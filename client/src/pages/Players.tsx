@@ -128,68 +128,54 @@ export default function Players() {
           onDelete={handleDeletePlayer}
         />
         
-        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-          <DialogContent 
-            className="sm:max-w-[550px]"
-            aria-labelledby="add-dialog-title"
-            aria-describedby="add-dialog-description"
-          >
-            <div 
-              id="add-dialog-title" 
-              className="text-lg font-semibold mt-2"
-              style={{ position: 'absolute', width: '1px', height: '1px', padding: '0', margin: '-1px', overflow: 'hidden', clip: 'rect(0, 0, 0, 0)', whiteSpace: 'nowrap', borderWidth: '0' }}
-            >
-              Add New Player
+        {isAddDialogOpen && (
+          <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center">
+            <div className="relative bg-white dark:bg-slate-900 p-6 rounded-lg max-w-lg w-full max-h-[90vh] overflow-y-auto">
+              <button 
+                className="absolute right-4 top-4 rounded-sm opacity-70 text-gray-600 hover:opacity-100" 
+                onClick={() => setIsAddDialogOpen(false)}
+              >
+                ✕
+                <span className="sr-only">Close</span>
+              </button>
+              
+              <h2 className="text-xl font-semibold mb-2">Add New Player</h2>
+              <p className="text-sm text-gray-500 mb-4">
+                Fill out the form below to add a new player to the team.
+              </p>
+              
+              <PlayerForm 
+                onSubmit={handleCreatePlayer} 
+                isSubmitting={createMutation.isPending} 
+              />
             </div>
-            <div 
-              id="add-dialog-description"
-              style={{ position: 'absolute', width: '1px', height: '1px', padding: '0', margin: '-1px', overflow: 'hidden', clip: 'rect(0, 0, 0, 0)', whiteSpace: 'nowrap', borderWidth: '0' }}
-            >
-              Fill out the form below to add a new player to the team.
-            </div>
-            
-            <h2 className="text-lg font-semibold mt-2">Add New Player</h2>
-            <p className="text-sm text-muted-foreground mb-4">
-              Fill out the form below to add a new player to the team.
-            </p>
-            <PlayerForm 
-              onSubmit={handleCreatePlayer} 
-              isSubmitting={createMutation.isPending} 
-            />
-          </DialogContent>
-        </Dialog>
+          </div>
+        )}
         
-        <Dialog open={!!editingPlayer} onOpenChange={(open) => !open && setEditingPlayer(null)}>
-          <DialogContent 
-            className="sm:max-w-[550px]"
-            aria-labelledby="edit-dialog-title"
-            aria-describedby="edit-dialog-description"
-          >
-            <div 
-              id="edit-dialog-title" 
-              className="text-lg font-semibold mt-2"
-              style={{ position: 'absolute', width: '1px', height: '1px', padding: '0', margin: '-1px', overflow: 'hidden', clip: 'rect(0, 0, 0, 0)', whiteSpace: 'nowrap', borderWidth: '0' }}
-            >
-              Edit Player
+        {!!editingPlayer && (
+          <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center">
+            <div className="relative bg-white dark:bg-slate-900 p-6 rounded-lg max-w-lg w-full max-h-[90vh] overflow-y-auto">
+              <button 
+                className="absolute right-4 top-4 rounded-sm opacity-70 text-gray-600 hover:opacity-100" 
+                onClick={() => setEditingPlayer(null)}
+              >
+                ✕
+                <span className="sr-only">Close</span>
+              </button>
+              
+              <h2 className="text-xl font-semibold mb-2">Edit Player</h2>
+              <p className="text-sm text-gray-500 mb-4">
+                Make changes to the player details below.
+              </p>
+              
+              <PlayerForm 
+                player={editingPlayer}
+                onSubmit={handleUpdatePlayer} 
+                isSubmitting={updateMutation.isPending} 
+              />
             </div>
-            <div 
-              id="edit-dialog-description"
-              style={{ position: 'absolute', width: '1px', height: '1px', padding: '0', margin: '-1px', overflow: 'hidden', clip: 'rect(0, 0, 0, 0)', whiteSpace: 'nowrap', borderWidth: '0' }}
-            >
-              Make changes to the player details below.
-            </div>
-            
-            <h2 className="text-lg font-semibold mt-2">Edit Player</h2>
-            <p className="text-sm text-muted-foreground mb-4">
-              Make changes to the player details below.
-            </p>
-            <PlayerForm 
-              player={editingPlayer || undefined}
-              onSubmit={handleUpdatePlayer} 
-              isSubmitting={updateMutation.isPending} 
-            />
-          </DialogContent>
-        </Dialog>
+          </div>
+        )}
       </div>
     </>
   );
