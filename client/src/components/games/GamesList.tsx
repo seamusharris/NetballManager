@@ -115,25 +115,31 @@ export default function GamesList({
     Object.entries(allGameStats).forEach(([gameIdStr, stats]) => {
       const gameId = parseInt(gameIdStr);
       
-      // Calculate goals by player and quarter
-      const quarterGoals: Record<number, {teamScore: number, opponentScore: number}> = {
-        1: {teamScore: 0, opponentScore: 0},
-        2: {teamScore: 0, opponentScore: 0},
-        3: {teamScore: 0, opponentScore: 0},
-        4: {teamScore: 0, opponentScore: 0}
+      // Calculate goals by player in each quarter - this is how it's done in the Statistics page too
+      const quarterGoals = {
+        1: { for: 0, against: 0 },
+        2: { for: 0, against: 0 },
+        3: { for: 0, against: 0 },
+        4: { for: 0, against: 0 }
       };
       
-      // Process each stat record by quarter
+      // First, get goals for each quarter
       stats.forEach(stat => {
         if (stat.quarter >= 1 && stat.quarter <= 4) {
-          quarterGoals[stat.quarter].teamScore += (stat.goalsFor || 0);
-          quarterGoals[stat.quarter].opponentScore += (stat.goalsAgainst || 0);
+          quarterGoals[stat.quarter].for += (stat.goalsFor || 0);
+          quarterGoals[stat.quarter].against += (stat.goalsAgainst || 0);
         }
       });
       
-      // Sum up the quarter totals for the final score
-      const teamScore = Object.values(quarterGoals).reduce((sum, q) => sum + q.teamScore, 0);
-      const opponentScore = Object.values(quarterGoals).reduce((sum, q) => sum + q.opponentScore, 0);
+      // Log the calculated scores for debugging
+      console.log(`Game ${gameId} quarter scores:`, quarterGoals);
+      
+      // Calculate total goals
+      const teamScore = Object.values(quarterGoals).reduce((sum, q) => sum + q.for, 0);
+      const opponentScore = Object.values(quarterGoals).reduce((sum, q) => sum + q.against, 0);
+      
+      // Log the final score for debugging
+      console.log(`Game ${gameId} final score: ${teamScore}-${opponentScore}`);
       
       newScores[gameId] = { team: teamScore, opponent: opponentScore };
     });
