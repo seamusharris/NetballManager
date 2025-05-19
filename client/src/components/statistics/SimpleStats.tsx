@@ -702,7 +702,7 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
                 <TableHeader>
                   <TableRow className="bg-slate-50">
                     <TableHead 
-                      className="min-w-[200px] cursor-pointer hover:bg-slate-100"
+                      className="w-[160px] cursor-pointer hover:bg-slate-100"
                       onClick={() => handleSort('name')}
                     >
                       Player
@@ -713,7 +713,7 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
                       )}
                     </TableHead>
                     <TableHead 
-                      className="text-center cursor-pointer hover:bg-slate-100"
+                      className="text-center w-[120px] cursor-pointer hover:bg-slate-100"
                       onClick={() => handleSort('rating')}
                     >
                       Rating
@@ -772,14 +772,23 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
                       </TableCell>
                       
                       <TableCell className="p-1 text-center border-r">
-                        <Input
-                          type="number"
-                          min="0"
-                          max="10"
-                          className="h-9 w-16 text-center mx-auto"
-                          value={playerRatings[player.id] || '5'}
-                          onChange={(e) => handleRatingChange(player.id, e.target.value)}
-                        />
+                        <div className="flex justify-center items-center gap-1">
+                          <button 
+                            onClick={(e) => handleRatingChange(player.id, 'decrement')}
+                            className="text-slate-500 hover:text-slate-700 px-1 font-medium"
+                          >
+                            -
+                          </button>
+                          <div className="bg-slate-50 px-3 py-2 rounded-md border border-slate-200 w-10 text-center">
+                            {playerRatings[player.id] || 5}
+                          </div>
+                          <button 
+                            onClick={(e) => handleRatingChange(player.id, 'increment')}
+                            className="text-slate-500 hover:text-slate-700 px-1 font-medium"
+                          >
+                            +
+                          </button>
+                        </div>
                       </TableCell>
                       
                       {/* Game totals display by category */}
