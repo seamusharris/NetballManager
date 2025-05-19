@@ -184,8 +184,8 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
     },
     onSuccess: () => {
       toast({
-        title: "Statistics saved",
-        description: `Quarter ${activeQuarter} statistics have been saved successfully.`
+        title: "All Statistics Saved",
+        description: `Statistics for all quarters have been saved successfully.`
       });
       
       // Refresh data
