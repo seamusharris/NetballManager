@@ -87,11 +87,28 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createPlayer(insertPlayer: InsertPlayer): Promise<Player> {
+    // Remove any auto flag for avatar color since we'll set it after creation
+    const playerData = {...insertPlayer};
+    delete (playerData as any).avatarColor;
+    
+    // Create the player first
     const [player] = await db
       .insert(players)
-      .values(insertPlayer)
+      .values(playerData)
       .returning();
-    return player;
+    
+    // Now that we have the player ID, we can assign a deterministic avatar color
+    // Based on the ID to ensure consistency across the application
+    const avatarColor = `bg-${['blue', 'purple', 'pink', 'green', 'teal', 'orange', 'red', 'yellow', 'indigo'][player.id % 9]}-600`;
+    
+    // Update the player with the generated avatar color
+    const [updatedPlayer] = await db
+      .update(players)
+      .set({ avatarColor })
+      .where(eq(players.id, player.id))
+      .returning();
+    
+    return updatedPlayer;
   }
 
   async updatePlayer(id: number, updatePlayer: Partial<InsertPlayer>): Promise<Player | undefined> {

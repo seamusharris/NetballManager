@@ -16,6 +16,7 @@ export const players = pgTable("players", {
   dateOfBirth: text("date_of_birth"),
   positionPreferences: json("position_preferences").notNull().$type<Position[]>(),
   active: boolean("active").notNull().default(true),
+  avatarColor: text("avatar_color"),
 });
 
 export const insertPlayerSchema = createInsertSchema(players).omit({ id: true });

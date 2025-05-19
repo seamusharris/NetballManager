@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Position, allPositions } from '@shared/schema';
+import { generatePlayerAvatarColor } from '@/lib/utils';
 
 interface SimplePlayerFormProps {
   onSubmit: (data: any) => void;
@@ -40,14 +41,16 @@ export default function SimplePlayerForm({ onSubmit, onCancel, isSubmitting }: S
       positionPreferences.push(position4 as Position);
     }
     
-    // Submit the data
+    // For new players, we'll create their avatar color when they're created
+    // The actual color assignment will happen server-side based on their ID, but we need to indicate we want one
     onSubmit({
       displayName,
       firstName,
       lastName,
       dateOfBirth: dateOfBirth || "", // Allow empty date of birth
       active,
-      positionPreferences
+      positionPreferences,
+      avatarColor: "auto" // This will be replaced with a specific color once the player is created and has an ID
     });
   };
   

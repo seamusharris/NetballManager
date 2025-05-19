@@ -59,6 +59,36 @@ export function generateRandomColor(seed: string): string {
   return `hsl(${hue}, 60%, 50%)`;
 }
 
+export function generatePlayerAvatarColor(playerId?: number | null): string {
+  // Predefined set of visually appealing, distinct colors for avatars
+  const avatarColors = [
+    'bg-blue-600',    // Blue
+    'bg-purple-600',  // Purple
+    'bg-pink-600',    // Pink
+    'bg-green-600',   // Green
+    'bg-accent',      // Accent (teal)
+    'bg-secondary',   // Secondary
+    'bg-orange-500',  // Orange
+    'bg-primary',     // Primary
+    'bg-red-500',     // Red
+    'bg-yellow-600',  // Yellow
+    'bg-indigo-600',  // Indigo
+    'bg-cyan-600',    // Cyan
+    'bg-amber-600',   // Amber
+    'bg-lime-600',    // Lime
+    'bg-emerald-600', // Emerald
+    'bg-violet-600',  // Violet
+    'bg-fuchsia-600', // Fuchsia
+    'bg-rose-600',    // Rose
+  ];
+  
+  if (!playerId) return 'bg-gray-500'; // Default fallback if no player id
+  
+  // Use player ID modulo the number of colors to select one deterministically
+  const colorIndex = playerId % avatarColors.length;
+  return avatarColors[colorIndex];
+}
+
 export function calculateTotalGoals(stats: any[], forTeam: boolean = true): number {
   const field = forTeam ? 'goalsFor' : 'goalsAgainst';
   return stats.reduce((sum, stat) => sum + (stat[field] || 0), 0);
