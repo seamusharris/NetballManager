@@ -7,7 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Wand2, Copy, Save } from 'lucide-react';
+import { Wand2, Copy, Save, Trash2 } from 'lucide-react';
 import { Player, Game, Opponent, Position } from '@shared/schema';
 import { formatShortDate, positionLabels, allPositions } from '@/lib/utils';
 import ExportButtons from '@/components/common/ExportButtons';
@@ -174,6 +174,35 @@ export default function SimpleRosterManager({
     
     // Log for debugging
     console.log(`Position updated - Quarter: ${quarter}, Position: ${position}, Player: ${actualPlayerId}`);
+  };
+
+  // Handle resetting all positions in all quarters
+  const handleResetAll = () => {
+    if (!selectedGameId) return;
+    
+    // Confirm with the user before clearing all positions
+    if (!confirm("Are you sure you want to reset ALL positions in ALL quarters? This cannot be undone.")) {
+      return;
+    }
+    
+    // Reset the local roster state to empty
+    setLocalRosterState({
+      '1': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
+      '2': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
+      '3': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
+      '4': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null }
+    });
+    
+    // Clear all pending changes
+    setPendingChanges([]);
+    
+    // Mark that we have unsaved changes (since we'll need to save this cleared state)
+    setHasUnsavedChanges(true);
+    
+    toast({
+      title: "All Positions Reset",
+      description: "All positions in all quarters have been reset. Don't forget to save to apply these changes!",
+    });
   };
 
   // Auto-fill roster based on player position preferences with equal playing time distribution
@@ -526,6 +555,15 @@ export default function SimpleRosterManager({
               className="flex items-center gap-1"
             >
               <Wand2 size={16} /> Auto-Fill
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              onClick={handleResetAll}
+              disabled={!selectedGameId}
+              className="flex items-center gap-1 border-red-200 hover:bg-red-50"
+            >
+              <Trash2 size={16} /> Reset All
             </Button>
             
             <Button 
