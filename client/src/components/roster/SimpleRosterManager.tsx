@@ -647,40 +647,36 @@ export default function SimpleRosterManager({
                 </TableBody>
               </Table>
               
-              {/* Players not on court section */}
+              {/* Players not on court per quarter section */}
               {!hasUnsavedChanges && (
                 <div className="mt-6 p-4 bg-slate-50 rounded-md">
-                  <h4 className="font-medium mb-2">Players Not On Court:</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {players
+                  <h4 className="font-medium mb-3">Players Not On Court (Per Quarter):</h4>
+                  
+                  {quarters.map(q => {
+                    const quarterKey = q.toString() as '1'|'2'|'3'|'4';
+                    const playersNotInQuarter = players
                       .filter(player => player.active)
-                      .filter(player => {
-                        // Check if player is assigned to any position in any quarter
-                        const isInQuarter1 = Object.values(localRosterState['1']).includes(player.id);
-                        const isInQuarter2 = Object.values(localRosterState['2']).includes(player.id);
-                        const isInQuarter3 = Object.values(localRosterState['3']).includes(player.id);
-                        const isInQuarter4 = Object.values(localRosterState['4']).includes(player.id);
-                        return !(isInQuarter1 || isInQuarter2 || isInQuarter3 || isInQuarter4);
-                      })
-                      .map(player => (
-                        <span 
-                          key={player.id}
-                          className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-200 text-slate-800"
-                        >
-                          {player.displayName}
-                        </span>
-                      ))}
-                    {players.filter(p => p.active).length > 0 && 
-                     players.filter(p => p.active).filter(player => {
-                        const isInQuarter1 = Object.values(localRosterState['1']).includes(player.id);
-                        const isInQuarter2 = Object.values(localRosterState['2']).includes(player.id);
-                        const isInQuarter3 = Object.values(localRosterState['3']).includes(player.id);
-                        const isInQuarter4 = Object.values(localRosterState['4']).includes(player.id);
-                        return !(isInQuarter1 || isInQuarter2 || isInQuarter3 || isInQuarter4);
-                     }).length === 0 && (
-                      <span className="text-sm text-slate-500">All active players are assigned to at least one position</span>
-                    )}
-                  </div>
+                      .filter(player => !Object.values(localRosterState[quarterKey]).includes(player.id));
+                    
+                    return (
+                      <div key={q} className="mb-3">
+                        <h5 className="text-sm font-medium mb-1">Q{q}:</h5>
+                        <div className="flex flex-wrap gap-2">
+                          {playersNotInQuarter.map(player => (
+                            <span 
+                              key={player.id}
+                              className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-200 text-slate-800"
+                            >
+                              {player.displayName}
+                            </span>
+                          ))}
+                          {playersNotInQuarter.length === 0 && (
+                            <span className="text-sm text-slate-500">All active players are assigned to positions</span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>
