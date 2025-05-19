@@ -154,7 +154,8 @@ export default function PerformanceCharts({ games, className }: PerformanceChart
     
     setChartData(newChartData);
     
-  }, [gameStatsMap, isLoading, gameIds.length]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gameStatsMap, isLoading]);
   
   // If no data yet, show loading state
   if (chartData.length === 0) {

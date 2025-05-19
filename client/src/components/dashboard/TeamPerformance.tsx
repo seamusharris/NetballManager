@@ -148,7 +148,8 @@ export default function TeamPerformance({ games, className }: TeamPerformancePro
       avgTeamScore
     });
     
-  }, [gameStatsMap, isLoading, completedGameIds, completedGamesCount]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gameStatsMap, isLoading]);
   
   return (
     <Card className={className}>
