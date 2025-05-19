@@ -236,15 +236,32 @@ export default function RosterManager({
       const assignments = [];
       const quarters = [1, 2, 3, 4];
       
+      // Create a tracking object to track which players are assigned in each quarter
+      const playerAssignedInQuarter = {};
+      quarters.forEach(quarter => {
+        playerAssignedInQuarter[quarter] = {};
+      });
+      
       // For each quarter and position
       quarters.forEach(quarter => {
         allPositions.forEach(position => {
           // Find the best player for this position:
           // 1. Player with this position in their preferences
-          // 2. Player with the fewest assignments so far
+          // 2. Player with the fewest assignments overall
+          // 3. Player not already assigned in this quarter
+          
+          // Get players not already assigned in this quarter
+          const availablePlayers = activePlayers.filter(player => 
+            !playerAssignedInQuarter[quarter][player.id]
+          );
+          
+          if (availablePlayers.length === 0) {
+            console.warn(`No available players for quarter ${quarter}, position ${position}!`);
+            return; // Skip this position if no players available
+          }
           
           // First, get players who have this position in their preferences
-          const playersWithPreference = activePlayers
+          const playersWithPreference = availablePlayers
             .filter(player => {
               const prefs = player.positionPreferences as Position[];
               return prefs.includes(position);
@@ -258,18 +275,18 @@ export default function RosterManager({
               
               if (aIndex !== bIndex) return aIndex - bIndex;
               
-              // Then by number of assignments
+              // Then by total number of assignments so far
               return (playerAssignmentCount[a.id] || 0) - (playerAssignmentCount[b.id] || 0);
             });
           
-          // Get all players sorted by fewest assignments
-          const allPlayersSorted = [...activePlayers]
+          // Get all available players sorted by fewest total assignments
+          const allAvailablePlayersSorted = [...availablePlayers]
             .sort((a, b) => (playerAssignmentCount[a.id] || 0) - (playerAssignmentCount[b.id] || 0));
           
           // Choose first player with preference, or any player if none have preference
           const selectedPlayer = playersWithPreference.length > 0 
             ? playersWithPreference[0] 
-            : allPlayersSorted[0];
+            : allAvailablePlayersSorted[0];
           
           // Add to assignments
           assignments.push({
@@ -279,7 +296,10 @@ export default function RosterManager({
             playerId: selectedPlayer.id
           });
           
-          // Update assignment count for this player
+          // Mark this player as assigned in this quarter
+          playerAssignedInQuarter[quarter][selectedPlayer.id] = true;
+          
+          // Update overall assignment count for this player
           playerAssignmentCount[selectedPlayer.id] = (playerAssignmentCount[selectedPlayer.id] || 0) + 1;
         });
       });
