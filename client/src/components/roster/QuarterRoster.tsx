@@ -73,15 +73,15 @@ export default function QuarterRoster({
             </h4>
             
             <Select 
-              value={assignedPlayerId?.toString() || ''} 
-              onValueChange={(value) => onAssignPlayer(position, Number(value))}
+              value={assignedPlayerId?.toString() || 'none'} 
+              onValueChange={(value) => value !== 'none' ? onAssignPlayer(position, Number(value)) : null}
               disabled={isPending}
             >
               <SelectTrigger className="w-full mb-2">
                 <SelectValue placeholder="Select player" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Select player</SelectItem>
+                <SelectItem value="none">Select player</SelectItem>
                 {availablePlayers.map(player => (
                   <SelectItem key={player.id} value={player.id.toString()}>
                     {player.displayName}

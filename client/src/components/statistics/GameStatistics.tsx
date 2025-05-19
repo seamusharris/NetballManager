@@ -167,14 +167,17 @@ export default function GameStatistics({
   Object.entries(statsByQuarterAndPlayer).forEach(([quarter, playerStats]) => {
     if (quarter === 'total') return; // Skip totals for now
     
-    Object.values(playerStats).forEach(stat => {
-      quarterScores[quarter].teamScore += stat.goalsFor;
-      quarterScores[quarter].opponentScore += stat.goalsAgainst;
-      
-      // Also add to totals
-      quarterScores['total'].teamScore += stat.goalsFor;
-      quarterScores['total'].opponentScore += stat.goalsAgainst;
-    });
+    // Make sure quarterScores has this quarter defined
+    if (quarterScores[quarter as '1'|'2'|'3'|'4']) {
+      Object.values(playerStats).forEach(stat => {
+        quarterScores[quarter as '1'|'2'|'3'|'4'].teamScore += stat.goalsFor;
+        quarterScores[quarter as '1'|'2'|'3'|'4'].opponentScore += stat.goalsAgainst;
+        
+        // Also add to totals
+        quarterScores['total'].teamScore += stat.goalsFor;
+        quarterScores['total'].opponentScore += stat.goalsAgainst;
+      });
+    }
   });
   
   // Check if roster is completely filled
@@ -312,12 +315,12 @@ export default function GameStatistics({
                 <div className="grid grid-cols-1 gap-2">
                   <div className="bg-primary/10 rounded p-2">
                     <div className="text-xl font-bold text-neutral-dark">
-                      {quarterScores[quarter].teamScore}
+                      {quarterScores[quarter as '1'|'2'|'3'|'4'].teamScore}
                     </div>
                   </div>
                   <div className="bg-gray-200 rounded p-2">
                     <div className="text-xl font-bold text-neutral-dark">
-                      {quarterScores[quarter].opponentScore}
+                      {quarterScores[quarter as '1'|'2'|'3'|'4'].opponentScore}
                     </div>
                   </div>
                 </div>
