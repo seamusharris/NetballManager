@@ -90,9 +90,18 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
       };
     });
     
-    // Process all game stats
-    Object.values(gameStatsMap).forEach(quarterStats => {
-      quarterStats.forEach(stat => {
+    // Process all game stats - but only include the latest game for accurate ratings display
+    // This ensures what's showing on the dashboard matches what's in Game Totals
+    if (Object.keys(gameStatsMap).length > 0) {
+      // Get the most recent game ID (should be the highest ID number)
+      const gameIds = Object.keys(gameStatsMap).map(id => parseInt(id));
+      const latestGameId = Math.max(...gameIds);
+      
+      // Get stats from only the latest game
+      const latestGameStats = gameStatsMap[latestGameId] || [];
+      
+      // Process stats for the latest game only
+      latestGameStats.forEach(stat => {
         if (!stat || !stat.playerId) return;
         
         const playerId = stat.playerId;
@@ -103,7 +112,7 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
           return;
         }
         
-        // Accumulate all the stats
+        // Accumulate stats from all quarters of the latest game
         newPlayerStatsMap[playerId].goals += stat.goalsFor || 0;
         newPlayerStatsMap[playerId].goalsAgainst += stat.goalsAgainst || 0;
         newPlayerStatsMap[playerId].missedGoals += stat.missedGoals || 0;
@@ -114,31 +123,36 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
         newPlayerStatsMap[playerId].pickUp += stat.pickUp || 0;
         newPlayerStatsMap[playerId].infringement += stat.infringement || 0;
       });
-    });
+      
+      console.log(`Using stats from game ${latestGameId} for the dashboard performance metrics`);
+    }
     
-    // Process player ratings
+    // Process player ratings - use only the latest game's quarter 1 stats
     Object.values(newPlayerStatsMap).forEach(player => {
-      // Get the player's quarter 1 stats to see if there's a rating
-      // Find all quarter 1 stats for this player
-      const playerQ1Stats = Object.values(gameStatsMap || {})
+      // Get all first quarter stats
+      const allFirstQuarterStats = Object.values(gameStatsMap || {})
         .flatMap(stats => stats.filter(stat => 
           stat.playerId === player.playerId && 
           stat.quarter === 1 && 
           stat.rating !== undefined && 
           stat.rating !== null
         ))
-        .sort((a, b) => b.id - a.id)[0]; // Sort by ID descending to get the most recent
+        .sort((a, b) => b.id - a.id); // Sort by ID descending to get most recent first
       
-      if (playerQ1Stats && typeof playerQ1Stats.rating === 'number') {
-        // Use the stored rating if available
-        player.rating = playerQ1Stats.rating;
+      // Get the most recent rating
+      if (allFirstQuarterStats.length > 0) {
+        const latestRating = allFirstQuarterStats[0].rating;
+        if (typeof latestRating === 'number') {
+          player.rating = latestRating;
+          console.log(`Using rating ${latestRating} for player ${player.playerId} from stat ID ${allFirstQuarterStats[0].id}`);
+        }
       } else {
-        // Calculate a default rating based on stats
+        // If no rating found, calculate a default based on performance
         const calculatedRating = 5 + 
-                      (player.goals * 0.5) +  // Each goal is worth 0.5 points
-                      (player.rebounds * 0.5) + // Each rebound is worth 0.5 points
-                      (player.intercepts * 0.8); // Each intercept is worth 0.8 points
-                      
+                    (player.goals * 0.2) +  // Each goal is worth 0.2 points
+                    (player.rebounds * 0.3) + // Each rebound is worth 0.3 points
+                    (player.intercepts * 0.4); // Each intercept is worth 0.4 points
+                    
         // Ensure rating is between 1 and 10
         player.rating = Math.min(10, Math.max(1, calculatedRating));
       }
