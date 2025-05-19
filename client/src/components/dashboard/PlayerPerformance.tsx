@@ -240,17 +240,21 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
                 <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Missed</th>
                 <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Rebounds</th>
                 <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Intercepts</th>
+                <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Bad Pass</th>
+                <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Errors</th>
+                <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Pick Up</th>
+                <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Infr.</th>
                 <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Rating</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {isLoading ? (
                 <tr>
-                  <td colSpan={7} className="text-center py-4 text-gray-500">Loading player statistics...</td>
+                  <td colSpan={11} className="text-center py-4 text-gray-500">Loading player statistics...</td>
                 </tr>
               ) : playersWithStats.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="text-center py-4 text-gray-500">No player statistics available</td>
+                  <td colSpan={11} className="text-center py-4 text-gray-500">No player statistics available</td>
                 </tr>
               ) : (
                 playersWithStats.map(player => (
@@ -272,6 +276,10 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
                     <td className="px-3 py-2 whitespace-nowrap text-sm text-center font-mono">{player.stats.missedGoals}</td>
                     <td className="px-3 py-2 whitespace-nowrap text-sm text-center font-mono">{player.stats.rebounds}</td>
                     <td className="px-3 py-2 whitespace-nowrap text-sm text-center font-mono">{player.stats.intercepts}</td>
+                    <td className="px-3 py-2 whitespace-nowrap text-sm text-center font-mono">{player.stats.badPass}</td>
+                    <td className="px-3 py-2 whitespace-nowrap text-sm text-center font-mono">{player.stats.handlingError}</td>
+                    <td className="px-3 py-2 whitespace-nowrap text-sm text-center font-mono">{player.stats.pickUp}</td>
+                    <td className="px-3 py-2 whitespace-nowrap text-sm text-center font-mono">{player.stats.infringement}</td>
                     <td className="px-3 py-2 whitespace-nowrap text-center">
                       <div className="flex items-center justify-center">
                         <span className={cn("px-2 py-1 text-xs font-semibold rounded-full", getRatingClass(player.stats.rating))}>
