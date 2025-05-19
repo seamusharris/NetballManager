@@ -64,6 +64,12 @@ export default function Statistics() {
     }
   });
   
+  // Reset to an empty array if we received a game object instead of roster entries
+  // This can happen in some API responses
+  const fixedRosters = Array.isArray(rosters) && rosters.length > 0 && 'date' in rosters[0] 
+    ? [] // This is a Game object, not roster entries
+    : rosters;
+  
   const isLoading = isLoadingGames || isLoadingOpponents || isLoadingPlayers || 
     (selectedGameId ? (isLoadingRosters || isLoadingStats) : false);
   
@@ -117,7 +123,7 @@ export default function Statistics() {
             opponent={selectedOpponent}
             players={players}
             gameStats={gameStats}
-            rosters={rosters}
+            rosters={fixedRosters}
             isLoading={isLoading}
           />
         ) : (
