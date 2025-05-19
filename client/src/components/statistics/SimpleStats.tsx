@@ -435,16 +435,36 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
     
     // Create map of player ID to position for this quarter
     const playerPositions: Record<number, string> = {};
+    
+    // Use a map to track positions that are already assigned
+    // This ensures we don't have duplicates in our statistics view
+    const positionPlayers: Record<string, number> = {};
+    
+    // Process rosters to get unique position assignments
+    // If there are duplicates, the last one processed will be used
     quarterRosters.forEach(roster => {
-      playerPositions[roster.playerId] = roster.position;
+      const position = roster.position;
+      const playerId = roster.playerId;
+      
+      // Record this player's position
+      playerPositions[playerId] = position;
+      
+      // Record which player is assigned to this position
+      positionPlayers[position] = playerId;
     });
     
+    // Create a set of players that have unique positions
+    const uniquePlayerIds = new Set(Object.values(positionPlayers));
+    
+    // Only include players with unique positions in our display
     return quarterRosters
       .map(roster => {
         const player = players.find(p => p.id === roster.playerId);
         return player || null;
       })
-      .filter((player): player is Player => player !== null)
+      .filter((player): player is Player => 
+        player !== null && uniquePlayerIds.has(player.id)
+      )
       // Sort by position order (GS through GK)
       .sort((a, b) => {
         const posA = playerPositions[a.id] || '';
