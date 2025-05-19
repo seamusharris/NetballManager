@@ -69,13 +69,20 @@ export default function GameForm({ game, opponents, onSubmit, isSubmitting }: Ga
   });
   
   const handleSubmit = (values: FormValues) => {
-    // For BYE games, we may not have an opponentId
+    // Prepare a clean version of the data to send to the server
     const formattedValues = {
       ...values,
-      // Only convert opponentId to number if it's provided
-      opponentId: values.opponentId ? parseInt(values.opponentId) : null
     };
     
+    // For BYE games, always set opponentId to null
+    if (values.isBye) {
+      formattedValues.opponentId = null;
+    } else {
+      // For normal games, convert opponentId to number
+      formattedValues.opponentId = parseInt(values.opponentId);
+    }
+    
+    console.log("Submitting game data:", formattedValues);
     onSubmit(formattedValues);
   };
   
