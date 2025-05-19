@@ -49,7 +49,14 @@ export default function QuarterStatistics({
   const getPlayersToShow = () => {
     if (rosters) {
       // For a specific quarter, show the players assigned in roster
-      return Object.values(rosters).filter(id => id !== null) as number[];
+      const playerIds = Object.values(rosters).filter(id => id !== null) as number[];
+      
+      // If no players are found but we have stats, just use those player IDs
+      if (playerIds.length === 0 && Object.keys(stats).length > 0) {
+        return Object.keys(stats).map(Number);
+      }
+      
+      return playerIds;
     } else {
       // For totals, show all players with stats
       return Object.keys(stats).map(Number);

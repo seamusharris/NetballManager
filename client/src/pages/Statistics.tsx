@@ -12,7 +12,7 @@ import {
   SelectValue 
 } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Game } from '@shared/schema';
+import { Game, Player, Opponent, Roster, GameStat } from '@shared/schema';
 
 export default function Statistics() {
   const [location] = useLocation();
@@ -27,22 +27,21 @@ export default function Statistics() {
     }
   }, [location]);
   
-  const { data: games = [], isLoading: isLoadingGames } = useQuery({
+  // Type our data with explicit types from the schema
+  const { data: games = [], isLoading: isLoadingGames } = useQuery<Game[]>({
     queryKey: ['/api/games'],
   });
   
-  const { data: opponents = [], isLoading: isLoadingOpponents } = useQuery({
+  const { data: opponents = [], isLoading: isLoadingOpponents } = useQuery<Opponent[]>({
     queryKey: ['/api/opponents'],
   });
   
-  const { data: players = [], isLoading: isLoadingPlayers } = useQuery({
+  const { data: players = [], isLoading: isLoadingPlayers } = useQuery<Player[]>({
     queryKey: ['/api/players'],
   });
   
-  // No duplicate selectedGame definition needed here
-  
   // Get rosters for selected game
-  const { data: rosters = [], isLoading: isLoadingRosters } = useQuery({
+  const { data: rosters = [], isLoading: isLoadingRosters } = useQuery<Roster[]>({
     queryKey: ['/api/games', selectedGameId, 'rosters'],
     enabled: !!selectedGameId,
     staleTime: 0, // Don't use cached data
@@ -50,7 +49,7 @@ export default function Statistics() {
   });
   
   // Get statistics for selected game
-  const { data: gameStats = [], isLoading: isLoadingStats } = useQuery({
+  const { data: gameStats = [], isLoading: isLoadingStats } = useQuery<GameStat[]>({
     queryKey: ['/api/games', selectedGameId, 'stats'],
     enabled: !!selectedGameId,
   });
