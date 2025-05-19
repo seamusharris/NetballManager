@@ -3,6 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Link } from 'wouter';
 import { Game, Opponent, GameStat } from '@shared/schema';
 import { formatShortDate } from '@/lib/utils';
+import { useQuery } from '@tanstack/react-query';
 
 interface RecentGamesProps {
   games: Game[];
@@ -15,45 +16,42 @@ export default function RecentGames({ games, opponents, className }: RecentGames
   const recentGames = games
     .filter(game => game.completed)
     .slice(0, 3);
-    
-  // State to store game stats for each game
-  const [gameStats, setGameStats] = useState<Record<number, GameStat[]>>({});
-  const [isLoading, setIsLoading] = useState(true);
   
-  // Fetch game statistics for each completed game
-  useEffect(() => {
-    const fetchAllGameStats = async () => {
-      if (recentGames.length === 0) {
-        setIsLoading(false);
-        return;
+  // Use a single query to fetch stats for all games if there are any
+  const gameIds = recentGames.map(game => game.id);
+  const enableQuery = gameIds.length > 0;
+  
+  // Cache game stats using React Query
+  const { data: allGameStats, isLoading } = useQuery({
+    queryKey: ['gameStats', ...gameIds],
+    queryFn: async () => {
+      if (gameIds.length === 0) {
+        return {};
       }
       
-      setIsLoading(true);
+      // Create a map to store stats by game ID
+      const statsMap: Record<number, GameStat[]> = {};
       
-      try {
-        const statsPromises = recentGames.map(game => 
-          fetch(`/api/games/${game.id}/stats`)
-            .then(res => res.json())
-            .then(stats => ({ gameId: game.id, stats }))
-        );
-        
-        const results = await Promise.all(statsPromises);
-        const statsMap: Record<number, GameStat[]> = {};
-        
-        results.forEach(result => {
-          statsMap[result.gameId] = result.stats;
-        });
-        
-        setGameStats(statsMap);
-        setIsLoading(false);
-      } catch (error) {
-        console.error("Error fetching game stats:", error);
-        setIsLoading(false);
-      }
-    };
-    
-    fetchAllGameStats();
-  }, [recentGames]);
+      // Fetch stats for each game
+      const statsPromises = gameIds.map(async (gameId) => {
+        const response = await fetch(`/api/games/${gameId}/stats`);
+        const stats = await response.json();
+        return { gameId, stats };
+      });
+      
+      const results = await Promise.all(statsPromises);
+      
+      // Organize stats by game ID
+      results.forEach(result => {
+        statsMap[result.gameId] = result.stats;
+      });
+      
+      return statsMap;
+    },
+    enabled: enableQuery,
+    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
+    gcTime: 15 * 60 * 1000,   // Keep data in cache for 15 minutes
+  });
   
   const getOpponentName = (opponentId: number) => {
     const opponent = opponents.find(o => o.id === opponentId);
@@ -62,7 +60,7 @@ export default function RecentGames({ games, opponents, className }: RecentGames
   
   // Calculate scores from game stats
   const getScores = (game: Game): [number, number] => {
-    const gameStatsList = gameStats[game.id] || [];
+    const gameStatsList = allGameStats?.[game.id] || [];
     
     // Calculate team score and opponent score from actual stats
     const teamScore = gameStatsList.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);

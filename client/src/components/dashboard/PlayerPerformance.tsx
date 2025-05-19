@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Avatar } from '@/components/ui/avatar';
 import { Game, Player, GameStat } from '@shared/schema';
 import { cn, getInitials } from '@/lib/utils';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 
 interface PlayerPerformanceProps {
   players: Player[];
@@ -22,87 +23,87 @@ interface PlayerStats {
 
 export default function PlayerPerformance({ players, games, className }: PlayerPerformanceProps) {
   const [timeRange, setTimeRange] = useState('last5');
-  const [playerStats, setPlayerStats] = useState<Record<number, PlayerStats>>({});
-  const [isLoading, setIsLoading] = useState(true);
   
-  // Fetch game statistics for completed games
-  useEffect(() => {
-    const completedGameIds = games
-      .filter(game => game.completed)
-      .map(game => game.id);
-      
-    if (completedGameIds.length === 0) {
-      setIsLoading(false);
-      return;
-    }
-    
-    const fetchAllGameStats = async () => {
-      try {
-        setIsLoading(true);
-        
-        // Fetch game stats for each completed game
-        const statsPromises = completedGameIds.map(gameId => 
-          fetch(`/api/games/${gameId}/stats`)
-            .then(res => res.json())
-        );
-        
-        const allGameStatsArrays = await Promise.all(statsPromises);
-        
-        // Calculate player statistics from all game stats
-        const playerStatsMap: Record<number, PlayerStats> = {};
-        
-        // Initialize stats for all players
-        players.forEach(player => {
-          playerStatsMap[player.id] = {
-            playerId: player.id,
-            goals: 0,
-            rebounds: 0,
-            intercepts: 0,
-            position: player.positionPreferences[0] || 'GS', // Use the first preferred position as default
-            rating: 0
-          };
-        });
-        
-        // Combine stats from all games
-        allGameStatsArrays.forEach(gameStats => {
-          gameStats.forEach((stat: GameStat) => {
-            if (stat.playerId && playerStatsMap[stat.playerId]) {
-              const player = playerStatsMap[stat.playerId];
-              
-              player.goals += stat.goalsFor || 0;
-              player.rebounds += stat.rebounds || 0;
-              player.intercepts += stat.intercepts || 0;
-              
-              // We'll leave the player position as their preferred position from before
-            }
-          });
-        });
-        
-        // Calculate player ratings based on their stats
-        // Simple formula: (goals * 1.0 + rebounds * 0.5 + intercepts * 0.8) / number of games
-        Object.values(playerStatsMap).forEach(player => {
-          const totalContribution = 
-            player.goals * 1.0 + 
-            player.rebounds * 0.5 + 
-            player.intercepts * 0.8;
-            
-          // Avoid division by zero
-          const numGames = completedGameIds.length || 1;
-          
-          // Calculate rating on a scale of 1-10
-          player.rating = Math.min(10, Math.max(1, (totalContribution / numGames) + 5));
-        });
-        
-        setPlayerStats(playerStatsMap);
-        setIsLoading(false);
-      } catch (error) {
-        console.error("Error fetching game stats:", error);
-        setIsLoading(false);
+  // Get only completed games
+  const completedGames = games.filter(game => game.completed);
+  const gameIds = completedGames.map(game => game.id);
+  const enableQuery = gameIds.length > 0;
+  
+  // Use React Query to fetch and cache game statistics
+  const { data: gameStatsMap, isLoading } = useQuery({
+    queryKey: ['playerGameStats', ...gameIds],
+    queryFn: async () => {
+      if (gameIds.length === 0) {
+        return {};
       }
-    };
+      
+      // Fetch stats for each completed game
+      const statsPromises = gameIds.map(async (gameId) => {
+        const response = await fetch(`/api/games/${gameId}/stats`);
+        const stats = await response.json();
+        return { gameId, stats };
+      });
+      
+      const results = await Promise.all(statsPromises);
+      
+      // Create a map of game ID to stats array
+      const statsMap: Record<number, GameStat[]> = {};
+      results.forEach(result => {
+        statsMap[result.gameId] = result.stats;
+      });
+      
+      return statsMap;
+    },
+    enabled: enableQuery,
+    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
+    gcTime: 15 * 60 * 1000,   // Keep data in cache for 15 minutes
+  });
+  
+  // Calculate player statistics from all game stats
+  const playerStatsMap: Record<number, PlayerStats> = {};
+  
+  // If we have game stats, calculate player statistics
+  if (gameStatsMap && !isLoading) {
+    // Initialize stats for all players
+    players.forEach(player => {
+      playerStatsMap[player.id] = {
+        playerId: player.id,
+        goals: 0,
+        rebounds: 0,
+        intercepts: 0,
+        position: player.positionPreferences[0] || 'GS', // Use the first preferred position as default
+        rating: 0
+      };
+    });
     
-    fetchAllGameStats();
-  }, [games, players]);
+    // Combine stats from all games
+    Object.values(gameStatsMap).forEach(gameStats => {
+      gameStats.forEach(stat => {
+        if (stat.playerId && playerStatsMap[stat.playerId]) {
+          const player = playerStatsMap[stat.playerId];
+          
+          player.goals += stat.goalsFor || 0;
+          player.rebounds += stat.rebounds || 0;
+          player.intercepts += stat.intercepts || 0;
+        }
+      });
+    });
+    
+    // Calculate player ratings based on their stats
+    // Simple formula: (goals * 1.0 + rebounds * 0.5 + intercepts * 0.8) / number of games
+    Object.values(playerStatsMap).forEach(player => {
+      const totalContribution = 
+        player.goals * 1.0 + 
+        player.rebounds * 0.5 + 
+        player.intercepts * 0.8;
+        
+      // Avoid division by zero
+      const numGames = gameIds.length || 1;
+      
+      // Calculate rating on a scale of 1-10
+      player.rating = Math.min(10, Math.max(1, (totalContribution / numGames) + 5));
+    });
+  }
   
   const getAvatarColor = (player: Player) => {
     const colors = [
@@ -121,10 +122,10 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
   
   // Get players with their stats and sort by rating
   const playersWithStats = players
-    .filter(player => playerStats[player.id])
+    .filter(player => playerStatsMap[player.id])
     .map(player => ({
       ...player,
-      stats: playerStats[player.id] || {
+      stats: playerStatsMap[player.id] || {
         playerId: player.id,
         goals: 0,
         rebounds: 0,
