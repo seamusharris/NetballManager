@@ -46,16 +46,19 @@ export default function GameStatistics({
     '4': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null }
   };
   
-  // Turn off console logs in production
-  // console.log('Examining rosters:', JSON.stringify(rosters));
+  // Add debug logging to identify the issue
+  console.log('Roster data received:', JSON.stringify(rosters));
   
-  // Fill roster assignments - handle array properly
+  // Fill roster assignments from roster data
   if (Array.isArray(rosters)) {
+    console.log(`Processing ${rosters.length} roster entries`);
+    
     rosters.forEach(roster => {
-      if (roster && roster.quarter !== undefined) {
+      console.log('Processing roster entry:', roster);
+      if (roster && typeof roster.quarter === 'number' && roster.position && typeof roster.playerId === 'number') {
         const quarterKey = roster.quarter.toString();
-        if (rosterByQuarterAndPosition[quarterKey] && roster.position) {
-          // console.log(`Setting roster: Q${quarterKey} - ${roster.position} - Player ID ${roster.playerId}`);
+        if (rosterByQuarterAndPosition[quarterKey]) {
+          console.log(`Assigning player ${roster.playerId} to Q${quarterKey} position ${roster.position}`);
           rosterByQuarterAndPosition[quarterKey][roster.position as Position] = roster.playerId;
         }
       }
@@ -63,6 +66,9 @@ export default function GameStatistics({
   } else {
     console.error('Expected roster data to be an array but got:', typeof rosters);
   }
+  
+  // Log the filled roster data
+  console.log('Roster data after processing:', JSON.stringify(rosterByQuarterAndPosition));
   
   // Group stats by quarter and player
   const statsByQuarterAndPlayer: Record<string, Record<number, GameStat>> = {
