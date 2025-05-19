@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
-import { queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Input } from '@/components/ui/input';
 import { Save } from 'lucide-react';
 import { Player, Roster, GameStat } from '@shared/schema';
 
@@ -18,101 +18,84 @@ interface SimpleStatsProps {
 
 export default function SimpleStats({ gameId, players, rosters, gameStats }: SimpleStatsProps) {
   const [activeQuarter, setActiveQuarter] = useState('1');
-  const [formValues, setFormValues] = useState<Record<string, Record<number, Record<string, string>>>>({});
+  const [formValues, setFormValues] = useState<Record<string, Record<number, Record<string, string>>>>({
+    '1': {}, '2': {}, '3': {}, '4': {}
+  });
   const { toast } = useToast();
   
-  // Initialize form values
+  // Initialize form values when component mounts or gameStats/rosters change
   useEffect(() => {
-    console.log("Initializing SimpleStats form with gameStats:", gameStats);
+    console.log("Initializing SimpleStats form with", gameStats?.length, "stats");
     
-    try {
-      // Create default empty values
-      const initialValues: Record<string, Record<number, Record<string, string>>> = {
-        '1': {},
-        '2': {},
-        '3': {},
-        '4': {}
-      };
+    // Create default empty values
+    const initialValues: Record<string, Record<number, Record<string, string>>> = {
+      '1': {}, '2': {}, '3': {}, '4': {}
+    };
+    
+    // Initialize with zeros for all players in each quarter
+    rosters.forEach(roster => {
+      const quarter = String(roster.quarter);
+      const playerId = roster.playerId;
       
-      // Group rosters by quarter
-      const quarterPlayers: Record<string, number[]> = {
-        '1': [],
-        '2': [],
-        '3': [],
-        '4': []
-      };
-      
-      // Get players for each quarter
-      rosters.forEach(roster => {
-        if (roster && roster.quarter) {
-          const quarter = String(roster.quarter);
-          if (quarterPlayers[quarter] && !quarterPlayers[quarter].includes(roster.playerId)) {
-            quarterPlayers[quarter].push(roster.playerId);
-          }
+      if (quarter && playerId) {
+        if (!initialValues[quarter][playerId]) {
+          initialValues[quarter][playerId] = {
+            goalsFor: '0',
+            goalsAgainst: '0',
+            missedGoals: '0',
+            rebounds: '0',
+            intercepts: '0',
+            badPass: '0',
+            handlingError: '0',
+            infringement: '0'
+          };
         }
-      });
-      
-      // Initialize with zeroes
-      Object.entries(quarterPlayers).forEach(([quarter, playerIds]) => {
-        playerIds.forEach(playerId => {
-          if (!initialValues[quarter][playerId]) {
-            initialValues[quarter][playerId] = {
-              goalsFor: '0',
-              goalsAgainst: '0'
-            };
-          }
-        });
-      });
-      
-      // Fill in with existing values - process all game stats to ensure we load saved values
-      console.log(`Loading ${gameStats?.length || 0} game stats into form`);
-      
-      if (gameStats && gameStats.length > 0) {
-        // Log a few stats to debug
-        console.log("Sample game stats:", gameStats.slice(0, 3));
-        
-        gameStats.forEach(stat => {
-          if (!stat) return;
-          
-          const quarter = String(stat.quarter);
-          const playerId = stat.playerId;
-          
-          console.log(`Processing stat for quarter ${quarter}, player ${playerId}:`, stat);
-          
-          if (!initialValues[quarter]) {
-            initialValues[quarter] = {};
-          }
-          
-          if (!initialValues[quarter][playerId]) {
-            initialValues[quarter][playerId] = {
-              goalsFor: '0',
-              goalsAgainst: '0',
-              missedGoals: '0',
-              rebounds: '0',
-              intercepts: '0',
-              badPass: '0',
-              handlingError: '0',
-              infringement: '0'
-            };
-          }
-          
-          // Make sure to convert numbers to strings and handle nulls
-          initialValues[quarter][playerId].goalsFor = String(stat.goalsFor || 0);
-          initialValues[quarter][playerId].goalsAgainst = String(stat.goalsAgainst || 0);
-          initialValues[quarter][playerId].missedGoals = String(stat.missedGoals || 0);
-          initialValues[quarter][playerId].rebounds = String(stat.rebounds || 0);
-          initialValues[quarter][playerId].intercepts = String(stat.intercepts || 0);
-          initialValues[quarter][playerId].badPass = String(stat.badPass || 0);
-          initialValues[quarter][playerId].handlingError = String(stat.handlingError || 0);
-          initialValues[quarter][playerId].infringement = String(stat.infringement || 0);
-        });
       }
+    });
+    
+    // Fill in with existing values
+    if (gameStats && gameStats.length > 0) {
+      console.log("Loading game stats:", gameStats.slice(0, 3));
       
-      setFormValues(initialValues);
-    } catch (error) {
-      console.error("Error initializing form values:", error);
+      gameStats.forEach(stat => {
+        if (!stat) return;
+        
+        const quarter = String(stat.quarter);
+        const playerId = stat.playerId;
+        
+        console.log(`Processing stat for quarter ${quarter}, player ${playerId}:`, stat);
+        
+        if (!initialValues[quarter]) {
+          initialValues[quarter] = {};
+        }
+        
+        if (!initialValues[quarter][playerId]) {
+          initialValues[quarter][playerId] = {
+            goalsFor: '0',
+            goalsAgainst: '0',
+            missedGoals: '0',
+            rebounds: '0',
+            intercepts: '0',
+            badPass: '0',
+            handlingError: '0',
+            infringement: '0'
+          };
+        }
+        
+        // Convert to strings and handle null values
+        initialValues[quarter][playerId].goalsFor = String(stat.goalsFor || 0);
+        initialValues[quarter][playerId].goalsAgainst = String(stat.goalsAgainst || 0);
+        initialValues[quarter][playerId].missedGoals = String(stat.missedGoals || 0);
+        initialValues[quarter][playerId].rebounds = String(stat.rebounds || 0);
+        initialValues[quarter][playerId].intercepts = String(stat.intercepts || 0);
+        initialValues[quarter][playerId].badPass = String(stat.badPass || 0);
+        initialValues[quarter][playerId].handlingError = String(stat.handlingError || 0);
+        initialValues[quarter][playerId].infringement = String(stat.infringement || 0);
+      });
     }
-  }, [rosters, gameStats]);
+    
+    setFormValues(initialValues);
+  }, [gameStats, rosters]);
   
   // Handle input change
   const handleChange = (quarter: string, playerId: number, field: string, value: string) => {
@@ -122,26 +105,27 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
     }
     
     setFormValues(prev => {
-      try {
-        const newValues = { ...prev };
-        
-        if (!newValues[quarter]) {
-          newValues[quarter] = {};
-        }
-        
-        if (!newValues[quarter][playerId]) {
-          newValues[quarter][playerId] = {
-            goalsFor: '0',
-            goalsAgainst: '0'
-          };
-        }
-        
-        newValues[quarter][playerId][field] = value;
-        return newValues;
-      } catch (error) {
-        console.error("Error updating form values:", error);
-        return prev;
+      const newValues = { ...prev };
+      
+      if (!newValues[quarter]) {
+        newValues[quarter] = {};
       }
+      
+      if (!newValues[quarter][playerId]) {
+        newValues[quarter][playerId] = {
+          goalsFor: '0',
+          goalsAgainst: '0',
+          missedGoals: '0',
+          rebounds: '0',
+          intercepts: '0',
+          badPass: '0',
+          handlingError: '0',
+          infringement: '0'
+        };
+      }
+      
+      newValues[quarter][playerId][field] = value;
+      return newValues;
     });
   };
   
@@ -174,7 +158,7 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
           
           // Find existing stat
           const existingStat = gameStats.find(
-            s => s && s.gameId === gameId && s.playerId === playerId && s.quarter === parseInt(quarter)
+            s => s.gameId === gameId && s.playerId === playerId && s.quarter === parseInt(quarter)
           );
           
           const statData = {
@@ -209,8 +193,77 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
         description: `Statistics for all quarters have been saved successfully.`
       });
       
-      // Force reload of statistics by refreshing the page
-      window.location.reload();
+      // Refresh data without reloading the page
+      fetch(`/api/games/${gameId}/stats`)
+        .then(res => res.json())
+        .then(data => {
+          console.log(`Refreshed ${data.length} game stat entries`);
+          
+          // Create new initial values
+          const initialValues: Record<string, Record<number, Record<string, string>>> = {
+            '1': {}, '2': {}, '3': {}, '4': {}
+          };
+          
+          // Fill with roster players
+          rosters.forEach(roster => {
+            const quarter = String(roster.quarter);
+            const playerId = roster.playerId;
+            
+            if (quarter && playerId) {
+              if (!initialValues[quarter][playerId]) {
+                initialValues[quarter][playerId] = {
+                  goalsFor: '0',
+                  goalsAgainst: '0',
+                  missedGoals: '0',
+                  rebounds: '0',
+                  intercepts: '0',
+                  badPass: '0',
+                  handlingError: '0',
+                  infringement: '0'
+                };
+              }
+            }
+          });
+          
+          // Fill with refreshed stats
+          data.forEach(stat => {
+            if (!stat) return;
+            
+            const quarter = String(stat.quarter);
+            const playerId = stat.playerId;
+            
+            if (!initialValues[quarter]) {
+              initialValues[quarter] = {};
+            }
+            
+            if (!initialValues[quarter][playerId]) {
+              initialValues[quarter][playerId] = {
+                goalsFor: '0',
+                goalsAgainst: '0',
+                missedGoals: '0',
+                rebounds: '0',
+                intercepts: '0',
+                badPass: '0',
+                handlingError: '0',
+                infringement: '0'
+              };
+            }
+            
+            initialValues[quarter][playerId].goalsFor = String(stat.goalsFor || 0);
+            initialValues[quarter][playerId].goalsAgainst = String(stat.goalsAgainst || 0);
+            initialValues[quarter][playerId].missedGoals = String(stat.missedGoals || 0);
+            initialValues[quarter][playerId].rebounds = String(stat.rebounds || 0);
+            initialValues[quarter][playerId].intercepts = String(stat.intercepts || 0);
+            initialValues[quarter][playerId].badPass = String(stat.badPass || 0);
+            initialValues[quarter][playerId].handlingError = String(stat.handlingError || 0);
+            initialValues[quarter][playerId].infringement = String(stat.infringement || 0);
+          });
+          
+          setFormValues(initialValues);
+        })
+        .catch(err => {
+          console.error("Error refreshing game stats:", err);
+        });
     },
     onError: (error: any) => {
       toast({
@@ -233,7 +286,7 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
     // Calculate from current form values
     Object.entries(formValues).forEach(([quarter, players]) => {
       if (quarter === '1' || quarter === '2' || quarter === '3' || quarter === '4') {
-        Object.values(players).forEach(values => {
+        Object.entries(players).forEach(([_, values]) => {
           const goalsFor = parseInt(values.goalsFor || '0');
           const goalsAgainst = parseInt(values.goalsAgainst || '0');
           
@@ -265,7 +318,7 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
   // Get position for a player
   const getPlayerPosition = (quarter: string, playerId: number) => {
     const quarterRoster = rosters.find(
-      r => r && r.quarter === parseInt(quarter) && r.playerId === playerId
+      r => r.quarter === parseInt(quarter) && r.playerId === playerId
     );
     return quarterRoster ? quarterRoster.position : '';
   };
@@ -277,7 +330,7 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
     
     // Get all roster entries for this quarter
     const quarterRosters = rosters.filter(
-      roster => roster && roster.quarter === parseInt(quarter)
+      roster => roster.quarter === parseInt(quarter)
     );
     
     // Sort by position according to defined order
@@ -302,7 +355,16 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
     if (!player) return null;
     
     const position = getPlayerPosition(quarter, playerId);
-    const values = formValues[quarter]?.[playerId] || { goalsFor: '0', goalsAgainst: '0' };
+    const values = formValues[quarter]?.[playerId] || { 
+      goalsFor: '0', 
+      goalsAgainst: '0',
+      missedGoals: '0',
+      rebounds: '0',
+      intercepts: '0',
+      badPass: '0',
+      handlingError: '0',
+      infringement: '0'
+    };
     
     return (
       <div className="p-4 border rounded-md mb-4" key={`${quarter}-${playerId}`}>
@@ -316,81 +378,81 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div>
             <label className="block text-sm font-medium mb-1">Goals For</label>
-            <input
+            <Input
               type="text"
               value={values.goalsFor || '0'}
               onChange={(e) => handleChange(quarter, playerId, 'goalsFor', e.target.value)}
-              className="w-full p-2 border rounded-md text-center"
+              className="text-center"
             />
           </div>
           
           <div>
             <label className="block text-sm font-medium mb-1">Goals Against</label>
-            <input
+            <Input
               type="text"
               value={values.goalsAgainst || '0'}
               onChange={(e) => handleChange(quarter, playerId, 'goalsAgainst', e.target.value)}
-              className="w-full p-2 border rounded-md text-center"
+              className="text-center"
             />
           </div>
           
           <div>
             <label className="block text-sm font-medium mb-1">Missed Goals</label>
-            <input
+            <Input
               type="text"
               value={values.missedGoals || '0'}
               onChange={(e) => handleChange(quarter, playerId, 'missedGoals', e.target.value)}
-              className="w-full p-2 border rounded-md text-center"
+              className="text-center"
             />
           </div>
           
           <div>
             <label className="block text-sm font-medium mb-1">Rebounds</label>
-            <input
+            <Input
               type="text"
               value={values.rebounds || '0'}
               onChange={(e) => handleChange(quarter, playerId, 'rebounds', e.target.value)}
-              className="w-full p-2 border rounded-md text-center"
+              className="text-center"
             />
           </div>
           
           <div>
             <label className="block text-sm font-medium mb-1">Intercepts</label>
-            <input
+            <Input
               type="text"
               value={values.intercepts || '0'}
               onChange={(e) => handleChange(quarter, playerId, 'intercepts', e.target.value)}
-              className="w-full p-2 border rounded-md text-center"
+              className="text-center"
             />
           </div>
           
           <div>
             <label className="block text-sm font-medium mb-1">Bad Pass</label>
-            <input
+            <Input
               type="text"
               value={values.badPass || '0'}
               onChange={(e) => handleChange(quarter, playerId, 'badPass', e.target.value)}
-              className="w-full p-2 border rounded-md text-center"
+              className="text-center"
             />
           </div>
           
           <div>
             <label className="block text-sm font-medium mb-1">Handling Error</label>
-            <input
+            <Input
               type="text"
               value={values.handlingError || '0'}
               onChange={(e) => handleChange(quarter, playerId, 'handlingError', e.target.value)}
-              className="w-full p-2 border rounded-md text-center"
+              className="text-center"
             />
           </div>
           
           <div>
             <label className="block text-sm font-medium mb-1">Infringement</label>
-            <input
+            <Input
               type="text"
               value={values.infringement || '0'}
               onChange={(e) => handleChange(quarter, playerId, 'infringement', e.target.value)}
-              className="w-full p-2 border rounded-md text-center"
+              className="text-center"
             />
           </div>
         </div>
@@ -398,105 +460,101 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
     );
   };
   
-  // Render quarter content
-  const renderQuarterContent = (quarter: string) => {
-    const players = getPlayersForQuarter(quarter);
+  // Render score summary
+  const renderScoreSummary = () => {
+    const summary = calculateSummary();
     
-    if (players.length === 0) {
-      return (
-        <div className="text-center p-4">
-          <p className="text-gray-500">No players assigned to this quarter.</p>
-        </div>
-      );
-    }
+    const getResultClass = () => {
+      if (summary.game.team > summary.game.opponent) return "text-green-600 font-bold";
+      if (summary.game.team < summary.game.opponent) return "text-red-600 font-bold";
+      return "text-yellow-600 font-bold";
+    };
+    
+    const getResultText = () => {
+      if (summary.game.team > summary.game.opponent) return "Win";
+      if (summary.game.team < summary.game.opponent) return "Loss";
+      return "Draw";
+    };
     
     return (
-      <div>
-        {players.map(playerId => renderPlayerForm(quarter, playerId))}
-      </div>
-    );
-  };
-  
-  const summary = calculateSummary();
-  
-  return (
-    <div className="space-y-6">
-      {/* Game Summary */}
-      <Card>
-        <CardContent className="p-4">
+      <Card className="mb-6">
+        <CardContent className="pt-6">
           <h3 className="text-lg font-semibold mb-4">Game Score Summary</h3>
           
-          <div className="grid grid-cols-5 gap-2 text-center mb-4">
-            <div className="font-medium">Quarter</div>
-            <div className="font-medium">Q1</div>
-            <div className="font-medium">Q2</div>
-            <div className="font-medium">Q3</div>
-            <div className="font-medium">Q4</div>
-            
-            <div className="font-medium">Our Team</div>
-            <div>{summary.quarters['1'].team}</div>
-            <div>{summary.quarters['2'].team}</div>
-            <div>{summary.quarters['3'].team}</div>
-            <div>{summary.quarters['4'].team}</div>
-            
-            <div className="font-medium">Opponent</div>
-            <div>{summary.quarters['1'].opponent}</div>
-            <div>{summary.quarters['2'].opponent}</div>
-            <div>{summary.quarters['3'].opponent}</div>
-            <div>{summary.quarters['4'].opponent}</div>
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="bg-gray-100">
+                  <th className="border p-2 text-left">Quarter</th>
+                  <th className="border p-2 text-center">Team</th>
+                  <th className="border p-2 text-center">Opponent</th>
+                </tr>
+              </thead>
+              <tbody>
+                {Object.entries(summary.quarters).map(([quarter, scores]) => (
+                  <tr key={quarter}>
+                    <td className="border p-2 font-medium">Quarter {quarter}</td>
+                    <td className="border p-2 text-center">{scores.team}</td>
+                    <td className="border p-2 text-center">{scores.opponent}</td>
+                  </tr>
+                ))}
+                <tr className="bg-gray-100 font-bold">
+                  <td className="border p-2">Final Score</td>
+                  <td className="border p-2 text-center">{summary.game.team}</td>
+                  <td className="border p-2 text-center">{summary.game.opponent}</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
           
-          <div className="flex justify-between items-center p-3 bg-gray-100 rounded-md">
-            <div className="font-medium">Final Score:</div>
-            <div className="text-xl font-bold">{summary.game.team} - {summary.game.opponent}</div>
-            <div>
-              {summary.game.team > summary.game.opponent ? (
-                <span className="text-primary font-medium">Win</span>
-              ) : summary.game.team < summary.game.opponent ? (
-                <span className="text-red-500 font-medium">Loss</span>
-              ) : (
-                <span className="text-amber-500 font-medium">Draw</span>
-              )}
-            </div>
+          <div className="mt-4 text-right">
+            <span className="mr-2">Result:</span>
+            <span className={getResultClass()}>{getResultText()}</span>
           </div>
         </CardContent>
       </Card>
+    );
+  };
+  
+  return (
+    <div className="space-y-6">
+      {renderScoreSummary()}
       
-      {/* Save Button */}
-      <div className="flex justify-end">
+      <div className="flex flex-col md:flex-row justify-between gap-4 mb-4">
+        <h3 className="text-xl font-semibold">Game Statistics</h3>
         <Button 
-          onClick={() => saveMutation.mutate()}
+          onClick={() => saveMutation.mutate()} 
           disabled={saveMutation.isPending}
-          className="bg-primary text-white"
+          className="bg-primary text-white hover:bg-primary-dark"
         >
-          <Save className="w-4 h-4 mr-2" /> Save Statistics
+          <Save className="mr-2 h-4 w-4" />
+          Save All Statistics
         </Button>
       </div>
       
-      {/* Quarter Tabs */}
-      <Tabs value={activeQuarter} onValueChange={setActiveQuarter}>
-        <TabsList className="w-full grid grid-cols-4">
-          <TabsTrigger value="1">Quarter 1</TabsTrigger>
-          <TabsTrigger value="2">Quarter 2</TabsTrigger>
-          <TabsTrigger value="3">Quarter 3</TabsTrigger>
-          <TabsTrigger value="4">Quarter 4</TabsTrigger>
+      <Tabs defaultValue="1" value={activeQuarter} onValueChange={setActiveQuarter}>
+        <TabsList className="mb-4">
+          <TabsTrigger value="1">Q1</TabsTrigger>
+          <TabsTrigger value="2">Q2</TabsTrigger>
+          <TabsTrigger value="3">Q3</TabsTrigger>
+          <TabsTrigger value="4">Q4</TabsTrigger>
         </TabsList>
         
-        <TabsContent value="1" className="mt-4">
-          {renderQuarterContent('1')}
-        </TabsContent>
-        
-        <TabsContent value="2" className="mt-4">
-          {renderQuarterContent('2')}
-        </TabsContent>
-        
-        <TabsContent value="3" className="mt-4">
-          {renderQuarterContent('3')}
-        </TabsContent>
-        
-        <TabsContent value="4" className="mt-4">
-          {renderQuarterContent('4')}
-        </TabsContent>
+        {['1', '2', '3', '4'].map(quarter => (
+          <TabsContent key={quarter} value={quarter}>
+            <div className="space-y-4">
+              {getPlayersForQuarter(quarter).length > 0 ? (
+                getPlayersForQuarter(quarter).map(playerId => (
+                  renderPlayerForm(quarter, playerId)
+                ))
+              ) : (
+                <Card className="p-4">
+                  <p className="text-center text-gray-500">No players in roster for this quarter.</p>
+                </Card>
+              )}
+            </div>
+          </TabsContent>
+        ))}
       </Tabs>
     </div>
   );
