@@ -238,35 +238,61 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
   // Save stats mutation for ALL quarters
   const saveMutation = useMutation({
     mutationFn: async () => {
+      console.log("STARTING SAVE OPERATION");
+      console.log("Current player ratings:", JSON.stringify(playerRatings));
+      
       const quarters = ['1', '2', '3', '4'];
       const promises = [];
       
-      // IMPORTANT: Process quarter 1 first to ensure ratings are saved
-      // This ensures that ratings are properly saved before other quarters
-      const quarterSequence = ['1', ...quarters.filter(q => q !== '1')];
+      // CRITICAL: We MUST save ratings first, then other stats
+      // Create a special array just for quarter 1 player ratings
+      const ratingPromises = [];
       
-      // Save only the latest stats for each player in each quarter to avoid duplicates
-      const latestStatIds: Record<string, Record<number, number>> = {};
+      // First, create a map of all the current player stats for quarter 1
+      // This lets us find the exact stat records that need rating updates
+      const quarter1StatsByPlayer: Record<number, GameStat> = {};
       
-      // Create a map of the latest stat record for each player in each quarter
       gameStats.forEach(stat => {
-        const quarter = String(stat.quarter);
-        const playerId = stat.playerId;
-        
-        if (!latestStatIds[quarter]) {
-          latestStatIds[quarter] = {};
-        }
-        
-        // If we don't have a record for this player/quarter yet, or if this is a newer record
-        if (!latestStatIds[quarter][playerId] || stat.id > latestStatIds[quarter][playerId]) {
-          latestStatIds[quarter][playerId] = stat.id;
+        if (stat.quarter === 1) {
+          // We're only interested in the latest stats for each player in quarter 1
+          if (!quarter1StatsByPlayer[stat.playerId] || stat.id > quarter1StatsByPlayer[stat.playerId].id) {
+            quarter1StatsByPlayer[stat.playerId] = stat;
+          }
         }
       });
       
-      // Process all quarters
-      for (const quarter of quarterSequence) {
+      // First, update all player ratings in quarter 1 stats
+      Object.entries(playerRatings).forEach(([playerIdStr, rating]) => {
+        const playerId = parseInt(playerIdStr);
+        if (isNaN(playerId)) return;
+        
+        // Find the quarter 1 stat for this player
+        const stat = quarter1StatsByPlayer[playerId];
+        
+        if (stat) {
+          console.log(`UPDATING RATING: Found stat ID ${stat.id} for player ${playerId} with current rating ${stat.rating}, setting to ${rating}`);
+          
+          // Update the rating for this player in quarter 1
+          const ratingUpdatePromise = apiRequest('PATCH', `/api/gamestats/${stat.id}`, {
+            rating: rating
+          });
+          
+          ratingPromises.push(ratingUpdatePromise);
+        } else {
+          console.log(`WARNING: No quarter 1 stat found for player ${playerId}, can't update rating ${rating}`);
+        }
+      });
+      
+      // Wait for all rating updates to complete before continuing
+      await Promise.all(ratingPromises);
+      console.log("All player ratings updated successfully");
+      
+      // Now update all other player stats
+      // Process quarters in order: 1, 2, 3, 4
+      for (const quarter of quarters) {
         const quarterValues = formValues[quarter] || {};
         
+        // For each player in this quarter with form values
         for (const playerIdStr in quarterValues) {
           const playerId = parseInt(playerIdStr);
           if (isNaN(playerId)) continue;
@@ -285,14 +311,12 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
           const pickUp = parseInt(playerValues.pickUp || '0');
           const infringement = parseInt(playerValues.infringement || '0');
           
-          // Get the latest rating for this player
-          const rating = playerRatings[playerId] || 0;
+          // Find the latest stat for this player/quarter
+          const latestStat = gameStats
+            .filter(s => s.quarter === parseInt(quarter) && s.playerId === playerId)
+            .sort((a, b) => b.id - a.id)[0];
           
-          // Find only the most recent stat record for this player/quarter
-          const latestStatId = latestStatIds[quarter]?.[playerId];
-          const existingStat = gameStats.find(s => s.id === latestStatId);
-          
-          // Create the base stat data with all required fields
+          // Create the base stat data (excluding rating for non-quarter 1)
           const statData: any = {
             gameId,
             playerId,
@@ -308,11 +332,7 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
             infringement
           };
           
-          // Only add rating to quarter 1 stats
-          if (quarter === '1') {
-            statData.rating = rating;
-            console.log(`Saving rating ${rating} for player ${playerId} in quarter 1 (stat ID: ${existingStat?.id || 'new'})`);
-          }
+          // DO NOT include rating here - we already updated it separately above
           
           if (existingStat) {
             // Update existing
@@ -332,11 +352,27 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
         description: `Statistics for all quarters have been saved successfully.`
       });
       
-      // Refresh data without reloading the page
-      fetch(`/api/games/${gameId}/stats`)
+      // Refresh ALL game stats data to ensure the dashboard gets the latest data
+      fetch(`/api/games/${gameId}/stats?_t=${Date.now()}`, { 
+        cache: 'no-store',
+        headers: { 'Cache-Control': 'no-cache' } 
+      })
         .then(res => res.json())
         .then(data => {
           console.log(`Refreshed ${data.length} game stat entries`);
+          
+          // Invalidate all React Query caches to force fresh data fetches
+          // This is crucial to ensure ratings show up correctly on the dashboard
+          window.setTimeout(() => {
+            try {
+              // Force the dashboard to refresh too
+              queryClient.invalidateQueries({ queryKey: ['playerGameStats'] });
+              queryClient.invalidateQueries({ queryKey: ['gameStats'] });
+              console.log("Invalidated all React Query caches to ensure fresh data");
+            } catch (err) {
+              console.error("Error invalidating caches:", err);
+            }
+          }, 100);
           
           // Create new initial values
           const initialValues: Record<string, Record<number, Record<string, string>>> = {

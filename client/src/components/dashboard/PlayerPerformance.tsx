@@ -44,7 +44,8 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
       
       // Fetch stats for each completed game
       const statsPromises = gameIds.map(async (gameId) => {
-        const response = await fetch(`/api/games/${gameId}/stats`);
+        // Use cache-busting parameter to ensure we get fresh data
+        const response = await fetch(`/api/games/${gameId}/stats?_t=${Date.now()}`);
         const stats = await response.json();
         return { gameId, stats };
       });
@@ -60,8 +61,9 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
       return statsMap;
     },
     enabled: enableQuery,
-    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
+    staleTime: 0, // Always get latest data
     gcTime: 15 * 60 * 1000,   // Keep data in cache for 15 minutes
+    refetchOnWindowFocus: true // Refresh data when user returns to the window
   });
   
   // State to store calculated player stats
