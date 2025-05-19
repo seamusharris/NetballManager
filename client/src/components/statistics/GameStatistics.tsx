@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { queryClient } from '@/lib/queryClient';
@@ -7,7 +7,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Save } from 'lucide-react';
-import QuarterStatistics from './QuarterStatistics';
 import { 
   Game, 
   GameStat, 
@@ -37,15 +36,6 @@ export default function GameStatistics({
 }: GameStatisticsProps) {
   const [activeQuarter, setActiveQuarter] = useState('1');
   const { toast } = useToast();
-  
-  // Use a ref to store pending changes to stats
-  const pendingChangesRef = useRef<{
-    [playerId: number]: {
-      [quarter: number]: {
-        [statName: string]: number;
-      };
-    };
-  }>({});
   
   // Transform rosters to more usable format
   const rosterByQuarterAndPosition: Record<string, Record<Position, number | null>> = {
