@@ -75,6 +75,7 @@ export const gameStats = pgTable("game_stats", {
   handlingError: integer("handling_error").notNull().default(0),
   pickUp: integer("pick_up").notNull().default(0),
   infringement: integer("infringement").notNull().default(0),
+  rating: integer("rating").default(0), // Player rating from 0-10
 });
 
 export const insertGameStatSchema = createInsertSchema(gameStats).omit({ id: true });

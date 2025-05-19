@@ -23,6 +23,8 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
   });
   // Add a state to store calculated game totals
   const [gameTotals, setGameTotals] = useState<Record<number, Record<string, number>>>({});
+  // Add state for player ratings in the Game Totals tab
+  const [playerRatings, setPlayerRatings] = useState<Record<number, number>>({});
   const { toast } = useToast();
   
   // Function to calculate game totals across all quarters
@@ -645,6 +647,7 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
                       <th scope="col" className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Handling</th>
                       <th scope="col" className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Pick Up</th>
                       <th scope="col" className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Infringement</th>
+                      <th scope="col" className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Rating (0-10)</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -708,6 +711,22 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
                               <td className="px-3 py-4 whitespace-nowrap text-sm text-center">{stats.handlingError || 0}</td>
                               <td className="px-3 py-4 whitespace-nowrap text-sm text-center">{stats.pickUp || 0}</td>
                               <td className="px-3 py-4 whitespace-nowrap text-sm text-center">{stats.infringement || 0}</td>
+                              <td className="px-3 py-4 whitespace-nowrap text-sm text-center">
+                                <Input
+                                  type="number"
+                                  min="0"
+                                  max="10"
+                                  value={playerRatings[player.id] || stats.rating || 0}
+                                  onChange={(e) => {
+                                    const value = Math.min(10, Math.max(0, parseInt(e.target.value) || 0));
+                                    setPlayerRatings({
+                                      ...playerRatings,
+                                      [player.id]: value
+                                    });
+                                  }}
+                                  className="w-16 text-center mx-auto"
+                                />
+                              </td>
                             </tr>
                           );
                         })
