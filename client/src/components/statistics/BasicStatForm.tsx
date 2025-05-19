@@ -69,24 +69,28 @@ export default function BasicStatForm({
     });
     
     // Fill in existing stat values
-    existingStats.forEach(stat => {
-      const quarterKey = stat.quarter.toString();
-      const playerId = stat.playerId;
-      
-      if (initialValues[quarterKey] && initialValues[quarterKey][playerId]) {
-        const statRecord = initialValues[quarterKey][playerId];
+    if (existingStats && existingStats.length > 0) {
+      existingStats.forEach(stat => {
+        if (!stat) return;
         
-        // Update with actual values
-        statRecord.goalsFor = stat.goalsFor.toString();
-        statRecord.goalsAgainst = stat.goalsAgainst.toString();
-        statRecord.missedGoals = stat.missedGoals.toString();
-        statRecord.rebounds = stat.rebounds.toString();
-        statRecord.intercepts = stat.intercepts.toString();
-        statRecord.badPass = stat.badPass.toString();
-        statRecord.handlingError = stat.handlingError.toString();
-        statRecord.infringement = stat.infringement.toString();
-      }
-    });
+        const quarterKey = stat.quarter?.toString() || '';
+        const playerId = stat.playerId;
+        
+        if (quarterKey && playerId && initialValues[quarterKey] && initialValues[quarterKey][playerId]) {
+          const statRecord = initialValues[quarterKey][playerId];
+          
+          // Update with actual values, safely converting to string
+          if (stat.goalsFor !== undefined) statRecord.goalsFor = String(stat.goalsFor);
+          if (stat.goalsAgainst !== undefined) statRecord.goalsAgainst = String(stat.goalsAgainst);
+          if (stat.missedGoals !== undefined) statRecord.missedGoals = String(stat.missedGoals);
+          if (stat.rebounds !== undefined) statRecord.rebounds = String(stat.rebounds);
+          if (stat.intercepts !== undefined) statRecord.intercepts = String(stat.intercepts);
+          if (stat.badPass !== undefined) statRecord.badPass = String(stat.badPass);
+          if (stat.handlingError !== undefined) statRecord.handlingError = String(stat.handlingError);
+          if (stat.infringement !== undefined) statRecord.infringement = String(stat.infringement);
+        }
+      });
+    }
     
     setStatValues(initialValues);
   }, [rosters, existingStats]);
