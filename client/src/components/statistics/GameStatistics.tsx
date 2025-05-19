@@ -46,19 +46,23 @@ export default function GameStatistics({
     '4': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null }
   };
   
-  // Add additional debug logs to examine roster content
-  console.log('Examining rosters:', JSON.stringify(rosters));
+  // Turn off console logs in production
+  // console.log('Examining rosters:', JSON.stringify(rosters));
   
-  // Fill roster assignments
-  rosters.forEach(roster => {
-    if (roster && roster.quarter !== undefined) {
-      const quarterKey = roster.quarter.toString();
-      if (rosterByQuarterAndPosition[quarterKey] && roster.position) {
-        console.log(`Setting roster: Q${quarterKey} - ${roster.position} - Player ID ${roster.playerId}`);
-        rosterByQuarterAndPosition[quarterKey][roster.position as Position] = roster.playerId;
+  // Fill roster assignments - handle array properly
+  if (Array.isArray(rosters)) {
+    rosters.forEach(roster => {
+      if (roster && roster.quarter !== undefined) {
+        const quarterKey = roster.quarter.toString();
+        if (rosterByQuarterAndPosition[quarterKey] && roster.position) {
+          // console.log(`Setting roster: Q${quarterKey} - ${roster.position} - Player ID ${roster.playerId}`);
+          rosterByQuarterAndPosition[quarterKey][roster.position as Position] = roster.playerId;
+        }
       }
-    }
-  });
+    });
+  } else {
+    console.error('Expected roster data to be an array but got:', typeof rosters);
+  }
   
   // Group stats by quarter and player
   const statsByQuarterAndPlayer: Record<string, Record<number, GameStat>> = {
@@ -184,16 +188,17 @@ export default function GameStatistics({
     }
   });
   
-  // Check if roster data exists and has players assigned
-  console.log('Roster data check:', { 
-    rosterCount: rosters.length,
-    rosterByQuarter: Object.keys(rosterByQuarterAndPosition).map(q => {
-      return { quarter: q, positions: Object.values(rosterByQuarterAndPosition[q as '1'|'2'|'3'|'4']).filter(Boolean).length }
-    })
+  // Check if there are players assigned after filling roster data
+  const rosterCountByQuarter = Object.keys(rosterByQuarterAndPosition).map(q => {
+    return { 
+      quarter: q, 
+      positions: Object.values(rosterByQuarterAndPosition[q as '1'|'2'|'3'|'4']).filter(Boolean).length 
+    }
   });
   
-  // Simply check if we have any rosters for this game
-  const isRosterComplete = rosters.length > 0;
+  // Consider roster complete if we have any players assigned to any quarter
+  const hasAnyPlayersAssigned = rosterCountByQuarter.some(q => q.positions > 0);
+  const isRosterComplete = hasAnyPlayersAssigned;
   
   // Save or update a player's statistics
   const saveStatsMutation = useMutation({
