@@ -1,4 +1,4 @@
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { insertPlayerSchema, Position, Player, allPositions } from "@shared/schema";
+import { useEffect, useState } from "react";
 
 // Extend the schema for the form validation
 const formSchema = insertPlayerSchema.extend({
@@ -72,6 +73,64 @@ export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFor
       active: player?.active !== undefined ? player.active : true,
     },
   });
+  
+  // Watch position selections to filter out duplicates
+  const position1 = useWatch({ control: form.control, name: "position1" });
+  const position2 = useWatch({ control: form.control, name: "position2" });
+  const position3 = useWatch({ control: form.control, name: "position3" });
+  const position4 = useWatch({ control: form.control, name: "position4" });
+  
+  // Manage available positions for each dropdown
+  const [availablePositions, setAvailablePositions] = useState({
+    position1: [...allPositions],
+    position2: [...allPositions],
+    position3: [...allPositions],
+    position4: [...allPositions],
+  });
+  
+  // Update available positions when selections change
+  useEffect(() => {
+    const selectedPositions = [position1, position2, position3, position4].filter(
+      pos => pos && pos !== "none"
+    );
+    
+    const newAvailablePositions = {
+      position1: [...allPositions],
+      position2: [...allPositions],
+      position3: [...allPositions],
+      position4: [...allPositions],
+    };
+    
+    // For each dropdown, filter out positions selected in other dropdowns
+    for (let i = 1; i <= 4; i++) {
+      const fieldName = `position${i}` as keyof typeof availablePositions;
+      const currentValue = form.getValues(fieldName as any);
+      
+      newAvailablePositions[fieldName] = allPositions.filter(pos => {
+        // Always include the currently selected value in the options
+        if (pos === currentValue) return true;
+        
+        // Exclude positions selected in other dropdowns
+        return !selectedPositions.includes(pos) || pos === currentValue;
+      });
+    }
+    
+    setAvailablePositions(newAvailablePositions);
+    
+    // Check for duplicates and reset if any are found
+    if (position2 !== "none" && position2 === position1) {
+      form.setValue("position2", "none");
+    }
+    
+    if (position3 !== "none" && (position3 === position1 || position3 === position2)) {
+      form.setValue("position3", "none");
+    }
+    
+    if (position4 !== "none" && (position4 === position1 || position4 === position2 || position4 === position3)) {
+      form.setValue("position4", "none");
+    }
+    
+  }, [position1, position2, position3, position4, form]);
   
   const handleSubmit = (values: FormValues) => {
     try {
@@ -275,7 +334,7 @@ export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFor
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {allPositions.map(position => (
+                      {availablePositions.position1.map(position => (
                         <SelectItem key={position} value={position}>{position}</SelectItem>
                       ))}
                     </SelectContent>
@@ -299,7 +358,7 @@ export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFor
                     </FormControl>
                     <SelectContent>
                       <SelectItem key="none" value="none">None</SelectItem>
-                      {allPositions.map(position => (
+                      {availablePositions.position2.map(position => (
                         <SelectItem key={position} value={position}>{position}</SelectItem>
                       ))}
                     </SelectContent>
@@ -323,7 +382,7 @@ export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFor
                     </FormControl>
                     <SelectContent>
                       <SelectItem key="none" value="none">None</SelectItem>
-                      {allPositions.map(position => (
+                      {availablePositions.position3.map(position => (
                         <SelectItem key={position} value={position}>{position}</SelectItem>
                       ))}
                     </SelectContent>
@@ -347,7 +406,7 @@ export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFor
                     </FormControl>
                     <SelectContent>
                       <SelectItem key="none" value="none">None</SelectItem>
-                      {allPositions.map(position => (
+                      {availablePositions.position4.map(position => (
                         <SelectItem key={position} value={position}>{position}</SelectItem>
                       ))}
                     </SelectContent>
