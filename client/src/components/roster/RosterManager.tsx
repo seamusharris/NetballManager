@@ -119,8 +119,27 @@ export default function RosterManager({
         return res.json();
       }
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/games', selectedGameId, 'rosters'] });
+      
+      // Force refresh the local roster state by creating a new copy
+      const updatedRoster = [...rosters];
+      const existingIndex = updatedRoster.findIndex(r => 
+        r.id === data.id
+      );
+      
+      if (existingIndex >= 0) {
+        updatedRoster[existingIndex] = data;
+      } else {
+        updatedRoster.push(data);
+      }
+      
+      // Update the local roster assignment map
+      const quarterKey = data.quarter.toString();
+      if (rosterByQuarter[quarterKey]) {
+        rosterByQuarter[quarterKey][data.position as Position] = data.playerId;
+      }
+      
       toast({
         title: "Success",
         description: "Roster position updated",
