@@ -69,50 +69,17 @@ export default function GameForm({ game, opponents, onSubmit, isSubmitting }: Ga
   });
   
   const handleSubmit = (values: FormValues) => {
-    // For BYE games, use a different endpoint
-    if (values.isBye) {
-      // Create a simplified object for BYE games
-      const byeGame = {
-        date: values.date,
-        time: values.time
-      };
-      
-      console.log("Submitting BYE game:", byeGame);
-      
-      // Custom submission for BYE games
-      fetch('/api/games/bye', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(byeGame),
-      })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Failed to create BYE game');
-        }
-        return response.json();
-      })
-      .then(data => {
-        console.log('BYE game created:', data);
-        // Refresh the page or redirect
-        window.location.href = '/games';
-      })
-      .catch(error => {
-        console.error('Error creating BYE game:', error);
-        alert('Failed to create BYE game. Please try again.');
-      });
-      
-      return;
-    }
-    
-    // For normal games, use the regular submission
+    // For both BYE and normal games, use the same handler pattern
     const formattedValues = {
-      ...values,
-      opponentId: parseInt(values.opponentId)
+      date: values.date,
+      time: values.time,
+      isBye: values.isBye,
+      completed: values.isBye ? false : values.completed, // BYE games can't be completed
+      // Only include opponentId for non-BYE games
+      ...(values.isBye ? {} : { opponentId: parseInt(values.opponentId) })
     };
     
-    console.log("Submitting regular game:", formattedValues);
+    console.log("Submitting game:", formattedValues);
     onSubmit(formattedValues);
   };
   
