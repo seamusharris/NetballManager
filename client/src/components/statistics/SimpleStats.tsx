@@ -142,13 +142,32 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
         initialValues[quarter][playerId].infringement = String(stat.infringement || 0);
       });
       
-      // Extract player ratings from first quarter stats
+      // Extract player ratings from any quarters with ratings
       const playerRatingMap: Record<number, number> = {};
-      gameStats.forEach(stat => {
-        if (stat.quarter === 1 && stat.rating !== undefined && stat.rating !== null) {
-          playerRatingMap[stat.playerId] = stat.rating;
+      
+      // Sort stats to prioritize quarter 1 stats (as we store ratings there)
+      const sortedStats = [...gameStats].sort((a, b) => {
+        if (a.quarter === 1 && b.quarter !== 1) return -1;
+        if (a.quarter !== 1 && b.quarter === 1) return 1;
+        return 0;
+      });
+      
+      // Group by player ID, keeping the first occurrence (which should be quarter 1 if available)
+      const playerStatsMap = new Map();
+      sortedStats.forEach(stat => {
+        if (!playerStatsMap.has(stat.playerId)) {
+          playerStatsMap.set(stat.playerId, stat);
         }
       });
+      
+      // Set ratings for each player using their quarter 1 stats
+      playerStatsMap.forEach(stat => {
+        if (stat.rating !== undefined && stat.rating !== null) {
+          playerRatingMap[stat.playerId] = stat.rating;
+          console.log(`Setting rating for player ${stat.playerId} to ${stat.rating} from quarter ${stat.quarter}`);
+        }
+      });
+      
       setPlayerRatings(playerRatingMap);
     }
     

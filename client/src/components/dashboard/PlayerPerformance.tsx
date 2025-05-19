@@ -116,16 +116,26 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
       });
     });
     
-    // Calculate ratings for all players
+    // Process player ratings
     Object.values(newPlayerStatsMap).forEach(player => {
-      // Calculate player rating based on their statistics
-      const rating = 5 + 
-                    (player.goals * 0.5) +  // Each goal is worth 0.5 points
-                    (player.rebounds * 0.5) + // Each rebound is worth 0.5 points
-                    (player.intercepts * 0.8); // Each intercept is worth 0.8 points
-                    
-      // Ensure rating is between 1 and 10
-      player.rating = Math.min(10, Math.max(1, rating));
+      // Get the player's quarter 1 stats to see if there's a rating
+      const playerQ1Stats = Object.values(gameStatsMap || {}).flatMap(stats => 
+        stats.filter(stat => stat.playerId === player.playerId && stat.quarter === 1)
+      )[0];
+      
+      if (playerQ1Stats && typeof playerQ1Stats.rating === 'number') {
+        // Use the stored rating if available
+        player.rating = playerQ1Stats.rating;
+      } else {
+        // Calculate a default rating based on stats
+        const calculatedRating = 5 + 
+                      (player.goals * 0.5) +  // Each goal is worth 0.5 points
+                      (player.rebounds * 0.5) + // Each rebound is worth 0.5 points
+                      (player.intercepts * 0.8); // Each intercept is worth 0.8 points
+                      
+        // Ensure rating is between 1 and 10
+        player.rating = Math.min(10, Math.max(1, calculatedRating));
+      }
     });
     
     setPlayerStatsMap(newPlayerStatsMap);
