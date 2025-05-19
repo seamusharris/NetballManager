@@ -2,6 +2,8 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { z } from "zod";
+import { sql } from "drizzle-orm";
+import { db } from "./db";
 import { 
   insertPlayerSchema, 
   insertOpponentSchema, 
@@ -174,11 +176,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (req.body.isBye === true) {
         try {
           // Execute raw SQL for BYE games to avoid schema validation issues
-          const result = await pool.query(
-            `INSERT INTO games (date, time, is_bye, completed) 
-             VALUES ($1, $2, $3, $4) 
-             RETURNING *`,
-            [req.body.date, req.body.time, true, false]
+          const result = await db.execute(
+            sql`INSERT INTO games (date, time, is_bye, completed) 
+                VALUES (${req.body.date}, ${req.body.time}, ${true}, ${false}) 
+                RETURNING *`
           );
           
           // Map the result to match our expected format
