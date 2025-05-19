@@ -58,7 +58,7 @@ export default function RosterManager({
     '4': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null }
   });
   
-  // Update roster data when rosters prop changes
+  // Update roster data when rosters prop changes or selectedGameId changes
   useEffect(() => {
     // Create empty roster map
     const newRosterByQuarter = {
@@ -67,6 +67,8 @@ export default function RosterManager({
       '3': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
       '4': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null }
     };
+    
+    console.log("Loading roster data, rosters count:", rosters.length);
     
     // Fill with roster data from API
     rosters.forEach(roster => {
@@ -78,9 +80,9 @@ export default function RosterManager({
       }
     });
     
-    // Update state
+    // Update state with new roster data
     setRosterByQuarter(newRosterByQuarter);
-  }, [rosters]);
+  }, [rosters, selectedGameId]);
   
   // Calculate roster completion percentage
   const totalPositions = Object.keys(rosterByQuarter).length * allPositions.length;
@@ -388,13 +390,18 @@ export default function RosterManager({
     });
     
     try {
-      // Track assignments for saving
-      const assignmentsToSave = [];
+      // First, remove any existing rosters for this game to avoid duplications
+      // We'll do this by fetching current rosters and deleting them
+      console.log(`Preparing to save rosters for game ${selectedGameId}`);
+      
+      // For each position in each quarter, check if we need to create a new assignment
       let successCount = 0;
       
-      // Collect all assignments from the rosterByQuarter state
-      for (const [quarter, positions] of Object.entries(rosterByQuarter)) {
-        for (const [position, playerId] of Object.entries(positions)) {
+      // Process one assignment at a time to ensure proper ordering and avoid race conditions
+      for (const quarter of ['1', '2', '3', '4']) {
+        for (const position of allPositions) {
+          const playerId = rosterByQuarter[quarter][position];
+          
           if (playerId !== null) {
             // Check if there's an existing roster for this position/quarter
             const existingRoster = rosters.find(r => 
@@ -405,11 +412,13 @@ export default function RosterManager({
             
             try {
               if (existingRoster) {
+                console.log(`Updating existing roster: Q${quarter}, Pos: ${position}, Player: ${playerId}`);
                 // Update existing assignment
                 await apiRequest('PATCH', `/api/rosters/${existingRoster.id}`, {
                   playerId: playerId
                 });
               } else {
+                console.log(`Creating new roster: Q${quarter}, Pos: ${position}, Player: ${playerId}`);
                 // Create new assignment
                 await apiRequest('POST', '/api/rosters', {
                   gameId: selectedGameId,
@@ -422,37 +431,59 @@ export default function RosterManager({
             } catch (err) {
               console.error(`Error saving position ${position} in quarter ${quarter}:`, err);
             }
+          } else {
+            // Position is unassigned, check if we need to remove an existing assignment
+            const existingRoster = rosters.find(r => 
+              r.gameId === selectedGameId && 
+              r.quarter === parseInt(quarter) && 
+              r.position === position
+            );
+            
+            if (existingRoster) {
+              console.log(`Removing roster: Q${quarter}, Pos: ${position}`);
+              try {
+                await apiRequest('DELETE', `/api/rosters/${existingRoster.id}`, {});
+              } catch (err) {
+                console.error(`Error removing position ${position} in quarter ${quarter}:`, err);
+              }
+            }
           }
         }
       }
       
-      // Refresh the roster data after saving
+      // Refresh the roster data
       queryClient.invalidateQueries({ queryKey: ['/api/games', selectedGameId, 'rosters'] });
       
-      // Fetch the updated rosters
-      const response = await apiRequest('GET', `/api/games/${selectedGameId}/rosters`);
-      const updatedRosters = await response.json();
-      
-      // Create a copy of current roster state
-      const updatedRosterByQuarter = {
-        '1': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
-        '2': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
-        '3': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
-        '4': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null }
-      };
-      
-      // Fill with newly fetched roster data
-      updatedRosters.forEach(roster => {
-        if (roster && roster.quarter !== undefined) {
-          const quarterKey = roster.quarter.toString();
-          if (roster.position && allPositions.includes(roster.position as Position)) {
-            updatedRosterByQuarter[quarterKey][roster.position as Position] = roster.playerId;
+      // For immediate UI feedback, fetch the updated roster data
+      try {
+        const response = await apiRequest('GET', `/api/games/${selectedGameId}/rosters`);
+        const updatedRosters = await response.json();
+        
+        console.log(`Received ${updatedRosters.length} updated roster assignments`);
+        
+        // Create a copy of current roster state
+        const updatedRosterByQuarter = {
+          '1': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
+          '2': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
+          '3': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
+          '4': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null }
+        };
+        
+        // Fill with newly fetched roster data
+        updatedRosters.forEach(roster => {
+          if (roster && roster.quarter !== undefined) {
+            const quarterKey = roster.quarter.toString();
+            if (roster.position && allPositions.includes(roster.position as Position)) {
+              updatedRosterByQuarter[quarterKey][roster.position as Position] = roster.playerId;
+            }
           }
-        }
-      });
-      
-      // Update the state
-      setRosterByQuarter(updatedRosterByQuarter);
+        });
+        
+        // Update the state
+        setRosterByQuarter(updatedRosterByQuarter);
+      } catch (error) {
+        console.error("Error fetching updated rosters:", error);
+      }
       
       toast({
         title: "Roster Saved",
