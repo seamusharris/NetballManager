@@ -772,12 +772,24 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
                       </TableCell>
                       
                       <TableCell className="p-1 text-center border-r">
-                        <div className="bg-slate-50 px-3 py-2 rounded-md border border-slate-200">
-                          <input
-                            type="number"
-                            min="0"
-                            max="10"
-                            className="w-10 text-center bg-transparent border-none p-0 focus:ring-0"
+                        <div className="flex flex-col items-center">
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-6 w-6 mb-1" 
+                            onClick={() => {
+                              const currentRating = playerRatings[player.id] || 5;
+                              const newRating = Math.min(10, currentRating + 1);
+                              setPlayerRatings(prev => ({...prev, [player.id]: newRating}));
+                            }}
+                          >
+                            <ChevronUp className="h-4 w-4" />
+                          </Button>
+                          
+                          <Input
+                            type="text"
+                            inputMode="numeric"
+                            className="h-9 w-16 text-center"
                             value={playerRatings[player.id] || 5}
                             onChange={(e) => {
                               const val = parseInt(e.target.value);
@@ -786,6 +798,20 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
                               }
                             }}
                           />
+                          
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-6 w-6 mt-1" 
+                            onClick={() => {
+                              const currentRating = playerRatings[player.id] || 5;
+                              const newRating = Math.max(0, currentRating - 1);
+                              setPlayerRatings(prev => ({...prev, [player.id]: newRating}));
+                            }}
+                            disabled={playerRatings[player.id] <= 0}
+                          >
+                            <ChevronDown className="h-4 w-4" />
+                          </Button>
                         </div>
                       </TableCell>
                       
