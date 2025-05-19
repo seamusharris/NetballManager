@@ -413,19 +413,19 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
           </Select>
         </div>
         
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto border-t border-l border-b rounded-md">
           <Table>
             <TableHeader>
               <TableRow className="bg-slate-50">
-                <TableHead className="min-w-[120px]">Player</TableHead>
-                <TableHead className="text-center w-10 border-r"></TableHead>
+                <TableHead className="min-w-[120px] border-b">Player</TableHead>
+                <TableHead className="text-center w-10 border-r border-b"></TableHead>
                 
                 {/* Stat category headers */}
                 {statCategories.map((category, index) => (
                   <TableHead 
                     key={category.name} 
                     colSpan={category.fields.length}
-                    className={`text-center bg-blue-50 border-r ${index === 0 ? 'border-l' : ''}`}
+                    className={`text-center bg-blue-50 border-r border-b ${index === 0 ? 'border-l' : ''}`}
                   >
                     {category.name}
                   </TableHead>
@@ -434,17 +434,21 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
               
               {/* Stat field headers */}
               <TableRow>
-                <TableHead></TableHead>
-                <TableHead className="border-r"></TableHead>
+                <TableHead className="border-b"></TableHead>
+                <TableHead className="border-r border-b"></TableHead>
                 
                 {statCategories.map((category, categoryIndex) => (
                   category.fields.map((field, fieldIndex) => {
                     // Add right border to last column in each category
                     const isLastInCategory = fieldIndex === category.fields.length - 1;
+                    // Add left border to first column in each category (except the first category)
+                    const isFirstInCategory = fieldIndex === 0;
+                    const needsLeftBorder = isFirstInCategory && categoryIndex > 0;
+                    
                     return (
                       <TableHead 
                         key={field.field}
-                        className={`text-center px-1 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-50 ${isLastInCategory ? 'border-r' : ''} ${sortConfig.field === field.field ? 'bg-gray-50' : ''}`}
+                        className={`text-center px-1 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-50 border-b ${isLastInCategory ? 'border-r' : ''} ${needsLeftBorder ? 'border-l' : ''} ${sortConfig.field === field.field ? 'bg-gray-50' : ''}`}
                         onClick={() => handleSort(field.field as SortField)}
                       >
                         {field.label} {renderSortIndicator(field.field as SortField)}
@@ -458,17 +462,17 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
             <TableBody className="bg-white divide-y divide-gray-200">
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={12} className="text-center py-4 text-gray-500">Loading player statistics...</TableCell>
+                  <TableCell colSpan={12} className="text-center py-4 text-gray-500 border-b">Loading player statistics...</TableCell>
                 </TableRow>
               ) : playersWithStats.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={12} className="text-center py-4 text-gray-500">No player statistics available</TableCell>
+                  <TableCell colSpan={12} className="text-center py-4 text-gray-500 border-b">No player statistics available</TableCell>
                 </TableRow>
               ) : (
-                playersWithStats.map(player => (
+                playersWithStats.map((player, playerIndex) => (
                   <TableRow 
                     key={player.id} 
-                    className="hover:bg-gray-100 cursor-pointer transition-colors duration-150"
+                    className={`hover:bg-gray-100 cursor-pointer transition-colors duration-150 ${playerIndex === playersWithStats.length - 1 ? "" : "border-b"}`}
                     onClick={() => window.location.href = `/player/${player.id}`}
                   >
                     {/* Player column */}
