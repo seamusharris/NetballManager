@@ -331,10 +331,12 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
           const pickUp = parseInt(playerValues.pickUp || '0');
           const infringement = parseInt(playerValues.infringement || '0');
           
-          // Find the most recent stat for this player and quarter
-          const latestStat = gameStats
-            .filter(s => s.quarter === parseInt(quarter) && s.playerId === playerId)
-            .sort((a, b) => b.id - a.id)[0];
+          // Find ANY existing stat for this player and quarter
+          // We'll always update it if it exists instead of creating a new one
+          const existingStat = gameStats.find(s => 
+            s.quarter === parseInt(quarter) && 
+            s.playerId === playerId
+          );
           
           // Basic stat data common to all quarters
           const statData: any = {
@@ -359,12 +361,12 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
             console.log(`Adding rating ${playerRatings[playerId]} to quarter 1 stats for player ${playerId}`);
           }
           
-          if (latestStat) {
-            // Update the existing stat
-            promises.push(apiRequest('PATCH', `/api/gamestats/${latestStat.id}`, statData));
-            console.log(`Updating existing stat ID ${latestStat.id} for player ${playerId}, quarter ${quarter}`);
+          if (existingStat) {
+            // Update the existing stat record instead of creating a new one
+            promises.push(apiRequest('PATCH', `/api/gamestats/${existingStat.id}`, statData));
+            console.log(`Updating existing stat ID ${existingStat.id} for player ${playerId}, quarter ${quarter}`);
           } else {
-            // Create a new stat record
+            // Only create a new stat record if one doesn't exist
             promises.push(apiRequest('POST', '/api/gamestats', statData));
             console.log(`Creating new stat for player ${playerId}, quarter ${quarter}`);
           }
