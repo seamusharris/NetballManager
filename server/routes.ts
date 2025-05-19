@@ -175,10 +175,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Direct database insert for BYE games to bypass schema validation
       if (req.body.isBye === true) {
         try {
-          // Execute raw SQL for BYE games to avoid schema validation issues
+          // Use drizzle SQL to execute a direct insert for BYE games
           const result = await db.execute(
-            sql`INSERT INTO games (date, time, is_bye, completed) 
-                VALUES (${req.body.date}, ${req.body.time}, ${true}, ${false}) 
+            sql`INSERT INTO "games" ("date", "time", "is_bye", "completed", "opponent_id") 
+                VALUES (${req.body.date}, ${req.body.time}, ${true}, ${false}, NULL) 
                 RETURNING *`
           );
           

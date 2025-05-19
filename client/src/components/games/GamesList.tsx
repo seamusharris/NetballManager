@@ -116,7 +116,7 @@ export default function GamesList({
       const gameId = parseInt(gameIdStr);
       
       // Calculate goals by player in each quarter - this is how it's done in the Statistics page too
-      const quarterGoals = {
+      const quarterGoals: Record<number, { for: number; against: number }> = {
         1: { for: 0, against: 0 },
         2: { for: 0, against: 0 },
         3: { for: 0, against: 0 },
@@ -137,8 +137,10 @@ export default function GamesList({
       // Use only the latest stats for calculating quarter goals
       Object.values(latestPlayerStats).forEach(stat => {
         if (stat.quarter >= 1 && stat.quarter <= 4) {
-          quarterGoals[stat.quarter].for += (stat.goalsFor || 0);
-          quarterGoals[stat.quarter].against += (stat.goalsAgainst || 0);
+          // Ensure quarter is treated as a valid key for the record
+          const quarter = stat.quarter as keyof typeof quarterGoals;
+          quarterGoals[quarter].for += (stat.goalsFor || 0);
+          quarterGoals[quarter].against += (stat.goalsAgainst || 0);
         }
       });
       
