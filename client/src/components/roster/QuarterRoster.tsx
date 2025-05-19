@@ -86,7 +86,14 @@ export default function QuarterRoster({
             
             <Select 
               value={assignedPlayerId?.toString() || 'none'} 
-              onValueChange={(value) => value !== 'none' ? onAssignPlayer(position, Number(value)) : null}
+              onValueChange={(value) => {
+                if (value !== 'none') {
+                  onAssignPlayer(position, Number(value));
+                } else {
+                  // Handle clearing position (passing null)
+                  onAssignPlayer(position, 0);
+                }
+              }}
               disabled={isPending}
             >
               <SelectTrigger className="w-full mb-2">

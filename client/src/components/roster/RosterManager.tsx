@@ -328,30 +328,41 @@ export default function RosterManager({
     const quarterKey = quarter as '1' | '2' | '3' | '4';
     
     if (quarterKey in newRosterByQuarter) {
+      // Check if this is a "clear position" action (value of 0 indicates clearing)
+      const actualPlayerId = playerId === 0 ? null : playerId;
+      
       // Create a new quarter object to trigger state update
       newRosterByQuarter[quarterKey] = {
         ...newRosterByQuarter[quarterKey],
-        [position]: playerId
+        [position]: actualPlayerId
       };
       
       // Update the state
       setRosterByQuarter(newRosterByQuarter);
       
-      // Add to pending changes
-      const quarterNum = parseInt(quarter);
-      setPendingChanges(prev => [
-        ...prev.filter(change => 
-          !(change.quarter === quarterNum && change.position === position)
-        ),
-        { quarter: quarterNum, position, playerId }
-      ]);
+      // Only add to pending changes if it's an actual assignment (not clearing)
+      if (actualPlayerId !== null) {
+        const quarterNum = parseInt(quarter);
+        setPendingChanges(prev => [
+          ...prev.filter(change => 
+            !(change.quarter === quarterNum && change.position === position)
+          ),
+          { quarter: quarterNum, position, playerId }
+        ]);
+      } else {
+        // For clearing, just mark that the position is cleared in pending changes
+        const quarterNum = parseInt(quarter);
+        setPendingChanges(prev => 
+          prev.filter(change => !(change.quarter === quarterNum && change.position === position))
+        );
+      }
       
       // Mark that we have unsaved changes
       setHasUnsavedChanges(true);
       
       // Notify parent component about the change for real-time summary updates
       if (onRosterChanged) {
-        onRosterChanged(quarter, position, playerId);
+        onRosterChanged(quarter, position, actualPlayerId);
       }
     }
   };
