@@ -17,8 +17,10 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Progress } from '@/components/ui/progress';
 import { Wand2, Copy, Save } from 'lucide-react';
 import QuarterRoster from './QuarterRoster';
+import ExportButtons from '@/components/common/ExportButtons';
 import { Player, Game, Opponent, Roster, Position } from '@shared/schema';
 import { formatShortDate, allPositions, positionLabels } from '@/lib/utils';
+import { exportRosterToPDF, exportRosterToExcel } from '@/lib/exportUtils';
 
 interface RosterManagerProps {
   players: Player[];
