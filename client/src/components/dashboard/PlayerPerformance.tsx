@@ -1,6 +1,6 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Avatar } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Game, Player, GameStat } from '@shared/schema';
 import { cn, getInitials, generateRandomColor } from '@/lib/utils';
 import { useState, useEffect } from 'react';
@@ -176,7 +176,6 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
   
   // Get players with their stats and sort by rating
   const playersWithStats = players
-    .filter(player => playerStatsMap[player.id])
     .map(player => ({
       ...player,
       stats: playerStatsMap[player.id] || {
@@ -188,8 +187,7 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
         rating: 5.0
       }
     }))
-    .sort((a, b) => b.stats.rating - a.stats.rating)
-    .slice(0, 5); // Display top 5 players
+    .sort((a, b) => b.stats.rating - a.stats.rating); // Show all players, sorted by rating
   
   return (
     <Card className={className}>
@@ -236,7 +234,9 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
                     <td className="px-3 py-2 whitespace-nowrap">
                       <div className="flex items-center">
                         <Avatar className={cn("h-8 w-8 text-white flex items-center justify-center", getAvatarColor(player))}>
-                          <span className="text-xs font-bold">{getInitials(player.firstName, player.lastName)}</span>
+                          <AvatarFallback className="text-white">
+                            {getInitials(player.firstName, player.lastName)}
+                          </AvatarFallback>
                         </Avatar>
                         <div className="ml-3">
                           <p className="text-sm font-medium text-gray-900">{player.displayName}</p>
