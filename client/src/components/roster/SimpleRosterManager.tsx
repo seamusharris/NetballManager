@@ -586,9 +586,9 @@ export default function SimpleRosterManager({
               <Table>
                 <TableHeader>
                   <TableRow className="bg-slate-50">
-                    <TableHead className="w-24 font-bold">Position</TableHead>
+                    <TableHead className="w-24 font-bold">Pos</TableHead>
                     {quarters.map(q => (
-                      <TableHead key={q} className="text-center font-semibold">Quarter {q}</TableHead>
+                      <TableHead key={q} className="text-center font-semibold">Q{q}</TableHead>
                     ))}
                   </TableRow>
                 </TableHeader>
