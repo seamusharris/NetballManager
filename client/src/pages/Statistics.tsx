@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet';
 import { useLocation } from 'wouter';
 import GameStatistics from '@/components/statistics/GameStatistics';
-import BasicStatForm from '@/components/statistics/BasicStatForm';
+import StatisticsForm from '@/components/statistics/StatisticsForm';
 import { Card, CardContent } from '@/components/ui/card';
 import { 
   Select, 
@@ -183,11 +183,11 @@ export default function Statistics() {
             </Card>
             
             {fixedRosters.length > 0 ? (
-              <BasicStatForm
+              <StatisticsForm
                 gameId={selectedGame.id}
                 players={players}
                 rosters={fixedRosters}
-                existingStats={gameStats}
+                gameStats={gameStats}
               />
             ) : (
               <Card className="p-6 text-center">

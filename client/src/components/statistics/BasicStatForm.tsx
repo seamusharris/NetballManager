@@ -198,22 +198,40 @@ export default function BasicStatForm({
     const quarter = activeQuarter;
     const quarterStats = statValues[quarter] || {};
     
+    console.log("Saving quarter", quarter, "with stats:", quarterStats);
+    
     // Convert string values to numbers
     const numericStats: Record<number, Record<string, number>> = {};
     
     Object.entries(quarterStats).forEach(([playerIdStr, fields]) => {
       const playerId = parseInt(playerIdStr);
+      if (isNaN(playerId)) return;
+      
       numericStats[playerId] = {};
       
       Object.entries(fields).forEach(([field, value]) => {
-        numericStats[playerId][field] = value === '' ? 0 : parseInt(value, 10);
+        const numValue = value === '' ? 0 : parseInt(value, 10);
+        if (!isNaN(numValue)) {
+          numericStats[playerId][field] = numValue;
+        } else {
+          numericStats[playerId][field] = 0;
+        }
       });
     });
     
-    saveMutation.mutate({ 
-      quarterKey: quarter, 
-      stats: numericStats 
-    });
+    console.log("Converted to numeric stats:", numericStats);
+    
+    if (Object.keys(numericStats).length > 0) {
+      saveMutation.mutate({ 
+        quarterKey: quarter, 
+        stats: numericStats 
+      });
+    } else {
+      toast({
+        title: "No statistics to save",
+        description: "There are no player statistics to save for this quarter.",
+      });
+    }
   };
   
   // Get player details
@@ -331,13 +349,17 @@ export default function BasicStatForm({
     };
     
     // Calculate from existing stats
-    existingStats.forEach(stat => {
-      const quarterKey = stat.quarter.toString();
-      if (quarterTotals[quarterKey]) {
-        quarterTotals[quarterKey].goalsFor += stat.goalsFor || 0;
-        quarterTotals[quarterKey].goalsAgainst += stat.goalsAgainst || 0;
-      }
-    });
+    if (existingStats && existingStats.length > 0) {
+      existingStats.forEach(stat => {
+        if (!stat || stat.quarter === undefined) return;
+        
+        const quarterKey = String(stat.quarter);
+        if (quarterTotals[quarterKey]) {
+          quarterTotals[quarterKey].goalsFor += (stat.goalsFor || 0);
+          quarterTotals[quarterKey].goalsAgainst += (stat.goalsAgainst || 0);
+        }
+      });
+    }
     
     // Add any unsaved changes from the form
     Object.entries(statValues).forEach(([quarterKey, playerStats]) => {
