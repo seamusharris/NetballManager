@@ -4,10 +4,10 @@
 
 @layer base {
   :root {
-    /* Main color scheme */
-    --primary: 145 44% 20%;            /* #1a5336 */
-    --primary-light: 143 45% 31%;      /* #2a7049 */
-    --primary-dark: 145 55% 14%;       /* #124025 */
+    /* Main color scheme - Blue */
+    --primary: 213 64% 45%;            /* #2563eb Blue-600 */
+    --primary-light: 213 70% 55%;      /* #3b82f6 Blue-500 */
+    --primary-dark: 217 91% 30%;       /* #1e40af Blue-800 */
     --secondary: 355 75% 56%;          /* #e63946 */
     --secondary-light: 353 78% 64%;    /* #eb5d68 */
     --secondary-dark: 355 69% 47%;     /* #c02331 */
@@ -28,38 +28,38 @@
     --popover: 0 0% 100%;
     --popover-foreground: 220 38% 23%;
     
-    --primary: 145 44% 20%;            /* Netball primary */
-    --primary-foreground: 100 14% 97%;
+    --primary: 213 64% 45%;            /* Blue primary */
+    --primary-foreground: 0 0% 100%;
     
     --secondary: 355 75% 56%;          /* Netball secondary */
-    --secondary-foreground: 100 14% 97%;
+    --secondary-foreground: 0 0% 100%;
     
     --muted: 60 5% 96%;
     --muted-foreground: 25 5% 45%;
     
     --accent: 203 38% 45%;             /* Netball accent */
-    --accent-foreground: 100 14% 97%;
+    --accent-foreground: 0 0% 100%;
     
     --destructive: 0 84% 60%;
     --destructive-foreground: 210 20% 98%;
     
     --border: 220 13% 91%;
     --input: 220 13% 91%;
-    --ring: 145 44% 20%;               /* Netball primary */
+    --ring: 213 64% 45%;               /* Blue primary */
     
-    --chart-1: 145 44% 20%;            /* Netball primary */
+    --chart-1: 213 64% 45%;            /* Blue primary */
     --chart-2: 355 75% 56%;            /* Netball secondary */
     --chart-3: 203 38% 45%;            /* Netball accent */
     --chart-4: 142 70% 49%;            /* Success */
     --chart-5: 37 90% 51%;             /* Warning */
     
-    --sidebar-background: 145 44% 20%; /* Netball primary */
-    --sidebar-foreground: 100 14% 97%;
-    --sidebar-primary: 143 45% 31%;    /* Netball primary-light */
+    --sidebar-background: 213 64% 45%; /* Blue primary */
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 213 70% 55%;    /* Blue primary-light */
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 145 55% 14%;     /* Netball primary-dark */
-    --sidebar-accent-foreground: 0 0% 90%;
-    --sidebar-border: 145 55% 14%;     /* Netball primary-dark */
+    --sidebar-accent: 217 91% 30%;     /* Blue primary-dark */
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 217 91% 30%;     /* Blue primary-dark */
     --sidebar-ring: 0 0% 100%;
     
     --radius: 0.5rem;
