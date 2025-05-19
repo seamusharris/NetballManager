@@ -155,6 +155,7 @@ export class MemStorage implements IStorage {
       ...insertPlayer, 
       id,
       active: insertPlayer.active ?? true,
+      dateOfBirth: insertPlayer.dateOfBirth || null,
       positionPreferences: insertPlayer.positionPreferences as Position[]
     };
     this.players.set(id, player);
@@ -169,6 +170,7 @@ export class MemStorage implements IStorage {
     const updatedPlayer: Player = { 
       ...player, 
       ...updatePlayer,
+      dateOfBirth: updatePlayer.dateOfBirth || player.dateOfBirth || null,
       positionPreferences: (updatePlayer.positionPreferences as Position[]) || player.positionPreferences
     };
     this.players.set(id, updatedPlayer);

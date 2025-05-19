@@ -44,8 +44,11 @@ export default function Players() {
   
   const updateMutation = useMutation({
     mutationFn: async ({ id, player }: { id: number, player: any }) => {
+      console.log("Sending update request for player:", id, player);
       const res = await apiRequest('PATCH', `/api/players/${id}`, player);
-      return res.json();
+      const updatedPlayer = await res.json();
+      console.log("Update response:", updatedPlayer);
+      return updatedPlayer;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/players'] });
@@ -56,6 +59,7 @@ export default function Players() {
       setEditingPlayer(null);
     },
     onError: (error) => {
+      console.error("Update player error:", error);
       toast({
         title: "Error",
         description: `Failed to update player: ${error}`,

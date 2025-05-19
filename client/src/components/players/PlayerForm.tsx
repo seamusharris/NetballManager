@@ -197,7 +197,14 @@ export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFor
             <FormItem>
               <FormLabel>Date of Birth</FormLabel>
               <FormControl>
-                <Input type="date" {...field} />
+                <Input 
+                  type="date" 
+                  value={field.value || ''} 
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  name={field.name}
+                  ref={field.ref}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
