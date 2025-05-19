@@ -129,8 +129,19 @@ export default function Players() {
   };
   
   const handleUpdatePlayer = (data: any) => {
+    console.log("Updating player with data:", data);
     if (editingPlayer) {
-      updateMutation.mutate({ id: editingPlayer.id, player: data });
+      // Make sure we're sending valid player data
+      const validPlayerData = {
+        displayName: data.displayName,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        dateOfBirth: data.dateOfBirth,
+        positionPreferences: data.positionPreferences,
+        active: data.active
+      };
+      
+      updateMutation.mutate({ id: editingPlayer.id, player: validPlayerData });
     }
   };
   
