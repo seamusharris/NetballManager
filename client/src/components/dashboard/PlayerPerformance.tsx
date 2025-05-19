@@ -71,90 +71,49 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
   useEffect(() => {
     if (!gameStatsMap || isLoading || players.length === 0) return;
     
-    // Known fixed stats for testing purposes - based on actual game data
-    // This is for game #1 which is the completed game we're using for the app
-    const fixedStats: Record<number, PlayerStats> = {
-      // Isla - player ID 2 - scored most goals in quarter 1
-      2: {
-        playerId: 2,
-        goals: 8,
-        goalsAgainst: 0,
-        missedGoals: 2,
-        rebounds: 0,
-        intercepts: 2,
-        badPass: 1,
-        handlingError: 0,
-        pickUp: 0,
-        infringement: 0,
-        rating: 0 // Will calculate later
-      },
-      // Lucia - player ID 1 - strong defender
-      1: {
-        playerId: 1,
-        goals: 0,
-        goalsAgainst: 3,
-        missedGoals: 0,
-        rebounds: 1,
-        intercepts: 3,
-        badPass: 0,
-        handlingError: 1,
-        pickUp: 0,
-        infringement: 2,
-        rating: 0
-      },
-      // Emily - player ID 7 - good all-around player
-      7: {
-        playerId: 7,
-        goals: 0,
-        goalsAgainst: 0,
-        missedGoals: 0,
-        rebounds: 2,
-        intercepts: 2,
-        badPass: 1,
-        handlingError: 0,
-        pickUp: 1,
-        infringement: 0,
-        rating: 0
-      },
-      // Ollie - player ID 8 - defensive player
-      8: {
-        playerId: 8,
-        goals: 0,
-        goalsAgainst: 2,
-        missedGoals: 0,
-        rebounds: 0,
-        intercepts: 3,
-        badPass: 0,
-        handlingError: 0,
-        pickUp: 0,
-        infringement: 1,
-        rating: 0
-      }
-    };
-    
     const newPlayerStatsMap: Record<number, PlayerStats> = {};
     
-    // Set up all players with default stats first
+    // Initialize all players with zeros
     players.forEach(player => {
-      // If we have fixed stats for this player, use those
-      if (fixedStats[player.id]) {
-        newPlayerStatsMap[player.id] = { ...fixedStats[player.id] };
-      } else {
-        // For players without fixed stats, initialize with zeros
-        newPlayerStatsMap[player.id] = {
-          playerId: player.id,
-          goals: 0,
-          goalsAgainst: 0,
-          missedGoals: 0,
-          rebounds: 0,
-          intercepts: 0,
-          badPass: 0,
-          handlingError: 0,
-          pickUp: 0,
-          infringement: 0,
-          rating: 0
-        };
-      }
+      newPlayerStatsMap[player.id] = {
+        playerId: player.id,
+        goals: 0,
+        goalsAgainst: 0,
+        missedGoals: 0,
+        rebounds: 0,
+        intercepts: 0,
+        badPass: 0,
+        handlingError: 0,
+        pickUp: 0,
+        infringement: 0,
+        rating: 0
+      };
+    });
+    
+    // Process all game stats
+    Object.values(gameStatsMap).forEach(quarterStats => {
+      quarterStats.forEach(stat => {
+        if (!stat || !stat.playerId) return;
+        
+        const playerId = stat.playerId;
+        // Check if player exists in our map
+        if (!newPlayerStatsMap[playerId]) {
+          // This might happen if a stat is for a player not in our player list
+          console.warn(`Stats found for player ${playerId} who is not in the players list`);
+          return;
+        }
+        
+        // Accumulate all the stats
+        newPlayerStatsMap[playerId].goals += stat.goalsFor || 0;
+        newPlayerStatsMap[playerId].goalsAgainst += stat.goalsAgainst || 0;
+        newPlayerStatsMap[playerId].missedGoals += stat.missedGoals || 0;
+        newPlayerStatsMap[playerId].rebounds += stat.rebounds || 0;
+        newPlayerStatsMap[playerId].intercepts += stat.intercepts || 0;
+        newPlayerStatsMap[playerId].badPass += stat.badPass || 0;
+        newPlayerStatsMap[playerId].handlingError += stat.handlingError || 0;
+        newPlayerStatsMap[playerId].pickUp += stat.pickUp || 0;
+        newPlayerStatsMap[playerId].infringement += stat.infringement || 0;
+      });
     });
     
     // Calculate ratings for all players
