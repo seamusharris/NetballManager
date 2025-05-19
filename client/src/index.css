@@ -127,11 +127,11 @@
 
 @layer components {
   .sidebar-link {
-    @apply flex items-center text-sidebar-foreground mb-2 py-2 px-3 rounded-md hover:bg-sidebar-primary transition duration-200;
+    @apply flex items-center bg-sidebar-primary text-white mb-2 py-2 px-3 rounded-md hover:bg-sidebar-accent hover:text-white transition duration-200;
   }
   
   .sidebar-link.active {
-    @apply bg-sidebar-primary text-white;
+    @apply bg-sidebar-accent text-white font-medium;
   }
   
   .stats-input {
