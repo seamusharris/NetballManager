@@ -652,7 +652,7 @@ export default function SimpleRosterManager({
                 <Table>
                   <TableBody>
                     <TableRow>
-                      <TableCell className="font-medium">Bench</TableCell>
+                      <TableCell className="font-medium">Off</TableCell>
                       
                       {quarters.map(quarter => {
                         const quarterKey = quarter.toString() as '1'|'2'|'3'|'4';
@@ -661,24 +661,16 @@ export default function SimpleRosterManager({
                           .filter(player => !Object.values(localRosterState[quarterKey]).includes(player.id));
                         
                         return (
-                          <TableCell key={`bench-${quarter}`} className="p-1 min-w-40">
-                            <Select disabled>
-                              <SelectTrigger className="w-full">
-                                <SelectValue>
-                                  <div className="flex flex-wrap gap-1">
-                                    {playersNotInQuarter.map((player, idx) => (
-                                      <span key={player.id}>
-                                        {idx > 0 ? ', ' : ''}
-                                        {player.displayName}
-                                      </span>
-                                    ))}
-                                    {playersNotInQuarter.length === 0 && (
-                                      <span className="text-slate-400">-</span>
-                                    )}
-                                  </div>
-                                </SelectValue>
-                              </SelectTrigger>
-                            </Select>
+                          <TableCell key={`off-${quarter}`} className="p-1 min-w-40 h-[40px]">
+                            <div className="border border-input bg-background text-sm h-10 px-3 py-2 rounded-md">
+                              {playersNotInQuarter.length > 0 ? (
+                                <div className="truncate">
+                                  {playersNotInQuarter.map(player => player.displayName).join(', ')}
+                                </div>
+                              ) : (
+                                <span className="text-muted-foreground">-</span>
+                              )}
+                            </div>
                           </TableCell>
                         );
                       })}
