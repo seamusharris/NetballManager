@@ -167,7 +167,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/games", async (req, res) => {
     try {
-      const parsedData = insertGameSchema.safeParse(req.body);
+      // Create a custom validation schema that allows opponentId to be null for BYE games
+      const gameValidationSchema = z.object({
+        date: z.string().min(1, "Date is required"),
+        time: z.string().min(1, "Time is required"),
+        opponentId: z.number().nullable(), // Allow null for BYE games
+        completed: z.boolean().default(false),
+        isBye: z.boolean().default(false)
+      }).refine(data => {
+        // If it's a BYE round, opponentId can be null
+        if (data.isBye) return true;
+        // If not a BYE round, opponentId is required
+        return data.opponentId !== null;
+      }, {
+        message: "Opponent is required for non-BYE games",
+        path: ["opponentId"]
+      });
+      
+      const parsedData = gameValidationSchema.safeParse(req.body);
       if (!parsedData.success) {
         return res.status(400).json({ message: "Invalid game data", errors: parsedData.error.errors });
       }
@@ -175,6 +192,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const game = await storage.createGame(parsedData.data);
       res.status(201).json(game);
     } catch (error) {
+      console.error("Game creation error:", error);
       res.status(500).json({ message: "Failed to create game" });
     }
   });
@@ -208,12 +226,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch("/api/games/:id", async (req, res) => {
     try {
       const id = Number(req.params.id);
+      
+      // If we're updating a game to be a BYE round, allow opponentId to be null
+      if (req.body.isBye === true) {
+        // Make opponentId null if updating to BYE game
+        req.body.opponentId = null;
+      } else if (req.body.isBye === false && req.body.opponentId === null) {
+        // Don't allow non-BYE games with null opponent
+        return res.status(400).json({ message: "Opponent is required for non-BYE games" });
+      }
+      
       const updatedGame = await storage.updateGame(id, req.body);
       if (!updatedGame) {
         return res.status(404).json({ message: "Game not found" });
       }
       res.json(updatedGame);
     } catch (error) {
+      console.error("Game update error:", error);
       res.status(500).json({ message: "Failed to update game" });
     }
   });
