@@ -74,46 +74,50 @@ export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFor
   });
   
   const handleSubmit = (values: FormValues) => {
-    // Validate at least one position is selected
-    if (!values.position1) {
-      form.setError("position1", { 
-        type: "required", 
-        message: "Primary position is required" 
-      });
-      return;
+    try {
+      // Validate at least one position is selected
+      if (!values.position1) {
+        form.setError("position1", { 
+          type: "required", 
+          message: "Primary position is required" 
+        });
+        return;
+      }
+      
+      // Construct position preferences array from individual selections
+      const positionPreferences: Position[] = [
+        values.position1 as Position,
+      ];
+      
+      // Only add secondary positions if they're not "none"
+      if (values.position2 !== "none") {
+        positionPreferences.push(values.position2 as Position);
+      }
+      
+      if (values.position3 !== "none") {
+        positionPreferences.push(values.position3 as Position);
+      }
+      
+      if (values.position4 !== "none") {
+        positionPreferences.push(values.position4 as Position);
+      }
+      
+      // Remove position fields from the data object
+      const { position1, position2, position3, position4, ...rest } = values;
+      
+      // Construct the final player data object
+      const playerData = {
+        ...rest,
+        positionPreferences,
+      };
+      
+      console.log("Player form submitted with data:", playerData);
+      
+      // Submit the data
+      onSubmit(playerData);
+    } catch (error) {
+      console.error("Error in handleSubmit:", error);
     }
-    
-    // Construct position preferences array from individual selections
-    const positionPreferences: Position[] = [
-      values.position1 as Position,
-    ];
-    
-    // Only add secondary positions if they're not "none"
-    if (values.position2 !== "none") {
-      positionPreferences.push(values.position2 as Position);
-    }
-    
-    if (values.position3 !== "none") {
-      positionPreferences.push(values.position3 as Position);
-    }
-    
-    if (values.position4 !== "none") {
-      positionPreferences.push(values.position4 as Position);
-    }
-    
-    // Remove position fields from the data object
-    const { position1, position2, position3, position4, ...rest } = values;
-    
-    // Construct the final player data object
-    const playerData = {
-      ...rest,
-      positionPreferences,
-    };
-    
-    console.log("Player form submitted with data:", playerData);
-    
-    // Submit the data
-    onSubmit(playerData);
   };
   
   return (
