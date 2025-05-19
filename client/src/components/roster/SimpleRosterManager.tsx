@@ -489,7 +489,7 @@ export default function SimpleRosterManager({
                   </div>
                   <div>
                     <p className="text-sm font-semibold">Opponent: <span className="font-normal">{selectedOpponent.teamName}</span></p>
-                    <p className="text-sm font-semibold">Location: <span className="font-normal">{selectedGame.location}</span></p>
+                    <p className="text-sm font-semibold">Venue: <span className="font-normal">Home game</span></p>
                   </div>
                 </div>
               </div>
@@ -524,7 +524,7 @@ export default function SimpleRosterManager({
                       {[1, 2, 3, 4].filter(q => q !== quarter).map((targetQuarter) => (
                         <Button
                           key={targetQuarter}
-                          size="xs"
+                          size="sm"
                           variant="outline"
                           onClick={() => handleCopyQuarter(quarter.toString(), targetQuarter.toString())}
                           disabled={saveRosterMutation.isPending}
@@ -537,45 +537,40 @@ export default function SimpleRosterManager({
                     </div>
                   </div>
                   
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-[150px]">Position</TableHead>
-                        <TableHead>Player</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {positionOrder.map((position) => (
-                        <TableRow key={position}>
-                          <TableCell className="font-medium">
-                            {positionLabels[position]} ({position})
-                          </TableCell>
-                          <TableCell>
-                            <Select
-                              value={(localRosterState[quarter.toString() as '1' | '2' | '3' | '4'][position] || 0).toString()}
-                              onValueChange={(value) => handleAssignPlayer(quarter.toString(), position, parseInt(value))}
-                              disabled={saveRosterMutation.isPending}
-                            >
-                              <SelectTrigger className="w-full max-w-xs">
-                                <SelectValue placeholder="Select a player" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="0">-- No Player --</SelectItem>
-                                {players
-                                  .filter(player => player.active)
-                                  .filter(player => player.positionPreferences.includes(position))
-                                  .map((player) => (
-                                    <SelectItem key={player.id} value={player.id.toString()}>
-                                      {player.displayName}
-                                    </SelectItem>
-                                  ))}
-                              </SelectContent>
-                            </Select>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                  <div className="grid grid-cols-7 gap-2">
+                    {/* Headers */}
+                    {positionOrder.map((position) => (
+                      <div key={position} className="text-center font-medium text-sm">
+                        {position}
+                      </div>
+                    ))}
+                    
+                    {/* Player selectors */}
+                    {positionOrder.map((position) => (
+                      <div key={position} className="w-full">
+                        <Select
+                          value={(localRosterState[quarter.toString() as '1' | '2' | '3' | '4'][position] || 0).toString()}
+                          onValueChange={(value) => handleAssignPlayer(quarter.toString(), position, parseInt(value))}
+                          disabled={saveRosterMutation.isPending}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="0">-- No Player --</SelectItem>
+                            {players
+                              .filter(player => player.active)
+                              .filter(player => player.positionPreferences.includes(position))
+                              .map((player) => (
+                                <SelectItem key={player.id} value={player.id.toString()}>
+                                  {player.displayName}
+                                </SelectItem>
+                              ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               ))}
             </div>
