@@ -37,6 +37,14 @@ export default function QuarterRoster({
     return players.find(p => p.id === playerId) || null;
   };
   
+  // Filter players by position preference
+  const filterPlayersByPosition = (playersList: Player[], position: Position) => {
+    // Return players who have this position in their preferences
+    return playersList.filter(player => 
+      (player.positionPreferences as Position[]).includes(position)
+    );
+  };
+  
   // Find the player's position preference rank
   const getPreferenceRank = (player: Player | null, position: Position) => {
     if (!player) return null;
@@ -64,10 +72,14 @@ export default function QuarterRoster({
       {positions.map(position => {
         const assignedPlayerId = assignments[position];
         const assignedPlayer = getPlayer(assignedPlayerId);
-        const availablePlayers = availablePlayersForPosition(position, assignedPlayerId);
+        // Filter by position preference first, then by availability
+        const availablePlayers = filterPlayersByPosition(
+          availablePlayersForPosition(position, assignedPlayerId),
+          position
+        );
         
         return (
-          <div key={position} className="bg-gray-50 p-4 rounded-lg border-l-4 border-primary">
+          <div key={position} className="bg-gray-50 p-4 rounded-lg">
             <h4 className="font-semibold mb-2 text-neutral-dark">
               {positionLabels[position]} ({position})
             </h4>

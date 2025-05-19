@@ -328,24 +328,36 @@ export default function RosterManager({
               </div>
             </div>
             
-            {/* Netball court background with roster status */}
-            <div className="mb-6 relative h-48 rounded-lg overflow-hidden">
-              <img 
-                src="https://images.unsplash.com/photo-1560089000-7433a4ebbd64?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&h=300" 
-                alt="Netball court during game" 
-                className="w-full h-full object-cover" 
-              />
-              <div className="absolute inset-0 bg-gradient-to-r from-primary/70 to-transparent flex items-center p-8">
-                <div className="text-white max-w-md">
-                  <h4 className="text-xl font-bold mb-2">Roster Status</h4>
-                  <p className="text-sm mb-4">
-                    Quarter 1: {positionsFilledByQuarter['1'] || 0}/7 positions filled<br />
-                    Quarter 2: {positionsFilledByQuarter['2'] || 0}/7 positions filled<br />
-                    Quarter 3: {positionsFilledByQuarter['3'] || 0}/7 positions filled<br />
-                    Quarter 4: {positionsFilledByQuarter['4'] || 0}/7 positions filled
-                  </p>
-                  <Progress value={completionPercentage} className="h-2 bg-white/30" />
-                  <p className="text-xs mt-2">{filledPositions}/{totalPositions} positions filled</p>
+            {/* Roster status card */}
+            <div className="mb-6 bg-gray-50 rounded-lg p-6 border border-gray-100">
+              <div className="flex flex-col md:flex-row justify-between">
+                <div>
+                  <h4 className="text-xl font-bold mb-3 text-neutral-dark">Roster Status</h4>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
+                    <div className="bg-white p-3 rounded border border-gray-100">
+                      <div className="text-sm text-gray-500">Quarter 1</div>
+                      <div className="font-semibold">{positionsFilledByQuarter['1'] || 0}/7 positions</div>
+                    </div>
+                    <div className="bg-white p-3 rounded border border-gray-100">
+                      <div className="text-sm text-gray-500">Quarter 2</div>
+                      <div className="font-semibold">{positionsFilledByQuarter['2'] || 0}/7 positions</div>
+                    </div>
+                    <div className="bg-white p-3 rounded border border-gray-100">
+                      <div className="text-sm text-gray-500">Quarter 3</div>
+                      <div className="font-semibold">{positionsFilledByQuarter['3'] || 0}/7 positions</div>
+                    </div>
+                    <div className="bg-white p-3 rounded border border-gray-100">
+                      <div className="text-sm text-gray-500">Quarter 4</div>
+                      <div className="font-semibold">{positionsFilledByQuarter['4'] || 0}/7 positions</div>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex flex-col justify-center items-center mt-4 md:mt-0">
+                  <div className="text-3xl font-bold text-primary mb-2">
+                    {Math.round(completionPercentage)}%
+                  </div>
+                  <Progress value={completionPercentage} className="h-2 w-24 mb-2" />
+                  <p className="text-xs text-gray-500">{filledPositions}/{totalPositions} positions filled</p>
                 </div>
               </div>
             </div>
