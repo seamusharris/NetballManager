@@ -124,56 +124,59 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
     });
   };
   
-  // Save stats mutation
+  // Save stats mutation for ALL quarters
   const saveMutation = useMutation({
     mutationFn: async () => {
-      const quarter = activeQuarter;
-      const quarterValues = formValues[quarter] || {};
+      const quarters = ['1', '2', '3', '4'];
       const promises = [];
       
-      for (const playerIdStr in quarterValues) {
-        const playerId = parseInt(playerIdStr);
-        if (isNaN(playerId)) continue;
+      // Process all quarters
+      for (const quarter of quarters) {
+        const quarterValues = formValues[quarter] || {};
         
-        const playerValues = quarterValues[playerId];
-        
-        // Convert values to numbers
-        const goalsFor = parseInt(playerValues.goalsFor || '0');
-        const goalsAgainst = parseInt(playerValues.goalsAgainst || '0');
-        
-        // Find existing stat
-        const existingStat = gameStats.find(
-          s => s && s.gameId === gameId && s.playerId === playerId && s.quarter === parseInt(quarter)
-        );
-        
-        // Parse all values from form
-        const missedGoals = parseInt(playerValues.missedGoals || '0');
-        const rebounds = parseInt(playerValues.rebounds || '0');
-        const intercepts = parseInt(playerValues.intercepts || '0');
-        const badPass = parseInt(playerValues.badPass || '0');
-        const handlingError = parseInt(playerValues.handlingError || '0');
-        const infringement = parseInt(playerValues.infringement || '0');
-        
-        const statData = {
-          gameId,
-          playerId,
-          quarter: parseInt(quarter),
-          goalsFor,
-          goalsAgainst,
-          missedGoals,
-          rebounds,
-          intercepts,
-          badPass,
-          handlingError,
-          infringement
-        };
-        
-        if (existingStat) {
-          // Update existing
-          promises.push(apiRequest('PATCH', `/api/gamestats/${existingStat.id}`, statData));
-        } else {
-          // Create new
-          promises.push(apiRequest('POST', '/api/gamestats', statData));
+        for (const playerIdStr in quarterValues) {
+          const playerId = parseInt(playerIdStr);
+          if (isNaN(playerId)) continue;
+          
+          const playerValues = quarterValues[playerId];
+          if (!playerValues) continue;
+          
+          // Convert values to numbers
+          const goalsFor = parseInt(playerValues.goalsFor || '0');
+          const goalsAgainst = parseInt(playerValues.goalsAgainst || '0');
+          const missedGoals = parseInt(playerValues.missedGoals || '0');
+          const rebounds = parseInt(playerValues.rebounds || '0');
+          const intercepts = parseInt(playerValues.intercepts || '0');
+          const badPass = parseInt(playerValues.badPass || '0');
+          const handlingError = parseInt(playerValues.handlingError || '0');
+          const infringement = parseInt(playerValues.infringement || '0');
+          
+          // Find existing stat
+          const existingStat = gameStats.find(
+            s => s && s.gameId === gameId && s.playerId === playerId && s.quarter === parseInt(quarter)
+          );
+          
+          const statData = {
+            gameId,
+            playerId,
+            quarter: parseInt(quarter),
+            goalsFor,
+            goalsAgainst,
+            missedGoals,
+            rebounds,
+            intercepts,
+            badPass,
+            handlingError,
+            infringement
+          };
+          
+          if (existingStat) {
+            // Update existing
+            promises.push(apiRequest('PATCH', `/api/gamestats/${existingStat.id}`, statData));
+          } else {
+            // Create new
+            promises.push(apiRequest('POST', '/api/gamestats', statData));
+          }
         }
       }
       
