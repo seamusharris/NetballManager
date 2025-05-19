@@ -129,7 +129,7 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
         goals: 0,
         rebounds: 0,
         intercepts: 0,
-        position: player.positions.split(',')[0],
+        position: player.positionPreferences[0] || 'GS',
         rating: 5.0
       }
     }))
