@@ -1,5 +1,6 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Game, Player, GameStat } from '@shared/schema';
 import { cn, getInitials } from '@/lib/utils';
 import { useState, useEffect } from 'react';
@@ -261,19 +262,38 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
       }
     });
   
-  // Column definitions
-  const columns = [
-    { field: 'name', label: 'Player' },
-    { field: 'goals', label: 'Goals' },
-    { field: 'goalsAgainst', label: 'Opp Goals' },
-    { field: 'missedGoals', label: 'Missed' },
-    { field: 'rebounds', label: 'Rebounds' },
-    { field: 'intercepts', label: 'Intercepts' },
-    { field: 'badPass', label: 'Bad Pass' },
-    { field: 'handlingError', label: 'Errors' },
-    { field: 'pickUp', label: 'Pick Up' },
-    { field: 'infringement', label: 'Infr.' },
-    { field: 'rating', label: 'Rating' },
+  // Column definitions with categories
+  const statCategories = [
+    { 
+      name: 'Rating', 
+      fields: [
+        { field: 'rating', label: 'Rating' },
+      ]
+    },
+    { 
+      name: 'Shooting', 
+      fields: [
+        { field: 'goals', label: 'Goals' },
+        { field: 'missedGoals', label: 'Missed' },
+        { field: 'goalsAgainst', label: 'Opp' },
+      ]
+    },
+    { 
+      name: 'Defense', 
+      fields: [
+        { field: 'rebounds', label: 'Reb' },
+        { field: 'intercepts', label: 'Int' },
+      ]
+    },
+    { 
+      name: 'Errors', 
+      fields: [
+        { field: 'badPass', label: 'Pass' },
+        { field: 'handlingError', label: 'Hand' },
+        { field: 'pickUp', label: 'Pick' },
+        { field: 'infringement', label: 'Infr' },
+      ]
+    },
   ];
   
   // Helper to render sort indicator
@@ -306,51 +326,65 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
         </div>
         
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead>
-              <tr>
-                {columns.map((column) => (
-                  <th 
-                    key={column.field}
-                    className={cn(
-                      "px-3 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-50",
-                      column.field === 'name' ? "text-left" : "text-center",
-                      sortConfig.field === column.field ? "bg-gray-50" : ""
-                    )}
-                    onClick={() => handleSort(column.field as SortField)}
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-slate-50">
+                <TableHead className="min-w-[120px]">Player</TableHead>
+                <TableHead className="text-center w-10 border-r"></TableHead>
+                
+                {/* Stat category headers */}
+                {statCategories.map((category, index) => (
+                  <TableHead 
+                    key={category.name} 
+                    colSpan={category.fields.length}
+                    className={`text-center bg-blue-50 border-r ${index === 0 ? 'border-l' : ''}`}
                   >
-                    <span className="flex items-center justify-center">
-                      {column.field === 'name' ? (
-                        <span className="flex items-center justify-start">
-                          {column.label} {renderSortIndicator(column.field as SortField)}
-                        </span>
-                      ) : (
-                        <span className="flex items-center justify-center">
-                          {column.label} {renderSortIndicator(column.field as SortField)}
-                        </span>
-                      )}
-                    </span>
-                  </th>
+                    {category.name}
+                  </TableHead>
                 ))}
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+              </TableRow>
+              
+              {/* Stat field headers */}
+              <TableRow>
+                <TableHead></TableHead>
+                <TableHead className="border-r"></TableHead>
+                
+                {statCategories.map((category, categoryIndex) => (
+                  category.fields.map((field, fieldIndex) => {
+                    // Add right border to last column in each category
+                    const isLastInCategory = fieldIndex === category.fields.length - 1;
+                    return (
+                      <TableHead 
+                        key={field.field}
+                        className={`text-center px-1 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-50 ${isLastInCategory ? 'border-r' : ''} ${sortConfig.field === field.field ? 'bg-gray-50' : ''}`}
+                        onClick={() => handleSort(field.field as SortField)}
+                      >
+                        {field.label} {renderSortIndicator(field.field as SortField)}
+                      </TableHead>
+                    );
+                  })
+                ))}
+              </TableRow>
+            </TableHeader>
+            
+            <TableBody className="bg-white divide-y divide-gray-200">
               {isLoading ? (
-                <tr>
-                  <td colSpan={11} className="text-center py-4 text-gray-500">Loading player statistics...</td>
-                </tr>
+                <TableRow>
+                  <TableCell colSpan={12} className="text-center py-4 text-gray-500">Loading player statistics...</TableCell>
+                </TableRow>
               ) : playersWithStats.length === 0 ? (
-                <tr>
-                  <td colSpan={11} className="text-center py-4 text-gray-500">No player statistics available</td>
-                </tr>
+                <TableRow>
+                  <TableCell colSpan={12} className="text-center py-4 text-gray-500">No player statistics available</TableCell>
+                </TableRow>
               ) : (
                 playersWithStats.map(player => (
-                  <tr 
+                  <TableRow 
                     key={player.id} 
                     className="hover:bg-gray-100 cursor-pointer transition-colors duration-150"
                     onClick={() => window.location.href = `/player/${player.id}`}
                   >
-                    <td className="px-3 py-2 whitespace-nowrap">
+                    {/* Player column */}
+                    <TableCell className="px-3 py-2 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className={cn("h-8 w-8 rounded-full flex items-center justify-center text-white", getAvatarColor(player))}>
                           <span className="text-xs font-semibold">
@@ -363,28 +397,56 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
                           </span>
                         </div>
                       </div>
-                    </td>
-                    <td className="px-3 py-2 whitespace-nowrap text-sm text-center font-mono">{player.stats.goals}</td>
-                    <td className="px-3 py-2 whitespace-nowrap text-sm text-center font-mono">{player.stats.goalsAgainst}</td>
-                    <td className="px-3 py-2 whitespace-nowrap text-sm text-center font-mono">{player.stats.missedGoals}</td>
-                    <td className="px-3 py-2 whitespace-nowrap text-sm text-center font-mono">{player.stats.rebounds}</td>
-                    <td className="px-3 py-2 whitespace-nowrap text-sm text-center font-mono">{player.stats.intercepts}</td>
-                    <td className="px-3 py-2 whitespace-nowrap text-sm text-center font-mono">{player.stats.badPass}</td>
-                    <td className="px-3 py-2 whitespace-nowrap text-sm text-center font-mono">{player.stats.handlingError}</td>
-                    <td className="px-3 py-2 whitespace-nowrap text-sm text-center font-mono">{player.stats.pickUp}</td>
-                    <td className="px-3 py-2 whitespace-nowrap text-sm text-center font-mono">{player.stats.infringement}</td>
-                    <td className="px-3 py-2 whitespace-nowrap text-center">
+                    </TableCell>
+                    
+                    <TableCell className="border-r"></TableCell>
+                    
+                    {/* Rating - now first */}
+                    <TableCell className="px-2 py-2 whitespace-nowrap text-center border-r">
                       <div className="flex items-center justify-center">
                         <span className={cn("px-2 py-1 text-xs font-semibold rounded-full", getRatingClass(player.stats.rating))}>
                           {player.stats.rating.toFixed(1)}
                         </span>
                       </div>
-                    </td>
-                  </tr>
+                    </TableCell>
+                    
+                    {/* Shooting stats */}
+                    <TableCell className="px-2 py-2 whitespace-nowrap text-sm text-center font-mono">
+                      {player.stats.goals}
+                    </TableCell>
+                    <TableCell className="px-2 py-2 whitespace-nowrap text-sm text-center font-mono">
+                      {player.stats.missedGoals}
+                    </TableCell>
+                    <TableCell className="px-2 py-2 whitespace-nowrap text-sm text-center font-mono border-r">
+                      {player.stats.goalsAgainst}
+                    </TableCell>
+                    
+                    {/* Defense stats */}
+                    <TableCell className="px-2 py-2 whitespace-nowrap text-sm text-center font-mono">
+                      {player.stats.rebounds}
+                    </TableCell>
+                    <TableCell className="px-2 py-2 whitespace-nowrap text-sm text-center font-mono border-r">
+                      {player.stats.intercepts}
+                    </TableCell>
+                    
+                    {/* Errors stats */}
+                    <TableCell className="px-2 py-2 whitespace-nowrap text-sm text-center font-mono">
+                      {player.stats.badPass}
+                    </TableCell>
+                    <TableCell className="px-2 py-2 whitespace-nowrap text-sm text-center font-mono">
+                      {player.stats.handlingError}
+                    </TableCell>
+                    <TableCell className="px-2 py-2 whitespace-nowrap text-sm text-center font-mono">
+                      {player.stats.pickUp}
+                    </TableCell>
+                    <TableCell className="px-2 py-2 whitespace-nowrap text-sm text-center font-mono border-r">
+                      {player.stats.infringement}
+                    </TableCell>
+                  </TableRow>
                 ))
               )}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
       </CardContent>
     </Card>
