@@ -347,11 +347,13 @@ export default function RosterManager({
       });
     });
     
-    // Submit all the assignments to the database
+    // Convert to a flat array of all assignments to make sequentially
+    const assignments: {quarter: number, position: Position, playerId: number}[] = [];
+    
     Object.entries(newRoster).forEach(([quarter, positions]) => {
       Object.entries(positions).forEach(([position, playerId]) => {
         if (playerId !== null) {
-          saveRosterMutation.mutate({
+          assignments.push({
             quarter: parseInt(quarter),
             position: position as Position,
             playerId: playerId
@@ -360,10 +362,64 @@ export default function RosterManager({
       });
     });
     
-    toast({
-      title: "Auto-fill Complete",
-      description: "Players have been assigned to all positions based on their preferences",
-    });
+    // Create a function to process assignments sequentially with a slight delay
+    const processAssignments = async () => {
+      toast({
+        title: "Auto-fill In Progress",
+        description: "Assigning players to positions...",
+      });
+      
+      for (let i = 0; i < assignments.length; i++) {
+        const assignment = assignments[i];
+        
+        // Check if there's an existing roster assignment for this position and quarter
+        const existingRoster = rosters.find(r => 
+          r.gameId === selectedGameId && 
+          r.quarter === assignment.quarter && 
+          r.position === assignment.position
+        );
+        
+        if (existingRoster) {
+          // Update existing roster assignment
+          await apiRequest('PATCH', `/api/rosters/${existingRoster.id}`, {
+            playerId: assignment.playerId
+          });
+        } else {
+          // Create new roster assignment
+          await apiRequest('POST', '/api/rosters', {
+            gameId: selectedGameId,
+            quarter: assignment.quarter,
+            position: assignment.position,
+            playerId: assignment.playerId
+          });
+        }
+        
+        // Update our local state for immediate UI update
+        const newRosterByQuarter = { ...rosterByQuarter };
+        const quarterKey = assignment.quarter.toString() as '1' | '2' | '3' | '4';
+        
+        newRosterByQuarter[quarterKey] = {
+          ...newRosterByQuarter[quarterKey],
+          [assignment.position]: assignment.playerId
+        };
+        
+        setRosterByQuarter(newRosterByQuarter);
+        
+        // Small delay to avoid overwhelming the server
+        await new Promise(resolve => setTimeout(resolve, 25));
+      }
+      
+      // Refresh the roster data after all assignments are complete
+      queryClient.invalidateQueries({ queryKey: ['/api/games', selectedGameId, 'rosters'] });
+      
+      toast({
+        title: "Auto-fill Complete",
+        description: `Successfully assigned ${assignments.length} positions across all quarters`,
+      });
+    };
+    
+    // Start processing assignments
+    processAssignments();
   };
   
   // Copy roster from one quarter to another
