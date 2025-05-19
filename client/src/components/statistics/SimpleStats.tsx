@@ -279,7 +279,29 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
           
           ratingPromises.push(ratingUpdatePromise);
         } else {
-          console.log(`WARNING: No quarter 1 stat found for player ${playerId}, cannot update rating ${rating}`);
+          console.log(`WARNING: No quarter 1 stat found for player ${playerId}, creating new stat with rating ${rating}`);
+          
+          // Special case: If a player doesn't have quarter 1 stats (like Abbey N), 
+          // create a new stat record for them in quarter 1 with the rating
+          const newStatData = {
+            gameId,
+            playerId,
+            quarter: 1,
+            goalsFor: 0,
+            goalsAgainst: 0,
+            missedGoals: 0,
+            rebounds: 0,
+            intercepts: 0,
+            badPass: 0,
+            handlingError: 0,
+            pickUp: 0,
+            infringement: 0,
+            rating: rating
+          };
+          
+          // Create a new stat record for quarter 1 with the rating
+          const createRatingPromise = apiRequest('POST', '/api/gamestats', newStatData);
+          ratingPromises.push(createRatingPromise);
         }
       });
       
