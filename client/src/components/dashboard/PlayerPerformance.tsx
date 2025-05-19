@@ -349,7 +349,11 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
                 </tr>
               ) : (
                 playersWithStats.map(player => (
-                  <tr key={player.id} className="hover:bg-gray-50">
+                  <tr 
+                    key={player.id} 
+                    className="hover:bg-gray-100 cursor-pointer transition-colors duration-150"
+                    onClick={() => window.location.href = `/player/${player.id}`}
+                  >
                     <td className="px-3 py-2 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className={cn("h-8 w-8 rounded-full flex items-center justify-center text-white", getAvatarColor(player))}>
@@ -358,12 +362,9 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
                           </span>
                         </div>
                         <div className="ml-3">
-                          <a 
-                            href={`/player/${player.id}`}
-                            className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline"
-                          >
+                          <span className="text-sm font-medium text-blue-600">
                             {player.displayName}
-                          </a>
+                          </span>
                         </div>
                       </div>
                     </td>
