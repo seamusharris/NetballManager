@@ -608,6 +608,7 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
           <TabsTrigger value="2">Q2</TabsTrigger>
           <TabsTrigger value="3">Q3</TabsTrigger>
           <TabsTrigger value="4">Q4</TabsTrigger>
+          <TabsTrigger value="total">Game Totals</TabsTrigger>
         </TabsList>
         
         {['1', '2', '3', '4'].map(quarter => (
@@ -625,6 +626,83 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
             </div>
           </TabsContent>
         ))}
+        
+        <TabsContent value="total">
+          <div className="space-y-4">
+            <Card className="p-6">
+              <h3 className="text-lg font-semibold mb-4">Game Totals</h3>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Player</th>
+                      <th scope="col" className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Goals</th>
+                      <th scope="col" className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Goals Against</th>
+                      <th scope="col" className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Missed</th>
+                      <th scope="col" className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Rebounds</th>
+                      <th scope="col" className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Intercepts</th>
+                      <th scope="col" className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Bad Pass</th>
+                      <th scope="col" className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Handling</th>
+                      <th scope="col" className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Pick Up</th>
+                      <th scope="col" className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Infringement</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {Object.keys(gameTotals).length === 0 ? (
+                      <tr>
+                        <td colSpan={10} className="px-6 py-4 text-center text-gray-500">
+                          No statistics recorded yet
+                        </td>
+                      </tr>
+                    ) : (
+                      players
+                        .filter(player => gameTotals[player.id] && 
+                          (gameTotals[player.id].goalsFor > 0 || 
+                           gameTotals[player.id].goalsAgainst > 0 ||
+                           gameTotals[player.id].missedGoals > 0 ||
+                           gameTotals[player.id].rebounds > 0 ||
+                           gameTotals[player.id].intercepts > 0 ||
+                           gameTotals[player.id].badPass > 0 ||
+                           gameTotals[player.id].handlingError > 0 ||
+                           gameTotals[player.id].pickUp > 0 ||
+                           gameTotals[player.id].infringement > 0))
+                        .map(player => {
+                          const stats = gameTotals[player.id];
+                          const positions = [];
+                          for (let q = 1; q <= 4; q++) {
+                            const pos = getPlayerPosition(String(q), player.id);
+                            if (pos && !positions.includes(pos)) {
+                              positions.push(pos);
+                            }
+                          }
+                          
+                          return (
+                            <tr key={player.id}>
+                              <td className="px-3 py-4 whitespace-nowrap">
+                                <div className="flex flex-col">
+                                  <div className="text-sm font-medium text-gray-900">{player.displayName}</div>
+                                  <div className="text-xs text-gray-500">{positions.join(', ')}</div>
+                                </div>
+                              </td>
+                              <td className="px-3 py-4 whitespace-nowrap text-sm text-center">{stats.goalsFor}</td>
+                              <td className="px-3 py-4 whitespace-nowrap text-sm text-center">{stats.goalsAgainst}</td>
+                              <td className="px-3 py-4 whitespace-nowrap text-sm text-center">{stats.missedGoals}</td>
+                              <td className="px-3 py-4 whitespace-nowrap text-sm text-center">{stats.rebounds}</td>
+                              <td className="px-3 py-4 whitespace-nowrap text-sm text-center">{stats.intercepts}</td>
+                              <td className="px-3 py-4 whitespace-nowrap text-sm text-center">{stats.badPass}</td>
+                              <td className="px-3 py-4 whitespace-nowrap text-sm text-center">{stats.handlingError}</td>
+                              <td className="px-3 py-4 whitespace-nowrap text-sm text-center">{stats.pickUp}</td>
+                              <td className="px-3 py-4 whitespace-nowrap text-sm text-center">{stats.infringement}</td>
+                            </tr>
+                          );
+                        })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+          </div>
+        </TabsContent>
       </Tabs>
     </div>
   );
