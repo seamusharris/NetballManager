@@ -1,15 +1,28 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Roster, Player, Position } from '@shared/schema';
 import { positionLabels } from '@/lib/utils';
+import { useQuery } from '@tanstack/react-query';
 
 interface RosterSummaryProps {
   rosters: Roster[];
   players: Player[];
+  selectedGameId: number | null;
 }
 
-export default function RosterSummary({ rosters, players }: RosterSummaryProps) {
+export default function RosterSummary({ rosters, players, selectedGameId }: RosterSummaryProps) {
+  // Using the roster data passed from parent component
+  const [rosterData, setRosterData] = useState<Roster[]>([]);
+  
+  useEffect(() => {
+    // Filter rosters for current game
+    if (selectedGameId) {
+      const gameRosters = rosters.filter(r => r.gameId === selectedGameId);
+      console.log("Game rosters for summary:", gameRosters);
+      setRosterData(gameRosters);
+    }
+  }, [rosters, selectedGameId]);
   // Create a map for quick player lookups
   const playerMap = players.reduce((map, player) => {
     map[player.id] = player;
@@ -29,10 +42,17 @@ export default function RosterSummary({ rosters, players }: RosterSummaryProps) 
   
   // Fill in the roster assignments
   rosters.forEach(roster => {
-    if (roster.quarter >= 1 && roster.quarter <= 4 && positionOrder.includes(roster.position as Position)) {
-      quarterPositions[roster.quarter][roster.position as Position] = roster.playerId;
+    if (roster.quarter >= 1 && roster.quarter <= 4) {
+      // Make sure we're handling the position correctly
+      const position = roster.position as Position;
+      if (positionOrder.includes(position)) {
+        quarterPositions[roster.quarter][position] = roster.playerId;
+      }
     }
   });
+  
+  // Debug console
+  console.log("Roster summary data:", rosters);
   
   return (
     <Card className="mb-6">
