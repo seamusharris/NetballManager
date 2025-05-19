@@ -155,28 +155,17 @@ export default function SimpleRosterManager({
       return newState;
     });
     
-    // Only add to pending changes if it's an actual assignment (not clearing)
-    if (actualPlayerId !== null) {
-      const quarterNum = parseInt(quarter);
-      setPendingChanges(prev => [
-        ...prev.filter(change => 
-          !(change.quarter === quarterNum && change.position === position)
-        ),
-        { quarter: quarterNum, position, playerId: actualPlayerId }
-      ]);
-    } else {
-      // For clearing, just mark that the position is cleared in pending changes
-      const quarterNum = parseInt(quarter);
-      setPendingChanges(prev => 
-        prev.filter(change => !(change.quarter === quarterNum && change.position === position))
-      );
-    }
-    
-    // Mark that we have unsaved changes
+    // Mark that we have unsaved changes - no need to track specific pending changes anymore
+    // as we'll save the entire roster state
     setHasUnsavedChanges(true);
     
     // Log for debugging
     console.log(`Position updated - Quarter: ${quarter}, Position: ${position}, Player: ${actualPlayerId}`);
+    
+    // Call onRosterChanged callback if provided
+    if (onRosterChanged) {
+      onRosterChanged(quarter, position, actualPlayerId);
+    }
   };
 
   // Handle resetting all positions in all quarters
@@ -276,10 +265,7 @@ export default function SimpleRosterManager({
       }
     }
     
-    // Apply the generated assignments to pendingChanges
-    setPendingChanges(assignments);
-    
-    // Update the local state
+      // Update the local state - we no longer need to track pendingChanges separately
     setLocalRosterState(newRosterState);
     
     // Mark as having unsaved changes
@@ -412,17 +398,17 @@ export default function SimpleRosterManager({
   const handleSave = () => {
     if (!selectedGameId) return;
     
-    // Don't save if there are no pending changes
-    if (pendingChanges.length === 0 && hasUnsavedChanges) {
+    // Always save when the user clicks save, regardless of pendingChanges state
+    // This ensures all positions in the current localRosterState are saved
+    if (!hasUnsavedChanges) {
       toast({
         title: "No Changes to Save",
         description: "There are no changes to save to the roster.",
       });
-      setHasUnsavedChanges(false);
       return;
     }
     
-    // Save the roster
+    // Save the roster - this will use the entire localRosterState, not just pendingChanges
     saveRosterMutation.mutate();
   };
 
