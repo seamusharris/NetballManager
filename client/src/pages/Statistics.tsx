@@ -15,21 +15,22 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Game, Player, Opponent, Roster, GameStat } from '@shared/schema';
 
 export default function Statistics() {
-  const [location] = useLocation();
+  const [location, navigate] = useLocation();
   const [selectedGameId, setSelectedGameId] = useState<number | null>(null);
   
-  // Parse game ID from URL query parameter if present
+  // Parse game ID from URL query parameter if present - similar to how Roster page handles it
   useEffect(() => {
-    const params = new URLSearchParams(location.split('?')[1] || '');
-    const gameId = params.get('game');
+    const queryParams = new URLSearchParams(window.location.search);
+    const gameId = queryParams.get('game');
     
-    if (gameId) {
+    if (gameId && !isNaN(Number(gameId))) {
       console.log(`Setting selected game ID to ${gameId} from URL parameter`);
+      // Set the selected game ID
       setSelectedGameId(Number(gameId));
-    } else {
-      console.log('No game ID found in URL parameters');
+      // Replace the URL without the query parameter for cleaner navigation
+      navigate('/statistics', { replace: true });
     }
-  }, [location]);
+  }, [navigate]);
   
   // Type our data with explicit types from the schema
   const { data: games = [], isLoading: isLoadingGames } = useQuery<Game[]>({

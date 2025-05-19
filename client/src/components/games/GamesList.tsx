@@ -255,10 +255,7 @@ export default function GamesList({
                         
                         {game.completed && (
                           <button 
-                            onClick={() => {
-                              // Force a complete page reload to go directly to the statistics page
-                              window.location.replace(`/statistics?game=${game.id}`);
-                            }}
+                            onClick={() => navigate(`/statistics?game=${game.id}`)}
                             className="inline-flex items-center justify-center rounded-md text-xs py-1 px-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground"
                           >
                             <FileText className="h-3 w-3 mr-1" />
