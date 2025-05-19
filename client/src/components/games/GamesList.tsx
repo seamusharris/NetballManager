@@ -260,7 +260,10 @@ export default function GamesList({
                             variant="outline" 
                             size="sm"
                             className="text-xs"
-                            onClick={() => navigate(`/statistics?game=${game.id}`)}
+                            onClick={() => {
+                              // Use the onViewStats callback which is correctly configured to navigate
+                              onViewStats(game.id);
+                            }}
                           >
                             <FileText className="h-3 w-3 mr-1" />
                             View Stats

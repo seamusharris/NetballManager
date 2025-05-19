@@ -20,10 +20,14 @@ export default function Statistics() {
   
   // Parse game ID from URL query parameter if present
   useEffect(() => {
-    const params = new URLSearchParams(location.split('?')[1]);
+    const params = new URLSearchParams(location.split('?')[1] || '');
     const gameId = params.get('game');
+    
     if (gameId) {
+      console.log(`Setting selected game ID to ${gameId} from URL parameter`);
       setSelectedGameId(Number(gameId));
+    } else {
+      console.log('No game ID found in URL parameters');
     }
   }, [location]);
   
@@ -65,6 +69,30 @@ export default function Statistics() {
     }
     
     fetchRosters();
+  }, [selectedGameId]);
+  
+  // Attempt to fetch roster data again when selectedGameId changes
+  useEffect(() => {
+    if (selectedGameId) {
+      console.log(`Loading roster data for game ${selectedGameId}`);
+      fetch(`/api/games/${selectedGameId}/rosters`)
+        .then(res => res.json())
+        .then(data => {
+          console.log(`Directly fetched ${data.length} roster entries for game ${selectedGameId}`);
+          if (Array.isArray(data) && data.length > 0) {
+            data.forEach(entry => {
+              if ('position' in entry && 'playerId' in entry && 'quarter' in entry) {
+                console.log("Found valid roster entry:", entry);
+              }
+            });
+          }
+          setRosterData(data);
+        })
+        .catch(err => {
+          console.error("Error fetching roster data:", err);
+          setRosterData([]);
+        });
+    }
   }, [selectedGameId]);
   
   // Use our manually fetched roster data instead of the query result
