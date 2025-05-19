@@ -77,6 +77,12 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
             
             initialValues[quarter][playerId].goalsFor = String(stat.goalsFor || '0');
             initialValues[quarter][playerId].goalsAgainst = String(stat.goalsAgainst || '0');
+            initialValues[quarter][playerId].missedGoals = String(stat.missedGoals || '0');
+            initialValues[quarter][playerId].rebounds = String(stat.rebounds || '0');
+            initialValues[quarter][playerId].intercepts = String(stat.intercepts || '0');
+            initialValues[quarter][playerId].badPass = String(stat.badPass || '0');
+            initialValues[quarter][playerId].handlingError = String(stat.handlingError || '0');
+            initialValues[quarter][playerId].infringement = String(stat.infringement || '0');
           }
         });
       }
@@ -140,18 +146,26 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
           s => s && s.gameId === gameId && s.playerId === playerId && s.quarter === parseInt(quarter)
         );
         
+        // Parse all values from form
+        const missedGoals = parseInt(playerValues.missedGoals || '0');
+        const rebounds = parseInt(playerValues.rebounds || '0');
+        const intercepts = parseInt(playerValues.intercepts || '0');
+        const badPass = parseInt(playerValues.badPass || '0');
+        const handlingError = parseInt(playerValues.handlingError || '0');
+        const infringement = parseInt(playerValues.infringement || '0');
+        
         const statData = {
           gameId,
           playerId,
           quarter: parseInt(quarter),
           goalsFor,
           goalsAgainst,
-          missedGoals: 0,
-          rebounds: 0,
-          intercepts: 0,
-          badPass: 0,
-          handlingError: 0,
-          infringement: 0
+          missedGoals,
+          rebounds,
+          intercepts,
+          badPass,
+          handlingError,
+          infringement
         };
         
         if (existingStat) {
@@ -284,6 +298,26 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
               type="text"
               value={values.goalsAgainst || '0'}
               onChange={(e) => handleChange(quarter, playerId, 'goalsAgainst', e.target.value)}
+              className="w-full p-2 border rounded-md text-center"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium mb-1">Missed Goals</label>
+            <input
+              type="text"
+              value={values.missedGoals || '0'}
+              onChange={(e) => handleChange(quarter, playerId, 'missedGoals', e.target.value)}
+              className="w-full p-2 border rounded-md text-center"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium mb-1">Rebounds</label>
+            <input
+              type="text"
+              value={values.rebounds || '0'}
+              onChange={(e) => handleChange(quarter, playerId, 'rebounds', e.target.value)}
               className="w-full p-2 border rounded-md text-center"
             />
           </div>
