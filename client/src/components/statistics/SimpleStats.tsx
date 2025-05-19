@@ -188,8 +188,8 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
         description: `Statistics for all quarters have been saved successfully.`
       });
       
-      // Refresh data
-      queryClient.invalidateQueries({ queryKey: ['/api/games', gameId, 'stats'] });
+      // Force reload of statistics by refreshing the page
+      window.location.reload();
     },
     onError: (error: any) => {
       toast({

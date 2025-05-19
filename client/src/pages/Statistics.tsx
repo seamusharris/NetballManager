@@ -101,11 +101,32 @@ export default function Statistics() {
   const rosters = rosterData;
   const isLoadingRosters = loadingRosters;
   
-  // Get statistics for selected game
-  const { data: gameStats = [], isLoading: isLoadingStats } = useQuery<GameStat[]>({
-    queryKey: ['/api/games', selectedGameId, 'stats'],
-    enabled: !!selectedGameId,
-  });
+  // State for game stats
+  const [gameStatsData, setGameStatsData] = useState<GameStat[]>([]);
+  const [loadingGameStats, setLoadingGameStats] = useState(false);
+  
+  // Fetch game statistics when selectedGameId changes
+  useEffect(() => {
+    if (!selectedGameId) return;
+    
+    async function fetchGameStats() {
+      setLoadingGameStats(true);
+      try {
+        const response = await fetch(`/api/games/${selectedGameId}/stats`);
+        if (!response.ok) throw new Error('Failed to fetch game stats');
+        const data = await response.json();
+        console.log(`Loaded ${data.length} game stat entries for game ${selectedGameId}`);
+        setGameStatsData(data);
+      } catch (error) {
+        console.error('Error fetching game stats:', error);
+        setGameStatsData([]);
+      } finally {
+        setLoadingGameStats(false);
+      }
+    }
+    
+    fetchGameStats();
+  }, [selectedGameId]);
   
   // Check to ensure we have valid roster entries with the expected fields
   const hasValidRosterEntries = Array.isArray(rosters) && 
@@ -125,7 +146,7 @@ export default function Statistics() {
   });
   
   const isLoading = isLoadingGames || isLoadingOpponents || isLoadingPlayers || 
-    (selectedGameId ? (isLoadingRosters || isLoadingStats) : false);
+    (selectedGameId ? (isLoadingRosters || loadingGameStats) : false);
   
   // Filter to only completed games for statistics
   const completedGames = games.filter(game => game.completed);
