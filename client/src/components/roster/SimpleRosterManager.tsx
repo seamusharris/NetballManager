@@ -85,11 +85,19 @@ export default function SimpleRosterManager({
     
     // Update our local state directly
     setLocalRosterState(prev => {
-      const newState = {...prev};
-      newState[quarter] = {
-        ...newState[quarter],
-        [position]: actualPlayerId
+      // Create a new state object to avoid direct mutation
+      const newState = {
+        '1': {...prev['1']},
+        '2': {...prev['2']},
+        '3': {...prev['3']},
+        '4': {...prev['4']}
       };
+      
+      // Update the specified position
+      if (quarter === '1' || quarter === '2' || quarter === '3' || quarter === '4') {
+        newState[quarter][position] = actualPlayerId;
+      }
+      
       return newState;
     });
     
@@ -176,9 +184,8 @@ export default function SimpleRosterManager({
           });
           
           // Update our new roster state
-          if (newRosterState[quarter.toString()] && position) {
-            newRosterState[quarter.toString()][position] = playerId;
-          }
+          const quarterKey = quarter.toString() as '1' | '2' | '3' | '4';
+          newRosterState[quarterKey][position] = playerId;
           
           // Increment assignment count
           assignmentCounts[playerId] = (assignmentCounts[playerId] || 0) + 1;
@@ -390,14 +397,33 @@ export default function SimpleRosterManager({
 
   // Create a map to track which players are already selected in a quarter
   const getSelectedPlayersInQuarter = (quarterKey: string) => {
-    if (!localRosterState) return new Set<number>();
-    
     const selectedPlayers = new Set<number>();
-    Object.values(localRosterState[quarterKey] || {}).forEach(playerId => {
-      if (playerId !== null) {
-        selectedPlayers.add(playerId);
-      }
-    });
+    
+    if (quarterKey === '1') {
+      Object.values(localRosterState['1']).forEach(playerId => {
+        if (playerId !== null) {
+          selectedPlayers.add(playerId);
+        }
+      });
+    } else if (quarterKey === '2') {
+      Object.values(localRosterState['2']).forEach(playerId => {
+        if (playerId !== null) {
+          selectedPlayers.add(playerId);
+        }
+      });
+    } else if (quarterKey === '3') {
+      Object.values(localRosterState['3']).forEach(playerId => {
+        if (playerId !== null) {
+          selectedPlayers.add(playerId);
+        }
+      });
+    } else if (quarterKey === '4') {
+      Object.values(localRosterState['4']).forEach(playerId => {
+        if (playerId !== null) {
+          selectedPlayers.add(playerId);
+        }
+      });
+    }
     
     return selectedPlayers;
   };
@@ -530,12 +556,16 @@ export default function SimpleRosterManager({
                           // Get players already selected in this quarter
                           const selectedPlayers = getSelectedPlayersInQuarter(quarterKey);
                           // Get current player in this position for this quarter
-                          const currentPlayerId = localRosterState?.[quarterKey]?.[position] || null;
+                          const currentPlayerId = 
+                            quarterKey === '1' ? localRosterState['1'][position] :
+                            quarterKey === '2' ? localRosterState['2'][position] :
+                            quarterKey === '3' ? localRosterState['3'][position] :
+                            quarterKey === '4' ? localRosterState['4'][position] : null;
                           
                           return (
                             <TableCell key={`${position}-${quarter}`} className="p-1 min-w-40">
                               <Select
-                                value={currentPlayerId ? currentPlayerId.toString() : "0"}
+                                value={currentPlayerId !== null ? currentPlayerId.toString() : "0"}
                                 onValueChange={(value) => handleAssignPlayer(
                                   quarterKey, 
                                   position, 
