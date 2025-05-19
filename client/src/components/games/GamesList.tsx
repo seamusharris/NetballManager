@@ -198,7 +198,7 @@ export default function GamesList({
                 <TableHead className="px-6 py-3 text-left">Date & Time</TableHead>
                 <TableHead className="px-6 py-3 text-left">Opponent</TableHead>
                 <TableHead className="px-6 py-3 text-left">Status</TableHead>
-                <TableHead className="px-6 py-3 text-left">Roster</TableHead>
+                <TableHead className="px-6 py-3 text-left">Options</TableHead>
                 <TableHead className="px-6 py-3 text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -242,15 +242,29 @@ export default function GamesList({
                       </Badge>
                     </TableCell>
                     <TableCell className="px-6 py-4 whitespace-nowrap">
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        className="text-xs"
-                        onClick={() => window.location.href = `/roster?game=${game.id}`}
-                      >
-                        <CalendarRange className="h-3 w-3 mr-1" />
-                        Manage Roster
-                      </Button>
+                      <div className="flex space-x-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          className="text-xs"
+                          onClick={() => window.location.href = `/roster?game=${game.id}`}
+                        >
+                          <CalendarRange className="h-3 w-3 mr-1" />
+                          Manage Roster
+                        </Button>
+                        
+                        {game.completed && (
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            className="text-xs"
+                            onClick={() => window.location.href = `/statistics?game=${game.id}`}
+                          >
+                            <FileText className="h-3 w-3 mr-1" />
+                            View Stats
+                          </Button>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell className="px-6 py-4 whitespace-nowrap text-right text-sm">
                       <div className="flex justify-end space-x-2">
@@ -262,17 +276,6 @@ export default function GamesList({
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
-                        
-                        {game.completed && (
-                          <Button 
-                            variant="ghost" 
-                            size="icon"
-                            className="text-primary hover:text-primary-dark"
-                            onClick={() => window.location.href = `/statistics?game=${game.id}`}
-                          >
-                            <FileText className="h-4 w-4" />
-                          </Button>
-                        )}
                         
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
