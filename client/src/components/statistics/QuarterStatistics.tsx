@@ -69,7 +69,10 @@ export default function QuarterStatistics({
     statName: keyof GameStat, 
     value: string
   ) => {
-    const numericValue = parseInt(value) || 0;
+    // Only allow numbers and empty string
+    if (value !== '' && !/^\d+$/.test(value)) return;
+    
+    const numericValue = value === '' ? 0 : parseInt(value);
     if (numericValue < 0) return; // Don't allow negative values
     
     onStatChange(playerId, statName, numericValue);

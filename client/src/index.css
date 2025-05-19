@@ -9,6 +9,18 @@
   margin: 0 auto;
 }
 
+/* Remove spinner arrows from number inputs */
+.stats-input::-webkit-inner-spin-button,
+.stats-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* For Firefox */
+.stats-input[type=number] {
+  -moz-appearance: textfield;
+}
+
 @layer base {
   :root {
     /* Main color scheme - Blue */
