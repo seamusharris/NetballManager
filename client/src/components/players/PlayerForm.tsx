@@ -27,9 +27,9 @@ const formSchema = insertPlayerSchema.extend({
   position1: z.string().refine((val) => allPositions.includes(val as Position), {
     message: "Please select a valid position",
   }),
-  position2: z.string().optional(),
-  position3: z.string().optional(),
-  position4: z.string().optional(),
+  position2: z.string().default("none"),
+  position3: z.string().default("none"),
+  position4: z.string().default("none"),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -45,14 +45,14 @@ export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFor
   
   // Extract position preferences for default values
   const getPositionDefaults = () => {
-    if (!player) return { position1: "", position2: "", position3: "", position4: "" };
+    if (!player) return { position1: allPositions[0], position2: "none", position3: "none", position4: "none" };
     
     const preferences = player.positionPreferences as Position[];
     return {
-      position1: preferences[0] || "",
-      position2: preferences[1] || "",
-      position3: preferences[2] || "",
-      position4: preferences[3] || "",
+      position1: preferences[0] || allPositions[0],
+      position2: preferences[1] || "none",
+      position3: preferences[2] || "none",
+      position4: preferences[3] || "none",
     };
   };
   
@@ -77,10 +77,20 @@ export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFor
     // Construct position preferences array from individual selections
     const positionPreferences: Position[] = [
       values.position1 as Position,
-      ...(values.position2 ? [values.position2 as Position] : []),
-      ...(values.position3 ? [values.position3 as Position] : []),
-      ...(values.position4 ? [values.position4 as Position] : []),
     ];
+    
+    // Only add secondary positions if they're not "none"
+    if (values.position2 !== "none") {
+      positionPreferences.push(values.position2 as Position);
+    }
+    
+    if (values.position3 !== "none") {
+      positionPreferences.push(values.position3 as Position);
+    }
+    
+    if (values.position4 !== "none") {
+      positionPreferences.push(values.position4 as Position);
+    }
     
     const { position1, position2, position3, position4, ...rest } = values;
     
@@ -92,7 +102,6 @@ export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFor
   
   return (
     <Form {...form}>
-      <h2 className="text-xl font-bold mb-6">{isEditing ? "Edit Player" : "Add New Player"}</h2>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
@@ -188,7 +197,7 @@ export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFor
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Primary Position</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select position" />
@@ -211,14 +220,14 @@ export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFor
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Second Preference</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value || ""}>
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select position" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="">None</SelectItem>
+                      <SelectItem key="none" value="none">None</SelectItem>
                       {allPositions.map(position => (
                         <SelectItem key={position} value={position}>{position}</SelectItem>
                       ))}
@@ -235,14 +244,14 @@ export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFor
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Third Preference</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value || ""}>
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select position" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="">None</SelectItem>
+                      <SelectItem key="none" value="none">None</SelectItem>
                       {allPositions.map(position => (
                         <SelectItem key={position} value={position}>{position}</SelectItem>
                       ))}
@@ -259,14 +268,14 @@ export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFor
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Fourth Preference</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value || ""}>
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select position" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="">None</SelectItem>
+                      <SelectItem key="none" value="none">None</SelectItem>
                       {allPositions.map(position => (
                         <SelectItem key={position} value={position}>{position}</SelectItem>
                       ))}

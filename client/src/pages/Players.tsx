@@ -125,20 +125,32 @@ export default function Players() {
         
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogContent className="sm:max-w-[550px]">
-            <PlayerForm 
-              onSubmit={handleCreatePlayer} 
-              isSubmitting={createMutation.isPending} 
-            />
+            <div className="pt-4">
+              <h2 id="add-player-dialog-title" className="text-lg font-semibold mb-2">Add New Player</h2>
+              <p id="add-player-dialog-description" className="text-sm text-muted-foreground mb-4">
+                Fill out the form below to add a new player to the team.
+              </p>
+              <PlayerForm 
+                onSubmit={handleCreatePlayer} 
+                isSubmitting={createMutation.isPending} 
+              />
+            </div>
           </DialogContent>
         </Dialog>
         
         <Dialog open={!!editingPlayer} onOpenChange={(open) => !open && setEditingPlayer(null)}>
           <DialogContent className="sm:max-w-[550px]">
-            <PlayerForm 
-              player={editingPlayer || undefined}
-              onSubmit={handleUpdatePlayer} 
-              isSubmitting={updateMutation.isPending} 
-            />
+            <div className="pt-4">
+              <h2 id="edit-player-dialog-title" className="text-lg font-semibold mb-2">Edit Player</h2>
+              <p id="edit-player-dialog-description" className="text-sm text-muted-foreground mb-4">
+                Make changes to the player details below.
+              </p>
+              <PlayerForm 
+                player={editingPlayer || undefined}
+                onSubmit={handleUpdatePlayer} 
+                isSubmitting={updateMutation.isPending} 
+              />
+            </div>
           </DialogContent>
         </Dialog>
       </div>
