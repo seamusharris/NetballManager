@@ -146,25 +146,22 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
     setPlayerStatsMap(newPlayerStatsMap);
   }, [gameStatsMap, isLoading, players]);
   
-  // Generate consistent avatar colors based on player names
+  // Generate a fixed color mapping for each player by ID
   const getAvatarColor = (player: Player) => {
-    // Use the player's full name as a seed for the color generator
-    const fullName = `${player.firstName} ${player.lastName}`;
+    // Fixed color mapping by player ID to ensure consistency
+    const colorMap: Record<number, string> = {
+      1: 'bg-blue-500',     // Lucia
+      2: 'bg-purple-500',   // Isla
+      3: 'bg-pink-500',     // JoJo
+      4: 'bg-green-500',    // Abby D
+      5: 'bg-accent',       // Abbey N
+      6: 'bg-secondary',    // Mila
+      7: 'bg-orange-500',   // Emily
+      8: 'bg-primary',      // Ollie
+    };
     
-    // Create deterministic background color from the fullName
-    let hash = 0;
-    for (let i = 0; i < fullName.length; i++) {
-      hash = fullName.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    
-    // Convert to tailwind class color
-    const colorClasses = [
-      'bg-primary-light', 'bg-accent', 'bg-secondary', 
-      'bg-primary', 'bg-accent-dark', 'bg-success', 'bg-warning',
-      'bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-pink-500', 'bg-orange-500'
-    ];
-    
-    return colorClasses[Math.abs(hash) % colorClasses.length];
+    // Return the fixed color or a fallback
+    return colorMap[player.id] || 'bg-primary-light';
   };
   
   const getRatingClass = (rating: number) => {
@@ -233,11 +230,11 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
                   <tr key={player.id}>
                     <td className="px-3 py-2 whitespace-nowrap">
                       <div className="flex items-center">
-                        <Avatar className="h-8 w-8 text-white flex items-center justify-center">
-                          <AvatarFallback className={cn("text-white", getAvatarColor(player))}>
+                        <div className={cn("h-8 w-8 rounded-full flex items-center justify-center text-white", getAvatarColor(player))}>
+                          <span className="text-xs font-semibold">
                             {getInitials(player.firstName, player.lastName)}
-                          </AvatarFallback>
-                        </Avatar>
+                          </span>
+                        </div>
                         <div className="ml-3">
                           <p className="text-sm font-medium text-gray-900">{player.displayName}</p>
                         </div>
