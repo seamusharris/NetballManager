@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from 'react';
 import { 
   Table,
   TableBody,
@@ -7,7 +8,6 @@ import {
   TableRow
 } from '@/components/ui/table';
 import { Avatar } from '@/components/ui/avatar';
-import { Input } from '@/components/ui/input';
 import { Player, GameStat, Position } from '@shared/schema';
 import { getInitials } from '@/lib/utils';
 
@@ -30,6 +30,8 @@ export default function QuarterStatistics({
   isEditable,
   isPending
 }: QuarterStatisticsProps) {
+  // Local state to track input values
+  const [localStats, setLocalStats] = useState<Record<number, Record<string, string>>>({});
   
   // Get player by ID
   const getPlayer = (playerId: number) => {
@@ -63,6 +65,26 @@ export default function QuarterStatistics({
     }
   };
   
+  // Initialize local stats from props
+  useEffect(() => {
+    const initialStats: Record<number, Record<string, string>> = {};
+    
+    // For each player in the stats
+    Object.entries(stats).forEach(([playerIdStr, playerStats]) => {
+      const playerId = Number(playerIdStr);
+      initialStats[playerId] = {};
+      
+      // For each stat field, convert number to string for input
+      Object.entries(playerStats).forEach(([key, value]) => {
+        if (typeof value === 'number') {
+          initialStats[playerId][key] = value.toString();
+        }
+      });
+    });
+    
+    setLocalStats(initialStats);
+  }, [stats]);
+  
   // Handle stat input change
   const handleStatChange = (
     playerId: number, 
@@ -72,6 +94,17 @@ export default function QuarterStatistics({
     // Only allow numbers and empty string
     if (value !== '' && !/^\d+$/.test(value)) return;
     
+    // Update local state first
+    setLocalStats(prev => {
+      const newStats = { ...prev };
+      if (!newStats[playerId]) {
+        newStats[playerId] = {};
+      }
+      newStats[playerId][statName] = value;
+      return newStats;
+    });
+    
+    // Then notify parent with numeric value
     const numericValue = value === '' ? 0 : parseInt(value);
     if (numericValue < 0) return; // Don't allow negative values
     
@@ -80,7 +113,10 @@ export default function QuarterStatistics({
   
   // Get stat value (or default to 0)
   const getStatValue = (playerId: number, statName: keyof GameStat) => {
-    return stats[playerId]?.[statName] || 0;
+    if (localStats[playerId]?.[statName] !== undefined) {
+      return localStats[playerId][statName];
+    }
+    return stats[playerId]?.[statName]?.toString() || '0';
   };
   
   const playersToShow = getPlayersToShow();
