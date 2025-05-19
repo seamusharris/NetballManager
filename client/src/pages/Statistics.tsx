@@ -4,6 +4,7 @@ import { Helmet } from 'react-helmet';
 import { useLocation } from 'wouter';
 import GameStatistics from '@/components/statistics/GameStatistics';
 import SimpleStats from '@/components/statistics/SimpleStats';
+import ExportButtons from '@/components/common/ExportButtons';
 import { Card, CardContent } from '@/components/ui/card';
 import { 
   Select, 
@@ -14,10 +15,13 @@ import {
 } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Game, Player, Opponent, Roster, GameStat } from '@shared/schema';
+import { useToast } from '@/hooks/use-toast';
+import { exportStatsToPDF, exportStatsToExcel } from '@/lib/exportUtils';
 
 export default function Statistics() {
   const [location, navigate] = useLocation();
   const [selectedGameId, setSelectedGameId] = useState<number | null>(null);
+  const { toast } = useToast();
   
   // Parse game ID from URL query parameter if present - similar to how Roster page handles it
   useEffect(() => {
@@ -200,6 +204,35 @@ export default function Statistics() {
                   Game vs. {selectedOpponent.teamName}
                 </h3>
                 <p className="text-gray-600">{selectedGame.date} at {selectedGame.time}</p>
+                
+                {/* Export buttons */}
+                <ExportButtons
+                  onExportPDF={() => {
+                    exportStatsToPDF(
+                      selectedGame,
+                      selectedOpponent,
+                      gameStatsData,
+                      players
+                    );
+                    toast({
+                      title: "Success",
+                      description: "Statistics have been exported to PDF",
+                    });
+                  }}
+                  onExportExcel={() => {
+                    exportStatsToExcel(
+                      selectedGame,
+                      selectedOpponent,
+                      gameStatsData,
+                      players
+                    );
+                    toast({
+                      title: "Success",
+                      description: "Statistics have been exported to Excel",
+                    });
+                  }}
+                  className="mt-2"
+                />
               </CardContent>
             </Card>
             

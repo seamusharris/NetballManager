@@ -639,6 +639,37 @@ export default function RosterManager({
                 <p className="text-gray-500 text-sm">
                   {formatShortDate(selectedGame.date)} • {selectedGame.time}
                 </p>
+                
+                {/* Export Buttons */}
+                {selectedOpponent && (
+                  <ExportButtons
+                    onExportPDF={() => {
+                      exportRosterToPDF(
+                        selectedGame,
+                        selectedOpponent,
+                        rosters.filter(r => r.gameId === selectedGameId),
+                        players
+                      );
+                      toast({
+                        title: "Success",
+                        description: "Roster has been exported to PDF",
+                      });
+                    }}
+                    onExportExcel={() => {
+                      exportRosterToExcel(
+                        selectedGame,
+                        selectedOpponent,
+                        rosters.filter(r => r.gameId === selectedGameId),
+                        players
+                      );
+                      toast({
+                        title: "Success",
+                        description: "Roster has been exported to Excel",
+                      });
+                    }}
+                    className="mt-2"
+                  />
+                )}
               </div>
               <div className="flex space-x-3">
                 {/* Copy Quarter dropdown */}
