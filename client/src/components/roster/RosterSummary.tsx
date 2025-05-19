@@ -23,11 +23,11 @@ export default function RosterSummary({
   
   // Fetch roster data directly from API
   const { data: rosters = [], isLoading, refetch } = useQuery<Roster[]>({
-    queryKey: ['/api/games/' + selectedGameId + '/rosters'],
+    queryKey: ['/api/games', selectedGameId, 'rosters'],
     enabled: !!selectedGameId,
     refetchOnWindowFocus: true,
     staleTime: 0, // Don't use cached data
-    refetchInterval: 1000, // Poll every second for updates
+    // Removed automatic refetch interval to prevent infinite update loop
   });
   
   // Listen for update trigger and refetch when it changes
