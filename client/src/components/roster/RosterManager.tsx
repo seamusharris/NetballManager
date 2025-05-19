@@ -77,13 +77,45 @@ export default function RosterManager({
           const quarterKey = roster.quarter.toString() as '1' | '2' | '3' | '4';
           if (roster.position && allPositions.includes(roster.position as Position)) {
             newRosterByQuarter[quarterKey][roster.position as Position] = roster.playerId;
-            console.log(`Loaded assignment: Quarter ${quarterKey}, Position ${roster.position}, Player ${roster.playerId}`);
           }
         }
       });
       
       // Update state with new roster data
       setRosterByQuarter(newRosterByQuarter);
+      
+      // Make a direct API call to ensure we have the latest data
+      apiRequest('GET', `/api/games/${selectedGameId}/rosters`)
+        .then(response => response.json())
+        .then(data => {
+          if (data && data.length > 0) {
+            console.log(`Directly fetched ${data.length} roster entries for game ${selectedGameId}`);
+            
+            // Create a fresh roster object with the latest data
+            const freshRosterByQuarter = {
+              '1': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
+              '2': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
+              '3': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
+              '4': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null }
+            };
+            
+            // Fill with directly fetched data
+            data.forEach(roster => {
+              if (roster && roster.quarter !== undefined) {
+                const quarterKey = roster.quarter.toString() as '1' | '2' | '3' | '4';
+                if (roster.position && allPositions.includes(roster.position as Position)) {
+                  freshRosterByQuarter[quarterKey][roster.position as Position] = roster.playerId;
+                }
+              }
+            });
+            
+            // Update the state with directly fetched data
+            setRosterByQuarter(freshRosterByQuarter);
+          }
+        })
+        .catch(error => {
+          console.error("Error fetching roster data directly:", error);
+        });
     }
   }, [rosters, selectedGameId]);
   
