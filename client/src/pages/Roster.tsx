@@ -119,14 +119,11 @@ export default function Roster() {
       </Helmet>
       
       {/* Display the Roster Summary if a game is selected */}
-      {selectedGameId && (
-        <RosterSummary 
-          selectedGameId={selectedGameId}
-          updateTrigger={rosterUpdated}
-          localRosterState={localRosterByQuarter} // Pass local roster state
-          players={players}
-        />
-      )}
+      <RosterSummary 
+        selectedGameId={selectedGameId}
+        localRosterState={localRosterByQuarter} // Pass local roster state 
+        players={players}
+      />
       
       <RosterManager 
         players={activePlayers}
