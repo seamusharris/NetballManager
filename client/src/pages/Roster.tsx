@@ -56,11 +56,11 @@ export default function Roster() {
         <meta name="description" content="Manage your netball team roster, assign players to positions for each quarter" />
       </Helmet>
       
-      {/* Display the Roster Summary if a game is selected and we have roster data */}
-      {selectedGameId && rosters.length > 0 && (
+      {/* Display the Roster Summary if a game is selected */}
+      {selectedGameId && (
         <RosterSummary 
-          rosters={rosters}
           players={activePlayers}
+          selectedGameId={selectedGameId}
         />
       )}
       
