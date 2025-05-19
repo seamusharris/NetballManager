@@ -389,6 +389,7 @@ export default function GamesList({
             <TableHeader className="bg-gray-50">
               <TableRow>
                 <TableHead className="px-6 py-3 text-left">Date & Time</TableHead>
+                <TableHead className="px-6 py-3 text-left">Round</TableHead>
                 <TableHead className="px-6 py-3 text-left">Opponent</TableHead>
                 <TableHead className="px-6 py-3 text-left">Status</TableHead>
                 <TableHead className="px-6 py-3 text-left">Final Score</TableHead>
@@ -419,6 +420,17 @@ export default function GamesList({
                         <span className="font-medium text-gray-900">{formatDate(game.date)}</span>
                         <span className="text-sm text-gray-500">{game.time}</span>
                       </div>
+                    </TableCell>
+                    <TableCell className="px-6 py-4 whitespace-nowrap">
+                      {game.round ? (
+                        <div className="font-medium">
+                          <Badge variant="outline" className="px-2 py-1 rounded-full bg-secondary/10 text-secondary">
+                            {game.round}
+                          </Badge>
+                        </div>
+                      ) : (
+                        <span className="text-gray-400">--</span>
+                      )}
                     </TableCell>
                     <TableCell className="px-6 py-4 whitespace-nowrap">
                       {game.isBye ? (

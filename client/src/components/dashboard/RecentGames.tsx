@@ -143,7 +143,14 @@ export default function RecentGames({ games, opponents, className }: RecentGames
               >
                 <div>
                   <p className="font-semibold">vs. {getOpponentName(game.opponentId)}</p>
-                  <p className="text-xs text-gray-500">{formatShortDate(game.date)}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-xs text-gray-500">{formatShortDate(game.date)}</p>
+                    {game.round && (
+                      <span className="text-xs px-1.5 py-0.5 bg-secondary/10 text-secondary rounded-full">
+                        Round {game.round}
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <div className="text-right">
                   <p className={`font-bold ${getResultTextClass(game)}`}>{getResultText(game)}</p>
