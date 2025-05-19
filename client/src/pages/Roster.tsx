@@ -53,7 +53,7 @@ export default function Roster() {
     refetchOnWindowFocus: true // Refetch when window gets focus
   });
   
-  // Update local state only when rosters first load or when game changes
+  // Update local state when rosters load or change
   useEffect(() => {
     if (selectedGameId && rosters && Array.isArray(rosters)) {
       console.log(`Loading roster data for game ${selectedGameId}, found ${rosters.length} roster entries`);
@@ -66,7 +66,7 @@ export default function Roster() {
         '4': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null }
       };
       
-      // Fill with new roster data
+      // Fill with roster data
       rosters.forEach((roster: any) => {
         if (roster.quarter >= 1 && roster.quarter <= 4) {
           const quarterKey = roster.quarter.toString() as '1' | '2' | '3' | '4';
@@ -74,10 +74,13 @@ export default function Roster() {
         }
       });
       
-      // Only update the state if we're loading a new game or first loading
+      // For debugging
+      console.log('Updated local roster state from database:', newRosterByQuarter);
+      
+      // Always update the state when roster data changes
       setLocalRosterByQuarter(newRosterByQuarter);
     }
-  }, [selectedGameId, rosters.length]);
+  }, [selectedGameId, rosters]);
   
   const isLoading = isLoadingPlayers || isLoadingGames || isLoadingOpponents || 
     (selectedGameId ? isLoadingRosters : false);
