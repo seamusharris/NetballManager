@@ -526,11 +526,14 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
   
   // Get sorted players for Game Totals tab
   const getSortedPlayers = () => {
+    // Default sort is alphabetical by player name
+    const playersCopy = [...players];
+    
     if (!sortConfig) {
-      return [...players]; // Return copy to avoid modifying original array
+      return playersCopy.sort((a, b) => a.displayName.localeCompare(b.displayName));
     }
     
-    return [...players].sort((a, b) => {
+    return playersCopy.sort((a, b) => {
       // Handle rating sort
       if (sortConfig.key === 'rating') {
         const ratingA = playerRatings[a.id] || 5;
@@ -543,19 +546,7 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
         }
       }
       
-      // Handle stat sort
-      if (gameTotals[a.id] && gameTotals[b.id]) {
-        const valueA = gameTotals[a.id][sortConfig.key] || 0;
-        const valueB = gameTotals[b.id][sortConfig.key] || 0;
-        
-        if (sortConfig.direction === 'ascending') {
-          return valueA - valueB;
-        } else {
-          return valueB - valueA;
-        }
-      }
-      
-      // Handle player name sort (default)
+      // Handle player name sort
       if (sortConfig.key === 'name') {
         if (sortConfig.direction === 'ascending') {
           return a.displayName.localeCompare(b.displayName);
@@ -564,7 +555,15 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
         }
       }
       
-      return 0;
+      // Handle stat sort - make sure we have totals data
+      const valueA = (gameTotals[a.id] && gameTotals[a.id][sortConfig.key]) || 0;
+      const valueB = (gameTotals[b.id] && gameTotals[b.id][sortConfig.key]) || 0;
+      
+      if (sortConfig.direction === 'ascending') {
+        return valueA - valueB;
+      } else {
+        return valueB - valueA;
+      }
     });
   };
   
@@ -772,7 +771,7 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
                         {player.displayName}
                       </TableCell>
                       
-                      <TableCell className="p-1 text-center">
+                      <TableCell className="p-1 text-center border-r">
                         <Input
                           type="number"
                           min="0"
@@ -784,14 +783,21 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
                       </TableCell>
                       
                       {/* Game totals display by category */}
-                      {statCategories.map((category) => (
-                        category.fields.map((field) => (
-                          <TableCell key={field.id} className="text-center">
-                            <div className="bg-slate-50 px-3 py-2 rounded-md border border-slate-200">
-                              {gameTotals[player.id]?.[field.id] || 0}
-                            </div>
-                          </TableCell>
-                        ))
+                      {statCategories.map((category, categoryIndex) => (
+                        category.fields.map((field, fieldIndex) => {
+                          // Add right border to last column in each category
+                          const isLastInCategory = fieldIndex === category.fields.length - 1;
+                          return (
+                            <TableCell 
+                              key={field.id} 
+                              className={`text-center ${isLastInCategory ? 'border-r' : ''}`}
+                            >
+                              <div className="bg-slate-50 px-3 py-2 rounded-md border border-slate-200">
+                                {gameTotals[player.id]?.[field.id] || 0}
+                              </div>
+                            </TableCell>
+                          );
+                        })
                       ))}
                     </TableRow>
                   ))}
