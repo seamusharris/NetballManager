@@ -39,6 +39,8 @@ export default function Statistics() {
     queryKey: ['/api/players'],
   });
   
+  // No duplicate selectedGame definition needed here
+  
   // Get rosters for selected game
   const { data: rosters = [], isLoading: isLoadingRosters } = useQuery({
     queryKey: ['/api/games', selectedGameId, 'rosters'],
@@ -51,6 +53,16 @@ export default function Statistics() {
   const { data: gameStats = [], isLoading: isLoadingStats } = useQuery({
     queryKey: ['/api/games', selectedGameId, 'stats'],
     enabled: !!selectedGameId,
+  });
+  
+  // Debug log to verify what's being passed to the component
+  console.log("Statistics page data:", {
+    selectedGameId,
+    rostersData: rosters,
+    dataTypes: {
+      rosters: Array.isArray(rosters) ? 'array' : typeof rosters,
+      firstItem: rosters.length > 0 ? typeof rosters[0] : 'none'
+    }
   });
   
   const isLoading = isLoadingGames || isLoadingOpponents || isLoadingPlayers || 
