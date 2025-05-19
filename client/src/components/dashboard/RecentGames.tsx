@@ -147,7 +147,6 @@ export default function RecentGames({ games, opponents, className }: RecentGames
                 </div>
                 <div className="text-right">
                   <p className={`font-bold ${getResultTextClass(game)}`}>{getResultText(game)}</p>
-                  <p className="text-xs text-gray-500">Home</p>
                 </div>
               </div>
             ))
