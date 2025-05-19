@@ -120,9 +120,53 @@ export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFor
     }
   };
   
+  // Function to handle manual form submission
+  const onFormSubmit = () => {
+    // Get the current form values
+    const values = form.getValues();
+    
+    // Validate form manually
+    if (!values.displayName || !values.firstName || !values.lastName || !values.position1) {
+      if (!values.displayName) {
+        form.setError("displayName", { type: "required", message: "Display name is required" });
+      }
+      if (!values.firstName) {
+        form.setError("firstName", { type: "required", message: "First name is required" });
+      }
+      if (!values.lastName) {
+        form.setError("lastName", { type: "required", message: "Last name is required" });
+      }
+      if (!values.position1) {
+        form.setError("position1", { type: "required", message: "Primary position is required" });
+      }
+      return;
+    }
+    
+    // Build position preferences array
+    const positionPreferences: Position[] = [values.position1 as Position];
+    if (values.position2 !== "none") positionPreferences.push(values.position2 as Position);
+    if (values.position3 !== "none") positionPreferences.push(values.position3 as Position);
+    if (values.position4 !== "none") positionPreferences.push(values.position4 as Position);
+    
+    // Build player data object
+    const playerData = {
+      displayName: values.displayName,
+      firstName: values.firstName,
+      lastName: values.lastName,
+      dateOfBirth: values.dateOfBirth || null,
+      positionPreferences,
+      active: values.active
+    };
+    
+    console.log("Submitting player data manually:", playerData);
+    
+    // Call the onSubmit handler passed from parent
+    onSubmit(playerData);
+  };
+  
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+      <div className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             control={form.control}
@@ -319,11 +363,16 @@ export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFor
           <Button type="button" variant="outline" onClick={() => form.reset()}>
             Reset
           </Button>
-          <Button type="submit" className="bg-primary text-white" disabled={isSubmitting}>
+          <Button 
+            type="button" 
+            className="bg-primary text-white" 
+            disabled={isSubmitting}
+            onClick={onFormSubmit}
+          >
             {isSubmitting ? 'Saving...' : isEditing ? 'Update Player' : 'Add Player'}
           </Button>
         </div>
-      </form>
+      </div>
     </Form>
   );
 }
