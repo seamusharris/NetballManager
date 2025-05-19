@@ -28,34 +28,47 @@ export const exportRosterToPDF = (
     return map;
   }, {} as Record<number, Player>);
   
-  // Group rosters by quarter
-  const rosterByQuarter: Record<number, Roster[]> = {};
-  rosters.forEach(roster => {
-    if (!rosterByQuarter[roster.quarter]) {
-      rosterByQuarter[roster.quarter] = [];
-    }
-    rosterByQuarter[roster.quarter].push(roster);
-  });
+  // Define quarters and positions
+  const quarters = ['1', '2', '3', '4'];
+  const positionOrder: Record<string, number> = { 
+    'GS': 1, 'GA': 2, 'WA': 3, 'C': 4, 'WD': 5, 'GD': 6, 'GK': 7 
+  };
   
-  // Add tables for each quarter
-  Object.keys(rosterByQuarter).forEach((quarter, index) => {
-    const quarterNum = parseInt(quarter);
-    const quarterRosters = rosterByQuarter[quarterNum];
+  // Process each quarter
+  quarters.forEach((quarter, index) => {
+    const quarterPositions = rosterState[quarter];
+    if (!quarterPositions) return;
     
-    const tableData = quarterRosters.map(roster => {
-      const player = playerMap[roster.playerId];
-      return [
-        positionLabels[roster.position], 
-        player ? player.displayName : 'Unknown Player'
-      ];
+    // Create table data for this quarter
+    const tableData: string[][] = [];
+    
+    // Sort positions by their natural order
+    const sortedPositions = Object.entries(quarterPositions)
+      .sort((a, b) => positionOrder[a[0]] - positionOrder[b[0]]);
+      
+    // Add each position and player to the table
+    sortedPositions.forEach(([position, playerId]) => {
+      if (playerId === null) return;
+      
+      const player = playerMap[playerId];
+      if (!player) return;
+      
+      tableData.push([
+        positionLabels[position as keyof typeof positionLabels],
+        player.displayName
+      ]);
     });
+    
+    // Skip empty quarters
+    if (tableData.length === 0) return;
     
     // Add a header for the quarter
     if (index === 0) {
       doc.setFontSize(14);
-      doc.text(getQuarterLabel(quarterNum), 14, 45);
+      doc.text(`Quarter ${quarter}`, 14, 45);
     }
     
+    // Create table
     autoTable(doc, {
       startY: index === 0 ? 50 : undefined,
       head: [['Position', 'Player']],
@@ -63,7 +76,7 @@ export const exportRosterToPDF = (
       didDrawPage: (data) => {
         if (index > 0) {
           doc.setFontSize(14);
-          doc.text(getQuarterLabel(quarterNum), 14, data.settings.startY - 10);
+          doc.text(`Quarter ${quarter}`, 14, data.settings.startY - 10);
         }
       }
     });
@@ -180,22 +193,13 @@ export const exportStatsToPDF = (
 export const exportRosterToExcel = (
   game: Game,
   opponent: Opponent,
-  rosters: Roster[],
-  players: Player[]
+  players: Player[],
+  rosterState: Record<string, Record<string, number | null>>
 ) => {
   const playerMap = players.reduce((map, player) => {
     map[player.id] = player;
     return map;
   }, {} as Record<number, Player>);
-  
-  // Group rosters by quarter
-  const rosterByQuarter: Record<number, Roster[]> = {};
-  rosters.forEach(roster => {
-    if (!rosterByQuarter[roster.quarter]) {
-      rosterByQuarter[roster.quarter] = [];
-    }
-    rosterByQuarter[roster.quarter].push(roster);
-  });
   
   // Create workbook
   const wb = XLSX.utils.book_new();
@@ -208,26 +212,83 @@ export const exportRosterToExcel = (
   ]);
   XLSX.utils.book_append_sheet(wb, gameDetailsWS, 'Game Details');
   
-  // Quarter sheets
-  Object.keys(rosterByQuarter).forEach(quarter => {
-    const quarterNum = parseInt(quarter);
-    const quarterRosters = rosterByQuarter[quarterNum];
+  // Define quarters and positions
+  const quarters = ['1', '2', '3', '4'];
+  const positionOrder: Record<string, number> = { 
+    'GS': 1, 'GA': 2, 'WA': 3, 'C': 4, 'WD': 5, 'GD': 6, 'GK': 7 
+  };
+  
+  // Create quarter sheets
+  quarters.forEach(quarter => {
+    const quarterPositions = rosterState[quarter];
+    if (!quarterPositions) return;
     
     const sheetData = [
       ['Position', 'Player']
     ];
     
-    quarterRosters.forEach(roster => {
-      const player = playerMap[roster.playerId];
+    // Sort positions by their natural order
+    const sortedPositions = Object.entries(quarterPositions)
+      .sort((a, b) => positionOrder[a[0]] - positionOrder[b[0]]);
+      
+    // Add each position and player to the sheet
+    sortedPositions.forEach(([position, playerId]) => {
+      if (playerId === null) return;
+      
+      const player = playerMap[playerId];
+      if (!player) return;
+      
       sheetData.push([
-        positionLabels[roster.position],
-        player ? player.displayName : 'Unknown Player'
+        positionLabels[position as keyof typeof positionLabels],
+        player.displayName
       ]);
     });
     
+    // Skip empty quarters
+    if (sheetData.length <= 1) return;
+    
     const ws = XLSX.utils.aoa_to_sheet(sheetData);
-    XLSX.utils.book_append_sheet(wb, ws, getQuarterLabel(quarterNum));
+    XLSX.utils.book_append_sheet(wb, ws, `Quarter ${quarter}`);
   });
+  
+  // Create a summary sheet showing all players by position
+  const summaryData = [
+    ['Position', 'Player', 'Quarters']
+  ];
+  
+  // For each position, find all players assigned to it
+  for (const position of Object.keys(positionOrder).sort((a, b) => positionOrder[a] - positionOrder[b])) {
+    // For each player in this position, collect their quarters
+    const playerQuarters = new Map<number, string[]>();
+    
+    quarters.forEach(quarter => {
+      const playerId = rosterState[quarter]?.[position];
+      if (playerId !== null && playerId !== undefined) {
+        if (!playerQuarters.has(playerId)) {
+          playerQuarters.set(playerId, []);
+        }
+        playerQuarters.get(playerId)?.push(quarter);
+      }
+    });
+    
+    // Add each player with their quarters to the summary
+    for (const [playerId, assignedQuarters] of playerQuarters.entries()) {
+      const player = playerMap[playerId];
+      if (!player) continue;
+      
+      summaryData.push([
+        positionLabels[position as keyof typeof positionLabels],
+        player.displayName,
+        assignedQuarters.map(q => `Q${q}`).join(', ')
+      ]);
+    }
+  }
+  
+  // Add the summary sheet if we have data
+  if (summaryData.length > 1) {
+    const summaryWS = XLSX.utils.aoa_to_sheet(summaryData);
+    XLSX.utils.book_append_sheet(wb, summaryWS, 'Summary');
+  }
   
   // Export the workbook
   XLSX.writeFile(wb, `Roster_${formatShortDate(game.date)}_vs_${opponent.teamName.replace(/\s+/g, '_')}.xlsx`);
