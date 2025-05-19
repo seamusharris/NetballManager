@@ -115,15 +115,25 @@ export default function GamesList({
     Object.entries(allGameStats).forEach(([gameIdStr, stats]) => {
       const gameId = parseInt(gameIdStr);
       
-      // For game #1, use the known final score
-      if (gameId === 1) {
-        newScores[gameId] = { team: 8, opponent: 5 };
-        return;
-      }
+      // Calculate goals by player and quarter
+      const quarterGoals: Record<number, {teamScore: number, opponentScore: number}> = {
+        1: {teamScore: 0, opponentScore: 0},
+        2: {teamScore: 0, opponentScore: 0},
+        3: {teamScore: 0, opponentScore: 0},
+        4: {teamScore: 0, opponentScore: 0}
+      };
       
-      // Calculate team score and opponent score from actual stats
-      const teamScore = stats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
-      const opponentScore = stats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
+      // Process each stat record by quarter
+      stats.forEach(stat => {
+        if (stat.quarter >= 1 && stat.quarter <= 4) {
+          quarterGoals[stat.quarter].teamScore += (stat.goalsFor || 0);
+          quarterGoals[stat.quarter].opponentScore += (stat.goalsAgainst || 0);
+        }
+      });
+      
+      // Sum up the quarter totals for the final score
+      const teamScore = Object.values(quarterGoals).reduce((sum, q) => sum + q.teamScore, 0);
+      const opponentScore = Object.values(quarterGoals).reduce((sum, q) => sum + q.opponentScore, 0);
       
       newScores[gameId] = { team: teamScore, opponent: opponentScore };
     });
