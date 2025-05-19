@@ -500,7 +500,7 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
       fields: [
         { id: 'badPass', label: 'Passes' },
         { id: 'handlingError', label: 'Handling' },
-        { id: 'infringement', label: 'Infringements' }
+        { id: 'infringement', label: 'Penalties' }
       ]
     }
   ];
@@ -748,7 +748,7 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
                         return (
                           <TableHead 
                             key={field.id} 
-                            className={`text-center px-1 py-2 min-w-[80px] cursor-pointer hover:bg-slate-100 ${isLastInCategory ? 'border-r' : ''}`}
+                            className={`text-center px-1 py-2 w-[100px] cursor-pointer hover:bg-slate-100 ${isLastInCategory ? 'border-r' : ''}`}
                             onClick={() => handleSort(field.id)}
                           >
                             {field.label}
@@ -790,7 +790,7 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
                           return (
                             <TableCell 
                               key={field.id} 
-                              className={`text-center ${isLastInCategory ? 'border-r' : ''}`}
+                              className={`text-center w-[100px] ${isLastInCategory ? 'border-r' : ''}`}
                             >
                               <div className="bg-slate-50 px-3 py-2 rounded-md border border-slate-200">
                                 {gameTotals[player.id]?.[field.id] || 0}
