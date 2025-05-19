@@ -207,6 +207,7 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
           const badPass = parseInt(playerValues.badPass || '0');
           const handlingError = parseInt(playerValues.handlingError || '0');
           const infringement = parseInt(playerValues.infringement || '0');
+          const rating = playerRatings[playerId] || 0; // Get the player rating from the state
           
           // Find existing stat
           const existingStat = gameStats.find(
@@ -224,7 +225,8 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
             intercepts,
             badPass,
             handlingError,
-            infringement
+            infringement,
+            rating: parseInt(quarter) === 1 ? rating : 0 // Only store the rating in quarter 1 to avoid duplication
           };
           
           if (existingStat) {
