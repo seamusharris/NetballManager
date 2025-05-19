@@ -464,6 +464,20 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
   const renderScoreSummary = () => {
     const summary = calculateSummary();
     
+    // Calculate running totals
+    const runningTotals = {
+      '1': { team: summary.quarters['1'].team, opponent: summary.quarters['1'].opponent },
+      '2': { team: 0, opponent: 0 },
+      '3': { team: 0, opponent: 0 },
+      '4': { team: 0, opponent: 0 }
+    };
+    
+    // Calculate cumulative totals
+    for (let i = 2; i <= 4; i++) {
+      runningTotals[i].team = runningTotals[i-1].team + summary.quarters[i].team;
+      runningTotals[i].opponent = runningTotals[i-1].opponent + summary.quarters[i].opponent;
+    }
+    
     const getResultClass = () => {
       if (summary.game.team > summary.game.opponent) return "text-green-600 font-bold";
       if (summary.game.team < summary.game.opponent) return "text-red-600 font-bold";
@@ -488,6 +502,8 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
                   <th className="border p-2 text-left">Quarter</th>
                   <th className="border p-2 text-center">Team</th>
                   <th className="border p-2 text-center">Opponent</th>
+                  <th className="border p-2 text-center">Running Total (Team)</th>
+                  <th className="border p-2 text-center">Running Total (Opponent)</th>
                 </tr>
               </thead>
               <tbody>
@@ -496,10 +512,14 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
                     <td className="border p-2 font-medium">Quarter {quarter}</td>
                     <td className="border p-2 text-center">{scores.team}</td>
                     <td className="border p-2 text-center">{scores.opponent}</td>
+                    <td className="border p-2 text-center">{runningTotals[quarter].team}</td>
+                    <td className="border p-2 text-center">{runningTotals[quarter].opponent}</td>
                   </tr>
                 ))}
                 <tr className="bg-gray-100 font-bold">
                   <td className="border p-2">Final Score</td>
+                  <td className="border p-2 text-center">{summary.game.team}</td>
+                  <td className="border p-2 text-center">{summary.game.opponent}</td>
                   <td className="border p-2 text-center">{summary.game.team}</td>
                   <td className="border p-2 text-center">{summary.game.opponent}</td>
                 </tr>
