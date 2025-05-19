@@ -245,29 +245,22 @@ export default function GamesList({
                     </TableCell>
                     <TableCell className="px-6 py-4 whitespace-nowrap">
                       <div className="flex space-x-2">
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          className="text-xs"
-                          onClick={() => navigate(`/roster?game=${game.id}`)}
+                        <a 
+                          href={`/roster?game=${game.id}`}
+                          className="inline-flex items-center justify-center rounded-md text-xs py-1 px-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground"
                         >
                           <CalendarRange className="h-3 w-3 mr-1" />
                           Manage Roster
-                        </Button>
+                        </a>
                         
                         {game.completed && (
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            className="text-xs"
-                            onClick={() => {
-                              // Use the onViewStats callback which is correctly configured to navigate
-                              onViewStats(game.id);
-                            }}
+                          <a 
+                            href={`/statistics?game=${game.id}`}
+                            className="inline-flex items-center justify-center rounded-md text-xs py-1 px-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground"
                           >
                             <FileText className="h-3 w-3 mr-1" />
                             View Stats
-                          </Button>
+                          </a>
                         )}
                       </div>
                     </TableCell>
