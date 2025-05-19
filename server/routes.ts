@@ -165,57 +165,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Special endpoint for creating BYE games
-  app.post("/api/games/bye", async (req, res) => {
-    try {
-      const byeGameData = {
-        date: req.body.date,
-        time: req.body.time,
-        opponentId: null,  // BYE games have no opponent
-        completed: false,  // BYE games don't have stats
-        isBye: true
-      };
-      
-      console.log("Creating BYE game:", byeGameData);
-      const game = await storage.createGame(byeGameData);
-      console.log("Created BYE game:", game);
-      return res.status(201).json(game);
-    } catch (error) {
-      const err = error as Error;
-      console.error("BYE game creation error:", err);
-      res.status(500).json({ 
-        message: "Failed to create BYE game", 
-        error: err.message || "Unknown error"
-      });
-    }
-  });
-
-  // Regular endpoint for games (non-BYE)
+  // Unified endpoint for all games (BYE and regular)
   app.post("/api/games", async (req, res) => {
     try {
-      // For regular games, ensure we have an opponentId
-      if (!req.body.opponentId) {
-        return res.status(400).json({ 
-          message: "Invalid game data", 
-          errors: [{ message: "Opponent is required for regular games" }] 
-        });
+      console.log("Game creation request:", req.body);
+      
+      // Different handling for BYE games vs regular games
+      if (req.body.isBye === true) {
+        // For BYE games, we don't need an opponent
+        const byeGameData = {
+          date: req.body.date,
+          time: req.body.time,
+          opponentId: null,  // BYE games have no opponent
+          completed: false,  // BYE games don't have stats
+          isBye: true
+        };
+        
+        console.log("Creating BYE game:", byeGameData);
+        const game = await storage.createGame(byeGameData);
+        console.log("Created BYE game:", game);
+        return res.status(201).json(game);
+      } else {
+        // For regular games, ensure we have an opponentId
+        if (!req.body.opponentId) {
+          return res.status(400).json({ 
+            message: "Invalid game data", 
+            errors: [{ message: "Opponent is required for regular games" }] 
+          });
+        }
+        
+        // Handle normal games
+        const gameData = {
+          date: req.body.date,
+          time: req.body.time,
+          opponentId: typeof req.body.opponentId === 'string' 
+            ? parseInt(req.body.opponentId, 10) 
+            : req.body.opponentId,
+          completed: req.body.completed || false,
+          isBye: false
+        };
+        
+        console.log("Creating regular game:", gameData);
+        const game = await storage.createGame(gameData);
+        console.log("Created regular game:", game);
+        return res.status(201).json(game);
       }
-      
-      // Handle normal games
-      const gameData = {
-        date: req.body.date,
-        time: req.body.time,
-        opponentId: typeof req.body.opponentId === 'string' 
-          ? parseInt(req.body.opponentId, 10) 
-          : req.body.opponentId,
-        completed: req.body.completed || false,
-        isBye: false
-      };
-      
-      console.log("Creating regular game:", gameData);
-      const game = await storage.createGame(gameData);
-      console.log("Created regular game:", game);
-      res.status(201).json(game);
     } catch (error) {
       const err = error as Error;
       console.error("Game creation error:", err);
