@@ -15,9 +15,14 @@ interface PlayerPerformanceProps {
 interface PlayerStats {
   playerId: number;
   goals: number;
+  goalsAgainst: number;
+  missedGoals: number;
   rebounds: number;
   intercepts: number;
-  position: string;
+  badPass: number;
+  handlingError: number;
+  pickUp: number;
+  infringement: number;
   rating: number;
 }
 
@@ -72,37 +77,57 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
       // Isla - player ID 2 - scored most goals in quarter 1
       2: {
         playerId: 2,
-        goals: 8,  // Sum of all goalsFor in game 1 for player 2
+        goals: 8,
+        goalsAgainst: 0,
+        missedGoals: 2,
         rebounds: 0,
         intercepts: 2,
-        position: 'GS',
+        badPass: 1,
+        handlingError: 0,
+        pickUp: 0,
+        infringement: 0,
         rating: 0 // Will calculate later
       },
       // Lucia - player ID 1 - strong defender
       1: {
         playerId: 1,
         goals: 0,
+        goalsAgainst: 3,
+        missedGoals: 0,
         rebounds: 1,
         intercepts: 3,
-        position: 'GK',
+        badPass: 0,
+        handlingError: 1,
+        pickUp: 0,
+        infringement: 2,
         rating: 0
       },
       // Emily - player ID 7 - good all-around player
       7: {
         playerId: 7,
         goals: 0,
+        goalsAgainst: 0,
+        missedGoals: 0,
         rebounds: 2,
         intercepts: 2,
-        position: 'GD',
+        badPass: 1,
+        handlingError: 0,
+        pickUp: 1,
+        infringement: 0,
         rating: 0
       },
       // Ollie - player ID 8 - defensive player
       8: {
         playerId: 8,
         goals: 0,
+        goalsAgainst: 2,
+        missedGoals: 0,
         rebounds: 0,
         intercepts: 3,
-        position: 'GD',
+        badPass: 0,
+        handlingError: 0,
+        pickUp: 0,
+        infringement: 1,
         rating: 0
       }
     };
@@ -119,9 +144,14 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
         newPlayerStatsMap[player.id] = {
           playerId: player.id,
           goals: 0,
+          goalsAgainst: 0,
+          missedGoals: 0,
           rebounds: 0,
           intercepts: 0,
-          position: player.positionPreferences[0] || 'GS',
+          badPass: 0,
+          handlingError: 0,
+          pickUp: 0,
+          infringement: 0,
           rating: 0
         };
       }
@@ -205,8 +235,9 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
             <thead>
               <tr>
                 <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Player</th>
-                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Position</th>
                 <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Goals</th>
+                <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Opp Goals</th>
+                <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Missed</th>
                 <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Rebounds</th>
                 <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Intercepts</th>
                 <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Rating</th>
@@ -215,11 +246,11 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
             <tbody className="bg-white divide-y divide-gray-200">
               {isLoading ? (
                 <tr>
-                  <td colSpan={6} className="text-center py-4 text-gray-500">Loading player statistics...</td>
+                  <td colSpan={7} className="text-center py-4 text-gray-500">Loading player statistics...</td>
                 </tr>
               ) : playersWithStats.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="text-center py-4 text-gray-500">No player statistics available</td>
+                  <td colSpan={7} className="text-center py-4 text-gray-500">No player statistics available</td>
                 </tr>
               ) : (
                 playersWithStats.map(player => (
@@ -236,8 +267,9 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
                         </div>
                       </div>
                     </td>
-                    <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-500">{player.stats.position}</td>
                     <td className="px-3 py-2 whitespace-nowrap text-sm text-center font-mono">{player.stats.goals}</td>
+                    <td className="px-3 py-2 whitespace-nowrap text-sm text-center font-mono">{player.stats.goalsAgainst}</td>
+                    <td className="px-3 py-2 whitespace-nowrap text-sm text-center font-mono">{player.stats.missedGoals}</td>
                     <td className="px-3 py-2 whitespace-nowrap text-sm text-center font-mono">{player.stats.rebounds}</td>
                     <td className="px-3 py-2 whitespace-nowrap text-sm text-center font-mono">{player.stats.intercepts}</td>
                     <td className="px-3 py-2 whitespace-nowrap text-center">
