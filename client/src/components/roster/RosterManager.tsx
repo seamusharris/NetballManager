@@ -639,24 +639,7 @@ export default function RosterManager({
                 </p>
               </div>
               <div className="flex space-x-3">
-                <Button
-                  variant="outline"
-                  className="border border-accent text-accent hover:bg-accent hover:text-white transition-colors"
-                  onClick={handleAutoFill}
-                  disabled={saveRosterMutation.isPending}
-                >
-                  <Wand2 className="w-4 h-4 mr-1" /> Auto-Fill
-                </Button>
-                
-                <Button
-                  variant="default"
-                  className="bg-primary hover:bg-primary/90 text-white transition-colors"
-                  onClick={handleSaveRoster}
-                  disabled={saveRosterMutation.isPending}
-                >
-                  <Save className="w-4 h-4 mr-1" /> Save Roster
-                </Button>
-                
+                {/* Copy Quarter dropdown */}
                 <div className="flex items-center space-x-2">
                   <Select value={quarterToCopy || ''} onValueChange={setQuarterToCopy}>
                     <SelectTrigger className="w-[140px]">
@@ -670,6 +653,7 @@ export default function RosterManager({
                     </SelectContent>
                   </Select>
                   
+                  {/* Copy button */}
                   <Button
                     variant="outline"
                     className="border border-gray-300 text-gray-600 hover:bg-gray-100 transition-colors"
@@ -679,6 +663,26 @@ export default function RosterManager({
                     <Copy className="w-4 h-4 mr-1" /> Copy
                   </Button>
                 </div>
+                
+                {/* Auto-Fill button */}
+                <Button
+                  variant="outline"
+                  className="border border-accent text-accent hover:bg-accent hover:text-white transition-colors"
+                  onClick={handleAutoFill}
+                  disabled={saveRosterMutation.isPending}
+                >
+                  <Wand2 className="w-4 h-4 mr-1" /> Auto-Fill
+                </Button>
+                
+                {/* Save Roster button */}
+                <Button
+                  variant="default"
+                  className="bg-primary hover:bg-primary/90 text-white transition-colors"
+                  onClick={handleSaveRoster}
+                  disabled={saveRosterMutation.isPending}
+                >
+                  <Save className="w-4 h-4 mr-1" /> Save Roster
+                </Button>
               </div>
             </div>
             
