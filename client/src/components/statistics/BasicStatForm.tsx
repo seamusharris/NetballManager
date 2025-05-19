@@ -105,30 +105,46 @@ export default function BasicStatForm({
       const quarter = parseInt(quarterKey);
       const savePromises = [];
       
+      console.log("Saving stats for quarter", quarter, stats);
+      
       // For each player in this quarter's stats
       for (const playerIdStr in stats) {
         const playerId = parseInt(playerIdStr);
         const playerStats = stats[playerId];
+        
+        console.log(`Saving stats for player ${playerId}:`, playerStats);
         
         // Find existing stat record
         const existingStat = existingStats.find(
           s => s.gameId === gameId && s.playerId === playerId && s.quarter === quarter
         );
         
+        // Make sure to include all required fields
+        const completeStats = {
+          gameId,
+          playerId,
+          quarter,
+          goalsFor: playerStats.goalsFor || 0,
+          goalsAgainst: playerStats.goalsAgainst || 0,
+          missedGoals: playerStats.missedGoals || 0,
+          rebounds: playerStats.rebounds || 0,
+          intercepts: playerStats.intercepts || 0,
+          badPass: playerStats.badPass || 0,
+          handlingError: playerStats.handlingError || 0,
+          infringement: playerStats.infringement || 0
+        };
+        
         if (existingStat) {
           // Update existing stat
+          console.log(`Updating existing stat ID ${existingStat.id}`);
           savePromises.push(
-            apiRequest('PATCH', `/api/gamestats/${existingStat.id}`, playerStats)
+            apiRequest('PATCH', `/api/gamestats/${existingStat.id}`, completeStats)
           );
         } else {
           // Create new stat
+          console.log(`Creating new stat for player ${playerId}`);
           savePromises.push(
-            apiRequest('POST', '/api/gamestats', {
-              gameId,
-              playerId,
-              quarter,
-              ...playerStats
-            })
+            apiRequest('POST', '/api/gamestats', completeStats)
           );
         }
       }
@@ -305,8 +321,122 @@ export default function BasicStatForm({
     );
   };
   
+  // Calculate quarter-by-quarter totals and game summary
+  const calculateQuarterTotals = () => {
+    const quarterTotals: Record<string, { goalsFor: number, goalsAgainst: number }> = {
+      '1': { goalsFor: 0, goalsAgainst: 0 },
+      '2': { goalsFor: 0, goalsAgainst: 0 },
+      '3': { goalsFor: 0, goalsAgainst: 0 },
+      '4': { goalsFor: 0, goalsAgainst: 0 },
+    };
+    
+    // Calculate from existing stats
+    existingStats.forEach(stat => {
+      const quarterKey = stat.quarter.toString();
+      if (quarterTotals[quarterKey]) {
+        quarterTotals[quarterKey].goalsFor += stat.goalsFor || 0;
+        quarterTotals[quarterKey].goalsAgainst += stat.goalsAgainst || 0;
+      }
+    });
+    
+    // Add any unsaved changes from the form
+    Object.entries(statValues).forEach(([quarterKey, playerStats]) => {
+      Object.values(playerStats).forEach(stats => {
+        const goalsFor = parseInt(stats.goalsFor || '0');
+        const goalsAgainst = parseInt(stats.goalsAgainst || '0');
+        
+        if (!isNaN(goalsFor)) {
+          quarterTotals[quarterKey].goalsFor += goalsFor;
+        }
+        
+        if (!isNaN(goalsAgainst)) {
+          quarterTotals[quarterKey].goalsAgainst += goalsAgainst;
+        }
+      });
+    });
+    
+    // Calculate game totals
+    const gameTotals = {
+      goalsFor: 0,
+      goalsAgainst: 0
+    };
+    
+    Object.values(quarterTotals).forEach(quarter => {
+      gameTotals.goalsFor += quarter.goalsFor;
+      gameTotals.goalsAgainst += quarter.goalsAgainst;
+    });
+    
+    return { quarterTotals, gameTotals };
+  };
+  
+  const { quarterTotals, gameTotals } = calculateQuarterTotals();
+  
   return (
     <div className="space-y-6">
+      {/* Game score summary */}
+      <Card className="overflow-hidden bg-gray-50">
+        <CardContent className="p-4">
+          <h3 className="text-lg font-semibold mb-4">Game Score Summary</h3>
+          
+          <div className="grid grid-cols-5 gap-2 text-center mb-4">
+            <div className="font-medium">Quarter</div>
+            <div className="font-medium">Q1</div>
+            <div className="font-medium">Q2</div>
+            <div className="font-medium">Q3</div>
+            <div className="font-medium">Q4</div>
+            
+            <div className="font-medium">Our Team</div>
+            <div className={quarterTotals['1'].goalsFor > quarterTotals['1'].goalsAgainst ? 'font-bold text-primary' : ''}>
+              {quarterTotals['1'].goalsFor}
+            </div>
+            <div className={quarterTotals['2'].goalsFor > quarterTotals['2'].goalsAgainst ? 'font-bold text-primary' : ''}>
+              {quarterTotals['2'].goalsFor}
+            </div>
+            <div className={quarterTotals['3'].goalsFor > quarterTotals['3'].goalsAgainst ? 'font-bold text-primary' : ''}>
+              {quarterTotals['3'].goalsFor}
+            </div>
+            <div className={quarterTotals['4'].goalsFor > quarterTotals['4'].goalsAgainst ? 'font-bold text-primary' : ''}>
+              {quarterTotals['4'].goalsFor}
+            </div>
+            
+            <div className="font-medium">Opponent</div>
+            <div className={quarterTotals['1'].goalsAgainst > quarterTotals['1'].goalsFor ? 'font-bold text-primary' : ''}>
+              {quarterTotals['1'].goalsAgainst}
+            </div>
+            <div className={quarterTotals['2'].goalsAgainst > quarterTotals['2'].goalsFor ? 'font-bold text-primary' : ''}>
+              {quarterTotals['2'].goalsAgainst}
+            </div>
+            <div className={quarterTotals['3'].goalsAgainst > quarterTotals['3'].goalsFor ? 'font-bold text-primary' : ''}>
+              {quarterTotals['3'].goalsAgainst}
+            </div>
+            <div className={quarterTotals['4'].goalsAgainst > quarterTotals['4'].goalsFor ? 'font-bold text-primary' : ''}>
+              {quarterTotals['4'].goalsAgainst}
+            </div>
+          </div>
+          
+          <div className="flex justify-between items-center p-2 rounded-md bg-gray-100">
+            <div className="font-medium">Final Score:</div>
+            <div className="text-xl font-bold">
+              <span className={gameTotals.goalsFor > gameTotals.goalsAgainst ? 'text-primary' : ''}>
+                {gameTotals.goalsFor}
+              </span>
+              <span className="mx-2">-</span>
+              <span className={gameTotals.goalsAgainst > gameTotals.goalsFor ? 'text-primary' : ''}>
+                {gameTotals.goalsAgainst}
+              </span>
+            </div>
+            <div className="text-sm">
+              {gameTotals.goalsFor > gameTotals.goalsAgainst ? 
+                <span className="text-primary font-medium">Win</span> : 
+                gameTotals.goalsFor < gameTotals.goalsAgainst ? 
+                  <span className="text-red-500 font-medium">Loss</span> : 
+                  <span className="text-amber-500 font-medium">Draw</span>
+              }
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       <div className="flex justify-end mb-4">
         <Button 
           onClick={handleSave} 
