@@ -305,9 +305,13 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
           // Keep the newest one
           const newestStat = existingQuarter1Stats[0];
           
-          // Delete older duplicates
+          // Delete older duplicates - handle possible 404 errors if records were already deleted
           for (let i = 1; i < existingQuarter1Stats.length; i++) {
-            const deletePromise = apiRequest('DELETE', `/api/gamestats/${existingQuarter1Stats[i].id}`);
+            const deletePromise = apiRequest('DELETE', `/api/gamestats/${existingQuarter1Stats[i].id}`)
+              .catch(err => {
+                console.log(`Stat record ${existingQuarter1Stats[i].id} already deleted, continuing...`);
+                return null;
+              });
             ratingPromises.push(deletePromise);
           }
           
@@ -411,9 +415,14 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
             // Keep the newest one
             const newestStat = existingStats[0];
             
-            // Delete the older duplicates
+            // Delete the older duplicates - use try/catch to handle potential 404 errors if already deleted
             for (let i = 1; i < existingStats.length; i++) {
-              const deletePromise = apiRequest('DELETE', `/api/gamestats/${existingStats[i].id}`);
+              const deletePromise = apiRequest('DELETE', `/api/gamestats/${existingStats[i].id}`)
+                .catch(err => {
+                  // If the record was not found (already deleted), just log and continue
+                  console.log(`Stat record ${existingStats[i].id} already deleted, continuing...`);
+                  return null;
+                });
               savePromises.push(deletePromise);
             }
             
