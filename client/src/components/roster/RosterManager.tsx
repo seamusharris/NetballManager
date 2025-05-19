@@ -30,6 +30,7 @@ interface RosterManagerProps {
   selectedGameId: number | null;
   setSelectedGameId: (id: number | null) => void;
   isLoading: boolean;
+  onRosterSaved?: () => void; // Optional callback when roster is saved
 }
 
 export default function RosterManager({ 
@@ -39,7 +40,8 @@ export default function RosterManager({
   rosters, 
   selectedGameId, 
   setSelectedGameId, 
-  isLoading 
+  isLoading,
+  onRosterSaved
 }: RosterManagerProps) {
   const [activeQuarter, setActiveQuarter] = useState('1');
   const [quarterToCopy, setQuarterToCopy] = useState<string | null>(null);

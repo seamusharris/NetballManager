@@ -7,17 +7,26 @@ import { useQuery } from '@tanstack/react-query';
 
 interface RosterSummaryProps {
   selectedGameId: number | null;
+  updateTrigger?: number; // Optional counter to trigger refetch
 }
 
-export default function RosterSummary({ selectedGameId }: RosterSummaryProps) {
+export default function RosterSummary({ selectedGameId, updateTrigger = 0 }: RosterSummaryProps) {
   // Type for quarters
   type Quarter = 1 | 2 | 3 | 4;
   
   // Fetch roster data directly from API
-  const { data: rosters = [], isLoading } = useQuery<Roster[]>({
+  const { data: rosters = [], isLoading, refetch } = useQuery<Roster[]>({
     queryKey: ['/api/games/' + selectedGameId + '/rosters'],
     enabled: !!selectedGameId
   });
+  
+  // Listen for update trigger and refetch when it changes
+  useEffect(() => {
+    if (selectedGameId && updateTrigger > 0) {
+      console.log(`Roster update triggered (${updateTrigger}), refetching data for game ${selectedGameId}`);
+      refetch();
+    }
+  }, [updateTrigger, selectedGameId, refetch]);
   
   // Fetch players directly from API
   const { data: players = [] } = useQuery<Player[]>({

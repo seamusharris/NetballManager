@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet';
 import RosterManager from '@/components/roster/RosterManager';
 import RosterSummary from '@/components/roster/RosterSummary';
@@ -7,7 +7,9 @@ import { useLocation } from 'wouter';
 
 export default function Roster() {
   const [selectedGameId, setSelectedGameId] = useState<number | null>(null);
+  const [rosterUpdated, setRosterUpdated] = useState<number>(0); // Counter to trigger refetch
   const [_, navigate] = useLocation();
+  const queryClient = useQueryClient();
   
   // Parse URL query parameters to get game ID
   useEffect(() => {
@@ -49,6 +51,17 @@ export default function Roster() {
   // Filter to only active players
   const activePlayers = players.filter(player => player.active);
   
+  // Callback for when roster is saved
+  const handleRosterSaved = () => {
+    // Invalidate the roster query to refresh data
+    if (selectedGameId) {
+      queryClient.invalidateQueries({ queryKey: ['/api/games/' + selectedGameId + '/rosters'] });
+      
+      // Increment update counter to trigger RosterSummary to refetch
+      setRosterUpdated(prev => prev + 1);
+    }
+  };
+  
   return (
     <>
       <Helmet>
@@ -60,6 +73,7 @@ export default function Roster() {
       {selectedGameId && (
         <RosterSummary 
           selectedGameId={selectedGameId}
+          updateTrigger={rosterUpdated} // Pass update trigger to force refetch
         />
       )}
       
@@ -71,6 +85,7 @@ export default function Roster() {
         selectedGameId={selectedGameId}
         setSelectedGameId={setSelectedGameId}
         isLoading={isLoading}
+        onRosterSaved={handleRosterSaved} // Add callback for roster saved
       />
     </>
   );
