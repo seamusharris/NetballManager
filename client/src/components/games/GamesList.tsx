@@ -346,33 +346,44 @@ export default function GamesList({
                     </TableCell>
                     <TableCell className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-2">
-                        <Badge
-                          variant="outline"
-                          className={`px-2 py-1 text-xs rounded-full font-semibold ${
-                            game.completed 
-                              ? "bg-success/10 text-success" 
-                              : "bg-accent/10 text-accent"
-                          }`}
-                        >
-                          {game.completed ? 'Completed' : 'Upcoming'}
-                        </Badge>
-                        
-                        {game.completed && gameScores[game.id] && (
-                          <div className={`p-1 rounded-full ${
-                            gameScores[game.id].team > gameScores[game.id].opponent
-                              ? "bg-success/20" 
-                              : gameScores[game.id].team < gameScores[game.id].opponent
-                                ? "bg-error/20"
-                                : "bg-warning/20"
-                          }`}>
-                            {gameScores[game.id].team > gameScores[game.id].opponent ? (
-                              <Trophy className="h-4 w-4 text-success" />
-                            ) : gameScores[game.id].team < gameScores[game.id].opponent ? (
-                              <ThumbsDown className="h-4 w-4 text-error" />
-                            ) : (
-                              <Minus className="h-4 w-4 text-warning" />
+                        {game.isBye ? (
+                          <Badge
+                            variant="outline"
+                            className="px-2 py-1 text-xs rounded-full font-semibold bg-gray-200 text-gray-700"
+                          >
+                            BYE Round
+                          </Badge>
+                        ) : (
+                          <>
+                            <Badge
+                              variant="outline"
+                              className={`px-2 py-1 text-xs rounded-full font-semibold ${
+                                game.completed 
+                                  ? "bg-success/10 text-success" 
+                                  : "bg-accent/10 text-accent"
+                              }`}
+                            >
+                              {game.completed ? 'Completed' : 'Upcoming'}
+                            </Badge>
+                            
+                            {game.completed && gameScores[game.id] && (
+                              <div className={`p-1 rounded-full ${
+                                gameScores[game.id].team > gameScores[game.id].opponent
+                                  ? "bg-success/20" 
+                                  : gameScores[game.id].team < gameScores[game.id].opponent
+                                    ? "bg-error/20"
+                                    : "bg-warning/20"
+                              }`}>
+                                {gameScores[game.id].team > gameScores[game.id].opponent ? (
+                                  <Trophy className="h-4 w-4 text-success" />
+                                ) : gameScores[game.id].team < gameScores[game.id].opponent ? (
+                                  <ThumbsDown className="h-4 w-4 text-error" />
+                                ) : (
+                                  <Minus className="h-4 w-4 text-warning" />
+                                )}
+                              </div>
                             )}
-                          </div>
+                          </>
                         )}
                       </div>
                     </TableCell>
@@ -403,22 +414,28 @@ export default function GamesList({
                     </TableCell>
                     <TableCell className="px-6 py-4 whitespace-nowrap">
                       <div className="flex space-x-2">
-                        <button 
-                          onClick={() => window.location.href = `/roster?game=${game.id}`}
-                          className="inline-flex items-center justify-center rounded-md text-xs py-1 px-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground"
-                        >
-                          <CalendarRange className="h-3 w-3 mr-1" />
-                          Manage Roster
-                        </button>
-                        
-                        {game.completed && (
-                          <button 
-                            onClick={() => navigate(`/statistics?game=${game.id}`)}
-                            className="inline-flex items-center justify-center rounded-md text-xs py-1 px-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground"
-                          >
-                            <FileText className="h-3 w-3 mr-1" />
-                            View Stats
-                          </button>
+                        {game.isBye ? (
+                          <span className="text-gray-400 text-xs italic">No actions available for BYE rounds</span>
+                        ) : (
+                          <>
+                            <button 
+                              onClick={() => window.location.href = `/roster?game=${game.id}`}
+                              className="inline-flex items-center justify-center rounded-md text-xs py-1 px-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground"
+                            >
+                              <CalendarRange className="h-3 w-3 mr-1" />
+                              Manage Roster
+                            </button>
+                            
+                            {game.completed && (
+                              <button 
+                                onClick={() => navigate(`/statistics?game=${game.id}`)}
+                                className="inline-flex items-center justify-center rounded-md text-xs py-1 px-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground"
+                              >
+                                <FileText className="h-3 w-3 mr-1" />
+                                View Stats
+                              </button>
+                            )}
+                          </>
                         )}
                       </div>
                     </TableCell>
