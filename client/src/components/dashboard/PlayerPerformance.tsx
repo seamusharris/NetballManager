@@ -2,8 +2,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Avatar } from '@/components/ui/avatar';
 import { Game, Player, GameStat } from '@shared/schema';
-import { cn, getInitials } from '@/lib/utils';
-import { useState } from 'react';
+import { cn, getInitials, generateRandomColor } from '@/lib/utils';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 
 interface PlayerPerformanceProps {
@@ -59,14 +59,18 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
     gcTime: 15 * 60 * 1000,   // Keep data in cache for 15 minutes
   });
   
-  // Calculate player statistics from all game stats
-  const playerStatsMap: Record<number, PlayerStats> = {};
+  // State to store calculated player stats
+  const [playerStatsMap, setPlayerStatsMap] = useState<Record<number, PlayerStats>>({});
   
-  // If we have game stats, calculate player statistics
-  if (gameStatsMap && !isLoading) {
+  // When game stats or players change, recalculate player statistics
+  useEffect(() => {
+    if (!gameStatsMap || isLoading || players.length === 0) return;
+    
+    const newPlayerStatsMap: Record<number, PlayerStats> = {};
+    
     // Initialize stats for all players
     players.forEach(player => {
-      playerStatsMap[player.id] = {
+      newPlayerStatsMap[player.id] = {
         playerId: player.id,
         goals: 0,
         rebounds: 0,
@@ -76,41 +80,91 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
       };
     });
     
-    // Combine stats from all games
+    // First, get all game stats and log them for debugging
+    const gameStats = Object.values(gameStatsMap).flatMap(stats => stats);
+    console.log('All game stats:', gameStats);
+    
+    // Count appearances for each player across all games and quarters
+    const playerAppearances: Record<number, number> = {};
+    players.forEach(player => {
+      playerAppearances[player.id] = 0;
+    });
+    
+    // Process each game's stats and aggregate them by player
     Object.values(gameStatsMap).forEach(gameStats => {
+      // Create a set of players who appeared in this game
+      const playersInGame = new Set<number>();
+      
       gameStats.forEach(stat => {
-        if (stat.playerId && playerStatsMap[stat.playerId]) {
-          const player = playerStatsMap[stat.playerId];
+        // Ensure the player exists in our stats map
+        if (stat.playerId && newPlayerStatsMap[stat.playerId]) {
+          const player = newPlayerStatsMap[stat.playerId];
           
+          // Add player to the set of players in this game
+          playersInGame.add(stat.playerId);
+          
+          // Accumulate stats
           player.goals += stat.goalsFor || 0;
           player.rebounds += stat.rebounds || 0;
           player.intercepts += stat.intercepts || 0;
+          
+          // We don't track positions in the game stats currently
+          // We'll use the player's preferred position from their profile
         }
+      });
+      
+      // Increment appearance count for each player who was in this game
+      playersInGame.forEach(playerId => {
+        playerAppearances[playerId] = (playerAppearances[playerId] || 0) + 1;
       });
     });
     
     // Calculate player ratings based on their stats
-    // Simple formula: (goals * 1.0 + rebounds * 0.5 + intercepts * 0.8) / number of games
-    Object.values(playerStatsMap).forEach(player => {
-      const totalContribution = 
-        player.goals * 1.0 + 
-        player.rebounds * 0.5 + 
-        player.intercepts * 0.8;
-        
-      // Avoid division by zero
-      const numGames = gameIds.length || 1;
+    Object.values(newPlayerStatsMap).forEach(player => {
+      // Get the number of games this player appeared in
+      const appearances = playerAppearances[player.playerId] || 1;
       
-      // Calculate rating on a scale of 1-10
-      player.rating = Math.min(10, Math.max(1, (totalContribution / numGames) + 5));
+      // Calculate per-game averages
+      const avgGoals = player.goals / appearances;
+      const avgRebounds = player.rebounds / appearances;
+      const avgIntercepts = player.intercepts / appearances;
+      
+      // Advanced rating formula:
+      // Base: 5 points
+      // Goals: +1 point per average goal
+      // Rebounds: +0.5 points per average rebound
+      // Intercepts: +0.8 points per average intercept
+      const rating = 5 + 
+                    (avgGoals * 1.0) + 
+                    (avgRebounds * 0.5) + 
+                    (avgIntercepts * 0.8);
+      
+      // Ensure rating is between 1 and 10
+      player.rating = Math.min(10, Math.max(1, rating));
     });
-  }
+    
+    setPlayerStatsMap(newPlayerStatsMap);
+  }, [gameStatsMap, isLoading, players]);
   
+  // Generate consistent avatar colors based on player names
   const getAvatarColor = (player: Player) => {
-    const colors = [
+    // Use the player's full name as a seed for the color generator
+    const fullName = `${player.firstName} ${player.lastName}`;
+    
+    // Create deterministic background color from the fullName
+    let hash = 0;
+    for (let i = 0; i < fullName.length; i++) {
+      hash = fullName.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    
+    // Convert to tailwind class color
+    const colorClasses = [
       'bg-primary-light', 'bg-accent', 'bg-secondary', 
-      'bg-primary', 'bg-accent-dark'
+      'bg-primary', 'bg-accent-dark', 'bg-success', 'bg-warning',
+      'bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-pink-500', 'bg-orange-500'
     ];
-    return colors[player.id % colors.length];
+    
+    return colorClasses[Math.abs(hash) % colorClasses.length];
   };
   
   const getRatingClass = (rating: number) => {
