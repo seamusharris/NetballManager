@@ -351,6 +351,7 @@ export default function RosterManager({
       
       // Notify parent component about the change for real-time summary updates
       if (onRosterChanged) {
+        console.log(`Calling parent onRosterChanged: Q${quarter}, ${position}, Player ${actualPlayerId}`);
         onRosterChanged(quarter, position, actualPlayerId);
       }
     }

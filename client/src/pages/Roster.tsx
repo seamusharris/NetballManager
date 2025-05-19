@@ -87,12 +87,15 @@ export default function Roster() {
   
   // Callback for when roster positions are changed locally (before save)
   const handleRosterChanged = (quarterKey: string, position: string, playerId: number | null) => {
+    console.log(`Roster changed - Quarter: ${quarterKey}, Position: ${position}, Player: ${playerId}`);
+    
     setLocalRosterByQuarter(prev => {
       const newState = {...prev};
       newState[quarterKey] = {
         ...newState[quarterKey],
         [position]: playerId
       };
+      console.log('Updated roster state:', newState);
       return newState;
     });
     
