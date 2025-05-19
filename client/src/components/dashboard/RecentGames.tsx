@@ -60,16 +60,44 @@ export default function RecentGames({ games, opponents, className }: RecentGames
   
   // Calculate scores from game stats
   const getScores = (game: Game): [number, number] => {
-    // Fixed score for test game
-    if (game.id === 1) {
-      return [8, 5]; // Actual score from the game stats (team: 8, opponent: 5)
-    }
-    
     const gameStatsList = allGameStats?.[game.id] || [];
     
-    // Calculate team score and opponent score from actual stats
-    const teamScore = gameStatsList.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
-    const opponentScore = gameStatsList.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
+    // If no stats found, return 0-0
+    if (gameStatsList.length === 0) {
+      return [0, 0];
+    }
+    
+    // Use the same calculation method as in GamesList.tsx
+    // First, calculate goals by quarter
+    const quarterGoals = {
+      1: { for: 0, against: 0 },
+      2: { for: 0, against: 0 },
+      3: { for: 0, against: 0 },
+      4: { for: 0, against: 0 }
+    };
+    
+    // Create a map of the latest stats for each player and quarter combination
+    const latestPlayerStats: Record<string, GameStat> = {};
+    
+    // Find the latest stat for each player and quarter
+    gameStatsList.forEach(stat => {
+      const key = `${stat.playerId}-${stat.quarter}`;
+      if (!latestPlayerStats[key] || stat.id > latestPlayerStats[key].id) {
+        latestPlayerStats[key] = stat;
+      }
+    });
+    
+    // Use only the latest stats for calculating quarter goals
+    Object.values(latestPlayerStats).forEach(stat => {
+      if (stat.quarter >= 1 && stat.quarter <= 4) {
+        quarterGoals[stat.quarter].for += (stat.goalsFor || 0);
+        quarterGoals[stat.quarter].against += (stat.goalsAgainst || 0);
+      }
+    });
+    
+    // Calculate total goals
+    const teamScore = Object.values(quarterGoals).reduce((sum, q) => sum + q.for, 0);
+    const opponentScore = Object.values(quarterGoals).reduce((sum, q) => sum + q.against, 0);
     
     return [teamScore, opponentScore];
   };
