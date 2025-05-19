@@ -33,7 +33,6 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
   
   // Function to calculate game totals across all quarters
   const calculateGameTotals = () => {
-    console.log("Recalculating game totals...");
     const totals: Record<number, Record<string, number>> = {};
     
     // Initialize totals for all players
@@ -50,9 +49,6 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
         infringement: 0
       };
     });
-    
-    // Log current form values to help debugging
-    console.log("Current form values:", JSON.stringify(formValues));
     
     // Sum up values across quarters
     for (const quarter of ['1', '2', '3', '4']) {
@@ -72,9 +68,6 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
         }
       }
     }
-    
-    // Log the calculated totals for debugging
-    console.log("Calculated totals:", JSON.stringify(totals));
     
     setGameTotals(totals);
   };
@@ -392,12 +385,20 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
             rating: quarter === '1' ? (playerRatings[playerId] || 5) : undefined
           };
           
-          // Find if this player already has stats for this quarter
-          const existingStat = gameStats.find(
-            stat => stat.gameId === gameId && 
-                   stat.playerId === playerId && 
-                   stat.quarter === parseInt(quarter)
-          );
+          // Find the most recent stat record for this player and quarter
+          let existingStat: GameStat | undefined;
+          
+          // Loop through all stats for this game to find the latest one for this player and quarter
+          gameStats.forEach(stat => {
+            if (stat.gameId === gameId && 
+                stat.playerId === playerId && 
+                stat.quarter === parseInt(quarter)) {
+              // Either no existing stat found yet, or this one is more recent (higher ID)
+              if (!existingStat || stat.id > existingStat.id) {
+                existingStat = stat;
+              }
+            }
+          });
           
           if (existingStat) {
             console.log(`Updating stats for player ${playerId} in quarter ${quarter}`);
