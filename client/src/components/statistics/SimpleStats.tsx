@@ -655,26 +655,41 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
                         </td>
                       </tr>
                     ) : (
+                      // Show all players who are in any roster for this game
                       players
-                        .filter(player => gameTotals[player.id] && 
-                          (gameTotals[player.id].goalsFor > 0 || 
-                           gameTotals[player.id].goalsAgainst > 0 ||
-                           gameTotals[player.id].missedGoals > 0 ||
-                           gameTotals[player.id].rebounds > 0 ||
-                           gameTotals[player.id].intercepts > 0 ||
-                           gameTotals[player.id].badPass > 0 ||
-                           gameTotals[player.id].handlingError > 0 ||
-                           gameTotals[player.id].pickUp > 0 ||
-                           gameTotals[player.id].infringement > 0))
+                        // Don't filter - show all players who are in this game's rosters
                         .map(player => {
-                          const stats = gameTotals[player.id];
+                          // Check if this player played in any quarter
                           const positions = [];
+                          let playerWasInRoster = false;
+                          
                           for (let q = 1; q <= 4; q++) {
                             const pos = getPlayerPosition(String(q), player.id);
-                            if (pos && !positions.includes(pos)) {
-                              positions.push(pos);
+                            if (pos) {
+                              playerWasInRoster = true;
+                              if (!positions.includes(pos)) {
+                                positions.push(pos);
+                              }
                             }
                           }
+                          
+                          // Skip players who didn't play in any quarter
+                          if (!playerWasInRoster) {
+                            return null;
+                          }
+                          
+                          // If player has no stats, initialize with zeros
+                          const stats = gameTotals[player.id] || {
+                            goalsFor: 0,
+                            goalsAgainst: 0,
+                            missedGoals: 0,
+                            rebounds: 0,
+                            intercepts: 0,
+                            badPass: 0,
+                            handlingError: 0,
+                            pickUp: 0,
+                            infringement: 0
+                          };
                           
                           return (
                             <tr key={player.id}>
@@ -684,15 +699,15 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
                                   <div className="text-xs text-gray-500">{positions.join(', ')}</div>
                                 </div>
                               </td>
-                              <td className="px-3 py-4 whitespace-nowrap text-sm text-center">{stats.goalsFor}</td>
-                              <td className="px-3 py-4 whitespace-nowrap text-sm text-center">{stats.goalsAgainst}</td>
-                              <td className="px-3 py-4 whitespace-nowrap text-sm text-center">{stats.missedGoals}</td>
-                              <td className="px-3 py-4 whitespace-nowrap text-sm text-center">{stats.rebounds}</td>
-                              <td className="px-3 py-4 whitespace-nowrap text-sm text-center">{stats.intercepts}</td>
-                              <td className="px-3 py-4 whitespace-nowrap text-sm text-center">{stats.badPass}</td>
-                              <td className="px-3 py-4 whitespace-nowrap text-sm text-center">{stats.handlingError}</td>
-                              <td className="px-3 py-4 whitespace-nowrap text-sm text-center">{stats.pickUp}</td>
-                              <td className="px-3 py-4 whitespace-nowrap text-sm text-center">{stats.infringement}</td>
+                              <td className="px-3 py-4 whitespace-nowrap text-sm text-center">{stats.goalsFor || 0}</td>
+                              <td className="px-3 py-4 whitespace-nowrap text-sm text-center">{stats.goalsAgainst || 0}</td>
+                              <td className="px-3 py-4 whitespace-nowrap text-sm text-center">{stats.missedGoals || 0}</td>
+                              <td className="px-3 py-4 whitespace-nowrap text-sm text-center">{stats.rebounds || 0}</td>
+                              <td className="px-3 py-4 whitespace-nowrap text-sm text-center">{stats.intercepts || 0}</td>
+                              <td className="px-3 py-4 whitespace-nowrap text-sm text-center">{stats.badPass || 0}</td>
+                              <td className="px-3 py-4 whitespace-nowrap text-sm text-center">{stats.handlingError || 0}</td>
+                              <td className="px-3 py-4 whitespace-nowrap text-sm text-center">{stats.pickUp || 0}</td>
+                              <td className="px-3 py-4 whitespace-nowrap text-sm text-center">{stats.infringement || 0}</td>
                             </tr>
                           );
                         })
