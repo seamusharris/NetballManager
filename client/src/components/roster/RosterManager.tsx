@@ -178,6 +178,11 @@ export default function RosterManager({
       // Invalidate the roster query to trigger a refresh
       queryClient.invalidateQueries({ queryKey: ['/api/games', selectedGameId, 'rosters'] });
       
+      // Call the parent callback to trigger roster summary update if provided
+      if (onRosterSaved) {
+        onRosterSaved();
+      }
+      
       // Manually update our local state for immediate UI update
       const newRosterByQuarter = { ...rosterByQuarter };
       const quarterKey = data.quarter.toString();
