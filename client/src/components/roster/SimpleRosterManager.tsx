@@ -661,20 +661,24 @@ export default function SimpleRosterManager({
                           .filter(player => !Object.values(localRosterState[quarterKey]).includes(player.id));
                         
                         return (
-                          <TableCell key={`bench-${quarter}`} className="p-1">
-                            <div className="flex flex-wrap gap-1">
-                              {playersNotInQuarter.map(player => (
-                                <span 
-                                  key={player.id}
-                                  className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700 mb-1"
-                                >
-                                  {player.displayName}
-                                </span>
-                              ))}
-                              {playersNotInQuarter.length === 0 && (
-                                <span className="text-xs text-slate-400">-</span>
-                              )}
-                            </div>
+                          <TableCell key={`bench-${quarter}`} className="p-1 min-w-40">
+                            <Select disabled>
+                              <SelectTrigger className="w-full">
+                                <SelectValue>
+                                  <div className="flex flex-wrap gap-1">
+                                    {playersNotInQuarter.map((player, idx) => (
+                                      <span key={player.id}>
+                                        {idx > 0 ? ', ' : ''}
+                                        {player.displayName}
+                                      </span>
+                                    ))}
+                                    {playersNotInQuarter.length === 0 && (
+                                      <span className="text-slate-400">-</span>
+                                    )}
+                                  </div>
+                                </SelectValue>
+                              </SelectTrigger>
+                            </Select>
                           </TableCell>
                         );
                       })}
