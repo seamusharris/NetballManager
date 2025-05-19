@@ -206,6 +206,7 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
           const intercepts = parseInt(playerValues.intercepts || '0');
           const badPass = parseInt(playerValues.badPass || '0');
           const handlingError = parseInt(playerValues.handlingError || '0');
+          const pickUp = parseInt(playerValues.pickUp || '0');
           const infringement = parseInt(playerValues.infringement || '0');
           const rating = playerRatings[playerId] || 0; // Get the player rating from the state
           
@@ -214,8 +215,8 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
             s => s.gameId === gameId && s.playerId === playerId && s.quarter === parseInt(quarter)
           );
           
-          // Create the base stat data
-          const statData = {
+          // Create the base stat data with all required fields
+          const statData: any = {
             gameId,
             playerId,
             quarter: parseInt(quarter),
