@@ -207,7 +207,7 @@ export default function PlayersList({ players, isLoading, onEdit, onDelete }: Pl
                   <TableRow key={player.id}>
                     <TableCell className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
-                        <Avatar className="h-10 w-10 bg-primary text-white flex items-center justify-center">
+                        <Avatar className={`h-10 w-10 ${player.avatarColor || 'bg-primary'} text-white flex items-center justify-center`}>
                           <span className="font-bold">{getInitials(player.firstName, player.lastName)}</span>
                         </Avatar>
                         <div className="ml-4">
@@ -233,7 +233,7 @@ export default function PlayersList({ players, isLoading, onEdit, onDelete }: Pl
                       </div>
                     </TableCell>
                     <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {formatDate(player.dateOfBirth)}
+                      {player.dateOfBirth ? formatDate(player.dateOfBirth) : ""}
                     </TableCell>
                     <TableCell className="px-6 py-4 whitespace-nowrap">
                       <Badge

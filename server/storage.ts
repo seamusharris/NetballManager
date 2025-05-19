@@ -87,9 +87,15 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createPlayer(insertPlayer: InsertPlayer): Promise<Player> {
-    // Remove any auto flag for avatar color since we'll set it after creation
-    const playerData = {...insertPlayer};
-    delete (playerData as any).avatarColor;
+    // TypeScript-safe insertion - convert to database schema format
+    const playerData = {
+      displayName: insertPlayer.displayName,
+      firstName: insertPlayer.firstName,
+      lastName: insertPlayer.lastName,
+      dateOfBirth: insertPlayer.dateOfBirth,
+      positionPreferences: insertPlayer.positionPreferences,
+      active: insertPlayer.active !== undefined ? insertPlayer.active : true
+    };
     
     // Create the player first
     const [player] = await db
@@ -99,7 +105,9 @@ export class DatabaseStorage implements IStorage {
     
     // Now that we have the player ID, we can assign a deterministic avatar color
     // Based on the ID to ensure consistency across the application
-    const avatarColor = `bg-${['blue', 'purple', 'pink', 'green', 'teal', 'orange', 'red', 'yellow', 'indigo'][player.id % 9]}-600`;
+    const avatarColors = ['blue', 'purple', 'pink', 'green', 'teal', 'orange', 'red', 'yellow', 'indigo'];
+    const colorName = avatarColors[player.id % avatarColors.length];
+    const avatarColor = `bg-${colorName}-600`;
     
     // Update the player with the generated avatar color
     const [updatedPlayer] = await db
