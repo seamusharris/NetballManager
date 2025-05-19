@@ -15,6 +15,7 @@ interface PlayerPerformanceProps {
 
 interface PlayerStats {
   playerId: number;
+  gamesPlayed: number;
   goals: number;
   goalsAgainst: number;
   missedGoals: number;
@@ -27,7 +28,7 @@ interface PlayerStats {
   rating: number;
 }
 
-type SortField = 'name' | 'goals' | 'goalsAgainst' | 'missedGoals' | 'rebounds' | 'intercepts' | 
+type SortField = 'name' | 'gamesPlayed' | 'goals' | 'goalsAgainst' | 'missedGoals' | 'rebounds' | 'intercepts' | 
                 'badPass' | 'handlingError' | 'pickUp' | 'infringement' | 'rating';
 type SortDirection = 'asc' | 'desc';
 
@@ -46,8 +47,8 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
   const gameIds = completedGames.map(game => game.id);
   const enableQuery = gameIds.length > 0;
   
-  // Use React Query to fetch and cache game statistics
-  const { data: gameStatsMap, isLoading } = useQuery({
+  // Use React Query to fetch and cache game statistics and rosters
+  const { data: gameStatsMap, isLoading: isLoadingStats } = useQuery({
     queryKey: ['playerGameStats', ...gameIds],
     queryFn: async () => {
       if (gameIds.length === 0) {
@@ -78,6 +79,40 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
     refetchOnWindowFocus: true // Refresh data when user returns to the window
   });
   
+  // Fetch roster data for tracking games played
+  const { data: gameRostersMap, isLoading: isLoadingRosters } = useQuery({
+    queryKey: ['gameRosters', ...gameIds],
+    queryFn: async () => {
+      if (gameIds.length === 0) {
+        return {};
+      }
+      
+      // Fetch rosters for each game to count games played
+      const rosterPromises = gameIds.map(async (gameId) => {
+        const response = await fetch(`/api/games/${gameId}/rosters`);
+        const rosters = await response.json();
+        return { gameId, rosters };
+      });
+      
+      const results = await Promise.all(rosterPromises);
+      
+      // Create a map of game ID to rosters array
+      const rostersMap: Record<number, any[]> = {};
+      results.forEach(result => {
+        rostersMap[result.gameId] = result.rosters;
+      });
+      
+      return rostersMap;
+    },
+    enabled: enableQuery,
+    staleTime: 0,
+    gcTime: 15 * 60 * 1000,
+    refetchOnWindowFocus: true
+  });
+  
+  // Combined loading state
+  const isLoading = isLoadingStats || isLoadingRosters;
+  
   // When game stats or players change, recalculate player statistics
   useEffect(() => {
     if (!gameStatsMap || isLoading || players.length === 0) return;
@@ -88,6 +123,7 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
     players.forEach(player => {
       newPlayerStatsMap[player.id] = {
         playerId: player.id,
+        gamesPlayed: 0,
         goals: 0,
         goalsAgainst: 0,
         missedGoals: 0,
@@ -100,6 +136,39 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
         rating: 0
       };
     });
+    
+    // Count games played from rosters (any game where player had a position in any quarter)
+    if (Object.keys(gameRostersMap).length > 0) {
+      // Track which games each player participated in
+      const playerGameIds: Record<number, Set<number>> = {};
+      
+      // Initialize sets for each player
+      players.forEach(player => {
+        playerGameIds[player.id] = new Set();
+      });
+      
+      // Process all game rosters
+      Object.entries(gameRostersMap).forEach(([gameIdStr, rosters]) => {
+        const gameId = parseInt(gameIdStr);
+        
+        // For each roster entry in this game
+        rosters.forEach((roster: any) => {
+          const playerId = roster.playerId;
+          
+          // If player is assigned to a position in any quarter, count them as having played
+          if (playerId && roster.position && playerGameIds[playerId]) {
+            playerGameIds[playerId].add(gameId);
+          }
+        });
+      });
+      
+      // Update games played count for each player
+      players.forEach(player => {
+        if (playerGameIds[player.id] && newPlayerStatsMap[player.id]) {
+          newPlayerStatsMap[player.id].gamesPlayed = playerGameIds[player.id].size;
+        }
+      });
+    }
     
     // Process all game stats - summing across ALL completed games for total stats
     if (Object.keys(gameStatsMap).length > 0) {
@@ -280,8 +349,9 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
   // Column definitions with categories
   const statCategories = [
     { 
-      name: 'Rating', 
+      name: 'Games', 
       fields: [
+        { field: 'gamesPlayed', label: 'Played' },
         { field: 'rating', label: 'Rating' },
       ]
     },
