@@ -11,76 +11,118 @@ export const exportRosterToPDF = (
   players: Player[],
   rosterState: Record<string, Record<string, number | null>>
 ) => {
-  const doc = new jsPDF();
+  // Create document in landscape orientation
+  const doc = new jsPDF({
+    orientation: 'landscape',
+    unit: 'mm',
+    format: 'a4'
+  });
+  
+  // Set page margins
+  const margin = 15;
+  const pageWidth = doc.internal.pageSize.width;
+  const pageHeight = doc.internal.pageSize.height;
   
   // Title
   doc.setFontSize(18);
-  doc.text(`Game Roster: ${formatShortDate(game.date)}`, 14, 22);
+  doc.setTextColor(0, 32, 96); // Dark blue for title
+  const title = `Game Roster: ${formatShortDate(game.date)} vs ${opponent.teamName}`;
+  doc.text(title, pageWidth / 2, margin, { align: 'center' });
   
   // Game details
   doc.setFontSize(12);
-  doc.text(`Time: ${game.time}`, 14, 32);
-  doc.text(`Opponent: ${opponent.teamName}`, 14, 38);
+  doc.setTextColor(0, 0, 0); // Black for text
+  const gameInfo = `Time: ${game.time}`;
+  doc.text(gameInfo, pageWidth / 2, margin + 8, { align: 'center' });
   
-  // Roster Table
+  // Roster Map for full-page summary
   const playerMap = players.reduce((map, player) => {
     map[player.id] = player;
     return map;
   }, {} as Record<number, Player>);
   
-  // Define quarters and positions
-  const quarters = ['1', '2', '3', '4'];
-  const positionOrder: Record<string, number> = { 
-    'GS': 1, 'GA': 2, 'WA': 3, 'C': 4, 'WD': 5, 'GD': 6, 'GK': 7 
-  };
+  // Define positions in order
+  const positions = ['GS', 'GA', 'WA', 'C', 'WD', 'GD', 'GK'];
   
-  // Process each quarter
-  quarters.forEach((quarter, index) => {
-    const quarterPositions = rosterState[quarter];
-    if (!quarterPositions) return;
+  // Create a single consolidated table for all quarters
+  const tableHead = [['Position', 'Quarter 1', 'Quarter 2', 'Quarter 3', 'Quarter 4']];
+  
+  // Create consolidated table body with each row being a position
+  const tableBody = positions.map(position => {
+    const row = [position]; // First column is the position
     
-    // Create table data for this quarter
-    const tableData: string[][] = [];
-    
-    // Sort positions by their natural order
-    const sortedPositions = Object.entries(quarterPositions)
-      .sort((a, b) => positionOrder[a[0]] - positionOrder[b[0]]);
+    // Add player for each quarter
+    for (let quarter = 1; quarter <= 4; quarter++) {
+      const quarterKey = quarter.toString() as '1' | '2' | '3' | '4';
+      const playerId = rosterState[quarterKey][position];
       
-    // Add each position and player to the table
-    sortedPositions.forEach(([position, playerId]) => {
-      if (playerId === null) return;
-      
-      const player = playerMap[playerId];
-      if (!player) return;
-      
-      tableData.push([
-        positionLabels[position as keyof typeof positionLabels],
-        player.displayName
-      ]);
-    });
-    
-    // Skip empty quarters
-    if (tableData.length === 0) return;
-    
-    // Add a header for the quarter
-    if (index === 0) {
-      doc.setFontSize(14);
-      doc.text(`Quarter ${quarter}`, 14, 45);
+      if (playerId !== null && playerMap[playerId]) {
+        row.push(playerMap[playerId].displayName);
+      } else {
+        row.push('-');
+      }
     }
     
-    // Create table
-    autoTable(doc, {
-      startY: index === 0 ? 50 : undefined,
-      head: [['Position', 'Player']],
-      body: tableData,
-      didDrawPage: (data) => {
-        if (index > 0) {
-          doc.setFontSize(14);
-          doc.text(`Quarter ${quarter}`, 14, data.settings.startY - 10);
-        }
-      }
-    });
+    return row;
   });
+  
+  // Add a row for "Off" players not on court in each quarter
+  const offPlayersRow = ['Off'];
+  for (let quarter = 1; quarter <= 4; quarter++) {
+    const quarterKey = quarter.toString() as '1' | '2' | '3' | '4';
+    const playersOnCourt = Object.values(rosterState[quarterKey]).filter(id => id !== null) as number[];
+    const playersOffCourt = players
+      .filter(player => player.active && !playersOnCourt.includes(player.id))
+      .map(player => player.displayName);
+    
+    offPlayersRow.push(playersOffCourt.length > 0 ? playersOffCourt.join(', ') : '-');
+  }
+  tableBody.push(offPlayersRow);
+  
+  // Create the main table
+  autoTable(doc, {
+    startY: margin + 15,
+    head: tableHead,
+    body: tableBody,
+    theme: 'grid',
+    headStyles: {
+      fillColor: [0, 91, 187], // Blue header
+      textColor: 255,
+      fontStyle: 'bold',
+      halign: 'center'
+    },
+    bodyStyles: {
+      halign: 'left'
+    },
+    columnStyles: {
+      0: { // Position column
+        fontStyle: 'bold',
+        cellWidth: 25
+      },
+      1: { cellWidth: 'auto' }, // Quarter 1
+      2: { cellWidth: 'auto' }, // Quarter 2
+      3: { cellWidth: 'auto' }, // Quarter 3
+      4: { cellWidth: 'auto' }  // Quarter 4
+    },
+    alternateRowStyles: {
+      fillColor: [240, 240, 240] // Light gray for alternate rows
+    },
+    didParseCell: (data) => {
+      // Style the "Off" row differently
+      if (data.row.index === positions.length && data.section === 'body') {
+        data.cell.styles.fillColor = [220, 230, 241]; // Light blue background
+        data.cell.styles.fontStyle = 'bold';
+      }
+    },
+    margin: { top: margin + 15, right: margin, bottom: margin, left: margin }
+  });
+  
+  // Add footer with date and page number
+  const footerText = `Printed on: ${new Date().toLocaleDateString()}`;
+  doc.setFontSize(8);
+  doc.setTextColor(100, 100, 100); // Gray for footer
+  doc.text(footerText, margin, pageHeight - margin / 2);
+  doc.text(`Page 1 of 1`, pageWidth - margin, pageHeight - margin / 2, { align: 'right' });
   
   // Save the PDF
   doc.save(`Roster_${formatShortDate(game.date)}_vs_${opponent.teamName.replace(/\s+/g, '_')}.pdf`);
