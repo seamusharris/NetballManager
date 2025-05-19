@@ -424,16 +424,35 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
     }
   });
   
-  // Group players by the quarter they played in
+  // Define position order for sorting
+  const positionOrder: Record<string, number> = {
+    'GS': 1, 'GA': 2, 'WA': 3, 'C': 4, 'WD': 5, 'GD': 6, 'GK': 7
+  };
+  
+  // Group players by the quarter they played in, sorted by position
   const playersByQuarter = (quarter: string): Player[] => {
-    return rosters
-      .filter(roster => String(roster.quarter) === quarter)
+    const quarterRosters = rosters.filter(roster => String(roster.quarter) === quarter);
+    
+    // Create map of player ID to position for this quarter
+    const playerPositions: Record<number, string> = {};
+    quarterRosters.forEach(roster => {
+      playerPositions[roster.playerId] = roster.position;
+    });
+    
+    return quarterRosters
       .map(roster => {
         const player = players.find(p => p.id === roster.playerId);
         return player || null;
       })
       .filter((player): player is Player => player !== null)
-      .sort((a, b) => a.displayName.localeCompare(b.displayName));
+      // Sort by position order (GS through GK)
+      .sort((a, b) => {
+        const posA = playerPositions[a.id] || '';
+        const posB = playerPositions[b.id] || '';
+        const orderA = positionOrder[posA] || 999;
+        const orderB = positionOrder[posB] || 999;
+        return orderA - orderB;
+      });
   };
   
   // Get stat fields grouped by category
