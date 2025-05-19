@@ -1,8 +1,7 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Game, Player, GameStat } from '@shared/schema';
-import { cn, getInitials, generateRandomColor } from '@/lib/utils';
+import { cn, getInitials } from '@/lib/utils';
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 
@@ -26,8 +25,9 @@ interface PlayerStats {
   rating: number;
 }
 
-export default function PlayerPerformance({ players, games, className }: PlayerPerformanceProps) {
+export default function PlayerPerformance({ players, games, className }: PlayerPerformanceProps): JSX.Element {
   const [timeRange, setTimeRange] = useState('last5');
+  const [playerStatsMap, setPlayerStatsMap] = useState<Record<number, PlayerStats>>({});
   
   // Get only completed games
   const completedGames = games.filter(game => game.completed);
@@ -66,9 +66,6 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
     refetchOnWindowFocus: true // Refresh data when user returns to the window
   });
   
-  // State to store calculated player stats
-  const [playerStatsMap, setPlayerStatsMap] = useState<Record<number, PlayerStats>>({});
-  
   // When game stats or players change, recalculate player statistics
   useEffect(() => {
     if (!gameStatsMap || isLoading || players.length === 0) return;
@@ -93,7 +90,6 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
     });
     
     // Process all game stats - but only include the latest game for accurate ratings display
-    // This ensures what's showing on the dashboard matches what's in Game Totals
     if (Object.keys(gameStatsMap).length > 0) {
       // Get the most recent game ID (should be the highest ID number)
       const gameIds = Object.keys(gameStatsMap).map(id => parseInt(id));
@@ -102,61 +98,80 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
       // Get stats from only the latest game
       const latestGameStats = gameStatsMap[latestGameId] || [];
       
-      // Process stats for the latest game only
+      // Process stats using a de-duplication approach to handle duplicate records
+      // Create a map to track the most recent stat entry for each player in each quarter
+      const dedupedStats: Record<number, Record<number, GameStat>> = {};
+      
+      // First identify the most recent stat for each player in each quarter
       latestGameStats.forEach(stat => {
-        if (!stat || !stat.playerId) return;
+        if (!stat || !stat.playerId || !stat.quarter) return;
         
         const playerId = stat.playerId;
-        // Check if player exists in our map
-        if (!newPlayerStatsMap[playerId]) {
-          // This might happen if a stat is for a player not in our player list
-          console.warn(`Stats found for player ${playerId} who is not in the players list`);
-          return;
+        const quarter = stat.quarter;
+        
+        // Initialize player's stats map if needed
+        if (!dedupedStats[playerId]) {
+          dedupedStats[playerId] = {};
         }
         
-        // Accumulate stats from all quarters of the latest game
-        newPlayerStatsMap[playerId].goals += stat.goalsFor || 0;
-        newPlayerStatsMap[playerId].goalsAgainst += stat.goalsAgainst || 0;
-        newPlayerStatsMap[playerId].missedGoals += stat.missedGoals || 0;
-        newPlayerStatsMap[playerId].rebounds += stat.rebounds || 0;
-        newPlayerStatsMap[playerId].intercepts += stat.intercepts || 0;
-        newPlayerStatsMap[playerId].badPass += stat.badPass || 0;
-        newPlayerStatsMap[playerId].handlingError += stat.handlingError || 0;
-        newPlayerStatsMap[playerId].pickUp += stat.pickUp || 0;
-        newPlayerStatsMap[playerId].infringement += stat.infringement || 0;
+        // Keep only the most recent stat for this player and quarter
+        if (!dedupedStats[playerId][quarter] || 
+            stat.id > dedupedStats[playerId][quarter].id) {
+          dedupedStats[playerId][quarter] = stat;
+        }
+      });
+      
+      // Now process only the de-duplicated stats
+      Object.values(dedupedStats).forEach(playerQuarterStats => {
+        Object.values(playerQuarterStats).forEach(stat => {
+          const playerId = stat.playerId;
+          if (!newPlayerStatsMap[playerId]) return;
+          
+          // Add this player's stats
+          newPlayerStatsMap[playerId].goals += stat.goalsFor || 0;
+          newPlayerStatsMap[playerId].goalsAgainst += stat.goalsAgainst || 0;
+          newPlayerStatsMap[playerId].missedGoals += stat.missedGoals || 0;
+          newPlayerStatsMap[playerId].rebounds += stat.rebounds || 0;
+          newPlayerStatsMap[playerId].intercepts += stat.intercepts || 0;
+          newPlayerStatsMap[playerId].badPass += stat.badPass || 0;
+          newPlayerStatsMap[playerId].handlingError += stat.handlingError || 0;
+          newPlayerStatsMap[playerId].pickUp += stat.pickUp || 0;
+          newPlayerStatsMap[playerId].infringement += stat.infringement || 0;
+        });
       });
       
       console.log(`Using stats from game ${latestGameId} for the dashboard performance metrics`);
     }
     
-    // Process player ratings - use only the latest game's quarter 1 stats
-    Object.values(newPlayerStatsMap).forEach(player => {
-      // Get all first quarter stats
-      const allFirstQuarterStats = Object.values(gameStatsMap || {})
-        .flatMap(stats => stats.filter(stat => 
-          stat.playerId === player.playerId && 
-          stat.quarter === 1 && 
-          stat.rating !== undefined && 
-          stat.rating !== null
-        ))
-        .sort((a, b) => b.id - a.id); // Sort by ID descending to get most recent first
+    // Process player ratings - use only the most recent quarter 1 stats
+    Object.values(newPlayerStatsMap).forEach(playerStat => {
+      // Find all quarter 1 stats for this player across all games
+      const quarter1Stats = Object.values(gameStatsMap)
+        .flatMap(gameStats => 
+          gameStats.filter(stat => 
+            stat.playerId === playerStat.playerId && 
+            stat.quarter === 1 && 
+            stat.rating !== undefined && 
+            stat.rating !== null
+          )
+        )
+        .sort((a, b) => b.id - a.id); // Sort by ID descending
       
-      // Get the most recent rating
-      if (allFirstQuarterStats.length > 0) {
-        const latestRating = allFirstQuarterStats[0].rating;
+      // Use the most recent rating if available
+      if (quarter1Stats.length > 0) {
+        const latestRating = quarter1Stats[0].rating;
         if (typeof latestRating === 'number') {
-          player.rating = latestRating;
-          console.log(`Using rating ${latestRating} for player ${player.playerId} from stat ID ${allFirstQuarterStats[0].id}`);
+          playerStat.rating = latestRating;
+          console.log(`Using rating ${latestRating} for player ${playerStat.playerId} from stat ID ${quarter1Stats[0].id}`);
         }
       } else {
-        // If no rating found, calculate a default based on performance
+        // Calculate default rating based on performance
         const calculatedRating = 5 + 
-                    (player.goals * 0.2) +  // Each goal is worth 0.2 points
-                    (player.rebounds * 0.3) + // Each rebound is worth 0.3 points
-                    (player.intercepts * 0.4); // Each intercept is worth 0.4 points
-                    
-        // Ensure rating is between 1 and 10
-        player.rating = Math.min(10, Math.max(1, calculatedRating));
+          (playerStat.goals * 0.2) +
+          (playerStat.rebounds * 0.3) + 
+          (playerStat.intercepts * 0.4);
+        
+        playerStat.rating = Math.min(10, Math.max(1, calculatedRating));
       }
     });
     
@@ -164,7 +179,7 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
   }, [gameStatsMap, isLoading, players]);
   
   // Generate a fixed color mapping for each player by ID
-  const getAvatarColor = (player: Player) => {
+  const getAvatarColor = (player: Player): string => {
     // Fixed color mapping by player ID to ensure consistency
     const colorMap: Record<number, string> = {
       1: 'bg-blue-500',     // Lucia
@@ -181,7 +196,7 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
     return colorMap[player.id] || 'bg-primary-light';
   };
   
-  const getRatingClass = (rating: number) => {
+  const getRatingClass = (rating: number): string => {
     if (rating >= 9) return 'bg-success/20 text-success';
     if (rating >= 8) return 'bg-accent/20 text-accent';
     if (rating >= 7) return 'bg-warning/20 text-warning';
@@ -195,13 +210,18 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
       stats: playerStatsMap[player.id] || {
         playerId: player.id,
         goals: 0,
+        goalsAgainst: 0,
+        missedGoals: 0,
         rebounds: 0,
         intercepts: 0,
-        position: player.positionPreferences[0] || 'GS',
+        badPass: 0,
+        handlingError: 0,
+        pickUp: 0,
+        infringement: 0,
         rating: 5.0
       }
     }))
-    .sort((a, b) => b.stats.rating - a.stats.rating); // Show all players, sorted by rating
+    .sort((a, b) => b.stats.rating - a.stats.rating); // Sort by rating
   
   return (
     <Card className={className}>
