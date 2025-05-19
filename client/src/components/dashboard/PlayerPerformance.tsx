@@ -138,7 +138,7 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
     });
     
     // Count games played from rosters (any game where player had a position in any quarter)
-    if (Object.keys(gameRostersMap).length > 0) {
+    if (gameRostersMap && Object.keys(gameRostersMap).length > 0) {
       // Track which games each player participated in
       const playerGameIds: Record<number, Set<number>> = {};
       
@@ -152,14 +152,16 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
         const gameId = parseInt(gameIdStr);
         
         // For each roster entry in this game
-        rosters.forEach((roster: any) => {
-          const playerId = roster.playerId;
-          
-          // If player is assigned to a position in any quarter, count them as having played
-          if (playerId && roster.position && playerGameIds[playerId]) {
-            playerGameIds[playerId].add(gameId);
-          }
-        });
+        if (Array.isArray(rosters)) {
+          rosters.forEach((roster: any) => {
+            const playerId = roster.playerId;
+            
+            // If player is assigned to a position in any quarter, count them as having played
+            if (playerId && roster.position && playerGameIds[playerId]) {
+              playerGameIds[playerId].add(gameId);
+            }
+          });
+        }
       });
       
       // Update games played count for each player
@@ -310,6 +312,7 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
       ...player,
       stats: playerStatsMap[player.id] || {
         playerId: player.id,
+        gamesPlayed: 0,
         goals: 0,
         goalsAgainst: 0,
         missedGoals: 0,
@@ -486,7 +489,12 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
                     
                     <TableCell className="border-r"></TableCell>
                     
-                    {/* Rating - now first */}
+                    {/* Games Played */}
+                    <TableCell className="px-2 py-2 whitespace-nowrap text-sm text-center font-mono">
+                      {player.stats.gamesPlayed}
+                    </TableCell>
+                    
+                    {/* Rating */}
                     <TableCell className="px-2 py-2 whitespace-nowrap text-center border-r">
                       <div className="flex items-center justify-center">
                         <span className={cn("px-2 py-1 text-xs font-semibold rounded-full", getRatingClass(player.stats.rating))}>
