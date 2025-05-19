@@ -520,15 +520,15 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-slate-50">
-                      <TableHead className="min-w-[150px]">Player</TableHead>
-                      <TableHead className="text-center w-10"></TableHead>
+                      <TableHead className="min-w-[120px] border-r">Player</TableHead>
+                      <TableHead className="text-center w-10 border-r"></TableHead>
                       
                       {/* Stat category headers */}
-                      {statCategories.map((category) => (
+                      {statCategories.map((category, index) => (
                         <TableHead 
                           key={category.name} 
                           colSpan={category.fields.length}
-                          className="text-center bg-blue-50 border-l border-r"
+                          className={`text-center bg-blue-50 border-r ${index === 0 ? 'border-l' : ''}`}
                         >
                           {category.name}
                         </TableHead>
@@ -537,15 +537,22 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
                     
                     {/* Stat field headers */}
                     <TableRow>
-                      <TableHead></TableHead>
-                      <TableHead></TableHead>
+                      <TableHead className="border-r"></TableHead>
+                      <TableHead className="border-r"></TableHead>
                       
-                      {statCategories.map((category) => (
-                        category.fields.map((field) => (
-                          <TableHead key={field.id} className="text-center px-1 py-2 min-w-[80px]">
-                            {field.label}
-                          </TableHead>
-                        ))
+                      {statCategories.map((category, categoryIndex) => (
+                        category.fields.map((field, fieldIndex) => {
+                          // Add right border to last column in each category
+                          const isLastInCategory = fieldIndex === category.fields.length - 1;
+                          return (
+                            <TableHead 
+                              key={field.id} 
+                              className={`text-center px-1 py-2 min-w-[80px] ${isLastInCategory ? 'border-r' : ''}`}
+                            >
+                              {field.label}
+                            </TableHead>
+                          );
+                        })
                       ))}
                     </TableRow>
                   </TableHeader>
@@ -553,48 +560,55 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
                   <TableBody>
                     {playersByQuarter(quarter).map(player => (
                       <TableRow key={player.id} className="hover:bg-slate-50">
-                        <TableCell className="font-medium">
+                        <TableCell className="font-medium border-r">
                           {player.displayName}
                         </TableCell>
                         
-                        <TableCell className="text-center font-medium">
+                        <TableCell className="text-center font-medium border-r">
                           {getPlayerPosition(player.id, quarter)}
                         </TableCell>
                         
                         {/* Stat inputs by category */}
-                        {statCategories.map((category) => (
-                          category.fields.map((field) => (
-                            <TableCell key={field.id} className="p-1 text-center">
-                              <div className="flex flex-col items-center">
-                                <Button 
-                                  variant="ghost" 
-                                  size="icon" 
-                                  className="h-6 w-6 mb-1" 
-                                  onClick={() => adjustStatValue(quarter, player.id, field.id, 1)}
-                                >
-                                  <ChevronUp className="h-4 w-4" />
-                                </Button>
-                                
-                                <Input
-                                  type="text"
-                                  inputMode="numeric"
-                                  className="h-9 w-16 text-center"
-                                  value={formValues[quarter]?.[player.id]?.[field.id] || '0'}
-                                  onChange={(e) => handleInputChange(quarter, player.id, field.id, e.target.value)}
-                                />
-                                
-                                <Button 
-                                  variant="ghost" 
-                                  size="icon" 
-                                  className="h-6 w-6 mt-1" 
-                                  onClick={() => adjustStatValue(quarter, player.id, field.id, -1)}
-                                  disabled={parseInt(formValues[quarter]?.[player.id]?.[field.id] || '0') <= 0}
-                                >
-                                  <ChevronDown className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </TableCell>
-                          ))
+                        {statCategories.map((category, categoryIndex) => (
+                          category.fields.map((field, fieldIndex) => {
+                            // Add right border to last column in each category
+                            const isLastInCategory = fieldIndex === category.fields.length - 1;
+                            return (
+                              <TableCell 
+                                key={field.id} 
+                                className={`p-1 text-center ${isLastInCategory ? 'border-r' : ''}`}
+                              >
+                                <div className="flex flex-col items-center">
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    className="h-6 w-6 mb-1" 
+                                    onClick={() => adjustStatValue(quarter, player.id, field.id, 1)}
+                                  >
+                                    <ChevronUp className="h-4 w-4" />
+                                  </Button>
+                                  
+                                  <Input
+                                    type="text"
+                                    inputMode="numeric"
+                                    className="h-9 w-16 text-center"
+                                    value={formValues[quarter]?.[player.id]?.[field.id] || '0'}
+                                    onChange={(e) => handleInputChange(quarter, player.id, field.id, e.target.value)}
+                                  />
+                                  
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    className="h-6 w-6 mt-1" 
+                                    onClick={() => adjustStatValue(quarter, player.id, field.id, -1)}
+                                    disabled={parseInt(formValues[quarter]?.[player.id]?.[field.id] || '0') <= 0}
+                                  >
+                                    <ChevronDown className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            );
+                          })
                         ))}
                       </TableRow>
                     ))}
