@@ -246,17 +246,25 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
     return quarterRoster ? quarterRoster.position : '';
   };
   
-  // Get players for a quarter
+  // Get players for a quarter, ordered by position (GS, GA, WA, C, WD, GD, GK)
   const getPlayersForQuarter = (quarter: string) => {
-    const quarterPlayers: number[] = [];
+    // Define position order
+    const positionOrder = ['GS', 'GA', 'WA', 'C', 'WD', 'GD', 'GK'];
     
-    rosters.forEach(roster => {
-      if (roster && roster.quarter === parseInt(quarter) && !quarterPlayers.includes(roster.playerId)) {
-        quarterPlayers.push(roster.playerId);
-      }
+    // Get all roster entries for this quarter
+    const quarterRosters = rosters.filter(
+      roster => roster && roster.quarter === parseInt(quarter)
+    );
+    
+    // Sort by position according to defined order
+    quarterRosters.sort((a, b) => {
+      const posA = positionOrder.indexOf(a.position);
+      const posB = positionOrder.indexOf(b.position);
+      return posA - posB;
     });
     
-    return quarterPlayers;
+    // Extract player IDs in correct order
+    return quarterRosters.map(roster => roster.playerId);
   };
   
   // Get player by ID
@@ -281,7 +289,7 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
           </div>
         </div>
         
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div>
             <label className="block text-sm font-medium mb-1">Goals For</label>
             <input
@@ -318,6 +326,46 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
               type="text"
               value={values.rebounds || '0'}
               onChange={(e) => handleChange(quarter, playerId, 'rebounds', e.target.value)}
+              className="w-full p-2 border rounded-md text-center"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium mb-1">Intercepts</label>
+            <input
+              type="text"
+              value={values.intercepts || '0'}
+              onChange={(e) => handleChange(quarter, playerId, 'intercepts', e.target.value)}
+              className="w-full p-2 border rounded-md text-center"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium mb-1">Bad Pass</label>
+            <input
+              type="text"
+              value={values.badPass || '0'}
+              onChange={(e) => handleChange(quarter, playerId, 'badPass', e.target.value)}
+              className="w-full p-2 border rounded-md text-center"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium mb-1">Handling Error</label>
+            <input
+              type="text"
+              value={values.handlingError || '0'}
+              onChange={(e) => handleChange(quarter, playerId, 'handlingError', e.target.value)}
+              className="w-full p-2 border rounded-md text-center"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium mb-1">Infringement</label>
+            <input
+              type="text"
+              value={values.infringement || '0'}
+              onChange={(e) => handleChange(quarter, playerId, 'infringement', e.target.value)}
               className="w-full p-2 border rounded-md text-center"
             />
           </div>
