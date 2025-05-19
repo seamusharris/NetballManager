@@ -423,22 +423,21 @@ export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFor
             type="button" 
             variant="outline" 
             onClick={() => {
-              // Reset form to initial values
-              form.reset();
+              // Get original values to properly reset
+              const originalValues = {
+                displayName: player?.displayName || "",
+                firstName: player?.firstName || "",
+                lastName: player?.lastName || "",
+                dateOfBirth: player?.dateOfBirth || "",
+                position1: positionDefaults.position1,
+                position2: positionDefaults.position2,
+                position3: positionDefaults.position3,
+                position4: positionDefaults.position4,
+                active: player?.active !== undefined ? player.active : true,
+              };
               
-              // Reset position fields to default empty values
-              form.setValue("position1", isEditing ? positionDefaults.position1 : "");
-              form.setValue("position2", "none");
-              form.setValue("position3", "none");
-              form.setValue("position4", "none");
-              
-              // Reset the available positions
-              setAvailablePositions({
-                position1: [...allPositions],
-                position2: [...allPositions],
-                position3: [...allPositions],
-                position4: [...allPositions],
-              });
+              // Reset form to original values
+              form.reset(originalValues);
             }}
           >
             Reset
