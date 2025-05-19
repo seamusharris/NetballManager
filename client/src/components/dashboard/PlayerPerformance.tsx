@@ -233,8 +233,8 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
                   <tr key={player.id}>
                     <td className="px-3 py-2 whitespace-nowrap">
                       <div className="flex items-center">
-                        <Avatar className={cn("h-8 w-8 text-white flex items-center justify-center", getAvatarColor(player))}>
-                          <AvatarFallback className="text-white">
+                        <Avatar className="h-8 w-8 text-white flex items-center justify-center">
+                          <AvatarFallback className={cn("text-white", getAvatarColor(player))}>
                             {getInitials(player.firstName, player.lastName)}
                           </AvatarFallback>
                         </Avatar>
