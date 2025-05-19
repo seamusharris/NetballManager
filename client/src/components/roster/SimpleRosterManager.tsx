@@ -155,8 +155,24 @@ export default function SimpleRosterManager({
       return newState;
     });
     
-    // Mark that we have unsaved changes - no need to track specific pending changes anymore
-    // as we'll save the entire roster state
+    // For tracking UI changes we still need to update pendingChanges
+    if (actualPlayerId !== null) {
+      const quarterNum = parseInt(quarter);
+      setPendingChanges(prev => [
+        ...prev.filter(change => 
+          !(change.quarter === quarterNum && change.position === position)
+        ),
+        { quarter: quarterNum, position, playerId: actualPlayerId }
+      ]);
+    } else {
+      // For clearing, just mark that the position is cleared in pending changes
+      const quarterNum = parseInt(quarter);
+      setPendingChanges(prev => 
+        prev.filter(change => !(change.quarter === quarterNum && change.position === position))
+      );
+    }
+    
+    // Mark that we have unsaved changes
     setHasUnsavedChanges(true);
     
     // Log for debugging
@@ -265,8 +281,9 @@ export default function SimpleRosterManager({
       }
     }
     
-      // Update the local state - we no longer need to track pendingChanges separately
+    // Update the local state and set pendingChanges for all assignments
     setLocalRosterState(newRosterState);
+    setPendingChanges(assignments);
     
     // Mark as having unsaved changes
     setHasUnsavedChanges(true);
