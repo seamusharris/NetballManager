@@ -136,13 +136,12 @@ export default function QuarterStatistics({
                   {/* Goals For */}
                   <TableCell className="px-4 py-3 whitespace-nowrap">
                     {isEditable ? (
-                      <Input
-                        type="number"
+                      <input
+                        type="text"
                         value={getStatValue(playerId, 'goalsFor')}
                         onChange={(e) => handleStatChange(playerId, 'goalsFor', e.target.value)}
-                        className="stats-input"
+                        className="stats-input border border-input rounded-md px-2 py-1"
                         disabled={isPending}
-                        min={0}
                       />
                     ) : (
                       <div className="text-center">{getStatValue(playerId, 'goalsFor')}</div>
@@ -152,13 +151,12 @@ export default function QuarterStatistics({
                   {/* Goals Against */}
                   <TableCell className="px-4 py-3 whitespace-nowrap">
                     {isEditable ? (
-                      <Input
-                        type="number"
+                      <input
+                        type="text"
                         value={getStatValue(playerId, 'goalsAgainst')}
                         onChange={(e) => handleStatChange(playerId, 'goalsAgainst', e.target.value)}
-                        className="stats-input"
+                        className="stats-input border border-input rounded-md px-2 py-1"
                         disabled={isPending}
-                        min={0}
                       />
                     ) : (
                       <div className="text-center">{getStatValue(playerId, 'goalsAgainst')}</div>
@@ -168,13 +166,12 @@ export default function QuarterStatistics({
                   {/* Missed Goals */}
                   <TableCell className="px-4 py-3 whitespace-nowrap">
                     {isEditable ? (
-                      <Input
-                        type="number"
+                      <input
+                        type="text"
                         value={getStatValue(playerId, 'missedGoals')}
                         onChange={(e) => handleStatChange(playerId, 'missedGoals', e.target.value)}
-                        className="stats-input"
+                        className="stats-input border border-input rounded-md px-2 py-1"
                         disabled={isPending}
-                        min={0}
                       />
                     ) : (
                       <div className="text-center">{getStatValue(playerId, 'missedGoals')}</div>
@@ -184,13 +181,12 @@ export default function QuarterStatistics({
                   {/* Rebounds */}
                   <TableCell className="px-4 py-3 whitespace-nowrap">
                     {isEditable ? (
-                      <Input
-                        type="number"
+                      <input
+                        type="text"
                         value={getStatValue(playerId, 'rebounds')}
                         onChange={(e) => handleStatChange(playerId, 'rebounds', e.target.value)}
-                        className="stats-input"
+                        className="stats-input border border-input rounded-md px-2 py-1"
                         disabled={isPending}
-                        min={0}
                       />
                     ) : (
                       <div className="text-center">{getStatValue(playerId, 'rebounds')}</div>
@@ -200,13 +196,12 @@ export default function QuarterStatistics({
                   {/* Intercepts */}
                   <TableCell className="px-4 py-3 whitespace-nowrap">
                     {isEditable ? (
-                      <Input
-                        type="number"
+                      <input
+                        type="text"
                         value={getStatValue(playerId, 'intercepts')}
                         onChange={(e) => handleStatChange(playerId, 'intercepts', e.target.value)}
-                        className="stats-input"
+                        className="stats-input border border-input rounded-md px-2 py-1"
                         disabled={isPending}
-                        min={0}
                       />
                     ) : (
                       <div className="text-center">{getStatValue(playerId, 'intercepts')}</div>
@@ -216,13 +211,12 @@ export default function QuarterStatistics({
                   {/* Bad Pass */}
                   <TableCell className="px-4 py-3 whitespace-nowrap">
                     {isEditable ? (
-                      <Input
-                        type="number"
+                      <input
+                        type="text"
                         value={getStatValue(playerId, 'badPass')}
                         onChange={(e) => handleStatChange(playerId, 'badPass', e.target.value)}
-                        className="stats-input"
+                        className="stats-input border border-input rounded-md px-2 py-1"
                         disabled={isPending}
-                        min={0}
                       />
                     ) : (
                       <div className="text-center">{getStatValue(playerId, 'badPass')}</div>
@@ -232,13 +226,12 @@ export default function QuarterStatistics({
                   {/* Handling Error */}
                   <TableCell className="px-4 py-3 whitespace-nowrap">
                     {isEditable ? (
-                      <Input
-                        type="number"
+                      <input
+                        type="text"
                         value={getStatValue(playerId, 'handlingError')}
                         onChange={(e) => handleStatChange(playerId, 'handlingError', e.target.value)}
-                        className="stats-input"
+                        className="stats-input border border-input rounded-md px-2 py-1"
                         disabled={isPending}
-                        min={0}
                       />
                     ) : (
                       <div className="text-center">{getStatValue(playerId, 'handlingError')}</div>
@@ -248,13 +241,12 @@ export default function QuarterStatistics({
                   {/* Infringement */}
                   <TableCell className="px-4 py-3 whitespace-nowrap">
                     {isEditable ? (
-                      <Input
-                        type="number"
+                      <input
+                        type="text"
                         value={getStatValue(playerId, 'infringement')}
                         onChange={(e) => handleStatChange(playerId, 'infringement', e.target.value)}
-                        className="stats-input"
+                        className="stats-input border border-input rounded-md px-2 py-1"
                         disabled={isPending}
-                        min={0}
                       />
                     ) : (
                       <div className="text-center">{getStatValue(playerId, 'infringement')}</div>

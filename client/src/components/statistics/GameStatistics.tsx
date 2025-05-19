@@ -288,6 +288,8 @@ export default function GameStatistics({
     statName: keyof GameStat, 
     value: number
   ) => {
+    console.log(`Updating stat: Player ${playerId}, Quarter ${quarter}, ${statName} = ${value}`);
+    
     // Initialize nested objects if they don't exist
     if (!pendingChangesRef.current[playerId]) {
       pendingChangesRef.current[playerId] = {};
@@ -299,10 +301,45 @@ export default function GameStatistics({
     // Store the pending change
     pendingChangesRef.current[playerId][quarter][statName] = value;
     
-    // Update the local UI state (no server interaction yet)
-    const existingStats = { ...statsByQuarterAndPlayer[quarter.toString()][playerId] };
-    existingStats[statName] = value;
-    statsByQuarterAndPlayer[quarter.toString()][playerId] = existingStats;
+    // Make a deep copy of the current state
+    const quarterStats = { ...statsByQuarterAndPlayer[quarter.toString()] };
+    
+    // Create a new player stats object if it doesn't exist
+    if (!quarterStats[playerId]) {
+      quarterStats[playerId] = {
+        id: 0,
+        gameId: game.id,
+        playerId,
+        quarter,
+        goalsFor: 0,
+        goalsAgainst: 0,
+        missedGoals: 0,
+        rebounds: 0,
+        intercepts: 0,
+        badPass: 0,
+        handlingError: 0,
+        pickUp: 0,
+        infringement: 0
+      };
+    }
+    
+    // Update the stat value
+    quarterStats[playerId] = {
+      ...quarterStats[playerId],
+      [statName]: value
+    };
+    
+    // Force update the UI state
+    statsByQuarterAndPlayer[quarter.toString()] = quarterStats;
+    
+    // Force a re-render by setting a state
+    setActiveQuarter(prev => {
+      // This is a trick to force re-render without changing the actual tab
+      const current = prev;
+      // Toggle and then toggle back to force React to detect a change
+      setTimeout(() => setActiveQuarter(current), 0);
+      return current;
+    });
   };
   
   // Mutation for batch saving stats
