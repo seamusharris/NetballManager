@@ -94,10 +94,13 @@ export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFor
     
     const { position1, position2, position3, position4, ...rest } = values;
     
-    onSubmit({
+    const playerData = {
       ...rest,
       positionPreferences,
-    });
+    };
+    
+    console.log("Form submitted with data:", playerData);
+    onSubmit(playerData);
   };
   
   return (

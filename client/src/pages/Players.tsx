@@ -90,6 +90,7 @@ export default function Players() {
   });
   
   const handleCreatePlayer = (data: any) => {
+    console.log("Creating player with data:", data);
     createMutation.mutate(data);
   };
   
