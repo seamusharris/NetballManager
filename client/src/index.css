@@ -2,6 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Custom styles */
+.stats-input {
+  width: 80px !important;
+  text-align: center;
+  margin: 0 auto;
+}
+
 @layer base {
   :root {
     /* Main color scheme - Blue */
