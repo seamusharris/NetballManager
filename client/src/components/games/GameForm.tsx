@@ -28,7 +28,8 @@ const formSchema = insertGameSchema.extend({
   time: z.string().min(1, "Time is required"),
   opponentId: z.string(), // No validation directly on the field
   completed: z.boolean().default(false),
-  isBye: z.boolean().default(false)
+  isBye: z.boolean().default(false),
+  round: z.string().optional()
 }).refine(
   (data) => {
     // If it's a bye, we don't need opponent
@@ -64,7 +65,8 @@ export default function GameForm({ game, opponents, onSubmit, isSubmitting }: Ga
       time: game?.time || "",
       opponentId: game?.opponentId ? String(game.opponentId) : "",
       completed: game?.completed || false,
-      isBye: game?.isBye || false
+      isBye: game?.isBye || false,
+      round: game?.round || ""
     },
   });
   
@@ -74,6 +76,7 @@ export default function GameForm({ game, opponents, onSubmit, isSubmitting }: Ga
       const byeGameData = {
         date: values.date,
         time: values.time,
+        round: values.round,
         isBye: true,
         // BYE games can't be completed since they don't have stats
         completed: false
@@ -88,6 +91,7 @@ export default function GameForm({ game, opponents, onSubmit, isSubmitting }: Ga
     const formattedValues = {
       date: values.date,
       time: values.time,
+      round: values.round,
       opponentId: parseInt(values.opponentId),
       completed: values.completed,
       isBye: false
@@ -192,8 +196,26 @@ export default function GameForm({ game, opponents, onSubmit, isSubmitting }: Ga
             )}
           />
         </div>
-        
 
+        <FormField
+          control={form.control}
+          name="round"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Round</FormLabel>
+              <FormControl>
+                <Input 
+                  placeholder="Enter round number (e.g., 1, 2, SF, GF)" 
+                  {...field} 
+                />
+              </FormControl>
+              <FormDescription>
+                Specify the round number in the season, or special values like "SF" for semi-finals or "GF" for grand final
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         
         {!form.watch("isBye") && (
           <FormField

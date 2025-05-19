@@ -42,6 +42,7 @@ export const games = pgTable("games", {
   opponentId: integer("opponent_id"), // Nullable for BYE games
   completed: boolean("completed").notNull().default(false),
   isBye: boolean("is_bye").notNull().default(false),
+  round: text("round"), // Round number in the season or special values like "SF" or "GF"
 });
 
 export const insertGameSchema = createInsertSchema(games).omit({ id: true });
