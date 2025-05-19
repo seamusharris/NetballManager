@@ -393,105 +393,74 @@ export default function RosterManager({
     });
     
     try {
-      // First, remove any existing rosters for this game to avoid duplications
-      // We'll do this by fetching current rosters and deleting them
-      console.log(`Preparing to save rosters for game ${selectedGameId}`);
+      // Simple approach: delete all existing roster entries for this game and create new ones
+      // This ensures we don't have orphaned or inconsistent data
       
-      // For each position in each quarter, check if we need to create a new assignment
+      // Step 1: Delete all existing roster entries for this game
+      try {
+        console.log(`Deleting existing roster entries for game ${selectedGameId}`);
+        
+        // Delete existing roster entries one by one
+        for (const roster of rosters) {
+          if (roster.gameId === selectedGameId) {
+            await apiRequest('DELETE', `/api/rosters/${roster.id}`, {});
+          }
+        }
+      } catch (error) {
+        console.error("Error deleting existing roster entries:", error);
+      }
+      
+      // Step 2: Create new roster entries based on current state
       let successCount = 0;
       
-      // Process one assignment at a time to ensure proper ordering and avoid race conditions
       for (const quarter of ['1', '2', '3', '4']) {
         for (const position of allPositions) {
           const playerId = rosterByQuarter[quarter][position];
           
           if (playerId !== null) {
-            // Check if there's an existing roster for this position/quarter
-            const existingRoster = rosters.find(r => 
-              r.gameId === selectedGameId && 
-              r.quarter === parseInt(quarter) && 
-              r.position === position
-            );
-            
             try {
-              if (existingRoster) {
-                console.log(`Updating existing roster: Q${quarter}, Pos: ${position}, Player: ${playerId}`);
-                // Update existing assignment
-                await apiRequest('PATCH', `/api/rosters/${existingRoster.id}`, {
-                  playerId: playerId
-                });
-              } else {
-                console.log(`Creating new roster: Q${quarter}, Pos: ${position}, Player: ${playerId}`);
-                // Create new assignment
-                await apiRequest('POST', '/api/rosters', {
-                  gameId: selectedGameId,
-                  quarter: parseInt(quarter),
-                  position: position as Position,
-                  playerId: playerId
-                });
-              }
+              console.log(`Creating roster entry: Game ${selectedGameId}, Q${quarter}, Pos: ${position}, Player: ${playerId}`);
+              
+              await apiRequest('POST', '/api/rosters', {
+                gameId: selectedGameId,
+                quarter: parseInt(quarter),
+                position: position as Position,
+                playerId: playerId
+              });
+              
               successCount++;
             } catch (err) {
-              console.error(`Error saving position ${position} in quarter ${quarter}:`, err);
-            }
-          } else {
-            // Position is unassigned, check if we need to remove an existing assignment
-            const existingRoster = rosters.find(r => 
-              r.gameId === selectedGameId && 
-              r.quarter === parseInt(quarter) && 
-              r.position === position
-            );
-            
-            if (existingRoster) {
-              console.log(`Removing roster: Q${quarter}, Pos: ${position}`);
-              try {
-                await apiRequest('DELETE', `/api/rosters/${existingRoster.id}`, {});
-              } catch (err) {
-                console.error(`Error removing position ${position} in quarter ${quarter}:`, err);
-              }
+              console.error(`Error creating position ${position} in quarter ${quarter}:`, err);
             }
           }
         }
       }
       
-      // Refresh the roster data
+      // Step 3: Refresh the roster data
       queryClient.invalidateQueries({ queryKey: ['/api/games', selectedGameId, 'rosters'] });
-      
-      // For immediate UI feedback, fetch the updated roster data
-      try {
-        const response = await apiRequest('GET', `/api/games/${selectedGameId}/rosters`);
-        const updatedRosters = await response.json();
-        
-        console.log(`Received ${updatedRosters.length} updated roster assignments`);
-        
-        // Create a copy of current roster state
-        const updatedRosterByQuarter = {
-          '1': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
-          '2': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
-          '3': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
-          '4': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null }
-        };
-        
-        // Fill with newly fetched roster data
-        updatedRosters.forEach(roster => {
-          if (roster && roster.quarter !== undefined) {
-            const quarterKey = roster.quarter.toString();
-            if (roster.position && allPositions.includes(roster.position as Position)) {
-              updatedRosterByQuarter[quarterKey][roster.position as Position] = roster.playerId;
-            }
-          }
-        });
-        
-        // Update the state
-        setRosterByQuarter(updatedRosterByQuarter);
-      } catch (error) {
-        console.error("Error fetching updated rosters:", error);
-      }
       
       toast({
         title: "Roster Saved",
         description: `Successfully saved ${successCount} roster assignments`,
       });
+      
+      // Force a reload of the roster data 
+      try {
+        const response = await apiRequest('GET', `/api/games/${selectedGameId}/rosters`);
+        const updatedRosters = await response.json();
+        
+        console.log(`Got ${updatedRosters.length} updated roster assignments after save`);
+        
+        // Notify the user that they should refresh the roster page to see the updated data
+        if (updatedRosters.length === 0) {
+          toast({
+            title: "Please Note",
+            description: "You may need to navigate away and back to see your saved roster.",
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching updated rosters:", error);
+      }
     } catch (error) {
       console.error("Error saving roster:", error);
       toast({
