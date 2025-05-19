@@ -165,45 +165,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Special endpoint for creating BYE games
+  app.post("/api/games/bye", async (req, res) => {
+    try {
+      const byeGameData = {
+        date: req.body.date,
+        time: req.body.time,
+        opponentId: null,  // BYE games have no opponent
+        completed: false,  // BYE games don't have stats
+        isBye: true
+      };
+      
+      console.log("Creating BYE game:", byeGameData);
+      const game = await storage.createGame(byeGameData);
+      console.log("Created BYE game:", game);
+      return res.status(201).json(game);
+    } catch (error) {
+      const err = error as Error;
+      console.error("BYE game creation error:", err);
+      res.status(500).json({ 
+        message: "Failed to create BYE game", 
+        error: err.message || "Unknown error"
+      });
+    }
+  });
+
+  // Regular endpoint for games (non-BYE)
   app.post("/api/games", async (req, res) => {
     try {
-      // Log the raw request data for debugging
-      console.log("Game creation request:", req.body);
-      
-      // For BYE games, we need to allow null opponentId
-      const gameData = { ...req.body };
-      
-      // If it's a BYE game, ensure opponentId is null
-      if (gameData.isBye === true) {
-        gameData.opponentId = null;
-      }
-      
-      // If it's not a BYE game and opponentId is missing/null, return an error
-      if (gameData.isBye !== true && (gameData.opponentId === null || gameData.opponentId === undefined || gameData.opponentId === "")) {
+      // For regular games, ensure we have an opponentId
+      if (!req.body.opponentId) {
         return res.status(400).json({ 
           message: "Invalid game data", 
-          errors: [{ message: "Opponent is required for non-BYE games" }] 
+          errors: [{ message: "Opponent is required for regular games" }] 
         });
       }
       
-      // Ensure we have the right types
-      if (typeof gameData.opponentId === 'string' && gameData.opponentId !== "") {
-        gameData.opponentId = parseInt(gameData.opponentId, 10);
-      }
+      // Handle normal games
+      const gameData = {
+        date: req.body.date,
+        time: req.body.time,
+        opponentId: typeof req.body.opponentId === 'string' 
+          ? parseInt(req.body.opponentId, 10) 
+          : req.body.opponentId,
+        completed: req.body.completed || false,
+        isBye: false
+      };
       
-      console.log("Processed game data:", gameData);
-      
-      // Skip schema validation and directly use the storage
+      console.log("Creating regular game:", gameData);
       const game = await storage.createGame(gameData);
-      console.log("Created game:", game);
+      console.log("Created regular game:", game);
       res.status(201).json(game);
     } catch (error) {
       const err = error as Error;
       console.error("Game creation error:", err);
       res.status(500).json({ 
         message: "Failed to create game", 
-        error: err.message || "Unknown error",
-        stack: err.stack || "No stack trace" 
+        error: err.message || "Unknown error"
       });
     }
   });

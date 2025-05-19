@@ -69,20 +69,50 @@ export default function GameForm({ game, opponents, onSubmit, isSubmitting }: Ga
   });
   
   const handleSubmit = (values: FormValues) => {
-    // Prepare a clean version of the data to send to the server
-    const formattedValues = {
-      ...values,
-    };
-    
-    // For BYE games, always set opponentId to null
+    // For BYE games, use a different endpoint
     if (values.isBye) {
-      formattedValues.opponentId = null;
-    } else {
-      // For normal games, convert opponentId to number
-      formattedValues.opponentId = parseInt(values.opponentId);
+      // Create a simplified object for BYE games
+      const byeGame = {
+        date: values.date,
+        time: values.time
+      };
+      
+      console.log("Submitting BYE game:", byeGame);
+      
+      // Custom submission for BYE games
+      fetch('/api/games/bye', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(byeGame),
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Failed to create BYE game');
+        }
+        return response.json();
+      })
+      .then(data => {
+        console.log('BYE game created:', data);
+        // Refresh the page or redirect
+        window.location.href = '/games';
+      })
+      .catch(error => {
+        console.error('Error creating BYE game:', error);
+        alert('Failed to create BYE game. Please try again.');
+      });
+      
+      return;
     }
     
-    console.log("Submitting game data:", formattedValues);
+    // For normal games, use the regular submission
+    const formattedValues = {
+      ...values,
+      opponentId: parseInt(values.opponentId)
+    };
+    
+    console.log("Submitting regular game:", formattedValues);
     onSubmit(formattedValues);
   };
   
@@ -184,29 +214,29 @@ export default function GameForm({ game, opponents, onSubmit, isSubmitting }: Ga
         
 
         
-        <FormField
-          control={form.control}
-          name="completed"
-          render={({ field }) => (
-            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-              <div className="space-y-0.5">
-                <FormLabel>Game Status</FormLabel>
-                <FormDescription>
-                  {form.watch("isBye") 
-                    ? "Mark as completed to include in season stats" 
-                    : "Mark as completed to enter statistics for this game"}
-                </FormDescription>
-              </div>
-              <FormControl>
-                <Switch
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        {!form.watch("isBye") && (
+          <FormField
+            control={form.control}
+            name="completed"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                <div className="space-y-0.5">
+                  <FormLabel>Game Status</FormLabel>
+                  <FormDescription>
+                    Mark as completed to enter statistics for this game
+                  </FormDescription>
+                </div>
+                <FormControl>
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
         
         <div className="flex justify-end space-x-2">
           <Button type="button" variant="outline" onClick={() => form.reset()}>
