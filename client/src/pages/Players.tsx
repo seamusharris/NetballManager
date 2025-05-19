@@ -129,7 +129,25 @@ export default function Players() {
         />
         
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-          <DialogContent className="sm:max-w-[550px]">
+          <DialogContent 
+            className="sm:max-w-[550px]"
+            aria-labelledby="add-dialog-title"
+            aria-describedby="add-dialog-description"
+          >
+            <div 
+              id="add-dialog-title" 
+              className="text-lg font-semibold mt-2"
+              style={{ position: 'absolute', width: '1px', height: '1px', padding: '0', margin: '-1px', overflow: 'hidden', clip: 'rect(0, 0, 0, 0)', whiteSpace: 'nowrap', borderWidth: '0' }}
+            >
+              Add New Player
+            </div>
+            <div 
+              id="add-dialog-description"
+              style={{ position: 'absolute', width: '1px', height: '1px', padding: '0', margin: '-1px', overflow: 'hidden', clip: 'rect(0, 0, 0, 0)', whiteSpace: 'nowrap', borderWidth: '0' }}
+            >
+              Fill out the form below to add a new player to the team.
+            </div>
+            
             <h2 className="text-lg font-semibold mt-2">Add New Player</h2>
             <p className="text-sm text-muted-foreground mb-4">
               Fill out the form below to add a new player to the team.
@@ -142,7 +160,25 @@ export default function Players() {
         </Dialog>
         
         <Dialog open={!!editingPlayer} onOpenChange={(open) => !open && setEditingPlayer(null)}>
-          <DialogContent className="sm:max-w-[550px]">
+          <DialogContent 
+            className="sm:max-w-[550px]"
+            aria-labelledby="edit-dialog-title"
+            aria-describedby="edit-dialog-description"
+          >
+            <div 
+              id="edit-dialog-title" 
+              className="text-lg font-semibold mt-2"
+              style={{ position: 'absolute', width: '1px', height: '1px', padding: '0', margin: '-1px', overflow: 'hidden', clip: 'rect(0, 0, 0, 0)', whiteSpace: 'nowrap', borderWidth: '0' }}
+            >
+              Edit Player
+            </div>
+            <div 
+              id="edit-dialog-description"
+              style={{ position: 'absolute', width: '1px', height: '1px', padding: '0', margin: '-1px', overflow: 'hidden', clip: 'rect(0, 0, 0, 0)', whiteSpace: 'nowrap', borderWidth: '0' }}
+            >
+              Make changes to the player details below.
+            </div>
+            
             <h2 className="text-lg font-semibold mt-2">Edit Player</h2>
             <p className="text-sm text-muted-foreground mb-4">
               Make changes to the player details below.

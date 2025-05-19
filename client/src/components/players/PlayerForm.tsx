@@ -45,11 +45,11 @@ export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFor
   
   // Extract position preferences for default values
   const getPositionDefaults = () => {
-    if (!player) return { position1: allPositions[0], position2: "none", position3: "none", position4: "none" };
+    if (!player) return { position1: "", position2: "none", position3: "none", position4: "none" };
     
     const preferences = player.positionPreferences as Position[];
     return {
-      position1: preferences[0] || allPositions[0],
+      position1: preferences[0] || "",
       position2: preferences[1] || "none",
       position3: preferences[2] || "none",
       position4: preferences[3] || "none",
