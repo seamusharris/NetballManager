@@ -774,16 +774,56 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
                       <TableCell className="p-1 text-center border-r">
                         <div className="flex justify-center items-center gap-1">
                           <button 
-                            onClick={(e) => handleRatingChange(player.id, 'decrement')}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const currentRating = playerRatings[player.id] || 5;
+                              const newRating = Math.max(0, currentRating - 1);
+                              setPlayerRatings(prev => ({...prev, [player.id]: newRating}));
+                            }}
                             className="text-slate-500 hover:text-slate-700 px-1 font-medium"
                           >
                             -
                           </button>
-                          <div className="bg-slate-50 px-3 py-2 rounded-md border border-slate-200 w-10 text-center">
-                            {playerRatings[player.id] || 5}
-                          </div>
+                          <input
+                            type="number"
+                            min="0"
+                            max="10"
+                            className="bg-slate-50 px-1 py-2 rounded-md border border-slate-200 w-10 text-center"
+                            value={playerRatings[player.id] || 5}
+                            onChange={(e) => {
+                              const val = parseInt(e.target.value);
+                              if (!isNaN(val) && val >= 0 && val <= 10) {
+                                setPlayerRatings(prev => ({...prev, [player.id]: val}));
+                              }
+                            }}
+                            onBlur={async () => {
+                              const playerStats = gameStats.find(s => s.playerId === player.id);
+                              const rating = playerRatings[player.id] || 5;
+                              
+                              if (playerStats) {
+                                try {
+                                  await apiRequest(`/api/gamestats/${playerStats.id}`, {
+                                    method: 'PATCH',
+                                    body: JSON.stringify({ rating })
+                                  });
+                                } catch (error) {
+                                  console.error("Failed to update rating:", error);
+                                  toast({
+                                    title: "Rating update failed",
+                                    description: "Please try again",
+                                    variant: "destructive",
+                                  });
+                                }
+                              }
+                            }}
+                          />
                           <button 
-                            onClick={(e) => handleRatingChange(player.id, 'increment')}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const currentRating = playerRatings[player.id] || 5;
+                              const newRating = Math.min(10, currentRating + 1);
+                              setPlayerRatings(prev => ({...prev, [player.id]: newRating}));
+                            }}
                             className="text-slate-500 hover:text-slate-700 px-1 font-medium"
                           >
                             +
