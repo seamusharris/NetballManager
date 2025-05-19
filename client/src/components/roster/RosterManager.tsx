@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
@@ -51,22 +51,36 @@ export default function RosterManager({
   );
   
   // Organize existing roster assignments by quarter and position
-  const rosterByQuarter: Record<string, Record<Position, number | null>> = {
+  const [rosterByQuarter, setRosterByQuarter] = useState<Record<string, Record<Position, number | null>>>({
     '1': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
     '2': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
     '3': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
     '4': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null }
-  };
-  
-  // Fill roster assignments from API data
-  rosters.forEach(roster => {
-    if (roster && roster.quarter !== undefined) {
-      const quarterKey = roster.quarter.toString();
-      if (rosterByQuarter[quarterKey] && roster.position && allPositions.includes(roster.position as Position)) {
-        rosterByQuarter[quarterKey][roster.position as Position] = roster.playerId;
-      }
-    }
   });
+  
+  // Update roster data when rosters prop changes
+  useEffect(() => {
+    // Create empty roster map
+    const newRosterByQuarter = {
+      '1': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
+      '2': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
+      '3': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
+      '4': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null }
+    };
+    
+    // Fill with roster data from API
+    rosters.forEach(roster => {
+      if (roster && roster.quarter !== undefined) {
+        const quarterKey = roster.quarter.toString();
+        if (roster.position && allPositions.includes(roster.position as Position)) {
+          newRosterByQuarter[quarterKey][roster.position as Position] = roster.playerId;
+        }
+      }
+    });
+    
+    // Update state
+    setRosterByQuarter(newRosterByQuarter);
+  }, [rosters]);
   
   // Calculate roster completion percentage
   const totalPositions = Object.keys(rosterByQuarter).length * allPositions.length;
@@ -120,24 +134,25 @@ export default function RosterManager({
       }
     },
     onSuccess: (data) => {
+      // Invalidate the roster query to trigger a refresh
       queryClient.invalidateQueries({ queryKey: ['/api/games', selectedGameId, 'rosters'] });
       
-      // Force refresh the local roster state by creating a new copy
-      const updatedRoster = [...rosters];
-      const existingIndex = updatedRoster.findIndex(r => 
-        r.id === data.id
-      );
-      
-      if (existingIndex >= 0) {
-        updatedRoster[existingIndex] = data;
-      } else {
-        updatedRoster.push(data);
-      }
-      
-      // Update the local roster assignment map
+      // Manually update our local state for immediate UI update
+      const newRosterByQuarter = { ...rosterByQuarter };
       const quarterKey = data.quarter.toString();
-      if (rosterByQuarter[quarterKey]) {
-        rosterByQuarter[quarterKey][data.position as Position] = data.playerId;
+      
+      if (quarterKey in newRosterByQuarter) {
+        // TypeScript type assertion to help with quarter keys
+        const key = quarterKey as '1' | '2' | '3' | '4';
+        
+        // Create a new quarter object to trigger state update
+        newRosterByQuarter[key] = {
+          ...newRosterByQuarter[key],
+          [data.position as Position]: data.playerId
+        };
+        
+        // Update the state
+        setRosterByQuarter(newRosterByQuarter);
       }
       
       toast({
@@ -159,12 +174,19 @@ export default function RosterManager({
     return rosterByQuarter[quarter] || {};
   };
   
-  // Find players that are not assigned in a given quarter
+  // Find players that are available for a given position in a quarter
   const getAvailablePlayers = (quarter: string, currentPosition: Position, currentPlayerId: number | null) => {
     const quarterAssignments = getQuarterAssignments(quarter);
-    const assignedPlayerIds = Object.values(quarterAssignments);
     
-    // Players who are either not assigned or currently assigned to this position
+    // Get all player IDs currently assigned in this quarter (except the current position)
+    const assignedPlayerIds = Object.entries(quarterAssignments)
+      .filter(([position, _]) => position !== currentPosition)
+      .map(([_, playerId]) => playerId)
+      .filter(id => id !== null) as number[];
+    
+    // Return players who are either:
+    // 1. Not assigned to any other position in this quarter
+    // 2. Currently assigned to this position
     return players.filter(player => 
       !assignedPlayerIds.includes(player.id) || player.id === currentPlayerId
     );
