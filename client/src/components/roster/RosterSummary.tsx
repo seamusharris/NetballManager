@@ -14,8 +14,8 @@ export default function RosterSummary({ selectedGameId }: RosterSummaryProps) {
   type Quarter = 1 | 2 | 3 | 4;
   
   // Fetch roster data directly from API
-  const { data: rosters = [] } = useQuery<Roster[]>({
-    queryKey: ['/api/games', selectedGameId, 'rosters'],
+  const { data: rosters = [], isLoading } = useQuery<Roster[]>({
+    queryKey: ['/api/games/' + selectedGameId + '/rosters'],
     enabled: !!selectedGameId
   });
   
@@ -47,7 +47,17 @@ export default function RosterSummary({ selectedGameId }: RosterSummaryProps) {
   
   // Process the roster data whenever it changes
   useEffect(() => {
-    if (!selectedGameId || !rosters.length) return;
+    if (!selectedGameId || !rosters.length) {
+      console.log(`No roster data for game ${selectedGameId || 'none'}, rosters length: ${rosters?.length || 0}`);
+      return;
+    }
+    
+    console.log(`Processing ${rosters.length} roster entries for game ${selectedGameId}`);
+    console.log("Roster data sample:", rosters.slice(0, 3));
+    
+    // Check if we have player data
+    console.log(`We have ${Object.keys(playerMap).length} players in our player map`);
+    console.log("Player map keys:", Object.keys(playerMap));
     
     const newAssignments = {
       1: { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
@@ -62,11 +72,15 @@ export default function RosterSummary({ selectedGameId }: RosterSummaryProps) {
         const quarter = roster.quarter as Quarter;
         const position = roster.position as Position;
         newAssignments[quarter][position] = roster.playerId;
+        
+        // Debug each assignment
+        const player = playerMap[roster.playerId];
+        console.log(`Assignment: Q${quarter} ${position}: Player ID ${roster.playerId} -> ${player ? player.displayName : 'Unknown player'}`);
       }
     });
     
     setAssignments(newAssignments);
-  }, [rosters, selectedGameId]);
+  }, [rosters, selectedGameId, playerMap]);
   
   // Define quarters array for display
   const quarters: Quarter[] = [1, 2, 3, 4];
@@ -82,6 +96,18 @@ export default function RosterSummary({ selectedGameId }: RosterSummaryProps) {
     );
   }
   
+  // Add loading state
+  if (isLoading) {
+    return (
+      <Card className="mb-6 shadow-md">
+        <CardContent className="pt-6">
+          <h3 className="text-lg font-semibold mb-4">Roster Summary</h3>
+          <p className="text-gray-500">Loading roster data...</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className="mb-6 shadow-md">
       <CardContent className="pt-6">
@@ -102,10 +128,15 @@ export default function RosterSummary({ selectedGameId }: RosterSummaryProps) {
                   <TableCell className="font-medium">{positionLabels[position]}</TableCell>
                   {quarters.map(q => {
                     const playerId = assignments[q][position];
+                    // Get player from map but only if ID exists and is in the map
                     const player = playerId !== null && playerMap[playerId] ? playerMap[playerId] : null;
                     return (
                       <TableCell key={q} className="text-center">
-                        {player ? player.displayName : '—'}
+                        {player ? (
+                          <span className="font-medium">{player.displayName}</span>
+                        ) : (
+                          <span className="text-gray-400">—</span>
+                        )}
                       </TableCell>
                     );
                   })}
