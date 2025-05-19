@@ -1,16 +1,13 @@
-import {
-  users, type User, type InsertUser,
-  players, type Player, type InsertPlayer,
-  opponents, type Opponent, type InsertOpponent,
-  games, type Game, type InsertGame,
-  rosters, type Roster, type InsertRoster,
-  gameStats, type GameStat, type InsertGameStat,
-  type Position
-} from "../shared/schema";
+import { users, type User, type InsertUser } from "@shared/schema";
+import { players, type Player, type InsertPlayer } from "@shared/schema";
+import { opponents, type Opponent, type InsertOpponent } from "@shared/schema";
+import { games, type Game, type InsertGame } from "@shared/schema";
+import { rosters, type Roster, type InsertRoster } from "@shared/schema";
+import { gameStats, type GameStat, type InsertGameStat } from "@shared/schema";
+import { Position } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 
-// Storage interface
 export interface IStorage {
   // User methods
   getUser(id: number): Promise<User | undefined>;
@@ -55,7 +52,6 @@ export interface IStorage {
   deleteGameStatsByGame(gameId: number): Promise<boolean>;
 }
 
-// Database storage implementation
 export class DatabaseStorage implements IStorage {
   // User methods
   async getUser(id: number): Promise<User | undefined> {
@@ -89,7 +85,10 @@ export class DatabaseStorage implements IStorage {
   async createPlayer(insertPlayer: InsertPlayer): Promise<Player> {
     const [player] = await db
       .insert(players)
-      .values(insertPlayer)
+      .values({
+        ...insertPlayer,
+        dateOfBirth: insertPlayer.dateOfBirth || null
+      })
       .returning();
     return player;
   }
@@ -97,7 +96,10 @@ export class DatabaseStorage implements IStorage {
   async updatePlayer(id: number, updatePlayer: Partial<InsertPlayer>): Promise<Player | undefined> {
     const [updated] = await db
       .update(players)
-      .set(updatePlayer)
+      .set({
+        ...updatePlayer,
+        dateOfBirth: updatePlayer.dateOfBirth || null
+      })
       .where(eq(players.id, id))
       .returning();
     return updated || undefined;
@@ -272,35 +274,5 @@ export class DatabaseStorage implements IStorage {
   }
 }
 
-// Export a single instance of DatabaseStorage
+// Export the database storage implementation
 export const storage = new DatabaseStorage();
-
-// Add some sample data for demonstration if none exists
-async function initSampleData() {
-  // Check if we have any opponents
-  const opponentList = await storage.getOpponents();
-  
-  if (opponentList.length === 0) {
-    // Add sample opponents
-    await storage.createOpponent({
-      teamName: "Thunder Netball",
-      primaryContact: "Jane Smith",
-      contactInfo: "coach@thundernetball.com"
-    });
-    
-    await storage.createOpponent({
-      teamName: "Lightning Strikers",
-      primaryContact: "Mike Johnson",
-      contactInfo: "mike@lightningstrikers.com"
-    });
-    
-    await storage.createOpponent({
-      teamName: "Phoenix Jets",
-      primaryContact: "Sarah Williams",
-      contactInfo: "coach@phoenixjets.com"
-    });
-  }
-}
-
-// Initialize sample data
-initSampleData().catch(console.error);
