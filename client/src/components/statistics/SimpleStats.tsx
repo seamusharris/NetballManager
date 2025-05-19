@@ -501,8 +501,8 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-slate-50">
-                      <TableHead className="min-w-[200px]">Player</TableHead>
-                      <TableHead className="text-center">Pos</TableHead>
+                      <TableHead className="min-w-[150px]">Player</TableHead>
+                      <TableHead className="text-center w-10"></TableHead>
                       
                       {/* Stat category headers */}
                       {statCategories.map((category) => (
@@ -546,35 +546,33 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
                         {statCategories.map((category) => (
                           category.fields.map((field) => (
                             <TableCell key={field.id} className="p-1 text-center">
-                              <div className="flex items-center justify-center">
-                                <div className="flex flex-col">
-                                  <Button 
-                                    variant="ghost" 
-                                    size="icon" 
-                                    className="h-5 w-5" 
-                                    onClick={() => adjustStatValue(quarter, player.id, field.id, 1)}
-                                  >
-                                    <ChevronUp className="h-3 w-3" />
-                                  </Button>
-                                  
-                                  <Input
-                                    type="number"
-                                    min="0"
-                                    className="h-9 w-16 text-center"
-                                    value={formValues[quarter]?.[player.id]?.[field.id] || '0'}
-                                    onChange={(e) => handleInputChange(quarter, player.id, field.id, e.target.value)}
-                                  />
-                                  
-                                  <Button 
-                                    variant="ghost" 
-                                    size="icon" 
-                                    className="h-5 w-5" 
-                                    onClick={() => adjustStatValue(quarter, player.id, field.id, -1)}
-                                    disabled={parseInt(formValues[quarter]?.[player.id]?.[field.id] || '0') <= 0}
-                                  >
-                                    <ChevronDown className="h-3 w-3" />
-                                  </Button>
-                                </div>
+                              <div className="flex flex-col items-center">
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  className="h-6 w-6 mb-1" 
+                                  onClick={() => adjustStatValue(quarter, player.id, field.id, 1)}
+                                >
+                                  <ChevronUp className="h-4 w-4" />
+                                </Button>
+                                
+                                <Input
+                                  type="text"
+                                  inputMode="numeric"
+                                  className="h-9 w-16 text-center"
+                                  value={formValues[quarter]?.[player.id]?.[field.id] || '0'}
+                                  onChange={(e) => handleInputChange(quarter, player.id, field.id, e.target.value)}
+                                />
+                                
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  className="h-6 w-6 mt-1" 
+                                  onClick={() => adjustStatValue(quarter, player.id, field.id, -1)}
+                                  disabled={parseInt(formValues[quarter]?.[player.id]?.[field.id] || '0') <= 0}
+                                >
+                                  <ChevronDown className="h-4 w-4" />
+                                </Button>
                               </div>
                             </TableCell>
                           ))
