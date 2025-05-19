@@ -307,18 +307,44 @@ export default function RosterManager({
   
   // Handle player assignment to position
   const handleAssignPlayer = (quarter: string, position: Position, playerId: number) => {
-    saveRosterMutation.mutate({
-      quarter: parseInt(quarter),
-      position,
-      playerId
-    }, {
-      onSuccess: () => {
-        // Call the onRosterSaved callback to update the summary
-        if (onRosterSaved) {
-          onRosterSaved();
+    if (!selectedGameId) return;
+    
+    // Check if there's already a roster entry for this position and quarter
+    const existingRosterId = rosterEntries.find(r => 
+      r.gameId === selectedGameId && 
+      r.quarter === parseInt(quarter) && 
+      r.position === position
+    )?.id;
+    
+    if (existingRosterId) {
+      // If an entry exists, update it
+      updateRosterMutation.mutate({
+        id: existingRosterId,
+        playerId
+      }, {
+        onSuccess: () => {
+          // Call the onRosterSaved callback to update the summary
+          if (onRosterSaved) {
+            onRosterSaved();
+          }
         }
-      }
-    });
+      });
+    } else {
+      // If no entry exists, create a new one
+      saveRosterMutation.mutate({
+        gameId: selectedGameId,
+        quarter: parseInt(quarter),
+        position,
+        playerId
+      }, {
+        onSuccess: () => {
+          // Call the onRosterSaved callback to update the summary
+          if (onRosterSaved) {
+            onRosterSaved();
+          }
+        }
+      });
+    }
   };
   
   // Auto-fill roster based on player position preferences with equal playing time distribution
