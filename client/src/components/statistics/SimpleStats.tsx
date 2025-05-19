@@ -78,6 +78,9 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
       '1': {}, '2': {}, '3': {}, '4': {}
     };
     
+    // Keep track of player ratings from first quarter stats
+    const firstQuarterRatings: Record<number, number> = {};
+    
     // Initialize with zeros for all players in each quarter
     rosters.forEach(roster => {
       const quarter = String(roster.quarter);
@@ -142,32 +145,23 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
         initialValues[quarter][playerId].infringement = String(stat.infringement || 0);
       });
       
-      // Extract player ratings from any quarters with ratings
+      // Extract player ratings from any quarters with ratings (prioritizing quarter 1)
       const playerRatingMap: Record<number, number> = {};
       
-      // Sort stats to prioritize quarter 1 stats (as we store ratings there)
-      const sortedStats = [...gameStats].sort((a, b) => {
-        if (a.quarter === 1 && b.quarter !== 1) return -1;
-        if (a.quarter !== 1 && b.quarter === 1) return 1;
-        return 0;
-      });
-      
-      // Group by player ID, keeping the first occurrence (which should be quarter 1 if available)
-      const playerStatsMap = new Map();
-      sortedStats.forEach(stat => {
-        if (!playerStatsMap.has(stat.playerId)) {
-          playerStatsMap.set(stat.playerId, stat);
-        }
-      });
-      
-      // Set ratings for each player using their quarter 1 stats
-      playerStatsMap.forEach(stat => {
-        if (stat.rating !== undefined && stat.rating !== null) {
+      // First collect all first quarter stats with ratings
+      gameStats.forEach(stat => {
+        if (stat.quarter === 1 && stat.rating !== undefined && stat.rating !== null) {
+          // Store the rating from quarter 1
           playerRatingMap[stat.playerId] = stat.rating;
-          console.log(`Setting rating for player ${stat.playerId} to ${stat.rating} from quarter ${stat.quarter}`);
+          firstQuarterRatings[stat.playerId] = stat.rating;
+          console.log(`Setting rating for player ${stat.playerId} to ${stat.rating} from quarter 1`);
         }
       });
       
+      // Log all the ratings we found
+      console.log("Found player ratings:", Object.entries(playerRatingMap).map(([id, rating]) => `Player ${id}: ${rating}`).join(", "));
+      
+      // Set the initial player ratings
       setPlayerRatings(playerRatingMap);
     }
     
@@ -262,9 +256,12 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
             infringement
           };
           
-          // Add rating only to the first quarter's stats to avoid duplication
+          // We need to save rating to any existing first quarter stat
           if (parseInt(quarter) === 1) {
+            // Set the player rating in first quarter stats
             statData.rating = rating;
+            
+            console.log(`Saving rating ${rating} for player ${playerId} in quarter 1`);
           }
           
           if (existingStat) {
@@ -756,9 +753,10 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
                                   type="number"
                                   min="0"
                                   max="10"
-                                  value={playerRatings[player.id] || stats.rating || 0}
+                                  value={playerRatings[player.id] ?? 0}
                                   onChange={(e) => {
                                     const value = Math.min(10, Math.max(0, parseInt(e.target.value) || 0));
+                                    console.log(`Setting new rating for player ${player.id}: ${value}`);
                                     setPlayerRatings({
                                       ...playerRatings,
                                       [player.id]: value
