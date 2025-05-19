@@ -528,6 +528,15 @@ export default function SimpleRosterManager({
               <Wand2 size={16} /> Auto-Fill
             </Button>
             
+            <Button 
+              variant="outline" 
+              disabled={!selectedGameId || saveRosterMutation.isPending}
+              onClick={handleSave}
+              className={`flex items-center gap-1 ${hasUnsavedChanges ? 'bg-blue-50 border-blue-200' : ''}`}
+            >
+              <Save size={16} /> Save Roster
+            </Button>
+            
             <ExportButtons 
               onExportPDF={handleExportPDF} 
               onExportExcel={handleExportExcel} 
@@ -636,7 +645,7 @@ export default function SimpleRosterManager({
                           quarterKey === '4' ? localRosterState['4'][position] : null;
                         
                         return (
-                          <TableCell key={`${position}-${quarter}`} className="p-1 min-w-40">
+                          <TableCell key={`${position}-${quarter}`} className="p-1 min-w-[160px]">
                             <Select
                               value={currentPlayerId !== null ? currentPlayerId.toString() : "0"}
                               onValueChange={(value) => handleAssignPlayer(
@@ -669,56 +678,42 @@ export default function SimpleRosterManager({
                 </TableBody>
               </Table>
               
-              {/* Border between player positions and off court players */}
-              <div className="border-t-2 border-slate-200 my-2"></div>
+              {/* Border separator - thin dark horizontal line */}
+              <div className="border-t border-gray-300 my-3"></div>
               
-              {/* Off court players row - matches exact format of players on court */}
-              <Table>
-                <TableBody>
-                  <TableRow>
-                    <TableCell className="font-medium">Off</TableCell>
+              {/* Off court players row - perfectly aligned with positions above */}
+              <div className="mb-4">
+                <div className="flex">
+                  <div className="w-24 p-2 px-4 font-medium">Off</div>
+                  
+                  {quarters.map(quarter => {
+                    const quarterKey = quarter.toString() as '1'|'2'|'3'|'4';
+                    const playersNotInQuarter = players
+                      .filter(player => player.active)
+                      .filter(player => !Object.values(localRosterState[quarterKey]).includes(player.id));
                     
-                    {quarters.map(quarter => {
-                      const quarterKey = quarter.toString() as '1'|'2'|'3'|'4';
-                      const playersNotInQuarter = players
-                        .filter(player => player.active)
-                        .filter(player => !Object.values(localRosterState[quarterKey]).includes(player.id));
-                      
-                      return (
-                        <TableCell key={`off-${quarter}`} className="p-1 min-w-40">
-                          <div className="h-10 px-3 py-2 rounded-md border border-input bg-slate-50 text-sm">
-                            {playersNotInQuarter.length > 0 ? (
-                              <div className="truncate leading-6">
-                                {playersNotInQuarter.map(player => player.displayName).join(', ')}
-                              </div>
-                            ) : (
-                              <div className="text-muted-foreground leading-6">-</div>
-                            )}
-                          </div>
-                        </TableCell>
-                      );
-                    })}
-                  </TableRow>
-                </TableBody>
-              </Table>
+                    return (
+                      <div key={`off-${quarter}`} className="p-1 min-w-[160px]">
+                        <div className="relative h-10 px-3 py-2 rounded-md border border-input bg-slate-50 text-sm flex items-center">
+                          {playersNotInQuarter.length > 0 ? (
+                            <div className="truncate">
+                              {playersNotInQuarter.map(player => player.displayName).join(', ')}
+                            </div>
+                          ) : (
+                            <div className="text-muted-foreground">-</div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
           ) : (
             <div className="p-8 text-center text-slate-500">
               Please select a game to manage the roster
             </div>
           )}
-        </div>
-        
-        {/* Save button at bottom */}
-        <div className="mt-4 flex justify-end">
-          <Button 
-            variant="outline" 
-            disabled={!selectedGameId || saveRosterMutation.isPending}
-            onClick={handleSave}
-            className={`flex items-center gap-1 ${hasUnsavedChanges ? 'bg-blue-50 border-blue-200' : ''}`}
-          >
-            <Save size={16} /> Save Roster
-          </Button>
         </div>
       </CardContent>
     </Card>
