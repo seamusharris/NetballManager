@@ -59,8 +59,11 @@ export default function SimpleRosterManager({
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Show all games, not just upcoming ones
-  const allGames = games.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  // Filter out BYE games since they don't have rosters
+  const gamesWithoutByes = games.filter(game => !game.isBye);
+  
+  // Show all valid games, not just upcoming ones
+  const allGames = gamesWithoutByes.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   const selectedGame = games.find(game => game.id === selectedGameId);
   const selectedOpponent = opponents.find(opponent => selectedGame?.opponentId === opponent.id);
   
