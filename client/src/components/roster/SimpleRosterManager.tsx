@@ -533,6 +533,59 @@ export default function SimpleRosterManager({
               </Table>
             </div>
             
+            {/* Roster Summary Section */}
+            <div className="mt-6 mb-2">
+              <h3 className="text-lg font-semibold mb-3">Roster Summary</h3>
+              <div className="bg-slate-50 p-4 rounded-md">
+                {selectedGame && localRosterState && (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="font-bold">Position</TableHead>
+                          <TableHead className="font-bold">Player</TableHead>
+                          <TableHead className="font-bold">Quarters</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {positionOrder.map(position => {
+                          // Get all players assigned to this position across quarters
+                          const assignedPlayerIds = new Set<number>();
+                          quarters.forEach(quarter => {
+                            const playerId = localRosterState[quarter.toString()]?.[position];
+                            if (playerId !== null && playerId !== undefined) {
+                              assignedPlayerIds.add(playerId);
+                            }
+                          });
+                          
+                          // For each player assigned to this position, show their quarters
+                          return Array.from(assignedPlayerIds).map(playerId => {
+                            const player = playerMap[playerId];
+                            if (!player) return null;
+                            
+                            // Get quarters this player is assigned to this position
+                            const assignedQuarters = quarters.filter(quarter => 
+                              localRosterState[quarter.toString()]?.[position] === playerId
+                            );
+                            
+                            return (
+                              <TableRow key={`${position}-${playerId}`}>
+                                <TableCell className="font-medium">{positionLabels[position]}</TableCell>
+                                <TableCell>{player.displayName}</TableCell>
+                                <TableCell>
+                                  {assignedQuarters.map(q => `Q${q}`).join(', ')}
+                                </TableCell>
+                              </TableRow>
+                            );
+                          });
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </div>
+            </div>
+            
             {/* Save button at bottom */}
             <div className="mt-4 flex justify-end">
               <Button 

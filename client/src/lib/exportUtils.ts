@@ -8,8 +8,8 @@ import { positionLabels, getQuarterLabel, formatShortDate } from './utils';
 export const exportRosterToPDF = (
   game: Game,
   opponent: Opponent,
-  rosters: Roster[],
-  players: Player[]
+  players: Player[],
+  rosterState: Record<string, Record<string, number | null>>
 ) => {
   const doc = new jsPDF();
   
