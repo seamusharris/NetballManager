@@ -35,10 +35,26 @@ export default function SimpleRosterManager({
   isLoading,
   onRosterSaved,
   onRosterChanged,
-  localRosterState
+  localRosterState: initialRosterState
 }: SimpleRosterManagerProps) {
   const [pendingChanges, setPendingChanges] = useState<Array<{quarter: number, position: Position, playerId: number}>>([]);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  // Define type for the roster state
+  type RosterStateType = {
+    '1': Record<string, number | null>;
+    '2': Record<string, number | null>;
+    '3': Record<string, number | null>;
+    '4': Record<string, number | null>;
+  };
+  
+  // Initialize the local roster state with empty values
+  const [localRosterState, setLocalRosterState] = useState<RosterStateType>({
+    '1': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
+    '2': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
+    '3': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
+    '4': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null }
+  });
+  
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -67,6 +83,16 @@ export default function SimpleRosterManager({
     // Check if this is a "clear position" action (value of 0 indicates clearing)
     const actualPlayerId = playerId === 0 ? null : playerId;
     
+    // Update our local state directly
+    setLocalRosterState(prev => {
+      const newState = {...prev};
+      newState[quarter] = {
+        ...newState[quarter],
+        [position]: actualPlayerId
+      };
+      return newState;
+    });
+    
     // Only add to pending changes if it's an actual assignment (not clearing)
     if (actualPlayerId !== null) {
       const quarterNum = parseInt(quarter);
@@ -87,11 +113,8 @@ export default function SimpleRosterManager({
     // Mark that we have unsaved changes
     setHasUnsavedChanges(true);
     
-    // Notify parent component about the change for real-time summary updates
-    if (onRosterChanged) {
-      console.log(`Calling parent onRosterChanged: Q${quarter}, ${position}, Player ${actualPlayerId}`);
-      onRosterChanged(quarter, position, actualPlayerId);
-    }
+    // Log for debugging
+    console.log(`Position updated - Quarter: ${quarter}, Position: ${position}, Player: ${actualPlayerId}`);
   };
 
   // Auto-fill roster based on player position preferences with equal playing time distribution
@@ -122,6 +145,14 @@ export default function SimpleRosterManager({
     // Generate assignments for each quarter
     const assignments: Array<{quarter: number, position: Position, playerId: number}> = [];
     
+    // Initialize new roster state
+    const newRosterState: RosterStateType = {
+      '1': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
+      '2': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
+      '3': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
+      '4': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null }
+    };
+    
     // For each position in each quarter
     for (let quarter = 1; quarter <= 4; quarter++) {
       for (const position of allPositions) {
@@ -136,11 +167,18 @@ export default function SimpleRosterManager({
         // Assign the player with fewest assignments
         if (sortedPlayers.length > 0) {
           const playerId = sortedPlayers[0];
+          
+          // Add to assignments
           assignments.push({
             quarter,
             position,
             playerId
           });
+          
+          // Update our new roster state
+          if (newRosterState[quarter.toString()] && position) {
+            newRosterState[quarter.toString()][position] = playerId;
+          }
           
           // Increment assignment count
           assignmentCounts[playerId] = (assignmentCounts[playerId] || 0) + 1;
@@ -148,20 +186,13 @@ export default function SimpleRosterManager({
       }
     }
     
-    // Apply the generated assignments
+    // Apply the generated assignments to pendingChanges
     setPendingChanges(assignments);
     
-    // Update the UI state
-    assignments.forEach(assignment => {
-      if (onRosterChanged) {
-        onRosterChanged(
-          assignment.quarter.toString(),
-          assignment.position,
-          assignment.playerId
-        );
-      }
-    });
+    // Update the local state
+    setLocalRosterState(newRosterState);
     
+    // Mark as having unsaved changes
     setHasUnsavedChanges(true);
     
     toast({
@@ -172,7 +203,7 @@ export default function SimpleRosterManager({
 
   // Handle copying roster from one quarter to another
   const handleCopyQuarter = (sourceQuarter: string, targetQuarter: string) => {
-    if (!selectedGameId || !localRosterState) return;
+    if (!selectedGameId) return;
 
     const sourceKey = sourceQuarter as '1' | '2' | '3' | '4';
     const targetKey = targetQuarter as '1' | '2' | '3' | '4';
@@ -180,35 +211,39 @@ export default function SimpleRosterManager({
     // Skip if trying to copy to the same quarter
     if (sourceKey === targetKey) return;
     
+    // Get source quarter positions
     const sourcePositions = localRosterState[sourceKey];
-    const targetPositions = { ...localRosterState[targetKey] };
+    if (!sourcePositions) return;
     
-    // Copy each position from source to target
+    // Update the local state by copying the positions
+    setLocalRosterState(prev => {
+      const newState = {...prev};
+      newState[targetKey] = {...sourcePositions};
+      return newState;
+    });
+    
+    // Update pending changes for database saving
+    const updatedPendingChanges = [...pendingChanges];
+    
+    // Remove existing assignments for this quarter
+    const filteredChanges = updatedPendingChanges.filter(change => 
+      change.quarter !== parseInt(targetKey)
+    );
+    
+    // Add new assignments from copied quarter
     Object.entries(sourcePositions).forEach(([position, playerId]) => {
-      // Update local UI state via callback
-      if (onRosterChanged) {
-        onRosterChanged(targetKey, position, playerId);
-      }
-      
-      // Add to pending changes if not null
       if (playerId !== null) {
         const pos = position as Position;
-        setPendingChanges(prev => [
-          ...prev.filter(change => 
-            !(change.quarter === parseInt(targetKey) && change.position === pos)
-          ),
-          { quarter: parseInt(targetKey), position: pos, playerId }
-        ]);
-      } else {
-        // Remove from pending changes if playerId is null
-        const pos = position as Position;
-        setPendingChanges(prev => 
-          prev.filter(change => 
-            !(change.quarter === parseInt(targetKey) && change.position === pos)
-          )
-        );
+        filteredChanges.push({
+          quarter: parseInt(targetKey),
+          position: pos,
+          playerId
+        });
       }
     });
+    
+    // Update pending changes
+    setPendingChanges(filteredChanges);
     
     // Mark that there are unsaved changes
     setHasUnsavedChanges(true);
