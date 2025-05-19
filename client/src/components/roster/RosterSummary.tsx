@@ -20,6 +20,7 @@ export default function RosterSummary({ selectedGameId, updateTrigger = 0 }: Ros
     enabled: !!selectedGameId,
     refetchOnWindowFocus: true,
     staleTime: 0, // Don't use cached data
+    refetchInterval: 1000, // Poll every second for updates
   });
   
   // Listen for update trigger and refetch when it changes

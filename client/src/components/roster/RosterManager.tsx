@@ -241,6 +241,9 @@ export default function RosterManager({
   // Create query client instance for cache invalidation
   const queryClientInstance = useQueryClient();
   
+  // State for reset loading
+  const [isResetting, setIsResetting] = useState(false);
+  
   // Handle reset all positions
   const handleResetPositions = async () => {
     if (!selectedGameId) {
@@ -260,15 +263,19 @@ export default function RosterManager({
       '4': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null }
     };
     
+    // Update loading state
+    setIsResetting(true);
+    
     // For immediate UI update
     setRosterByQuarter(emptyRoster);
     
     // Delete all existing roster assignments for the game from the database
     if (selectedGameId) {
       try {
+        // Delete all roster entries from the database
         await apiRequest('DELETE', `/api/games/${selectedGameId}/rosters`);
         
-        // Invalidate queries to force data refresh
+        // Manually trigger a refetch of the roster data for both queries
         queryClientInstance.invalidateQueries({ 
           queryKey: ['/api/games', selectedGameId, 'rosters'] 
         });
@@ -276,14 +283,14 @@ export default function RosterManager({
           queryKey: ['/api/games/' + selectedGameId + '/rosters']
         });
         
-        // Trigger the callback to update the summary
+        // Trigger the callback to update the roster summary
         if (onRosterSaved) {
           onRosterSaved();
         }
         
         toast({
           title: "Positions Reset",
-          description: "All positions have been cleared and saved to the database.",
+          description: "All positions have been cleared successfully.",
         });
       } catch (error) {
         console.error("Error resetting positions:", error);
@@ -292,6 +299,8 @@ export default function RosterManager({
           description: "There was an error resetting positions. Please try again.",
           variant: "destructive",
         });
+      } finally {
+        setIsResetting(false);
       }
     }
   };
@@ -774,9 +783,18 @@ export default function RosterManager({
                   variant="outline"
                   className="border border-red-500 text-red-500 hover:bg-red-500 hover:text-white transition-colors"
                   onClick={handleResetPositions}
-                  disabled={saveRosterMutation.isPending}
+                  disabled={saveRosterMutation.isPending || isResetting}
                 >
-                  <Trash2 className="w-4 h-4 mr-1" /> Reset All
+                  {isResetting ? (
+                    <span className="flex items-center gap-1">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-500"></div>
+                      Resetting...
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1">
+                      <Trash2 className="w-4 h-4 mr-1" /> Reset All
+                    </span>
+                  )}
                 </Button>
                 
                 {/* Auto-Fill button */}
