@@ -41,6 +41,7 @@ export const games = pgTable("games", {
   time: text("time").notNull(),
   opponentId: integer("opponent_id").notNull(),
   completed: boolean("completed").notNull().default(false),
+  isBye: boolean("is_bye").notNull().default(false),
 });
 
 export const insertGameSchema = createInsertSchema(games).omit({ id: true });
