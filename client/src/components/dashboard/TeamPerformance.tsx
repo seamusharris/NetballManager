@@ -177,8 +177,6 @@ export default function TeamPerformance({ games, className }: TeamPerformancePro
           </div>
           <div className="text-center bg-gray-50 p-4 rounded-lg">
             <p className="text-gray-500 text-sm mb-1">Upcoming</p>
-            {/* Add debugging to check why this is showing 0 */}
-            {console.log("Upcoming games check:", games.map(g => ({ id: g.id, date: g.date, completed: g.completed })))}
             <p className="text-4xl font-bold text-primary">{games.filter(game => !game.completed).length}</p>
           </div>
         </div>
