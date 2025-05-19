@@ -216,10 +216,27 @@ export default function PlayerDetails() {
       6: 'bg-secondary',    // Mila
       7: 'bg-orange-500',   // Emily
       8: 'bg-primary',      // Ollie
+      9: 'bg-red-500',      // Evie
     };
     
-    // Return the fixed color or a fallback
-    return colorMap[player?.id] || 'bg-primary-light';
+    // For any player not in the map, generate a deterministic color based on player ID
+    if (!player?.id || !colorMap[player.id]) {
+      // Use a deterministic algorithm based on ID to choose from a set of good colors
+      const availableColors = [
+        'bg-blue-600', 'bg-purple-600', 'bg-green-600', 'bg-yellow-600', 
+        'bg-pink-600', 'bg-indigo-600', 'bg-red-600', 'bg-cyan-600', 
+        'bg-amber-600', 'bg-lime-600', 'bg-emerald-600', 'bg-teal-600',
+        'bg-violet-600', 'bg-fuchsia-600', 'bg-rose-600'
+      ];
+      
+      if (!player?.id) return 'bg-gray-500'; // Default fallback if no player
+      
+      // Use player ID modulo the number of colors to select one deterministically
+      const colorIndex = player.id % availableColors.length;
+      return availableColors[colorIndex];
+    }
+    
+    return colorMap[player.id];
   };
 
   const getRatingClass = (rating: number): string => {
