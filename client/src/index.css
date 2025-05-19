@@ -1,0 +1,140 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Main color scheme */
+    --primary: 145 44% 20%;            /* #1a5336 */
+    --primary-light: 143 45% 31%;      /* #2a7049 */
+    --primary-dark: 145 55% 14%;       /* #124025 */
+    --secondary: 355 75% 56%;          /* #e63946 */
+    --secondary-light: 353 78% 64%;    /* #eb5d68 */
+    --secondary-dark: 355 69% 47%;     /* #c02331 */
+    --accent: 203 38% 45%;             /* #457b9d */
+    --accent-light: 203 32% 52%;       /* #5a8eb0 */
+    --accent-dark: 206 40% 35%;        /* #35607b */
+    --success: 142 70% 49%;            /* #2ecc71 */
+    --error: 6 78% 57%;                /* #e74c3c */
+    --warning: 37 90% 51%;             /* #f39c12 */
+    
+    /* Shadcn variables */
+    --background: 100 14% 97%;         /* #f1faee */
+    --foreground: 220 38% 23%;         /* #1d3557 */
+    
+    --card: 0 0% 100%;
+    --card-foreground: 220 38% 23%;
+    
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 38% 23%;
+    
+    --primary: 145 44% 20%;            /* Netball primary */
+    --primary-foreground: 100 14% 97%;
+    
+    --secondary: 355 75% 56%;          /* Netball secondary */
+    --secondary-foreground: 100 14% 97%;
+    
+    --muted: 60 5% 96%;
+    --muted-foreground: 25 5% 45%;
+    
+    --accent: 203 38% 45%;             /* Netball accent */
+    --accent-foreground: 100 14% 97%;
+    
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 20% 98%;
+    
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 145 44% 20%;               /* Netball primary */
+    
+    --chart-1: 145 44% 20%;            /* Netball primary */
+    --chart-2: 355 75% 56%;            /* Netball secondary */
+    --chart-3: 203 38% 45%;            /* Netball accent */
+    --chart-4: 142 70% 49%;            /* Success */
+    --chart-5: 37 90% 51%;             /* Warning */
+    
+    --sidebar-background: 145 44% 20%; /* Netball primary */
+    --sidebar-foreground: 100 14% 97%;
+    --sidebar-primary: 143 45% 31%;    /* Netball primary-light */
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 145 55% 14%;     /* Netball primary-dark */
+    --sidebar-accent-foreground: 0 0% 90%;
+    --sidebar-border: 145 55% 14%;     /* Netball primary-dark */
+    --sidebar-ring: 0 0% 100%;
+    
+    --radius: 0.5rem;
+  }
+ 
+  .dark {
+    --background: 220 38% 15%;
+    --foreground: 210 20% 98%;
+    
+    --card: 224 71% 4%;
+    --card-foreground: 210 20% 98%;
+    
+    --popover: 224 71% 4%;
+    --popover-foreground: 210 20% 98%;
+    
+    --primary: 145 44% 20%;
+    --primary-foreground: 100 14% 97%;
+    
+    --secondary: 355 75% 56%;
+    --secondary-foreground: 100 14% 97%;
+    
+    --muted: 215 27.9% 16.9%;
+    --muted-foreground: 217.9 10.6% 64.9%;
+    
+    --accent: 203 38% 45%;
+    --accent-foreground: 100 14% 97%;
+    
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 20% 98%;
+    
+    --border: 215 27.9% 16.9%;
+    --input: 215 27.9% 16.9%;
+    --ring: 145 44% 20%;
+    
+    --chart-1: 145 44% 25%;            /* Netball primary - lighter */
+    --chart-2: 355 75% 66%;            /* Netball secondary - lighter */
+    --chart-3: 203 38% 55%;            /* Netball accent - lighter */
+    --chart-4: 142 70% 59%;            /* Success - lighter */
+    --chart-5: 37 90% 61%;             /* Warning - lighter */
+    
+    --sidebar-background: 145 44% 15%;
+    --sidebar-foreground: 0 0% 90%;
+    --sidebar-primary: 143 45% 26%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 145 55% 9%;
+    --sidebar-accent-foreground: 0 0% 90%;
+    --sidebar-border: 145 55% 9%;
+    --sidebar-ring: 0 0% 100%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply font-body antialiased bg-background text-foreground;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading;
+  }
+}
+
+@layer components {
+  .sidebar-link {
+    @apply flex items-center text-sidebar-foreground mb-2 py-2 px-3 rounded-md hover:bg-sidebar-primary transition duration-200;
+  }
+  
+  .sidebar-link.active {
+    @apply bg-sidebar-primary text-white;
+  }
+  
+  .stats-input {
+    @apply w-12 text-center border rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-primary;
+  }
+}
