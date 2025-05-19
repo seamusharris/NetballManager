@@ -260,6 +260,11 @@ export default function RosterManager({
     // Update the state with empty roster assignments
     setRosterByQuarter(emptyRoster);
     
+    // Trigger the onRosterSaved callback to update the roster summary
+    if (onRosterSaved) {
+      onRosterSaved();
+    }
+    
     toast({
       title: "Positions Reset",
       description: "All positions have been cleared. Click 'Save Roster' to confirm changes.",

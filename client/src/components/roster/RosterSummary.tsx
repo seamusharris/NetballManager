@@ -17,7 +17,9 @@ export default function RosterSummary({ selectedGameId, updateTrigger = 0 }: Ros
   // Fetch roster data directly from API
   const { data: rosters = [], isLoading, refetch } = useQuery<Roster[]>({
     queryKey: ['/api/games/' + selectedGameId + '/rosters'],
-    enabled: !!selectedGameId
+    enabled: !!selectedGameId,
+    refetchOnWindowFocus: true,
+    staleTime: 0, // Don't use cached data
   });
   
   // Listen for update trigger and refetch when it changes
