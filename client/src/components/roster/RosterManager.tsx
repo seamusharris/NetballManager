@@ -259,7 +259,7 @@ export default function RosterManager({
             </SelectTrigger>
             <SelectContent>
               {allGames.length === 0 ? (
-                <SelectItem value="none" disabled>No games available</SelectItem>
+                <SelectItem value="no-games" disabled>No games available</SelectItem>
               ) : (
                 allGames.map(game => (
                   <SelectItem key={game.id} value={game.id.toString()}>
