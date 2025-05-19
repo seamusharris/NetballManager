@@ -3,15 +3,10 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogTitle,
-  DialogDescription 
-} from '@/components/ui/dialog';
 import { Plus } from 'lucide-react';
 import PlayersList from '@/components/players/PlayersList';
 import PlayerForm from '@/components/players/PlayerForm';
+import SimplePlayerForm from '@/components/players/SimplePlayerForm';
 import { apiRequest } from '@/lib/queryClient';
 import { queryClient } from '@/lib/queryClient';
 import { Player } from '@shared/schema';
@@ -184,8 +179,10 @@ export default function Players() {
                 Fill out the form below to add a new player to the team.
               </p>
               
-              <PlayerForm 
+              {/* Using SimplePlayerForm instead of PlayerForm */}
+              <SimplePlayerForm 
                 onSubmit={handleCreatePlayer} 
+                onCancel={() => setIsAddDialogOpen(false)}
                 isSubmitting={createMutation.isPending} 
               />
             </div>
