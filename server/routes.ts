@@ -170,21 +170,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log("Game creation request:", req.body);
       
-      // Different handling for BYE games vs regular games
+      // Direct database insert for BYE games to bypass schema validation
       if (req.body.isBye === true) {
-        // For BYE games, we don't need an opponent
-        const byeGameData = {
-          date: req.body.date,
-          time: req.body.time,
-          opponentId: null,  // BYE games have no opponent
-          completed: false,  // BYE games don't have stats
-          isBye: true
-        };
-        
-        console.log("Creating BYE game:", byeGameData);
-        const game = await storage.createGame(byeGameData);
-        console.log("Created BYE game:", game);
-        return res.status(201).json(game);
+        try {
+          // Execute raw SQL for BYE games to avoid schema validation issues
+          const result = await pool.query(
+            `INSERT INTO games (date, time, is_bye, completed) 
+             VALUES ($1, $2, $3, $4) 
+             RETURNING *`,
+            [req.body.date, req.body.time, true, false]
+          );
+          
+          // Map the result to match our expected format
+          const game = {
+            id: result.rows[0].id,
+            date: result.rows[0].date,
+            time: result.rows[0].time,
+            opponentId: null,
+            completed: result.rows[0].completed,
+            isBye: result.rows[0].is_bye
+          };
+          
+          console.log("Created BYE game:", game);
+          return res.status(201).json(game);
+        } catch (dbError) {
+          console.error("Database BYE game error:", dbError);
+          return res.status(500).json({ 
+            message: "Failed to create BYE game", 
+            error: (dbError as Error).message
+          });
+        }
       } else {
         // For regular games, ensure we have an opponentId
         if (!req.body.opponentId) {
