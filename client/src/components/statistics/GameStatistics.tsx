@@ -236,17 +236,31 @@ export default function GameStatistics({
           gameId: game.id,
           playerId,
           quarter,
-          ...stats
+          goalsFor: 0,
+          goalsAgainst: 0,
+          missedGoals: 0,
+          rebounds: 0,
+          intercepts: 0,
+          badPass: 0,
+          handlingError: 0,
+          pickUp: 0,
+          infringement: 0,
+          ...stats // Override with actual values being updated
         });
         return res.json();
       }
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      // Force immediate refresh of game stats
       queryClient.invalidateQueries({ queryKey: ['/api/games', game.id, 'stats'] });
-      toast({
-        title: "Success",
-        description: "Statistics updated successfully",
-      });
+      
+      // Show success toast after a short delay to ensure data is refreshed
+      setTimeout(() => {
+        toast({
+          title: "Success",
+          description: "Statistics updated successfully",
+        });
+      }, 300);
     },
     onError: (error) => {
       toast({
