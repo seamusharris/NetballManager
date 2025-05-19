@@ -33,6 +33,7 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
   
   // Function to calculate game totals across all quarters
   const calculateGameTotals = () => {
+    console.log("Recalculating game totals...");
     const totals: Record<number, Record<string, number>> = {};
     
     // Initialize totals for all players
@@ -49,6 +50,9 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
         infringement: 0
       };
     });
+    
+    // Log current form values to help debugging
+    console.log("Current form values:", JSON.stringify(formValues));
     
     // Sum up values across quarters
     for (const quarter of ['1', '2', '3', '4']) {
@@ -68,6 +72,9 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
         }
       }
     }
+    
+    // Log the calculated totals for debugging
+    console.log("Calculated totals:", JSON.stringify(totals));
     
     setGameTotals(totals);
   };
@@ -250,11 +257,11 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
         [field]: String(numValue)
       };
       
+      // We need to update the game totals after the state is updated
+      setTimeout(() => calculateGameTotals(), 0);
+      
       return newValues;
     });
-    
-    // Recalculate game totals when an input changes
-    calculateGameTotals();
   };
   
   // Increment or decrement a stat value
