@@ -214,6 +214,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch rosters" });
     }
   });
+  
+  // API endpoint to delete all roster entries for a game
+  app.delete("/api/games/:gameId/rosters", async (req, res) => {
+    try {
+      const gameId = Number(req.params.gameId);
+      await storage.deleteRostersByGame(gameId);
+      res.json({ success: true, message: "All roster entries deleted for game" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete roster entries" });
+    }
+  });
 
   app.post("/api/rosters", async (req, res) => {
     try {
