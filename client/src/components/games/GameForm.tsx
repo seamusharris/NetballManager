@@ -69,17 +69,31 @@ export default function GameForm({ game, opponents, onSubmit, isSubmitting }: Ga
   });
   
   const handleSubmit = (values: FormValues) => {
-    // For both BYE and normal games, use the same handler pattern
+    // Special handling for BYE games - they don't need an opponent
+    if (values.isBye) {
+      const byeGameData = {
+        date: values.date,
+        time: values.time,
+        isBye: true,
+        // BYE games can't be completed since they don't have stats
+        completed: false
+      };
+      
+      console.log("Submitting BYE game:", byeGameData);
+      onSubmit(byeGameData);
+      return;
+    }
+    
+    // Regular games need an opponent
     const formattedValues = {
       date: values.date,
       time: values.time,
-      isBye: values.isBye,
-      completed: values.isBye ? false : values.completed, // BYE games can't be completed
-      // Only include opponentId for non-BYE games
-      ...(values.isBye ? {} : { opponentId: parseInt(values.opponentId) })
+      opponentId: parseInt(values.opponentId),
+      completed: values.completed,
+      isBye: false
     };
     
-    console.log("Submitting game:", formattedValues);
+    console.log("Submitting regular game:", formattedValues);
     onSubmit(formattedValues);
   };
   
