@@ -1,7 +1,6 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Link } from 'wouter';
-import { CalendarDays } from 'lucide-react';
 import { Game, Opponent } from '@shared/schema';
 import { formatShortDate } from '@/lib/utils';
 
@@ -45,23 +44,8 @@ export default function UpcomingGames({ games, opponents, className }: UpcomingG
                   <p className="font-semibold">vs. {getOpponentName(game.opponentId)}</p>
                   <p className="text-xs text-gray-500">{formatShortDate(game.date)} • {game.time}</p>
                 </div>
-                <div className="text-right">
-                  <p className="font-bold text-primary">
-                    {index === 0 ? 'Next Game' : ''}
-                  </p>
-                  <p className="text-xs text-gray-500">Home</p>
-                </div>
               </div>
             ))}
-            
-            {upcomingGames.length < 3 && upcomingGames.length > 0 && (
-              <Link href="/games/new">
-                <a className="flex items-center justify-center p-3 border border-dashed border-gray-300 rounded-md text-gray-500 hover:text-primary hover:border-primary transition-colors">
-                  <CalendarDays className="w-4 h-4 mr-2" />
-                  <span>Schedule more games</span>
-                </a>
-              </Link>
-            )}
           </div>
         ) : (
           <div className="text-center py-6">
