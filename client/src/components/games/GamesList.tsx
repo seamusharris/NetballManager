@@ -207,9 +207,9 @@ export default function GamesList({
       return a.completed ? 1 : -1; // Upcoming games before completed ones
     }
     
-    // For upcoming games: sort by nearest date first (ascending)
+    // For upcoming games: sort by furthest date first (descending)
     if (!a.completed) {
-      return dateA - dateB;
+      return dateB - dateA;
     }
     
     // For completed games: sort by most recent first (descending)
