@@ -201,225 +201,136 @@ export default function RosterManager({
     });
   };
   
-  // Auto-fill roster based on player position preferences
-  const handleAutoFill = () => {
+  // Auto-fill roster based on player position preferences (simplified approach)
+  const handleAutoFill = async () => {
     if (!selectedGameId) return;
     
-    // Start with a clean copy of all roster assignments
-    const newRoster = {
-      '1': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
-      '2': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
-      '3': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
-      '4': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null }
-    };
-    
-    // Keep any existing assignments
-    Object.keys(rosterByQuarter).forEach(quarter => {
-      Object.entries(rosterByQuarter[quarter]).forEach(([position, playerId]) => {
-        if (playerId !== null) {
-          newRoster[quarter][position as Position] = playerId;
-        }
-      });
+    toast({
+      title: "Auto-fill Starting",
+      description: "Preparing roster assignments...",
     });
     
-    // Set up player tracking for fair distribution
-    // Track how many quarters each player is assigned
-    const playerAssignmentCount: Record<number, number> = {};
-    players.forEach(player => {
-      playerAssignmentCount[player.id] = 0;
-    });
-    
-    // Sort players by active status (active first) and then by position preference ranking
-    const sortedPlayers = [...players].sort((a, b) => {
-      // Active players come first
-      if (a.active && !b.active) return -1;
-      if (!a.active && b.active) return 1;
-      return 0;
-    });
-    
-    // First pass: Try to assign players to their primary position preference
-    // This ensures players get their preferred positions first when possible
-    allPositions.forEach(position => {
-      // Get players who prefer this position (ordered by preference rank)
-      const playersForPosition = sortedPlayers
-        .filter(player => player.active && (player.positionPreferences as Position[]).includes(position))
-        .sort((a, b) => {
-          const aRank = (a.positionPreferences as Position[]).indexOf(position);
-          const bRank = (b.positionPreferences as Position[]).indexOf(position);
-          return aRank - bRank; // Lower index (higher preference) comes first
+    try {
+      // Delete all existing roster assignments for this game
+      await apiRequest('DELETE', `/api/games/${selectedGameId}/rosters`);
+      
+      // Sort players by active status (active first)
+      const activePlayers = [...players].filter(p => p.active);
+      
+      if (activePlayers.length === 0) {
+        toast({
+          title: "Auto-fill Failed",
+          description: "No active players available to assign",
+          variant: "destructive",
         });
-        
-      // Try to assign each player to their preferred position in a quarter
-      for (const player of playersForPosition) {
-        // Try to assign to a quarter if they're not already assigned in that quarter
-        for (const quarter of ['1', '2', '3', '4']) {
-          // Check if player is already assigned in this quarter
-          const isPlayerAssignedInQuarter = Object.values(newRoster[quarter]).includes(player.id);
-          
-          // Check if position is available in this quarter
-          const isPositionAvailable = newRoster[quarter][position] === null;
-          
-          if (!isPlayerAssignedInQuarter && isPositionAvailable) {
-            newRoster[quarter][position] = player.id;
-            playerAssignmentCount[player.id]++;
-            break;  // Only assign once per player in this pass
-          }
-        }
+        return;
       }
-    });
-    
-    // Second pass: Fill in any remaining positions
-    // Process each quarter
-    ['1', '2', '3', '4'].forEach(quarter => {
-      // Process each position in the quarter
-      allPositions.forEach(position => {
-        // Skip if already assigned
-        if (newRoster[quarter][position] !== null) return;
-        
-        // Get players who aren't assigned in this quarter
-        const assignedPlayerIdsInQuarter = Object.values(newRoster[quarter]).filter(id => id !== null) as number[];
-        const availablePlayers = sortedPlayers.filter(player => 
-          player.active && !assignedPlayerIdsInQuarter.includes(player.id)
-        );
-        
-        // Sort available players by:
-        // 1. Position preference (players who can play this position come first)
-        // 2. How many quarters they're already assigned (fewer assignments first)
-        const rankedPlayers = availablePlayers.sort((a, b) => {
-          // Get position preference ranks (-1 means they don't prefer this position)
-          const aPreferences = a.positionPreferences as Position[];
-          const bPreferences = b.positionPreferences as Position[];
-          const aRank = aPreferences.indexOf(position);
-          const bRank = bPreferences.indexOf(position);
-          
-          // Both players have a preference for this position
-          if (aRank >= 0 && bRank >= 0) {
-            // Sort by preference rank first
-            if (aRank !== bRank) return aRank - bRank;
-            
-            // If same preference rank, sort by assignment count
-            return playerAssignmentCount[a.id] - playerAssignmentCount[b.id];
-          }
-          
-          // Only player A has a preference for this position
-          if (aRank >= 0) return -1;
-          
-          // Only player B has a preference for this position
-          if (bRank >= 0) return 1;
-          
-          // Neither player prefers this position, sort by assignment count
-          return playerAssignmentCount[a.id] - playerAssignmentCount[b.id];
-        });
-        
-        // Assign the best player for this position if available
-        if (rankedPlayers.length > 0) {
-          const bestPlayer = rankedPlayers[0];
-          newRoster[quarter][position] = bestPlayer.id;
-          playerAssignmentCount[bestPlayer.id]++;
-        }
-      });
-    });
-    
-    // Final pass: If we still have unassigned positions and not enough players, 
-    // allow players to play in multiple positions within a quarter
-    ['1', '2', '3', '4'].forEach(quarter => {
-      allPositions.forEach(position => {
-        // Skip if already assigned
-        if (newRoster[quarter][position] !== null) return;
-        
-        // Find player with fewest assignments who can play this position
-        const candidatePlayers = sortedPlayers
-          .filter(player => player.active && 
-            (player.positionPreferences as Position[]).includes(position))
-          .sort((a, b) => playerAssignmentCount[a.id] - playerAssignmentCount[b.id]);
-        
-        // If no players available with this preference, just take any active player
-        const playerPool = candidatePlayers.length > 0 ? 
-          candidatePlayers : 
-          sortedPlayers.filter(player => player.active)
-            .sort((a, b) => playerAssignmentCount[a.id] - playerAssignmentCount[b.id]);
-        
-        if (playerPool.length > 0) {
-          const bestPlayer = playerPool[0];
-          newRoster[quarter][position] = bestPlayer.id;
-          playerAssignmentCount[bestPlayer.id]++;
-        }
-      });
-    });
-    
-    // Convert to a flat array of all assignments to make sequentially
-    const assignments: {quarter: number, position: Position, playerId: number}[] = [];
-    
-    Object.entries(newRoster).forEach(([quarter, positions]) => {
-      Object.entries(positions).forEach(([position, playerId]) => {
-        if (playerId !== null) {
-          assignments.push({
-            quarter: parseInt(quarter),
-            position: position as Position,
-            playerId: playerId
-          });
-        }
-      });
-    });
-    
-    // Create a function to process assignments sequentially with a slight delay
-    const processAssignments = async () => {
-      toast({
-        title: "Auto-fill In Progress",
-        description: "Assigning players to positions...",
+      
+      // Set up tracking for player assignments
+      const playerAssignmentCount = {};
+      activePlayers.forEach(player => {
+        playerAssignmentCount[player.id] = 0;
       });
       
-      for (let i = 0; i < assignments.length; i++) {
-        const assignment = assignments[i];
-        
-        // Check if there's an existing roster assignment for this position and quarter
-        const existingRoster = rosters.find(r => 
-          r.gameId === selectedGameId && 
-          r.quarter === assignment.quarter && 
-          r.position === assignment.position
-        );
-        
-        if (existingRoster) {
-          // Update existing roster assignment
-          await apiRequest('PATCH', `/api/rosters/${existingRoster.id}`, {
-            playerId: assignment.playerId
-          });
-        } else {
-          // Create new roster assignment
-          await apiRequest('POST', '/api/rosters', {
+      // Create assignments for all quarters
+      const assignments = [];
+      const quarters = [1, 2, 3, 4];
+      
+      // For each quarter and position
+      quarters.forEach(quarter => {
+        allPositions.forEach(position => {
+          // Find the best player for this position:
+          // 1. Player with this position in their preferences
+          // 2. Player with the fewest assignments so far
+          
+          // First, get players who have this position in their preferences
+          const playersWithPreference = activePlayers
+            .filter(player => {
+              const prefs = player.positionPreferences as Position[];
+              return prefs.includes(position);
+            })
+            .sort((a, b) => {
+              // Sort by preference order first
+              const aPrefs = a.positionPreferences as Position[];
+              const bPrefs = b.positionPreferences as Position[];
+              const aIndex = aPrefs.indexOf(position);
+              const bIndex = bPrefs.indexOf(position);
+              
+              if (aIndex !== bIndex) return aIndex - bIndex;
+              
+              // Then by number of assignments
+              return (playerAssignmentCount[a.id] || 0) - (playerAssignmentCount[b.id] || 0);
+            });
+          
+          // Get all players sorted by fewest assignments
+          const allPlayersSorted = [...activePlayers]
+            .sort((a, b) => (playerAssignmentCount[a.id] || 0) - (playerAssignmentCount[b.id] || 0));
+          
+          // Choose first player with preference, or any player if none have preference
+          const selectedPlayer = playersWithPreference.length > 0 
+            ? playersWithPreference[0] 
+            : allPlayersSorted[0];
+          
+          // Add to assignments
+          assignments.push({
             gameId: selectedGameId,
-            quarter: assignment.quarter,
-            position: assignment.position,
-            playerId: assignment.playerId
+            quarter: quarter,
+            position: position,
+            playerId: selectedPlayer.id
           });
-        }
-        
-        // Update our local state for immediate UI update
-        const newRosterByQuarter = { ...rosterByQuarter };
-        const quarterKey = assignment.quarter.toString() as '1' | '2' | '3' | '4';
-        
-        newRosterByQuarter[quarterKey] = {
-          ...newRosterByQuarter[quarterKey],
-          [assignment.position]: assignment.playerId
-        };
-        
-        setRosterByQuarter(newRosterByQuarter);
-        
-        // Small delay to avoid overwhelming the server
-        await new Promise(resolve => setTimeout(resolve, 25));
+          
+          // Update assignment count for this player
+          playerAssignmentCount[selectedPlayer.id] = (playerAssignmentCount[selectedPlayer.id] || 0) + 1;
+        });
+      });
+      
+      // Create batch of all assignments
+      toast({
+        title: "Auto-fill In Progress",
+        description: "Creating roster assignments...",
+      });
+      
+      // Create all the assignments
+      const createdAssignments = [];
+      
+      for (const assignment of assignments) {
+        const response = await apiRequest('POST', '/api/rosters', assignment);
+        const result = await response.json();
+        createdAssignments.push(result);
       }
+      
+      // Update the local state with our new assignments
+      const newRosterByQuarter = {
+        '1': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
+        '2': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
+        '3': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
+        '4': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null }
+      };
+      
+      // Update with the new assignments
+      createdAssignments.forEach(roster => {
+        const quarterKey = roster.quarter.toString() as '1' | '2' | '3' | '4';
+        newRosterByQuarter[quarterKey][roster.position as Position] = roster.playerId;
+      });
+      
+      // Update component state
+      setRosterByQuarter(newRosterByQuarter);
       
       // Refresh the roster data after all assignments are complete
       queryClient.invalidateQueries({ queryKey: ['/api/games', selectedGameId, 'rosters'] });
       
       toast({
         title: "Auto-fill Complete",
-        description: `Successfully assigned ${assignments.length} positions across all quarters`,
+        description: `Successfully assigned ${createdAssignments.length} positions across all quarters`,
       });
-    };
-    
-    // Start processing assignments
-    processAssignments();
+    } catch (error) {
+      console.error("Error during auto-fill:", error);
+      toast({
+        title: "Auto-fill Error",
+        description: "There was an error assigning players. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
   
   // Copy roster from one quarter to another
