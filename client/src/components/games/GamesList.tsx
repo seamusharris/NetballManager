@@ -245,22 +245,25 @@ export default function GamesList({
                     </TableCell>
                     <TableCell className="px-6 py-4 whitespace-nowrap">
                       <div className="flex space-x-2">
-                        <a 
-                          href={`/roster?game=${game.id}`}
+                        <button 
+                          onClick={() => window.location.href = `/roster?game=${game.id}`}
                           className="inline-flex items-center justify-center rounded-md text-xs py-1 px-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground"
                         >
                           <CalendarRange className="h-3 w-3 mr-1" />
                           Manage Roster
-                        </a>
+                        </button>
                         
                         {game.completed && (
-                          <a 
-                            href={`/statistics?game=${game.id}`}
+                          <button 
+                            onClick={() => {
+                              // Force a complete page reload to go directly to the statistics page
+                              window.location.replace(`/statistics?game=${game.id}`);
+                            }}
                             className="inline-flex items-center justify-center rounded-md text-xs py-1 px-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground"
                           >
                             <FileText className="h-3 w-3 mr-1" />
                             View Stats
-                          </a>
+                          </button>
                         )}
                       </div>
                     </TableCell>
