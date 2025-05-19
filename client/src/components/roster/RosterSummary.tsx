@@ -6,11 +6,10 @@ import { positionLabels } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
 
 interface RosterSummaryProps {
-  players: Player[];
   selectedGameId: number | null;
 }
 
-export default function RosterSummary({ players, selectedGameId }: RosterSummaryProps) {
+export default function RosterSummary({ selectedGameId }: RosterSummaryProps) {
   // Type for quarters
   type Quarter = 1 | 2 | 3 | 4;
   
@@ -28,11 +27,21 @@ export default function RosterSummary({ players, selectedGameId }: RosterSummary
     enabled: !!selectedGameId
   });
   
+  // Fetch players directly from API
+  const { data: playersData = [] } = useQuery<Player[]>({
+    queryKey: ['/api/players'],
+    // Always fetch players data
+    enabled: true,
+  });
+  
   // Create a map for quick player lookups
-  const playerMap = players.reduce((map, player) => {
+  const playerMap = playersData.reduce((map, player) => {
     map[player.id] = player;
     return map;
   }, {} as Record<number, Player>);
+  
+  // Debug information to help diagnose the issue
+  console.log("Available players:", playersData.length, playersData.map(p => `ID:${p.id} - ${p.displayName}`));
   
   // Standard position order from GS to GK
   const positionOrder: Position[] = ['GS', 'GA', 'WA', 'C', 'WD', 'GD', 'GK'];

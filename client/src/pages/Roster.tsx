@@ -59,7 +59,6 @@ export default function Roster() {
       {/* Display the Roster Summary if a game is selected */}
       {selectedGameId && (
         <RosterSummary 
-          players={activePlayers}
           selectedGameId={selectedGameId}
         />
       )}
