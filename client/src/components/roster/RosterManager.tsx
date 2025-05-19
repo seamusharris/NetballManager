@@ -378,6 +378,81 @@ export default function RosterManager({
     setQuarterToCopy(null);
   };
   
+  // Save all roster assignments
+  const handleSaveRoster = async () => {
+    if (!selectedGameId) return;
+    
+    toast({
+      title: "Saving Roster",
+      description: "Saving all roster assignments...",
+    });
+    
+    try {
+      // Get all current assignments
+      const assignments = [];
+      
+      // Collect all assignments from the rosterByQuarter state
+      Object.entries(rosterByQuarter).forEach(([quarter, positions]) => {
+        Object.entries(positions).forEach(([position, playerId]) => {
+          if (playerId !== null) {
+            // Check if there's an existing roster for this position/quarter
+            const existingRoster = rosters.find(r => 
+              r.gameId === selectedGameId && 
+              r.quarter === parseInt(quarter) && 
+              r.position === position
+            );
+            
+            if (existingRoster) {
+              // Update existing assignment
+              assignments.push({
+                id: existingRoster.id,
+                type: 'update',
+                data: {
+                  playerId: playerId
+                }
+              });
+            } else {
+              // Create new assignment
+              assignments.push({
+                type: 'create',
+                data: {
+                  gameId: selectedGameId,
+                  quarter: parseInt(quarter),
+                  position: position as Position,
+                  playerId: playerId
+                }
+              });
+            }
+          }
+        });
+      });
+      
+      // Process all assignments
+      for (const assignment of assignments) {
+        if (assignment.type === 'update') {
+          await apiRequest('PATCH', `/api/rosters/${assignment.id}`, assignment.data);
+        } else {
+          await apiRequest('POST', '/api/rosters', assignment.data);
+        }
+      }
+      
+      // Update the cache
+      queryClient.invalidateQueries({ queryKey: ['/api/games', selectedGameId, 'rosters'] });
+      
+      toast({
+        title: "Roster Saved",
+        description: `Successfully saved ${assignments.length} roster assignments`,
+      });
+    } catch (error) {
+      console.error("Error saving roster:", error);
+      toast({
+        title: "Save Error",
+        description: "There was an error saving the roster. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+  
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -443,6 +518,15 @@ export default function RosterManager({
                   disabled={saveRosterMutation.isPending}
                 >
                   <Wand2 className="w-4 h-4 mr-1" /> Auto-Fill
+                </Button>
+                
+                <Button
+                  variant="default"
+                  className="bg-primary hover:bg-primary/90 text-white transition-colors"
+                  onClick={handleSaveRoster}
+                  disabled={saveRosterMutation.isPending}
+                >
+                  <Save className="w-4 h-4 mr-1" /> Save Roster
                 </Button>
                 
                 <div className="flex items-center space-x-2">
