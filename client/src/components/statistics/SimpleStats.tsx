@@ -869,14 +869,25 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
                                     const value = Math.min(10, Math.max(0, parseInt(e.target.value) || 0));
                                     console.log(`Setting new rating for player ${player.id}: ${value}`);
                                     
-                                    // Update the rating in playerRatings state
+                                    // Update the rating in playerRatings state for this player
                                     const updatedRatings = {
                                       ...playerRatings,
                                       [player.id]: value
                                     };
                                     
-                                    // Log the new ratings
-                                    console.log("New ratings:", Object.entries(updatedRatings)
+                                    // Make sure we have ratings for ALL players in the game
+                                    // This is critical - any player who plays should have a rating
+                                    rosters.forEach(roster => {
+                                      const playerId = roster.playerId;
+                                      if (playerId && !(playerId in updatedRatings)) {
+                                        // If this player doesn't have a rating yet, set a default of 5
+                                        updatedRatings[playerId] = 5;
+                                        console.log(`Adding default rating 5 for player ${playerId} who didn't have one`);
+                                      }
+                                    });
+                                    
+                                    // Log the updated ratings
+                                    console.log("Updated ratings:", Object.entries(updatedRatings)
                                       .map(([id, rating]) => `Player ${id}: ${rating}`)
                                       .join(", "));
                                       
