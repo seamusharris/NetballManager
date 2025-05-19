@@ -274,15 +274,15 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
       name: 'Shooting', 
       fields: [
         { field: 'goals', label: 'For' },
-        { field: 'missedGoals', label: 'Miss' },
         { field: 'goalsAgainst', label: 'Agn' },
+        { field: 'missedGoals', label: 'Miss' },
       ]
     },
     { 
       name: 'Defense', 
       fields: [
-        { field: 'rebounds', label: 'Reb' },
         { field: 'intercepts', label: 'Int' },
+        { field: 'rebounds', label: 'Reb' },
         { field: 'pickUp', label: 'Pick' },
       ]
     },
@@ -291,7 +291,7 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
       fields: [
         { field: 'badPass', label: 'Pass' },
         { field: 'handlingError', label: 'Hand' },
-        { field: 'infringement', label: 'Infr' },
+        { field: 'infringement', label: 'Pen' },
       ]
     },
   ];
@@ -415,18 +415,18 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
                       {player.stats.goals}
                     </TableCell>
                     <TableCell className="px-2 py-2 whitespace-nowrap text-sm text-center font-mono">
-                      {player.stats.missedGoals}
+                      {player.stats.goalsAgainst}
                     </TableCell>
                     <TableCell className="px-2 py-2 whitespace-nowrap text-sm text-center font-mono border-r">
-                      {player.stats.goalsAgainst}
+                      {player.stats.missedGoals}
                     </TableCell>
                     
                     {/* Defense stats */}
                     <TableCell className="px-2 py-2 whitespace-nowrap text-sm text-center font-mono">
-                      {player.stats.rebounds}
+                      {player.stats.intercepts}
                     </TableCell>
                     <TableCell className="px-2 py-2 whitespace-nowrap text-sm text-center font-mono">
-                      {player.stats.intercepts}
+                      {player.stats.rebounds}
                     </TableCell>
                     <TableCell className="px-2 py-2 whitespace-nowrap text-sm text-center font-mono border-r">
                       {player.stats.pickUp}
