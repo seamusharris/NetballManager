@@ -40,13 +40,36 @@ export default function Statistics() {
     queryKey: ['/api/players'],
   });
   
-  // Get rosters for selected game
-  const { data: rosters = [], isLoading: isLoadingRosters } = useQuery<Roster[]>({
-    queryKey: ['/api/games', selectedGameId, 'rosters'],
-    enabled: !!selectedGameId,
-    staleTime: 0, // Don't use cached data
-    refetchOnWindowFocus: true, // Refetch when window gets focus
-  });
+  // Use state to store roster data
+  const [rosterData, setRosterData] = useState<Roster[]>([]);
+  const [loadingRosters, setLoadingRosters] = useState(false);
+  
+  // Fetch roster data directly when selectedGameId changes
+  useEffect(() => {
+    if (!selectedGameId) return;
+    
+    async function fetchRosters() {
+      setLoadingRosters(true);
+      try {
+        const response = await fetch(`/api/games/${selectedGameId}/rosters`);
+        if (!response.ok) throw new Error('Failed to fetch rosters');
+        const data = await response.json();
+        console.log(`Manually fetched ${data.length} roster entries`);
+        setRosterData(data);
+      } catch (error) {
+        console.error('Error fetching roster data:', error);
+        setRosterData([]);
+      } finally {
+        setLoadingRosters(false);
+      }
+    }
+    
+    fetchRosters();
+  }, [selectedGameId]);
+  
+  // Use our manually fetched roster data instead of the query result
+  const rosters = rosterData;
+  const isLoadingRosters = loadingRosters;
   
   // Get statistics for selected game
   const { data: gameStats = [], isLoading: isLoadingStats } = useQuery<GameStat[]>({
@@ -54,21 +77,22 @@ export default function Statistics() {
     enabled: !!selectedGameId,
   });
   
-  // Debug log to verify what's being passed to the component
-  console.log("Statistics page data:", {
-    selectedGameId,
-    rostersData: rosters,
-    dataTypes: {
-      rosters: Array.isArray(rosters) ? 'array' : typeof rosters,
-      firstItem: rosters.length > 0 ? typeof rosters[0] : 'none'
-    }
-  });
+  // Check to ensure we have valid roster entries with the expected fields
+  const hasValidRosterEntries = Array.isArray(rosters) && 
+    rosters.length > 0 && 
+    'position' in rosters[0] && 
+    'playerId' in rosters[0] &&
+    'quarter' in rosters[0];
   
-  // Reset to an empty array if we received a game object instead of roster entries
-  // This can happen in some API responses
-  const fixedRosters = Array.isArray(rosters) && rosters.length > 0 && 'date' in rosters[0] 
-    ? [] // This is a Game object, not roster entries
-    : rosters;
+  // If we don't have valid roster entries, use an empty array
+  const fixedRosters = hasValidRosterEntries ? rosters : [];
+  
+  // Debug log showing the data we're working with
+  console.log("Statistics roster data:", {
+    hasValidRosterEntries,
+    entries: fixedRosters.length,
+    sample: fixedRosters.length > 0 ? fixedRosters[0] : null
+  });
   
   const isLoading = isLoadingGames || isLoadingOpponents || isLoadingPlayers || 
     (selectedGameId ? (isLoadingRosters || isLoadingStats) : false);
