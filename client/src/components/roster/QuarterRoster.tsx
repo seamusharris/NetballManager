@@ -116,15 +116,36 @@ export default function QuarterRoster({
         );
       })}
       
-      {/* Substitutes box */}
-      <div className="bg-gray-50 p-4 rounded-lg flex flex-col items-center justify-center text-center border-2 border-dashed border-gray-300">
-        <span className="text-gray-500 mb-2">ℹ️</span>
-        <h4 className="font-semibold text-gray-600 mb-1">Available Substitutes</h4>
-        <p className="text-xs text-gray-500">
+      {/* Unassigned Players box */}
+      <div className="bg-gray-50 p-4 rounded-lg border-2 border-dashed border-gray-300">
+        <h4 className="font-semibold text-gray-600 mb-3 text-center">Unassigned Players</h4>
+        
+        {/* List of unassigned players */}
+        <div className="space-y-2 max-h-72 overflow-y-auto">
           {players.filter(player => 
             !Object.values(assignments).includes(player.id) && player.active
-          ).length} players available
-        </p>
+          ).map(player => (
+            <div key={player.id} className="flex items-center justify-between bg-white p-2 rounded border border-gray-200">
+              <div className="flex items-center">
+                <Avatar className="h-6 w-6 mr-2 bg-primary text-white text-xs">
+                  <span>{getInitials(player.firstName, player.lastName)}</span>
+                </Avatar>
+                <span className="text-sm font-medium">{player.displayName}</span>
+              </div>
+              <div className="text-xs text-gray-500">
+                {(player.positionPreferences as Position[])[0] || 'No pref'}
+              </div>
+            </div>
+          ))}
+          
+          {players.filter(player => 
+            !Object.values(assignments).includes(player.id) && player.active
+          ).length === 0 && (
+            <p className="text-xs text-gray-500 text-center py-2">
+              All active players are assigned
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -388,12 +388,13 @@ export default function RosterManager({
     });
     
     try {
-      // Get all current assignments
-      const assignments = [];
+      // Track assignments for saving
+      const assignmentsToSave = [];
+      let successCount = 0;
       
       // Collect all assignments from the rosterByQuarter state
-      Object.entries(rosterByQuarter).forEach(([quarter, positions]) => {
-        Object.entries(positions).forEach(([position, playerId]) => {
+      for (const [quarter, positions] of Object.entries(rosterByQuarter)) {
+        for (const [position, playerId] of Object.entries(positions)) {
           if (playerId !== null) {
             // Check if there's an existing roster for this position/quarter
             const existingRoster = rosters.find(r => 
@@ -402,46 +403,60 @@ export default function RosterManager({
               r.position === position
             );
             
-            if (existingRoster) {
-              // Update existing assignment
-              assignments.push({
-                id: existingRoster.id,
-                type: 'update',
-                data: {
+            try {
+              if (existingRoster) {
+                // Update existing assignment
+                await apiRequest('PATCH', `/api/rosters/${existingRoster.id}`, {
                   playerId: playerId
-                }
-              });
-            } else {
-              // Create new assignment
-              assignments.push({
-                type: 'create',
-                data: {
+                });
+              } else {
+                // Create new assignment
+                await apiRequest('POST', '/api/rosters', {
                   gameId: selectedGameId,
                   quarter: parseInt(quarter),
                   position: position as Position,
                   playerId: playerId
-                }
-              });
+                });
+              }
+              successCount++;
+            } catch (err) {
+              console.error(`Error saving position ${position} in quarter ${quarter}:`, err);
             }
           }
-        });
-      });
-      
-      // Process all assignments
-      for (const assignment of assignments) {
-        if (assignment.type === 'update') {
-          await apiRequest('PATCH', `/api/rosters/${assignment.id}`, assignment.data);
-        } else {
-          await apiRequest('POST', '/api/rosters', assignment.data);
         }
       }
       
-      // Update the cache
+      // Refresh the roster data after saving
       queryClient.invalidateQueries({ queryKey: ['/api/games', selectedGameId, 'rosters'] });
+      
+      // Fetch the updated rosters
+      const response = await apiRequest('GET', `/api/games/${selectedGameId}/rosters`);
+      const updatedRosters = await response.json();
+      
+      // Create a copy of current roster state
+      const updatedRosterByQuarter = {
+        '1': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
+        '2': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
+        '3': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
+        '4': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null }
+      };
+      
+      // Fill with newly fetched roster data
+      updatedRosters.forEach(roster => {
+        if (roster && roster.quarter !== undefined) {
+          const quarterKey = roster.quarter.toString();
+          if (roster.position && allPositions.includes(roster.position as Position)) {
+            updatedRosterByQuarter[quarterKey][roster.position as Position] = roster.playerId;
+          }
+        }
+      });
+      
+      // Update the state
+      setRosterByQuarter(updatedRosterByQuarter);
       
       toast({
         title: "Roster Saved",
-        description: `Successfully saved ${assignments.length} roster assignments`,
+        description: `Successfully saved ${successCount} roster assignments`,
       });
     } catch (error) {
       console.error("Error saving roster:", error);
