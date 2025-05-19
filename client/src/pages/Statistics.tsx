@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet';
 import { useLocation } from 'wouter';
 import GameStatistics from '@/components/statistics/GameStatistics';
+import BasicStatForm from '@/components/statistics/BasicStatForm';
 import { Card, CardContent } from '@/components/ui/card';
 import { 
   Select, 
@@ -171,14 +172,30 @@ export default function Statistics() {
         {isLoading ? (
           <Skeleton className="h-[500px] w-full" />
         ) : selectedGame && selectedOpponent ? (
-          <GameStatistics 
-            game={selectedGame}
-            opponent={selectedOpponent}
-            players={players}
-            gameStats={gameStats}
-            rosters={fixedRosters}
-            isLoading={isLoading}
-          />
+          <div className="space-y-6">
+            <Card className="p-4">
+              <CardContent className="pt-2">
+                <h3 className="text-xl font-semibold mb-2">
+                  Game vs. {selectedOpponent.teamName}
+                </h3>
+                <p className="text-gray-600">{selectedGame.date} at {selectedGame.time}</p>
+              </CardContent>
+            </Card>
+            
+            {fixedRosters.length > 0 ? (
+              <BasicStatForm
+                gameId={selectedGame.id}
+                players={players}
+                rosters={fixedRosters}
+                existingStats={gameStats}
+              />
+            ) : (
+              <Card className="p-6 text-center">
+                <p className="text-gray-600 mb-2">No roster data available for this game.</p>
+                <p className="text-gray-600">Please set up the roster first before entering statistics.</p>
+              </Card>
+            )}
+          </div>
         ) : (
           <Card className="flex flex-col items-center justify-center p-10 text-center">
             <h3 className="text-xl font-semibold mb-4">Select a Game to View Statistics</h3>
