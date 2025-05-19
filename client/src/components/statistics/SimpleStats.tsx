@@ -23,6 +23,8 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
   
   // Initialize form values
   useEffect(() => {
+    console.log("Initializing SimpleStats form with gameStats:", gameStats);
+    
     try {
       // Create default empty values
       const initialValues: Record<string, Record<number, Record<string, string>>> = {
@@ -62,28 +64,47 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
         });
       });
       
-      // Fill in with existing values
+      // Fill in with existing values - process all game stats to ensure we load saved values
+      console.log(`Loading ${gameStats?.length || 0} game stats into form`);
+      
       if (gameStats && gameStats.length > 0) {
+        // Log a few stats to debug
+        console.log("Sample game stats:", gameStats.slice(0, 3));
+        
         gameStats.forEach(stat => {
           if (!stat) return;
           
           const quarter = String(stat.quarter);
           const playerId = stat.playerId;
           
-          if (initialValues[quarter] && playerId) {
-            if (!initialValues[quarter][playerId]) {
-              initialValues[quarter][playerId] = {};
-            }
-            
-            initialValues[quarter][playerId].goalsFor = String(stat.goalsFor || '0');
-            initialValues[quarter][playerId].goalsAgainst = String(stat.goalsAgainst || '0');
-            initialValues[quarter][playerId].missedGoals = String(stat.missedGoals || '0');
-            initialValues[quarter][playerId].rebounds = String(stat.rebounds || '0');
-            initialValues[quarter][playerId].intercepts = String(stat.intercepts || '0');
-            initialValues[quarter][playerId].badPass = String(stat.badPass || '0');
-            initialValues[quarter][playerId].handlingError = String(stat.handlingError || '0');
-            initialValues[quarter][playerId].infringement = String(stat.infringement || '0');
+          console.log(`Processing stat for quarter ${quarter}, player ${playerId}:`, stat);
+          
+          if (!initialValues[quarter]) {
+            initialValues[quarter] = {};
           }
+          
+          if (!initialValues[quarter][playerId]) {
+            initialValues[quarter][playerId] = {
+              goalsFor: '0',
+              goalsAgainst: '0',
+              missedGoals: '0',
+              rebounds: '0',
+              intercepts: '0',
+              badPass: '0',
+              handlingError: '0',
+              infringement: '0'
+            };
+          }
+          
+          // Make sure to convert numbers to strings and handle nulls
+          initialValues[quarter][playerId].goalsFor = String(stat.goalsFor || 0);
+          initialValues[quarter][playerId].goalsAgainst = String(stat.goalsAgainst || 0);
+          initialValues[quarter][playerId].missedGoals = String(stat.missedGoals || 0);
+          initialValues[quarter][playerId].rebounds = String(stat.rebounds || 0);
+          initialValues[quarter][playerId].intercepts = String(stat.intercepts || 0);
+          initialValues[quarter][playerId].badPass = String(stat.badPass || 0);
+          initialValues[quarter][playerId].handlingError = String(stat.handlingError || 0);
+          initialValues[quarter][playerId].infringement = String(stat.infringement || 0);
         });
       }
       

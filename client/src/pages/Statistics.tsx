@@ -208,7 +208,7 @@ export default function Statistics() {
                 gameId={selectedGame.id}
                 players={players}
                 rosters={fixedRosters}
-                gameStats={gameStats}
+                gameStats={gameStatsData}
               />
             ) : (
               <Card className="p-6 text-center">
