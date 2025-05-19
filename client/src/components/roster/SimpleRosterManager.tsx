@@ -648,10 +648,10 @@ export default function SimpleRosterManager({
               </Table>
               
               {/* Players not in court - directly under the main table */}
-              <div className="mt-4 overflow-x-auto">
+              <div className="mt-0 overflow-x-auto">
                 <Table>
                   <TableBody>
-                    <TableRow>
+                    <TableRow className="border-t-2 border-slate-200">
                       <TableCell className="font-medium">Off</TableCell>
                       
                       {quarters.map(quarter => {
@@ -662,7 +662,7 @@ export default function SimpleRosterManager({
                         
                         return (
                           <TableCell key={`off-${quarter}`} className="p-1 min-w-40 h-[40px]">
-                            <div className="border border-input bg-background text-sm h-10 px-3 py-2 rounded-md">
+                            <div className="border border-input bg-background text-sm h-10 px-3 py-2 rounded-md w-full">
                               {playersNotInQuarter.length > 0 ? (
                                 <div className="truncate">
                                   {playersNotInQuarter.map(player => player.displayName).join(', ')}
