@@ -100,39 +100,35 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
       };
     });
     
-    // Process all game stats - but only include the latest game for accurate ratings display
+    // Process all game stats - summing across ALL completed games for total stats
     if (Object.keys(gameStatsMap).length > 0) {
-      // Get the most recent game ID (should be the highest ID number)
-      const gameIds = Object.keys(gameStatsMap).map(id => parseInt(id));
-      const latestGameId = Math.max(...gameIds);
-      
-      // Get stats from only the latest game
-      const latestGameStats = gameStatsMap[latestGameId] || [];
+      // Process combined stats from all games
+      const allGameStats = Object.values(gameStatsMap).flatMap(stats => stats);
       
       // Process stats using a de-duplication approach to handle duplicate records
-      // Create a map to track the most recent stat entry for each player in each quarter
-      const dedupedStats: Record<number, Record<number, GameStat>> = {};
+      // Create a map to track the most recent stat entry for each player in each quarter of each game
+      const dedupedStats: Record<number, Record<string, GameStat>> = {};
       
-      // First identify the most recent stat for each player in each quarter
-      latestGameStats.forEach(stat => {
-        if (!stat || !stat.playerId || !stat.quarter) return;
+      // First identify the most recent stat for each player in each quarter of each game
+      allGameStats.forEach(stat => {
+        if (!stat || !stat.playerId || !stat.quarter || !stat.gameId) return;
         
         const playerId = stat.playerId;
-        const quarter = stat.quarter;
+        const uniqueKey = `${stat.gameId}-${stat.quarter}`; // Unique key per game and quarter
         
         // Initialize player's stats map if needed
         if (!dedupedStats[playerId]) {
           dedupedStats[playerId] = {};
         }
         
-        // Keep only the most recent stat for this player and quarter
-        if (!dedupedStats[playerId][quarter] || 
-            stat.id > dedupedStats[playerId][quarter].id) {
-          dedupedStats[playerId][quarter] = stat;
+        // Keep only the most recent stat for this player and quarter in this game
+        if (!dedupedStats[playerId][uniqueKey] || 
+            stat.id > dedupedStats[playerId][uniqueKey].id) {
+          dedupedStats[playerId][uniqueKey] = stat;
         }
       });
       
-      // Now process only the de-duplicated stats
+      // Now process only the de-duplicated stats to get player totals across all games
       Object.values(dedupedStats).forEach(playerQuarterStats => {
         Object.values(playerQuarterStats).forEach(stat => {
           const playerId = stat.playerId;
@@ -151,7 +147,7 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
         });
       });
       
-      console.log(`Using stats from game ${latestGameId} for the dashboard performance metrics`);
+      console.log(`Using stats from all ${Object.keys(gameStatsMap).length} completed games for dashboard player performance`);
     }
     
     // Process player ratings - use only the most recent quarter 1 stats
