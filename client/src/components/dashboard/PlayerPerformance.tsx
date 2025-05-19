@@ -358,7 +358,12 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
                           </span>
                         </div>
                         <div className="ml-3">
-                          <p className="text-sm font-medium text-gray-900">{player.displayName}</p>
+                          <a 
+                            href={`/player/${player.id}`}
+                            className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline"
+                          >
+                            {player.displayName}
+                          </a>
                         </div>
                       </div>
                     </td>

@@ -10,6 +10,7 @@ import Roster from "@/pages/Roster";
 import Games from "@/pages/Games";
 import Opponents from "@/pages/Opponents";
 import Statistics from "@/pages/Statistics";
+import PlayerDetails from "@/pages/PlayerDetails";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -17,7 +18,9 @@ function Router() {
     <Layout>
       <Switch>
         <Route path="/" component={Dashboard} />
+        <Route path="/dashboard" component={Dashboard} />
         <Route path="/players" component={Players} />
+        <Route path="/player/:id" component={PlayerDetails} />
         <Route path="/roster" component={Roster} />
         <Route path="/games" component={Games} />
         <Route path="/opponents" component={Opponents} />
