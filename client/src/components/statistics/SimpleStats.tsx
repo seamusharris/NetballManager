@@ -93,6 +93,7 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
             intercepts: '0',
             badPass: '0',
             handlingError: '0',
+            pickUp: '0',
             infringement: '0'
           };
         }
@@ -124,6 +125,7 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
             intercepts: '0',
             badPass: '0',
             handlingError: '0',
+            pickUp: '0',
             infringement: '0'
           };
         }
@@ -136,8 +138,18 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
         initialValues[quarter][playerId].intercepts = String(stat.intercepts || 0);
         initialValues[quarter][playerId].badPass = String(stat.badPass || 0);
         initialValues[quarter][playerId].handlingError = String(stat.handlingError || 0);
+        initialValues[quarter][playerId].pickUp = String(stat.pickUp || 0);
         initialValues[quarter][playerId].infringement = String(stat.infringement || 0);
       });
+      
+      // Extract player ratings from first quarter stats
+      const playerRatingMap: Record<number, number> = {};
+      gameStats.forEach(stat => {
+        if (stat.quarter === 1 && stat.rating !== undefined && stat.rating !== null) {
+          playerRatingMap[stat.playerId] = stat.rating;
+        }
+      });
+      setPlayerRatings(playerRatingMap);
     }
     
     setFormValues(initialValues);
