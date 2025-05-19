@@ -614,6 +614,15 @@ export default function RosterManager({
   const handleSaveRoster = async () => {
     if (!selectedGameId) return;
     
+    // If no unsaved changes, show message and return
+    if (!hasUnsavedChanges) {
+      toast({
+        title: "No Changes",
+        description: "No changes to save",
+      });
+      return;
+    }
+    
     toast({
       title: "Saving Roster",
       description: "Saving all roster assignments...",
@@ -687,6 +696,10 @@ export default function RosterManager({
         // Update the component state
         setRosterByQuarter(newRosterByQuarter);
       }
+      
+      // Clear the unsaved changes state
+      setHasUnsavedChanges(false);
+      setPendingChanges([]);
       
       toast({
         title: "Roster Saved",
