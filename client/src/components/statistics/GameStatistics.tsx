@@ -253,7 +253,7 @@ export default function GameStatistics({
         <div>
           <h2 className="text-2xl font-heading font-bold text-neutral-dark">Game Statistics</h2>
           <p className="text-gray-500">
-            vs. {opponent?.teamName} • {formatShortDate(game.date)} • {game.time}
+            vs. {opponent?.teamName || 'Unknown Team'} • {game.date ? formatShortDate(game.date) : 'No date'} • {game.time || 'No time'}
           </p>
         </div>
         <Button
