@@ -197,18 +197,23 @@ export default function GamesList({
     return matchesSearch && matchesStatus && matchesDate;
   });
   
-  // Sort games by date (most recent first for completed, soonest first for upcoming)
+  // Sort games by date chronologically with future/most recent games first
   const sortedGames = [...filteredGames].sort((a, b) => {
     const dateA = new Date(a.date).getTime();
     const dateB = new Date(b.date).getTime();
     
-    if (a.completed && b.completed) {
-      return dateB - dateA; // Most recent completed games first
-    } else if (!a.completed && !b.completed) {
-      return dateA - dateB; // Soonest upcoming games first
-    } else {
+    // First sort by completed status (upcoming games first)
+    if (a.completed !== b.completed) {
       return a.completed ? 1 : -1; // Upcoming games before completed ones
     }
+    
+    // For upcoming games: sort by nearest date first (ascending)
+    if (!a.completed) {
+      return dateA - dateB;
+    }
+    
+    // For completed games: sort by most recent first (descending)
+    return dateB - dateA;
   });
   
   const confirmDelete = (id: number) => {
