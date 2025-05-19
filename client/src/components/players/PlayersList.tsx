@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useLocation } from 'wouter';
 import { 
   Card, 
   CardContent 
@@ -59,6 +60,7 @@ export default function PlayersList({ players, isLoading, onEdit, onDelete }: Pl
   const [statusFilter, setStatusFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemToDelete, setItemToDelete] = useState<number | null>(null);
+  const [_, navigate] = useLocation();
   const itemsPerPage = 10;
   
   // Filter players based on search and filters
@@ -259,7 +261,8 @@ export default function PlayersList({ players, isLoading, onEdit, onDelete }: Pl
                         <Button 
                           variant="ghost" 
                           size="icon"
-                          className="text-gray-400 hover:text-gray-600"
+                          className="text-accent hover:text-accent-dark"
+                          onClick={() => navigate(`/player/${player.id}`)}
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
