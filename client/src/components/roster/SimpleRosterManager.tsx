@@ -37,6 +37,7 @@ export default function SimpleRosterManager({
   onRosterChanged,
   localRosterState: initialRosterState
 }: SimpleRosterManagerProps) {
+  const [pendingChanges, setPendingChanges] = useState<Array<{quarter: number, position: Position, playerId: number}>>([]);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   
   // Define type for the roster state
@@ -68,7 +69,8 @@ export default function SimpleRosterManager({
   
   // Effect to load existing roster when game selection changes
   useEffect(() => {
-    // Reset unsaved changes flag when game changes
+    // Reset the pending changes when game changes
+    setPendingChanges([]);
     setHasUnsavedChanges(false);
     
     // Reset local roster state to empty
@@ -153,7 +155,8 @@ export default function SimpleRosterManager({
       return newState;
     });
     
-    // Mark that we have unsaved changes
+    // Mark that we have unsaved changes - no need to track specific pending changes anymore
+    // as we'll save the entire roster state
     setHasUnsavedChanges(true);
     
     // Log for debugging
@@ -181,6 +184,9 @@ export default function SimpleRosterManager({
       '3': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
       '4': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null }
     });
+    
+    // Clear all pending changes
+    setPendingChanges([]);
     
     // Mark that we have unsaved changes (since we'll need to save this cleared state)
     setHasUnsavedChanges(true);
@@ -216,6 +222,9 @@ export default function SimpleRosterManager({
       assignmentCounts[player.id] = 0;
     });
     
+    // Generate assignments for each quarter
+    const assignments: Array<{quarter: number, position: Position, playerId: number}> = [];
+    
     // Initialize new roster state
     const newRosterState: RosterStateType = {
       '1': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
@@ -239,6 +248,13 @@ export default function SimpleRosterManager({
         if (sortedPlayers.length > 0) {
           const playerId = sortedPlayers[0];
           
+          // Add to assignments
+          assignments.push({
+            quarter,
+            position,
+            playerId
+          });
+          
           // Update our new roster state
           const quarterKey = quarter.toString() as '1' | '2' | '3' | '4';
           newRosterState[quarterKey][position] = playerId;
@@ -249,7 +265,7 @@ export default function SimpleRosterManager({
       }
     }
     
-    // Update the local state
+      // Update the local state - we no longer need to track pendingChanges separately
     setLocalRosterState(newRosterState);
     
     // Mark as having unsaved changes
@@ -282,6 +298,29 @@ export default function SimpleRosterManager({
       return newState;
     });
     
+    // Update pending changes for database saving
+    const updatedPendingChanges = [...pendingChanges];
+    
+    // Remove existing assignments for this quarter
+    const filteredChanges = updatedPendingChanges.filter(change => 
+      change.quarter !== parseInt(targetKey)
+    );
+    
+    // Add new assignments from copied quarter
+    Object.entries(sourcePositions).forEach(([position, playerId]) => {
+      if (playerId !== null) {
+        const pos = position as Position;
+        filteredChanges.push({
+          quarter: parseInt(targetKey),
+          position: pos,
+          playerId
+        });
+      }
+    });
+    
+    // Update pending changes
+    setPendingChanges(filteredChanges);
+    
     // Mark that there are unsaved changes
     setHasUnsavedChanges(true);
     
@@ -309,9 +348,7 @@ export default function SimpleRosterManager({
         const quarterNum = parseInt(quarterKey);
         
         // Go through all positions in this quarter
-        for (const position of allPositions) {
-          const playerId = quarterPositions[position];
-          
+        for (const [position, playerId] of Object.entries(quarterPositions)) {
           // Only save positions that have a player assigned
           if (playerId !== null) {
             console.log(`Creating roster entry: Game ${selectedGameId}, Q${quarterNum}, Pos: ${position}, Player: ${playerId}`);
@@ -319,7 +356,7 @@ export default function SimpleRosterManager({
             const rosterEntry = {
               gameId: selectedGameId,
               quarter: quarterNum,
-              position: position,
+              position: position as Position,
               playerId: playerId
             };
             
@@ -332,7 +369,8 @@ export default function SimpleRosterManager({
       return true;
     },
     onSuccess: () => {
-      // Reset the unsaved changes flag
+      // Clear pending changes and reset state
+      setPendingChanges([]);
       setHasUnsavedChanges(false);
       
       // Show success toast
@@ -360,7 +398,7 @@ export default function SimpleRosterManager({
   const handleSave = () => {
     if (!selectedGameId) return;
     
-    // Always save when the user clicks save, regardless of state
+    // Always save when the user clicks save, regardless of pendingChanges state
     // This ensures all positions in the current localRosterState are saved
     if (!hasUnsavedChanges) {
       toast({
@@ -370,7 +408,7 @@ export default function SimpleRosterManager({
       return;
     }
     
-    // Save the roster - this will use the entire localRosterState
+    // Save the roster - this will use the entire localRosterState, not just pendingChanges
     saveRosterMutation.mutate();
   };
 
@@ -380,6 +418,7 @@ export default function SimpleRosterManager({
     if (hasUnsavedChanges) {
       if (confirm("You have unsaved changes. Are you sure you want to switch games without saving?")) {
         setSelectedGameId(Number(gameId));
+        setPendingChanges([]);
         setHasUnsavedChanges(false);
       }
     } else {
@@ -393,11 +432,16 @@ export default function SimpleRosterManager({
     
     // Call our export function with the correct parameters
     exportRosterToPDF(
-      selectedGame,
-      selectedOpponent,
-      players,
+      selectedGame, 
+      selectedOpponent, 
+      players, 
       localRosterState
     );
+    
+    toast({
+      title: "Export Complete",
+      description: "Roster has been exported to PDF.",
+    });
   };
 
   // Handle export to Excel
@@ -406,177 +450,305 @@ export default function SimpleRosterManager({
     
     // Call our export function with the correct parameters
     exportRosterToExcel(
-      selectedGame,
-      selectedOpponent,
-      players,
+      selectedGame, 
+      selectedOpponent, 
+      players, 
       localRosterState
+    );
+    
+    toast({
+      title: "Export Complete",
+      description: "Roster has been exported to Excel.",
+    });
+  };
+
+  // Helper to determine if a player has a certain position preference
+  const hasPositionPreference = (player: Player, position: Position): boolean => {
+    return player.positionPreferences.includes(position);
+  };
+
+  // Get players eligible for a position
+  const getEligiblePlayers = (position: Position): Player[] => {
+    return players.filter(player => 
+      player.active && player.positionPreferences.includes(position)
     );
   };
 
-  return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Roster Management</h1>
-        <div className="flex gap-2">
-          <Button 
-            size="sm" 
-            variant="outline"
-            onClick={handleResetAll}
-            disabled={!selectedGameId || saveRosterMutation.isPending}
-          >
-            <Trash2 className="h-4 w-4 mr-1" />
-            Reset All
-          </Button>
-          <Button 
-            size="sm" 
-            variant="outline"
-            onClick={handleAutoFill}
-            disabled={!selectedGameId || saveRosterMutation.isPending}
-          >
-            <Wand2 className="h-4 w-4 mr-1" />
-            Auto-fill
-          </Button>
-          <Button 
-            size="sm" 
-            variant="default"
-            onClick={handleSave}
-            disabled={!selectedGameId || !hasUnsavedChanges || saveRosterMutation.isPending}
-          >
-            <Save className="h-4 w-4 mr-1" />
-            Save {saveRosterMutation.isPending && '...'}
-          </Button>
-          
-          {/* Export Buttons */}
-          <ExportButtons 
-            onExportPDF={handleExportPDF}
-            onExportExcel={handleExportExcel}
-            disabled={saveRosterMutation.isPending}
-          />
-        </div>
-      </div>
-      
-      {/* Game Selection */}
-      <Card>
+  // Create a map to track which players are already selected in a quarter
+  const getSelectedPlayersInQuarter = (quarterKey: string) => {
+    const selectedPlayers = new Set<number>();
+    
+    if (quarterKey === '1') {
+      Object.values(localRosterState['1']).forEach(playerId => {
+        if (playerId !== null) {
+          selectedPlayers.add(playerId);
+        }
+      });
+    } else if (quarterKey === '2') {
+      Object.values(localRosterState['2']).forEach(playerId => {
+        if (playerId !== null) {
+          selectedPlayers.add(playerId);
+        }
+      });
+    } else if (quarterKey === '3') {
+      Object.values(localRosterState['3']).forEach(playerId => {
+        if (playerId !== null) {
+          selectedPlayers.add(playerId);
+        }
+      });
+    } else if (quarterKey === '4') {
+      Object.values(localRosterState['4']).forEach(playerId => {
+        if (playerId !== null) {
+          selectedPlayers.add(playerId);
+        }
+      });
+    }
+    
+    return selectedPlayers;
+  };
+
+  // Check if loading
+  if (isLoading) {
+    return (
+      <Card className="mb-6 shadow-md">
         <CardContent className="pt-6">
-          <div className="grid grid-cols-3 gap-4 items-center">
-            <div>
-              <label className="block text-sm font-medium mb-1">Select Game</label>
-              <Select 
-                value={selectedGameId?.toString() || ""}
-                onValueChange={handleGameChange}
-                disabled={saveRosterMutation.isPending}
-              >
-                <SelectTrigger className="w-full" disabled={saveRosterMutation.isPending}>
-                  <SelectValue placeholder="Select a game" />
-                </SelectTrigger>
-                <SelectContent>
-                  {allGames.map((game) => (
-                    <SelectItem key={game.id} value={game.id.toString()}>
-                      {formatShortDate(game.date)} - {opponents.find(o => o.id === game.opponentId)?.teamName}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            {/* Display Game Details */}
-            {selectedGame && selectedOpponent && (
-              <div className="col-span-2">
-                <div className="flex justify-between">
-                  <div>
-                    <p className="text-sm font-semibold">Date: <span className="font-normal">{formatShortDate(selectedGame.date)}</span></p>
-                    <p className="text-sm font-semibold">Time: <span className="font-normal">{selectedGame.time}</span></p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold">Opponent: <span className="font-normal">{selectedOpponent.teamName}</span></p>
-                    <p className="text-sm font-semibold">Venue: <span className="font-normal">Home game</span></p>
-                  </div>
-                </div>
-              </div>
-            )}
+          <h3 className="text-lg font-semibold mb-4">Loading Roster...</h3>
+          <div className="space-y-4">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-60 w-full" />
           </div>
         </CardContent>
       </Card>
-      
-      {/* Roster Management Table */}
-      <Card>
-        <CardContent className="pt-6">
-          {isLoading ? (
-            // Loading state
-            <div className="space-y-3">
-              <Skeleton className="h-8 w-full" />
-              <Skeleton className="h-24 w-full" />
-            </div>
-          ) : !selectedGameId ? (
-            // No game selected state
-            <div className="text-center py-6">
-              <p className="text-muted-foreground">Please select a game to manage its roster</p>
+    );
+  }
+
+  return (
+    <Card className="mb-6 shadow-md">
+      <CardContent className="pt-6">
+        {/* Game Selection and Actions */}
+        <div className="flex flex-col md:flex-row gap-4 justify-between mb-6">
+          <div className="w-full md:w-1/3">
+            <label className="text-sm font-medium mb-2 block">Select Game</label>
+            <Select
+              value={selectedGameId?.toString() || ""}
+              onValueChange={handleGameChange}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select a game" />
+              </SelectTrigger>
+              <SelectContent>
+                {allGames.map((game) => (
+                  <SelectItem key={game.id} value={game.id.toString()}>
+                    {formatShortDate(game.date)} - {opponents.find(o => o.id === game.opponentId)?.teamName || "Unknown Opponent"}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="flex gap-2 items-end">
+            <Button 
+              variant="outline" 
+              onClick={handleAutoFill}
+              disabled={!selectedGameId}
+              className="flex items-center gap-1"
+            >
+              <Wand2 size={16} /> Auto-Fill
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              onClick={handleResetAll}
+              disabled={!selectedGameId}
+              className="flex items-center gap-1 border-red-200 hover:bg-red-50"
+            >
+              <Trash2 size={16} /> Reset All
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              disabled={!selectedGameId || saveRosterMutation.isPending}
+              onClick={handleSave}
+              className={`flex items-center gap-1 ${hasUnsavedChanges ? 'bg-blue-50 border-blue-200' : ''}`}
+            >
+              <Save size={16} /> Save Roster
+            </Button>
+            
+            <ExportButtons 
+              onExportPDF={handleExportPDF} 
+              onExportExcel={handleExportExcel} 
+              disabled={!selectedGameId}
+            />
+          </div>
+        </div>
+        
+        {/* Selected Game Info */}
+        {selectedGame && selectedOpponent && (
+          <div className="mb-4 p-3 bg-slate-50 rounded-md">
+            <h3 className="font-semibold">
+              Game: {formatShortDate(selectedGame.date)} {selectedGame.time} vs {selectedOpponent.teamName}
+            </h3>
+          </div>
+        )}
+        
+        {/* Quarter Copying Controls */}
+        {selectedGameId && (
+          <div className="mb-4 flex gap-2 flex-wrap">
+            <Select
+              onValueChange={(value) => handleCopyQuarter('1', value)}
+              disabled={saveRosterMutation.isPending}
+            >
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Copy Q1 to..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="2">Quarter 2</SelectItem>
+                <SelectItem value="3">Quarter 3</SelectItem>
+                <SelectItem value="4">Quarter 4</SelectItem>
+              </SelectContent>
+            </Select>
+            
+            <Select
+              onValueChange={(value) => handleCopyQuarter('2', value)}
+              disabled={saveRosterMutation.isPending}
+            >
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Copy Q2 to..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1">Quarter 1</SelectItem>
+                <SelectItem value="3">Quarter 3</SelectItem>
+                <SelectItem value="4">Quarter 4</SelectItem>
+              </SelectContent>
+            </Select>
+            
+            <Select
+              onValueChange={(value) => handleCopyQuarter('3', value)}
+              disabled={saveRosterMutation.isPending}
+            >
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Copy Q3 to..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1">Quarter 1</SelectItem>
+                <SelectItem value="2">Quarter 2</SelectItem>
+                <SelectItem value="4">Quarter 4</SelectItem>
+              </SelectContent>
+            </Select>
+            
+            <Select
+              onValueChange={(value) => handleCopyQuarter('4', value)}
+              disabled={saveRosterMutation.isPending}
+            >
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Copy Q4 to..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1">Quarter 1</SelectItem>
+                <SelectItem value="2">Quarter 2</SelectItem>
+                <SelectItem value="3">Quarter 3</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+
+        {/* Table of positions by quarter */}
+        <div className="mt-4">
+          {selectedGameId ? (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-slate-50">
+                    <TableHead className="w-24 font-bold"></TableHead>
+                    {quarters.map(q => (
+                      <TableHead key={q} className="text-center font-semibold">Q{q}</TableHead>
+                    ))}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {/* Position rows */}
+                  {positionOrder.map(position => (
+                    <TableRow key={position} className="hover:bg-slate-50">
+                      <TableCell className="font-medium">{position}</TableCell>
+                      
+                      {quarters.map(quarter => {
+                        const quarterKey = quarter.toString();
+                        // Get players already selected in this quarter
+                        const selectedPlayers = getSelectedPlayersInQuarter(quarterKey);
+                        // Get current player in this position for this quarter
+                        const currentPlayerId = 
+                          quarterKey === '1' ? localRosterState['1'][position] :
+                          quarterKey === '2' ? localRosterState['2'][position] :
+                          quarterKey === '3' ? localRosterState['3'][position] :
+                          quarterKey === '4' ? localRosterState['4'][position] : null;
+                        
+                        return (
+                          <TableCell key={`${position}-${quarter}`} className="p-1 min-w-[160px]">
+                            <Select
+                              value={currentPlayerId !== null ? currentPlayerId.toString() : "0"}
+                              onValueChange={(value) => handleAssignPlayer(
+                                quarterKey, 
+                                position, 
+                                value === "0" ? null : parseInt(value)
+                              )}
+                              disabled={saveRosterMutation.isPending}
+                            >
+                              <SelectTrigger className="w-full" disabled={saveRosterMutation.isPending}>
+                                <SelectValue placeholder="Select Player" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="0">-- None --</SelectItem>
+                                {getEligiblePlayers(position)
+                                  .filter(player => !selectedPlayers.has(player.id) || player.id === currentPlayerId)
+                                  .map(player => (
+                                    <SelectItem key={player.id} value={player.id.toString()}>
+                                      {player.displayName}
+                                    </SelectItem>
+                                  ))
+                                }
+                              </SelectContent>
+                            </Select>
+                          </TableCell>
+                        );
+                      })}
+                    </TableRow>
+                  ))}
+                  
+                  {/* Off players row - in the same table with a top border */}
+                  <TableRow className="border-t-2 border-slate-200">
+                    <TableCell className="font-medium">Off</TableCell>
+                    
+                    {quarters.map(quarter => {
+                      const quarterKey = quarter.toString() as '1'|'2'|'3'|'4';
+                      const playersNotInQuarter = players
+                        .filter(player => player.active)
+                        .filter(player => !Object.values(localRosterState[quarterKey]).includes(player.id));
+                      
+                      return (
+                        <TableCell key={`off-${quarter}`} className="p-1 min-w-[160px]">
+                          <div className="flex h-10 w-full rounded-md border border-input bg-slate-50 px-3 py-2 text-sm">
+                            {playersNotInQuarter.length > 0 ? (
+                              <div className="truncate my-auto">
+                                {playersNotInQuarter.map(player => player.displayName).join(', ')}
+                              </div>
+                            ) : (
+                              <div className="text-muted-foreground my-auto">-</div>
+                            )}
+                          </div>
+                        </TableCell>
+                      );
+                    })}
+                  </TableRow>
+                </TableBody>
+              </Table>
             </div>
           ) : (
-            // Roster table content
-            <div className="space-y-6">
-              {quarters.map((quarter) => (
-                <div key={quarter} className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <h3 className="font-semibold">Quarter {quarter}</h3>
-                    <div className="flex gap-2">
-                      {/* Copy to other quarters buttons */}
-                      {[1, 2, 3, 4].filter(q => q !== quarter).map((targetQuarter) => (
-                        <Button
-                          key={targetQuarter}
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleCopyQuarter(quarter.toString(), targetQuarter.toString())}
-                          disabled={saveRosterMutation.isPending}
-                          className="text-xs h-7 px-2"
-                        >
-                          <Copy className="h-3 w-3 mr-1" />
-                          Copy to Q{targetQuarter}
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-7 gap-2">
-                    {/* Headers */}
-                    {positionOrder.map((position) => (
-                      <div key={position} className="text-center font-medium text-sm">
-                        {position}
-                      </div>
-                    ))}
-                    
-                    {/* Player selectors */}
-                    {positionOrder.map((position) => (
-                      <div key={position} className="w-full">
-                        <Select
-                          value={(localRosterState[quarter.toString() as '1' | '2' | '3' | '4'][position] || 0).toString()}
-                          onValueChange={(value) => handleAssignPlayer(quarter.toString(), position, parseInt(value))}
-                          disabled={saveRosterMutation.isPending}
-                        >
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Select" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="0">-- No Player --</SelectItem>
-                            {players
-                              .filter(player => player.active)
-                              .filter(player => player.positionPreferences.includes(position))
-                              .map((player) => (
-                                <SelectItem key={player.id} value={player.id.toString()}>
-                                  {player.displayName}
-                                </SelectItem>
-                              ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
+            <div className="p-8 text-center text-slate-500">
+              Please select a game to manage the roster
             </div>
           )}
-        </CardContent>
-      </Card>
-    </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
