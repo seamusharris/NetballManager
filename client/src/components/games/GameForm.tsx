@@ -175,27 +175,7 @@ export default function GameForm({ game, opponents, onSubmit, isSubmitting }: Ga
           />
         </div>
         
-        <FormField
-          control={form.control}
-          name="isBye"
-          render={({ field }) => (
-            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-              <div className="space-y-0.5">
-                <FormLabel>BYE Round</FormLabel>
-                <FormDescription>
-                  Mark as BYE if your team doesn't have a scheduled match this round
-                </FormDescription>
-              </div>
-              <FormControl>
-                <Switch
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+
         
         <FormField
           control={form.control}

@@ -159,7 +159,8 @@ export default function GamesList({
   }, [allGameStats]);
   
   // Get opponent name by ID
-  const getOpponentName = (opponentId: number) => {
+  const getOpponentName = (opponentId: number | null) => {
+    if (opponentId === null) return '';
     const opponent = opponents.find(o => o.id === opponentId);
     return opponent ? opponent.teamName : 'Unknown Opponent';
   };
@@ -443,7 +444,7 @@ export default function GamesList({
                             <AlertDialogHeader>
                               <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
                               <AlertDialogDescription>
-                                Are you sure you want to delete this game against {getOpponentName(game.opponentId)}? 
+                                Are you sure you want to delete this {game.isBye ? "BYE round" : `game against ${getOpponentName(game.opponentId)}`}? 
                                 This will also delete all roster assignments and statistics for this game.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
