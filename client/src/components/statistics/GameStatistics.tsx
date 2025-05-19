@@ -46,11 +46,15 @@ export default function GameStatistics({
     '4': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null }
   };
   
+  // Add additional debug logs to examine roster content
+  console.log('Examining rosters:', JSON.stringify(rosters));
+  
   // Fill roster assignments
   rosters.forEach(roster => {
     if (roster && roster.quarter !== undefined) {
       const quarterKey = roster.quarter.toString();
       if (rosterByQuarterAndPosition[quarterKey] && roster.position) {
+        console.log(`Setting roster: Q${quarterKey} - ${roster.position} - Player ID ${roster.playerId}`);
         rosterByQuarterAndPosition[quarterKey][roster.position as Position] = roster.playerId;
       }
     }

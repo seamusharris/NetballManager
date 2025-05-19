@@ -43,6 +43,8 @@ export default function Statistics() {
   const { data: rosters = [], isLoading: isLoadingRosters } = useQuery({
     queryKey: ['/api/games', selectedGameId, 'rosters'],
     enabled: !!selectedGameId,
+    staleTime: 0, // Don't use cached data
+    refetchOnWindowFocus: true, // Refetch when window gets focus
   });
   
   // Get statistics for selected game
