@@ -391,26 +391,71 @@ export default function RosterManager({
   };
   
   // Copy roster from one quarter to another
-  const handleCopyQuarter = () => {
+  const handleCopyQuarter = async () => {
     if (!selectedGameId || !quarterToCopy || quarterToCopy === activeQuarter) return;
     
     const sourceQuarterAssignments = getQuarterAssignments(quarterToCopy);
     
-    // For each position in the source quarter, copy to active quarter
-    Object.entries(sourceQuarterAssignments).forEach(([position, playerId]) => {
-      if (playerId !== null) {
-        saveRosterMutation.mutate({
-          quarter: parseInt(activeQuarter),
-          position: position as Position,
-          playerId
-        });
-      }
-    });
+    // Create a new object for the updated quarter
+    const newQuarterAssignments = { ...rosterByQuarter };
+    const targetQuarterKey = activeQuarter as '1' | '2' | '3' | '4';
     
-    toast({
-      title: "Quarter Copied",
-      description: `Positions from Quarter ${quarterToCopy} copied to Quarter ${activeQuarter}`,
-    });
+    // First, update the local state immediately for UI responsiveness
+    newQuarterAssignments[targetQuarterKey] = {
+      ...sourceQuarterAssignments
+    };
+    
+    // Update the state with the copied assignments
+    setRosterByQuarter(newQuarterAssignments);
+    
+    // Now save all the updated assignments to the server
+    try {
+      // Clear existing roster entries for this quarter
+      const toDeletePromises = [];
+      for (const roster of rosters) {
+        if (roster.gameId === selectedGameId && roster.quarter === parseInt(activeQuarter)) {
+          toDeletePromises.push(apiRequest('DELETE', `/api/rosters/${roster.id}`, {}));
+        }
+      }
+      
+      // Wait for all deletes to complete
+      await Promise.all(toDeletePromises);
+      
+      // For each position in the source quarter, create new assignments
+      const savePromises = [];
+      
+      Object.entries(sourceQuarterAssignments).forEach(([position, playerId]) => {
+        if (playerId !== null) {
+          // Create promise for each save operation
+          const savePromise = apiRequest('POST', '/api/rosters', {
+            gameId: selectedGameId,
+            quarter: parseInt(activeQuarter),
+            position: position as Position,
+            playerId
+          });
+          
+          savePromises.push(savePromise);
+        }
+      });
+      
+      // Wait for all save operations to complete
+      await Promise.all(savePromises);
+      
+      // Refresh the roster data
+      queryClient.invalidateQueries({ queryKey: ['/api/games', selectedGameId, 'rosters'] });
+      
+      toast({
+        title: "Quarter Copied",
+        description: `Positions from Quarter ${quarterToCopy} copied to Quarter ${activeQuarter}`,
+      });
+    } catch (error) {
+      console.error("Error copying quarter:", error);
+      toast({
+        title: "Copy Error",
+        description: "There was an error copying the quarter. Please try again.",
+        variant: "destructive",
+      });
+    }
     
     setQuarterToCopy(null);
   };
