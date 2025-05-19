@@ -13,7 +13,7 @@ export const players = pgTable("players", {
   displayName: text("display_name").notNull(),
   firstName: text("first_name").notNull(),
   lastName: text("last_name").notNull(),
-  dateOfBirth: text("date_of_birth").notNull(),
+  dateOfBirth: text("date_of_birth"),
   positionPreferences: json("position_preferences").notNull().$type<Position[]>(),
   active: boolean("active").notNull().default(true),
 });

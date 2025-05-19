@@ -125,7 +125,7 @@ export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFor
             name="displayName"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Display Name</FormLabel>
+                <FormLabel required>Display Name</FormLabel>
                 <FormControl>
                   <Input placeholder="J. Smith" {...field} />
                 </FormControl>
@@ -166,7 +166,7 @@ export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFor
             name="firstName"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>First Name</FormLabel>
+                <FormLabel required>First Name</FormLabel>
                 <FormControl>
                   <Input placeholder="Jane" {...field} />
                 </FormControl>
@@ -180,7 +180,7 @@ export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFor
             name="lastName"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Last Name</FormLabel>
+                <FormLabel required>Last Name</FormLabel>
                 <FormControl>
                   <Input placeholder="Smith" {...field} />
                 </FormControl>
@@ -212,7 +212,7 @@ export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFor
               name="position1"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Primary Position</FormLabel>
+                  <FormLabel required>Primary Position</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
