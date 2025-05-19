@@ -68,7 +68,9 @@ export default function GamesList({
   const [itemToDelete, setItemToDelete] = useState<number | null>(null);
   const [_, navigate] = useLocation();
   const [gameScores, setGameScores] = useState<Record<number, GameScore>>({});
-  const [gameRosterStatus, setGameRosterStatus] = useState<Record<number, boolean>>({});
+  // Use an enum-like type for roster status
+  type RosterStatus = 'not-started' | 'partial' | 'complete';
+  const [gameRosterStatus, setGameRosterStatus] = useState<Record<number, RosterStatus>>({});
   
   // Fetch game stats for all completed games
   const completedGameIds = games
@@ -147,11 +149,17 @@ export default function GamesList({
   useEffect(() => {
     if (!allRosterData) return;
     
-    const rosterStatuses: Record<number, boolean> = {};
+    const rosterStatuses: Record<number, RosterStatus> = {};
     
-    // Check each game's roster to see if all positions for all quarters are filled
+    // Check each game's roster status (not started / partial / complete)
     Object.entries(allRosterData).forEach(([gameIdStr, rosters]) => {
       const gameId = parseInt(gameIdStr);
+      
+      // If there are no rosters at all, mark as not started
+      if (rosters.length === 0) {
+        rosterStatuses[gameId] = 'not-started';
+        return;
+      }
       
       // Track filled positions by quarter
       const quarterPositions: Record<number, Set<string>> = {
@@ -173,7 +181,8 @@ export default function GamesList({
         (positions) => positions.size === 7
       );
       
-      rosterStatuses[gameId] = allPositionsFilled;
+      // If all positions are filled, mark as complete, otherwise mark as partial
+      rosterStatuses[gameId] = allPositionsFilled ? 'complete' : 'partial';
     });
     
     setGameRosterStatus(rosterStatuses);
@@ -495,13 +504,27 @@ export default function GamesList({
                             <button 
                               onClick={() => window.location.href = `/roster?game=${game.id}`}
                               className={`inline-flex items-center justify-center rounded-md text-xs py-1 px-2 border ${
-                                gameRosterStatus[game.id] 
+                                gameRosterStatus[game.id] === 'complete'
                                   ? "bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100" 
-                                  : "bg-background border-input hover:bg-accent hover:text-accent-foreground"
+                                  : gameRosterStatus[game.id] === 'partial'
+                                    ? "bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100"
+                                    : "bg-red-50 border-red-200 text-red-700 hover:bg-red-100"
                               }`}
                             >
-                              <CalendarRange className={`h-3 w-3 mr-1 ${gameRosterStatus[game.id] ? "text-emerald-600" : ""}`} />
-                              {gameRosterStatus[game.id] ? "Roster Complete" : "Manage Roster"}
+                              <CalendarRange className={`h-3 w-3 mr-1 ${
+                                gameRosterStatus[game.id] === 'complete'
+                                  ? "text-emerald-600"
+                                  : gameRosterStatus[game.id] === 'partial'
+                                    ? "text-amber-600"
+                                    : "text-red-600"
+                              }`} />
+                              {
+                                gameRosterStatus[game.id] === 'complete' 
+                                  ? "Roster Complete" 
+                                  : gameRosterStatus[game.id] === 'partial'
+                                    ? "Roster Partial"
+                                    : "Roster Empty"
+                              }
                             </button>
                             
                             {game.completed && (
