@@ -7,7 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Wand2, Copy, Save, Trash2 } from 'lucide-react';
+import { Wand2, Copy, Save } from 'lucide-react';
 import { Player, Game, Opponent, Position } from '@shared/schema';
 import { formatShortDate, positionLabels, allPositions } from '@/lib/utils';
 import ExportButtons from '@/components/common/ExportButtons';
@@ -629,6 +629,7 @@ export default function SimpleRosterManager({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
+                  {/* Position rows */}
                   {positionOrder.map(position => (
                     <TableRow key={position} className="hover:bg-slate-50">
                       <TableCell className="font-medium">{position}</TableCell>
@@ -675,39 +676,34 @@ export default function SimpleRosterManager({
                       })}
                     </TableRow>
                   ))}
+                  
+                  {/* Off players row - in the same table with a top border */}
+                  <TableRow className="border-t-2 border-slate-200">
+                    <TableCell className="font-medium">Off</TableCell>
+                    
+                    {quarters.map(quarter => {
+                      const quarterKey = quarter.toString() as '1'|'2'|'3'|'4';
+                      const playersNotInQuarter = players
+                        .filter(player => player.active)
+                        .filter(player => !Object.values(localRosterState[quarterKey]).includes(player.id));
+                      
+                      return (
+                        <TableCell key={`off-${quarter}`} className="p-1 min-w-[160px]">
+                          <div className="flex h-10 w-full rounded-md border border-input bg-slate-50 px-3 py-2 text-sm">
+                            {playersNotInQuarter.length > 0 ? (
+                              <div className="truncate my-auto">
+                                {playersNotInQuarter.map(player => player.displayName).join(', ')}
+                              </div>
+                            ) : (
+                              <div className="text-muted-foreground my-auto">-</div>
+                            )}
+                          </div>
+                        </TableCell>
+                      );
+                    })}
+                  </TableRow>
                 </TableBody>
               </Table>
-              
-              {/* Border separator - thin dark horizontal line */}
-              <div className="border-t border-gray-300 my-3"></div>
-              
-              {/* Off court players row - perfectly aligned with positions above */}
-              <div className="mb-4">
-                <div className="flex">
-                  <div className="w-24 p-2 px-4 font-medium">Off</div>
-                  
-                  {quarters.map(quarter => {
-                    const quarterKey = quarter.toString() as '1'|'2'|'3'|'4';
-                    const playersNotInQuarter = players
-                      .filter(player => player.active)
-                      .filter(player => !Object.values(localRosterState[quarterKey]).includes(player.id));
-                    
-                    return (
-                      <div key={`off-${quarter}`} className="p-1 min-w-[160px]">
-                        <div className="relative h-10 px-3 py-2 rounded-md border border-input bg-slate-50 text-sm flex items-center">
-                          {playersNotInQuarter.length > 0 ? (
-                            <div className="truncate">
-                              {playersNotInQuarter.map(player => player.displayName).join(', ')}
-                            </div>
-                          ) : (
-                            <div className="text-muted-foreground">-</div>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
             </div>
           ) : (
             <div className="p-8 text-center text-slate-500">
