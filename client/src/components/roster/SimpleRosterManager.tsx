@@ -647,50 +647,40 @@ export default function SimpleRosterManager({
                 </TableBody>
               </Table>
               
-              {/* Players not on court - horizontal layout aligned with quarters */}
-              <div className="mt-6 p-4 bg-slate-50 rounded-md">
-                <h4 className="font-medium mb-3">Players Not On Court:</h4>
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr>
-                        <th className="text-left font-medium text-sm pb-2 w-24"></th>
-                        {quarters.map(q => (
-                          <th key={q} className="text-center font-medium text-sm pb-2">Q{q}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <td className="align-top pt-2 text-sm font-medium">Not Playing:</td>
-                        {quarters.map(q => {
-                          const quarterKey = q.toString() as '1'|'2'|'3'|'4';
-                          const playersNotInQuarter = players
-                            .filter(player => player.active)
-                            .filter(player => !Object.values(localRosterState[quarterKey]).includes(player.id));
-                          
-                          return (
-                            <td key={q} className="align-top pt-2">
-                              <div className="flex flex-wrap gap-1 justify-center">
-                                {playersNotInQuarter.map(player => (
-                                  <span 
-                                    key={player.id}
-                                    className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-200 text-slate-800 mb-1"
-                                  >
-                                    {player.displayName}
-                                  </span>
-                                ))}
-                                {playersNotInQuarter.length === 0 && (
-                                  <span className="text-xs text-slate-500">All assigned</span>
-                                )}
-                              </div>
-                            </td>
-                          );
-                        })}
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
+              {/* Players not in court - directly under the main table */}
+              <div className="mt-4 overflow-x-auto">
+                <Table>
+                  <TableBody>
+                    <TableRow>
+                      <TableCell className="font-medium">Bench</TableCell>
+                      
+                      {quarters.map(quarter => {
+                        const quarterKey = quarter.toString() as '1'|'2'|'3'|'4';
+                        const playersNotInQuarter = players
+                          .filter(player => player.active)
+                          .filter(player => !Object.values(localRosterState[quarterKey]).includes(player.id));
+                        
+                        return (
+                          <TableCell key={`bench-${quarter}`} className="p-1">
+                            <div className="flex flex-wrap gap-1">
+                              {playersNotInQuarter.map(player => (
+                                <span 
+                                  key={player.id}
+                                  className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700 mb-1"
+                                >
+                                  {player.displayName}
+                                </span>
+                              ))}
+                              {playersNotInQuarter.length === 0 && (
+                                <span className="text-xs text-slate-400">-</span>
+                              )}
+                            </div>
+                          </TableCell>
+                        );
+                      })}
+                    </TableRow>
+                  </TableBody>
+                </Table>
               </div>
             </div>
             
