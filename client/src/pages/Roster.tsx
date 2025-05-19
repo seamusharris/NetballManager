@@ -67,11 +67,17 @@ export default function Roster() {
       };
       
       // Fill with roster data
-      rosters.forEach((roster: any) => {
-        if (roster.quarter >= 1 && roster.quarter <= 4) {
-          const quarterKey = roster.quarter.toString() as '1' | '2' | '3' | '4';
-          newRosterByQuarter[quarterKey][roster.position] = roster.playerId;
-        }
+      const validRosters = rosters.filter((roster: any) => 
+        roster && 
+        roster.gameId === selectedGameId && 
+        roster.quarter >= 1 && 
+        roster.quarter <= 4 &&
+        roster.position
+      );
+      
+      validRosters.forEach((roster: any) => {
+        const quarterKey = roster.quarter.toString() as '1' | '2' | '3' | '4';
+        newRosterByQuarter[quarterKey][roster.position] = roster.playerId;
       });
       
       // For debugging

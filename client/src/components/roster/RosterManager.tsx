@@ -68,6 +68,12 @@ export default function RosterManager({
   
   // Update roster data when rosters prop changes or selectedGameId changes
   useEffect(() => {
+    // Check if we should use the parent-provided local state
+    if (localRosterState) {
+      setRosterByQuarter(localRosterState as Record<string, Record<Position, number | null>>);
+      return;
+    }
+    
     if (selectedGameId) {
       console.log(`Loading roster data for game ${selectedGameId}, found ${rosters.length} roster entries`);
       
@@ -91,41 +97,8 @@ export default function RosterManager({
       
       // Update state with new roster data
       setRosterByQuarter(newRosterByQuarter);
-      
-      // Make a direct API call to ensure we have the latest data
-      apiRequest('GET', `/api/games/${selectedGameId}/rosters`)
-        .then(response => response.json())
-        .then(data => {
-          if (data && data.length > 0) {
-            console.log(`Directly fetched ${data.length} roster entries for game ${selectedGameId}`);
-            
-            // Create a fresh roster object with the latest data
-            const freshRosterByQuarter = {
-              '1': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
-              '2': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
-              '3': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
-              '4': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null }
-            };
-            
-            // Fill with directly fetched data
-            data.forEach(roster => {
-              if (roster && roster.quarter !== undefined) {
-                const quarterKey = roster.quarter.toString() as '1' | '2' | '3' | '4';
-                if (roster.position && allPositions.includes(roster.position as Position)) {
-                  freshRosterByQuarter[quarterKey][roster.position as Position] = roster.playerId;
-                }
-              }
-            });
-            
-            // Update the state with directly fetched data
-            setRosterByQuarter(freshRosterByQuarter);
-          }
-        })
-        .catch(error => {
-          console.error("Error fetching roster data directly:", error);
-        });
     }
-  }, [rosters, selectedGameId]);
+  }, [rosters, selectedGameId, localRosterState]);
   
   // Calculate roster completion percentage
   const totalPositions = Object.keys(rosterByQuarter).length * allPositions.length;
