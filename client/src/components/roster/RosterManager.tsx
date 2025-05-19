@@ -238,7 +238,7 @@ export default function RosterManager({
     });
   };
   
-  // Auto-fill roster based on player position preferences (simplified approach)
+  // Auto-fill roster based on player position preferences with equal playing time distribution
   const handleAutoFill = async () => {
     if (!selectedGameId) return;
     
@@ -263,6 +263,17 @@ export default function RosterManager({
         return;
       }
       
+      // Calculate required quarters per player for maximum playing time
+      const positionsPerQuarter = allPositions.length; // 7 positions per quarter
+      const totalPositions = positionsPerQuarter * 4; // 28 total slots in a game
+      const idealQuartersPerPlayer = Math.min(4, Math.floor(totalPositions / activePlayers.length));
+      
+      console.log(`Ideal quarters per player: ${idealQuartersPerPlayer} with ${activePlayers.length} active players`);
+      
+      // No player should sit out more than 1 quarter if possible
+      const minQuartersPerPlayer = Math.max(3, idealQuartersPerPlayer);
+      console.log(`Min quarters per player: ${minQuartersPerPlayer}`);
+      
       // Set up tracking for player assignments
       const playerAssignmentCount = {};
       activePlayers.forEach(player => {
@@ -279,14 +290,9 @@ export default function RosterManager({
         playerAssignedInQuarter[quarter] = {};
       });
       
-      // For each quarter and position
+      // First pass: Assign players to their preferred positions, ensuring equal playing time
       quarters.forEach(quarter => {
         allPositions.forEach(position => {
-          // Find the best player for this position:
-          // 1. Player with this position in their preferences
-          // 2. Player with the fewest assignments overall
-          // 3. Player not already assigned in this quarter
-          
           // Get players not already assigned in this quarter
           const availablePlayers = activePlayers.filter(player => 
             !playerAssignedInQuarter[quarter][player.id]
@@ -297,14 +303,24 @@ export default function RosterManager({
             return; // Skip this position if no players available
           }
           
-          // First, get players who have this position in their preferences
+          // First, prioritize players who:
+          // 1. Are under their minimum quarters target
+          // 2. Have this position in their preferences
           const playersWithPreference = availablePlayers
             .filter(player => {
               const prefs = player.positionPreferences as Position[];
               return prefs.includes(position);
             })
             .sort((a, b) => {
-              // Sort by preference order first
+              // First sort by how many quarters under the minimum they are
+              const aAssignments = playerAssignmentCount[a.id] || 0;
+              const bAssignments = playerAssignmentCount[b.id] || 0;
+              const aUnder = Math.max(0, minQuartersPerPlayer - aAssignments);
+              const bUnder = Math.max(0, minQuartersPerPlayer - bAssignments);
+              
+              if (bUnder !== aUnder) return bUnder - aUnder;
+              
+              // Then by preference order
               const aPrefs = a.positionPreferences as Position[];
               const bPrefs = b.positionPreferences as Position[];
               const aIndex = aPrefs.indexOf(position);
@@ -312,13 +328,24 @@ export default function RosterManager({
               
               if (aIndex !== bIndex) return aIndex - bIndex;
               
-              // Then by total number of assignments so far
-              return (playerAssignmentCount[a.id] || 0) - (playerAssignmentCount[b.id] || 0);
+              // Finally by total assignments
+              return aAssignments - bAssignments;
             });
           
-          // Get all available players sorted by fewest total assignments
+          // Sort all available players by quarters under minimum
           const allAvailablePlayersSorted = [...availablePlayers]
-            .sort((a, b) => (playerAssignmentCount[a.id] || 0) - (playerAssignmentCount[b.id] || 0));
+            .sort((a, b) => {
+              const aAssignments = playerAssignmentCount[a.id] || 0;
+              const bAssignments = playerAssignmentCount[b.id] || 0;
+              const aUnder = Math.max(0, minQuartersPerPlayer - aAssignments);
+              const bUnder = Math.max(0, minQuartersPerPlayer - bAssignments);
+              
+              // Prioritize players who need more quarters to meet minimum
+              if (bUnder !== aUnder) return bUnder - aUnder;
+              
+              // Then sort by fewest assignments
+              return aAssignments - bAssignments;
+            });
           
           // Choose first player with preference, or any player if none have preference
           const selectedPlayer = playersWithPreference.length > 0 
@@ -341,20 +368,29 @@ export default function RosterManager({
         });
       });
       
+      // Log assignment distribution
+      console.log("Final player assignment counts:");
+      Object.entries(playerAssignmentCount).forEach(([playerId, count]) => {
+        const player = activePlayers.find(p => p.id === parseInt(playerId));
+        console.log(`${player?.displayName}: ${count} quarters`);
+      });
+      
       // Create batch of all assignments
       toast({
         title: "Auto-fill In Progress",
         description: "Creating roster assignments...",
       });
       
-      // Create all the assignments
-      const createdAssignments = [];
+      // Create all the assignments in batch
+      const savePromises = [];
       
       for (const assignment of assignments) {
-        const response = await apiRequest('POST', '/api/rosters', assignment);
-        const result = await response.json();
-        createdAssignments.push(result);
+        const savePromise = apiRequest('POST', '/api/rosters', assignment).then(res => res.json());
+        savePromises.push(savePromise);
       }
+      
+      // Wait for all assignments to be created
+      const createdAssignments = await Promise.all(savePromises);
       
       // Update the local state with our new assignments
       const newRosterByQuarter = {
@@ -378,7 +414,7 @@ export default function RosterManager({
       
       toast({
         title: "Auto-fill Complete",
-        description: `Successfully assigned ${createdAssignments.length} positions across all quarters`,
+        description: `Successfully assigned ${createdAssignments.length} positions across all quarters with balanced playing time`,
       });
     } catch (error) {
       console.error("Error during auto-fill:", error);
