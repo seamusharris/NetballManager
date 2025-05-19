@@ -674,7 +674,8 @@ export default function RosterManager({
       await Promise.all(savePromises);
       
       // Invalidate and refetch queries to ensure UI is up-to-date
-      queryClient.invalidateQueries({ queryKey: ['/api/games', selectedGameId, 'rosters'] });
+      queryClientInstance.invalidateQueries({ queryKey: ['/api/games', selectedGameId, 'rosters'] });
+      queryClientInstance.refetchQueries({ queryKey: ['/api/games', selectedGameId, 'rosters'] });
       
       // Notify parent component that roster has been saved
       if (onRosterSaved) {

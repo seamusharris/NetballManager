@@ -53,12 +53,12 @@ export default function Roster() {
     refetchOnWindowFocus: true // Refetch when window gets focus
   });
   
-  // Update local state when rosters change, but only from API data
+  // Update local state only when rosters first load or when game changes
   useEffect(() => {
-    if (selectedGameId && rosters) {
-      console.log(`Roster update triggered (${rosterUpdated}), refetching data for game ${selectedGameId}`);
+    if (selectedGameId && rosters && Array.isArray(rosters)) {
+      console.log(`Loading roster data for game ${selectedGameId}, found ${rosters.length} roster entries`);
       
-      // Only update from API data if we don't have local unsaved changes
+      // Create empty roster template
       const newRosterByQuarter = {
         '1': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
         '2': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
@@ -67,16 +67,17 @@ export default function Roster() {
       };
       
       // Fill with new roster data
-      rosters.forEach(roster => {
+      rosters.forEach((roster: any) => {
         if (roster.quarter >= 1 && roster.quarter <= 4) {
           const quarterKey = roster.quarter.toString() as '1' | '2' | '3' | '4';
           newRosterByQuarter[quarterKey][roster.position] = roster.playerId;
         }
       });
       
+      // Only update the state if we're loading a new game or first loading
       setLocalRosterByQuarter(newRosterByQuarter);
     }
-  }, [rosters, selectedGameId]);
+  }, [selectedGameId, rosters.length]);
   
   const isLoading = isLoadingPlayers || isLoadingGames || isLoadingOpponents || 
     (selectedGameId ? isLoadingRosters : false);
@@ -101,12 +102,12 @@ export default function Roster() {
   
   // Callback for when roster is saved to database
   const handleRosterSaved = () => {
+    console.log("Roster saved, refreshing data");
+    
     // Invalidate the roster query to refresh data
     if (selectedGameId) {
-      queryClient.invalidateQueries({ queryKey: ['/api/games/' + selectedGameId + '/rosters'] });
-      
-      // Increment update counter to trigger RosterSummary to refetch
-      setRosterUpdated(prev => prev + 1);
+      queryClient.invalidateQueries({ queryKey: ['/api/games', selectedGameId, 'rosters'] });
+      queryClient.refetchQueries({ queryKey: ['/api/games', selectedGameId, 'rosters'] });
     }
   };
   
