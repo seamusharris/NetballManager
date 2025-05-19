@@ -505,14 +505,7 @@ export default function RosterManager({
             </SelectContent>
           </Select>
           
-          {selectedGameId && (
-            <Button
-              className="bg-primary hover:bg-primary-light text-white"
-              disabled={saveRosterMutation.isPending}
-            >
-              <Save className="w-4 h-4 mr-1" /> Save Roster
-            </Button>
-          )}
+          {/* No buttons here - Save Roster button is next to Auto-Fill */}
         </div>
       </div>
       
