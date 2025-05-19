@@ -143,6 +143,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/games", async (req, res) => {
     try {
       const games = await storage.getGames();
+      
+      // Debug game information
+      console.log("Available games:", games.map(g => ({ id: g.id, date: g.date, completed: g.completed })));
+      
       res.json(games);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch games" });
@@ -172,6 +176,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(game);
     } catch (error) {
       res.status(500).json({ message: "Failed to create game" });
+    }
+  });
+
+  // One-time endpoint to add the missing 4th game as upcoming
+  app.post("/api/games/createUpcoming", async (req, res) => {
+    try {
+      // Check if a 4th game exists already
+      const games = await storage.getGames();
+      if (games.length >= 4) {
+        // Set the 4th game as upcoming
+        const fourthGame = games[3];
+        await storage.updateGame(fourthGame.id, { completed: false });
+        return res.json({ message: "Fourth game updated as upcoming", game: fourthGame });
+      }
+      
+      // Add a new upcoming game (e.g., June 2, 2025)
+      const newGame = await storage.createGame({
+        date: "2025-06-02",
+        time: "14:00",
+        opponentId: 2, // Using an existing opponent ID
+        completed: false
+      });
+      
+      res.status(201).json({ message: "New upcoming game created", game: newGame });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to create upcoming game" });
     }
   });
 
