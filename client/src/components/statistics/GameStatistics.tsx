@@ -48,9 +48,11 @@ export default function GameStatistics({
   
   // Fill roster assignments
   rosters.forEach(roster => {
-    const quarterKey = roster.quarter.toString();
-    if (rosterByQuarterAndPosition[quarterKey] && roster.position) {
-      rosterByQuarterAndPosition[quarterKey][roster.position as Position] = roster.playerId;
+    if (roster && roster.quarter !== undefined) {
+      const quarterKey = roster.quarter.toString();
+      if (rosterByQuarterAndPosition[quarterKey] && roster.position) {
+        rosterByQuarterAndPosition[quarterKey][roster.position as Position] = roster.playerId;
+      }
     }
   });
   
@@ -111,39 +113,43 @@ export default function GameStatistics({
   
   // Fill in actual stats where they exist
   gameStats.forEach(stat => {
-    const quarterKey = stat.quarter.toString();
-    if (quarterKey in statsByQuarterAndPlayer) {
-      statsByQuarterAndPlayer[quarterKey][stat.playerId] = stat;
+    if (stat && stat.quarter !== undefined) {
+      const quarterKey = stat.quarter.toString();
+      if (quarterKey in statsByQuarterAndPlayer) {
+        statsByQuarterAndPlayer[quarterKey][stat.playerId] = stat;
+      }
     }
     
-    // Accumulate totals
-    if (!playerTotals[stat.playerId]) {
-      playerTotals[stat.playerId] = {
-        id: 0,
-        gameId: game.id,
-        playerId: stat.playerId,
-        quarter: 0,
-        goalsFor: 0,
-        goalsAgainst: 0,
-        missedGoals: 0,
-        rebounds: 0,
-        intercepts: 0,
-        badPass: 0,
-        handlingError: 0,
-        pickUp: 0,
-        infringement: 0
-      };
+    // Accumulate totals - with additional null checks
+    if (stat && stat.playerId !== undefined) {
+      if (!playerTotals[stat.playerId]) {
+        playerTotals[stat.playerId] = {
+          id: 0,
+          gameId: game.id,
+          playerId: stat.playerId,
+          quarter: 0,
+          goalsFor: 0,
+          goalsAgainst: 0,
+          missedGoals: 0,
+          rebounds: 0,
+          intercepts: 0,
+          badPass: 0,
+          handlingError: 0,
+          pickUp: 0,
+          infringement: 0
+        };
+      }
+      
+      playerTotals[stat.playerId].goalsFor += (stat.goalsFor || 0);
+      playerTotals[stat.playerId].goalsAgainst += (stat.goalsAgainst || 0);
+      playerTotals[stat.playerId].missedGoals += (stat.missedGoals || 0);
+      playerTotals[stat.playerId].rebounds += (stat.rebounds || 0);
+      playerTotals[stat.playerId].intercepts += (stat.intercepts || 0);
+      playerTotals[stat.playerId].badPass += (stat.badPass || 0);
+      playerTotals[stat.playerId].handlingError += (stat.handlingError || 0);
+      playerTotals[stat.playerId].pickUp += (stat.pickUp || 0);
+      playerTotals[stat.playerId].infringement += (stat.infringement || 0);
     }
-    
-    playerTotals[stat.playerId].goalsFor += stat.goalsFor;
-    playerTotals[stat.playerId].goalsAgainst += stat.goalsAgainst;
-    playerTotals[stat.playerId].missedGoals += stat.missedGoals;
-    playerTotals[stat.playerId].rebounds += stat.rebounds;
-    playerTotals[stat.playerId].intercepts += stat.intercepts;
-    playerTotals[stat.playerId].badPass += stat.badPass;
-    playerTotals[stat.playerId].handlingError += stat.handlingError;
-    playerTotals[stat.playerId].pickUp += stat.pickUp;
-    playerTotals[stat.playerId].infringement += stat.infringement;
   });
   
   statsByQuarterAndPlayer['total'] = playerTotals;
