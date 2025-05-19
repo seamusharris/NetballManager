@@ -268,7 +268,7 @@ export default function GamesList({
                             variant="ghost" 
                             size="icon"
                             className="text-primary hover:text-primary-dark"
-                            onClick={() => onViewStats(game.id)}
+                            onClick={() => window.location.href = `/statistics?game=${game.id}`}
                           >
                             <FileText className="h-4 w-4" />
                           </Button>
