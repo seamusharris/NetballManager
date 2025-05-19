@@ -78,8 +78,8 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
       '1': {}, '2': {}, '3': {}, '4': {}
     };
     
-    // Keep track of player ratings from first quarter stats
-    const firstQuarterRatings: Record<number, number> = {};
+    // Keep track of player ratings and their stat IDs 
+    const firstQuarterRatings: Record<number, { rating: number, statId: number }> = {};
     
     // Initialize with zeros for all players in each quarter
     rosters.forEach(roster => {
@@ -107,78 +107,90 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
     if (gameStats && gameStats.length > 0) {
       console.log("Loading game stats:", gameStats.slice(0, 3));
       
+      // Group all stats by quarter and player for easier processing
+      const statsByQuarterAndPlayer: Record<string, Record<number, GameStat[]>> = {
+        '1': {}, '2': {}, '3': {}, '4': {}
+      };
+      
+      // Group stats by quarter and player
       gameStats.forEach(stat => {
         if (!stat) return;
         
         const quarter = String(stat.quarter);
         const playerId = stat.playerId;
         
-        console.log(`Processing stat for quarter ${quarter}, player ${playerId}:`, stat);
-        
-        if (!initialValues[quarter]) {
-          initialValues[quarter] = {};
+        if (!statsByQuarterAndPlayer[quarter][playerId]) {
+          statsByQuarterAndPlayer[quarter][playerId] = [];
         }
         
-        if (!initialValues[quarter][playerId]) {
-          initialValues[quarter][playerId] = {
-            goalsFor: '0',
-            goalsAgainst: '0',
-            missedGoals: '0',
-            rebounds: '0',
-            intercepts: '0',
-            badPass: '0',
-            handlingError: '0',
-            pickUp: '0',
-            infringement: '0'
-          };
-        }
-        
-        // Convert to strings and handle null values
-        initialValues[quarter][playerId].goalsFor = String(stat.goalsFor || 0);
-        initialValues[quarter][playerId].goalsAgainst = String(stat.goalsAgainst || 0);
-        initialValues[quarter][playerId].missedGoals = String(stat.missedGoals || 0);
-        initialValues[quarter][playerId].rebounds = String(stat.rebounds || 0);
-        initialValues[quarter][playerId].intercepts = String(stat.intercepts || 0);
-        initialValues[quarter][playerId].badPass = String(stat.badPass || 0);
-        initialValues[quarter][playerId].handlingError = String(stat.handlingError || 0);
-        initialValues[quarter][playerId].pickUp = String(stat.pickUp || 0);
-        initialValues[quarter][playerId].infringement = String(stat.infringement || 0);
+        statsByQuarterAndPlayer[quarter][playerId].push(stat);
       });
       
-      // Extract player ratings from all quarter 1 stats
+      // For each quarter and player, get the latest stat
+      Object.entries(statsByQuarterAndPlayer).forEach(([quarter, playerStats]) => {
+        Object.entries(playerStats).forEach(([playerIdStr, stats]) => {
+          const playerId = parseInt(playerIdStr);
+          
+          // Sort by ID descending to get the most recent stat first
+          const sortedStats = [...stats].sort((a, b) => b.id - a.id);
+          if (sortedStats.length === 0) return;
+          
+          const latestStat = sortedStats[0];
+          console.log(`Processing stat for quarter ${quarter}, player ${playerId}:`, latestStat);
+          
+          if (!initialValues[quarter]) {
+            initialValues[quarter] = {};
+          }
+          
+          if (!initialValues[quarter][playerId]) {
+            initialValues[quarter][playerId] = {
+              goalsFor: '0',
+              goalsAgainst: '0',
+              missedGoals: '0',
+              rebounds: '0',
+              intercepts: '0',
+              badPass: '0',
+              handlingError: '0',
+              pickUp: '0',
+              infringement: '0'
+            };
+          }
+          
+          // Convert to strings and handle null values
+          initialValues[quarter][playerId].goalsFor = String(latestStat.goalsFor || 0);
+          initialValues[quarter][playerId].goalsAgainst = String(latestStat.goalsAgainst || 0);
+          initialValues[quarter][playerId].missedGoals = String(latestStat.missedGoals || 0);
+          initialValues[quarter][playerId].rebounds = String(latestStat.rebounds || 0);
+          initialValues[quarter][playerId].intercepts = String(latestStat.intercepts || 0);
+          initialValues[quarter][playerId].badPass = String(latestStat.badPass || 0);
+          initialValues[quarter][playerId].handlingError = String(latestStat.handlingError || 0);
+          initialValues[quarter][playerId].pickUp = String(latestStat.pickUp || 0);
+          initialValues[quarter][playerId].infringement = String(latestStat.infringement || 0);
+          
+          // Store rating information for quarter 1 stats
+          if (quarter === '1' && latestStat.rating !== undefined && latestStat.rating !== null) {
+            firstQuarterRatings[playerId] = { 
+              rating: latestStat.rating, 
+              statId: latestStat.id 
+            };
+          }
+        });
+      });
+      
+      // Extract player ratings from quarter 1 stats
       const playerRatingMap: Record<number, number> = {};
       
-      // Group all stats by player ID
-      const playerStats: Record<number, GameStat[]> = {};
-      gameStats.forEach(stat => {
-        if (!playerStats[stat.playerId]) {
-          playerStats[stat.playerId] = [];
-        }
-        playerStats[stat.playerId].push(stat);
-      });
-      
-      // For each player, get their latest quarter 1 stat with a rating
-      Object.entries(playerStats).forEach(([playerIdStr, stats]) => {
+      // Set player ratings from the first quarter stats
+      Object.entries(firstQuarterRatings).forEach(([playerIdStr, data]) => {
         const playerId = parseInt(playerIdStr);
-        
-        // Sort by ID descending to get most recent first
-        // Filter to quarter 1 stats with a valid rating
-        const q1Stats = stats
-          .filter(s => s.quarter === 1 && s.rating !== undefined && s.rating !== null)
-          .sort((a, b) => b.id - a.id);
-        
-        if (q1Stats.length > 0) {
-          const latestStat = q1Stats[0];
-          playerRatingMap[playerId] = latestStat.rating!;
-          firstQuarterRatings[playerId] = latestStat.rating!;
-          console.log(`Setting rating for player ${playerId} to ${latestStat.rating} from quarter 1 (stat ID: ${latestStat.id})`);
-        }
+        playerRatingMap[playerId] = data.rating;
+        console.log(`Setting rating for player ${playerId} to ${data.rating} from quarter 1 (stat ID: ${data.statId})`);
       });
       
       // Log all the ratings we found
       console.log("Found player ratings:", Object.entries(playerRatingMap).map(([id, rating]) => `Player ${id}: ${rating}`).join(", "));
       
-      // Set the initial player ratings
+      // Set the player ratings in the component state
       setPlayerRatings(playerRatingMap);
     }
     
@@ -229,8 +241,30 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
       const quarters = ['1', '2', '3', '4'];
       const promises = [];
       
+      // IMPORTANT: Process quarter 1 first to ensure ratings are saved
+      // This ensures that ratings are properly saved before other quarters
+      const quarterSequence = ['1', ...quarters.filter(q => q !== '1')];
+      
+      // Save only the latest stats for each player in each quarter to avoid duplicates
+      const latestStatIds: Record<string, Record<number, number>> = {};
+      
+      // Create a map of the latest stat record for each player in each quarter
+      gameStats.forEach(stat => {
+        const quarter = String(stat.quarter);
+        const playerId = stat.playerId;
+        
+        if (!latestStatIds[quarter]) {
+          latestStatIds[quarter] = {};
+        }
+        
+        // If we don't have a record for this player/quarter yet, or if this is a newer record
+        if (!latestStatIds[quarter][playerId] || stat.id > latestStatIds[quarter][playerId]) {
+          latestStatIds[quarter][playerId] = stat.id;
+        }
+      });
+      
       // Process all quarters
-      for (const quarter of quarters) {
+      for (const quarter of quarterSequence) {
         const quarterValues = formValues[quarter] || {};
         
         for (const playerIdStr in quarterValues) {
@@ -250,12 +284,13 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
           const handlingError = parseInt(playerValues.handlingError || '0');
           const pickUp = parseInt(playerValues.pickUp || '0');
           const infringement = parseInt(playerValues.infringement || '0');
-          const rating = playerRatings[playerId] || 0; // Get the player rating from the state
           
-          // Find existing stat
-          const existingStat = gameStats.find(
-            s => s.gameId === gameId && s.playerId === playerId && s.quarter === parseInt(quarter)
-          );
+          // Get the latest rating for this player
+          const rating = playerRatings[playerId] || 0;
+          
+          // Find only the most recent stat record for this player/quarter
+          const latestStatId = latestStatIds[quarter]?.[playerId];
+          const existingStat = gameStats.find(s => s.id === latestStatId);
           
           // Create the base stat data with all required fields
           const statData: any = {
@@ -273,12 +308,10 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
             infringement
           };
           
-          // We need to save rating to any existing first quarter stat
-          if (parseInt(quarter) === 1) {
-            // Set the player rating in first quarter stats
+          // Only add rating to quarter 1 stats
+          if (quarter === '1') {
             statData.rating = rating;
-            
-            console.log(`Saving rating ${rating} for player ${playerId} in quarter 1`);
+            console.log(`Saving rating ${rating} for player ${playerId} in quarter 1 (stat ID: ${existingStat?.id || 'new'})`);
           }
           
           if (existingStat) {
@@ -774,10 +807,19 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
                                   onChange={(e) => {
                                     const value = Math.min(10, Math.max(0, parseInt(e.target.value) || 0));
                                     console.log(`Setting new rating for player ${player.id}: ${value}`);
-                                    setPlayerRatings({
+                                    
+                                    // Update the rating in playerRatings state
+                                    const updatedRatings = {
                                       ...playerRatings,
                                       [player.id]: value
-                                    });
+                                    };
+                                    
+                                    // Log the new ratings
+                                    console.log("New ratings:", Object.entries(updatedRatings)
+                                      .map(([id, rating]) => `Player ${id}: ${rating}`)
+                                      .join(", "));
+                                      
+                                    setPlayerRatings(updatedRatings);
                                   }}
                                   className="w-16 text-center mx-auto"
                                 />
