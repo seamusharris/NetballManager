@@ -245,8 +245,9 @@ export default function RosterManager({
   // Create query client instance for cache invalidation
   const queryClientInstance = useQueryClient();
   
-  // State for reset loading
+  // State for loading indicators
   const [isResetting, setIsResetting] = useState(false);
+  const [isSaving, setSaving] = useState(false);
   
   // Handle reset all positions
   const handleResetPositions = async () => {

@@ -50,9 +50,15 @@ export default function Roster() {
     queryKey: ['/api/games', selectedGameId, 'rosters'],
     enabled: !!selectedGameId,
     staleTime: 0, // Don't use cached data
-    refetchOnWindowFocus: true, // Refetch when window gets focus
-    onSuccess: (data) => {
-      // When roster data is fetched, update the local state
+    refetchOnWindowFocus: true // Refetch when window gets focus
+  });
+  
+  // Update local state when rosters change, but only from API data
+  useEffect(() => {
+    if (selectedGameId && rosters) {
+      console.log(`Roster update triggered (${rosterUpdated}), refetching data for game ${selectedGameId}`);
+      
+      // Only update from API data if we don't have local unsaved changes
       const newRosterByQuarter = {
         '1': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
         '2': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
@@ -61,7 +67,7 @@ export default function Roster() {
       };
       
       // Fill with new roster data
-      data.forEach(roster => {
+      rosters.forEach(roster => {
         if (roster.quarter >= 1 && roster.quarter <= 4) {
           const quarterKey = roster.quarter.toString() as '1' | '2' | '3' | '4';
           newRosterByQuarter[quarterKey][roster.position] = roster.playerId;
@@ -70,7 +76,7 @@ export default function Roster() {
       
       setLocalRosterByQuarter(newRosterByQuarter);
     }
-  });
+  }, [rosters, selectedGameId]);
   
   const isLoading = isLoadingPlayers || isLoadingGames || isLoadingOpponents || 
     (selectedGameId ? isLoadingRosters : false);

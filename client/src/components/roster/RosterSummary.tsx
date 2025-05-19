@@ -115,6 +115,7 @@ export default function RosterSummary({
     });
     
     setAssignments(newAssignments);
+    // Removed updateTrigger from dependency array to prevent infinite loop
   }, [rosters, selectedGameId, playerMap, localRosterState]);
   
   // Define quarters array for display
