@@ -21,7 +21,51 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
   const [formValues, setFormValues] = useState<Record<string, Record<number, Record<string, string>>>>({
     '1': {}, '2': {}, '3': {}, '4': {}
   });
+  // Add a state to store calculated game totals
+  const [gameTotals, setGameTotals] = useState<Record<number, Record<string, number>>>({});
   const { toast } = useToast();
+  
+  // Function to calculate game totals across all quarters
+  const calculateGameTotals = () => {
+    const totals: Record<number, Record<string, number>> = {};
+    
+    // Initialize player totals
+    players.forEach(player => {
+      totals[player.id] = {
+        goalsFor: 0,
+        goalsAgainst: 0,
+        missedGoals: 0,
+        rebounds: 0,
+        intercepts: 0,
+        badPass: 0,
+        handlingError: 0,
+        pickUp: 0,
+        infringement: 0
+      };
+    });
+    
+    // Sum up stats across all quarters
+    Object.keys(formValues).forEach(quarter => {
+      const quarterData = formValues[quarter];
+      Object.keys(quarterData).forEach(playerIdStr => {
+        const playerId = parseInt(playerIdStr);
+        if (isNaN(playerId)) return;
+        
+        const playerData = quarterData[playerId];
+        if (!playerData) return;
+        
+        // Sum up values for this player across quarters
+        Object.keys(playerData).forEach(stat => {
+          const value = parseInt(playerData[stat] || '0');
+          if (!isNaN(value)) {
+            totals[playerId][stat] += value;
+          }
+        });
+      });
+    });
+    
+    return totals;
+  };
   
   // Initialize form values when component mounts or gameStats/rosters change
   useEffect(() => {
@@ -128,6 +172,12 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
       return newValues;
     });
   };
+  
+  // Update game totals whenever form values change
+  useEffect(() => {
+    const totals = calculateGameTotals();
+    setGameTotals(totals);
+  }, [formValues]);
   
   // Save stats mutation for ALL quarters
   const saveMutation = useMutation({
