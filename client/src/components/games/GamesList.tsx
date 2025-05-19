@@ -34,7 +34,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Edit, Trash2, FileText, CalendarRange, Search } from 'lucide-react';
+import { Edit, Trash2, FileText, CalendarRange, Search, Trophy, ThumbsDown, Minus } from 'lucide-react';
 import { Game, Opponent, GameStat } from '@shared/schema';
 import { formatDate, formatShortDate } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
@@ -303,16 +303,36 @@ export default function GamesList({
                       <div className="font-medium">vs. {getOpponentName(game.opponentId)}</div>
                     </TableCell>
                     <TableCell className="px-6 py-4 whitespace-nowrap">
-                      <Badge
-                        variant="outline"
-                        className={`px-2 py-1 text-xs rounded-full font-semibold ${
-                          game.completed 
-                            ? "bg-success/10 text-success" 
-                            : "bg-accent/10 text-accent"
-                        }`}
-                      >
-                        {game.completed ? 'Completed' : 'Upcoming'}
-                      </Badge>
+                      <div className="flex items-center gap-2">
+                        <Badge
+                          variant="outline"
+                          className={`px-2 py-1 text-xs rounded-full font-semibold ${
+                            game.completed 
+                              ? "bg-success/10 text-success" 
+                              : "bg-accent/10 text-accent"
+                          }`}
+                        >
+                          {game.completed ? 'Completed' : 'Upcoming'}
+                        </Badge>
+                        
+                        {game.completed && gameScores[game.id] && (
+                          <div className={`p-1 rounded-full ${
+                            gameScores[game.id].team > gameScores[game.id].opponent
+                              ? "bg-success/20" 
+                              : gameScores[game.id].team < gameScores[game.id].opponent
+                                ? "bg-error/20"
+                                : "bg-warning/20"
+                          }`}>
+                            {gameScores[game.id].team > gameScores[game.id].opponent ? (
+                              <Trophy className="h-4 w-4 text-success" />
+                            ) : gameScores[game.id].team < gameScores[game.id].opponent ? (
+                              <ThumbsDown className="h-4 w-4 text-error" />
+                            ) : (
+                              <Minus className="h-4 w-4 text-warning" />
+                            )}
+                          </div>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell className="px-6 py-4 whitespace-nowrap">
                       {game.completed ? (
