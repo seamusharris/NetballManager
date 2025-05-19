@@ -119,9 +119,15 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
     // Process player ratings
     Object.values(newPlayerStatsMap).forEach(player => {
       // Get the player's quarter 1 stats to see if there's a rating
-      const playerQ1Stats = Object.values(gameStatsMap || {}).flatMap(stats => 
-        stats.filter(stat => stat.playerId === player.playerId && stat.quarter === 1)
-      )[0];
+      // Find all quarter 1 stats for this player
+      const playerQ1Stats = Object.values(gameStatsMap || {})
+        .flatMap(stats => stats.filter(stat => 
+          stat.playerId === player.playerId && 
+          stat.quarter === 1 && 
+          stat.rating !== undefined && 
+          stat.rating !== null
+        ))
+        .sort((a, b) => b.id - a.id)[0]; // Sort by ID descending to get the most recent
       
       if (playerQ1Stats && typeof playerQ1Stats.rating === 'number') {
         // Use the stored rating if available
