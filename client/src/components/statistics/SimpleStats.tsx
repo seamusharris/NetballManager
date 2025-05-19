@@ -772,23 +772,12 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
                       </TableCell>
                       
                       <TableCell className="p-1 text-center border-r">
-                        <div className="flex justify-center items-center gap-1">
-                          <button 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              const currentRating = playerRatings[player.id] || 5;
-                              const newRating = Math.max(0, currentRating - 1);
-                              setPlayerRatings(prev => ({...prev, [player.id]: newRating}));
-                            }}
-                            className="text-slate-500 hover:text-slate-700 px-1 font-medium"
-                          >
-                            -
-                          </button>
+                        <div className="bg-slate-50 px-3 py-2 rounded-md border border-slate-200">
                           <input
                             type="number"
                             min="0"
                             max="10"
-                            className="bg-slate-50 px-1 py-2 rounded-md border border-slate-200 w-10 text-center"
+                            className="w-10 text-center bg-transparent border-none p-0 focus:ring-0"
                             value={playerRatings[player.id] || 5}
                             onChange={(e) => {
                               const val = parseInt(e.target.value);
@@ -802,10 +791,7 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
                               
                               if (playerStats) {
                                 try {
-                                  await apiRequest(`/api/gamestats/${playerStats.id}`, {
-                                    method: 'PATCH',
-                                    body: JSON.stringify({ rating })
-                                  });
+                                  await apiRequest('PATCH', `/api/gamestats/${playerStats.id}`, { rating });
                                 } catch (error) {
                                   console.error("Failed to update rating:", error);
                                   toast({
@@ -817,17 +803,6 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
                               }
                             }}
                           />
-                          <button 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              const currentRating = playerRatings[player.id] || 5;
-                              const newRating = Math.min(10, currentRating + 1);
-                              setPlayerRatings(prev => ({...prev, [player.id]: newRating}));
-                            }}
-                            className="text-slate-500 hover:text-slate-700 px-1 font-medium"
-                          >
-                            +
-                          </button>
                         </div>
                       </TableCell>
                       
