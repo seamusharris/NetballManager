@@ -273,9 +273,9 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
     { 
       name: 'Shooting', 
       fields: [
-        { field: 'goals', label: 'Goals' },
-        { field: 'missedGoals', label: 'Missed' },
-        { field: 'goalsAgainst', label: 'Opp' },
+        { field: 'goals', label: 'For' },
+        { field: 'missedGoals', label: 'Miss' },
+        { field: 'goalsAgainst', label: 'Agn' },
       ]
     },
     { 
@@ -283,6 +283,7 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
       fields: [
         { field: 'rebounds', label: 'Reb' },
         { field: 'intercepts', label: 'Int' },
+        { field: 'pickUp', label: 'Pick' },
       ]
     },
     { 
@@ -290,7 +291,6 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
       fields: [
         { field: 'badPass', label: 'Pass' },
         { field: 'handlingError', label: 'Hand' },
-        { field: 'pickUp', label: 'Pick' },
         { field: 'infringement', label: 'Infr' },
       ]
     },
@@ -425,8 +425,11 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
                     <TableCell className="px-2 py-2 whitespace-nowrap text-sm text-center font-mono">
                       {player.stats.rebounds}
                     </TableCell>
-                    <TableCell className="px-2 py-2 whitespace-nowrap text-sm text-center font-mono border-r">
+                    <TableCell className="px-2 py-2 whitespace-nowrap text-sm text-center font-mono">
                       {player.stats.intercepts}
+                    </TableCell>
+                    <TableCell className="px-2 py-2 whitespace-nowrap text-sm text-center font-mono border-r">
+                      {player.stats.pickUp}
                     </TableCell>
                     
                     {/* Errors stats */}
@@ -435,9 +438,6 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
                     </TableCell>
                     <TableCell className="px-2 py-2 whitespace-nowrap text-sm text-center font-mono">
                       {player.stats.handlingError}
-                    </TableCell>
-                    <TableCell className="px-2 py-2 whitespace-nowrap text-sm text-center font-mono">
-                      {player.stats.pickUp}
                     </TableCell>
                     <TableCell className="px-2 py-2 whitespace-nowrap text-sm text-center font-mono border-r">
                       {player.stats.infringement}
