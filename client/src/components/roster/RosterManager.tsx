@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Progress } from '@/components/ui/progress';
-import { Wand2, Copy, Save } from 'lucide-react';
+import { Wand2, Copy, Save, Trash2 } from 'lucide-react';
 import QuarterRoster from './QuarterRoster';
 import ExportButtons from '@/components/common/ExportButtons';
 import { Player, Game, Opponent, Roster, Position } from '@shared/schema';
@@ -236,6 +236,34 @@ export default function RosterManager({
     return players.filter(player => 
       !assignedPlayerIds.includes(player.id) || player.id === currentPlayerId
     );
+  };
+  
+  // Handle reset all positions
+  const handleResetPositions = () => {
+    if (!selectedGameId) {
+      toast({
+        title: "Error",
+        description: "Please select a game first",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Reset roster assignments for all quarters
+    const emptyRoster = {
+      '1': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
+      '2': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
+      '3': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
+      '4': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null }
+    };
+    
+    // Update the state with empty roster assignments
+    setRosterByQuarter(emptyRoster);
+    
+    toast({
+      title: "Positions Reset",
+      description: "All positions have been cleared. Click 'Save Roster' to confirm changes.",
+    });
   };
   
   // Handle player assignment to position
@@ -703,6 +731,16 @@ export default function RosterManager({
                     <Copy className="w-4 h-4 mr-1" /> Copy
                   </Button>
                 </div>
+                
+                {/* Reset button */}
+                <Button
+                  variant="outline"
+                  className="border border-red-500 text-red-500 hover:bg-red-500 hover:text-white transition-colors"
+                  onClick={handleResetPositions}
+                  disabled={saveRosterMutation.isPending}
+                >
+                  <Trash2 className="w-4 h-4 mr-1" /> Reset All
+                </Button>
                 
                 {/* Auto-Fill button */}
                 <Button
