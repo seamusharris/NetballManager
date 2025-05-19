@@ -520,7 +520,7 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-slate-50">
-                      <TableHead className="min-w-[120px] border-r">Player</TableHead>
+                      <TableHead className="min-w-[120px]">Player</TableHead>
                       <TableHead className="text-center w-10 border-r"></TableHead>
                       
                       {/* Stat category headers */}
@@ -560,7 +560,7 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
                   <TableBody>
                     {playersByQuarter(quarter).map(player => (
                       <TableRow key={player.id} className="hover:bg-slate-50">
-                        <TableCell className="font-medium border-r">
+                        <TableCell className="font-medium">
                           {player.displayName}
                         </TableCell>
                         
