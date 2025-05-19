@@ -123,8 +123,19 @@ export default function GamesList({
         4: { for: 0, against: 0 }
       };
       
-      // First, get goals for each quarter
+      // Create a map of the latest stats for each player and quarter combination
+      const latestPlayerStats: Record<string, GameStat> = {};
+      
+      // Find the latest stat for each player and quarter
       stats.forEach(stat => {
+        const key = `${stat.playerId}-${stat.quarter}`;
+        if (!latestPlayerStats[key] || stat.id > latestPlayerStats[key].id) {
+          latestPlayerStats[key] = stat;
+        }
+      });
+      
+      // Use only the latest stats for calculating quarter goals
+      Object.values(latestPlayerStats).forEach(stat => {
         if (stat.quarter >= 1 && stat.quarter <= 4) {
           quarterGoals[stat.quarter].for += (stat.goalsFor || 0);
           quarterGoals[stat.quarter].against += (stat.goalsAgainst || 0);
