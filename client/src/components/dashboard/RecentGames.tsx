@@ -103,10 +103,8 @@ export default function RecentGames({ games, opponents, className }: RecentGames
   };
   
   const getResultClass = (game: Game) => {
-    const [teamScore, opponentScore] = getScores(game);
-    if (teamScore > opponentScore) return 'border-success bg-success/5';
-    if (teamScore < opponentScore) return 'border-error bg-error/5';
-    return 'border-warning bg-warning/5';
+    // Always use blue accent styling to match upcoming games
+    return 'border-accent bg-accent/5';
   };
   
   const getResultText = (game: Game) => {
