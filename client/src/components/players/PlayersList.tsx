@@ -80,10 +80,15 @@ export default function PlayersList({ players, isLoading, onEdit, onDelete }: Pl
     
     return matchesSearch && matchesPosition && matchesStatus;
   });
+
+  // Sort players by display name
+  const sortedPlayers = [...filteredPlayers].sort((a, b) => 
+    a.displayName.localeCompare(b.displayName)
+  );
   
   // Pagination
-  const totalPages = Math.ceil(filteredPlayers.length / itemsPerPage);
-  const paginatedPlayers = filteredPlayers.slice(
+  const totalPages = Math.ceil(sortedPlayers.length / itemsPerPage);
+  const paginatedPlayers = sortedPlayers.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
