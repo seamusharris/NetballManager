@@ -26,10 +26,21 @@ import { insertGameSchema, Game, Opponent } from "@shared/schema";
 const formSchema = insertGameSchema.extend({
   date: z.string().min(1, "Date is required"),
   time: z.string().min(1, "Time is required"),
-  opponentId: z.string().min(1, "Opponent is required"),
+  opponentId: z.string(), // No validation directly on the field
   completed: z.boolean().default(false),
   isBye: z.boolean().default(false)
-});
+}).refine(
+  (data) => {
+    // If it's a bye, we don't need opponent
+    if (data.isBye) return true;
+    // If not a bye, opponent is required
+    return data.opponentId !== "";
+  },
+  {
+    message: "Opponent is required unless it's a BYE round",
+    path: ["opponentId"]
+  }
+);
 
 // Convert string opponentId to number for submission
 type FormValues = z.infer<typeof formSchema> & {
@@ -58,10 +69,11 @@ export default function GameForm({ game, opponents, onSubmit, isSubmitting }: Ga
   });
   
   const handleSubmit = (values: FormValues) => {
-    // Convert opponentId to number
+    // For BYE games, we may not have an opponentId
     const formattedValues = {
       ...values,
-      opponentId: parseInt(values.opponentId)
+      // Only convert opponentId to number if it's provided
+      opponentId: values.opponentId ? parseInt(values.opponentId) : null
     };
     
     onSubmit(formattedValues);
@@ -73,14 +85,46 @@ export default function GameForm({ game, opponents, onSubmit, isSubmitting }: Ga
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         <FormField
           control={form.control}
+          name="isBye"
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+              <div className="space-y-0.5">
+                <FormLabel>BYE Round</FormLabel>
+                <FormDescription>
+                  Mark as BYE if your team doesn't have a scheduled match this round
+                </FormDescription>
+              </div>
+              <FormControl>
+                <Switch
+                  checked={field.value}
+                  onCheckedChange={(checked) => {
+                    field.onChange(checked);
+                    // If BYE is checked, clear opponent field
+                    if (checked) {
+                      form.setValue("opponentId", "");
+                    }
+                  }}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <FormField
+          control={form.control}
           name="opponentId"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Opponent</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select 
+                onValueChange={field.onChange} 
+                defaultValue={field.value}
+                disabled={form.watch("isBye")}
+              >
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select opponent" />
+                    <SelectValue placeholder={form.watch("isBye") ? "Not required for BYE" : "Select opponent"} />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
@@ -92,7 +136,9 @@ export default function GameForm({ game, opponents, onSubmit, isSubmitting }: Ga
                 </SelectContent>
               </Select>
               <FormDescription>
-                Select the team your squad will be playing against
+                {form.watch("isBye") 
+                  ? "No opponent needed for BYE rounds" 
+                  : "Select the team your squad will be playing against"}
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -159,7 +205,9 @@ export default function GameForm({ game, opponents, onSubmit, isSubmitting }: Ga
               <div className="space-y-0.5">
                 <FormLabel>Game Status</FormLabel>
                 <FormDescription>
-                  Mark as completed to enter statistics for this game
+                  {form.watch("isBye") 
+                    ? "Mark as completed to include in season stats" 
+                    : "Mark as completed to enter statistics for this game"}
                 </FormDescription>
               </div>
               <FormControl>

@@ -39,7 +39,7 @@ export const games = pgTable("games", {
   id: serial("id").primaryKey(),
   date: text("date").notNull(),
   time: text("time").notNull(),
-  opponentId: integer("opponent_id").notNull(),
+  opponentId: integer("opponent_id"), // Nullable for BYE games
   completed: boolean("completed").notNull().default(false),
   isBye: boolean("is_bye").notNull().default(false),
 });
