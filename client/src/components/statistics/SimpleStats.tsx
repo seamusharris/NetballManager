@@ -214,6 +214,7 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
             s => s.gameId === gameId && s.playerId === playerId && s.quarter === parseInt(quarter)
           );
           
+          // Create the base stat data
           const statData = {
             gameId,
             playerId,
@@ -225,9 +226,14 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
             intercepts,
             badPass,
             handlingError,
-            infringement,
-            rating: parseInt(quarter) === 1 ? rating : 0 // Only store the rating in quarter 1 to avoid duplication
+            pickUp,
+            infringement
           };
+          
+          // Add rating only to the first quarter's stats to avoid duplication
+          if (parseInt(quarter) === 1) {
+            statData.rating = rating;
+          }
           
           if (existingStat) {
             // Update existing
