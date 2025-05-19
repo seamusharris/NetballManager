@@ -91,6 +91,45 @@ export default function Players() {
   
   const handleCreatePlayer = (data: any) => {
     console.log("Creating player with data:", data);
+    
+    // Debug validation - make sure all required fields are present
+    if (!data.displayName) {
+      toast({
+        title: "Error",
+        description: "Display name is required",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!data.firstName) {
+      toast({
+        title: "Error",
+        description: "First name is required",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!data.lastName) {
+      toast({
+        title: "Error",
+        description: "Last name is required",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!data.positionPreferences || data.positionPreferences.length === 0) {
+      toast({
+        title: "Error",
+        description: "At least one position preference is required",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // If validation passes, create the player
     createMutation.mutate(data);
   };
   

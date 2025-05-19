@@ -1,0 +1,199 @@
+import { useState } from 'react';
+import { Position, allPositions } from '@shared/schema';
+
+interface SimplePlayerFormProps {
+  onSubmit: (data: any) => void;
+  onCancel: () => void;
+  isSubmitting: boolean;
+}
+
+export default function SimplePlayerForm({ onSubmit, onCancel, isSubmitting }: SimplePlayerFormProps) {
+  const [displayName, setDisplayName] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [dateOfBirth, setDateOfBirth] = useState('');
+  const [active, setActive] = useState(true);
+  const [position1, setPosition1] = useState('');
+  const [position2, setPosition2] = useState('none');
+  const [position3, setPosition3] = useState('none');
+  const [position4, setPosition4] = useState('none');
+  
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Validate required fields
+    if (!displayName || !firstName || !lastName || !dateOfBirth || !position1) {
+      alert("Please fill in all required fields");
+      return;
+    }
+    
+    // Build position preferences array
+    const positionPreferences: Position[] = [position1 as Position];
+    
+    if (position2 !== 'none') {
+      positionPreferences.push(position2 as Position);
+    }
+    if (position3 !== 'none') {
+      positionPreferences.push(position3 as Position);
+    }
+    if (position4 !== 'none') {
+      positionPreferences.push(position4 as Position);
+    }
+    
+    // Submit the data
+    onSubmit({
+      displayName,
+      firstName,
+      lastName,
+      dateOfBirth,
+      active,
+      positionPreferences
+    });
+  };
+  
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium mb-1">Display Name *</label>
+          <input 
+            type="text"
+            required
+            className="w-full p-2 border rounded-md"
+            value={displayName}
+            onChange={(e) => setDisplayName(e.target.value)}
+          />
+          <p className="text-xs text-gray-500 mt-1">Name as displayed on roster and statistics</p>
+        </div>
+        
+        <div className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+          <div>
+            <label className="block text-sm font-medium">Active Status</label>
+            <p className="text-xs text-gray-500">Inactive players won't appear in roster selections</p>
+          </div>
+          <div>
+            <input
+              type="checkbox"
+              checked={active}
+              onChange={(e) => setActive(e.target.checked)}
+            />
+          </div>
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium mb-1">First Name *</label>
+          <input
+            type="text"
+            required
+            className="w-full p-2 border rounded-md"
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)}
+          />
+        </div>
+        
+        <div>
+          <label className="block text-sm font-medium mb-1">Last Name *</label>
+          <input
+            type="text"
+            required
+            className="w-full p-2 border rounded-md"
+            value={lastName}
+            onChange={(e) => setLastName(e.target.value)}
+          />
+        </div>
+      </div>
+      
+      <div>
+        <label className="block text-sm font-medium mb-1">Date of Birth *</label>
+        <input
+          type="date"
+          required
+          className="w-full p-2 border rounded-md"
+          value={dateOfBirth}
+          onChange={(e) => setDateOfBirth(e.target.value)}
+        />
+      </div>
+      
+      <div>
+        <h3 className="text-sm font-medium mb-2">Position Preferences (Ranked)</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium mb-1">Primary Position *</label>
+            <select
+              required
+              className="w-full p-2 border rounded-md"
+              value={position1}
+              onChange={(e) => setPosition1(e.target.value)}
+            >
+              <option value="" disabled>Select position</option>
+              {allPositions.map(pos => (
+                <option key={pos} value={pos}>{pos}</option>
+              ))}
+            </select>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium mb-1">Second Preference</label>
+            <select
+              className="w-full p-2 border rounded-md"
+              value={position2}
+              onChange={(e) => setPosition2(e.target.value)}
+            >
+              <option value="none">None</option>
+              {allPositions.map(pos => (
+                <option key={pos} value={pos}>{pos}</option>
+              ))}
+            </select>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium mb-1">Third Preference</label>
+            <select
+              className="w-full p-2 border rounded-md"
+              value={position3}
+              onChange={(e) => setPosition3(e.target.value)}
+            >
+              <option value="none">None</option>
+              {allPositions.map(pos => (
+                <option key={pos} value={pos}>{pos}</option>
+              ))}
+            </select>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium mb-1">Fourth Preference</label>
+            <select
+              className="w-full p-2 border rounded-md"
+              value={position4}
+              onChange={(e) => setPosition4(e.target.value)}
+            >
+              <option value="none">None</option>
+              {allPositions.map(pos => (
+                <option key={pos} value={pos}>{pos}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+      </div>
+      
+      <div className="flex justify-end space-x-2 pt-4">
+        <button
+          type="button"
+          className="px-4 py-2 border rounded-md"
+          onClick={onCancel}
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          className="px-4 py-2 bg-blue-600 text-white rounded-md"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? 'Saving...' : 'Add Player'}
+        </button>
+      </div>
+    </form>
+  );
+}
