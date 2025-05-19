@@ -200,8 +200,13 @@ export default function GameStatistics({
     }
   });
   
-  // For simplicity, let's just check if the array itself has entries
-  const isRosterComplete = Array.isArray(rosters) && rosters.length > 0;
+  // Perform an additional check to ensure we have valid roster entries
+  const hasValidRosterEntries = Array.isArray(rosters) && 
+    rosters.length > 0 && 
+    rosters.some(r => 'position' in r && 'playerId' in r && 'quarter' in r);
+  
+  // Mark roster as complete if we have any valid entries
+  const isRosterComplete = hasValidRosterEntries;
   
   // Save or update a player's statistics
   const saveStatsMutation = useMutation({
