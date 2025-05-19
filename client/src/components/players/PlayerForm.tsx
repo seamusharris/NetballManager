@@ -419,7 +419,28 @@ export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFor
         </div>
         
         <div className="flex justify-end space-x-2">
-          <Button type="button" variant="outline" onClick={() => form.reset()}>
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={() => {
+              // Reset form to initial values
+              form.reset();
+              
+              // Reset position fields to default empty values
+              form.setValue("position1", isEditing ? positionDefaults.position1 : "");
+              form.setValue("position2", "none");
+              form.setValue("position3", "none");
+              form.setValue("position4", "none");
+              
+              // Reset the available positions
+              setAvailablePositions({
+                position1: [...allPositions],
+                position2: [...allPositions],
+                position3: [...allPositions],
+                position4: [...allPositions],
+              });
+            }}
+          >
             Reset
           </Button>
           <Button 
