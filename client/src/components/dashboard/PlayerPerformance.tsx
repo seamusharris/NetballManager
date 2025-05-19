@@ -4,6 +4,7 @@ import { Game, Player, GameStat } from '@shared/schema';
 import { cn, getInitials } from '@/lib/utils';
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react';
 
 interface PlayerPerformanceProps {
   players: Player[];
@@ -25,9 +26,19 @@ interface PlayerStats {
   rating: number;
 }
 
+type SortField = 'name' | 'goals' | 'goalsAgainst' | 'missedGoals' | 'rebounds' | 'intercepts' | 
+                'badPass' | 'handlingError' | 'pickUp' | 'infringement' | 'rating';
+type SortDirection = 'asc' | 'desc';
+
+interface SortConfig {
+  field: SortField;
+  direction: SortDirection;
+}
+
 export default function PlayerPerformance({ players, games, className }: PlayerPerformanceProps): JSX.Element {
   const [timeRange, setTimeRange] = useState('last5');
   const [playerStatsMap, setPlayerStatsMap] = useState<Record<number, PlayerStats>>({});
+  const [sortConfig, setSortConfig] = useState<SortConfig>({ field: 'rating', direction: 'desc' });
   
   // Get only completed games
   const completedGames = games.filter(game => game.completed);
@@ -203,7 +214,16 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
     return 'bg-error/20 text-error';
   };
   
-  // Get players with their stats and sort by rating
+  // Sort handler function
+  const handleSort = (field: SortField) => {
+    // If clicking the same field, toggle direction, otherwise set to default (desc)
+    const direction = 
+      sortConfig.field === field && sortConfig.direction === 'desc' ? 'asc' : 'desc';
+    
+    setSortConfig({ field, direction });
+  };
+  
+  // Get players with their stats
   const playersWithStats = players
     .map(player => ({
       ...player,
@@ -221,7 +241,55 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
         rating: 5.0
       }
     }))
-    .sort((a, b) => b.stats.rating - a.stats.rating); // Sort by rating
+    .sort((a, b) => {
+      // Sort by the selected field and direction
+      const { field, direction } = sortConfig;
+      
+      // Handle name sorting separately
+      if (field === 'name') {
+        if (direction === 'asc') {
+          return a.displayName.localeCompare(b.displayName);
+        } else {
+          return b.displayName.localeCompare(a.displayName);
+        }
+      }
+      
+      // For numeric fields, sort numerically
+      const aValue = field === 'rating' ? a.stats[field] : a.stats[field];
+      const bValue = field === 'rating' ? b.stats[field] : b.stats[field];
+      
+      if (direction === 'asc') {
+        return aValue - bValue;
+      } else {
+        return bValue - aValue;
+      }
+    });
+  
+  // Column definitions
+  const columns = [
+    { field: 'name', label: 'Player' },
+    { field: 'goals', label: 'Goals' },
+    { field: 'goalsAgainst', label: 'Opp Goals' },
+    { field: 'missedGoals', label: 'Missed' },
+    { field: 'rebounds', label: 'Rebounds' },
+    { field: 'intercepts', label: 'Intercepts' },
+    { field: 'badPass', label: 'Bad Pass' },
+    { field: 'handlingError', label: 'Errors' },
+    { field: 'pickUp', label: 'Pick Up' },
+    { field: 'infringement', label: 'Infr.' },
+    { field: 'rating', label: 'Rating' },
+  ];
+  
+  // Helper to render sort indicator
+  const renderSortIndicator = (field: SortField) => {
+    if (sortConfig.field !== field) {
+      return <ArrowUpDown className="ml-1 h-3 w-3 inline" />;
+    }
+    
+    return sortConfig.direction === 'asc' ? 
+      <ArrowUp className="ml-1 h-3 w-3 inline text-primary" /> : 
+      <ArrowDown className="ml-1 h-3 w-3 inline text-primary" />;
+  };
   
   return (
     <Card className={className}>
@@ -245,17 +313,29 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
           <table className="min-w-full divide-y divide-gray-200">
             <thead>
               <tr>
-                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Player</th>
-                <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Goals</th>
-                <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Opp Goals</th>
-                <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Missed</th>
-                <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Rebounds</th>
-                <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Intercepts</th>
-                <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Bad Pass</th>
-                <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Errors</th>
-                <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Pick Up</th>
-                <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Infr.</th>
-                <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Rating</th>
+                {columns.map((column) => (
+                  <th 
+                    key={column.field}
+                    className={cn(
+                      "px-3 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-50",
+                      column.field === 'name' ? "text-left" : "text-center",
+                      sortConfig.field === column.field ? "bg-gray-50" : ""
+                    )}
+                    onClick={() => handleSort(column.field as SortField)}
+                  >
+                    <span className="flex items-center justify-center">
+                      {column.field === 'name' ? (
+                        <span className="flex items-center justify-start">
+                          {column.label} {renderSortIndicator(column.field as SortField)}
+                        </span>
+                      ) : (
+                        <span className="flex items-center justify-center">
+                          {column.label} {renderSortIndicator(column.field as SortField)}
+                        </span>
+                      )}
+                    </span>
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -269,7 +349,7 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
                 </tr>
               ) : (
                 playersWithStats.map(player => (
-                  <tr key={player.id}>
+                  <tr key={player.id} className="hover:bg-gray-50">
                     <td className="px-3 py-2 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className={cn("h-8 w-8 rounded-full flex items-center justify-center text-white", getAvatarColor(player))}>
