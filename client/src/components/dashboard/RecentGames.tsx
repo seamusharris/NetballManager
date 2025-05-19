@@ -53,7 +53,8 @@ export default function RecentGames({ games, opponents, className }: RecentGames
     gcTime: 15 * 60 * 1000,   // Keep data in cache for 15 minutes
   });
   
-  const getOpponentName = (opponentId: number) => {
+  const getOpponentName = (opponentId: number | null) => {
+    if (!opponentId) return 'Unknown Opponent';
     const opponent = opponents.find(o => o.id === opponentId);
     return opponent ? opponent.teamName : 'Unknown Opponent';
   };
@@ -69,7 +70,7 @@ export default function RecentGames({ games, opponents, className }: RecentGames
     
     // Use the same calculation method as in GamesList.tsx
     // First, calculate goals by quarter
-    const quarterGoals = {
+    const quarterGoals: Record<number, { for: number, against: number }> = {
       1: { for: 0, against: 0 },
       2: { for: 0, against: 0 },
       3: { for: 0, against: 0 },

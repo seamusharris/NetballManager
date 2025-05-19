@@ -16,7 +16,8 @@ export default function UpcomingGames({ games, opponents, className }: UpcomingG
     .filter(game => !game.completed)
     .slice(0, 3);
   
-  const getOpponentName = (opponentId: number) => {
+  const getOpponentName = (opponentId: number | null) => {
+    if (!opponentId) return 'Unknown Opponent';
     const opponent = opponents.find(o => o.id === opponentId);
     return opponent ? opponent.teamName : 'Unknown Opponent';
   };
