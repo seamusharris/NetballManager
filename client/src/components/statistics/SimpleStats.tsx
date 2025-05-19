@@ -785,23 +785,6 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
                                 setPlayerRatings(prev => ({...prev, [player.id]: val}));
                               }
                             }}
-                            onBlur={async () => {
-                              const playerStats = gameStats.find(s => s.playerId === player.id);
-                              const rating = playerRatings[player.id] || 5;
-                              
-                              if (playerStats) {
-                                try {
-                                  await apiRequest('PATCH', `/api/gamestats/${playerStats.id}`, { rating });
-                                } catch (error) {
-                                  console.error("Failed to update rating:", error);
-                                  toast({
-                                    title: "Rating update failed",
-                                    description: "Please try again",
-                                    variant: "destructive",
-                                  });
-                                }
-                              }
-                            }}
                           />
                         </div>
                       </TableCell>
