@@ -63,6 +63,56 @@ export default function SimpleRosterManager({
   const selectedGame = games.find(game => game.id === selectedGameId);
   const selectedOpponent = opponents.find(opponent => selectedGame?.opponentId === opponent.id);
   
+  // Effect to load existing roster when game selection changes
+  useEffect(() => {
+    // Reset the pending changes when game changes
+    setPendingChanges([]);
+    setHasUnsavedChanges(false);
+    
+    // Reset local roster state to empty
+    setLocalRosterState({
+      '1': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
+      '2': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
+      '3': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
+      '4': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null }
+    });
+    
+    // If we have a selected game, fetch its roster and update local state
+    if (selectedGameId) {
+      const fetchRoster = async () => {
+        try {
+          const response = await fetch(`/api/games/${selectedGameId}/rosters`);
+          if (response.ok) {
+            const rosters: RosterType[] = await response.json();
+            
+            // Update local state with fetched roster
+            const newRosterState: RosterStateType = {
+              '1': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
+              '2': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
+              '3': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
+              '4': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null }
+            };
+            
+            // Populate with loaded data
+            rosters.forEach(roster => {
+              const quarterKey = roster.quarter.toString() as '1' | '2' | '3' | '4';
+              if (quarterKey === '1' || quarterKey === '2' || quarterKey === '3' || quarterKey === '4') {
+                newRosterState[quarterKey][roster.position] = roster.playerId;
+              }
+            });
+            
+            setLocalRosterState(newRosterState);
+            console.log("Loaded roster data:", newRosterState);
+          }
+        } catch (error) {
+          console.error("Error loading roster:", error);
+        }
+      };
+      
+      fetchRoster();
+    }
+  }, [selectedGameId]);
+  
   // Type for quarters
   type Quarter = 1 | 2 | 3 | 4;
   const quarters: Quarter[] = [1, 2, 3, 4];
