@@ -8,9 +8,16 @@ import { useQuery } from '@tanstack/react-query';
 interface RosterSummaryProps {
   selectedGameId: number | null;
   updateTrigger?: number; // Optional counter to trigger refetch
+  localRosterState?: Record<string, Record<string, number | null>>; // Local state for unsaved changes
+  players?: Player[]; // Pass players directly
 }
 
-export default function RosterSummary({ selectedGameId, updateTrigger = 0 }: RosterSummaryProps) {
+export default function RosterSummary({ 
+  selectedGameId, 
+  updateTrigger = 0,
+  localRosterState,
+  players: propPlayers
+}: RosterSummaryProps) {
   // Type for quarters
   type Quarter = 1 | 2 | 3 | 4;
   
@@ -31,11 +38,14 @@ export default function RosterSummary({ selectedGameId, updateTrigger = 0 }: Ros
     }
   }, [updateTrigger, selectedGameId, refetch]);
   
-  // Fetch players directly from API
-  const { data: players = [] } = useQuery<Player[]>({
+  // Fetch players directly from API if not provided via props
+  const { data: fetchedPlayers = [] } = useQuery<Player[]>({
     queryKey: ['/api/players'],
     enabled: true
   });
+  
+  // Use provided players or fetched players
+  const players = propPlayers || fetchedPlayers;
   
   // Create a map for quick player lookups
   const playerMap = React.useMemo(() => {
@@ -57,7 +67,7 @@ export default function RosterSummary({ selectedGameId, updateTrigger = 0 }: Ros
   // Standard position order from GS to GK
   const positionOrder: Position[] = ['GS', 'GA', 'WA', 'C', 'WD', 'GD', 'GK'];
   
-  // Process the roster data whenever it changes
+  // Process the roster data (either from local state or from API)
   useEffect(() => {
     // Create empty assignments to handle both data and reset cases
     const newAssignments = {
@@ -67,6 +77,27 @@ export default function RosterSummary({ selectedGameId, updateTrigger = 0 }: Ros
       4: { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null }
     } as Record<Quarter, Record<Position, number | null>>;
     
+    // Check if we should use localRosterState (unsaved changes)
+    if (localRosterState && selectedGameId) {
+      // Process each quarter
+      Object.entries(localRosterState).forEach(([quarterKey, positions]) => {
+        const quarter = parseInt(quarterKey) as Quarter;
+        if (quarter < 1 || quarter > 4) return;
+        
+        // Process each position in the quarter
+        Object.entries(positions).forEach(([posKey, playerId]) => {
+          if (['GS', 'GA', 'WA', 'C', 'WD', 'GD', 'GK'].includes(posKey)) {
+            const position = posKey as Position;
+            newAssignments[quarter][position] = playerId;
+          }
+        });
+      });
+      
+      setAssignments(newAssignments);
+      return;
+    }
+    
+    // If we don't have local state, use API data
     // If there's no game selected or no roster data, reset to empty positions
     if (!selectedGameId || !rosters || rosters.length === 0) {
       console.log(`No roster data for game ${selectedGameId || 'none'}, rosters length: ${rosters?.length || 0}`);
@@ -96,7 +127,7 @@ export default function RosterSummary({ selectedGameId, updateTrigger = 0 }: Ros
     });
     
     setAssignments(newAssignments);
-  }, [rosters, selectedGameId, playerMap]);
+  }, [rosters, selectedGameId, playerMap, localRosterState, updateTrigger]);
   
   // Define quarters array for display
   const quarters: Quarter[] = [1, 2, 3, 4];
@@ -113,7 +144,7 @@ export default function RosterSummary({ selectedGameId, updateTrigger = 0 }: Ros
   }
   
   // Add loading state
-  if (isLoading) {
+  if (isLoading && !localRosterState) {
     return (
       <Card className="mb-6 shadow-md">
         <CardContent className="pt-6">

@@ -11,6 +11,14 @@ export default function Roster() {
   const [_, navigate] = useLocation();
   const queryClient = useQueryClient();
   
+  // Add state for local roster changes (before saving to database)
+  const [localRosterByQuarter, setLocalRosterByQuarter] = useState<Record<string, Record<string, number | null>>>({
+    '1': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
+    '2': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
+    '3': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
+    '4': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null }
+  });
+  
   // Parse URL query parameters to get game ID
   useEffect(() => {
     // Get the game ID from the URL query parameter if it exists
@@ -43,6 +51,25 @@ export default function Roster() {
     enabled: !!selectedGameId,
     staleTime: 0, // Don't use cached data
     refetchOnWindowFocus: true, // Refetch when window gets focus
+    onSuccess: (data) => {
+      // When roster data is fetched, update the local state
+      const newRosterByQuarter = {
+        '1': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
+        '2': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
+        '3': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
+        '4': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null }
+      };
+      
+      // Fill with new roster data
+      data.forEach(roster => {
+        if (roster.quarter >= 1 && roster.quarter <= 4) {
+          const quarterKey = roster.quarter.toString() as '1' | '2' | '3' | '4';
+          newRosterByQuarter[quarterKey][roster.position] = roster.playerId;
+        }
+      });
+      
+      setLocalRosterByQuarter(newRosterByQuarter);
+    }
   });
   
   const isLoading = isLoadingPlayers || isLoadingGames || isLoadingOpponents || 
@@ -51,7 +78,22 @@ export default function Roster() {
   // Filter to only active players
   const activePlayers = players.filter(player => player.active);
   
-  // Callback for when roster is saved
+  // Callback for when roster positions are changed locally (before save)
+  const handleRosterChanged = (quarterKey: string, position: string, playerId: number | null) => {
+    setLocalRosterByQuarter(prev => {
+      const newState = {...prev};
+      newState[quarterKey] = {
+        ...newState[quarterKey],
+        [position]: playerId
+      };
+      return newState;
+    });
+    
+    // Increment update counter to trigger re-renders
+    setRosterUpdated(prev => prev + 1);
+  };
+  
+  // Callback for when roster is saved to database
   const handleRosterSaved = () => {
     // Invalidate the roster query to refresh data
     if (selectedGameId) {
@@ -73,7 +115,9 @@ export default function Roster() {
       {selectedGameId && (
         <RosterSummary 
           selectedGameId={selectedGameId}
-          updateTrigger={rosterUpdated} // Pass update trigger to force refetch
+          updateTrigger={rosterUpdated}
+          localRosterState={localRosterByQuarter} // Pass local roster state
+          players={players}
         />
       )}
       
@@ -85,7 +129,9 @@ export default function Roster() {
         selectedGameId={selectedGameId}
         setSelectedGameId={setSelectedGameId}
         isLoading={isLoading}
-        onRosterSaved={handleRosterSaved} // Add callback for roster saved
+        onRosterSaved={handleRosterSaved}
+        onRosterChanged={handleRosterChanged} // Add callback for local roster changes
+        localRosterState={localRosterByQuarter} // Pass local roster state
       />
     </>
   );
