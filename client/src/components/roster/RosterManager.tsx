@@ -43,7 +43,8 @@ export default function RosterManager({
   const [quarterToCopy, setQuarterToCopy] = useState<string | null>(null);
   const { toast } = useToast();
   
-  const upcomingGames = games.filter(game => !game.completed);
+  // Show all games, not just upcoming ones
+  const allGames = games.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   const selectedGame = games.find(game => game.id === selectedGameId);
   const selectedOpponent = opponents.find(opponent => 
     selectedGame?.opponentId === opponent.id
@@ -59,9 +60,11 @@ export default function RosterManager({
   
   // Fill roster assignments from API data
   rosters.forEach(roster => {
-    const quarterKey = roster.quarter.toString();
-    if (rosterByQuarter[quarterKey] && allPositions.includes(roster.position as Position)) {
-      rosterByQuarter[quarterKey][roster.position as Position] = roster.playerId;
+    if (roster && roster.quarter !== undefined) {
+      const quarterKey = roster.quarter.toString();
+      if (rosterByQuarter[quarterKey] && roster.position && allPositions.includes(roster.position as Position)) {
+        rosterByQuarter[quarterKey][roster.position as Position] = roster.playerId;
+      }
     }
   });
   
@@ -255,12 +258,12 @@ export default function RosterManager({
               <SelectValue placeholder="Select Game" />
             </SelectTrigger>
             <SelectContent>
-              {upcomingGames.length === 0 ? (
-                <SelectItem value="none" disabled>No upcoming games</SelectItem>
+              {allGames.length === 0 ? (
+                <SelectItem value="none" disabled>No games available</SelectItem>
               ) : (
-                upcomingGames.map(game => (
+                allGames.map(game => (
                   <SelectItem key={game.id} value={game.id.toString()}>
-                    vs. {opponents.find(o => o.id === game.opponentId)?.teamName} - {formatShortDate(game.date)}
+                    vs. {opponents.find(o => o.id === game.opponentId)?.teamName} - {formatShortDate(game.date)} {game.completed ? "(Past)" : ""}
                   </SelectItem>
                 ))
               )}
@@ -384,9 +387,9 @@ export default function RosterManager({
         <Card className="flex flex-col items-center justify-center p-10 text-center">
           <h3 className="text-xl font-semibold mb-4">Select a Game to Manage Roster</h3>
           <p className="text-gray-500 mb-4">
-            Please select an upcoming game from the dropdown above to start managing your team roster
+            Please select a game from the dropdown above to start managing your team roster
           </p>
-          {upcomingGames.length === 0 && (
+          {allGames.filter(game => !game.completed).length === 0 && (
             <Button className="bg-primary hover:bg-primary-light text-white" onClick={() => window.location.href = '/games'}>
               Schedule a Game
             </Button>
