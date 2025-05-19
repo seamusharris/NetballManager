@@ -68,11 +68,48 @@ export default function GamesList({
   const [itemToDelete, setItemToDelete] = useState<number | null>(null);
   const [_, navigate] = useLocation();
   const [gameScores, setGameScores] = useState<Record<number, GameScore>>({});
+  const [gameRosterStatus, setGameRosterStatus] = useState<Record<number, boolean>>({});
   
   // Fetch game stats for all completed games
   const completedGameIds = games
     .filter(game => game.completed)
     .map(game => game.id);
+  
+  // Get all non-BYE game IDs for checking roster status
+  const nonByeGameIds = games
+    .filter(game => !game.isBye)
+    .map(game => game.id);
+    
+  // Use React Query to fetch roster data for all games to check if they're complete
+  const { data: allRosterData, isLoading: isLoadingRosters } = useQuery({
+    queryKey: ['allRosters', ...nonByeGameIds],
+    queryFn: async () => {
+      if (nonByeGameIds.length === 0) {
+        return {};
+      }
+      
+      // Create a map to store rosters by game ID
+      const rostersMap: Record<number, any[]> = {};
+      
+      // Fetch rosters for each game
+      const rosterPromises = nonByeGameIds.map(async (gameId) => {
+        const response = await fetch(`/api/games/${gameId}/rosters`);
+        const rosters = await response.json();
+        return { gameId, rosters };
+      });
+      
+      const results = await Promise.all(rosterPromises);
+      
+      // Organize rosters by game ID
+      results.forEach(result => {
+        rostersMap[result.gameId] = result.rosters;
+      });
+      
+      return rostersMap;
+    },
+    enabled: nonByeGameIds.length > 0,
+    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
+  });
   
   // Use React Query to fetch and cache all game statistics
   const { data: allGameStats, isLoading: isLoadingStats } = useQuery({
@@ -106,6 +143,25 @@ export default function GamesList({
   });
   
   // Calculate scores for all games
+  // Process roster data to determine if games have rosters set up
+  useEffect(() => {
+    if (!allRosterData) return;
+    
+    const rosterStatuses: Record<number, boolean> = {};
+    
+    // Check each game's roster to see if it has at least one player assigned to any position
+    Object.entries(allRosterData).forEach(([gameIdStr, rosters]) => {
+      const gameId = parseInt(gameIdStr);
+      
+      // A game roster is considered complete if it has at least one player in a position
+      // Could be refined for more specific criteria if needed
+      rosterStatuses[gameId] = rosters.length > 0;
+    });
+    
+    setGameRosterStatus(rosterStatuses);
+  }, [allRosterData]);
+  
+  // Process game statistics to calculate scores
   useEffect(() => {
     if (!allGameStats) return;
     
@@ -420,10 +476,14 @@ export default function GamesList({
                           <>
                             <button 
                               onClick={() => window.location.href = `/roster?game=${game.id}`}
-                              className="inline-flex items-center justify-center rounded-md text-xs py-1 px-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground"
+                              className={`inline-flex items-center justify-center rounded-md text-xs py-1 px-2 border ${
+                                gameRosterStatus[game.id] 
+                                  ? "bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100" 
+                                  : "bg-background border-input hover:bg-accent hover:text-accent-foreground"
+                              }`}
                             >
-                              <CalendarRange className="h-3 w-3 mr-1" />
-                              Manage Roster
+                              <CalendarRange className={`h-3 w-3 mr-1 ${gameRosterStatus[game.id] ? "text-emerald-600" : ""}`} />
+                              {gameRosterStatus[game.id] ? "Roster Complete" : "Manage Roster"}
                             </button>
                             
                             {game.completed && (
