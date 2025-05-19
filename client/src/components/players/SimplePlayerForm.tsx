@@ -22,7 +22,7 @@ export default function SimplePlayerForm({ onSubmit, onCancel, isSubmitting }: S
     e.preventDefault();
     
     // Validate required fields
-    if (!displayName || !firstName || !lastName || !dateOfBirth || !position1) {
+    if (!displayName || !firstName || !lastName || !position1) {
       alert("Please fill in all required fields");
       return;
     }
@@ -45,7 +45,7 @@ export default function SimplePlayerForm({ onSubmit, onCancel, isSubmitting }: S
       displayName,
       firstName,
       lastName,
-      dateOfBirth,
+      dateOfBirth: dateOfBirth || "", // Allow empty date of birth
       active,
       positionPreferences
     });
@@ -55,7 +55,7 @@ export default function SimplePlayerForm({ onSubmit, onCancel, isSubmitting }: S
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium mb-1">Display Name *</label>
+          <label className="block text-sm font-medium mb-1">Display Name <span className="text-red-500">*</span></label>
           <input 
             type="text"
             required
@@ -83,7 +83,7 @@ export default function SimplePlayerForm({ onSubmit, onCancel, isSubmitting }: S
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium mb-1">First Name *</label>
+          <label className="block text-sm font-medium mb-1">First Name <span className="text-red-500">*</span></label>
           <input
             type="text"
             required
@@ -94,7 +94,7 @@ export default function SimplePlayerForm({ onSubmit, onCancel, isSubmitting }: S
         </div>
         
         <div>
-          <label className="block text-sm font-medium mb-1">Last Name *</label>
+          <label className="block text-sm font-medium mb-1">Last Name <span className="text-red-500">*</span></label>
           <input
             type="text"
             required
@@ -106,10 +106,9 @@ export default function SimplePlayerForm({ onSubmit, onCancel, isSubmitting }: S
       </div>
       
       <div>
-        <label className="block text-sm font-medium mb-1">Date of Birth *</label>
+        <label className="block text-sm font-medium mb-1">Date of Birth</label>
         <input
           type="date"
-          required
           className="w-full p-2 border rounded-md"
           value={dateOfBirth}
           onChange={(e) => setDateOfBirth(e.target.value)}
@@ -120,7 +119,7 @@ export default function SimplePlayerForm({ onSubmit, onCancel, isSubmitting }: S
         <h3 className="text-sm font-medium mb-2">Position Preferences (Ranked)</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium mb-1">Primary Position *</label>
+            <label className="block text-sm font-medium mb-1">Primary Position <span className="text-red-500">*</span></label>
             <select
               required
               className="w-full p-2 border rounded-md"
