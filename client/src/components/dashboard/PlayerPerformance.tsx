@@ -490,17 +490,15 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
                     <TableCell className="border-r"></TableCell>
                     
                     {/* Games Played */}
-                    <TableCell className="px-2 py-2 whitespace-nowrap text-sm text-center font-mono">
+                    <TableCell className="px-2 py-2 whitespace-nowrap text-sm text-center font-mono border-r">
                       {player.stats.gamesPlayed}
                     </TableCell>
                     
                     {/* Rating */}
                     <TableCell className="px-2 py-2 whitespace-nowrap text-center border-r">
-                      <div className="flex items-center justify-center">
-                        <span className={cn("px-2 py-1 text-xs font-semibold rounded-full", getRatingClass(player.stats.rating))}>
-                          {player.stats.rating.toFixed(1)}
-                        </span>
-                      </div>
+                      <span className={cn("text-sm font-mono", getRatingClass(player.stats.rating))}>
+                        {player.stats.rating.toFixed(1)}
+                      </span>
                     </TableCell>
                     
                     {/* Shooting stats */}
