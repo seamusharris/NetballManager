@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { queryClient } from '@/lib/queryClient';
@@ -37,6 +37,15 @@ export default function GameStatistics({
 }: GameStatisticsProps) {
   const [activeQuarter, setActiveQuarter] = useState('1');
   const { toast } = useToast();
+  
+  // Use a ref to store pending changes to stats
+  const pendingChangesRef = useRef<{
+    [playerId: number]: {
+      [quarter: number]: {
+        [statName: string]: number;
+      };
+    };
+  }>({});
   
   // Transform rosters to more usable format
   const rosterByQuarterAndPosition: Record<string, Record<Position, number | null>> = {
@@ -208,7 +217,8 @@ export default function GameStatistics({
   // Mark roster as complete if we have any valid entries
   const isRosterComplete = hasValidRosterEntries;
   
-  // Save or update a player's statistics
+  // Old individual save mutation - no longer used directly
+  // Instead we now batch save changes only when the save button is clicked
   const saveStatsMutation = useMutation({
     mutationFn: async ({
       playerId,
@@ -271,26 +281,118 @@ export default function GameStatistics({
     }
   });
   
-  // Handle stat value change
+  // Store stat change in memory, don't save to backend yet
   const handleStatChange = (
     playerId: number, 
     quarter: number, 
     statName: keyof GameStat, 
     value: number
   ) => {
-    saveStatsMutation.mutate({
-      playerId,
-      quarter,
-      stats: { [statName]: value }
-    });
+    // Initialize nested objects if they don't exist
+    if (!pendingChangesRef.current[playerId]) {
+      pendingChangesRef.current[playerId] = {};
+    }
+    if (!pendingChangesRef.current[playerId][quarter]) {
+      pendingChangesRef.current[playerId][quarter] = {};
+    }
+    
+    // Store the pending change
+    pendingChangesRef.current[playerId][quarter][statName] = value;
+    
+    // Update the local UI state (no server interaction yet)
+    const existingStats = { ...statsByQuarterAndPlayer[quarter.toString()][playerId] };
+    existingStats[statName] = value;
+    statsByQuarterAndPlayer[quarter.toString()][playerId] = existingStats;
   };
   
-  // Bulk save all stats
+  // Mutation for batch saving stats
+  const batchSaveStatsMutation = useMutation({
+    mutationFn: async () => {
+      const pendingChanges = pendingChangesRef.current;
+      const savePromises = [];
+      
+      // For each player that has changes
+      for (const playerId in pendingChanges) {
+        const playerQuarters = pendingChanges[playerId];
+        
+        // For each quarter that has changes for this player
+        for (const quarter in playerQuarters) {
+          const quarterChanges = playerQuarters[quarter];
+          
+          // Find if there's an existing stat entry
+          const existingStat = gameStats.find(s => 
+            s.gameId === game.id && 
+            s.playerId === Number(playerId) && 
+            s.quarter === Number(quarter)
+          );
+          
+          if (existingStat) {
+            // Update existing stats
+            savePromises.push(
+              apiRequest('PATCH', `/api/gamestats/${existingStat.id}`, quarterChanges)
+            );
+          } else {
+            // Create new stats with defaults
+            savePromises.push(
+              apiRequest('POST', '/api/gamestats', {
+                gameId: game.id,
+                playerId: Number(playerId),
+                quarter: Number(quarter),
+                goalsFor: 0,
+                goalsAgainst: 0,
+                missedGoals: 0,
+                rebounds: 0,
+                intercepts: 0,
+                badPass: 0,
+                handlingError: 0,
+                pickUp: 0,
+                infringement: 0,
+                ...quarterChanges // Override with actual values being updated
+              })
+            );
+          }
+        }
+      }
+      
+      // Execute all save promises
+      await Promise.all(savePromises);
+      
+      // Clear pending changes
+      pendingChangesRef.current = {};
+      
+      return { success: true, count: savePromises.length };
+    },
+    onSuccess: () => {
+      // Refresh the game stats data
+      queryClient.invalidateQueries({ queryKey: ['/api/games', game.id, 'stats'] });
+      
+      toast({
+        title: "Statistics Saved",
+        description: "All statistics have been saved successfully",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: `Failed to save statistics: ${error}`,
+        variant: "destructive",
+      });
+    }
+  });
+  
+  // Bulk save all stats when save button is clicked
   const handleSaveAllStats = () => {
-    toast({
-      title: "Saving Statistics",
-      description: "All statistics have been saved successfully",
-    });
+    // Check if there are any changes to save
+    const hasChanges = Object.keys(pendingChangesRef.current).length > 0;
+    
+    if (hasChanges) {
+      batchSaveStatsMutation.mutate();
+    } else {
+      toast({
+        title: "No Changes",
+        description: "No changes to save",
+      });
+    }
   };
   
   return (
@@ -305,7 +407,7 @@ export default function GameStatistics({
         <Button
           className="bg-primary hover:bg-primary-light text-white"
           onClick={handleSaveAllStats}
-          disabled={saveStatsMutation.isPending}
+          disabled={batchSaveStatsMutation.isPending}
         >
           <Save className="w-4 h-4 mr-1" /> Save Stats
         </Button>
