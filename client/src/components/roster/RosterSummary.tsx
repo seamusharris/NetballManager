@@ -59,8 +59,19 @@ export default function RosterSummary({ selectedGameId, updateTrigger = 0 }: Ros
   
   // Process the roster data whenever it changes
   useEffect(() => {
-    if (!selectedGameId || !rosters.length) {
+    // Create empty assignments to handle both data and reset cases
+    const newAssignments = {
+      1: { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
+      2: { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
+      3: { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
+      4: { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null }
+    } as Record<Quarter, Record<Position, number | null>>;
+    
+    // If there's no game selected or no roster data, reset to empty positions
+    if (!selectedGameId || !rosters || rosters.length === 0) {
       console.log(`No roster data for game ${selectedGameId || 'none'}, rosters length: ${rosters?.length || 0}`);
+      // Set empty assignments and return early
+      setAssignments(newAssignments);
       return;
     }
     
@@ -70,13 +81,6 @@ export default function RosterSummary({ selectedGameId, updateTrigger = 0 }: Ros
     // Check if we have player data
     console.log(`We have ${Object.keys(playerMap).length} players in our player map`);
     console.log("Player map keys:", Object.keys(playerMap));
-    
-    const newAssignments = {
-      1: { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
-      2: { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
-      3: { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
-      4: { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null }
-    } as Record<Quarter, Record<Position, number | null>>;
     
     // Fill in position assignments from roster data
     rosters.forEach(roster => {
