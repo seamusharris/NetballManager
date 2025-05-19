@@ -31,6 +31,8 @@ interface RosterManagerProps {
   setSelectedGameId: (id: number | null) => void;
   isLoading: boolean;
   onRosterSaved?: () => void; // Optional callback when roster is saved
+  onRosterChanged?: (quarter: string, position: string, playerId: number | null) => void; // Callback for local changes
+  localRosterState?: Record<string, Record<string, number | null>>; // Local state from parent component
 }
 
 export default function RosterManager({ 
@@ -41,7 +43,9 @@ export default function RosterManager({
   selectedGameId, 
   setSelectedGameId, 
   isLoading,
-  onRosterSaved
+  onRosterSaved,
+  onRosterChanged,
+  localRosterState
 }: RosterManagerProps) {
   const [activeQuarter, setActiveQuarter] = useState('1');
   const [quarterToCopy, setQuarterToCopy] = useState<string | null>(null);
@@ -345,9 +349,9 @@ export default function RosterManager({
       // Mark that we have unsaved changes
       setHasUnsavedChanges(true);
       
-      // Still call the callback to update the roster summary view without saving to database
-      if (onRosterSaved) {
-        onRosterSaved();
+      // Notify parent component about the change for real-time summary updates
+      if (onRosterChanged) {
+        onRosterChanged(quarter, position, playerId);
       }
     }
   };
