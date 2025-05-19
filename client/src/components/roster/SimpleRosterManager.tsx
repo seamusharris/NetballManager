@@ -335,38 +335,44 @@ export default function SimpleRosterManager({
     mutationFn: async () => {
       if (!selectedGameId) return;
       
-      // First delete existing roster entries
-      console.log(`Deleting all existing roster entries for game ${selectedGameId}`);
-      await apiRequest('DELETE', `/api/games/${selectedGameId}/rosters`);
-      
-      // Create all the new entries
-      const savePromises = [];
-      
-      // Save ALL roster positions from the entire localRosterState
-      for (const quarterKey of ['1', '2', '3', '4']) {
-        const quarterPositions = localRosterState[quarterKey as '1'|'2'|'3'|'4'];
-        const quarterNum = parseInt(quarterKey);
+      try {
+        // First delete existing roster entries
+        console.log(`Deleting all existing roster entries for game ${selectedGameId}`);
+        await apiRequest('DELETE', `/api/games/${selectedGameId}/rosters`);
         
-        // Go through all positions in this quarter
-        for (const [position, playerId] of Object.entries(quarterPositions)) {
-          // Only save positions that have a player assigned
-          if (playerId !== null) {
-            console.log(`Creating roster entry: Game ${selectedGameId}, Q${quarterNum}, Pos: ${position}, Player: ${playerId}`);
-            
-            const rosterEntry = {
-              gameId: selectedGameId,
-              quarter: quarterNum,
-              position: position as Position,
-              playerId: playerId
-            };
-            
-            savePromises.push(apiRequest('POST', '/api/rosters', rosterEntry));
+        // Create all the new entries
+        const savePromises = [];
+        
+        // Save ALL roster positions from the entire localRosterState
+        for (const quarterKey of ['1', '2', '3', '4']) {
+          const quarterPositions = localRosterState[quarterKey as '1'|'2'|'3'|'4'];
+          const quarterNum = parseInt(quarterKey);
+          
+          // Go through all positions in this quarter
+          for (const [position, playerId] of Object.entries(quarterPositions)) {
+            // Only save positions that have a player assigned
+            if (playerId !== null) {
+              console.log(`Creating roster entry: Game ${selectedGameId}, Q${quarterNum}, Pos: ${position}, Player: ${playerId}`);
+              
+              const rosterEntry = {
+                gameId: selectedGameId,
+                quarter: quarterNum,
+                position: position as Position,
+                playerId: playerId
+              };
+              
+              savePromises.push(apiRequest('POST', '/api/rosters', rosterEntry));
+            }
           }
         }
+        
+        // Wait for all save operations to complete
+        await Promise.all(savePromises);
+        return true;
+      } catch (error) {
+        console.error("Error saving roster:", error);
+        throw error;
       }
-      
-      await Promise.all(savePromises);
-      return true;
     },
     onSuccess: () => {
       // Clear pending changes and reset state
@@ -398,8 +404,7 @@ export default function SimpleRosterManager({
   const handleSave = () => {
     if (!selectedGameId) return;
     
-    // Always save when the user clicks save, regardless of pendingChanges state
-    // This ensures all positions in the current localRosterState are saved
+    // Only show "no changes" message if there are truly no changes
     if (!hasUnsavedChanges) {
       toast({
         title: "No Changes to Save",
@@ -408,7 +413,8 @@ export default function SimpleRosterManager({
       return;
     }
     
-    // Save the roster - this will use the entire localRosterState, not just pendingChanges
+    // Save the entire roster state - all quarters, all positions
+    console.log("Saving full roster state:", localRosterState);
     saveRosterMutation.mutate();
   };
 
