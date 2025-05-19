@@ -180,10 +180,13 @@ export default function GameStatistics({
     }
   });
   
-  // Check if roster is completely filled
-  const isRosterComplete = Object.values(rosterByQuarterAndPosition).every(positions => 
-    Object.values(positions).every(playerId => playerId !== null)
+  // Check if roster has at least some players assigned
+  const hasPlayersAssigned = Object.values(rosterByQuarterAndPosition).some(positions => 
+    Object.values(positions).some(playerId => playerId !== null)
   );
+  
+  // Consider roster complete if there are player assignments (we don't need every position filled)
+  const isRosterComplete = hasPlayersAssigned;
   
   // Save or update a player's statistics
   const saveStatsMutation = useMutation({
