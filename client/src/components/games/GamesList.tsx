@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useLocation } from 'wouter';
 import { 
   Card, 
   CardContent 
@@ -58,6 +59,7 @@ export default function GamesList({
   const [statusFilter, setStatusFilter] = useState('all');
   const [dateFilter, setDateFilter] = useState('all');
   const [itemToDelete, setItemToDelete] = useState<number | null>(null);
+  const [_, navigate] = useLocation();
   
   // Get opponent name by ID
   const getOpponentName = (opponentId: number) => {
@@ -247,7 +249,7 @@ export default function GamesList({
                           variant="outline" 
                           size="sm"
                           className="text-xs"
-                          onClick={() => window.location.href = `/roster?game=${game.id}`}
+                          onClick={() => navigate(`/roster?game=${game.id}`)}
                         >
                           <CalendarRange className="h-3 w-3 mr-1" />
                           Manage Roster
@@ -258,7 +260,7 @@ export default function GamesList({
                             variant="outline" 
                             size="sm"
                             className="text-xs"
-                            onClick={() => window.location.href = `/statistics?game=${game.id}`}
+                            onClick={() => navigate(`/statistics?game=${game.id}`)}
                           >
                             <FileText className="h-3 w-3 mr-1" />
                             View Stats
