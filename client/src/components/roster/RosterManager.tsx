@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
@@ -238,8 +238,11 @@ export default function RosterManager({
     );
   };
   
+  // Create query client instance for cache invalidation
+  const queryClientInstance = useQueryClient();
+  
   // Handle reset all positions
-  const handleResetPositions = () => {
+  const handleResetPositions = async () => {
     if (!selectedGameId) {
       toast({
         title: "Error",
@@ -257,18 +260,40 @@ export default function RosterManager({
       '4': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null }
     };
     
-    // Update the state with empty roster assignments
+    // For immediate UI update
     setRosterByQuarter(emptyRoster);
     
-    // Trigger the onRosterSaved callback to update the roster summary
-    if (onRosterSaved) {
-      onRosterSaved();
+    // Delete all existing roster assignments for the game from the database
+    if (selectedGameId) {
+      try {
+        await apiRequest('DELETE', `/api/games/${selectedGameId}/rosters`);
+        
+        // Invalidate queries to force data refresh
+        queryClientInstance.invalidateQueries({ 
+          queryKey: ['/api/games', selectedGameId, 'rosters'] 
+        });
+        queryClientInstance.invalidateQueries({ 
+          queryKey: ['/api/games/' + selectedGameId + '/rosters']
+        });
+        
+        // Trigger the callback to update the summary
+        if (onRosterSaved) {
+          onRosterSaved();
+        }
+        
+        toast({
+          title: "Positions Reset",
+          description: "All positions have been cleared and saved to the database.",
+        });
+      } catch (error) {
+        console.error("Error resetting positions:", error);
+        toast({
+          title: "Reset Failed",
+          description: "There was an error resetting positions. Please try again.",
+          variant: "destructive",
+        });
+      }
     }
-    
-    toast({
-      title: "Positions Reset",
-      description: "All positions have been cleared. Click 'Save Roster' to confirm changes.",
-    });
   };
   
   // Handle player assignment to position
@@ -277,6 +302,13 @@ export default function RosterManager({
       quarter: parseInt(quarter),
       position,
       playerId
+    }, {
+      onSuccess: () => {
+        // Call the onRosterSaved callback to update the summary
+        if (onRosterSaved) {
+          onRosterSaved();
+        }
+      }
     });
   };
   
