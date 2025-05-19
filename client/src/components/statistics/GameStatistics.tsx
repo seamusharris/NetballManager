@@ -180,13 +180,16 @@ export default function GameStatistics({
     }
   });
   
-  // Check if roster has at least some players assigned
-  const hasPlayersAssigned = Object.values(rosterByQuarterAndPosition).some(positions => 
-    Object.values(positions).some(playerId => playerId !== null)
-  );
+  // Check if roster data exists and has players assigned
+  console.log('Roster data check:', { 
+    rosterCount: rosters.length,
+    rosterByQuarter: Object.keys(rosterByQuarterAndPosition).map(q => {
+      return { quarter: q, positions: Object.values(rosterByQuarterAndPosition[q as '1'|'2'|'3'|'4']).filter(Boolean).length }
+    })
+  });
   
-  // Consider roster complete if there are player assignments (we don't need every position filled)
-  const isRosterComplete = hasPlayersAssigned;
+  // Simply check if we have any rosters for this game
+  const isRosterComplete = rosters.length > 0;
   
   // Save or update a player's statistics
   const saveStatsMutation = useMutation({
