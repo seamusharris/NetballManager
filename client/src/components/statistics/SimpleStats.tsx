@@ -285,37 +285,49 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
       
       // First handle player ratings update
       
-      // First, identify the latest quarter 1 stats for each player
-      const quarter1StatsByPlayer: Record<number, GameStat> = {};
-      
-      // Find the most recent quarter 1 stats for each player
-      gameStats.forEach(stat => {
-        if (stat.quarter === 1) {
-          // Only keep the latest stat record for each player in quarter 1
-          if (!quarter1StatsByPlayer[stat.playerId] || stat.id > quarter1StatsByPlayer[stat.playerId].id) {
-            quarter1StatsByPlayer[stat.playerId] = stat;
-          }
-        }
-      });
-      
       // Process rating updates for all players in the first quarter
       Object.entries(playerRatings).forEach(([playerIdStr, rating]) => {
         const playerId = parseInt(playerIdStr);
         if (isNaN(playerId)) return;
         
-        // Find the player's quarter 1 stat record
-        const stat = quarter1StatsByPlayer[playerId];
+        // Find all existing stats for this player in quarter 1
+        const existingQuarter1Stats = gameStats.filter(stat => 
+          stat.gameId === gameId && 
+          stat.playerId === playerId && 
+          stat.quarter === 1
+        );
         
-        if (stat) {
-          console.log(`UPDATING RATING: Player ${playerId} - changing from ${stat.rating} to ${rating} (stat ID: ${stat.id})`);
+        // If there are multiple entries, handle duplicates
+        if (existingQuarter1Stats.length > 1) {
+          // Sort by ID descending (newest first)
+          existingQuarter1Stats.sort((a, b) => b.id - a.id);
           
-          // Update only the rating field
-          const ratingUpdatePromise = apiRequest('PATCH', `/api/gamestats/${stat.id}`, {
+          // Keep the newest one
+          const newestStat = existingQuarter1Stats[0];
+          
+          // Delete older duplicates
+          for (let i = 1; i < existingQuarter1Stats.length; i++) {
+            const deletePromise = apiRequest('DELETE', `/api/gamestats/${existingQuarter1Stats[i].id}`);
+            ratingPromises.push(deletePromise);
+          }
+          
+          // Update the newest stat with the new rating
+          console.log(`UPDATING RATING: Player ${playerId} - changing from ${newestStat.rating} to ${rating} (and deleting ${existingQuarter1Stats.length - 1} duplicates)`);
+          const ratingUpdatePromise = apiRequest('PATCH', `/api/gamestats/${newestStat.id}`, {
             rating: rating
           });
-          
           ratingPromises.push(ratingUpdatePromise);
-        } else {
+        }
+        // Just one existing stat, update it
+        else if (existingQuarter1Stats.length === 1) {
+          console.log(`UPDATING RATING: Player ${playerId} - changing from ${existingQuarter1Stats[0].rating} to ${rating}`);
+          const ratingUpdatePromise = apiRequest('PATCH', `/api/gamestats/${existingQuarter1Stats[0].id}`, {
+            rating: rating
+          });
+          ratingPromises.push(ratingUpdatePromise);
+        }
+        // No existing stats, create a new one
+        else {
           console.log(`WARNING: No quarter 1 stat found for player ${playerId}, creating new stat with rating ${rating}`);
           
           // Create a new stat record for quarter 1 with the rating
@@ -335,7 +347,6 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
             rating: rating
           };
           
-          // Create a new stat record for quarter 1 with the rating
           const createRatingPromise = apiRequest('POST', '/api/gamestats', newStatData);
           ratingPromises.push(createRatingPromise);
         }
@@ -385,26 +396,40 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
             rating: quarter === '1' ? (playerRatings[playerId] || 5) : undefined
           };
           
-          // Find the most recent stat record for this player and quarter
-          let existingStat: GameStat | undefined;
+          // Find all existing stats for this player and quarter combination
+          const existingStats = gameStats.filter(stat => 
+            stat.gameId === gameId && 
+            stat.playerId === playerId && 
+            stat.quarter === parseInt(quarter)
+          );
           
-          // Loop through all stats for this game to find the latest one for this player and quarter
-          gameStats.forEach(stat => {
-            if (stat.gameId === gameId && 
-                stat.playerId === playerId && 
-                stat.quarter === parseInt(quarter)) {
-              // Either no existing stat found yet, or this one is more recent (higher ID)
-              if (!existingStat || stat.id > existingStat.id) {
-                existingStat = stat;
-              }
+          // If there are multiple entries, we'll delete the older ones
+          if (existingStats.length > 1) {
+            // Sort by ID descending (newest first)
+            existingStats.sort((a, b) => b.id - a.id);
+            
+            // Keep the newest one
+            const newestStat = existingStats[0];
+            
+            // Delete the older duplicates
+            for (let i = 1; i < existingStats.length; i++) {
+              const deletePromise = apiRequest('DELETE', `/api/gamestats/${existingStats[i].id}`);
+              savePromises.push(deletePromise);
             }
-          });
-          
-          if (existingStat) {
-            console.log(`Updating stats for player ${playerId} in quarter ${quarter}`);
-            const updatePromise = apiRequest('PATCH', `/api/gamestats/${existingStat.id}`, statValues);
+            
+            // Update the newest stat
+            console.log(`Updating stats for player ${playerId} in quarter ${quarter} (and deleting ${existingStats.length - 1} duplicates)`);
+            const updatePromise = apiRequest('PATCH', `/api/gamestats/${newestStat.id}`, statValues);
             savePromises.push(updatePromise);
-          } else {
+          } 
+          // Just one existing stat, update it
+          else if (existingStats.length === 1) {
+            console.log(`Updating stats for player ${playerId} in quarter ${quarter}`);
+            const updatePromise = apiRequest('PATCH', `/api/gamestats/${existingStats[0].id}`, statValues);
+            savePromises.push(updatePromise);
+          } 
+          // No existing stats, create new one
+          else {
             console.log(`Creating new stats for player ${playerId} in quarter ${quarter}`);
             const createPromise = apiRequest('POST', '/api/gamestats', statValues);
             savePromises.push(createPromise);
