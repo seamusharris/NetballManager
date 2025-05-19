@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
@@ -11,54 +11,176 @@ import {
   Legend, 
   ResponsiveContainer 
 } from 'recharts';
-import { Game } from '@shared/schema';
+import { Game, GameStat } from '@shared/schema';
 import { ArrowDown, ArrowUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useQuery } from '@tanstack/react-query';
 
 interface PerformanceChartsProps {
   games: Game[];
   className?: string;
 }
 
+interface ChartDataPoint {
+  name: string;
+  teamScore: number;
+  opponentScore: number;
+  reboundRate: number;
+  interceptions: number;
+  change: number;
+}
+
+interface QuarterStats {
+  teamScore: number;
+  opponentScore: number;
+  rebounds: number;
+  intercepts: number;
+  totalReboundOpportunities: number;
+}
+
 export default function PerformanceCharts({ games, className }: PerformanceChartsProps) {
-  const [gameRange, setGameRange] = useState('last5');
+  const [gameRange, setGameRange] = useState('all');
   const [metricType, setMetricType] = useState('all');
+  const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
   
-  // This is placeholder data - in a real app, you would calculate this from game stats
-  const chartData = [
-    {
-      name: 'Quarter 1',
-      teamScore: 10.2,
-      opponentScore: 9.5,
-      reboundRate: 65,
-      interceptions: 7,
-      change: 8
+  // Filter games based on selected range
+  const filteredGames = games.filter(game => game.completed);
+  const gameIds = filteredGames.map(game => game.id);
+  
+  // Fetch game stats for all completed games
+  const { data: gameStatsMap, isLoading } = useQuery({
+    queryKey: ['performanceChartStats', ...gameIds],
+    queryFn: async () => {
+      if (gameIds.length === 0) {
+        return {};
+      }
+      
+      // Fetch stats for each completed game
+      const statsPromises = gameIds.map(async (gameId) => {
+        const response = await fetch(`/api/games/${gameId}/stats`);
+        const stats = await response.json();
+        return { gameId, stats };
+      });
+      
+      const results = await Promise.all(statsPromises);
+      
+      // Create a map of game ID to stats array
+      const statsMap: Record<number, GameStat[]> = {};
+      results.forEach(result => {
+        statsMap[result.gameId] = result.stats;
+      });
+      
+      return statsMap;
     },
-    {
-      name: 'Quarter 2',
-      teamScore: 9.6,
-      opponentScore: 10.1,
-      reboundRate: 58,
-      interceptions: 5,
-      change: 3
-    },
-    {
-      name: 'Quarter 3',
-      teamScore: 11.4,
-      opponentScore: 8.7,
-      reboundRate: 70,
-      interceptions: 9,
-      change: 15
-    },
-    {
-      name: 'Quarter 4',
-      teamScore: 11.8,
-      opponentScore: 12.2,
-      reboundRate: 61,
-      interceptions: 6,
-      change: -2
+    enabled: gameIds.length > 0,
+    staleTime: 60000 // 1 minute
+  });
+  
+  // Calculate chart data from game stats
+  useEffect(() => {
+    if (!gameStatsMap || isLoading || Object.keys(gameStatsMap).length === 0) {
+      return;
     }
-  ];
+    
+    // Initialize quarter stats
+    const quarterStats: Record<number, QuarterStats> = {
+      1: { teamScore: 0, opponentScore: 0, rebounds: 0, intercepts: 0, totalReboundOpportunities: 0 },
+      2: { teamScore: 0, opponentScore: 0, rebounds: 0, intercepts: 0, totalReboundOpportunities: 0 },
+      3: { teamScore: 0, opponentScore: 0, rebounds: 0, intercepts: 0, totalReboundOpportunities: 0 },
+      4: { teamScore: 0, opponentScore: 0, rebounds: 0, intercepts: 0, totalReboundOpportunities: 0 }
+    };
+    
+    const quarterGamesCount: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0 };
+    
+    // Process all stats
+    Object.values(gameStatsMap).forEach(gameStats => {
+      if (!gameStats || gameStats.length === 0) return;
+      
+      // Create sets to track which quarters have data for this game
+      const quartersWithData = new Set<number>();
+      
+      // Aggregate stats by quarter
+      gameStats.forEach(stat => {
+        if (stat.quarter < 1 || stat.quarter > 4) return;
+        
+        const quarter = stat.quarter;
+        quartersWithData.add(quarter);
+        
+        // Add to quarter totals
+        quarterStats[quarter].teamScore += stat.goalsFor || 0;
+        quarterStats[quarter].opponentScore += stat.goalsAgainst || 0;
+        quarterStats[quarter].rebounds += stat.rebounds || 0;
+        quarterStats[quarter].intercepts += stat.intercepts || 0;
+        quarterStats[quarter].totalReboundOpportunities += (stat.rebounds || 0) + (stat.missedGoals || 0);
+      });
+      
+      // Increment game count for quarters that had data
+      quartersWithData.forEach(quarter => {
+        quarterGamesCount[quarter]++;
+      });
+    });
+    
+    // Calculate averages and create chart data
+    const newChartData: ChartDataPoint[] = [];
+    
+    let prevQuarterTeamScore = 0;
+    
+    for (let quarter = 1; quarter <= 4; quarter++) {
+      const gameCount = quarterGamesCount[quarter] || 1; // Avoid division by zero
+      const teamScore = quarterStats[quarter].teamScore / gameCount;
+      const opponentScore = quarterStats[quarter].opponentScore / gameCount;
+      const intercepts = quarterStats[quarter].intercepts / gameCount;
+      
+      // Calculate rebound rate (rebounds as percentage of rebound opportunities)
+      const totalReboundOps = quarterStats[quarter].totalReboundOpportunities || 1; // Avoid division by zero
+      const reboundRate = (quarterStats[quarter].rebounds / totalReboundOps) * 100;
+      
+      // Calculate score change from previous quarter (for first quarter, compare to 0)
+      const change = quarter === 1 
+        ? teamScore 
+        : ((teamScore - prevQuarterTeamScore) / Math.max(prevQuarterTeamScore, 0.1)) * 100;
+      
+      prevQuarterTeamScore = teamScore;
+      
+      newChartData.push({
+        name: `Quarter ${quarter}`,
+        teamScore: parseFloat(teamScore.toFixed(1)),
+        opponentScore: parseFloat(opponentScore.toFixed(1)),
+        reboundRate: parseFloat(reboundRate.toFixed(1)),
+        interceptions: parseFloat(intercepts.toFixed(1)),
+        change: parseFloat(change.toFixed(1))
+      });
+    }
+    
+    setChartData(newChartData);
+    
+  }, [gameStatsMap, isLoading, gameIds.length]);
+  
+  // If no data yet, show loading state
+  if (chartData.length === 0) {
+    return (
+      <Card className={className}>
+        <CardContent className="p-6">
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="font-heading font-semibold text-neutral-dark">Quarter-by-Quarter Performance</h3>
+            <div className="flex space-x-3">
+              <Select value={gameRange} onValueChange={setGameRange}>
+                <SelectTrigger className="bg-white border rounded-md w-[130px]">
+                  <SelectValue placeholder="All Games" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Games</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="h-64 flex items-center justify-center">
+            <p className="text-gray-400">Loading chart data or no completed games yet...</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
   
   return (
     <Card className={className}>
@@ -68,10 +190,9 @@ export default function PerformanceCharts({ games, className }: PerformanceChart
           <div className="flex space-x-3">
             <Select value={gameRange} onValueChange={setGameRange}>
               <SelectTrigger className="bg-white border rounded-md w-[130px]">
-                <SelectValue placeholder="Last 5 Games" />
+                <SelectValue placeholder="All Games" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="last5">Last 5 Games</SelectItem>
                 <SelectItem value="all">All Games</SelectItem>
               </SelectContent>
             </Select>
