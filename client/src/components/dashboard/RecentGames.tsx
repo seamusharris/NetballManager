@@ -1,7 +1,8 @@
+import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Link } from 'wouter';
-import { Game, Opponent } from '@shared/schema';
-import { formatShortDate, getWinLoseClass } from '@/lib/utils';
+import { Game, Opponent, GameStat } from '@shared/schema';
+import { formatShortDate } from '@/lib/utils';
 
 interface RecentGamesProps {
   games: Game[];
@@ -14,19 +15,58 @@ export default function RecentGames({ games, opponents, className }: RecentGames
   const recentGames = games
     .filter(game => game.completed)
     .slice(0, 3);
+    
+  // State to store game stats for each game
+  const [gameStats, setGameStats] = useState<Record<number, GameStat[]>>({});
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // Fetch game statistics for each completed game
+  useEffect(() => {
+    const fetchAllGameStats = async () => {
+      if (recentGames.length === 0) {
+        setIsLoading(false);
+        return;
+      }
+      
+      setIsLoading(true);
+      
+      try {
+        const statsPromises = recentGames.map(game => 
+          fetch(`/api/games/${game.id}/stats`)
+            .then(res => res.json())
+            .then(stats => ({ gameId: game.id, stats }))
+        );
+        
+        const results = await Promise.all(statsPromises);
+        const statsMap: Record<number, GameStat[]> = {};
+        
+        results.forEach(result => {
+          statsMap[result.gameId] = result.stats;
+        });
+        
+        setGameStats(statsMap);
+        setIsLoading(false);
+      } catch (error) {
+        console.error("Error fetching game stats:", error);
+        setIsLoading(false);
+      }
+    };
+    
+    fetchAllGameStats();
+  }, [recentGames]);
   
   const getOpponentName = (opponentId: number) => {
     const opponent = opponents.find(o => o.id === opponentId);
     return opponent ? opponent.teamName : 'Unknown Opponent';
   };
   
-  // These would normally come from actual stats, using placeholders for now
+  // Calculate scores from game stats
   const getScores = (game: Game): [number, number] => {
-    // In a real implementation, this would calculate from actual game stats
-    // For now, generate placeholder scores
-    const hashCode = (game.id * 7 + game.opponentId * 13) % 100;
-    const teamScore = 30 + (hashCode % 20);
-    const opponentScore = 25 + ((hashCode + 7) % 25);
+    const gameStatsList = gameStats[game.id] || [];
+    
+    // Calculate team score and opponent score from actual stats
+    const teamScore = gameStatsList.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
+    const opponentScore = gameStatsList.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
     
     return [teamScore, opponentScore];
   };
@@ -62,7 +102,9 @@ export default function RecentGames({ games, opponents, className }: RecentGames
           </Link>
         </div>
         <div className="space-y-4">
-          {recentGames.length === 0 ? (
+          {isLoading ? (
+            <p className="text-gray-500 text-center py-4">Loading recent games...</p>
+          ) : recentGames.length === 0 ? (
             <p className="text-gray-500 text-center py-4">No recent games to display</p>
           ) : (
             recentGames.map(game => (

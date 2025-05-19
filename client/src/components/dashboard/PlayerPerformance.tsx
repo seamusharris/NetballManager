@@ -1,9 +1,9 @@
+import { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Avatar } from '@/components/ui/avatar';
-import { Game, Player } from '@shared/schema';
+import { Game, Player, GameStat } from '@shared/schema';
 import { cn, getInitials } from '@/lib/utils';
-import { useState } from 'react';
 
 interface PlayerPerformanceProps {
   players: Player[];
@@ -11,22 +11,98 @@ interface PlayerPerformanceProps {
   className?: string;
 }
 
+interface PlayerStats {
+  playerId: number;
+  goals: number;
+  rebounds: number;
+  intercepts: number;
+  position: string;
+  rating: number;
+}
+
 export default function PlayerPerformance({ players, games, className }: PlayerPerformanceProps) {
   const [timeRange, setTimeRange] = useState('last5');
+  const [playerStats, setPlayerStats] = useState<Record<number, PlayerStats>>({});
+  const [isLoading, setIsLoading] = useState(true);
   
-  // This would come from actual player stats in a real implementation
-  // Using placeholder data for demonstration
-  const getPlayerStats = (player: Player) => {
-    // Generate somewhat random but consistent stats based on player id
-    const seed = player.id;
-    return {
-      position: ['GA', 'GS', 'WA', 'C', 'WD', 'GD', 'GK'][seed % 7],
-      goals: 5 + (seed * 3) % 20,
-      rebounds: 2 + (seed * 7) % 10,
-      intercepts: 2 + (seed * 11) % 13,
-      rating: (7 + (seed * 23) % 30) / 10
+  // Fetch game statistics for completed games
+  useEffect(() => {
+    const completedGameIds = games
+      .filter(game => game.completed)
+      .map(game => game.id);
+      
+    if (completedGameIds.length === 0) {
+      setIsLoading(false);
+      return;
+    }
+    
+    const fetchAllGameStats = async () => {
+      try {
+        setIsLoading(true);
+        
+        // Fetch game stats for each completed game
+        const statsPromises = completedGameIds.map(gameId => 
+          fetch(`/api/games/${gameId}/stats`)
+            .then(res => res.json())
+        );
+        
+        const allGameStatsArrays = await Promise.all(statsPromises);
+        
+        // Calculate player statistics from all game stats
+        const playerStatsMap: Record<number, PlayerStats> = {};
+        
+        // Initialize stats for all players
+        players.forEach(player => {
+          playerStatsMap[player.id] = {
+            playerId: player.id,
+            goals: 0,
+            rebounds: 0,
+            intercepts: 0,
+            position: player.positionPreferences[0] || 'GS', // Use the first preferred position as default
+            rating: 0
+          };
+        });
+        
+        // Combine stats from all games
+        allGameStatsArrays.forEach(gameStats => {
+          gameStats.forEach((stat: GameStat) => {
+            if (stat.playerId && playerStatsMap[stat.playerId]) {
+              const player = playerStatsMap[stat.playerId];
+              
+              player.goals += stat.goalsFor || 0;
+              player.rebounds += stat.rebounds || 0;
+              player.intercepts += stat.intercepts || 0;
+              
+              // We'll leave the player position as their preferred position from before
+            }
+          });
+        });
+        
+        // Calculate player ratings based on their stats
+        // Simple formula: (goals * 1.0 + rebounds * 0.5 + intercepts * 0.8) / number of games
+        Object.values(playerStatsMap).forEach(player => {
+          const totalContribution = 
+            player.goals * 1.0 + 
+            player.rebounds * 0.5 + 
+            player.intercepts * 0.8;
+            
+          // Avoid division by zero
+          const numGames = completedGameIds.length || 1;
+          
+          // Calculate rating on a scale of 1-10
+          player.rating = Math.min(10, Math.max(1, (totalContribution / numGames) + 5));
+        });
+        
+        setPlayerStats(playerStatsMap);
+        setIsLoading(false);
+      } catch (error) {
+        console.error("Error fetching game stats:", error);
+        setIsLoading(false);
+      }
     };
-  };
+    
+    fetchAllGameStats();
+  }, [games, players]);
   
   const getAvatarColor = (player: Player) => {
     const colors = [
@@ -43,9 +119,20 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
     return 'bg-error/20 text-error';
   };
   
-  // Sort players by rating for display
-  const sortedPlayers = [...players]
-    .map(player => ({ ...player, stats: getPlayerStats(player) }))
+  // Get players with their stats and sort by rating
+  const playersWithStats = players
+    .filter(player => playerStats[player.id])
+    .map(player => ({
+      ...player,
+      stats: playerStats[player.id] || {
+        playerId: player.id,
+        goals: 0,
+        rebounds: 0,
+        intercepts: 0,
+        position: player.positions.split(',')[0],
+        rating: 5.0
+      }
+    }))
     .sort((a, b) => b.stats.rating - a.stats.rating)
     .slice(0, 5); // Display top 5 players
   
@@ -80,12 +167,16 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {sortedPlayers.length === 0 ? (
+              {isLoading ? (
                 <tr>
-                  <td colSpan={6} className="text-center py-4 text-gray-500">No player data available</td>
+                  <td colSpan={6} className="text-center py-4 text-gray-500">Loading player statistics...</td>
+                </tr>
+              ) : playersWithStats.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="text-center py-4 text-gray-500">No player statistics available</td>
                 </tr>
               ) : (
-                sortedPlayers.map(player => (
+                playersWithStats.map(player => (
                   <tr key={player.id}>
                     <td className="px-3 py-2 whitespace-nowrap">
                       <div className="flex items-center">

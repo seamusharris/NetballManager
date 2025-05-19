@@ -8,7 +8,7 @@ import TeamPerformance from './TeamPerformance';
 import RecentGames from './RecentGames';
 import UpcomingGames from './UpcomingGames';
 import PlayerPerformance from './PlayerPerformance';
-import TeamGallery from './TeamGallery';
+
 import PerformanceCharts from './PerformanceCharts';
 import { Player, Game, Opponent } from '@shared/schema';
 import { sortByDate } from '@/lib/utils';
@@ -70,18 +70,12 @@ export default function DashboardSummary({ players, games, opponents, isLoading 
         )}
       </div>
 
-      {/* Stats & Players Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+      {/* Player Performance Row */}
+      <div className="grid grid-cols-1 gap-6">
         {isLoading ? (
-          <>
-            <Skeleton className="h-[300px] w-full rounded-lg lg:col-span-3" />
-            <Skeleton className="h-[300px] w-full rounded-lg lg:col-span-2" />
-          </>
+          <Skeleton className="h-[300px] w-full rounded-lg" />
         ) : (
-          <>
-            <PlayerPerformance players={players} games={pastGames} className="lg:col-span-3" />
-            <TeamGallery className="lg:col-span-2" />
-          </>
+          <PlayerPerformance players={players} games={pastGames} className="w-full" />
         )}
       </div>
 
