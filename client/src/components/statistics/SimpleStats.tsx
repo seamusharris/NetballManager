@@ -27,6 +27,8 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
   const [gameTotals, setGameTotals] = useState<Record<number, Record<string, number>>>({});
   // Add state for player ratings in the Game Totals tab
   const [playerRatings, setPlayerRatings] = useState<Record<number, number>>({});
+  // Add state for sorting the Game Totals table
+  const [sortConfig, setSortConfig] = useState<{key: string, direction: 'ascending' | 'descending'} | null>(null);
   const { toast } = useToast();
   
   // Function to calculate game totals across all quarters
@@ -510,6 +512,62 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
     return roster ? roster.position : '';
   };
   
+  // Function to handle sorting for Game Totals table
+  const handleSort = (key: string) => {
+    let direction: 'ascending' | 'descending' = 'ascending';
+    
+    // If we're already sorting by this key, toggle the direction
+    if (sortConfig && sortConfig.key === key) {
+      direction = sortConfig.direction === 'ascending' ? 'descending' : 'ascending';
+    }
+    
+    setSortConfig({ key, direction });
+  };
+  
+  // Get sorted players for Game Totals tab
+  const getSortedPlayers = () => {
+    if (!sortConfig) {
+      return [...players]; // Return copy to avoid modifying original array
+    }
+    
+    return [...players].sort((a, b) => {
+      // Handle rating sort
+      if (sortConfig.key === 'rating') {
+        const ratingA = playerRatings[a.id] || 5;
+        const ratingB = playerRatings[b.id] || 5;
+        
+        if (sortConfig.direction === 'ascending') {
+          return ratingA - ratingB;
+        } else {
+          return ratingB - ratingA;
+        }
+      }
+      
+      // Handle stat sort
+      if (gameTotals[a.id] && gameTotals[b.id]) {
+        const valueA = gameTotals[a.id][sortConfig.key] || 0;
+        const valueB = gameTotals[b.id][sortConfig.key] || 0;
+        
+        if (sortConfig.direction === 'ascending') {
+          return valueA - valueB;
+        } else {
+          return valueB - valueA;
+        }
+      }
+      
+      // Handle player name sort (default)
+      if (sortConfig.key === 'name') {
+        if (sortConfig.direction === 'ascending') {
+          return a.displayName.localeCompare(b.displayName);
+        } else {
+          return b.displayName.localeCompare(a.displayName);
+        }
+      }
+      
+      return 0;
+    });
+  };
+  
   return (
     <Card className="mb-6">
       <CardContent className="pt-6">
@@ -644,8 +702,28 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
               <Table>
                 <TableHeader>
                   <TableRow className="bg-slate-50">
-                    <TableHead className="min-w-[200px]">Player</TableHead>
-                    <TableHead className="text-center">Rating</TableHead>
+                    <TableHead 
+                      className="min-w-[200px] cursor-pointer hover:bg-slate-100"
+                      onClick={() => handleSort('name')}
+                    >
+                      Player
+                      {sortConfig?.key === 'name' && (
+                        <span className="ml-1">
+                          {sortConfig.direction === 'ascending' ? '↑' : '↓'}
+                        </span>
+                      )}
+                    </TableHead>
+                    <TableHead 
+                      className="text-center cursor-pointer hover:bg-slate-100"
+                      onClick={() => handleSort('rating')}
+                    >
+                      Rating
+                      {sortConfig?.key === 'rating' && (
+                        <span className="ml-1">
+                          {sortConfig.direction === 'ascending' ? '↑' : '↓'}
+                        </span>
+                      )}
+                    </TableHead>
                     
                     {/* Stat category headers for totals */}
                     {statCategories.map((category) => (
@@ -662,20 +740,33 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
                   {/* Stat field headers */}
                   <TableRow>
                     <TableHead></TableHead>
-                    <TableHead></TableHead>
+                    <TableHead className="border-r"></TableHead>
                     
-                    {statCategories.map((category) => (
-                      category.fields.map((field) => (
-                        <TableHead key={field.id} className="text-center px-1 py-2 min-w-[80px]">
-                          {field.label}
-                        </TableHead>
-                      ))
+                    {statCategories.map((category, categoryIndex) => (
+                      category.fields.map((field, fieldIndex) => {
+                        // Add right border to last column in each category
+                        const isLastInCategory = fieldIndex === category.fields.length - 1;
+                        return (
+                          <TableHead 
+                            key={field.id} 
+                            className={`text-center px-1 py-2 min-w-[80px] cursor-pointer hover:bg-slate-100 ${isLastInCategory ? 'border-r' : ''}`}
+                            onClick={() => handleSort(field.id)}
+                          >
+                            {field.label}
+                            {sortConfig?.key === field.id && (
+                              <span className="ml-1">
+                                {sortConfig.direction === 'ascending' ? '↑' : '↓'}
+                              </span>
+                            )}
+                          </TableHead>
+                        );
+                      })
                     ))}
                   </TableRow>
                 </TableHeader>
                 
                 <TableBody>
-                  {players.map(player => (
+                  {getSortedPlayers().map(player => (
                     <TableRow key={player.id} className="hover:bg-slate-50">
                       <TableCell className="font-medium">
                         {player.displayName}
