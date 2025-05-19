@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet';
 import RosterManager from '@/components/roster/RosterManager';
+import RosterSummary from '@/components/roster/RosterSummary';
 import { useLocation } from 'wouter';
 
 export default function Roster() {
@@ -54,6 +55,14 @@ export default function Roster() {
         <title>Roster | NetballManager</title>
         <meta name="description" content="Manage your netball team roster, assign players to positions for each quarter" />
       </Helmet>
+      
+      {/* Display the Roster Summary if a game is selected and we have roster data */}
+      {selectedGameId && rosters.length > 0 && (
+        <RosterSummary 
+          rosters={rosters}
+          players={activePlayers}
+        />
+      )}
       
       <RosterManager 
         players={activePlayers}
