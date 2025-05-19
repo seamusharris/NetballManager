@@ -3,7 +3,12 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogTitle,
+  DialogDescription 
+} from '@/components/ui/dialog';
 import { Plus } from 'lucide-react';
 import PlayersList from '@/components/players/PlayersList';
 import PlayerForm from '@/components/players/PlayerForm';
@@ -125,32 +130,28 @@ export default function Players() {
         
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogContent className="sm:max-w-[550px]">
-            <DialogTitle className="text-lg font-semibold">Add New Player</DialogTitle>
-            <DialogDescription className="text-sm text-muted-foreground">
+            <h2 className="text-lg font-semibold mt-2">Add New Player</h2>
+            <p className="text-sm text-muted-foreground mb-4">
               Fill out the form below to add a new player to the team.
-            </DialogDescription>
-            <div className="pt-4">
-              <PlayerForm 
-                onSubmit={handleCreatePlayer} 
-                isSubmitting={createMutation.isPending} 
-              />
-            </div>
+            </p>
+            <PlayerForm 
+              onSubmit={handleCreatePlayer} 
+              isSubmitting={createMutation.isPending} 
+            />
           </DialogContent>
         </Dialog>
         
         <Dialog open={!!editingPlayer} onOpenChange={(open) => !open && setEditingPlayer(null)}>
           <DialogContent className="sm:max-w-[550px]">
-            <DialogTitle className="text-lg font-semibold">Edit Player</DialogTitle>
-            <DialogDescription className="text-sm text-muted-foreground">
+            <h2 className="text-lg font-semibold mt-2">Edit Player</h2>
+            <p className="text-sm text-muted-foreground mb-4">
               Make changes to the player details below.
-            </DialogDescription>
-            <div className="pt-4">
-              <PlayerForm 
-                player={editingPlayer || undefined}
-                onSubmit={handleUpdatePlayer} 
-                isSubmitting={updateMutation.isPending} 
-              />
-            </div>
+            </p>
+            <PlayerForm 
+              player={editingPlayer || undefined}
+              onSubmit={handleUpdatePlayer} 
+              isSubmitting={updateMutation.isPending} 
+            />
           </DialogContent>
         </Dialog>
       </div>
