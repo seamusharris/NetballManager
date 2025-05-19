@@ -100,18 +100,10 @@ export default function RosterSummary({
     // If we don't have local state, use API data
     // If there's no game selected or no roster data, reset to empty positions
     if (!selectedGameId || !rosters || rosters.length === 0) {
-      console.log(`No roster data for game ${selectedGameId || 'none'}, rosters length: ${rosters?.length || 0}`);
       // Set empty assignments and return early
       setAssignments(newAssignments);
       return;
     }
-    
-    console.log(`Processing ${rosters.length} roster entries for game ${selectedGameId}`);
-    console.log("Roster data sample:", rosters.slice(0, 3));
-    
-    // Check if we have player data
-    console.log(`We have ${Object.keys(playerMap).length} players in our player map`);
-    console.log("Player map keys:", Object.keys(playerMap));
     
     // Fill in position assignments from roster data
     rosters.forEach(roster => {
@@ -119,15 +111,11 @@ export default function RosterSummary({
         const quarter = roster.quarter as Quarter;
         const position = roster.position as Position;
         newAssignments[quarter][position] = roster.playerId;
-        
-        // Debug each assignment
-        const player = playerMap[roster.playerId];
-        console.log(`Assignment: Q${quarter} ${position}: Player ID ${roster.playerId} -> ${player ? player.displayName : 'Unknown player'}`);
       }
     });
     
     setAssignments(newAssignments);
-  }, [rosters, selectedGameId, playerMap, localRosterState, updateTrigger]);
+  }, [rosters, selectedGameId, playerMap, localRosterState]);
   
   // Define quarters array for display
   const quarters: Quarter[] = [1, 2, 3, 4];
