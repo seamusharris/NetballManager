@@ -60,28 +60,31 @@ export default function RosterManager({
   
   // Update roster data when rosters prop changes or selectedGameId changes
   useEffect(() => {
-    // Create empty roster map
-    const newRosterByQuarter = {
-      '1': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
-      '2': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
-      '3': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
-      '4': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null }
-    };
-    
-    console.log("Loading roster data, rosters count:", rosters.length);
-    
-    // Fill with roster data from API
-    rosters.forEach(roster => {
-      if (roster && roster.quarter !== undefined) {
-        const quarterKey = roster.quarter.toString();
-        if (roster.position && allPositions.includes(roster.position as Position)) {
-          newRosterByQuarter[quarterKey][roster.position as Position] = roster.playerId;
+    if (selectedGameId) {
+      console.log(`Loading roster data for game ${selectedGameId}, found ${rosters.length} roster entries`);
+      
+      // Create empty roster map
+      const newRosterByQuarter = {
+        '1': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
+        '2': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
+        '3': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
+        '4': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null }
+      };
+      
+      // Fill with roster data from API
+      rosters.forEach(roster => {
+        if (roster && roster.gameId === selectedGameId && roster.quarter !== undefined) {
+          const quarterKey = roster.quarter.toString() as '1' | '2' | '3' | '4';
+          if (roster.position && allPositions.includes(roster.position as Position)) {
+            newRosterByQuarter[quarterKey][roster.position as Position] = roster.playerId;
+            console.log(`Loaded assignment: Quarter ${quarterKey}, Position ${roster.position}, Player ${roster.playerId}`);
+          }
         }
-      }
-    });
-    
-    // Update state with new roster data
-    setRosterByQuarter(newRosterByQuarter);
+      });
+      
+      // Update state with new roster data
+      setRosterByQuarter(newRosterByQuarter);
+    }
   }, [rosters, selectedGameId]);
   
   // Calculate roster completion percentage

@@ -22,6 +22,8 @@ export default function Roster() {
   const { data: rosters = [], isLoading: isLoadingRosters } = useQuery({
     queryKey: ['/api/games', selectedGameId, 'rosters'],
     enabled: !!selectedGameId,
+    staleTime: 0, // Don't use cached data
+    refetchOnWindowFocus: true, // Refetch when window gets focus
   });
   
   const isLoading = isLoadingPlayers || isLoadingGames || isLoadingOpponents || 
