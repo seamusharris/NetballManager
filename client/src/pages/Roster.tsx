@@ -1,10 +1,26 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet';
 import RosterManager from '@/components/roster/RosterManager';
+import { useLocation } from 'wouter';
 
 export default function Roster() {
   const [selectedGameId, setSelectedGameId] = useState<number | null>(null);
+  const [_, navigate] = useLocation();
+  
+  // Parse URL query parameters to get game ID
+  useEffect(() => {
+    // Get the game ID from the URL query parameter if it exists
+    const queryParams = new URLSearchParams(window.location.search);
+    const gameId = queryParams.get('game');
+    
+    if (gameId && !isNaN(Number(gameId))) {
+      // Set the selected game ID and update the URL to remove the query parameter
+      setSelectedGameId(Number(gameId));
+      // Replace the URL without the query parameter for cleaner navigation
+      navigate('/roster', { replace: true });
+    }
+  }, [navigate]);
   
   const { data: players = [], isLoading: isLoadingPlayers } = useQuery({
     queryKey: ['/api/players'],
