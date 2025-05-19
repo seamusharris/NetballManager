@@ -161,66 +161,23 @@ export default function TeamPerformance({ games, className }: TeamPerformancePro
           </Badge>
         </div>
         
-        {/* Key performance indicators */}
-        <div className="grid grid-cols-2 gap-4 mb-6">
-          <div className="text-center">
-            <p className="text-gray-500 text-sm">Win Rate</p>
-            <p className="text-3xl font-bold text-primary mt-1">{quarterPerformance.teamWinRate}%</p>
+        {/* Key performance indicators - 2x2 grid expanded to take up more space */}
+        <div className="grid grid-cols-2 gap-6 mb-6">
+          <div className="text-center bg-gray-50 p-4 rounded-lg">
+            <p className="text-gray-500 text-sm mb-1">Win Rate</p>
+            <p className="text-4xl font-bold text-primary">{quarterPerformance.teamWinRate}%</p>
           </div>
-          <div className="text-center">
-            <p className="text-gray-500 text-sm">Avg. Score</p>
-            <p className="text-3xl font-bold text-primary mt-1">{quarterPerformance.avgTeamScore}</p>
+          <div className="text-center bg-gray-50 p-4 rounded-lg">
+            <p className="text-gray-500 text-sm mb-1">Avg. Score</p>
+            <p className="text-4xl font-bold text-primary">{quarterPerformance.avgTeamScore}</p>
           </div>
-          <div className="text-center">
-            <p className="text-gray-500 text-sm">Games Played</p>
-            <p className="text-3xl font-bold text-primary mt-1">{completedGamesCount}</p>
+          <div className="text-center bg-gray-50 p-4 rounded-lg">
+            <p className="text-gray-500 text-sm mb-1">Games Played</p>
+            <p className="text-4xl font-bold text-primary">{completedGamesCount}</p>
           </div>
-          <div className="text-center">
-            <p className="text-gray-500 text-sm">Upcoming</p>
-            <p className="text-3xl font-bold text-primary mt-1">{Math.max(0, totalGames - completedGamesCount)}</p>
-          </div>
-        </div>
-        
-        {/* Quarter-by-quarter performance */}
-        <div className="mt-4">
-          <h4 className="text-sm font-semibold text-gray-500 mb-2">Quarter-by-Quarter Performance</h4>
-          <div className="grid grid-cols-4 gap-2 text-sm">
-            <div className="text-center bg-gray-50 py-1 font-medium">Q1</div>
-            <div className="text-center bg-gray-50 py-1 font-medium">Q2</div>
-            <div className="text-center bg-gray-50 py-1 font-medium">Q3</div>
-            <div className="text-center bg-gray-50 py-1 font-medium">Q4</div>
-            
-            {/* Team average scores by quarter */}
-            <div className="text-center py-1 font-mono text-primary">
-              {quarterPerformance.avgTeamScoreByQuarter[1]}
-            </div>
-            <div className="text-center py-1 font-mono text-primary">
-              {quarterPerformance.avgTeamScoreByQuarter[2]}
-            </div>
-            <div className="text-center py-1 font-mono text-primary">
-              {quarterPerformance.avgTeamScoreByQuarter[3]}
-            </div>
-            <div className="text-center py-1 font-mono text-primary">
-              {quarterPerformance.avgTeamScoreByQuarter[4]}
-            </div>
-            
-            {/* Opponent average scores by quarter */}
-            <div className="text-center py-1 font-mono text-gray-500">
-              {quarterPerformance.avgOpponentScoreByQuarter[1]}
-            </div>
-            <div className="text-center py-1 font-mono text-gray-500">
-              {quarterPerformance.avgOpponentScoreByQuarter[2]}
-            </div>
-            <div className="text-center py-1 font-mono text-gray-500">
-              {quarterPerformance.avgOpponentScoreByQuarter[3]}
-            </div>
-            <div className="text-center py-1 font-mono text-gray-500">
-              {quarterPerformance.avgOpponentScoreByQuarter[4]}
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-2 text-xs text-gray-500 mt-1">
-            <div className="text-center">Our Score</div>
-            <div className="text-center">Opponent Score</div>
+          <div className="text-center bg-gray-50 p-4 rounded-lg">
+            <p className="text-gray-500 text-sm mb-1">Upcoming</p>
+            <p className="text-4xl font-bold text-primary">{Math.max(0, totalGames - completedGamesCount)}</p>
           </div>
         </div>
       </CardContent>
