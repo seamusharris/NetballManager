@@ -149,13 +149,31 @@ export default function GamesList({
     
     const rosterStatuses: Record<number, boolean> = {};
     
-    // Check each game's roster to see if it has at least one player assigned to any position
+    // Check each game's roster to see if all positions for all quarters are filled
     Object.entries(allRosterData).forEach(([gameIdStr, rosters]) => {
       const gameId = parseInt(gameIdStr);
       
-      // A game roster is considered complete if it has at least one player in a position
-      // Could be refined for more specific criteria if needed
-      rosterStatuses[gameId] = rosters.length > 0;
+      // Track filled positions by quarter
+      const quarterPositions: Record<number, Set<string>> = {
+        1: new Set(),
+        2: new Set(),
+        3: new Set(),
+        4: new Set()
+      };
+      
+      // Count which positions are filled for each quarter
+      rosters.forEach((roster: any) => {
+        if (roster.quarter >= 1 && roster.quarter <= 4 && roster.position && roster.playerId) {
+          quarterPositions[roster.quarter].add(roster.position);
+        }
+      });
+      
+      // All 7 positions (GS, GA, WA, C, WD, GD, GK) should be filled for all 4 quarters
+      const allPositionsFilled = Object.values(quarterPositions).every(
+        (positions) => positions.size === 7
+      );
+      
+      rosterStatuses[gameId] = allPositionsFilled;
     });
     
     setGameRosterStatus(rosterStatuses);
