@@ -460,9 +460,9 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
     {
       name: 'Shooting',
       fields: [
-        { id: 'goalsFor', label: 'Goals For' },
-        { id: 'goalsAgainst', label: 'Goals Against' },
-        { id: 'missedGoals', label: 'Missed Goals' }
+        { id: 'goalsFor', label: 'For' },
+        { id: 'goalsAgainst', label: 'Against' },
+        { id: 'missedGoals', label: 'Missed' }
       ]
     },
     {
@@ -476,8 +476,8 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
     {
       name: 'Errors',
       fields: [
-        { id: 'badPass', label: 'Bad Passes' },
-        { id: 'handlingError', label: 'Handling Errors' },
+        { id: 'badPass', label: 'Passes' },
+        { id: 'handlingError', label: 'Handling' },
         { id: 'infringement', label: 'Infringements' }
       ]
     }
@@ -537,7 +537,7 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
                     
                     {/* Stat field headers */}
                     <TableRow>
-                      <TableHead className="border-r"></TableHead>
+                      <TableHead></TableHead>
                       <TableHead className="border-r"></TableHead>
                       
                       {statCategories.map((category, categoryIndex) => (
