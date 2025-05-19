@@ -127,20 +127,41 @@ export default function RosterManager({
     }) => {
       if (!selectedGameId) throw new Error("No game selected");
       
-      // Check if there's an existing roster assignment for this position and quarter
-      const existingRoster = rosters.find(r => 
+      // Find all existing roster assignments for this position and quarter
+      const existingRosters = rosters.filter(r => 
         r.gameId === selectedGameId && 
         r.quarter === quarter && 
         r.position === position
       );
       
-      if (existingRoster) {
-        // Update existing roster assignment
-        const res = await apiRequest('PATCH', `/api/rosters/${existingRoster.id}`, {
+      // If there are multiple entries, we need to clean them up
+      if (existingRosters.length > 1) {
+        console.log(`Found ${existingRosters.length} duplicate roster entries for Q${quarter} ${position}, cleaning up...`);
+        
+        // Sort by ID descending to keep the newest entry
+        existingRosters.sort((a, b) => b.id - a.id);
+        
+        // Delete the older duplicate entries (keep only the first/newest one)
+        for (let i = 1; i < existingRosters.length; i++) {
+          await apiRequest('DELETE', `/api/rosters/${existingRosters[i].id}`);
+        }
+        
+        // Update the newest entry
+        const res = await apiRequest('PATCH', `/api/rosters/${existingRosters[0].id}`, {
           playerId
         });
         return res.json();
-      } else {
+      }
+      // Just one existing entry, update it
+      else if (existingRosters.length === 1) {
+        // Update existing roster assignment
+        const res = await apiRequest('PATCH', `/api/rosters/${existingRosters[0].id}`, {
+          playerId
+        });
+        return res.json();
+      } 
+      // No existing entries, create a new one
+      else {
         // Create new roster assignment
         const res = await apiRequest('POST', '/api/rosters', {
           gameId: selectedGameId,
