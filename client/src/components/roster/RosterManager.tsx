@@ -305,45 +305,50 @@ export default function RosterManager({
     }
   };
   
-  // Handle player assignment to position
+  // Track unsaved changes
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  
+  // Keep track of local changes that haven't been saved yet
+  const [pendingChanges, setPendingChanges] = useState<Array<{
+    quarter: number;
+    position: Position;
+    playerId: number;
+  }>>([]);
+  
+  // Handle player assignment to position (only updates local state)
   const handleAssignPlayer = (quarter: string, position: Position, playerId: number) => {
     if (!selectedGameId) return;
     
-    // Check if there's already a roster entry for this position and quarter
-    const existingRosterId = rosterEntries.find(r => 
-      r.gameId === selectedGameId && 
-      r.quarter === parseInt(quarter) && 
-      r.position === position
-    )?.id;
+    // Update our local state for immediate UI update
+    const newRosterByQuarter = { ...rosterByQuarter };
+    const quarterKey = quarter as '1' | '2' | '3' | '4';
     
-    if (existingRosterId) {
-      // If an entry exists, update it
-      updateRosterMutation.mutate({
-        id: existingRosterId,
-        playerId
-      }, {
-        onSuccess: () => {
-          // Call the onRosterSaved callback to update the summary
-          if (onRosterSaved) {
-            onRosterSaved();
-          }
-        }
-      });
-    } else {
-      // If no entry exists, create a new one
-      saveRosterMutation.mutate({
-        gameId: selectedGameId,
-        quarter: parseInt(quarter),
-        position,
-        playerId
-      }, {
-        onSuccess: () => {
-          // Call the onRosterSaved callback to update the summary
-          if (onRosterSaved) {
-            onRosterSaved();
-          }
-        }
-      });
+    if (quarterKey in newRosterByQuarter) {
+      // Create a new quarter object to trigger state update
+      newRosterByQuarter[quarterKey] = {
+        ...newRosterByQuarter[quarterKey],
+        [position]: playerId
+      };
+      
+      // Update the state
+      setRosterByQuarter(newRosterByQuarter);
+      
+      // Add to pending changes
+      const quarterNum = parseInt(quarter);
+      setPendingChanges(prev => [
+        ...prev.filter(change => 
+          !(change.quarter === quarterNum && change.position === position)
+        ),
+        { quarter: quarterNum, position, playerId }
+      ]);
+      
+      // Mark that we have unsaved changes
+      setHasUnsavedChanges(true);
+      
+      // Still call the callback to update the roster summary view without saving to database
+      if (onRosterSaved) {
+        onRosterSaved();
+      }
     }
   };
   
