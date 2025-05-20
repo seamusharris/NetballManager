@@ -176,7 +176,9 @@ export function calculateTotalGoals(stats: any[], forTeam: boolean = true): numb
  * @returns true if the position is an actual playing position (GS, GA, WA, C, WD, GD, GK)
  */
 export function isOnCourtPosition(position: string): boolean {
-  return allPositions.includes(position as Position);
+  // Explicitly check against the actual position values instead of using allPositions
+  const onCourtPositions = ['GS', 'GA', 'WA', 'C', 'WD', 'GD', 'GK'];
+  return onCourtPositions.includes(position);
 }
 
 /**
@@ -204,6 +206,28 @@ export function wasPlayerOnCourt(
   
   // Check if the player was assigned to an actual on-court position
   return !!rosterEntry && isOnCourtPosition(rosterEntry.position);
+}
+
+/**
+ * Check if a player participated in a game in an on-court position for at least one quarter
+ * @param playerId The player's ID
+ * @param gameId The game's ID 
+ * @param rosters The roster data for the game
+ * @returns true if the player was on court for at least one quarter
+ */
+export function didPlayerParticipateInGame(
+  playerId: number,
+  gameId: number,
+  rosters: any[]
+): boolean {
+  if (!rosters || !Array.isArray(rosters)) return false;
+  
+  // Find any roster entries where the player was in an on-court position
+  return rosters.some(roster => 
+    roster.playerId === playerId && 
+    roster.gameId === gameId && 
+    isOnCourtPosition(roster.position)
+  );
 }
 
 export function sortByDate<T extends { date: string }>(items: T[], ascending: boolean = false): T[] {
