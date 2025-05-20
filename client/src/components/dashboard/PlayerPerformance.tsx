@@ -38,7 +38,7 @@ interface SortConfig {
 }
 
 export default function PlayerPerformance({ players, games, className }: PlayerPerformanceProps): JSX.Element {
-  const [timeRange, setTimeRange] = useState('last5');
+  const [timeRange, setTimeRange] = useState('season');
   const [playerStatsMap, setPlayerStatsMap] = useState<Record<number, PlayerStats>>({});
   // Add this key to force re-calculation when time range changes
   const [statsKey, setStatsKey] = useState(0);
@@ -472,7 +472,6 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="last5">Last 5 Games</SelectItem>
-              <SelectItem value="month">This Month</SelectItem>
               <SelectItem value="season">This Season</SelectItem>
             </SelectContent>
           </Select>
