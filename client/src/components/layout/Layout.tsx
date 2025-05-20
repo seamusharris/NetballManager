@@ -28,15 +28,16 @@ export default function Layout({ children }: LayoutProps) {
       {/* Overlay to close sidebar when clicking outside on tablet/mobile */}
       {isMobileOpen && (
         <div 
-          className="fixed inset-0 bg-black bg-opacity-30 z-20 lg:hidden"
+          className="fixed inset-0 bg-black bg-opacity-30 z-20"
+          style={{ display: isTablet || window.innerWidth < 1024 ? 'block' : 'none' }}
           onClick={() => setIsMobileOpen(false)}
         />
       )}
       
-      <Sidebar isMobileOpen={isMobileOpen} setIsMobileOpen={setIsMobileOpen} />
+      <Sidebar isMobileOpen={isMobileOpen} setIsMobileOpen={setIsMobileOpen} isTablet={isTablet} />
       
       <div className="flex-1 flex flex-col overflow-hidden">
-        <Header setIsMobileOpen={setIsMobileOpen} />
+        <Header setIsMobileOpen={setIsMobileOpen} isTablet={isTablet} />
         
         <main className={cn(
           "flex-1 overflow-y-auto bg-background",

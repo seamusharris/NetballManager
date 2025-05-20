@@ -7,22 +7,10 @@ import { Menu } from 'lucide-react';
 
 interface HeaderProps {
   setIsMobileOpen: (open: boolean) => void;
+  isTablet: boolean;
 }
 
-export default function Header({ setIsMobileOpen }: HeaderProps) {
-  const [isTablet, setIsTablet] = useState(false);
-
-  // Detect tablet screen size (including all iPad sizes)
-  useEffect(() => {
-    const checkScreenSize = () => {
-      // Covers standard iPads and large 12" iPad Pro (up to 1366px)
-      setIsTablet(window.innerWidth >= 768 && window.innerWidth < 1367);
-    };
-    
-    checkScreenSize();
-    window.addEventListener('resize', checkScreenSize);
-    return () => window.removeEventListener('resize', checkScreenSize);
-  }, []);
+export default function Header({ setIsMobileOpen, isTablet }: HeaderProps) {
 
   return (
     <header className="bg-white shadow-sm z-20">
@@ -30,8 +18,8 @@ export default function Header({ setIsMobileOpen }: HeaderProps) {
         <Button 
           variant="ghost" 
           size="icon" 
-          className="text-gray-600 focus:outline-none hidden"
-          style={{ display: isTablet || window.innerWidth < 768 ? 'flex' : 'none' }}
+          className="text-gray-600 focus:outline-none"
+          style={{ display: isTablet ? 'flex' : 'none' }}
           onClick={() => setIsMobileOpen(true)}
         >
           <Menu className="h-5 w-5" />

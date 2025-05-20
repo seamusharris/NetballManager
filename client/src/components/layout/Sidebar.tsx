@@ -6,28 +6,11 @@ import { X, Menu, Home, Users, ClipboardList, Calendar, Flag, BarChart, Database
 interface SidebarProps {
   isMobileOpen: boolean;
   setIsMobileOpen: (open: boolean) => void;
+  isTablet: boolean;
 }
 
-export default function Sidebar({ isMobileOpen, setIsMobileOpen }: SidebarProps) {
+export default function Sidebar({ isMobileOpen, setIsMobileOpen, isTablet }: SidebarProps) {
   const [location] = useLocation();
-  const [isTablet, setIsTablet] = useState(false);
-
-  // Detect tablet screen size (including all iPad sizes)
-  useEffect(() => {
-    const checkScreenSize = () => {
-      // Includes both standard iPads (768-1024px) and large iPads like 12" Pro (up to 1366px)
-      setIsTablet(window.innerWidth >= 768 && window.innerWidth < 1367);
-    };
-    
-    // Check on mount
-    checkScreenSize();
-    
-    // Check on resize
-    window.addEventListener('resize', checkScreenSize);
-    
-    // Cleanup
-    return () => window.removeEventListener('resize', checkScreenSize);
-  }, []);
 
   const isActive = (path: string) => {
     if (path === '/' && location === '/') return true;
@@ -49,10 +32,10 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen }: SidebarProps)
     <aside 
       className={cn(
         "bg-sidebar-background w-64 h-full fixed inset-y-0 left-0 z-30 shadow-lg transform transition-transform duration-300",
-        // Default is visible on large screens only
-        "lg:translate-x-0 lg:static lg:inset-0",
+        // Default is visible on large desktop screens only (>1366px)
+        !isTablet ? "translate-x-0 static inset-0" : "",
         // On mobile and tablet, use slide-in menu
-        (isTablet || window.innerWidth < 768) ? (isMobileOpen ? "translate-x-0" : "-translate-x-full") : ""
+        isTablet ? (isMobileOpen ? "translate-x-0" : "-translate-x-full") : ""
       )}
     >
       <div className="flex items-center justify-between h-16 bg-sidebar-accent px-4">
@@ -61,9 +44,8 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen }: SidebarProps)
           <h1 className="text-white font-heading font-bold text-lg">NetballManager</h1>
         </div>
         <button 
-          className="text-white focus:outline-none hidden" 
-          // Only show for tablet and smaller screens
-          style={{ display: isTablet || window.innerWidth < 768 ? 'block' : 'none' }}
+          className="text-white focus:outline-none"
+          style={{ display: isTablet ? 'block' : 'none' }}
           onClick={() => setIsMobileOpen(false)}
         >
           <X className="w-5 h-5" />
