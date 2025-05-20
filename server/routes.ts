@@ -10,6 +10,7 @@ import {
   insertGameSchema, importGameSchema,
   insertRosterSchema, importRosterSchema,
   insertGameStatSchema, importGameStatSchema,
+  players, opponents, games, rosters, gameStats,
   POSITIONS
 } from "@shared/schema";
 
@@ -23,11 +24,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/clear-data", async (req, res) => {
     try {
       // Delete all data in reverse order of dependencies
-      await db.delete(gameStats);
-      await db.delete(rosters);
-      await db.delete(games);
-      await db.delete(opponents);
-      await db.delete(players);
+      await db.execute(sql`DELETE FROM game_stats`);
+      await db.execute(sql`DELETE FROM rosters`);
+      await db.execute(sql`DELETE FROM games`);
+      await db.execute(sql`DELETE FROM opponents`);
+      await db.execute(sql`DELETE FROM players`);
       
       // Reset all sequences
       await db.execute(sql`ALTER SEQUENCE game_stats_id_seq RESTART WITH 1`);
@@ -90,12 +91,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         try {
           await db.execute(sql`
             INSERT INTO opponents (
-              id, team_name, primary_contact, contact_info
+              id, team_name, primary_contact, contact_info,
+              primary_color, secondary_color, notes
             ) VALUES (
               ${opponent.id}, 
               ${opponent.teamName || "Unknown Team"}, 
               ${opponent.primaryContact || null}, 
-              ${opponent.contactInfo || null}
+              ${opponent.contactInfo || null},
+              ${opponent.primaryColor || "#000000"},
+              ${opponent.secondaryColor || "#FFFFFF"},
+              ${opponent.notes || null}
             )
           `);
           opponentsImported++;
