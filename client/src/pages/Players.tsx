@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet';
 import { useToast } from '@/hooks/use-toast';
@@ -10,15 +10,31 @@ import SimplePlayerForm from '@/components/players/SimplePlayerForm';
 import { apiRequest } from '@/lib/queryClient';
 import { queryClient } from '@/lib/queryClient';
 import { Player } from '@shared/schema';
+import { useLocation } from 'wouter';
 
 export default function Players() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
   const { toast } = useToast();
+  const [location] = useLocation();
   
-  const { data: players = [], isLoading } = useQuery({
+  // Parse URL params to check for edit parameter
+  const params = new URLSearchParams(location.split('?')[1] || '');
+  const editId = params.get('edit');
+  
+  const { data: players = [], isLoading } = useQuery<Player[]>({
     queryKey: ['/api/players'],
   });
+  
+  // Find the player to edit if an edit ID is provided in the URL
+  useEffect(() => {
+    if (editId && players.length > 0) {
+      const playerToEdit = players.find(p => p.id === parseInt(editId));
+      if (playerToEdit) {
+        setEditingPlayer(playerToEdit);
+      }
+    }
+  }, [editId, players]);
   
   const createMutation = useMutation({
     mutationFn: async (newPlayer: any) => {

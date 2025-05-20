@@ -288,7 +288,8 @@ export default function PlayerDetails() {
   };
 
   const handleEditPlayer = () => {
-    navigate(`/players/edit/${playerId}`);
+    // Navigate to the edit player form with this player's ID
+    navigate(`/players?edit=${playerId}`);
   };
 
   // Get the player's avatar color
