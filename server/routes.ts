@@ -258,7 +258,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
             ? parseInt(req.body.opponentId, 10) 
             : req.body.opponentId,
           completed: req.body.completed || false,
-          isBye: false
+          isBye: false,
+          round: req.body.round || null,
+          venue: req.body.venue || null,
+          teamScore: req.body.teamScore || 0,
+          opponentScore: req.body.opponentScore || 0,
+          notes: req.body.notes || null
         };
         
         console.log("Creating regular game:", gameData);
