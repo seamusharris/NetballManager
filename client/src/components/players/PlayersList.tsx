@@ -537,7 +537,7 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
                   >
                     Player {renderSortIndicator('name')}
                   </TableHead>
-                  <TableHead className="text-center w-[100px] border-r border-b">Position</TableHead>
+                  <TableHead className="text-center w-[160px] border-r border-b">Position</TableHead>
                   
                   {/* Stat category headers */}
                   {statCategories.map((category, index) => (
