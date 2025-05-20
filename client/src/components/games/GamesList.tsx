@@ -198,6 +198,11 @@ export default function GamesList({
     Object.entries(allGameStats).forEach(([gameIdStr, stats]) => {
       const gameId = parseInt(gameIdStr);
       
+      if (!stats || stats.length === 0) {
+        newScores[gameId] = { team: 0, opponent: 0 };
+        return;
+      }
+      
       // Calculate goals by player in each quarter - this is how it's done in the Statistics page too
       const quarterGoals: Record<number, { for: number; against: number }> = {
         1: { for: 0, against: 0 },
@@ -211,6 +216,8 @@ export default function GamesList({
       
       // Find the latest stat for each player and quarter
       stats.forEach(stat => {
+        if (!stat) return;
+        
         const key = `${stat.playerId}-${stat.quarter}`;
         if (!latestPlayerStats[key] || stat.id > latestPlayerStats[key].id) {
           latestPlayerStats[key] = stat;
@@ -219,7 +226,7 @@ export default function GamesList({
       
       // Use only the latest stats for calculating quarter goals
       Object.values(latestPlayerStats).forEach(stat => {
-        if (stat.quarter >= 1 && stat.quarter <= 4) {
+        if (stat && stat.quarter >= 1 && stat.quarter <= 4) {
           // Ensure quarter is treated as a valid key for the record
           const quarter = stat.quarter as keyof typeof quarterGoals;
           quarterGoals[quarter].for += (stat.goalsFor || 0);
@@ -240,8 +247,16 @@ export default function GamesList({
       newScores[gameId] = { team: teamScore, opponent: opponentScore };
     });
     
+    // Apply scores to all games that exist in completedGameIds
+    completedGameIds.forEach(gameId => {
+      // If we don't have scores for this game yet, set to 0-0
+      if (!newScores[gameId]) {
+        newScores[gameId] = { team: 0, opponent: 0 };
+      }
+    });
+    
     setGameScores(newScores);
-  }, [allGameStats]);
+  }, [allGameStats, completedGameIds]);
   
   // Get opponent name by ID
   const getOpponentName = (opponentId: number | null) => {
