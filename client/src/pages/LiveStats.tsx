@@ -612,9 +612,9 @@ export default function LiveStats() {
         </Card>
       </div>
       
-      {/* Players stat cards */}
-      <div className="mb-6">
-        <h2 className="text-lg font-semibold mb-3">Players on Court - Quarter {currentQuarter}</h2>
+      {/* Players stat cards - tablet optimized */}
+      <div className="mb-4 md:mb-5">
+        <h2 className="text-base md:text-lg font-semibold mb-2 md:mb-3">Players on Court - Quarter {currentQuarter}</h2>
         
         {playersOnCourt.length === 0 ? (
           <Card className="p-4 text-center">
@@ -631,11 +631,11 @@ export default function LiveStats() {
             const avatarColor = generatePlayerAvatarColor(playerId);
             
             return (
-              <Card key={playerId} className="mb-4">
-                <CardHeader className="py-3">
-                  <div className="flex items-center gap-3">
+              <Card key={playerId} className="mb-3 overflow-hidden">
+                <CardHeader className="py-2">
+                  <div className="flex items-center gap-2">
                     <div 
-                      className="h-12 w-12 rounded-full flex items-center justify-center text-white font-bold text-lg"
+                      className="h-10 w-10 md:h-12 md:w-12 rounded-full flex items-center justify-center text-white font-bold text-base md:text-lg"
                       style={{
                         backgroundColor: '#3b82f6', /* blue-500 */
                         border: '2px solid white',
@@ -645,12 +645,12 @@ export default function LiveStats() {
                       {position}
                     </div>
                     <div>
-                      <p className="font-semibold">{player.displayName}</p>
+                      <p className="font-semibold text-sm md:text-base">{player.displayName}</p>
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                <CardContent className="py-2">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 md:gap-3">
                     {/* Render stat counters based on position */}
                     {Object.entries(statConfig).map(([stat, isAvailable]) => {
                       if (isAvailable) {
@@ -670,15 +670,15 @@ export default function LiveStats() {
         )}
       </div>
       
-      {/* Save button at the bottom */}
-      <div className="flex justify-end mt-4">
+      {/* Save button at the bottom - tablet optimized */}
+      <div className="flex justify-end mt-3 md:mt-4">
         <Button
           size="lg"
           onClick={saveAllStats}
           disabled={saveInProgress}
-          className="px-8"
+          className="px-4 md:px-8 h-10 md:h-11 text-sm md:text-base"
         >
-          <Save className="h-5 w-5 mr-2" />
+          <Save className="h-4 w-4 md:h-5 md:w-5 mr-1 md:mr-2" />
           Save All Statistics
         </Button>
       </div>
