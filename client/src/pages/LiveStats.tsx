@@ -680,14 +680,14 @@ export default function LiveStats() {
                   </div>
                 </CardHeader>
                 <CardContent className="py-2 pt-1">
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 justify-items-center">
                     {/* Render position-specific stat counters */}
                     {Object.entries(statConfig).map(([stat, isAvailable]) => {
                       // Only render stats that aren't already shown in the header
                       const statType = stat as StatType;
                       if (isAvailable && !commonStats.includes(statType)) {
                         return (
-                          <div key={`${playerId}-${stat}`}>
+                          <div key={`${playerId}-${stat}`} className="w-full flex justify-center">
                             {renderStatCounter(playerId, statType)}
                           </div>
                         );
