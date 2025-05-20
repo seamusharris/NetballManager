@@ -47,7 +47,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Bulk import - imports all data in a single transaction
   app.post("/api/bulk-import", async (req, res) => {
     try {
-      // Handle both string and object formats
+      // Always convert to object format consistently
       let data;
       if (typeof req.body === 'string') {
         try {
@@ -60,30 +60,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         data = req.body;
       }
       
-      console.log("Import data structure:", Object.keys(data));
-      
-      // Provide more detailed debug info
-      console.log("Data keys:", Object.keys(data));
-      
-      // Validate the data structure with more flexibility
+      // Validate the data structure
       const hasPlayers = Array.isArray(data.players);
       const hasOpponents = Array.isArray(data.opponents);
       const hasGames = Array.isArray(data.games);
+      const hasRosters = Array.isArray(data.rosters);
+      const hasGameStats = Array.isArray(data.gameStats);
       
-      console.log("Data validation:", { hasPlayers, hasOpponents, hasGames });
+      console.log("Import validation:", { 
+        players: hasPlayers ? data.players.length : 0,
+        opponents: hasOpponents ? data.opponents.length : 0, 
+        games: hasGames ? data.games.length : 0,
+        rosters: hasRosters ? data.rosters.length : 0,
+        stats: hasGameStats ? data.gameStats.length : 0
+      });
       
-      // Allow partial imports if at least players are available
+      // Require players section at minimum
       if (!hasPlayers) {
-        console.error("Missing required player data");
         return res.status(400).json({ message: "Invalid data format - missing player data" });
-      }
-      
-      // Log the structure of the first items for debugging
-      if (hasPlayers && data.players.length > 0) {
-        console.log("Sample player:", Object.keys(data.players[0]));
-      }
-      if (hasGames && data.games.length > 0) {
-        console.log("Sample game:", Object.keys(data.games[0]));
       }
       
       // Import counts
@@ -163,19 +157,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      // DIRECT INSERT ROSTERS
+      // DIRECT INSERT ROSTERS - with improved validation
       const rostersData = Array.isArray(data.rosters) ? data.rosters : [];
+      
+      // Extract valid game and player IDs for reference
+      const validGameIds: number[] = [];
+      games.forEach((game) => validGameIds.push(game.id));
+      
+      const validPlayerIds: number[] = [];
+      players.forEach((player) => validPlayerIds.push(player.id));
+      
+      // First, log the total we'll attempt to import
+      console.log(`Processing ${rostersData.length} roster entries...`);
+      
       for (const roster of rostersData) {
         try {
+          // Skip invalid relationships
+          if (!validGameIds.includes(roster.gameId)) {
+            console.warn(`Skipping roster ${roster.id}: game ID ${roster.gameId} not found`);
+            continue;
+          }
+          
+          if (!validPlayerIds.includes(roster.playerId)) {
+            console.warn(`Skipping roster ${roster.id}: player ID ${roster.playerId} not found`);
+            continue;
+          }
+          
+          // Clean and normalize data
+          const position = POSITIONS.includes(roster.position) ? roster.position : "GS";
+          const quarter = roster.quarter >= 1 && roster.quarter <= 4 ? roster.quarter : 1;
+          
+          console.log(`Found valid roster entry:`, roster);
+          
           await db.execute(sql`
             INSERT INTO rosters (
               id, game_id, quarter, position, player_id
             ) VALUES (
               ${roster.id}, 
-              ${roster.gameId || 0}, 
-              ${roster.quarter || 1}, 
-              ${roster.position || "GS"}, 
-              ${roster.playerId || 0}
+              ${roster.gameId}, 
+              ${quarter}, 
+              ${position}, 
+              ${roster.playerId}
             )
           `);
           rostersImported++;
@@ -184,30 +206,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      // DIRECT INSERT GAME STATS
+      // DIRECT INSERT GAME STATS - with improved validation
       const statsData = Array.isArray(data.gameStats) ? data.gameStats : [];
+      
+      // Get valid game and player IDs for reference (reusing from rosters)
+      console.log(`Processing ${statsData.length} game stat entries...`);
+      
       for (const stat of statsData) {
         try {
+          // Skip invalid relationships
+          if (!validGameIds.includes(stat.gameId)) {
+            console.warn(`Skipping stat ${stat.id}: game ID ${stat.gameId} not found`);
+            continue;
+          }
+          
+          if (!validPlayerIds.includes(stat.playerId)) {
+            console.warn(`Skipping stat ${stat.id}: player ID ${stat.playerId} not found`);
+            continue;
+          }
+          
+          // Clean and normalize all fields
+          const cleanStat = {
+            id: stat.id,
+            gameId: stat.gameId,
+            playerId: stat.playerId,
+            quarter: stat.quarter >= 1 && stat.quarter <= 4 ? stat.quarter : 1,
+            goalsFor: Math.max(0, parseInt(stat.goalsFor || 0)),
+            goalsAgainst: Math.max(0, parseInt(stat.goalsAgainst || 0)),
+            missedGoals: Math.max(0, parseInt(stat.missedGoals || 0)),
+            rebounds: Math.max(0, parseInt(stat.rebounds || 0)),
+            intercepts: Math.max(0, parseInt(stat.intercepts || 0)),
+            badPass: Math.max(0, parseInt(stat.badPass || 0)),
+            handlingError: Math.max(0, parseInt(stat.handlingError || 0)),
+            pickUp: Math.max(0, parseInt(stat.pickUp || 0)),
+            infringement: Math.max(0, parseInt(stat.infringement || 0)),
+            rating: Math.min(10, Math.max(1, parseInt(stat.rating || 5)))
+          };
+          
+          console.log(`Processing stat for quarter ${cleanStat.quarter}, player ${cleanStat.playerId}:`, stat);
+          
           await db.execute(sql`
             INSERT INTO game_stats (
               id, game_id, player_id, quarter, goals_for, goals_against, 
               missed_goals, rebounds, intercepts, bad_pass, handling_error, 
               pick_up, infringement, rating
             ) VALUES (
-              ${stat.id}, 
-              ${stat.gameId || 0}, 
-              ${stat.playerId || 0}, 
-              ${stat.quarter || 1}, 
-              ${stat.goalsFor || 0}, 
-              ${stat.goalsAgainst || 0}, 
-              ${stat.missedGoals || 0}, 
-              ${stat.rebounds || 0}, 
-              ${stat.intercepts || 0}, 
-              ${stat.badPass || 0}, 
-              ${stat.handlingError || 0}, 
-              ${stat.pickUp || 0}, 
-              ${stat.infringement || 0}, 
-              ${stat.rating || 5}
+              ${cleanStat.id}, 
+              ${cleanStat.gameId}, 
+              ${cleanStat.playerId}, 
+              ${cleanStat.quarter}, 
+              ${cleanStat.goalsFor}, 
+              ${cleanStat.goalsAgainst}, 
+              ${cleanStat.missedGoals}, 
+              ${cleanStat.rebounds}, 
+              ${cleanStat.intercepts}, 
+              ${cleanStat.badPass}, 
+              ${cleanStat.handlingError}, 
+              ${cleanStat.pickUp}, 
+              ${cleanStat.infringement}, 
+              ${cleanStat.rating}
             )
           `);
           statsImported++;
