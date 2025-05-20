@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
+import { useQuery } from '@tanstack/react-query';
 import { 
   Card, 
   CardContent 
@@ -31,7 +32,7 @@ import {
 } from '@/components/ui/pagination';
 import { Badge } from '@/components/ui/badge';
 import { Search } from 'lucide-react';
-import { Player, Position } from '@shared/schema';
+import { Game, Player, Position, GameStat } from '@shared/schema';
 import { cn, getInitials, allPositions, positionGroups } from '@/lib/utils';
 
 interface PlayersListProps {
@@ -41,9 +42,9 @@ interface PlayersListProps {
   onDelete: (id: number) => void;
 }
 
-// Hard-coded player stats - in a real implementation, these would come from the API
 interface PlayerStats {
   playerId: number;
+  gamesPlayed: number;
   goals: number;
   goalsAgainst: number;
   missedGoals: number;
@@ -54,8 +55,201 @@ export default function PlayersList({ players, isLoading, onEdit, onDelete }: Pl
   const [positionFilter, setPositionFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
+  const [playerStatsMap, setPlayerStatsMap] = useState<Record<number, PlayerStats>>({});
   const [_, navigate] = useLocation();
   const itemsPerPage = 10;
+  
+  // Fetch games to calculate player statistics
+  const { data: games = [], isLoading: isLoadingGames } = useQuery({
+    queryKey: ['/api/games'],
+  });
+
+  // Get only completed games
+  const completedGames = games.filter((game: Game) => game.completed);
+  const gameIds = completedGames.map((game: Game) => game.id);
+  const enableQuery = gameIds.length > 0;
+  
+  // Use React Query to fetch and cache game statistics and rosters
+  const { data: gameStatsMap, isLoading: isLoadingStats } = useQuery({
+    queryKey: ['playerGameStats', ...gameIds],
+    queryFn: async () => {
+      if (gameIds.length === 0) {
+        return {};
+      }
+      
+      // Fetch stats for each completed game
+      const statsPromises = gameIds.map(async (gameId) => {
+        const response = await fetch(`/api/games/${gameId}/stats?_t=${Date.now()}`);
+        const stats = await response.json();
+        return { gameId, stats };
+      });
+      
+      const results = await Promise.all(statsPromises);
+      
+      // Create a map of game ID to stats array
+      const statsMap: Record<number, GameStat[]> = {};
+      results.forEach(result => {
+        statsMap[result.gameId] = result.stats;
+      });
+      
+      return statsMap;
+    },
+    enabled: enableQuery,
+    staleTime: 0, 
+    gcTime: 15 * 60 * 1000,
+  });
+  
+  // Fetch roster data for tracking games played
+  const { data: gameRostersMap, isLoading: isLoadingRosters } = useQuery({
+    queryKey: ['gameRosters', ...gameIds],
+    queryFn: async () => {
+      if (gameIds.length === 0) {
+        return {};
+      }
+      
+      // Fetch rosters for each game to count games played
+      const rosterPromises = gameIds.map(async (gameId) => {
+        const response = await fetch(`/api/games/${gameId}/rosters`);
+        const rosters = await response.json();
+        return { gameId, rosters };
+      });
+      
+      const results = await Promise.all(rosterPromises);
+      
+      // Create a map of game ID to rosters array
+      const rostersMap: Record<number, any[]> = {};
+      results.forEach(result => {
+        rostersMap[result.gameId] = result.rosters;
+      });
+      
+      return rostersMap;
+    },
+    enabled: enableQuery,
+    staleTime: 0,
+    gcTime: 15 * 60 * 1000,
+  });
+
+  // Combined loading state
+  const isLoadingData = isLoadingStats || isLoadingRosters || isLoadingGames;
+
+  // When game stats or players change, recalculate player statistics
+  useEffect(() => {
+    if (!gameStatsMap || isLoadingData || players.length === 0) return;
+    
+    const newPlayerStatsMap: Record<number, PlayerStats> = {};
+    
+    // Initialize all players with zeros
+    players.forEach(player => {
+      newPlayerStatsMap[player.id] = {
+        playerId: player.id,
+        gamesPlayed: 0,
+        goals: 0,
+        goalsAgainst: 0,
+        missedGoals: 0
+      };
+    });
+    
+    // Count games played from both rosters and game stats
+    if ((gameRostersMap && Object.keys(gameRostersMap).length > 0) || 
+        (gameStatsMap && Object.keys(gameStatsMap).length > 0)) {
+      
+      // Track which games each player participated in
+      const playerGameIds: Record<number, Set<number>> = {};
+      
+      // Initialize sets for each player
+      players.forEach(player => {
+        playerGameIds[player.id] = new Set();
+      });
+      
+      // First, process all game rosters to find participation
+      if (gameRostersMap) {
+        Object.entries(gameRostersMap).forEach(([gameIdStr, rosters]) => {
+          const gameId = parseInt(gameIdStr);
+          
+          // For each roster entry in this game
+          if (Array.isArray(rosters)) {
+            rosters.forEach((roster: any) => {
+              const playerId = roster.playerId;
+              
+              // If player is assigned to a position in any quarter, count them as having played
+              if (playerId && roster.position && playerGameIds[playerId]) {
+                playerGameIds[playerId].add(gameId);
+              }
+            });
+          }
+        });
+      }
+      
+      // Then, process all game stats to find additional participation
+      if (gameStatsMap) {
+        Object.entries(gameStatsMap).forEach(([gameIdStr, stats]) => {
+          const gameId = parseInt(gameIdStr);
+          
+          if (Array.isArray(stats)) {
+            // Get unique player IDs that have stats for this game
+            const playerIdsWithStats = new Set(stats.map(stat => stat.playerId));
+            
+            // Mark each player as having participated in this game
+            playerIdsWithStats.forEach(playerId => {
+              if (playerId && playerGameIds[playerId]) {
+                playerGameIds[playerId].add(gameId);
+              }
+            });
+          }
+        });
+      }
+      
+      // Update games played count for each player
+      players.forEach(player => {
+        if (playerGameIds[player.id] && newPlayerStatsMap[player.id]) {
+          newPlayerStatsMap[player.id].gamesPlayed = playerGameIds[player.id].size;
+        }
+      });
+    }
+    
+    // Process all game stats for each player
+    if (Object.keys(gameStatsMap).length > 0) {
+      // Get all stats across all games
+      const allGameStats = Object.values(gameStatsMap).flatMap(stats => stats);
+      
+      // Use a de-duplication approach to handle duplicate records
+      const dedupedStats: Record<number, Record<string, GameStat>> = {};
+      
+      // First identify the most recent stat for each player in each quarter of each game
+      allGameStats.forEach(stat => {
+        if (!stat || !stat.playerId || !stat.quarter || !stat.gameId) return;
+        
+        const playerId = stat.playerId;
+        const uniqueKey = `${stat.gameId}-${stat.quarter}`;
+        
+        // Initialize player's stats map if needed
+        if (!dedupedStats[playerId]) {
+          dedupedStats[playerId] = {};
+        }
+        
+        // Keep only the most recent stat for this player and quarter in this game
+        if (!dedupedStats[playerId][uniqueKey] || 
+            stat.id > dedupedStats[playerId][uniqueKey].id) {
+          dedupedStats[playerId][uniqueKey] = stat;
+        }
+      });
+      
+      // Process only the de-duplicated stats to get player totals
+      Object.values(dedupedStats).forEach(playerQuarterStats => {
+        Object.values(playerQuarterStats).forEach(stat => {
+          const playerId = stat.playerId;
+          if (!newPlayerStatsMap[playerId]) return;
+          
+          // Add this player's stats
+          newPlayerStatsMap[playerId].goals += stat.goalsFor || 0;
+          newPlayerStatsMap[playerId].goalsAgainst += stat.goalsAgainst || 0;
+          newPlayerStatsMap[playerId].missedGoals += stat.missedGoals || 0;
+        });
+      });
+    }
+    
+    setPlayerStatsMap(newPlayerStatsMap);
+  }, [gameStatsMap, gameRostersMap, isLoadingData, players]);
   
   // Filter players based on search and filters
   const filteredPlayers = players.filter(player => {
@@ -97,16 +291,6 @@ export default function PlayersList({ players, isLoading, onEdit, onDelete }: Pl
     setCurrentPage(page);
   };
   
-  // Mock player stats (in a real implementation, these would be fetched from the API)
-  const getPlayerStats = (playerId: number): PlayerStats => {
-    return {
-      playerId,
-      goals: Math.floor(Math.random() * 10),
-      goalsAgainst: Math.floor(Math.random() * 5),
-      missedGoals: Math.floor(Math.random() * 3)
-    };
-  };
-  
   // Get the player's stored avatar color
   const getAvatarColor = (player: Player): string => {
     // If the player has a stored avatar color, use it
@@ -120,6 +304,12 @@ export default function PlayersList({ players, isLoading, onEdit, onDelete }: Pl
   
   // Stat categories for the table
   const statCategories = [
+    { 
+      name: 'Games', 
+      fields: [
+        { field: 'gamesPlayed', label: 'Played' },
+      ]
+    },
     { 
       name: 'Shooting', 
       fields: [
@@ -194,8 +384,8 @@ export default function PlayersList({ players, isLoading, onEdit, onDelete }: Pl
           <Table>
             <TableHeader>
               <TableRow className="bg-slate-50">
-                <TableHead className="min-w-[120px] border-b">Player</TableHead>
-                <TableHead className="text-center border-r border-b">Position</TableHead>
+                <TableHead className="w-[100px] border-b">Player</TableHead>
+                <TableHead className="text-center w-[100px] border-r border-b">Position</TableHead>
                 
                 {/* Stat category headers */}
                 {statCategories.map((category, index) => (
@@ -220,7 +410,7 @@ export default function PlayersList({ players, isLoading, onEdit, onDelete }: Pl
                     <TableHead 
                       key={field.field} 
                       className={`text-center py-2 text-xs font-medium text-gray-500 border-r border-b ${fieldIndex === 0 ? 'border-l' : ''}`}
-                      style={{ width: '80px' }} // Fixed width columns for stats
+                      style={{ width: '60px' }} // Fixed narrower width columns for stats
                     >
                       {field.label}
                     </TableHead>
@@ -230,23 +420,29 @@ export default function PlayersList({ players, isLoading, onEdit, onDelete }: Pl
             </TableHeader>
             
             <TableBody className="bg-white divide-y divide-gray-200">
-              {isLoading ? (
+              {isLoading || isLoadingData ? (
                 Array(5).fill(0).map((_, i) => (
                   <TableRow key={i}>
-                    <TableCell colSpan={5}>
+                    <TableCell colSpan={6}>
                       <Skeleton className="h-12 w-full" />
                     </TableCell>
                   </TableRow>
                 ))
               ) : paginatedPlayers.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8 text-gray-500">
+                  <TableCell colSpan={6} className="text-center py-8 text-gray-500">
                     No players found. Please add a player or adjust your filters.
                   </TableCell>
                 </TableRow>
               ) : (
                 paginatedPlayers.map((player, playerIndex) => {
-                  const playerStats = getPlayerStats(player.id);
+                  const playerStats = playerStatsMap[player.id] || {
+                    playerId: player.id,
+                    gamesPlayed: 0,
+                    goals: 0,
+                    goalsAgainst: 0,
+                    missedGoals: 0
+                  };
                   
                   return (
                     <TableRow 
@@ -255,14 +451,14 @@ export default function PlayersList({ players, isLoading, onEdit, onDelete }: Pl
                       onClick={() => navigate(`/player/${player.id}`)}
                     >
                       {/* Player column */}
-                      <TableCell className="px-3 py-2 whitespace-nowrap">
+                      <TableCell className="px-2 py-2 whitespace-nowrap">
                         <div className="flex items-center">
                           <div className={cn("h-8 w-8 rounded-full flex items-center justify-center text-white", getAvatarColor(player))}>
                             <span className="text-xs font-semibold">
                               {getInitials(player.firstName, player.lastName)}
                             </span>
                           </div>
-                          <div className="ml-3">
+                          <div className="ml-2">
                             <span className="text-sm font-medium text-blue-600">
                               {player.displayName}
                             </span>
@@ -273,7 +469,9 @@ export default function PlayersList({ players, isLoading, onEdit, onDelete }: Pl
                       {/* Position preferences column */}
                       <TableCell className="text-center px-2 py-2 border-r">
                         <div className="flex flex-wrap justify-center gap-1">
-                          {(player.positionPreferences as Position[]).map((position, index) => (
+                          {(player.positionPreferences as Position[])
+                            .slice(0, 2) // Only show first 2 positions
+                            .map((position, index) => (
                             <Badge
                               key={index}
                               variant="outline"
@@ -285,6 +483,9 @@ export default function PlayersList({ players, isLoading, onEdit, onDelete }: Pl
                               {position}
                             </Badge>
                           ))}
+                          {(player.positionPreferences as Position[]).length > 2 && (
+                            <span className="text-xs text-gray-500">+{(player.positionPreferences as Position[]).length - 2}</span>
+                          )}
                         </div>
                       </TableCell>
                       
@@ -293,7 +494,7 @@ export default function PlayersList({ players, isLoading, onEdit, onDelete }: Pl
                         category.fields.map((field, i) => (
                           <TableCell 
                             key={field.field} 
-                            className={`py-2 px-2 text-center border-r ${i === 0 ? 'border-l' : ''}`}
+                            className={`py-2 px-1 text-center border-r ${i === 0 ? 'border-l' : ''}`}
                           >
                             <span className="text-sm font-medium">
                               {playerStats[field.field as keyof PlayerStats] || 0}
