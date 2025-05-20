@@ -532,12 +532,12 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
               <TableHeader>
                 <TableRow className="bg-slate-50">
                   <TableHead 
-                    className="min-w-[120px] border-b cursor-pointer hover:bg-gray-50"
+                    className="min-w-[140px] border-b cursor-pointer hover:bg-gray-50"
                     onClick={() => handleSort('name')}
                   >
                     Player {renderSortIndicator('name')}
                   </TableHead>
-                  <TableHead className="text-center w-[160px] border-r border-b">Position</TableHead>
+                  <TableHead className="text-center w-[130px] border-r border-b">Position</TableHead>
                   
                   {/* Stat category headers */}
                   {statCategories.map((category, index) => (
@@ -562,7 +562,7 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
                         key={field.field} 
                         className={`text-center py-1 px-0 text-xs font-medium text-gray-500 border-r border-b ${fieldIndex === 0 ? 'border-l' : ''}`}
                         onClick={() => handleSort(field.field as SortField)}
-                        style={{ width: '45px', cursor: 'pointer' }}
+                        style={{ width: '55px', cursor: 'pointer' }}
                       >
                         {field.label} {renderSortIndicator(field.field as SortField)}
                       </TableHead>
