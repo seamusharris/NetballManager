@@ -211,6 +211,15 @@ export default function GamesList({
         4: { for: 0, against: 0 }
       };
       
+      // Calculate the total goals for each quarter, instead of adding up individual player goals
+      // Group stats by quarter and sum the goals directly
+      const quarterTotals: Record<number, { goalsFor: number, goalsAgainst: number }> = {
+        1: { goalsFor: 0, goalsAgainst: 0 },
+        2: { goalsFor: 0, goalsAgainst: 0 },
+        3: { goalsFor: 0, goalsAgainst: 0 },
+        4: { goalsFor: 0, goalsAgainst: 0 }
+      };
+      
       // Create a map of the latest stats for each player and quarter combination
       const latestPlayerStats: Record<string, GameStat> = {};
       
