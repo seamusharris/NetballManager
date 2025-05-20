@@ -489,7 +489,7 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
                     {/* Player column */}
                     <TableCell className="px-3 py-2 whitespace-nowrap">
                       <div className="flex items-center">
-                        <div className={cn("h-8 w-8 rounded-full flex items-center justify-center text-white", getAvatarColor(player))}>
+                        <div className={cn("h-8 w-8 rounded-full flex items-center justify-center text-white", player.avatarColor || 'bg-gray-500')}>
                           <span className="text-xs font-semibold">
                             {getInitials(player.firstName, player.lastName)}
                           </span>
