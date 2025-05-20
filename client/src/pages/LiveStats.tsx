@@ -437,15 +437,18 @@ export default function LiveStats() {
     return total;
   };
   
+  // Common stats to show in the top row
+  const commonStats: StatType[] = ['intercepts', 'badPass', 'handlingError', 'infringement', 'pickUp'];
+  
   // Check if a stat is common across positions
-  const isCommonStat = (stat: StatType, config: Record<StatType, boolean>): boolean => {
+  const isCommonStat = (stat: StatType): boolean => {
     // These stats are common across most positions
-    return ['intercepts', 'badPass', 'handlingError', 'infringement'].includes(stat) && config[stat];
+    return commonStats.includes(stat);
   };
   
   // Check if a stat is position-specific
-  const isPositionSpecificStat = (stat: StatType, config: Record<StatType, boolean>): boolean => {
-    return config[stat] && !isCommonStat(stat, config);
+  const isPositionSpecificStat = (stat: StatType): boolean => {
+    return !isCommonStat(stat);
   };
   
   // Render a stat counter button
@@ -662,20 +665,15 @@ export default function LiveStats() {
                     </div>
                     
                     {/* Common stats that show in header - for more compact layout */}
-                    <div className="flex flex-wrap gap-1">
+                    <div className="flex flex-wrap gap-2">
                       {/* Show common stats here */}
-                      {statConfig['intercepts'] && (
-                        <div className="inline-block">{renderStatCounter(playerId, 'intercepts', true)}</div>
-                      )}
-                      {statConfig['badPass'] && (
-                        <div className="inline-block">{renderStatCounter(playerId, 'badPass', true)}</div>
-                      )}
-                      {statConfig['handlingError'] && (
-                        <div className="inline-block">{renderStatCounter(playerId, 'handlingError', true)}</div>
-                      )}
-                      {statConfig['infringement'] && (
-                        <div className="inline-block">{renderStatCounter(playerId, 'infringement', true)}</div>
-                      )}
+                      {commonStats.map(stat => (
+                        statConfig[stat] && (
+                          <div key={`${playerId}-header-${stat}`} className="inline-block">
+                            {renderStatCounter(playerId, stat, true)}
+                          </div>
+                        )
+                      ))}
                     </div>
                   </div>
                 </CardHeader>
@@ -685,8 +683,7 @@ export default function LiveStats() {
                     {Object.entries(statConfig).map(([stat, isAvailable]) => {
                       // Only render stats that aren't already shown in the header
                       const statType = stat as StatType;
-                      if (isAvailable && 
-                          !['intercepts', 'badPass', 'handlingError', 'infringement'].includes(statType)) {
+                      if (isAvailable && !commonStats.includes(statType)) {
                         return (
                           <div key={`${playerId}-${stat}`}>
                             {renderStatCounter(playerId, statType)}
