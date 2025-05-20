@@ -121,11 +121,6 @@ export async function importData(jsonData: string): Promise<ImportResult> {
     let rostersImported = 0;
     let statsImported = 0;
     
-    // Track ID mappings to maintain relationships (old ID -> new ID)
-    const playerIdMap: Record<number, number> = {};
-    const opponentIdMap: Record<number, number> = {};
-    const gameIdMap: Record<number, number> = {};
-    
     // Step 1: Import players first with correct ID preservation
     console.log(`Importing ${data.players.length} players...`);
     for (const player of data.players) {
@@ -150,9 +145,8 @@ export async function importData(jsonData: string): Promise<ImportResult> {
         
         if (response.ok) {
           const result = await response.json();
-          playerIdMap[player.id] = result.id; // Map old ID to new ID
           playersImported++;
-          console.log(`Successfully imported player ${player.displayName} (ID: ${player.id} -> ${result.id})`);
+          console.log(`Successfully imported player ${player.displayName} (ID: ${player.id})`);
         }
       } catch (error) {
         console.error(`Failed to import player ${player.displayName || player.id}:`, error);
@@ -181,9 +175,8 @@ export async function importData(jsonData: string): Promise<ImportResult> {
         
         if (response.ok) {
           const result = await response.json();
-          opponentIdMap[opponent.id] = result.id; // Map old ID to new ID
           opponentsImported++;
-          console.log(`Successfully imported opponent ${opponent.teamName} (ID: ${opponent.id} -> ${result.id})`);
+          console.log(`Successfully imported opponent ${opponent.teamName} (ID: ${opponent.id})`);
         }
       } catch (error) {
         console.error(`Failed to import opponent ${opponent.teamName || opponent.id}:`, error);
@@ -214,9 +207,8 @@ export async function importData(jsonData: string): Promise<ImportResult> {
         
         if (gameResponse.ok) {
           const gameResult = await gameResponse.json();
-          gameIdMap[game.id] = gameResult.id; // Map old ID to new ID
           gamesImported++;
-          console.log(`Successfully imported game on ${game.date} (ID: ${game.id} -> ${gameResult.id})`);
+          console.log(`Successfully imported game on ${game.date} (ID: ${game.id})`);
         }
       } catch (error) {
         console.error(`Failed to import game ${formatDate(game.date || "")}:`, error);

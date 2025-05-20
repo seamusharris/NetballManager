@@ -17,6 +17,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // put application routes here
   // prefix all routes with /api
   
+  // ----- SEQUENCE SYNC API -----
+  app.post("/api/sync-sequences", async (req, res) => {
+    try {
+      // Sync sequences for all database tables to prevent ID conflicts after import
+      await db.execute(sql`SELECT sync_sequence('players')`);
+      await db.execute(sql`SELECT sync_sequence('opponents')`);
+      await db.execute(sql`SELECT sync_sequence('games')`);
+      await db.execute(sql`SELECT sync_sequence('rosters')`);
+      await db.execute(sql`SELECT sync_sequence('game_stats')`);
+      
+      res.status(200).json({ message: "Database sequences synchronized successfully" });
+    } catch (error) {
+      console.error('Failed to synchronize sequences:', error);
+      res.status(500).json({ message: "Failed to synchronize sequences" });
+    }
+  });
+  
   // ----- BACKUP API -----
   app.post("/api/backup", async (req, res) => {
     try {
