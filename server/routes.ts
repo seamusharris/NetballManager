@@ -47,11 +47,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Bulk import - imports all data in a single transaction
   app.post("/api/bulk-import", async (req, res) => {
     try {
-      const data = req.body;
+      // Handle both string and object formats
+      let data;
+      if (typeof req.body === 'string') {
+        try {
+          data = JSON.parse(req.body);
+        } catch (e) {
+          console.error("Failed to parse JSON string:", e);
+          return res.status(400).json({ message: "Invalid JSON format" });
+        }
+      } else {
+        data = req.body;
+      }
+      
+      console.log("Import data structure:", Object.keys(data));
       
       // Validate the data structure
       if (!data.players || !data.opponents || !data.games) {
-        return res.status(400).json({ message: "Invalid data format" });
+        console.error("Missing required data sections:", { 
+          hasPlayers: !!data.players, 
+          hasOpponents: !!data.opponents, 
+          hasGames: !!data.games 
+        });
+        return res.status(400).json({ message: "Invalid data format - missing required sections" });
       }
       
       // Import counts
