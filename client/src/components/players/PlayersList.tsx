@@ -1,27 +1,9 @@
-import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
-import { 
-  Card, 
-  CardContent 
-} from '@/components/ui/card';
+import { useState, useEffect } from 'react';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Skeleton } from '@/components/ui/skeleton';
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui/select';
-import { 
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow
-} from '@/components/ui/table';
 import { 
   Pagination,
   PaginationContent,
@@ -30,8 +12,23 @@ import {
   PaginationNext,
   PaginationPrevious
 } from '@/components/ui/pagination';
-import { Badge } from '@/components/ui/badge';
-import { Search } from 'lucide-react';
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
+import { 
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow 
+} from '@/components/ui/table';
+import { ArrowDown, ArrowUp, ArrowUpDown, Search } from 'lucide-react';
 import { Game, Player, Position, GameStat } from '@shared/schema';
 import { cn, getInitials, allPositions, positionGroups } from '@/lib/utils';
 
@@ -48,30 +45,45 @@ interface PlayerStats {
   goals: number;
   goalsAgainst: number;
   missedGoals: number;
+  rebounds: number;
+  intercepts: number;
+  badPass: number;
+  handlingError: number;
+  pickUp: number;
+  infringement: number;
   rating: number;
 }
 
-export default function PlayersList({ players, isLoading, onEdit, onDelete }: PlayersListProps) {
+type SortField = 'name' | 'gamesPlayed' | 'goals' | 'goalsAgainst' | 'missedGoals' | 'rating';
+type SortDirection = 'asc' | 'desc';
+
+interface SortConfig {
+  field: SortField;
+  direction: SortDirection;
+}
+
+export default function PlayersList({ players, isLoading: isPlayersLoading, onEdit, onDelete }: PlayersListProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [positionFilter, setPositionFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
+  const [sortConfig, setSortConfig] = useState<SortConfig>({ field: 'name', direction: 'asc' });
   const [playerStatsMap, setPlayerStatsMap] = useState<Record<number, PlayerStats>>({});
   const [_, navigate] = useLocation();
   const itemsPerPage = 10;
   
   // Fetch games to calculate player statistics
-  const { data: games = [], isLoading: isLoadingGames } = useQuery({
+  const { data: games = [], isLoading: isLoadingGames } = useQuery<Game[]>({
     queryKey: ['/api/games'],
   });
 
   // Get only completed games
-  const completedGames = games.filter((game: Game) => game.completed);
-  const gameIds = completedGames.map((game: Game) => game.id);
+  const completedGames = games.filter(game => game.completed);
+  const gameIds = completedGames.map(game => game.id);
   const enableQuery = gameIds.length > 0;
   
   // Use React Query to fetch and cache game statistics and rosters
-  const { data: gameStatsMap, isLoading: isLoadingStats } = useQuery({
+  const { data: gameStatsMap, isLoading: isLoadingStats } = useQuery<Record<number, GameStat[]>>({
     queryKey: ['playerGameStats', ...gameIds],
     queryFn: async () => {
       if (gameIds.length === 0) {
@@ -79,7 +91,7 @@ export default function PlayersList({ players, isLoading, onEdit, onDelete }: Pl
       }
       
       // Fetch stats for each completed game
-      const statsPromises = gameIds.map(async (gameId) => {
+      const statsPromises = gameIds.map(async (gameId: number) => {
         const response = await fetch(`/api/games/${gameId}/stats?_t=${Date.now()}`);
         const stats = await response.json();
         return { gameId, stats };
@@ -89,7 +101,7 @@ export default function PlayersList({ players, isLoading, onEdit, onDelete }: Pl
       
       // Create a map of game ID to stats array
       const statsMap: Record<number, GameStat[]> = {};
-      results.forEach(result => {
+      results.forEach((result: {gameId: number, stats: GameStat[]}) => {
         statsMap[result.gameId] = result.stats;
       });
       
@@ -101,7 +113,7 @@ export default function PlayersList({ players, isLoading, onEdit, onDelete }: Pl
   });
   
   // Fetch roster data for tracking games played
-  const { data: gameRostersMap, isLoading: isLoadingRosters } = useQuery({
+  const { data: gameRostersMap, isLoading: isLoadingRosters } = useQuery<Record<number, any[]>>({
     queryKey: ['gameRosters', ...gameIds],
     queryFn: async () => {
       if (gameIds.length === 0) {
@@ -109,7 +121,7 @@ export default function PlayersList({ players, isLoading, onEdit, onDelete }: Pl
       }
       
       // Fetch rosters for each game to count games played
-      const rosterPromises = gameIds.map(async (gameId) => {
+      const rosterPromises = gameIds.map(async (gameId: number) => {
         const response = await fetch(`/api/games/${gameId}/rosters`);
         const rosters = await response.json();
         return { gameId, rosters };
@@ -119,7 +131,7 @@ export default function PlayersList({ players, isLoading, onEdit, onDelete }: Pl
       
       // Create a map of game ID to rosters array
       const rostersMap: Record<number, any[]> = {};
-      results.forEach(result => {
+      results.forEach((result: {gameId: number, rosters: any[]}) => {
         rostersMap[result.gameId] = result.rosters;
       });
       
@@ -131,11 +143,11 @@ export default function PlayersList({ players, isLoading, onEdit, onDelete }: Pl
   });
 
   // Combined loading state
-  const isLoadingData = isLoadingStats || isLoadingRosters || isLoadingGames;
+  const isLoading = isPlayersLoading || isLoadingStats || isLoadingRosters || isLoadingGames;
 
   // When game stats or players change, recalculate player statistics
   useEffect(() => {
-    if (!gameStatsMap || isLoadingData || players.length === 0) return;
+    if (!gameStatsMap || isLoading || players.length === 0) return;
     
     const newPlayerStatsMap: Record<number, PlayerStats> = {};
     
@@ -147,11 +159,20 @@ export default function PlayersList({ players, isLoading, onEdit, onDelete }: Pl
         goals: 0,
         goalsAgainst: 0,
         missedGoals: 0,
-        rating: 5 // Default rating
+        rebounds: 0,
+        intercepts: 0,
+        badPass: 0,
+        handlingError: 0,
+        pickUp: 0,
+        infringement: 0,
+        rating: 5.0
       };
     });
     
     // Count games played from both rosters and game stats
+    // A player has played if they:
+    // 1. Appear in the roster with a position OR
+    // 2. Have stats recorded for the game
     if ((gameRostersMap && Object.keys(gameRostersMap).length > 0) || 
         (gameStatsMap && Object.keys(gameStatsMap).length > 0)) {
       
@@ -183,10 +204,12 @@ export default function PlayersList({ players, isLoading, onEdit, onDelete }: Pl
       }
       
       // Then, process all game stats to find additional participation
+      // A player with any stats for a game has participated
       if (gameStatsMap) {
         Object.entries(gameStatsMap).forEach(([gameIdStr, stats]) => {
           const gameId = parseInt(gameIdStr);
           
+          // Group stats by player for this game
           if (Array.isArray(stats)) {
             // Get unique player IDs that have stats for this game
             const playerIdsWithStats = new Set(stats.map(stat => stat.playerId));
@@ -209,12 +232,13 @@ export default function PlayersList({ players, isLoading, onEdit, onDelete }: Pl
       });
     }
     
-    // Process all game stats for each player
+    // Process all game stats - summing across ALL completed games for total stats
     if (Object.keys(gameStatsMap).length > 0) {
-      // Get all stats across all games
+      // Process combined stats from all games
       const allGameStats = Object.values(gameStatsMap).flatMap(stats => stats);
       
-      // Use a de-duplication approach to handle duplicate records
+      // Process stats using a de-duplication approach to handle duplicate records
+      // Create a map to track the most recent stat entry for each player in each quarter of each game
       const dedupedStats: Record<number, Record<string, GameStat>> = {};
       
       // First identify the most recent stat for each player in each quarter of each game
@@ -222,7 +246,7 @@ export default function PlayersList({ players, isLoading, onEdit, onDelete }: Pl
         if (!stat || !stat.playerId || !stat.quarter || !stat.gameId) return;
         
         const playerId = stat.playerId;
-        const uniqueKey = `${stat.gameId}-${stat.quarter}`;
+        const uniqueKey = `${stat.gameId}-${stat.quarter}`; // Unique key per game and quarter
         
         // Initialize player's stats map if needed
         if (!dedupedStats[playerId]) {
@@ -236,7 +260,7 @@ export default function PlayersList({ players, isLoading, onEdit, onDelete }: Pl
         }
       });
       
-      // Process only the de-duplicated stats to get player totals
+      // Now process only the de-duplicated stats to get player totals across all games
       Object.values(dedupedStats).forEach(playerQuarterStats => {
         Object.values(playerQuarterStats).forEach(stat => {
           const playerId = stat.playerId;
@@ -246,45 +270,49 @@ export default function PlayersList({ players, isLoading, onEdit, onDelete }: Pl
           newPlayerStatsMap[playerId].goals += stat.goalsFor || 0;
           newPlayerStatsMap[playerId].goalsAgainst += stat.goalsAgainst || 0;
           newPlayerStatsMap[playerId].missedGoals += stat.missedGoals || 0;
+          newPlayerStatsMap[playerId].rebounds += stat.rebounds || 0;
+          newPlayerStatsMap[playerId].intercepts += stat.intercepts || 0;
+          newPlayerStatsMap[playerId].badPass += stat.badPass || 0;
+          newPlayerStatsMap[playerId].handlingError += stat.handlingError || 0;
+          newPlayerStatsMap[playerId].pickUp += stat.pickUp || 0;
+          newPlayerStatsMap[playerId].infringement += stat.infringement || 0;
         });
       });
     }
     
     // Process player ratings - use only the most recent quarter 1 stats
-    if (Object.keys(gameStatsMap).length > 0) {
-      Object.values(newPlayerStatsMap).forEach(playerStat => {
-        // Find all quarter 1 stats for this player across all games
-        const quarter1Stats = Object.values(gameStatsMap)
-          .flatMap(gameStats => 
-            gameStats.filter((stat: GameStat) => 
-              stat.playerId === playerStat.playerId && 
-              stat.quarter === 1 && 
-              stat.rating !== undefined && 
-              stat.rating !== null
-            )
+    Object.values(newPlayerStatsMap).forEach(playerStat => {
+      // Find all quarter 1 stats for this player across all games
+      const quarter1Stats = Object.values(gameStatsMap)
+        .flatMap(gameStats => 
+          gameStats.filter(stat => 
+            stat.playerId === playerStat.playerId && 
+            stat.quarter === 1 && 
+            stat.rating !== undefined && 
+            stat.rating !== null
           )
-          .sort((a: GameStat, b: GameStat) => b.id - a.id); // Sort by ID descending
-        
-        // Use the most recent rating if available
-        if (quarter1Stats.length > 0) {
-          const latestRating = quarter1Stats[0].rating;
-          if (typeof latestRating === 'number') {
-            playerStat.rating = latestRating;
-          }
-        } else {
-          // Calculate default rating based on performance
-          const calculatedRating = 5 + 
-            (playerStat.goals * 0.2) +
-            (playerStat.goalsAgainst * -0.1) + 
-            (playerStat.missedGoals * -0.1);
-          
-          playerStat.rating = Math.min(10, Math.max(1, calculatedRating));
+        )
+        .sort((a, b) => b.id - a.id); // Sort by ID descending
+      
+      // Use the most recent rating if available
+      if (quarter1Stats.length > 0) {
+        const latestRating = quarter1Stats[0].rating;
+        if (typeof latestRating === 'number') {
+          playerStat.rating = latestRating;
         }
-      });
-    }
+      } else {
+        // Calculate default rating based on performance
+        const calculatedRating = 5 + 
+          (playerStat.goals * 0.2) +
+          (playerStat.rebounds * 0.3) + 
+          (playerStat.intercepts * 0.4);
+        
+        playerStat.rating = Math.min(10, Math.max(1, calculatedRating));
+      }
+    });
     
     setPlayerStatsMap(newPlayerStatsMap);
-  }, [gameStatsMap, gameRostersMap, isLoadingData, players]);
+  }, [gameStatsMap, gameRostersMap, isLoading, players]);
   
   // Filter players based on search and filters
   const filteredPlayers = players.filter(player => {
@@ -310,14 +338,52 @@ export default function PlayersList({ players, isLoading, onEdit, onDelete }: Pl
     return matchesSearch && matchesPosition && matchesStatus;
   });
 
-  // Sort players by display name
-  const sortedPlayers = [...filteredPlayers].sort((a, b) => 
-    a.displayName.localeCompare(b.displayName)
-  );
+  // Get players with their stats
+  const playersWithStats = filteredPlayers
+    .map(player => ({
+      ...player,
+      stats: playerStatsMap[player.id] || {
+        playerId: player.id,
+        gamesPlayed: 0,
+        goals: 0,
+        goalsAgainst: 0,
+        missedGoals: 0,
+        rebounds: 0,
+        intercepts: 0,
+        badPass: 0,
+        handlingError: 0,
+        pickUp: 0,
+        infringement: 0,
+        rating: 5.0
+      }
+    }))
+    .sort((a, b) => {
+      // Sort by the selected field and direction
+      const { field, direction } = sortConfig;
+      
+      // Handle name sorting separately
+      if (field === 'name') {
+        if (direction === 'asc') {
+          return a.displayName.localeCompare(b.displayName);
+        } else {
+          return b.displayName.localeCompare(a.displayName);
+        }
+      }
+      
+      // For numeric fields, sort numerically
+      const aValue = a.stats[field];
+      const bValue = b.stats[field];
+      
+      if (direction === 'asc') {
+        return aValue - bValue;
+      } else {
+        return bValue - aValue;
+      }
+    });
   
   // Pagination
-  const totalPages = Math.ceil(sortedPlayers.length / itemsPerPage);
-  const paginatedPlayers = sortedPlayers.slice(
+  const totalPages = Math.ceil(playersWithStats.length / itemsPerPage);
+  const paginatedPlayers = playersWithStats.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
@@ -337,13 +403,29 @@ export default function PlayersList({ players, isLoading, onEdit, onDelete }: Pl
     return 'bg-gray-500';
   };
   
-  // Stat categories for the table
+  const getRatingClass = (rating: number): string => {
+    if (rating >= 9) return 'bg-success/20 text-success';
+    if (rating >= 8) return 'bg-accent/20 text-accent';
+    if (rating >= 7) return 'bg-warning/20 text-warning';
+    return 'bg-error/20 text-error';
+  };
+  
+  // Sort handler function
+  const handleSort = (field: SortField) => {
+    // If clicking the same field, toggle direction, otherwise set to default (desc)
+    const direction = 
+      sortConfig.field === field && sortConfig.direction === 'desc' ? 'asc' : 'desc';
+    
+    setSortConfig({ field, direction });
+  };
+  
+  // Column definitions with categories
   const statCategories = [
     { 
       name: 'Games', 
       fields: [
         { field: 'gamesPlayed', label: 'Played' },
-        { field: 'rating', label: 'Rating' }
+        { field: 'rating', label: 'Rating' },
       ]
     },
     { 
@@ -356,12 +438,15 @@ export default function PlayersList({ players, isLoading, onEdit, onDelete }: Pl
     }
   ];
   
-  // Rating color/classes
-  const getRatingClass = (rating: number): string => {
-    if (rating >= 9) return 'bg-success/20 text-success';
-    if (rating >= 8) return 'bg-accent/20 text-accent';
-    if (rating >= 7) return 'bg-warning/20 text-warning';
-    return 'bg-error/20 text-error';
+  // Helper to render sort indicator
+  const renderSortIndicator = (field: SortField) => {
+    if (sortConfig.field !== field) {
+      return <ArrowUpDown className="ml-1 h-3 w-3 inline" />;
+    }
+    
+    return sortConfig.direction === 'asc' ? 
+      <ArrowUp className="ml-1 h-3 w-3 inline text-primary" /> : 
+      <ArrowDown className="ml-1 h-3 w-3 inline text-primary" />;
   };
   
   return (
@@ -423,87 +508,81 @@ export default function PlayersList({ players, isLoading, onEdit, onDelete }: Pl
       </Card>
       
       {/* Players Performance Table */}
-      <Card className="overflow-hidden">
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-slate-50">
-                <TableHead className="w-[80px] border-b">Player</TableHead>
-                <TableHead className="text-center w-[90px] border-r border-b">Position</TableHead>
-                
-                {/* Stat category headers */}
-                {statCategories.map((category, index) => (
+      <Card>
+        <CardContent className="p-6">
+          <div className="overflow-x-auto border-t border-l border-b rounded-md">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-slate-50">
                   <TableHead 
-                    key={category.name} 
-                    colSpan={category.fields.length}
-                    className={`text-center bg-blue-50 border-r border-b ${index === 0 ? 'border-l' : ''}`}
+                    className="min-w-[70px] border-b cursor-pointer hover:bg-gray-50"
+                    onClick={() => handleSort('name')}
                   >
-                    {category.name}
+                    Player {renderSortIndicator('name')}
                   </TableHead>
-                ))}
-              </TableRow>
-              
-              {/* Stat field headers */}
-              <TableRow>
-                <TableHead className="border-b"></TableHead>
-                <TableHead className="border-r border-b"></TableHead>
-                
-                {/* Stat field column headers */}
-                {statCategories.map(category => (
-                  category.fields.map((field, fieldIndex) => (
+                  <TableHead className="text-center border-r border-b">Position</TableHead>
+                  
+                  {/* Stat category headers */}
+                  {statCategories.map((category, index) => (
                     <TableHead 
-                      key={field.field} 
-                      className={`text-center py-2 text-xs font-medium text-gray-500 border-r border-b ${fieldIndex === 0 ? 'border-l' : ''}`}
-                      style={{ width: '50px' }} // Extra narrow columns
+                      key={category.name} 
+                      colSpan={category.fields.length}
+                      className={`text-center bg-blue-50 border-r border-b ${index === 0 ? 'border-l' : ''}`}
                     >
-                      {field.label}
+                      {category.name}
                     </TableHead>
-                  ))
-                ))}
-              </TableRow>
-            </TableHeader>
-            
-            <TableBody className="bg-white divide-y divide-gray-200">
-              {isLoading || isLoadingData ? (
-                Array(5).fill(0).map((_, i) => (
-                  <TableRow key={i}>
-                    <TableCell colSpan={7}>
+                  ))}
+                </TableRow>
+                
+                <TableRow>
+                  <TableHead className="border-b"></TableHead>
+                  <TableHead className="border-r border-b"></TableHead>
+                  
+                  {/* Stat field column headers */}
+                  {statCategories.map(category => (
+                    category.fields.map((field, fieldIndex) => (
+                      <TableHead 
+                        key={field.field} 
+                        className={`text-center py-1 px-0 text-xs font-medium text-gray-500 border-r border-b ${fieldIndex === 0 ? 'border-l' : ''}`}
+                        onClick={() => handleSort(field.field as SortField)}
+                        style={{ width: '45px', cursor: 'pointer' }}
+                      >
+                        {field.label} {renderSortIndicator(field.field as SortField)}
+                      </TableHead>
+                    ))
+                  ))}
+                </TableRow>
+              </TableHeader>
+              
+              <TableBody className="bg-white divide-y divide-gray-200">
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-4 text-gray-500 border-b">
                       <Skeleton className="h-12 w-full" />
                     </TableCell>
                   </TableRow>
-                ))
-              ) : paginatedPlayers.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-gray-500">
-                    No players found. Please add a player or adjust your filters.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                paginatedPlayers.map((player, playerIndex) => {
-                  const playerStats = playerStatsMap[player.id] || {
-                    playerId: player.id,
-                    gamesPlayed: 0,
-                    goals: 0,
-                    goalsAgainst: 0,
-                    missedGoals: 0,
-                    rating: 5
-                  };
-                  
-                  return (
+                ) : paginatedPlayers.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-4 text-gray-500 border-b">
+                      No player statistics available
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  paginatedPlayers.map((player, playerIndex) => (
                     <TableRow 
                       key={player.id} 
                       className={`hover:bg-gray-100 cursor-pointer transition-colors duration-150 ${playerIndex === paginatedPlayers.length - 1 ? "" : "border-b"}`}
                       onClick={() => navigate(`/player/${player.id}`)}
                     >
                       {/* Player column */}
-                      <TableCell className="px-1 py-2 whitespace-nowrap">
+                      <TableCell className="px-2 py-2 whitespace-nowrap">
                         <div className="flex items-center">
                           <div className={cn("h-7 w-7 rounded-full flex items-center justify-center text-white", getAvatarColor(player))}>
                             <span className="text-xs font-semibold">
                               {getInitials(player.firstName, player.lastName)}
                             </span>
                           </div>
-                          <div className="ml-2 w-[50px] truncate">
+                          <div className="ml-2 w-[40px] truncate">
                             <span className="text-sm font-medium text-blue-600">
                               {player.displayName}
                             </span>
@@ -512,7 +591,7 @@ export default function PlayersList({ players, isLoading, onEdit, onDelete }: Pl
                       </TableCell>
                       
                       {/* Position preferences column */}
-                      <TableCell className="text-center px-1 py-2 border-r">
+                      <TableCell className="px-1 py-2 border-r">
                         <div className="flex flex-wrap justify-center gap-1">
                           {(player.positionPreferences as Position[]).map((position, index) => (
                             <Badge
@@ -537,13 +616,13 @@ export default function PlayersList({ players, isLoading, onEdit, onDelete }: Pl
                             return (
                               <TableCell 
                                 key={field.field} 
-                                className={`py-2 px-1 text-center border-r ${i === 0 ? 'border-l' : ''}`}
+                                className={`py-2 px-0 text-center border-r ${i === 0 ? 'border-l' : ''}`}
                               >
                                 <span className={cn(
-                                  "text-sm font-medium px-2 py-1 rounded", 
-                                  getRatingClass(playerStats.rating)
+                                  "text-sm font-medium px-1 py-1 rounded", 
+                                  getRatingClass(player.stats.rating)
                                 )}>
-                                  {playerStats.rating.toFixed(1)}
+                                  {player.stats.rating.toFixed(1)}
                                 </span>
                               </TableCell>
                             );
@@ -553,70 +632,70 @@ export default function PlayersList({ players, isLoading, onEdit, onDelete }: Pl
                           return (
                             <TableCell 
                               key={field.field} 
-                              className={`py-2 px-1 text-center border-r ${i === 0 ? 'border-l' : ''}`}
+                              className={`py-2 px-0 text-center border-r ${i === 0 ? 'border-l' : ''}`}
                             >
                               <span className="text-sm font-medium">
-                                {playerStats[field.field as keyof PlayerStats] || 0}
+                                {player.stats[field.field as keyof PlayerStats] || 0}
                               </span>
                             </TableCell>
                           );
                         })
                       ))}
                     </TableRow>
-                  );
-                })
-              )}
-            </TableBody>
-          </Table>
-        </div>
-        
-        {/* Pagination */}
-        {!isLoading && filteredPlayers.length > 0 && (
-          <div className="px-6 py-3 flex items-center justify-between border-t">
-            <div>
-              <p className="text-sm text-gray-700">
-                Showing <span className="font-medium">{(currentPage - 1) * itemsPerPage + 1}</span> to{' '}
-                <span className="font-medium">
-                  {Math.min(currentPage * itemsPerPage, filteredPlayers.length)}
-                </span>{' '}
-                of <span className="font-medium">{filteredPlayers.length}</span> players
-              </p>
-            </div>
-            
-            <Pagination>
-              <PaginationContent>
-                <PaginationItem>
-                  <PaginationPrevious 
-                    onClick={() => currentPage > 1 && handlePageChange(currentPage - 1)}
-                    className={currentPage === 1 ? 'pointer-events-none opacity-50' : ''}
-                  />
-                </PaginationItem>
-                
-                {Array.from({ length: Math.min(totalPages, 5) }).map((_, i) => {
-                  const page = i + 1;
-                  return (
-                    <PaginationItem key={page}>
-                      <PaginationLink
-                        onClick={() => handlePageChange(page)}
-                        isActive={currentPage === page}
-                      >
-                        {page}
-                      </PaginationLink>
-                    </PaginationItem>
-                  );
-                })}
-                
-                <PaginationItem>
-                  <PaginationNext 
-                    onClick={() => currentPage < totalPages && handlePageChange(currentPage + 1)}
-                    className={currentPage === totalPages ? 'pointer-events-none opacity-50' : ''}
-                  />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
+                  ))
+                )}
+              </TableBody>
+            </Table>
           </div>
-        )}
+        </CardContent>
       </Card>
+      
+      {/* Pagination */}
+      {!isLoading && filteredPlayers.length > 0 && (
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm text-gray-700">
+              Showing <span className="font-medium">{(currentPage - 1) * itemsPerPage + 1}</span> to{' '}
+              <span className="font-medium">
+                {Math.min(currentPage * itemsPerPage, filteredPlayers.length)}
+              </span>{' '}
+              of <span className="font-medium">{filteredPlayers.length}</span> players
+            </p>
+          </div>
+          
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious 
+                  onClick={() => currentPage > 1 && handlePageChange(currentPage - 1)}
+                  className={currentPage === 1 ? 'pointer-events-none opacity-50' : ''}
+                />
+              </PaginationItem>
+              
+              {Array.from({ length: Math.min(totalPages, 5) }).map((_, i) => {
+                const page = i + 1;
+                return (
+                  <PaginationItem key={page}>
+                    <PaginationLink
+                      onClick={() => handlePageChange(page)}
+                      isActive={currentPage === page}
+                    >
+                      {page}
+                    </PaginationLink>
+                  </PaginationItem>
+                );
+              })}
+              
+              <PaginationItem>
+                <PaginationNext 
+                  onClick={() => currentPage < totalPages && handlePageChange(currentPage + 1)}
+                  className={currentPage === totalPages ? 'pointer-events-none opacity-50' : ''}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
+      )}
     </div>
   );
 }
