@@ -30,17 +30,23 @@ export default function PlayerDetails() {
     queryKey: ['/api/opponents'],
   });
 
-  // Fetch all player stats
-  const { data: allGameStats = {}, isLoading: isLoadingStats } = useQuery({
-    queryKey: ['playerAllGameStats', playerId],
+  // Define data type for player game data
+  interface PlayerGameData {
+    stats: Record<number, GameStat[]>;
+    rosters: Record<number, any[]>;
+  }
+
+  // Fetch all player stats and roster participation
+  const { data: playerGameData = { stats: {}, rosters: {} }, isLoading: isLoadingStats } = useQuery<PlayerGameData>({
+    queryKey: ['playerAllGameData', playerId],
     queryFn: async () => {
-      if (isNaN(playerId)) return {};
+      if (isNaN(playerId)) return { stats: {}, rosters: {} };
       
       const completedGames = (games as Game[]).filter(game => game.completed);
       const gameIds = completedGames.map(game => game.id);
       
       if (gameIds.length === 0) {
-        return {};
+        return { stats: {}, rosters: {} };
       }
       
       // Fetch stats for each completed game
@@ -52,26 +58,54 @@ export default function PlayerDetails() {
         return { gameId, stats: playerStats };
       });
       
-      const results = await Promise.all(statsPromises);
+      // Fetch roster data for each completed game to check participation
+      const rosterPromises = gameIds.map(async (gameId) => {
+        const response = await fetch(`/api/games/${gameId}/rosters?_t=${Date.now()}`);
+        const allRosters = await response.json();
+        // Filter rosters for only this player
+        const playerRosters = allRosters.filter((roster: any) => roster.playerId === playerId);
+        return { gameId, rosters: playerRosters };
+      });
+      
+      const statsResults = await Promise.all(statsPromises);
+      const rosterResults = await Promise.all(rosterPromises);
       
       // Create a map of game ID to stats array
       const statsMap: Record<number, GameStat[]> = {};
-      results.forEach(result => {
+      statsResults.forEach(result => {
         if (result.stats.length > 0) {
           statsMap[result.gameId] = result.stats;
         }
       });
       
-      return statsMap;
+      // Create a map of game ID to roster array
+      const rostersMap: Record<number, any[]> = {};
+      rosterResults.forEach(result => {
+        if (result.rosters.length > 0) {
+          rostersMap[result.gameId] = result.rosters;
+        }
+      });
+      
+      return { stats: statsMap, rosters: rostersMap };
     },
     enabled: !isNaN(playerId) && (games as Game[]).length > 0,
   });
+  
+  // Extract the individual data pieces with proper types
+  const allGameStats: Record<number, GameStat[]> = playerGameData.stats;
+  const allGameRosters: Record<number, any[]> = playerGameData.rosters;
 
   const isLoading = isLoadingPlayer || isLoadingGames || isLoadingStats;
 
   // Calculate aggregate stats
   const calculateAggregateStats = () => {
-    if (!allGameStats || Object.keys(allGameStats).length === 0) {
+    // Get all game IDs where this player participated (either has stats or was in roster)
+    const allParticipatedGameIds = new Set([
+      ...Object.keys(allGameStats).map(id => parseInt(id)),
+      ...Object.keys(allGameRosters).map(id => parseInt(id))
+    ]);
+    
+    if (allParticipatedGameIds.size === 0) {
       return {
         totalGames: 0,
         totalGoals: 0,
@@ -112,15 +146,15 @@ export default function PlayerDetails() {
       rating: number
     }[] = [];
 
-    // Process each game's stats
-    Object.entries(allGameStats).forEach(([gameIdStr, stats]) => {
-      if (!stats || stats.length === 0) return;
-      
-      const gameId = parseInt(gameIdStr);
+    // Process each game this player participated in
+    allParticipatedGameIds.forEach(gameId => {
       const game = games.find(g => g.id === gameId);
       if (!game) return;
       
       totalGames++;
+      
+      // Get stats for this game if available
+      const stats: GameStat[] = allGameStats[gameId] || [];
       
       // Find opponent name from opponent ID
       const opponent = opponents.find(o => o.id === game.opponentId);
@@ -138,7 +172,7 @@ export default function PlayerDetails() {
       let gameInfringements = 0;
       let gameRating = 0;
       
-      stats.forEach(stat => {
+      stats.forEach((stat: GameStat) => {
         gameGoals += stat.goalsFor || 0;
         gameGoalsAgainst += stat.goalsAgainst || 0;
         gameMissedGoals += stat.missedGoals || 0;
