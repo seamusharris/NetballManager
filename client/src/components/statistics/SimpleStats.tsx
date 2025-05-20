@@ -575,13 +575,21 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
       queryClient.invalidateQueries({ queryKey: ['playerGameStats'] });
       queryClient.invalidateQueries({ queryKey: ['gameStats'] });
       
-      // Invalidate specific player queries for players that have stats in this game
+      // Invalidate specific player queries for all players in the current game
       // This ensures player details pages stay up to date
-      const uniquePlayerIds = new Set(gameStats.map(stat => stat.playerId));
+      const uniquePlayerIds = new Set();
+      gameStats.forEach(stat => {
+        if (stat.playerId) uniquePlayerIds.add(stat.playerId);
+      });
+      
+      // Also include players from the roster to ensure everyone involved is updated
+      rosters.forEach(roster => {
+        if (roster.playerId) uniquePlayerIds.add(roster.playerId);
+      });
+      
+      // Invalidate player queries
       uniquePlayerIds.forEach(playerId => {
-        if (playerId) {
-          queryClient.invalidateQueries({ queryKey: [`/api/players/${playerId}`] });
-        }
+        queryClient.invalidateQueries({ queryKey: [`/api/players/${playerId}`] });
       });
     },
     onError: (error: any) => {
