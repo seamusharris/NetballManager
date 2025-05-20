@@ -532,12 +532,12 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
               <TableHeader>
                 <TableRow className="bg-slate-50">
                   <TableHead 
-                    className="min-w-[140px] border-b cursor-pointer hover:bg-gray-50"
+                    className="min-w-[120px] border-b cursor-pointer hover:bg-gray-50"
                     onClick={() => handleSort('name')}
                   >
                     Player {renderSortIndicator('name')}
                   </TableHead>
-                  <TableHead className="text-center w-[130px] border-r border-b">Position</TableHead>
+                  <TableHead className="text-center w-10 border-r border-b"></TableHead>
                   
                   {/* Stat category headers */}
                   {statCategories.map((category, index) => (
@@ -592,14 +592,14 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
                       onClick={() => navigate(`/player/${player.id}`)}
                     >
                       {/* Player column */}
-                      <TableCell className="px-2 py-2 whitespace-nowrap">
+                      <TableCell className="px-3 py-2 whitespace-nowrap">
                         <div className="flex items-center">
-                          <div className={cn("h-7 w-7 rounded-full flex items-center justify-center text-white", getAvatarColor(player))}>
+                          <div className={cn("h-8 w-8 rounded-full flex items-center justify-center text-white", getAvatarColor(player))}>
                             <span className="text-xs font-semibold">
                               {getInitials(player.firstName, player.lastName)}
                             </span>
                           </div>
-                          <div className="ml-2 w-[80px]">
+                          <div className="ml-3">
                             <span className="text-sm font-medium text-blue-600">
                               {player.displayName}
                             </span>
@@ -607,57 +607,52 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
                         </div>
                       </TableCell>
                       
-                      {/* Position preferences column */}
-                      <TableCell className="px-1 py-2 border-r">
-                        <div className="flex flex-wrap justify-center gap-1">
-                          {(player.positionPreferences as Position[]).map((position, index) => (
-                            <Badge
-                              key={index}
-                              variant="outline"
-                              className={cn(
-                                "px-1 py-0.5 text-xs rounded-full",
-                                index === 0 ? "bg-primary/10 text-primary font-semibold" : "bg-gray-100 text-gray-600"
-                              )}
-                            >
-                              {position}
-                            </Badge>
-                          ))}
-                        </div>
+                      <TableCell className="border-r"></TableCell>
+                      
+                      {/* Games Played */}
+                      <TableCell className="px-2 py-2 whitespace-nowrap text-sm text-center font-mono border-r">
+                        {player.stats.gamesPlayed}
                       </TableCell>
                       
-                      {/* Stat category fields */}
-                      {statCategories.map(category => (
-                        category.fields.map((field, i) => {
-                          // Special handling for Rating field
-                          if (field.field === 'rating') {
-                            return (
-                              <TableCell 
-                                key={field.field} 
-                                className={`py-2 px-0 text-center border-r ${i === 0 ? 'border-l' : ''}`}
-                              >
-                                <span className={cn(
-                                  "text-sm font-medium px-1 py-1 rounded", 
-                                  getRatingClass(player.stats.rating)
-                                )}>
-                                  {player.stats.rating.toFixed(1)}
-                                </span>
-                              </TableCell>
-                            );
-                          }
-                          
-                          // Regular fields
-                          return (
-                            <TableCell 
-                              key={field.field} 
-                              className={`py-2 px-0 text-center border-r ${i === 0 ? 'border-l' : ''}`}
-                            >
-                              <span className="text-sm font-medium">
-                                {player.stats[field.field as keyof PlayerStats] || 0}
-                              </span>
-                            </TableCell>
-                          );
-                        })
-                      ))}
+                      {/* Rating */}
+                      <TableCell className="px-2 py-2 whitespace-nowrap text-center border-r">
+                        <span className={cn("text-sm font-mono", getRatingClass(player.stats.rating))}>
+                          {player.stats.rating.toFixed(1)}
+                        </span>
+                      </TableCell>
+                      
+                      {/* Shooting stats */}
+                      <TableCell className="px-2 py-2 whitespace-nowrap text-sm text-center font-mono">
+                        {player.stats.goals}
+                      </TableCell>
+                      <TableCell className="px-2 py-2 whitespace-nowrap text-sm text-center font-mono">
+                        {player.stats.goalsAgainst}
+                      </TableCell>
+                      <TableCell className="px-2 py-2 whitespace-nowrap text-sm text-center font-mono border-r">
+                        {player.stats.missedGoals}
+                      </TableCell>
+                      
+                      {/* Defense stats */}
+                      <TableCell className="px-2 py-2 whitespace-nowrap text-sm text-center font-mono">
+                        {player.stats.intercepts}
+                      </TableCell>
+                      <TableCell className="px-2 py-2 whitespace-nowrap text-sm text-center font-mono">
+                        {player.stats.rebounds}
+                      </TableCell>
+                      <TableCell className="px-2 py-2 whitespace-nowrap text-sm text-center font-mono border-r">
+                        {player.stats.pickUp}
+                      </TableCell>
+                      
+                      {/* Errors stats */}
+                      <TableCell className="px-2 py-2 whitespace-nowrap text-sm text-center font-mono">
+                        {player.stats.badPass}
+                      </TableCell>
+                      <TableCell className="px-2 py-2 whitespace-nowrap text-sm text-center font-mono">
+                        {player.stats.handlingError}
+                      </TableCell>
+                      <TableCell className="px-2 py-2 whitespace-nowrap text-sm text-center font-mono border-r">
+                        {player.stats.infringement}
+                      </TableCell>
                     </TableRow>
                   ))
                 )}
