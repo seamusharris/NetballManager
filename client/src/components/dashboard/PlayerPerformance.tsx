@@ -1,8 +1,8 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Game, Player, GameStat, allPositions } from '@shared/schema';
-import { cn, getInitials } from '@/lib/utils';
+import { Game, Player, GameStat } from '@shared/schema';
+import { cn, getInitials, isOnCourtPosition } from '@/lib/utils';
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react';
@@ -197,7 +197,7 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
               
               // Only count actual playing positions (GS, GA, WA, C, WD, GD, GK)
               // This excludes players who were only listed as "off" for all quarters
-              if (playerId && roster.position && allPositions.includes(roster.position) && playerGameIds[playerId]) {
+              if (playerId && roster.position && isOnCourtPosition(roster.position) && playerGameIds[playerId]) {
                 playersOnCourt[playerId] = true;
               }
             });

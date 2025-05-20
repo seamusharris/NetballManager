@@ -1,6 +1,6 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { Position } from '@shared/schema';
+import { Position, allPositions } from '@shared/schema';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -41,7 +41,8 @@ export const positionLabels: Record<Position, string> = {
   'GK': 'Goal Keeper'
 };
 
-export const allPositions: Position[] = ['GS', 'GA', 'WA', 'C', 'WD', 'GD', 'GK'];
+// Import allPositions from schema rather than redefining it here
+// export const allPositions: Position[] = ['GS', 'GA', 'WA', 'C', 'WD', 'GD', 'GK'];
 
 // Position groups for filtering
 export const positionGroups = {
@@ -167,6 +168,42 @@ export function generatePlayerAvatarColor(playerId?: number | null): string {
 export function calculateTotalGoals(stats: any[], forTeam: boolean = true): number {
   const field = forTeam ? 'goalsFor' : 'goalsAgainst';
   return stats.reduce((sum, stat) => sum + (stat[field] || 0), 0);
+}
+
+/**
+ * Check if a position is an on-court position (not "off")
+ * @param position The position to check
+ * @returns true if the position is an actual playing position (GS, GA, WA, C, WD, GD, GK)
+ */
+export function isOnCourtPosition(position: string): boolean {
+  return allPositions.includes(position as Position);
+}
+
+/**
+ * Check if a player was on court in an actual position for a specific game quarter
+ * @param playerId The player's ID
+ * @param gameId The game's ID
+ * @param quarter The quarter number
+ * @param rosters The roster data for the game
+ * @returns true if the player was on court in an actual position for this quarter
+ */
+export function wasPlayerOnCourt(
+  playerId: number, 
+  gameId: number, 
+  quarter: number, 
+  rosters: any[]
+): boolean {
+  if (!rosters || !Array.isArray(rosters)) return false;
+  
+  // Find the roster entry for this player, game, and quarter
+  const rosterEntry = rosters.find(roster => 
+    roster.playerId === playerId && 
+    roster.gameId === gameId && 
+    roster.quarter === quarter
+  );
+  
+  // Check if the player was assigned to an actual on-court position
+  return !!rosterEntry && isOnCourtPosition(rosterEntry.position);
 }
 
 export function sortByDate<T extends { date: string }>(items: T[], ascending: boolean = false): T[] {
