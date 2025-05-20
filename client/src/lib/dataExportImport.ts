@@ -86,32 +86,16 @@ export async function importData(jsonData: string): Promise<ImportResult> {
   try {
     // Parse the JSON data
     const data = JSON.parse(jsonData);
+    console.log("Parsed data:", data);
     
     // Validate the data structure
     if (!data.players || !data.opponents || !data.games) {
+      console.error("Missing data sections:", { 
+        hasPlayers: !!data.players, 
+        hasOpponents: !!data.opponents, 
+        hasGames: !!data.games 
+      });
       throw new Error('Invalid data format. The import file is missing required data sections.');
-    }
-    
-    // Prepare data structure
-    let gameStatsArray: GameStat[] = [];
-    if (data.gameStats) {
-      gameStatsArray = Array.isArray(data.gameStats) ? data.gameStats : [];
-    } else if (data.stats) {
-      // Handle older format
-      if (Array.isArray(data.stats)) {
-        gameStatsArray = data.stats;
-      } else if (typeof data.stats === 'object') {
-        gameStatsArray = Object.values(data.stats).flat();
-      }
-    }
-    
-    let rostersArray: Roster[] = [];
-    if (data.rosters) {
-      if (Array.isArray(data.rosters)) {
-        rostersArray = data.rosters;
-      } else if (typeof data.rosters === 'object') {
-        rostersArray = Object.values(data.rosters).flat();
-      }
     }
     
     // Count successful imports
@@ -121,164 +105,226 @@ export async function importData(jsonData: string): Promise<ImportResult> {
     let rostersImported = 0;
     let statsImported = 0;
     
-    // Step 1: Import players first
-    console.log(`Starting import of ${data.players.length} players`);
+    // Step 1: Import players
     for (const player of data.players) {
       try {
-        const playerData = {
-          id: player.id,
-          displayName: player.displayName || '',
-          firstName: player.firstName || '',
-          lastName: player.lastName || '',
-          dateOfBirth: player.dateOfBirth || null,
-          positionPreferences: Array.isArray(player.positionPreferences) ? player.positionPreferences : [],
-          active: player.active === false ? false : true,
-          avatarColor: player.avatarColor || null
-        };
-        
-        const response = await apiRequest('/api/players', {
+        // Log the player data
+        console.log("Importing player:", player);
+
+        const response = await fetch('/api/players', {
           method: 'POST',
-          body: JSON.stringify(playerData)
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: player.id,
+            displayName: player.displayName || "",
+            firstName: player.firstName || "",
+            lastName: player.lastName || "",
+            dateOfBirth: player.dateOfBirth || null,
+            positionPreferences: player.positionPreferences || [],
+            active: player.active !== false,
+            avatarColor: player.avatarColor || null
+          })
         });
         
         if (response.ok) {
           playersImported++;
+        } else {
+          console.error(`Error importing player: ${response.status} ${response.statusText}`);
         }
       } catch (error) {
-        console.error(`Failed to import player ${player.displayName || player.id}:`, error);
+        console.error("Player import error:", error);
       }
     }
     
     // Step 2: Import opponents
-    console.log(`Starting import of ${data.opponents.length} opponents`);
     for (const opponent of data.opponents) {
       try {
-        const opponentData = {
-          id: opponent.id,
-          teamName: opponent.teamName || 'Unknown Team',
-          primaryColor: opponent.primaryColor || '#000000',
-          secondaryColor: opponent.secondaryColor || '#FFFFFF',
-          notes: opponent.notes || ''
-        };
-        
-        const response = await apiRequest('/api/opponents', {
+        // Log the opponent data
+        console.log("Importing opponent:", opponent);
+
+        const response = await fetch('/api/opponents', {
           method: 'POST',
-          body: JSON.stringify(opponentData)
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: opponent.id,
+            teamName: opponent.teamName || "Unknown Team",
+            primaryColor: opponent.primaryColor || "#000000",
+            secondaryColor: opponent.secondaryColor || "#FFFFFF",
+            notes: opponent.notes || ""
+          })
         });
         
         if (response.ok) {
           opponentsImported++;
+        } else {
+          console.error(`Error importing opponent: ${response.status} ${response.statusText}`);
         }
       } catch (error) {
-        console.error(`Failed to import opponent ${opponent.teamName || opponent.id}:`, error);
+        console.error("Opponent import error:", error);
       }
     }
     
     // Step 3: Import games
-    console.log(`Starting import of ${data.games.length} games`);
     for (const game of data.games) {
       try {
-        const gameData = {
-          id: game.id,
-          date: game.date || '2025-01-01',
-          time: game.time || '12:00',
-          opponentId: game.opponentId || null,
-          venue: game.venue || null,
-          teamScore: game.teamScore || 0,
-          opponentScore: game.opponentScore || 0,
-          completed: game.completed === true,
-          notes: game.notes || '',
-          round: game.round || null,
-          isBye: game.isBye === true
-        };
-        
-        console.log(`Importing game ID ${game.id} with round ${game.round}, opponent ${game.opponentId}`);
-        const response = await apiRequest('/api/games', {
+        // Log the game data
+        console.log("Importing game:", game);
+
+        // Basic game data
+        const gameResponse = await fetch('/api/games', {
           method: 'POST',
-          body: JSON.stringify(gameData)
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: game.id,
+            date: game.date || null,
+            time: game.time || null,
+            opponentId: game.opponentId,
+            completed: game.completed === true,
+            isBye: game.isBye === true,
+            round: game.round,
+            venue: game.venue || null,
+            teamScore: game.teamScore || 0,
+            opponentScore: game.opponentScore || 0,
+            notes: game.notes || null
+          })
         });
         
-        if (response.ok) {
-          const createdGame = await response.json();
+        if (gameResponse.ok) {
+          const gameResult = await gameResponse.json();
           gamesImported++;
-          console.log(`Successfully imported game ID ${game.id} as ${createdGame.id}`);
           
-          // Update game with round number
-          if (game.round) {
+          // Extra step: ensure the round number is set correctly
+          if (game.round && gameResult.id) {
             try {
-              const updateResponse = await apiRequest(`/api/games/${createdGame.id}`, {
+              const updateResponse = await fetch(`/api/games/${gameResult.id}`, {
                 method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ round: game.round })
               });
-              console.log(`Updated round number for game ${createdGame.id} to ${game.round}`);
-            } catch (updateError) {
-              console.error(`Error updating round for game ${createdGame.id}:`, updateError);
+              if (updateResponse.ok) {
+                console.log(`Updated round for game ${gameResult.id} to ${game.round}`);
+              }
+            } catch (err) {
+              console.error("Error updating game round:", err);
             }
           }
         } else {
-          console.error(`Failed to import game ${game.id}: ${response.statusText}`);
+          console.error(`Error importing game: ${gameResponse.status} ${gameResponse.statusText}`);
         }
       } catch (error) {
-        console.error(`Failed to import game ${game.id || formatDate(game.date)}:`, error);
+        console.error("Game import error:", error);
       }
     }
     
-    // Step 4: Import rosters
-    console.log(`Starting import of ${rostersArray.length} roster entries`);
-    for (const roster of rostersArray) {
+    // Step 4: Find rosters in the data
+    let rosters = [];
+    
+    // Check for direct rosters array
+    if (Array.isArray(data.rosters)) {
+      rosters = data.rosters;
+    } 
+    // Check for rosters as object with game IDs as keys
+    else if (data.rosters && typeof data.rosters === 'object') {
+      Object.values(data.rosters).forEach(gameRosters => {
+        if (Array.isArray(gameRosters)) {
+          rosters = [...rosters, ...gameRosters];
+        }
+      });
+    }
+    
+    // Import rosters
+    for (const roster of rosters) {
       try {
-        const rosterData = {
-          id: roster.id,
-          gameId: roster.gameId,
-          playerId: roster.playerId,
-          quarter: roster.quarter || 1,
-          position: roster.position || 'GS'
-        };
+        if (!roster || !roster.gameId || !roster.playerId) {
+          console.log("Skipping invalid roster:", roster);
+          continue;
+        }
         
-        const response = await apiRequest('/api/rosters', {
+        // Log the roster data
+        console.log("Importing roster:", roster);
+
+        const response = await fetch('/api/rosters', {
           method: 'POST',
-          body: JSON.stringify(rosterData)
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: roster.id,
+            gameId: roster.gameId,
+            playerId: roster.playerId,
+            quarter: roster.quarter || 1,
+            position: roster.position || "GS"
+          })
         });
         
         if (response.ok) {
           rostersImported++;
+        } else {
+          console.error(`Error importing roster: ${response.status} ${response.statusText}`);
         }
       } catch (error) {
-        console.error(`Failed to import roster ${roster.id}:`, error);
+        console.error("Roster import error:", error);
       }
     }
     
-    // Step 5: Import game stats
-    console.log(`Starting import of ${gameStatsArray.length} game stat entries`);
-    for (const stat of gameStatsArray) {
+    // Step 5: Find game stats in the data
+    let gameStats = [];
+    
+    // Check for direct gameStats array
+    if (Array.isArray(data.gameStats)) {
+      gameStats = data.gameStats;
+    } 
+    // Check for older "stats" property
+    else if (Array.isArray(data.stats)) {
+      gameStats = data.stats;
+    }
+    // Check for stats as object with game IDs as keys
+    else if ((data.gameStats || data.stats) && typeof (data.gameStats || data.stats) === 'object') {
+      const statsObj = data.gameStats || data.stats;
+      Object.values(statsObj).forEach(gameStat => {
+        if (Array.isArray(gameStat)) {
+          gameStats = [...gameStats, ...gameStat];
+        }
+      });
+    }
+    
+    // Import game stats
+    for (const stat of gameStats) {
       try {
-        const statData = {
-          id: stat.id,
-          gameId: stat.gameId,
-          playerId: stat.playerId,
-          quarter: stat.quarter || 1,
-          goalsFor: stat.goalsFor || 0,
-          goalsAgainst: stat.goalsAgainst || 0,
-          missedGoals: stat.missedGoals || 0,
-          rebounds: stat.rebounds || 0,
-          intercepts: stat.intercepts || 0,
-          badPass: stat.badPass || 0,
-          handlingError: stat.handlingError || 0,
-          pickUp: stat.pickUp || 0,
-          infringement: stat.infringement || 0,
-          rating: stat.rating || 5
-        };
+        if (!stat || !stat.gameId || !stat.playerId) {
+          console.log("Skipping invalid game stat:", stat);
+          continue;
+        }
         
-        const response = await apiRequest('/api/gamestats', {
+        // Log the stat data
+        console.log("Importing game stat:", stat);
+
+        const response = await fetch('/api/gamestats', {
           method: 'POST',
-          body: JSON.stringify(statData)
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: stat.id,
+            gameId: stat.gameId,
+            playerId: stat.playerId,
+            quarter: stat.quarter || 1,
+            goalsFor: stat.goalsFor || 0,
+            goalsAgainst: stat.goalsAgainst || 0,
+            missedGoals: stat.missedGoals || 0,
+            rebounds: stat.rebounds || 0,
+            intercepts: stat.intercepts || 0,
+            badPass: stat.badPass || 0,
+            handlingError: stat.handlingError || 0,
+            pickUp: stat.pickUp || 0,
+            infringement: stat.infringement || 0,
+            rating: stat.rating || 5
+          })
         });
         
         if (response.ok) {
           statsImported++;
+        } else {
+          console.error(`Error importing game stat: ${response.status} ${response.statusText}`);
         }
       } catch (error) {
-        console.error(`Failed to import game stat ${stat.id}:`, error);
+        console.error("Game stat import error:", error);
       }
     }
     
