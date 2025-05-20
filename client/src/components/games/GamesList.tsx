@@ -575,7 +575,9 @@ export default function GamesList({
                               </button>
                             )}
                             
-                            {!game.isBye && (
+                            {!game.isBye && 
+                             !game.completed && 
+                             gameRosterStatus[game.id] === 'complete' && (
                               <button 
                                 onClick={() => navigate(`/games/${game.id}/livestats`)}
                                 className="inline-flex items-center justify-center rounded-md text-xs py-1 px-2 border border-purple-200 bg-purple-50 text-purple-700 hover:bg-purple-100"
