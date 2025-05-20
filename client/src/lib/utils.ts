@@ -67,27 +67,50 @@ export function generateRandomColor(seed: string): string {
 }
 
 export function generatePlayerAvatarColor(playerId?: number | null): string {
-  // Predefined set of visually appealing, distinct colors for avatars
+  // Expanded set of visually appealing, distinct colors for avatars
   const avatarColors = [
-    'bg-blue-600',    // Blue
-    'bg-purple-600',  // Purple
-    'bg-pink-600',    // Pink
-    'bg-green-600',   // Green
-    'bg-accent',      // Accent (teal)
-    'bg-secondary',   // Secondary
-    'bg-orange-500',  // Orange
-    'bg-primary',     // Primary
-    'bg-red-500',     // Red
-    'bg-yellow-600',  // Yellow
-    'bg-indigo-600',  // Indigo
-    'bg-cyan-600',    // Cyan
-    'bg-amber-600',   // Amber
-    'bg-lime-600',    // Lime
-    'bg-emerald-600', // Emerald
-    'bg-violet-600',  // Violet
-    'bg-fuchsia-600', // Fuchsia
-    'bg-rose-600',    // Rose
+    'bg-blue-600',     // Blue
+    'bg-purple-600',   // Purple
+    'bg-pink-600',     // Pink
+    'bg-green-600',    // Green
+    'bg-accent',       // Accent (teal)
+    'bg-secondary',    // Secondary
+    'bg-orange-500',   // Orange
+    'bg-primary',      // Primary
+    'bg-red-500',      // Red
+    'bg-yellow-600',   // Yellow
+    'bg-indigo-600',   // Indigo
+    'bg-cyan-600',     // Cyan
+    'bg-amber-600',    // Amber
+    'bg-lime-600',     // Lime
+    'bg-emerald-600',  // Emerald
+    'bg-violet-600',   // Violet
+    'bg-fuchsia-600',  // Fuchsia
+    'bg-rose-600',     // Rose
+    'bg-sky-600',      // Sky blue
+    'bg-blue-800',     // Dark blue
+    'bg-indigo-800',   // Dark indigo
+    'bg-violet-800',   // Dark violet
+    'bg-purple-800',   // Dark purple
+    'bg-fuchsia-800',  // Dark fuchsia
+    'bg-pink-800',     // Dark pink
+    'bg-rose-800',     // Dark rose
+    'bg-red-800',      // Dark red
+    'bg-orange-800',   // Dark orange
+    'bg-amber-800',    // Dark amber
+    'bg-yellow-800',   // Dark yellow
+    'bg-lime-800',     // Dark lime
+    'bg-green-800',    // Dark green
+    'bg-emerald-800',  // Dark emerald
+    'bg-teal-800',     // Dark teal
+    'bg-cyan-800',     // Dark cyan
+    'bg-sky-800',      // Dark sky blue
   ];
+  
+  // Special case handling for Mila (ID 50)
+  if (playerId === 50) {
+    return 'bg-fuchsia-600'; // Assign a distinct color to Mila
+  }
   
   if (!playerId) return 'bg-gray-500'; // Default fallback if no player id
   
