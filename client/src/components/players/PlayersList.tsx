@@ -662,8 +662,8 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
         </CardContent>
       </Card>
       
-      {/* Pagination */}
-      {!isLoading && filteredPlayers.length > 0 && (
+      {/* Pagination - only show if we have more than itemsPerPage players */}
+      {!isLoading && filteredPlayers.length > itemsPerPage && (
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm text-gray-700">
