@@ -71,7 +71,7 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
   const [sortConfig, setSortConfig] = useState<SortConfig>({ field: 'name', direction: 'asc' });
   const [playerStatsMap, setPlayerStatsMap] = useState<Record<number, PlayerStats>>({});
   const [_, navigate] = useLocation();
-  const itemsPerPage = 10;
+  const itemsPerPage = 20;
   
   // Fetch games to calculate player statistics
   const { data: games = [], isLoading: isLoadingGames } = useQuery<Game[]>({
@@ -532,12 +532,12 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
               <TableHeader>
                 <TableRow className="bg-slate-50">
                   <TableHead 
-                    className="w-[100px] border-b cursor-pointer hover:bg-gray-50"
+                    className="w-[160px] border-b cursor-pointer hover:bg-gray-50"
                     onClick={() => handleSort('name')}
                   >
                     Player {renderSortIndicator('name')}
                   </TableHead>
-                  <TableHead className="text-center w-10 border-r border-b"></TableHead>
+                  <TableHead className="text-center w-4 border-r border-b"></TableHead>
                   
                   {/* Stat category headers */}
                   {statCategories.map((category, index) => (
