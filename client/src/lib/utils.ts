@@ -111,11 +111,10 @@ export function generatePlayerAvatarColor(playerId?: number | null): string {
   // We need to manually assign colors to certain players to ensure consistency
   const specialPlayerColors: Record<number, string> = {
     50: 'bg-fuchsia-600', // Mila
-    // Add the missing players with consistent colors
-    // These IDs can be adjusted based on your actual player IDs
-    56: 'bg-green-600',   // Abby D
-    60: 'bg-indigo-600',  // JoJo
-    64: 'bg-amber-600'    // Abbey N
+    // Colors for players with specific IDs based on database values
+    58: 'bg-teal-600',    // JoJo
+    59: 'bg-orange-600',  // Abby D
+    60: 'bg-red-600'      // Abbey N
   };
   
   // Check if this is a player with a special assigned color
