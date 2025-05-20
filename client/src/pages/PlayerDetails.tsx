@@ -545,39 +545,167 @@ export default function PlayerDetails() {
                   </div>
                   
                   <div>
-                    <h3 className="text-lg font-medium mb-3">Recent Games</h3>
+                    <h3 className="text-lg font-medium mb-3">Game Performance</h3>
                     {stats.gameStats.length === 0 ? (
                       <p className="text-gray-500">No game statistics available</p>
                     ) : (
-                      <div className="overflow-x-auto">
-                        <table className="w-full">
-                          <thead>
-                            <tr className="border-b">
-                              <th className="text-left py-2 px-2">Date</th>
-                              <th className="text-left py-2 px-2">Opponent</th>
-                              <th className="text-center py-2 px-2">Goals</th>
-                              <th className="text-center py-2 px-2">Rebounds</th>
-                              <th className="text-center py-2 px-2">Intercepts</th>
-                              <th className="text-center py-2 px-2">Rating</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {stats.gameStats.slice(0, 5).map((game) => (
-                              <tr key={game.gameId} className="border-b hover:bg-gray-50">
-                                <td className="py-2 px-2">{new Date(game.date).toLocaleDateString()}</td>
-                                <td className="py-2 px-2">{game.opponent}</td>
-                                <td className="py-2 px-2 text-center">{game.goals}</td>
-                                <td className="py-2 px-2 text-center">{game.rebounds}</td>
-                                <td className="py-2 px-2 text-center">{game.intercepts}</td>
-                                <td className="py-2 px-2 text-center">
-                                  <span className={cn("px-2 py-1 text-xs font-semibold rounded-full", getRatingClass(game.rating))}>
-                                    {game.rating.toFixed(1)}
-                                  </span>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
+                      <div className="overflow-x-auto border-t border-l border-b rounded-md">
+                        <Table>
+                          <TableHeader>
+                            <TableRow className="bg-slate-50">
+                              <TableHead className="min-w-[100px] border-b">Date</TableHead>
+                              <TableHead className="min-w-[120px] border-b">Opponent</TableHead>
+                              <TableHead className="text-center w-10 border-r border-b"></TableHead>
+                              
+                              {/* Game Info Category */}
+                              <TableHead colSpan={2} className="text-center bg-blue-50 border-r border-b">
+                                Game
+                              </TableHead>
+                              
+                              {/* Shooting Category */}
+                              <TableHead colSpan={3} className="text-center bg-blue-50 border-r border-b">
+                                Shooting
+                              </TableHead>
+                              
+                              {/* Defense Category */}
+                              <TableHead colSpan={3} className="text-center bg-blue-50 border-r border-b">
+                                Defense
+                              </TableHead>
+                              
+                              {/* Errors Category */}
+                              <TableHead colSpan={3} className="text-center bg-blue-50 border-r border-b">
+                                Errors
+                              </TableHead>
+                            </TableRow>
+                            
+                            {/* Stat field headers */}
+                            <TableRow>
+                              <TableHead className="border-b"></TableHead>
+                              <TableHead className="border-b"></TableHead>
+                              <TableHead className="border-r border-b"></TableHead>
+                              
+                              {/* Game Info Fields */}
+                              <TableHead className="text-center px-1 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                                Round
+                              </TableHead>
+                              <TableHead className="text-center px-1 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-r">
+                                Rating
+                              </TableHead>
+                              
+                              {/* Shooting Fields */}
+                              <TableHead className="text-center px-1 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                                For
+                              </TableHead>
+                              <TableHead className="text-center px-1 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                                Agn
+                              </TableHead>
+                              <TableHead className="text-center px-1 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-r">
+                                Miss
+                              </TableHead>
+                              
+                              {/* Defense Fields */}
+                              <TableHead className="text-center px-1 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                                Int
+                              </TableHead>
+                              <TableHead className="text-center px-1 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                                Reb
+                              </TableHead>
+                              <TableHead className="text-center px-1 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-r">
+                                Pick
+                              </TableHead>
+                              
+                              {/* Errors Fields */}
+                              <TableHead className="text-center px-1 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                                Pass
+                              </TableHead>
+                              <TableHead className="text-center px-1 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                                Hand
+                              </TableHead>
+                              <TableHead className="text-center px-1 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-r">
+                                Pen
+                              </TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          
+                          <TableBody className="bg-white divide-y divide-gray-200">
+                            {stats.gameStats.map((game, index) => {
+                              // Find the game to get the round number
+                              const gameData = games.find(g => g.id === game.gameId);
+                              const roundNumber = gameData?.round || '-';
+                              
+                              return (
+                                <TableRow 
+                                  key={game.gameId} 
+                                  className={`hover:bg-gray-100 transition-colors duration-150 ${index === stats.gameStats.length - 1 ? "" : "border-b"}`}
+                                >
+                                  {/* Date column */}
+                                  <TableCell className="px-3 py-2 whitespace-nowrap">
+                                    {new Date(game.date).toLocaleDateString()}
+                                  </TableCell>
+                                  
+                                  {/* Opponent column */}
+                                  <TableCell className="px-3 py-2 whitespace-nowrap">
+                                    <span className="text-sm font-medium text-blue-600">
+                                      {game.opponent}
+                                    </span>
+                                  </TableCell>
+                                  
+                                  <TableCell className="border-r"></TableCell>
+                                  
+                                  {/* Round */}
+                                  <TableCell className="px-2 py-2 whitespace-nowrap text-sm text-center font-mono">
+                                    {roundNumber}
+                                  </TableCell>
+                                  
+                                  {/* Rating */}
+                                  <TableCell className="px-2 py-2 whitespace-nowrap text-center border-r">
+                                    <span className={cn("text-sm font-mono", getRatingClass(game.rating))}>
+                                      {game.rating.toFixed(1)}
+                                    </span>
+                                  </TableCell>
+                                  
+                                  {/* Shooting stats */}
+                                  <TableCell className="px-2 py-2 whitespace-nowrap text-sm text-center font-mono">
+                                    {game.goals}
+                                  </TableCell>
+                                  <TableCell className="px-2 py-2 whitespace-nowrap text-sm text-center font-mono">
+                                    {game.goalsAgainst}
+                                  </TableCell>
+                                  <TableCell className="px-2 py-2 whitespace-nowrap text-sm text-center font-mono border-r">
+                                    {/* Using missedGoals from extra data we can extract */}
+                                    {allGameStats[game.gameId]?.reduce((sum, stat) => sum + (stat.missedGoals || 0), 0) || 0}
+                                  </TableCell>
+                                  
+                                  {/* Defense stats */}
+                                  <TableCell className="px-2 py-2 whitespace-nowrap text-sm text-center font-mono">
+                                    {game.intercepts}
+                                  </TableCell>
+                                  <TableCell className="px-2 py-2 whitespace-nowrap text-sm text-center font-mono">
+                                    {game.rebounds}
+                                  </TableCell>
+                                  <TableCell className="px-2 py-2 whitespace-nowrap text-sm text-center font-mono border-r">
+                                    {/* Using pickUp from extra data we can extract */}
+                                    {allGameStats[game.gameId]?.reduce((sum, stat) => sum + (stat.pickUp || 0), 0) || 0}
+                                  </TableCell>
+                                  
+                                  {/* Errors stats */}
+                                  <TableCell className="px-2 py-2 whitespace-nowrap text-sm text-center font-mono">
+                                    {/* Using badPass from extra data we can extract */}
+                                    {allGameStats[game.gameId]?.reduce((sum, stat) => sum + (stat.badPass || 0), 0) || 0}
+                                  </TableCell>
+                                  <TableCell className="px-2 py-2 whitespace-nowrap text-sm text-center font-mono">
+                                    {/* Using handlingError from extra data we can extract */}
+                                    {allGameStats[game.gameId]?.reduce((sum, stat) => sum + (stat.handlingError || 0), 0) || 0}
+                                  </TableCell>
+                                  <TableCell className="px-2 py-2 whitespace-nowrap text-sm text-center font-mono border-r">
+                                    {/* Using infringement from extra data we can extract */}
+                                    {allGameStats[game.gameId]?.reduce((sum, stat) => sum + (stat.infringement || 0), 0) || 0}
+                                  </TableCell>
+                                </TableRow>
+                              )
+                            })}
+                          </TableBody>
+                        </Table>
                       </div>
                     )}
                   </div>
@@ -589,169 +717,52 @@ export default function PlayerDetails() {
           <TabsContent value="games">
             <Card>
               <CardHeader>
-                <CardTitle>Game Performance</CardTitle>
+                <CardTitle>Game History</CardTitle>
               </CardHeader>
-              <CardContent className="p-6">
+              <CardContent>
                 {stats.gameStats.length === 0 ? (
                   <p className="text-gray-500">No game statistics available</p>
                 ) : (
-                  <div className="overflow-x-auto border-t border-l border-b rounded-md">
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="bg-slate-50">
-                          <TableHead className="min-w-[100px] border-b">Date</TableHead>
-                          <TableHead className="min-w-[120px] border-b">Opponent</TableHead>
-                          <TableHead className="text-center w-10 border-r border-b"></TableHead>
-                          
-                          {/* Game Info Category */}
-                          <TableHead colSpan={2} className="text-center bg-blue-50 border-r border-b">
-                            Game
-                          </TableHead>
-                          
-                          {/* Shooting Category */}
-                          <TableHead colSpan={3} className="text-center bg-blue-50 border-r border-b">
-                            Shooting
-                          </TableHead>
-                          
-                          {/* Defense Category */}
-                          <TableHead colSpan={3} className="text-center bg-blue-50 border-r border-b">
-                            Defense
-                          </TableHead>
-                          
-                          {/* Errors Category */}
-                          <TableHead colSpan={3} className="text-center bg-blue-50 border-r border-b">
-                            Errors
-                          </TableHead>
-                        </TableRow>
-                        
-                        {/* Stat field headers */}
-                        <TableRow>
-                          <TableHead className="border-b"></TableHead>
-                          <TableHead className="border-b"></TableHead>
-                          <TableHead className="border-r border-b"></TableHead>
-                          
-                          {/* Game Info Fields */}
-                          <TableHead className="text-center px-1 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                            Round
-                          </TableHead>
-                          <TableHead className="text-center px-1 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-r">
-                            Rating
-                          </TableHead>
-                          
-                          {/* Shooting Fields */}
-                          <TableHead className="text-center px-1 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                            For
-                          </TableHead>
-                          <TableHead className="text-center px-1 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                            Agn
-                          </TableHead>
-                          <TableHead className="text-center px-1 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-r">
-                            Miss
-                          </TableHead>
-                          
-                          {/* Defense Fields */}
-                          <TableHead className="text-center px-1 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                            Int
-                          </TableHead>
-                          <TableHead className="text-center px-1 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                            Reb
-                          </TableHead>
-                          <TableHead className="text-center px-1 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-r">
-                            Pick
-                          </TableHead>
-                          
-                          {/* Errors Fields */}
-                          <TableHead className="text-center px-1 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                            Pass
-                          </TableHead>
-                          <TableHead className="text-center px-1 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                            Hand
-                          </TableHead>
-                          <TableHead className="text-center px-1 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-r">
-                            Pen
-                          </TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      
-                      <TableBody className="bg-white divide-y divide-gray-200">
-                        {stats.gameStats.map((game, index) => {
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b">
+                          <th className="text-left py-2 px-2">Date</th>
+                          <th className="text-left py-2 px-2">Opponent</th>
+                          <th className="text-left py-2 px-2">Round</th>
+                          <th className="text-center py-2 px-2">Position</th>
+                          <th className="text-center py-2 px-2">Rating</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {stats.gameStats.map((game) => {
                           // Find the game to get the round number
                           const gameData = games.find(g => g.id === game.gameId);
                           const roundNumber = gameData?.round || '-';
                           
+                          // Find the player's positions for this game
+                          const gameRosters = allGameRosters[game.gameId] || [];
+                          const positions = gameRosters
+                            .filter((roster: any) => roster.playerId === playerId)
+                            .map((roster: any) => `Q${roster.quarter}: ${roster.position}`)
+                            .join(', ');
+                          
                           return (
-                            <TableRow 
-                              key={game.gameId} 
-                              className={`hover:bg-gray-100 transition-colors duration-150 ${index === stats.gameStats.length - 1 ? "" : "border-b"}`}
-                            >
-                              {/* Date column */}
-                              <TableCell className="px-3 py-2 whitespace-nowrap">
-                                {new Date(game.date).toLocaleDateString()}
-                              </TableCell>
-                              
-                              {/* Opponent column */}
-                              <TableCell className="px-3 py-2 whitespace-nowrap">
-                                <span className="text-sm font-medium text-blue-600">
-                                  {game.opponent}
-                                </span>
-                              </TableCell>
-                              
-                              <TableCell className="border-r"></TableCell>
-                              
-                              {/* Round */}
-                              <TableCell className="px-2 py-2 whitespace-nowrap text-sm text-center font-mono">
-                                {roundNumber}
-                              </TableCell>
-                              
-                              {/* Rating */}
-                              <TableCell className="px-2 py-2 whitespace-nowrap text-center border-r">
-                                <span className={cn("text-sm font-mono", getRatingClass(game.rating))}>
+                            <tr key={game.gameId} className="border-b hover:bg-gray-50">
+                              <td className="py-2 px-2">{new Date(game.date).toLocaleDateString()}</td>
+                              <td className="py-2 px-2">{game.opponent}</td>
+                              <td className="py-2 px-2">{roundNumber}</td>
+                              <td className="py-2 px-2 text-center">{positions || 'Unknown'}</td>
+                              <td className="py-2 px-2 text-center">
+                                <span className={cn("px-2 py-1 text-xs font-semibold rounded-full", getRatingClass(game.rating))}>
                                   {game.rating.toFixed(1)}
                                 </span>
-                              </TableCell>
-                              
-                              {/* Shooting stats */}
-                              <TableCell className="px-2 py-2 whitespace-nowrap text-sm text-center font-mono">
-                                {game.goals}
-                              </TableCell>
-                              <TableCell className="px-2 py-2 whitespace-nowrap text-sm text-center font-mono">
-                                {game.goalsAgainst}
-                              </TableCell>
-                              <TableCell className="px-2 py-2 whitespace-nowrap text-sm text-center font-mono border-r">
-                                {/* Using missedGoals from extra data we can extract */}
-                                {allGameStats[game.gameId]?.reduce((sum, stat) => sum + (stat.missedGoals || 0), 0) || 0}
-                              </TableCell>
-                              
-                              {/* Defense stats */}
-                              <TableCell className="px-2 py-2 whitespace-nowrap text-sm text-center font-mono">
-                                {game.intercepts}
-                              </TableCell>
-                              <TableCell className="px-2 py-2 whitespace-nowrap text-sm text-center font-mono">
-                                {game.rebounds}
-                              </TableCell>
-                              <TableCell className="px-2 py-2 whitespace-nowrap text-sm text-center font-mono border-r">
-                                {/* Using pickUp from extra data we can extract */}
-                                {allGameStats[game.gameId]?.reduce((sum, stat) => sum + (stat.pickUp || 0), 0) || 0}
-                              </TableCell>
-                              
-                              {/* Errors stats */}
-                              <TableCell className="px-2 py-2 whitespace-nowrap text-sm text-center font-mono">
-                                {/* Using badPass from extra data we can extract */}
-                                {allGameStats[game.gameId]?.reduce((sum, stat) => sum + (stat.badPass || 0), 0) || 0}
-                              </TableCell>
-                              <TableCell className="px-2 py-2 whitespace-nowrap text-sm text-center font-mono">
-                                {/* Using handlingError from extra data we can extract */}
-                                {allGameStats[game.gameId]?.reduce((sum, stat) => sum + (stat.handlingError || 0), 0) || 0}
-                              </TableCell>
-                              <TableCell className="px-2 py-2 whitespace-nowrap text-sm text-center font-mono border-r">
-                                {/* Using infringement from extra data we can extract */}
-                                {allGameStats[game.gameId]?.reduce((sum, stat) => sum + (stat.infringement || 0), 0) || 0}
-                              </TableCell>
-                            </TableRow>
-                          )
+                              </td>
+                            </tr>
+                          );
                         })}
-                      </TableBody>
-                    </Table>
+                      </tbody>
+                    </table>
                   </div>
                 )}
               </CardContent>
