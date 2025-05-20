@@ -48,6 +48,7 @@ interface PlayerStats {
   goals: number;
   goalsAgainst: number;
   missedGoals: number;
+  rating: number;
 }
 
 export default function PlayersList({ players, isLoading, onEdit, onDelete }: PlayersListProps) {
@@ -145,7 +146,8 @@ export default function PlayersList({ players, isLoading, onEdit, onDelete }: Pl
         gamesPlayed: 0,
         goals: 0,
         goalsAgainst: 0,
-        missedGoals: 0
+        missedGoals: 0,
+        rating: 5 // Default rating
       };
     });
     
@@ -248,6 +250,39 @@ export default function PlayersList({ players, isLoading, onEdit, onDelete }: Pl
       });
     }
     
+    // Process player ratings - use only the most recent quarter 1 stats
+    if (Object.keys(gameStatsMap).length > 0) {
+      Object.values(newPlayerStatsMap).forEach(playerStat => {
+        // Find all quarter 1 stats for this player across all games
+        const quarter1Stats = Object.values(gameStatsMap)
+          .flatMap(gameStats => 
+            gameStats.filter((stat: GameStat) => 
+              stat.playerId === playerStat.playerId && 
+              stat.quarter === 1 && 
+              stat.rating !== undefined && 
+              stat.rating !== null
+            )
+          )
+          .sort((a: GameStat, b: GameStat) => b.id - a.id); // Sort by ID descending
+        
+        // Use the most recent rating if available
+        if (quarter1Stats.length > 0) {
+          const latestRating = quarter1Stats[0].rating;
+          if (typeof latestRating === 'number') {
+            playerStat.rating = latestRating;
+          }
+        } else {
+          // Calculate default rating based on performance
+          const calculatedRating = 5 + 
+            (playerStat.goals * 0.2) +
+            (playerStat.goalsAgainst * -0.1) + 
+            (playerStat.missedGoals * -0.1);
+          
+          playerStat.rating = Math.min(10, Math.max(1, calculatedRating));
+        }
+      });
+    }
+    
     setPlayerStatsMap(newPlayerStatsMap);
   }, [gameStatsMap, gameRostersMap, isLoadingData, players]);
   
@@ -308,6 +343,7 @@ export default function PlayersList({ players, isLoading, onEdit, onDelete }: Pl
       name: 'Games', 
       fields: [
         { field: 'gamesPlayed', label: 'Played' },
+        { field: 'rating', label: 'Rating' }
       ]
     },
     { 
@@ -319,6 +355,14 @@ export default function PlayersList({ players, isLoading, onEdit, onDelete }: Pl
       ]
     }
   ];
+  
+  // Rating color/classes
+  const getRatingClass = (rating: number): string => {
+    if (rating >= 9) return 'bg-success/20 text-success';
+    if (rating >= 8) return 'bg-accent/20 text-accent';
+    if (rating >= 7) return 'bg-warning/20 text-warning';
+    return 'bg-error/20 text-error';
+  };
   
   return (
     <div className="space-y-6">
@@ -384,8 +428,8 @@ export default function PlayersList({ players, isLoading, onEdit, onDelete }: Pl
           <Table>
             <TableHeader>
               <TableRow className="bg-slate-50">
-                <TableHead className="w-[100px] border-b">Player</TableHead>
-                <TableHead className="text-center w-[100px] border-r border-b">Position</TableHead>
+                <TableHead className="w-[80px] border-b">Player</TableHead>
+                <TableHead className="text-center w-[90px] border-r border-b">Position</TableHead>
                 
                 {/* Stat category headers */}
                 {statCategories.map((category, index) => (
@@ -410,7 +454,7 @@ export default function PlayersList({ players, isLoading, onEdit, onDelete }: Pl
                     <TableHead 
                       key={field.field} 
                       className={`text-center py-2 text-xs font-medium text-gray-500 border-r border-b ${fieldIndex === 0 ? 'border-l' : ''}`}
-                      style={{ width: '60px' }} // Fixed narrower width columns for stats
+                      style={{ width: '50px' }} // Extra narrow columns
                     >
                       {field.label}
                     </TableHead>
@@ -423,14 +467,14 @@ export default function PlayersList({ players, isLoading, onEdit, onDelete }: Pl
               {isLoading || isLoadingData ? (
                 Array(5).fill(0).map((_, i) => (
                   <TableRow key={i}>
-                    <TableCell colSpan={6}>
+                    <TableCell colSpan={7}>
                       <Skeleton className="h-12 w-full" />
                     </TableCell>
                   </TableRow>
                 ))
               ) : paginatedPlayers.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                  <TableCell colSpan={7} className="text-center py-8 text-gray-500">
                     No players found. Please add a player or adjust your filters.
                   </TableCell>
                 </TableRow>
@@ -441,7 +485,8 @@ export default function PlayersList({ players, isLoading, onEdit, onDelete }: Pl
                     gamesPlayed: 0,
                     goals: 0,
                     goalsAgainst: 0,
-                    missedGoals: 0
+                    missedGoals: 0,
+                    rating: 5
                   };
                   
                   return (
@@ -451,14 +496,14 @@ export default function PlayersList({ players, isLoading, onEdit, onDelete }: Pl
                       onClick={() => navigate(`/player/${player.id}`)}
                     >
                       {/* Player column */}
-                      <TableCell className="px-2 py-2 whitespace-nowrap">
+                      <TableCell className="px-1 py-2 whitespace-nowrap">
                         <div className="flex items-center">
-                          <div className={cn("h-8 w-8 rounded-full flex items-center justify-center text-white", getAvatarColor(player))}>
+                          <div className={cn("h-7 w-7 rounded-full flex items-center justify-center text-white", getAvatarColor(player))}>
                             <span className="text-xs font-semibold">
                               {getInitials(player.firstName, player.lastName)}
                             </span>
                           </div>
-                          <div className="ml-2">
+                          <div className="ml-2 w-[50px] truncate">
                             <span className="text-sm font-medium text-blue-600">
                               {player.displayName}
                             </span>
@@ -467,40 +512,55 @@ export default function PlayersList({ players, isLoading, onEdit, onDelete }: Pl
                       </TableCell>
                       
                       {/* Position preferences column */}
-                      <TableCell className="text-center px-2 py-2 border-r">
+                      <TableCell className="text-center px-1 py-2 border-r">
                         <div className="flex flex-wrap justify-center gap-1">
-                          {(player.positionPreferences as Position[])
-                            .slice(0, 2) // Only show first 2 positions
-                            .map((position, index) => (
+                          {(player.positionPreferences as Position[]).map((position, index) => (
                             <Badge
                               key={index}
                               variant="outline"
                               className={cn(
-                                "px-2 py-0.5 text-xs rounded-full",
+                                "px-1 py-0.5 text-xs rounded-full",
                                 index === 0 ? "bg-primary/10 text-primary font-semibold" : "bg-gray-100 text-gray-600"
                               )}
                             >
                               {position}
                             </Badge>
                           ))}
-                          {(player.positionPreferences as Position[]).length > 2 && (
-                            <span className="text-xs text-gray-500">+{(player.positionPreferences as Position[]).length - 2}</span>
-                          )}
                         </div>
                       </TableCell>
                       
                       {/* Stat category fields */}
                       {statCategories.map(category => (
-                        category.fields.map((field, i) => (
-                          <TableCell 
-                            key={field.field} 
-                            className={`py-2 px-1 text-center border-r ${i === 0 ? 'border-l' : ''}`}
-                          >
-                            <span className="text-sm font-medium">
-                              {playerStats[field.field as keyof PlayerStats] || 0}
-                            </span>
-                          </TableCell>
-                        ))
+                        category.fields.map((field, i) => {
+                          // Special handling for Rating field
+                          if (field.field === 'rating') {
+                            return (
+                              <TableCell 
+                                key={field.field} 
+                                className={`py-2 px-1 text-center border-r ${i === 0 ? 'border-l' : ''}`}
+                              >
+                                <span className={cn(
+                                  "text-sm font-medium px-2 py-1 rounded", 
+                                  getRatingClass(playerStats.rating)
+                                )}>
+                                  {playerStats.rating.toFixed(1)}
+                                </span>
+                              </TableCell>
+                            );
+                          }
+                          
+                          // Regular fields
+                          return (
+                            <TableCell 
+                              key={field.field} 
+                              className={`py-2 px-1 text-center border-r ${i === 0 ? 'border-l' : ''}`}
+                            >
+                              <span className="text-sm font-medium">
+                                {playerStats[field.field as keyof PlayerStats] || 0}
+                              </span>
+                            </TableCell>
+                          );
+                        })
                       ))}
                     </TableRow>
                   );
