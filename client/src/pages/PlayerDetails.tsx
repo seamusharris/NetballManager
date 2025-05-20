@@ -1,18 +1,34 @@
-import { useQuery } from "@tanstack/react-query";
-import { useParams, Link } from "wouter";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useParams, Link, useLocation } from "wouter";
 import { Helmet } from "react-helmet";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import { 
+  AlertDialog,
+  AlertDialogAction, 
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle 
+} from "@/components/ui/alert-dialog";
 import { Player, Game, GameStat } from "@shared/schema";
 import { cn, getInitials } from "@/lib/utils";
-import { ArrowLeft, Award, Target, Shield, Activity } from "lucide-react";
+import { ArrowLeft, Award, Target, Shield, Activity, Edit, Trash2 } from "lucide-react";
 import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 
 export default function PlayerDetails() {
   const { id } = useParams<{ id: string }>();
   const playerId = parseInt(id);
+  const [_, navigate] = useLocation();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
   const [selectedTab, setSelectedTab] = useState("overview");
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   // Fetch player data
   const { data: player, isLoading: isLoadingPlayer } = useQuery<Player>({
@@ -238,6 +254,43 @@ export default function PlayerDetails() {
 
   const stats = calculateAggregateStats();
 
+  // Mutation for deleting the player
+  const deletePlayerMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest(`/api/players/${playerId}`, 'DELETE');
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/players'] });
+      toast({
+        title: "Player deleted",
+        description: "The player has been successfully deleted.",
+        variant: "default",
+      });
+      navigate('/players');
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to delete player. Please try again.",
+        variant: "destructive",
+      });
+      console.error("Failed to delete player:", error);
+    }
+  });
+
+  const handleDeletePlayer = () => {
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDeletePlayer = () => {
+    deletePlayerMutation.mutate();
+    setIsDeleteDialogOpen(false);
+  };
+
+  const handleEditPlayer = () => {
+    navigate(`/players/edit/${playerId}`);
+  };
+
   // Get the player's avatar color
   const getAvatarColor = (player: Player): string => {
     // If the player has a stored avatar color, use it
@@ -294,12 +347,32 @@ export default function PlayerDetails() {
       </Helmet>
       
       <div className="container mx-auto p-4">
-        <div className="flex items-center mb-6">
-          <Link href="/dashboard">
-            <Button variant="ghost" size="sm" className="mr-2">
-              <ArrowLeft className="mr-1 h-4 w-4" /> Back to Dashboard
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center">
+            <Link href="/dashboard">
+              <Button variant="ghost" size="sm" className="mr-2">
+                <ArrowLeft className="mr-1 h-4 w-4" /> Back to Dashboard
+              </Button>
+            </Link>
+          </div>
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="flex items-center" 
+              onClick={handleEditPlayer}
+            >
+              <Edit className="h-4 w-4 mr-1" /> Edit
             </Button>
-          </Link>
+            <Button 
+              variant="destructive" 
+              size="sm" 
+              className="flex items-center"
+              onClick={handleDeletePlayer}
+            >
+              <Trash2 className="h-4 w-4 mr-1" /> Delete
+            </Button>
+          </div>
         </div>
         
         <div className="flex flex-col md:flex-row gap-6 mb-6">
