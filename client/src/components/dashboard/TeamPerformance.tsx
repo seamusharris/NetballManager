@@ -181,7 +181,7 @@ export default function TeamPerformance({ games, className }: TeamPerformancePro
           </div>
           <div className="text-center bg-gray-50 p-4 rounded-lg">
             <p className="text-gray-500 text-sm mb-1">Upcoming</p>
-            <p className="text-4xl font-bold text-primary">{games.filter(game => !game.completed).length}</p>
+            <p className="text-4xl font-bold text-primary">{games.filter(game => !game.completed && !game.isBye).length}</p>
           </div>
         </div>
       </CardContent>
