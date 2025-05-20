@@ -396,6 +396,18 @@ export default function SimpleRosterManager({
       setPendingChanges([]);
       setHasUnsavedChanges(false);
       
+      // Invalidate all queries that depend on roster data
+      // This ensures dashboards and player details are updated
+      queryClient.invalidateQueries({ queryKey: [`/api/games/${selectedGameId}/rosters`] });
+      
+      // Also invalidate player game stats queries since they're filtered by roster
+      queryClient.invalidateQueries({ queryKey: ['playerGameStats'] });
+      
+      // Invalidate specific player queries that might show game counts
+      players.forEach(player => {
+        queryClient.invalidateQueries({ queryKey: [`/api/players/${player.id}`] });
+      });
+      
       // Show success toast
       toast({
         title: "Roster Saved",
