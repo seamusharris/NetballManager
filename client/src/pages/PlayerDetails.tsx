@@ -15,7 +15,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle 
 } from "@/components/ui/alert-dialog";
-import { Player, Game, GameStat } from "@shared/schema";
+import { Player, Game, GameStat, allPositions, Position } from "@shared/schema";
 import { cn, getInitials } from "@/lib/utils";
 import { ArrowLeft, Award, Target, Shield, Activity, Edit, Trash2 } from "lucide-react";
 import { useState } from "react";
@@ -519,7 +519,7 @@ export default function PlayerDetails() {
                   <div>
                     <h3 className="text-lg font-medium mb-3">Positions Played</h3>
                     <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-4 mb-6">
-                      {allPositions.map(position => (
+                      {allPositions.map((position: Position) => (
                         <div key={position} className="bg-gray-50 p-3 rounded-lg text-center">
                           <p className="text-md font-medium mb-1">{position}</p>
                           <p className="text-2xl font-semibold">{stats.positionCounts[position] || 0}</p>
