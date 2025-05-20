@@ -671,10 +671,24 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
   const getSortedPlayersForTotals = () => {
     const allPlayers = getAllPlayers();
     
+    // If no sorting config is set, return players sorted by position
     if (!sortConfig) {
-      return allPlayers;
+      // Define position order: GS, GA, WA, C, WD, GD, GK
+      const posOrder = { GS: 1, GA: 2, WA: 3, C: 4, WD: 5, GD: 6, GK: 7, Unknown: 8 };
+      
+      return [...allPlayers].sort((a, b) => {
+        // Find their position in quarter 1 (or earliest appearance)
+        const aRoster = rosters.find(r => r.playerId === a.id);
+        const bRoster = rosters.find(r => r.playerId === b.id);
+        
+        const aPos = aRoster?.position || 'Unknown';
+        const bPos = bRoster?.position || 'Unknown';
+        
+        return posOrder[aPos as keyof typeof posOrder] - posOrder[bPos as keyof typeof posOrder];
+      });
     }
     
+    // Otherwise sort by the selected column
     return [...allPlayers].sort((a, b) => {
       // Special case for player names
       if (sortConfig.key === 'name') {
@@ -921,8 +935,11 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
                       <TableRow key={player.id}>
                         <TableCell className="border-r font-medium">
                           <div className="flex items-center">
-                            <div className="w-6 h-6 rounded-full mr-2" 
+                            <div className="w-6 h-6 rounded-full mr-2 flex items-center justify-center" 
                               style={{ backgroundColor: player.avatarColor || '#0ea5e9' }}>
+                              <span className="text-xs text-white font-bold">
+                                {rosters.find(r => r.playerId === player.id)?.position || ''}
+                              </span>
                             </div>
                             <div className="truncate">
                               {player.displayName || `${player.firstName} ${player.lastName}`}
