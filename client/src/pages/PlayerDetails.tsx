@@ -177,6 +177,16 @@ export default function PlayerDetails() {
       const game = games.find(g => g.id === gameId);
       if (!game) return;
       
+      // First check if player played in an actual position in this game
+      const gameRosters = allGameRosters[gameId] || [];
+      const playedOnCourt = gameRosters.some((roster: any) => 
+        roster.playerId === playerId && allPositions.includes(roster.position)
+      );
+      
+      // Only process games where player was actually on court
+      if (!playedOnCourt) return;
+      
+      // Increment games count since player was actually on court
       totalGames++;
       
       // Get stats for this game if available
@@ -186,13 +196,14 @@ export default function PlayerDetails() {
       const opponent = opponents.find(o => o.id === game.opponentId);
       const opponentName = opponent ? opponent.teamName : `Team #${game.opponentId}`;
       
-      // Count positions played in this game
-      const gameRosters = allGameRosters[gameId] || [];
+      // Count positions played in this game (only count actual playing positions, not "off")
       gameRosters.forEach((roster: any) => {
         if (roster.playerId === playerId) {
-          // Increment the count for this position
-          positionCounts[roster.position] = (positionCounts[roster.position] || 0) + 1;
-          totalQuartersPlayed++;
+          // Only count actual playing positions (those in allPositions)
+          if (allPositions.includes(roster.position)) {
+            positionCounts[roster.position] = (positionCounts[roster.position] || 0) + 1;
+            totalQuartersPlayed++;
+          }
         }
       });
       
