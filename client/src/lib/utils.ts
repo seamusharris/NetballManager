@@ -130,7 +130,7 @@ export function generatePlayerAvatarColor(playerId?: number | null): string {
   
   // Map of specific players to their designated colors to ensure consistency
   const playerColorMap: Record<number, string> = {
-    // Specific players with fixed colors - these are important to maintain
+    // IMPORTANT: These are the exact colors we want to use for these specific players
     56: 'bg-blue-600',     // Lucia
     57: 'bg-emerald-600',  // Isla
     58: 'bg-teal-600',     // JoJo
