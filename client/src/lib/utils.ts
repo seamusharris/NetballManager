@@ -109,28 +109,28 @@ export function generatePlayerAvatarColor(playerId?: number | null): string {
     'bg-sky-800',       // Dark sky blue
     
     // Tertiary palette - lighter variants for even more options
-    'bg-blue-500',      // Light blue
-    'bg-purple-500',    // Light purple
-    'bg-pink-500',      // Light pink
-    'bg-green-500',     // Light green
-    'bg-teal-500',      // Light teal
+    'bg-blue-400',      // Light blue
+    'bg-purple-400',    // Light purple
+    'bg-pink-400',      // Light pink
+    'bg-green-400',     // Light green
+    'bg-teal-400',      // Light teal
     'bg-orange-400',    // Light orange
     'bg-red-400',       // Light red
-    'bg-yellow-500',    // Light yellow
-    'bg-indigo-500',    // Light indigo
-    'bg-cyan-500',      // Light cyan
-    'bg-amber-500',     // Light amber
-    'bg-lime-500',      // Light lime
-    'bg-emerald-500',   // Light emerald
-    'bg-violet-500',    // Light violet
-    'bg-fuchsia-500',   // Light fuchsia
-    'bg-rose-500',      // Light rose
-    'bg-sky-500',       // Light sky blue
+    'bg-yellow-400',    // Light yellow
+    'bg-indigo-400',    // Light indigo
+    'bg-cyan-400',      // Light cyan
+    'bg-amber-400',     // Light amber
+    'bg-lime-400',      // Light lime
+    'bg-emerald-400',   // Light emerald
+    'bg-violet-400',    // Light violet
+    'bg-fuchsia-400',   // Light fuchsia
+    'bg-rose-400',      // Light rose
+    'bg-sky-400',       // Light sky blue
   ];
   
   // Map of specific players to their designated colors to ensure consistency
   const playerColorMap: Record<number, string> = {
-    // Specific players with fixed colors
+    // Specific players with fixed colors - these are important to maintain
     56: 'bg-blue-600',     // Lucia
     57: 'bg-emerald-600',  // Isla
     58: 'bg-teal-600',     // JoJo
@@ -140,21 +140,28 @@ export function generatePlayerAvatarColor(playerId?: number | null): string {
     62: 'bg-indigo-600',   // Ollie
     63: 'bg-sky-600',      // Evie
     64: 'bg-purple-600',   // Mila
-    65: 'bg-pink-500',     // Olive (changed from pink-600 to avoid duplication)
-    66: 'bg-lime-600',     // Xanthe (changed from green-600 to avoid duplication)
+    65: 'bg-pink-500',     // Olive
+    66: 'bg-lime-600',     // Xanthe
   };
   
-  // Return the designated color for this player if it exists
+  // Return the designated color for these special players
   if (playerId && playerColorMap[playerId]) {
     return playerColorMap[playerId];
   }
   
   if (!playerId) return 'bg-gray-500'; // Default fallback if no player id
   
-  // For new players, use a hash function based on ID to better distribute colors
-  // This gives us a more unique distribution than simple modulo
-  const hashIndex = Math.abs((playerId * 13) % avatarColors.length);
-  return avatarColors[hashIndex];
+  // Filter out colors that are already assigned to specific players
+  // This ensures new players never get the same color as our fixed players
+  const reservedColors = Object.values(playerColorMap);
+  const availableColors = avatarColors.filter(color => !reservedColors.includes(color));
+  
+  // Use a better hash function based on prime numbers for more uniqueness
+  // Use player ID to generate a consistent but well-distributed index
+  const seed = (playerId * 31) + (playerId % 17); // Using prime numbers for better distribution
+  const hashIndex = Math.abs(seed % availableColors.length);
+  
+  return availableColors[hashIndex];
 }
 
 export function calculateTotalGoals(stats: any[], forTeam: boolean = true): number {
