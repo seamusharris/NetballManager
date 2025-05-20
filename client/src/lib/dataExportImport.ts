@@ -322,4 +322,3 @@ export async function importData(jsonData: string): Promise<ImportResult> {
     throw new Error('Failed to import data. Please check the file format and try again.');
   }
 }
-}
