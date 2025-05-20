@@ -100,11 +100,22 @@ export class DatabaseStorage implements IStorage {
       })
       .returning();
     
-    // Now that we have the player ID, we can assign a deterministic avatar color
-    // Based on the ID to ensure consistency across the application
-    const avatarColors = ['blue', 'purple', 'pink', 'green', 'teal', 'orange', 'red', 'yellow', 'indigo'];
-    const colorName = avatarColors[player.id % avatarColors.length];
-    const avatarColor = `bg-${colorName}-600`;
+    // Now that we have the player ID, assign the exact avatar color from the predefined scheme
+    // This matches the original color mapping used in the application
+    const avatarColors = [
+      'bg-blue-600',    // Blue
+      'bg-purple-600',  // Purple
+      'bg-pink-600',    // Pink
+      'bg-green-600',   // Green
+      'bg-accent',      // Accent (teal)
+      'bg-secondary',   // Secondary
+      'bg-orange-500',  // Orange
+      'bg-primary',     // Primary
+      'bg-red-500',     // Red
+    ];
+    
+    // Use the same deterministic assignment based on player ID
+    const avatarColor = avatarColors[player.id % avatarColors.length];
     
     // Update the player with the generated avatar color
     const [updatedPlayer] = await db
