@@ -138,6 +138,8 @@ export default function PlayerDetails() {
         totalPickUps: 0,
         totalInfringements: 0,
         averageRating: 0,
+        positionCounts: {},
+        totalQuartersPlayed: 0,
         gameStats: []
       };
     }
@@ -166,6 +168,10 @@ export default function PlayerDetails() {
       rating: number
     }[] = [];
 
+    // Initialize position counts
+    const positionCounts: Record<string, number> = {};
+    let totalQuartersPlayed = 0;
+    
     // Process each game this player participated in
     allParticipatedGameIds.forEach(gameId => {
       const game = games.find(g => g.id === gameId);
@@ -179,6 +185,16 @@ export default function PlayerDetails() {
       // Find opponent name from opponent ID
       const opponent = opponents.find(o => o.id === game.opponentId);
       const opponentName = opponent ? opponent.teamName : `Team #${game.opponentId}`;
+      
+      // Count positions played in this game
+      const gameRosters = allGameRosters[gameId] || [];
+      gameRosters.forEach((roster: any) => {
+        if (roster.playerId === playerId) {
+          // Increment the count for this position
+          positionCounts[roster.position] = (positionCounts[roster.position] || 0) + 1;
+          totalQuartersPlayed++;
+        }
+      });
       
       // Sum stats for this game
       let gameGoals = 0;
@@ -252,6 +268,8 @@ export default function PlayerDetails() {
       totalPickUps,
       totalInfringements,
       averageRating: ratingCount > 0 ? Math.round((ratingSum / ratingCount) * 10) / 10 : 0,
+      positionCounts,
+      totalQuartersPlayed,
       gameStats: gameStatSummaries
     };
   };
@@ -499,6 +517,21 @@ export default function PlayerDetails() {
               <CardContent>
                 <div className="space-y-6">
                   <div>
+                    <h3 className="text-lg font-medium mb-3">Positions Played</h3>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-4 mb-6">
+                      {allPositions.map(position => (
+                        <div key={position} className="bg-gray-50 p-3 rounded-lg text-center">
+                          <p className="text-md font-medium mb-1">{position}</p>
+                          <p className="text-2xl font-semibold">{stats.positionCounts[position] || 0}</p>
+                          <p className="text-xs text-gray-500">
+                            {stats.totalQuartersPlayed > 0 
+                              ? `${Math.round((stats.positionCounts[position] || 0) / stats.totalQuartersPlayed * 100)}%` 
+                              : '0%'}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                    
                     <h3 className="text-lg font-medium mb-3">Season Statistics</h3>
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                       <div className="bg-gray-50 p-3 rounded-lg">
