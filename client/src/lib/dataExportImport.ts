@@ -19,9 +19,14 @@ interface ImportResult {
 export async function exportAllData(): Promise<ExportResult> {
   try {
     // Fetch all data
-    const players = await apiRequest('/api/players') as Player[];
-    const opponents = await apiRequest('/api/opponents') as Opponent[];
-    const games = await apiRequest('/api/games') as Game[];
+    const playersResponse = await fetch('/api/players');
+    const players = await playersResponse.json() as Player[];
+    
+    const opponentsResponse = await fetch('/api/opponents');
+    const opponents = await opponentsResponse.json() as Opponent[];
+    
+    const gamesResponse = await fetch('/api/games');
+    const games = await gamesResponse.json() as Game[];
     
     // Fetch rosters and stats for each game
     const gameRosters: Record<number, Roster[]> = {};
@@ -29,16 +34,18 @@ export async function exportAllData(): Promise<ExportResult> {
     
     for (const game of games) {
       try {
-        const rosterResponse = await apiRequest(`/api/games/${game.id}/rosters`);
-        gameRosters[game.id] = rosterResponse as Roster[];
+        const rosterResponse = await fetch(`/api/games/${game.id}/rosters`);
+        const rosters = await rosterResponse.json();
+        gameRosters[game.id] = rosters as Roster[];
       } catch (error) {
         console.error(`Failed to fetch rosters for game ${game.id}:`, error);
         gameRosters[game.id] = [];
       }
       
       try {
-        const statsResponse = await apiRequest(`/api/games/${game.id}/stats`);
-        gameStats[game.id] = statsResponse as GameStat[];
+        const statsResponse = await fetch(`/api/games/${game.id}/stats`);
+        const stats = await statsResponse.json();
+        gameStats[game.id] = stats as GameStat[];
       } catch (error) {
         console.error(`Failed to fetch stats for game ${game.id}:`, error);
         gameStats[game.id] = [];
@@ -105,13 +112,15 @@ export async function importData(jsonData: string): Promise<ImportResult> {
           avatarColor: player.avatarColor
         };
         
-        await apiRequest('/api/players', {
+        const response = await fetch('/api/players', {
           method: 'POST',
           body: JSON.stringify(playerData),
           headers: { 'Content-Type': 'application/json' }
         });
         
-        playersImported++;
+        if (response.ok) {
+          playersImported++;
+        }
       } catch (error) {
         console.error(`Failed to import player ${player.displayName}:`, error);
       }
@@ -127,13 +136,15 @@ export async function importData(jsonData: string): Promise<ImportResult> {
           notes: opponent.notes
         };
         
-        await apiRequest('/api/opponents', {
+        const response = await fetch('/api/opponents', {
           method: 'POST',
           body: JSON.stringify(opponentData),
           headers: { 'Content-Type': 'application/json' }
         });
         
-        opponentsImported++;
+        if (response.ok) {
+          opponentsImported++;
+        }
       } catch (error) {
         console.error(`Failed to import opponent ${opponent.teamName}:`, error);
       }
@@ -156,13 +167,17 @@ export async function importData(jsonData: string): Promise<ImportResult> {
           isBye: game.isBye
         };
         
-        const response = await apiRequest('/api/games', {
+        const response = await fetch('/api/games', {
           method: 'POST',
           body: JSON.stringify(gameData),
           headers: { 'Content-Type': 'application/json' }
         });
         
-        const newGame = response as Game;
+        if (!response.ok) {
+          throw new Error(`Failed to import game: ${response.statusText}`);
+        }
+        
+        const newGame = await response.json() as Game;
         gamesImported++;
         
         // Import rosters for this game
@@ -176,13 +191,15 @@ export async function importData(jsonData: string): Promise<ImportResult> {
               position: roster.position
             };
             
-            await apiRequest('/api/rosters', {
+            const rosterResponse = await fetch('/api/rosters', {
               method: 'POST',
               body: JSON.stringify(rosterData),
               headers: { 'Content-Type': 'application/json' }
             });
             
-            rostersImported++;
+            if (rosterResponse.ok) {
+              rostersImported++;
+            }
           } catch (error) {
             console.error(`Failed to import roster for game ${newGame.id}, quarter ${roster.quarter}, position ${roster.position}:`, error);
           }
@@ -208,13 +225,15 @@ export async function importData(jsonData: string): Promise<ImportResult> {
               rating: stat.rating
             };
             
-            await apiRequest('/api/gamestats', {
+            const statResponse = await fetch('/api/gamestats', {
               method: 'POST',
               body: JSON.stringify(statData),
               headers: { 'Content-Type': 'application/json' }
             });
             
-            statsImported++;
+            if (statResponse.ok) {
+              statsImported++;
+            }
           } catch (error) {
             console.error(`Failed to import stat for game ${newGame.id}, quarter ${stat.quarter}, player ${stat.playerId}:`, error);
           }
