@@ -141,7 +141,7 @@ export default function GamesList({
       return statsMap;
     },
     enabled: completedGameIds.length > 0,
-    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
+    staleTime: 0, // Always refetch when needed
   });
   
   // Calculate scores for all games
