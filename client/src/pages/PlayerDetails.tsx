@@ -666,6 +666,14 @@ export default function PlayerDetails() {
                               const gameData = games.find(g => g.id === game.gameId);
                               const roundNumber = gameData?.round || '-';
                               
+                              // Double check player is on roster for this game and has an actual position (not "off")
+                              const gameRosters = allGameRosters[game.gameId] || [];
+                              const isOnRoster = gameRosters.some((roster: any) => 
+                                roster.playerId === playerId && allPositions.includes(roster.position)
+                              );
+                              
+                              if (!isOnRoster) return null; // Skip if not on roster or only "off" position
+                              
                               return (
                                 <TableRow 
                                   key={game.gameId} 
@@ -775,8 +783,14 @@ export default function PlayerDetails() {
                           
                           // Find the player's positions for this game
                           const gameRosters = allGameRosters[game.gameId] || [];
-                          const positions = gameRosters
-                            .filter((roster: any) => roster.playerId === playerId)
+                          const positionRosters = gameRosters.filter((roster: any) => 
+                            roster.playerId === playerId && allPositions.includes(roster.position)
+                          );
+                          
+                          // Skip if player is not on roster for this game or only has "off" positions
+                          if (positionRosters.length === 0) return null;
+                          
+                          const positions = positionRosters
                             .map((roster: any) => `Q${roster.quarter}: ${roster.position}`)
                             .join(', ');
                           
