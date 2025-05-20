@@ -37,8 +37,9 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
   const [gameTotals, setGameTotals] = useState<Record<number, Record<string, number>>>({});
   // Add state for player ratings in the Game Totals tab
   const [playerRatings, setPlayerRatings] = useState<Record<number, number>>({});
-  // Add state for sorting the Game Totals table and reset dialogs
+  // Add state for sorting the Game Totals table
   const [sortConfig, setSortConfig] = useState<{key: string, direction: 'ascending' | 'descending'} | null>(null);
+  // State for reset confirmation dialogs
   const [resetQuarterDialogOpen, setResetQuarterDialogOpen] = useState(false);
   const [resetAllDialogOpen, setResetAllDialogOpen] = useState(false);
   const { toast } = useToast();
@@ -468,58 +469,43 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
         }
       });
       
-      // Wait for all rating updates to complete before updating other stats
-      await Promise.all(ratingPromises);
-      console.log("Successfully updated all player ratings");
-      
-      // Now update all the regular stats for all players and quarters
-      for (const quarter of quarters) {
-        const quarterValues = formValues[quarter] || {};
+      // Then save all stats for all quarters
+      quarters.forEach(quarter => {
+        const quarterData = formValues[quarter];
         
-        for (const playerIdStr in quarterValues) {
+        for (const playerIdStr in quarterData) {
           const playerId = parseInt(playerIdStr);
           if (isNaN(playerId)) continue;
           
-          const playerValues = quarterValues[playerId];
-          
-          // Skip empty sets of values
-          if (!playerValues) continue;
-          
-          // Skip players who have all zeros
-          const allZeros = Object.values(playerValues).every(v => parseInt(v) === 0);
-          
-          // Only create/update stats if there's meaningful data
-          if (allZeros) {
-            console.log(`Skipping player ${playerId} in quarter ${quarter} - all values are zero`);
-            continue;
-          }
-          
-          // Convert string values to numbers for saving
-          const statValues = {
-            gameId,
-            playerId,
-            quarter: parseInt(quarter),
-            goalsFor: parseInt(playerValues.goalsFor || '0'),
-            goalsAgainst: parseInt(playerValues.goalsAgainst || '0'),
-            missedGoals: parseInt(playerValues.missedGoals || '0'),
-            rebounds: parseInt(playerValues.rebounds || '0'),
-            intercepts: parseInt(playerValues.intercepts || '0'),
-            badPass: parseInt(playerValues.badPass || '0'),
-            handlingError: parseInt(playerValues.handlingError || '0'),
-            pickUp: parseInt(playerValues.pickUp || '0'),
-            infringement: parseInt(playerValues.infringement || '0'),
-            // Keep existing rating or default to 5
-            rating: quarter === '1' ? (playerRatings[playerId] || 5) : undefined
-          };
-          
-          // Find all existing stats for this player and quarter combination
+          // Find the player's stats for this quarter and game
           const existingStats = gameStats.filter(stat => 
             stat.gameId === gameId && 
             stat.playerId === playerId && 
-            stat.quarter === parseInt(quarter)
+            stat.quarter.toString() === quarter
           );
           
-          // If there are multiple entries, we'll delete the older ones
+          // Get the form values for this player and quarter
+          const formData = quarterData[playerId];
+          
+          // Create the stat data object
+          const statData = {
+            gameId,
+            playerId, 
+            quarter: parseInt(quarter),
+            goalsFor: parseInt(formData.goalsFor) || 0,
+            goalsAgainst: parseInt(formData.goalsAgainst) || 0,
+            missedGoals: parseInt(formData.missedGoals) || 0,
+            rebounds: parseInt(formData.rebounds) || 0,
+            intercepts: parseInt(formData.intercepts) || 0,
+            badPass: parseInt(formData.badPass) || 0,
+            handlingError: parseInt(formData.handlingError) || 0,
+            pickUp: parseInt(formData.pickUp) || 0,
+            infringement: parseInt(formData.infringement) || 0,
+            // Only include rating for quarter 1
+            ...(quarter === '1' ? { rating: playerRatings[playerId] || 5 } : {})
+          };
+          
+          // If there are multiple entries, handle duplicates
           if (existingStats.length > 1) {
             // Sort by ID descending (newest first)
             existingStats.sort((a, b) => b.id - a.id);
@@ -527,197 +513,192 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
             // Keep the newest one
             const newestStat = existingStats[0];
             
-            // Delete the older duplicates - use try/catch to handle potential 404 errors if already deleted
+            // Delete older duplicates
             for (let i = 1; i < existingStats.length; i++) {
               const deletePromise = apiRequest('DELETE', `/api/gamestats/${existingStats[i].id}`)
                 .catch(err => {
-                  // If the record was not found (already deleted), just log and continue
                   console.log(`Stat record ${existingStats[i].id} already deleted, continuing...`);
                   return null;
                 });
               savePromises.push(deletePromise);
             }
             
-            // Update the newest stat
-            console.log(`Updating stats for player ${playerId} in quarter ${quarter} (and deleting ${existingStats.length - 1} duplicates)`);
-            const updatePromise = apiRequest('PATCH', `/api/gamestats/${newestStat.id}`, statValues);
+            // Update the newest stat with new values
+            const updatePromise = apiRequest('PATCH', `/api/gamestats/${newestStat.id}`, statData);
             savePromises.push(updatePromise);
-          } 
+          }
           // Just one existing stat, update it
           else if (existingStats.length === 1) {
-            console.log(`Updating stats for player ${playerId} in quarter ${quarter}`);
-            const updatePromise = apiRequest('PATCH', `/api/gamestats/${existingStats[0].id}`, statValues);
+            const updatePromise = apiRequest('PATCH', `/api/gamestats/${existingStats[0].id}`, statData);
             savePromises.push(updatePromise);
-          } 
-          // No existing stats, create new one
+          }
+          // No existing stats, create a new one
           else {
-            console.log(`Creating new stats for player ${playerId} in quarter ${quarter}`);
-            const createPromise = apiRequest('POST', '/api/gamestats', statValues);
+            const createPromise = apiRequest('POST', '/api/gamestats', statData);
             savePromises.push(createPromise);
           }
         }
-      }
+      });
       
-      await Promise.all(savePromises);
-      return true;
+      // Wait for all promises to complete
+      await Promise.all([...ratingPromises, ...savePromises]);
+      
+      return { success: true };
     },
     onSuccess: () => {
       toast({
-        title: "Success",
-        description: "Game statistics saved successfully.",
+        title: "Statistics saved",
+        description: "All player statistics have been saved successfully."
       });
       
-      // Invalidate the relevant queries
-      queryClient.invalidateQueries({ queryKey: [`/api/games/${gameId}/stats`] });
+      // Invalidate the game stats query to refresh data
+      queryClient.invalidateQueries({ queryKey: ['/api/gamestats', gameId] });
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.error("Error saving stats:", error);
       toast({
-        title: "Error",
-        description: "Failed to save game statistics. Please try again.",
+        title: "Error saving statistics",
+        description: "Something went wrong. Please try again.",
         variant: "destructive"
       });
     }
   });
   
-  // Define position order for sorting
-  const positionOrder: Record<string, number> = {
-    'GS': 1, 'GA': 2, 'WA': 3, 'C': 4, 'WD': 5, 'GD': 6, 'GK': 7
-  };
-  
-  // Group players by the quarter they played in, sorted by position
-  const playersByQuarter = (quarter: string): Player[] => {
-    const quarterRosters = rosters.filter(roster => String(roster.quarter) === quarter);
-    
-    // Create map of player ID to position for this quarter
-    const playerPositions: Record<number, string> = {};
-    
-    // Use a map to track positions that are already assigned
-    // This ensures we don't have duplicates in our statistics view
-    const positionPlayers: Record<string, number> = {};
-    
-    // Process rosters to get unique position assignments
-    // If there are duplicates, the last one processed will be used
-    quarterRosters.forEach(roster => {
-      const position = roster.position;
-      const playerId = roster.playerId;
-      
-      // Record this player's position
-      playerPositions[playerId] = position;
-      
-      // Record which player is assigned to this position
-      positionPlayers[position] = playerId;
-    });
-    
-    // Create a set of players that have unique positions
-    const uniquePlayerIds = new Set(Object.values(positionPlayers));
-    
-    // Only include players with unique positions in our display
-    return quarterRosters
-      .map(roster => {
-        const player = players.find(p => p.id === roster.playerId);
-        return player || null;
-      })
-      .filter((player): player is Player => 
-        player !== null && uniquePlayerIds.has(player.id)
-      )
-      // Sort by position order (GS through GK)
-      .sort((a, b) => {
-        const posA = playerPositions[a.id] || '';
-        const posB = playerPositions[b.id] || '';
-        const orderA = positionOrder[posA] || 999;
-        const orderB = positionOrder[posB] || 999;
-        return orderA - orderB;
-      });
-  };
-  
-  // Get stat fields grouped by category
+  // Define stat categories and fields
   const statCategories = [
-    {
-      name: 'Shooting',
+    { 
+      label: 'Shooting', 
       fields: [
-        { id: 'goalsFor', label: 'For' },
+        { id: 'goalsFor', label: 'Goals' },
         { id: 'goalsAgainst', label: 'Against' },
-        { id: 'missedGoals', label: 'Missed' }
+        { id: 'missedGoals', label: 'Missed' },
       ]
     },
-    {
-      name: 'Defense',
+    { 
+      label: 'Defense', 
       fields: [
-        { id: 'intercepts', label: 'Intercepts' },
         { id: 'rebounds', label: 'Rebounds' },
-        { id: 'pickUp', label: 'Pick Ups' }
+        { id: 'intercepts', label: 'Intercepts' },
+        { id: 'pickUp', label: 'Pick Ups' },
       ]
     },
-    {
-      name: 'Errors',
+    { 
+      label: 'Errors', 
       fields: [
-        { id: 'badPass', label: 'Passes' },
+        { id: 'badPass', label: 'Bad Pass' },
         { id: 'handlingError', label: 'Handling' },
-        { id: 'infringement', label: 'Penalties' }
+        { id: 'infringement', label: 'Infringement' },
       ]
     }
   ];
   
-  // Helper function to get player's position in a specific quarter
-  const getPlayerPosition = (playerId: number, quarter: string): string => {
-    const quarterNum = parseInt(quarter);
-    const roster = rosters.find(r => r.quarter === quarterNum && r.playerId === playerId);
-    return roster ? roster.position : '';
+  // Get players in the current quarter, ordered by position
+  const getPlayersInQuarter = (quarter: string) => {
+    // Map players to their roster info
+    const playersWithRoster = players
+      .map(player => {
+        const rosterEntry = rosters.find(
+          r => r.playerId === player.id && r.quarter.toString() === quarter
+        );
+        
+        return {
+          player,
+          roster: rosterEntry,
+          position: rosterEntry?.position || 'Unknown'
+        };
+      })
+      .filter(item => item.roster) // Only include players who have a roster entry for this quarter
+      .sort((a, b) => {
+        // Define position order: GS, GA, WA, C, WD, GD, GK
+        const posOrder = { GS: 1, GA: 2, WA: 3, C: 4, WD: 5, GD: 6, GK: 7, Unknown: 8 };
+        return posOrder[a.position as keyof typeof posOrder] - posOrder[b.position as keyof typeof posOrder];
+      });
+    
+    return playersWithRoster;
   };
   
-  // Function to handle sorting for Game Totals table
-  const handleSort = (key: string) => {
+  // Get all players for the game totals view, also ordered by first quarter position
+  const getAllPlayers = () => {
+    // Get unique players from all quarters
+    const uniquePlayerIds = new Set<number>();
+    rosters.forEach(roster => uniquePlayerIds.add(roster.playerId));
+    
+    // Map player IDs to player objects with their quarter 1 position
+    return Array.from(uniquePlayerIds)
+      .map(playerId => {
+        const player = players.find(p => p.id === playerId);
+        if (!player) return null;
+        
+        // Find their position in quarter 1 (or earliest appearance)
+        const playerRosters = rosters
+          .filter(r => r.playerId === playerId)
+          .sort((a, b) => a.quarter - b.quarter);
+        
+        const firstRoster = playerRosters[0];
+        
+        return {
+          player,
+          position: firstRoster?.position || 'Unknown',
+          sortOrder: firstRoster?.quarter || 5 // Sort by earliest appearance, then position
+        };
+      })
+      .filter(item => item !== null)
+      .sort((a, b) => {
+        if (!a || !b) return 0;
+        if (a.sortOrder !== b.sortOrder) {
+          return a.sortOrder - b.sortOrder;
+        }
+        
+        // Define position order: GS, GA, WA, C, WD, GD, GK
+        const posOrder = { GS: 1, GA: 2, WA: 3, C: 4, WD: 5, GD: 6, GK: 7, Unknown: 8 };
+        return posOrder[a.position as keyof typeof posOrder] - posOrder[b.position as keyof typeof posOrder];
+      })
+      .map(item => item?.player) as Player[];
+  };
+  
+  // Function to sort the players in game totals view
+  const requestSort = (key: string) => {
     let direction: 'ascending' | 'descending' = 'ascending';
     
-    // If we're already sorting by this key, toggle the direction
-    if (sortConfig && sortConfig.key === key) {
-      direction = sortConfig.direction === 'ascending' ? 'descending' : 'ascending';
+    if (sortConfig?.key === key && sortConfig.direction === 'ascending') {
+      direction = 'descending';
     }
     
     setSortConfig({ key, direction });
   };
   
-  // Get sorted players for Game Totals tab
-  const getSortedPlayers = () => {
-    // Default sort is alphabetical by player name
-    const playersCopy = [...players];
+  // Get sorted players for the game totals view
+  const getSortedPlayersForTotals = () => {
+    const allPlayers = getAllPlayers();
     
     if (!sortConfig) {
-      return playersCopy.sort((a, b) => a.displayName.localeCompare(b.displayName));
+      return allPlayers;
     }
     
-    return playersCopy.sort((a, b) => {
-      // Handle rating sort
-      if (sortConfig.key === 'rating') {
-        const ratingA = playerRatings[a.id] || 5;
-        const ratingB = playerRatings[b.id] || 5;
-        
-        if (sortConfig.direction === 'ascending') {
-          return ratingA - ratingB;
-        } else {
-          return ratingB - ratingA;
-        }
-      }
-      
-      // Handle player name sort
+    return [...allPlayers].sort((a, b) => {
+      // Special case for player names
       if (sortConfig.key === 'name') {
-        if (sortConfig.direction === 'ascending') {
-          return a.displayName.localeCompare(b.displayName);
-        } else {
-          return b.displayName.localeCompare(a.displayName);
-        }
+        const aName = `${a.firstName} ${a.lastName}`;
+        const bName = `${b.firstName} ${b.lastName}`;
+        return sortConfig.direction === 'ascending' 
+          ? aName.localeCompare(bName)
+          : bName.localeCompare(aName);
       }
       
-      // Handle stat sort - make sure we have totals data
-      const valueA = (gameTotals[a.id] && gameTotals[a.id][sortConfig.key]) || 0;
-      const valueB = (gameTotals[b.id] && gameTotals[b.id][sortConfig.key]) || 0;
+      // Get values for comparison
+      const aValue = sortConfig.key === 'rating' 
+        ? playerRatings[a.id] || 0
+        : gameTotals[a.id]?.[sortConfig.key] || 0;
+        
+      const bValue = sortConfig.key === 'rating'
+        ? playerRatings[b.id] || 0
+        : gameTotals[b.id]?.[sortConfig.key] || 0;
       
       if (sortConfig.direction === 'ascending') {
-        return valueA - valueB;
-      } else {
-        return valueB - valueA;
+        return aValue - bValue;
       }
+      
+      return bValue - aValue;
     });
   };
   
@@ -751,90 +732,249 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
                 >
                   <Trash2 className="w-4 h-4 mr-2" /> Reset All Stats
                 </Button>
-            
-            <div className="flex space-x-2 ml-2">
-              <Button 
-                onClick={() => setResetQuarterDialogOpen(true)}
-                variant="outline"
-                className="border-red-200 hover:bg-red-50 text-red-600"
-              >
-                <RotateCcw className="w-4 h-4 mr-2" /> Reset Quarter
-              </Button>
-              
-              <Button 
-                onClick={() => setResetAllDialogOpen(true)}
-                variant="outline"
-                className="border-red-200 hover:bg-red-50 text-red-600"
-              >
-                <Trash2 className="w-4 h-4 mr-2" /> Reset All Stats
-              </Button>
-            
-              <Button
-                variant="default" 
-                onClick={() => saveStatsMutation.mutate()}
-                disabled={saveStatsMutation.isPending}
-              >
-                <Save className="w-4 h-4 mr-2" /> Save Stats
-              </Button>
+                
+                <Button
+                  variant="default" 
+                  onClick={() => saveStatsMutation.mutate()}
+                  disabled={saveStatsMutation.isPending}
+                >
+                  <Save className="w-4 h-4 mr-2" /> Save Stats
+                </Button>
+              </div>
             </div>
-          </div>
-          
-          {/* Quarter tabs */}
-          {['1', '2', '3', '4'].map(quarter => (
-            <TabsContent key={quarter} value={quarter} className="mt-0">
+            
+            {/* Quarter tabs */}
+            {['1', '2', '3', '4'].map(quarter => (
+              <TabsContent key={quarter} value={quarter}>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-36 border-r">Player</TableHead>
+                        
+                        {/* Create header cells for each stat category */}
+                        {statCategories.map((category, categoryIndex) => (
+                          <React.Fragment key={categoryIndex}>
+                            {category.fields.map((field, fieldIndex) => {
+                              // Add right border to last column in each category
+                              const isLastInCategory = fieldIndex === category.fields.length - 1;
+                              return (
+                                <TableHead 
+                                  key={field.id} 
+                                  className={`text-center w-[100px] ${isLastInCategory ? 'border-r' : ''}`}
+                                >
+                                  {field.label}
+                                </TableHead>
+                              );
+                            })}
+                          </React.Fragment>
+                        ))}
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {getPlayersInQuarter(quarter).map(({ player, position }) => (
+                        <TableRow key={player.id}>
+                          <TableCell className="border-r font-medium">
+                            <div className="flex items-center">
+                              <div className="w-6 h-6 rounded-full mr-2 flex items-center justify-center" 
+                                style={{ backgroundColor: player.avatarColor || '#0ea5e9' }}>
+                                <span className="text-xs text-white font-bold">
+                                  {position}
+                                </span>
+                              </div>
+                              <div className="truncate">
+                                {player.displayName || `${player.firstName} ${player.lastName}`}
+                              </div>
+                            </div>
+                          </TableCell>
+                          
+                          {/* Stat fields */}
+                          {statCategories.map((category, categoryIndex) => (
+                            category.fields.map((field, fieldIndex) => {
+                              // Add right border to last column in each category
+                              const isLastInCategory = fieldIndex === category.fields.length - 1;
+                              
+                              return (
+                                <TableCell 
+                                  key={field.id} 
+                                  className={`text-center w-[100px] ${isLastInCategory ? 'border-r' : ''}`}
+                                >
+                                  <div className="flex items-center justify-center space-x-2">
+                                    <Button
+                                      variant="outline"
+                                      size="icon"
+                                      className="h-7 w-7"
+                                      onClick={() => {
+                                        adjustStatValue(quarter, player.id, field.id, 1);
+                                      }}
+                                    >
+                                      <ChevronUp className="h-4 w-4" />
+                                    </Button>
+                                    
+                                    <Input
+                                      type="number"
+                                      min="0"
+                                      className="h-9 w-12 text-center"
+                                      value={formValues[quarter]?.[player.id]?.[field.id] || '0'}
+                                      onChange={(e) => {
+                                        handleInputChange(quarter, player.id, field.id, e.target.value);
+                                      }}
+                                    />
+                                    
+                                    <Button
+                                      variant="outline"
+                                      size="icon"
+                                      className="h-7 w-7"
+                                      onClick={() => {
+                                        adjustStatValue(quarter, player.id, field.id, -1);
+                                      }}
+                                      disabled={!formValues[quarter]?.[player.id]?.[field.id] || formValues[quarter][player.id][field.id] === '0'}
+                                    >
+                                      <ChevronDown className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                </TableCell>
+                              );
+                            })
+                          ))}
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </TabsContent>
+            ))}
+            
+            {/* Game Totals tab */}
+            <TabsContent value="totals">
               <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-slate-50">
-                      <TableHead className="min-w-[120px]">Player</TableHead>
-                      <TableHead className="text-center w-10 border-r"></TableHead>
+                <Table className="min-w-full">
+                  <TableHeader className="bg-muted">
+                    <TableRow>
+                      <TableHead 
+                        className="w-40 border-r cursor-pointer hover:bg-gray-100"
+                        onClick={() => requestSort('name')}
+                      >
+                        Player
+                        {sortConfig?.key === 'name' && (
+                          <span className="ml-1">
+                            {sortConfig.direction === 'ascending' ? '↑' : '↓'}
+                          </span>
+                        )}
+                      </TableHead>
                       
-                      {/* Stat category headers */}
-                      {statCategories.map((category, index) => (
-                        <TableHead 
-                          key={category.name} 
-                          colSpan={category.fields.length}
-                          className={`text-center bg-blue-50 border-r ${index === 0 ? 'border-l' : ''}`}
-                        >
-                          {category.name}
-                        </TableHead>
+                      <TableHead 
+                        className="w-[100px] text-center border-r cursor-pointer hover:bg-gray-100"
+                        onClick={() => requestSort('rating')}
+                      >
+                        Rating
+                        {sortConfig?.key === 'rating' && (
+                          <span className="ml-1">
+                            {sortConfig.direction === 'ascending' ? '↑' : '↓'}
+                          </span>
+                        )}
+                      </TableHead>
+                      
+                      {/* Create header cells for each stat category */}
+                      {statCategories.map((category, categoryIndex) => (
+                        <React.Fragment key={categoryIndex}>
+                          <TableHead className="text-center bg-gray-50 font-bold" colSpan={category.fields.length}>
+                            {category.label}
+                          </TableHead>
+                        </React.Fragment>
                       ))}
                     </TableRow>
                     
-                    {/* Stat field headers */}
                     <TableRow>
-                      <TableHead></TableHead>
-                      <TableHead className="border-r"></TableHead>
+                      <TableHead className="w-40 border-r"></TableHead>
+                      <TableHead className="w-[100px] text-center border-r"></TableHead>
                       
+                      {/* Create header cells for each stat field */}
                       {statCategories.map((category, categoryIndex) => (
-                        category.fields.map((field, fieldIndex) => {
-                          // Add right border to last column in each category
-                          const isLastInCategory = fieldIndex === category.fields.length - 1;
-                          return (
-                            <TableHead 
-                              key={field.id} 
-                              className={`text-center px-1 py-2 min-w-[80px] ${isLastInCategory ? 'border-r' : ''}`}
-                            >
-                              {field.label}
-                            </TableHead>
-                          );
-                        })
+                        <React.Fragment key={categoryIndex}>
+                          {category.fields.map((field, fieldIndex) => {
+                            // Add right border to last column in each category
+                            const isLastInCategory = fieldIndex === category.fields.length - 1;
+                            
+                            return (
+                              <TableHead 
+                                key={field.id} 
+                                className={`text-center w-[100px] cursor-pointer hover:bg-gray-100 ${isLastInCategory ? 'border-r' : ''}`}
+                                onClick={() => requestSort(field.id)}
+                              >
+                                {field.label}
+                                {sortConfig?.key === field.id && (
+                                  <span className="ml-1">
+                                    {sortConfig.direction === 'ascending' ? '↑' : '↓'}
+                                  </span>
+                                )}
+                              </TableHead>
+                            );
+                          })}
+                        </React.Fragment>
                       ))}
                     </TableRow>
                   </TableHeader>
                   
                   <TableBody>
-                    {playersByQuarter(quarter).map(player => (
-                      <TableRow key={player.id} className="hover:bg-slate-50">
-                        <TableCell className="font-medium">
-                          {player.displayName}
+                    {getSortedPlayersForTotals().map(player => (
+                      <TableRow key={player.id}>
+                        <TableCell className="border-r font-medium">
+                          <div className="flex items-center">
+                            <div className="w-6 h-6 rounded-full mr-2" 
+                              style={{ backgroundColor: player.avatarColor || '#0ea5e9' }}>
+                            </div>
+                            <div className="truncate">
+                              {player.displayName || `${player.firstName} ${player.lastName}`}
+                            </div>
+                          </div>
                         </TableCell>
                         
-                        <TableCell className="text-center font-medium border-r">
-                          {getPlayerPosition(player.id, quarter)}
+                        {/* Player rating cell - this is editable */}
+                        <TableCell className="border-r">
+                          <div className="flex items-center justify-center space-x-2">
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              className="h-7 w-7"
+                              onClick={() => {
+                                const currentRating = playerRatings[player.id] || 5;
+                                const newRating = Math.min(10, currentRating + 1);
+                                setPlayerRatings(prev => ({...prev, [player.id]: newRating}));
+                              }}
+                              disabled={playerRatings[player.id] >= 10}
+                            >
+                              <ChevronUp className="h-4 w-4" />
+                            </Button>
+                            
+                            <Input
+                              type="number"
+                              min="0"
+                              max="10"
+                              className="h-9 w-12 text-center"
+                              value={playerRatings[player.id] || 5}
+                              onChange={(e) => {
+                                handleRatingChange(player.id, e.target.value);
+                              }}
+                            />
+                            
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              className="h-7 w-7"
+                              onClick={() => {
+                                const currentRating = playerRatings[player.id] || 5;
+                                const newRating = Math.max(0, currentRating - 1);
+                                setPlayerRatings(prev => ({...prev, [player.id]: newRating}));
+                              }}
+                              disabled={playerRatings[player.id] <= 0}
+                            >
+                              <ChevronDown className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </TableCell>
                         
-                        {/* Stat inputs by category */}
+                        {/* Game totals display by category */}
                         {statCategories.map((category, categoryIndex) => (
                           category.fields.map((field, fieldIndex) => {
                             // Add right border to last column in each category
@@ -842,35 +982,10 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
                             return (
                               <TableCell 
                                 key={field.id} 
-                                className={`p-1 text-center ${isLastInCategory ? 'border-r' : ''}`}
+                                className={`text-center w-[100px] ${isLastInCategory ? 'border-r' : ''}`}
                               >
-                                <div className="flex flex-col items-center">
-                                  <Button 
-                                    variant="ghost" 
-                                    size="icon" 
-                                    className="h-6 w-6 mb-1" 
-                                    onClick={() => adjustStatValue(quarter, player.id, field.id, 1)}
-                                  >
-                                    <ChevronUp className="h-4 w-4" />
-                                  </Button>
-                                  
-                                  <Input
-                                    type="text"
-                                    inputMode="numeric"
-                                    className="h-9 w-16 text-center"
-                                    value={formValues[quarter]?.[player.id]?.[field.id] || '0'}
-                                    onChange={(e) => handleInputChange(quarter, player.id, field.id, e.target.value)}
-                                  />
-                                  
-                                  <Button 
-                                    variant="ghost" 
-                                    size="icon" 
-                                    className="h-6 w-6 mt-1" 
-                                    onClick={() => adjustStatValue(quarter, player.id, field.id, -1)}
-                                    disabled={parseInt(formValues[quarter]?.[player.id]?.[field.id] || '0') <= 0}
-                                  >
-                                    <ChevronDown className="h-4 w-4" />
-                                  </Button>
+                                <div className="bg-slate-50 px-3 py-2 rounded-md border border-slate-200">
+                                  {gameTotals[player.id]?.[field.id] || 0}
                                 </div>
                               </TableCell>
                             );
@@ -882,197 +997,55 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
                 </Table>
               </div>
             </TabsContent>
-          ))}
-          
-          {/* Game Totals tab */}
-          <TabsContent value="totals">
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-slate-50">
-                    <TableHead 
-                      className="w-[160px] cursor-pointer hover:bg-slate-100"
-                      onClick={() => handleSort('name')}
-                    >
-                      Player
-                      {sortConfig?.key === 'name' && (
-                        <span className="ml-1">
-                          {sortConfig.direction === 'ascending' ? '↑' : '↓'}
-                        </span>
-                      )}
-                    </TableHead>
-                    <TableHead 
-                      className="text-center w-[120px] cursor-pointer hover:bg-slate-100"
-                      onClick={() => handleSort('rating')}
-                    >
-                      Rating
-                      {sortConfig?.key === 'rating' && (
-                        <span className="ml-1">
-                          {sortConfig.direction === 'ascending' ? '↑' : '↓'}
-                        </span>
-                      )}
-                    </TableHead>
-                    
-                    {/* Stat category headers for totals */}
-                    {statCategories.map((category) => (
-                      <TableHead 
-                        key={category.name} 
-                        colSpan={category.fields.length}
-                        className="text-center bg-blue-50 border-l border-r"
-                      >
-                        {category.name}
-                      </TableHead>
-                    ))}
-                  </TableRow>
-                  
-                  {/* Stat field headers */}
-                  <TableRow>
-                    <TableHead></TableHead>
-                    <TableHead className="border-r"></TableHead>
-                    
-                    {statCategories.map((category, categoryIndex) => (
-                      category.fields.map((field, fieldIndex) => {
-                        // Add right border to last column in each category
-                        const isLastInCategory = fieldIndex === category.fields.length - 1;
-                        return (
-                          <TableHead 
-                            key={field.id} 
-                            className={`text-center px-1 py-2 w-[100px] cursor-pointer hover:bg-slate-100 ${isLastInCategory ? 'border-r' : ''}`}
-                            onClick={() => handleSort(field.id)}
-                          >
-                            {field.label}
-                            {sortConfig?.key === field.id && (
-                              <span className="ml-1">
-                                {sortConfig.direction === 'ascending' ? '↑' : '↓'}
-                              </span>
-                            )}
-                          </TableHead>
-                        );
-                      })
-                    ))}
-                  </TableRow>
-                </TableHeader>
-                
-                <TableBody>
-                  {getSortedPlayers().map(player => (
-                    <TableRow key={player.id} className="hover:bg-slate-50">
-                      <TableCell className="font-medium">
-                        {player.displayName}
-                      </TableCell>
-                      
-                      <TableCell className="p-1 text-center border-r">
-                        <div className="flex flex-col items-center">
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-6 w-6 mb-1" 
-                            onClick={() => {
-                              const currentRating = playerRatings[player.id] || 5;
-                              const newRating = Math.min(10, currentRating + 1);
-                              setPlayerRatings(prev => ({...prev, [player.id]: newRating}));
-                            }}
-                          >
-                            <ChevronUp className="h-4 w-4" />
-                          </Button>
-                          
-                          <Input
-                            type="text"
-                            inputMode="numeric"
-                            className="h-9 w-16 text-center"
-                            value={playerRatings[player.id] || 5}
-                            onChange={(e) => {
-                              const val = parseInt(e.target.value);
-                              if (!isNaN(val) && val >= 0 && val <= 10) {
-                                setPlayerRatings(prev => ({...prev, [player.id]: val}));
-                              }
-                            }}
-                          />
-                          
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-6 w-6 mt-1" 
-                            onClick={() => {
-                              const currentRating = playerRatings[player.id] || 5;
-                              const newRating = Math.max(0, currentRating - 1);
-                              setPlayerRatings(prev => ({...prev, [player.id]: newRating}));
-                            }}
-                            disabled={playerRatings[player.id] <= 0}
-                          >
-                            <ChevronDown className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                      
-                      {/* Game totals display by category */}
-                      {statCategories.map((category, categoryIndex) => (
-                        category.fields.map((field, fieldIndex) => {
-                          // Add right border to last column in each category
-                          const isLastInCategory = fieldIndex === category.fields.length - 1;
-                          return (
-                            <TableCell 
-                              key={field.id} 
-                              className={`text-center w-[100px] ${isLastInCategory ? 'border-r' : ''}`}
-                            >
-                              <div className="bg-slate-50 px-3 py-2 rounded-md border border-slate-200">
-                                {gameTotals[player.id]?.[field.id] || 0}
-                              </div>
-                            </TableCell>
-                          );
-                        })
-                      ))}
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </TabsContent>
-        </Tabs>
-      </CardContent>
-    </Card>
-    
-    <AlertDialog open={resetQuarterDialogOpen} onOpenChange={setResetQuarterDialogOpen}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Reset Quarter Statistics</AlertDialogTitle>
-          <AlertDialogDescription>
-            This will reset all statistics for Quarter {activeQuarter} to zero. 
-            This action only affects the form and won&apos;t be saved until you click &quot;Save Stats&quot;.
-            Are you sure you want to continue?
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction 
-            onClick={resetQuarterStats}
-            className="bg-red-500 hover:bg-red-600 text-white"
-          >
-            Reset Quarter
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
-    
-    <AlertDialog open={resetAllDialogOpen} onOpenChange={setResetAllDialogOpen}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Reset All Game Statistics</AlertDialogTitle>
-          <AlertDialogDescription>
-            This will reset all statistics for the entire game to zero.
-            This action only affects the form and won&apos;t be saved until you click &quot;Save Stats&quot;.
-            Are you sure you want to continue?
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction 
-            onClick={resetAllStats}
-            className="bg-red-500 hover:bg-red-600 text-white"
-          >
-            Reset All Statistics
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+          </Tabs>
+        </CardContent>
+      </Card>
+      
+      {/* Reset Quarter Confirmation Dialog */}
+      <AlertDialog open={resetQuarterDialogOpen} onOpenChange={setResetQuarterDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Reset Quarter Statistics</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will reset all statistics for Quarter {activeQuarter} to zero. 
+              This action only affects the form and won&apos;t be saved until you click &quot;Save Stats&quot;.
+              Are you sure you want to continue?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={resetQuarterStats}
+              className="bg-red-500 hover:bg-red-600 text-white"
+            >
+              Reset Quarter
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      
+      {/* Reset All Stats Confirmation Dialog */}
+      <AlertDialog open={resetAllDialogOpen} onOpenChange={setResetAllDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Reset All Game Statistics</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will reset all statistics for the entire game to zero.
+              This action only affects the form and won&apos;t be saved until you click &quot;Save Stats&quot;.
+              Are you sure you want to continue?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={resetAllStats}
+              className="bg-red-500 hover:bg-red-600 text-white"
+            >
+              Reset All Statistics
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
