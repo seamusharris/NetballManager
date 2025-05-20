@@ -509,7 +509,7 @@ export default function LiveStats() {
         <div>
           <h1 className="text-2xl font-bold">Live Stats Tracking</h1>
           <p className="text-muted-foreground">
-            {formatShortDate(game.date)} vs {game.opponentName}
+            Round {game.round} | {formatShortDate(game.date)} vs {game.opponent && game.opponent.teamName}
           </p>
         </div>
         
@@ -548,7 +548,7 @@ export default function LiveStats() {
               </div>
               <div className="text-2xl font-bold">-</div>
               <div className="text-right">
-                <p className="text-sm text-muted-foreground">{game.opponentName}</p>
+                <p className="text-sm text-muted-foreground">{game.opponent ? game.opponent.teamName : game.opponentName}</p>
                 <p className="text-3xl font-bold">{getGameTotal('goalsAgainst')}</p>
               </div>
             </div>
