@@ -186,11 +186,13 @@ export default function Statistics() {
                   {completedGames.length === 0 ? (
                     <SelectItem value="none" disabled>No completed games</SelectItem>
                   ) : (
-                    completedGames.map(game => (
-                      <SelectItem key={game.id} value={game.id.toString()}>
-                        Round {game.round} - {opponents.find(o => o.id === game.opponentId)?.teamName}
-                      </SelectItem>
-                    ))
+                    [...completedGames]
+                      .sort((a, b) => (a.round || 0) - (b.round || 0))
+                      .map(game => (
+                        <SelectItem key={game.id} value={game.id.toString()}>
+                          Round {game.round} - {opponents.find(o => o.id === game.opponentId)?.teamName}
+                        </SelectItem>
+                      ))
                   )}
                 </SelectContent>
               </Select>

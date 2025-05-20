@@ -722,11 +722,13 @@ export default function RosterManager({
               {allGames.length === 0 ? (
                 <SelectItem value="no-games" disabled>No games available</SelectItem>
               ) : (
-                allGames.map(game => (
-                  <SelectItem key={game.id} value={game.id.toString()}>
-                    Round {game.round} - {opponents.find(o => o.id === game.opponentId)?.teamName} {game.completed ? "(Past)" : ""}
-                  </SelectItem>
-                ))
+                [...allGames]
+                  .sort((a, b) => (a.round || 0) - (b.round || 0))
+                  .map(game => (
+                    <SelectItem key={game.id} value={game.id.toString()}>
+                      Round {game.round} - {opponents.find(o => o.id === game.opponentId)?.teamName} {game.completed ? "(Past)" : ""}
+                    </SelectItem>
+                  ))
               )}
             </SelectContent>
           </Select>

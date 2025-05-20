@@ -582,11 +582,13 @@ export default function SimpleRosterManager({
                 <SelectValue placeholder="Select a game" />
               </SelectTrigger>
               <SelectContent>
-                {allGames.map((game) => (
-                  <SelectItem key={game.id} value={game.id.toString()}>
-                    Round {game.round} - {opponents.find(o => o.id === game.opponentId)?.teamName || "Unknown Opponent"}
-                  </SelectItem>
-                ))}
+                {[...allGames]
+                  .sort((a, b) => (a.round || 0) - (b.round || 0))
+                  .map((game) => (
+                    <SelectItem key={game.id} value={game.id.toString()}>
+                      Round {game.round} - {opponents.find(o => o.id === game.opponentId)?.teamName || "Unknown Opponent"}
+                    </SelectItem>
+                  ))}
               </SelectContent>
             </Select>
           </div>
