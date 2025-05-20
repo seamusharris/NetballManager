@@ -532,7 +532,7 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
               <TableHeader>
                 <TableRow className="bg-slate-50">
                   <TableHead 
-                    className="min-w-[120px] border-b cursor-pointer hover:bg-gray-50"
+                    className="w-[100px] border-b cursor-pointer hover:bg-gray-50"
                     onClick={() => handleSort('name')}
                   >
                     Player {renderSortIndicator('name')}
@@ -592,14 +592,14 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
                       onClick={() => navigate(`/player/${player.id}`)}
                     >
                       {/* Player column */}
-                      <TableCell className="px-3 py-2 whitespace-nowrap">
+                      <TableCell className="py-2 whitespace-nowrap">
                         <div className="flex items-center">
                           <div className={cn("h-8 w-8 rounded-full flex items-center justify-center text-white", getAvatarColor(player))}>
                             <span className="text-xs font-semibold">
                               {getInitials(player.firstName, player.lastName)}
                             </span>
                           </div>
-                          <div className="ml-3">
+                          <div className="ml-2">
                             <span className="text-sm font-medium text-blue-600">
                               {player.displayName}
                             </span>
