@@ -101,8 +101,9 @@ export async function importData(jsonData: string): Promise<ImportResult> {
     // Import players
     for (const player of data.players) {
       try {
-        // Create a clean player object without the ID to let the server assign new IDs
+        // Include the original ID to preserve relationships
         const playerData = {
+          id: player.id, // Keep original ID
           displayName: player.displayName,
           firstName: player.firstName,
           lastName: player.lastName,
@@ -130,6 +131,7 @@ export async function importData(jsonData: string): Promise<ImportResult> {
     for (const opponent of data.opponents) {
       try {
         const opponentData = {
+          id: opponent.id, // Keep original ID
           teamName: opponent.teamName,
           primaryColor: opponent.primaryColor,
           secondaryColor: opponent.secondaryColor,
@@ -154,6 +156,7 @@ export async function importData(jsonData: string): Promise<ImportResult> {
     for (const game of data.games) {
       try {
         const gameData = {
+          id: game.id, // Keep original ID
           date: game.date,
           time: game.time,
           opponentId: game.opponentId,
@@ -181,11 +184,12 @@ export async function importData(jsonData: string): Promise<ImportResult> {
         gamesImported++;
         
         // Import rosters for this game
-        const gameRosters = data.rosters[game.id] || [];
+        const gameRosters = data.rosters.filter(r => r.gameId === game.id) || [];
         for (const roster of gameRosters) {
           try {
             const rosterData = {
-              gameId: newGame.id, // Use the new game ID
+              id: roster.id, // Keep original ID
+              gameId: game.id, // Keep original game ID
               playerId: roster.playerId,
               quarter: roster.quarter,
               position: roster.position
@@ -206,11 +210,12 @@ export async function importData(jsonData: string): Promise<ImportResult> {
         }
         
         // Import stats for this game
-        const gameStats = data.stats[game.id] || [];
+        const gameStats = data.gameStats.filter(s => s.gameId === game.id) || [];
         for (const stat of gameStats) {
           try {
             const statData = {
-              gameId: newGame.id, // Use the new game ID
+              id: stat.id, // Keep original ID
+              gameId: game.id, // Keep original game ID
               playerId: stat.playerId,
               quarter: stat.quarter,
               goalsFor: stat.goalsFor,
