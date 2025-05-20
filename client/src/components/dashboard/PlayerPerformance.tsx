@@ -423,7 +423,12 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
           <Table>
             <TableHeader>
               <TableRow className="bg-slate-50">
-                <TableHead className="min-w-[120px] border-b">Player</TableHead>
+                <TableHead 
+                  className="min-w-[120px] border-b cursor-pointer hover:bg-gray-50"
+                  onClick={() => handleSort('name')}
+                >
+                  Player {renderSortIndicator('name')}
+                </TableHead>
                 <TableHead className="text-center w-10 border-r border-b"></TableHead>
                 
                 {/* Stat category headers */}
