@@ -184,7 +184,7 @@ export async function importData(jsonData: string): Promise<ImportResult> {
         gamesImported++;
         
         // Import rosters for this game
-        const gameRosters = data.rosters.filter(r => r.gameId === game.id) || [];
+        const gameRosters = data.rosters.filter((r: any) => r.gameId === game.id) || [];
         for (const roster of gameRosters) {
           try {
             const rosterData = {
@@ -210,7 +210,7 @@ export async function importData(jsonData: string): Promise<ImportResult> {
         }
         
         // Import stats for this game
-        const gameStats = data.gameStats.filter(s => s.gameId === game.id) || [];
+        const gameStats = data.gameStats.filter((s: any) => s.gameId === game.id) || [];
         for (const stat of gameStats) {
           try {
             const statData = {
