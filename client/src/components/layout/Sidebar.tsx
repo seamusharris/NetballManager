@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'wouter';
 import { cn } from '@/lib/utils';
-import { X, Menu, Home, Users, ClipboardList, Calendar, Flag, BarChart } from 'lucide-react';
+import { X, Menu, Home, Users, ClipboardList, Calendar, Flag, BarChart, Database } from 'lucide-react';
 
 interface SidebarProps {
   isMobileOpen: boolean;

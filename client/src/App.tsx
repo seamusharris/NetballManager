@@ -11,6 +11,7 @@ import Games from "@/pages/Games";
 import Opponents from "@/pages/Opponents";
 import Statistics from "@/pages/Statistics";
 import PlayerDetails from "@/pages/PlayerDetails";
+import DataManagement from "@/pages/DataManagement";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -25,6 +26,7 @@ function Router() {
         <Route path="/games" component={Games} />
         <Route path="/opponents" component={Opponents} />
         <Route path="/statistics" component={Statistics} />
+        <Route path="/data-management" component={DataManagement} />
         <Route component={NotFound} />
       </Switch>
     </Layout>
