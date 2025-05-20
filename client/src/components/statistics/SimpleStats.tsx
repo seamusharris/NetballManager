@@ -37,9 +37,8 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
   const [gameTotals, setGameTotals] = useState<Record<number, Record<string, number>>>({});
   // Add state for player ratings in the Game Totals tab
   const [playerRatings, setPlayerRatings] = useState<Record<number, number>>({});
-  // Add state for sorting the Game Totals table
+  // Add state for sorting the Game Totals table and reset dialogs
   const [sortConfig, setSortConfig] = useState<{key: string, direction: 'ascending' | 'descending'} | null>(null);
-  // Add state for reset dialogs
   const [resetQuarterDialogOpen, setResetQuarterDialogOpen] = useState(false);
   const [resetAllDialogOpen, setResetAllDialogOpen] = useState(false);
   const { toast } = useToast();
