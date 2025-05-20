@@ -174,24 +174,28 @@ export default function Statistics() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-heading font-bold text-neutral-dark">Game Statistics</h2>
-          <div className="flex space-x-3">
-            <Select value={selectedGameId?.toString() || ''} onValueChange={(value) => setSelectedGameId(Number(value))}>
-              <SelectTrigger className="w-[250px]">
-                <SelectValue placeholder="Select Game" />
-              </SelectTrigger>
-              <SelectContent>
-                {completedGames.length === 0 ? (
-                  <SelectItem value="none" disabled>No completed games</SelectItem>
-                ) : (
-                  completedGames.map(game => (
-                    <SelectItem key={game.id} value={game.id.toString()}>
-                      vs. {opponents.find(o => o.id === game.opponentId)?.teamName} - {game.date}
-                    </SelectItem>
-                  ))
-                )}
-              </SelectContent>
-            </Select>
-          </div>
+          {games.length === 0 ? (
+            <div></div> /* Empty div to maintain flex layout */
+          ) : (
+            <div className="flex space-x-3">
+              <Select value={selectedGameId?.toString() || ''} onValueChange={(value) => setSelectedGameId(Number(value))}>
+                <SelectTrigger className="w-[250px]">
+                  <SelectValue placeholder="Select Game" />
+                </SelectTrigger>
+                <SelectContent>
+                  {completedGames.length === 0 ? (
+                    <SelectItem value="none" disabled>No completed games</SelectItem>
+                  ) : (
+                    completedGames.map(game => (
+                      <SelectItem key={game.id} value={game.id.toString()}>
+                        vs. {opponents.find(o => o.id === game.opponentId)?.teamName} - {game.date}
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
         </div>
         
         {isLoading ? (

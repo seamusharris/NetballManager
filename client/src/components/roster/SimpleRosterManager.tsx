@@ -545,6 +545,26 @@ export default function SimpleRosterManager({
     );
   }
 
+  // Check if there are no games
+  if (games.length === 0) {
+    return (
+      <Card className="mb-6 shadow-md">
+        <CardContent className="pt-6">
+          <h3 className="text-lg font-semibold mb-4">No Games Available</h3>
+          <p className="text-muted-foreground mb-4">
+            There are no games available for roster management. Please create games first.
+          </p>
+          <Button 
+            variant="default" 
+            onClick={() => window.location.href = '/games'}
+          >
+            Go to Games Page
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className="mb-6 shadow-md">
       <CardContent className="pt-6">
