@@ -323,15 +323,7 @@ export default function PlayerDetails() {
   };
 
   // Get the player's avatar color
-  const getAvatarColor = (player: Player): string => {
-    // If the player has a stored avatar color, use it
-    if (player?.avatarColor) {
-      return player.avatarColor;
-    }
-    
-    // Default fallback if the player has no stored color
-    return 'bg-gray-500';
-  };
+  // The avatar color function is no longer used since we're directly using player.avatarColor in the JSX
 
   const getRatingClass = (rating: number): string => {
     if (rating >= 9) return 'bg-success/20 text-success';
@@ -411,7 +403,7 @@ export default function PlayerDetails() {
           <Card className="flex-grow md:w-1/3 md:max-w-md">
             <CardContent className="p-6">
               <div className="flex items-center">
-                <div className={cn("h-16 w-16 rounded-full flex items-center justify-center text-white mr-4", getAvatarColor(player))}>
+                <div className={cn("h-16 w-16 rounded-full flex items-center justify-center text-white mr-4", player.avatarColor || 'bg-gray-500')}>
                   <span className="text-lg font-semibold">
                     {getInitials(player.firstName, player.lastName)}
                   </span>
