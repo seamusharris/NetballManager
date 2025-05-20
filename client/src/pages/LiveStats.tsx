@@ -647,34 +647,32 @@ export default function LiveStats() {
             return (
               <Card key={playerId} className="mb-3 overflow-hidden">
                 <CardHeader className="py-2 pb-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <div className="flex items-center gap-2 mr-2">
-                      <div 
-                        className="h-10 w-10 rounded-full flex items-center justify-center text-white font-bold text-base"
-                        style={{
-                          backgroundColor: '#3b82f6', /* blue-500 */
-                          border: '2px solid white',
-                          boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
-                        }}
-                      >
-                        {position}
-                      </div>
-                      <div>
-                        <p className="font-semibold text-sm">{player.displayName}</p>
-                      </div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <div 
+                      className="h-10 w-10 rounded-full flex items-center justify-center text-white font-bold text-base"
+                      style={{
+                        backgroundColor: '#3b82f6', /* blue-500 */
+                        border: '2px solid white',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                      }}
+                    >
+                      {position}
                     </div>
-                    
-                    {/* Common stats that show in header - for more compact layout */}
-                    <div className="flex flex-wrap gap-2">
-                      {/* Show common stats here */}
-                      {commonStats.map(stat => (
-                        statConfig[stat] && (
-                          <div key={`${playerId}-header-${stat}`} className="inline-block">
-                            {renderStatCounter(playerId, stat, true)}
-                          </div>
-                        )
-                      ))}
+                    <div>
+                      <p className="font-semibold text-sm">{player.displayName}</p>
                     </div>
+                  </div>
+                  
+                  {/* Common stats that show in header - using consistent grid */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 w-full">
+                    {/* Show common stats here */}
+                    {commonStats.map(stat => (
+                      statConfig[stat] && (
+                        <div key={`${playerId}-header-${stat}`}>
+                          {renderStatCounter(playerId, stat, false)}
+                        </div>
+                      )
+                    ))}
                   </div>
                 </CardHeader>
                 <CardContent className="py-2 pt-1">
