@@ -158,12 +158,59 @@ export default function DataManagement() {
       setIsDeleting(true);
       setError(null);
       
-      // Delete all data tables in order (child tables first to avoid foreign key issues)
-      await fetch('/api/gamestats/all', { method: 'DELETE' });
-      await fetch('/api/rosters/all', { method: 'DELETE' });
-      await fetch('/api/games/all', { method: 'DELETE' });
-      await fetch('/api/opponents/all', { method: 'DELETE' });
-      await fetch('/api/players/all', { method: 'DELETE' });
+      // Create a backup first
+      try {
+        const backupResult = await exportAllData();
+        console.log("Backup created before deletion:", backupResult.filename);
+        
+        toast({
+          title: "Backup Created",
+          description: `A backup of your data was created as "${backupResult.filename}" before deletion.`,
+          variant: "default",
+        });
+      } catch (backupError) {
+        console.error("Failed to create backup before deletion:", backupError);
+        toast({
+          title: "Backup Failed",
+          description: "We couldn't create a backup before deletion. You may want to cancel and export your data manually first.",
+          variant: "destructive",
+        });
+        setIsDeleting(false);
+        return;
+      }
+      
+      // Delete all players - this will cascade delete related records due to database constraints
+      const players = await (await fetch('/api/players')).json();
+      
+      for (const player of players) {
+        await fetch(`/api/players/${player.id}`, { method: 'DELETE' });
+      }
+      
+      // Delete all opponents
+      const opponents = await (await fetch('/api/opponents')).json();
+      
+      for (const opponent of opponents) {
+        await fetch(`/api/opponents/${opponent.id}`, { method: 'DELETE' });
+      }
+      
+      // Delete all games - this should also delete associated rosters and game stats
+      const games = await (await fetch('/api/games')).json();
+      
+      // Delete all rosters and game stats first
+      for (const game of games) {
+        const rosters = await (await fetch(`/api/games/${game.id}/rosters`)).json();
+        for (const roster of rosters) {
+          await fetch(`/api/rosters/${roster.id}`, { method: 'DELETE' });
+        }
+        
+        const stats = await (await fetch(`/api/games/${game.id}/stats`)).json();
+        for (const stat of stats) {
+          await fetch(`/api/gamestats/${stat.id}`, { method: 'DELETE' });
+        }
+        
+        // Now delete the game
+        await fetch(`/api/games/${game.id}`, { method: 'DELETE' });
+      }
       
       // Invalidate all queries to refresh data
       await queryClient.invalidateQueries({ queryKey: ['/api/players'] });
