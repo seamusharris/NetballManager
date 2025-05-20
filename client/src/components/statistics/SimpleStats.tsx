@@ -801,20 +801,20 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
                                 >
                                   <div className="flex flex-col items-center justify-center">
                                     <Button
-                                      variant="outline"
-                                      size="icon"
-                                      className="h-7 w-7 mb-1"
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-5 w-5 p-0 mb-1 hover:bg-transparent"
                                       onClick={() => {
                                         adjustStatValue(quarter, player.id, field.id, 1);
                                       }}
                                     >
-                                      <ChevronUp className="h-4 w-4" />
+                                      <ChevronUp className="h-4 w-4 text-blue-500" />
                                     </Button>
                                     
                                     <Input
                                       type="number"
                                       min="0"
-                                      className="h-9 w-12 text-center"
+                                      className="h-8 w-10 text-center"
                                       value={formValues[quarter]?.[player.id]?.[field.id] || '0'}
                                       onChange={(e) => {
                                         handleInputChange(quarter, player.id, field.id, e.target.value);
@@ -822,15 +822,15 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
                                     />
                                     
                                     <Button
-                                      variant="outline"
-                                      size="icon"
-                                      className="h-7 w-7 mt-1"
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-5 w-5 p-0 mt-1 hover:bg-transparent"
                                       onClick={() => {
                                         adjustStatValue(quarter, player.id, field.id, -1);
                                       }}
                                       disabled={!formValues[quarter]?.[player.id]?.[field.id] || formValues[quarter][player.id][field.id] === '0'}
                                     >
-                                      <ChevronDown className="h-4 w-4" />
+                                      <ChevronDown className="h-4 w-4 text-blue-500" />
                                     </Button>
                                   </div>
                                 </TableCell>
@@ -934,9 +934,9 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
                         <TableCell className="border-r">
                           <div className="flex flex-col items-center justify-center">
                             <Button
-                              variant="outline"
-                              size="icon"
-                              className="h-7 w-7 mb-1"
+                              variant="ghost"
+                              size="sm"
+                              className="h-5 w-5 p-0 mb-1 hover:bg-transparent"
                               onClick={() => {
                                 const currentRating = playerRatings[player.id] || 5;
                                 const newRating = Math.min(10, currentRating + 1);
@@ -944,14 +944,14 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
                               }}
                               disabled={playerRatings[player.id] >= 10}
                             >
-                              <ChevronUp className="h-4 w-4" />
+                              <ChevronUp className="h-4 w-4 text-blue-500" />
                             </Button>
                             
                             <Input
                               type="number"
                               min="0"
                               max="10"
-                              className="h-9 w-12 text-center"
+                              className="h-8 w-10 text-center"
                               value={playerRatings[player.id] || 5}
                               onChange={(e) => {
                                 handleRatingChange(player.id, e.target.value);
@@ -959,9 +959,9 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
                             />
                             
                             <Button
-                              variant="outline"
-                              size="icon"
-                              className="h-7 w-7 mt-1"
+                              variant="ghost"
+                              size="sm"
+                              className="h-5 w-5 p-0 mt-1 hover:bg-transparent"
                               onClick={() => {
                                 const currentRating = playerRatings[player.id] || 5;
                                 const newRating = Math.max(0, currentRating - 1);
@@ -969,7 +969,7 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
                               }}
                               disabled={playerRatings[player.id] <= 0}
                             >
-                              <ChevronDown className="h-4 w-4" />
+                              <ChevronDown className="h-4 w-4 text-blue-500" />
                             </Button>
                           </div>
                         </TableCell>
