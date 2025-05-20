@@ -541,31 +541,31 @@ export default function LiveStats() {
         </div>
       </div>
       
-      {/* Game scoreboard */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-        <Card>
-          <CardHeader className="py-3">
-            <CardTitle className="text-lg font-semibold">Game Score</CardTitle>
+      {/* Game scoreboard - optimized for all tablet sizes */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+        <Card className="overflow-hidden">
+          <CardHeader className="py-2">
+            <CardTitle className="text-base md:text-lg font-semibold">Game Score</CardTitle>
           </CardHeader>
-          <CardContent className="py-2">
+          <CardContent className="py-1">
             <div className="flex justify-between items-center">
               <div>
-                <p className="text-sm text-muted-foreground">Our Team</p>
-                <p className="text-3xl font-bold">{getGameTotal('goalsFor')}</p>
+                <p className="text-xs md:text-sm text-muted-foreground">Our Team</p>
+                <p className="text-2xl md:text-3xl font-bold">{getGameTotal('goalsFor')}</p>
               </div>
-              <div className="text-2xl font-bold">-</div>
+              <div className="text-xl md:text-2xl font-bold">-</div>
               <div className="text-right">
-                <p className="text-sm text-muted-foreground">{opponent ? opponent.teamName : game.opponentName || "Opponent"}</p>
-                <p className="text-3xl font-bold">{getGameTotal('goalsAgainst')}</p>
+                <p className="text-xs md:text-sm text-muted-foreground">{opponent ? opponent.teamName : game.opponentName || "Opponent"}</p>
+                <p className="text-2xl md:text-3xl font-bold">{getGameTotal('goalsAgainst')}</p>
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card>
-          <CardHeader className="py-3">
+        <Card className="overflow-hidden">
+          <CardHeader className="py-2">
             <div className="flex justify-between items-center">
-              <CardTitle className="text-lg font-semibold">Quarter {currentQuarter}</CardTitle>
+              <CardTitle className="text-base md:text-lg font-semibold">Quarter {currentQuarter}</CardTitle>
               <div className="flex gap-1">
                 {[1, 2, 3, 4].map(quarter => (
                   <Button
@@ -573,7 +573,7 @@ export default function LiveStats() {
                     variant={quarter === currentQuarter ? "default" : "outline"}
                     size="sm"
                     onClick={() => setCurrentQuarter(quarter)}
-                    className="w-8 h-8 p-0"
+                    className="w-7 h-7 md:w-8 md:h-8 p-0 text-xs md:text-sm"
                   >
                     {quarter}
                   </Button>
@@ -581,11 +581,11 @@ export default function LiveStats() {
               </div>
             </div>
           </CardHeader>
-          <CardContent className="py-2">
+          <CardContent className="py-1">
             <div className="flex justify-between items-center">
               <div>
-                <p className="text-sm text-muted-foreground">Quarter Score</p>
-                <p className="text-2xl font-bold">{getQuarterTotal('goalsFor')} - {getQuarterTotal('goalsAgainst')}</p>
+                <p className="text-xs md:text-sm text-muted-foreground">Quarter Score</p>
+                <p className="text-xl md:text-2xl font-bold">{getQuarterTotal('goalsFor')} - {getQuarterTotal('goalsAgainst')}</p>
               </div>
               <div className="flex gap-1">
                 <Button
@@ -593,16 +593,18 @@ export default function LiveStats() {
                   size="sm"
                   onClick={handleUndo}
                   disabled={undoStack.length === 0}
+                  className="h-7 w-7 md:h-8 md:w-8 p-0"
                 >
-                  <Undo className="h-4 w-4" />
+                  <Undo className="h-3.5 w-3.5 md:h-4 md:w-4" />
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={handleRedo}
                   disabled={redoStack.length === 0}
+                  className="h-7 w-7 md:h-8 md:w-8 p-0"
                 >
-                  <Redo className="h-4 w-4" />
+                  <Redo className="h-3.5 w-3.5 md:h-4 md:w-4" />
                 </Button>
               </div>
             </div>
