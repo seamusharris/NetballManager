@@ -54,7 +54,8 @@ interface PlayerStats {
   rating: number;
 }
 
-type SortField = 'name' | 'gamesPlayed' | 'goals' | 'goalsAgainst' | 'missedGoals' | 'rating';
+type SortField = 'name' | 'gamesPlayed' | 'goals' | 'goalsAgainst' | 'missedGoals' | 
+                'rebounds' | 'intercepts' | 'badPass' | 'handlingError' | 'pickUp' | 'infringement' | 'rating';
 type SortDirection = 'asc' | 'desc';
 
 interface SortConfig {
@@ -434,6 +435,22 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
         { field: 'goals', label: 'For' },
         { field: 'goalsAgainst', label: 'Agn' },
         { field: 'missedGoals', label: 'Miss' },
+      ]
+    },
+    { 
+      name: 'Defense', 
+      fields: [
+        { field: 'intercepts', label: 'Int' },
+        { field: 'rebounds', label: 'Reb' },
+        { field: 'pickUp', label: 'Pick' },
+      ]
+    },
+    { 
+      name: 'Errors', 
+      fields: [
+        { field: 'badPass', label: 'Pass' },
+        { field: 'handlingError', label: 'Hand' },
+        { field: 'infringement', label: 'Pen' },
       ]
     }
   ];
