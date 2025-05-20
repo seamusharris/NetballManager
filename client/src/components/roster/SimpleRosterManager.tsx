@@ -631,7 +631,7 @@ export default function SimpleRosterManager({
         {selectedGame && selectedOpponent && (
           <div className="mb-4 p-3 bg-slate-50 rounded-md">
             <h3 className="font-semibold">
-              Game: {formatShortDate(selectedGame.date)} {selectedGame.time} vs {selectedOpponent.teamName}
+              Game: Round {selectedGame.round} vs {selectedOpponent.teamName} ({formatShortDate(selectedGame.date)} {selectedGame.time})
             </h3>
           </div>
         )}
