@@ -710,37 +710,10 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
   
   return (
     <>
-      {/* Top action buttons */}
-      <div className="flex justify-end space-x-2 mb-6">
-        <Button 
-          onClick={() => setResetQuarterDialogOpen(true)}
-          variant="outline"
-          className="border-red-200 hover:bg-red-50 text-red-600"
-        >
-          <RotateCcw className="w-4 h-4 mr-2" /> Reset Quarter
-        </Button>
-        
-        <Button 
-          onClick={() => setResetAllDialogOpen(true)}
-          variant="outline"
-          className="border-red-200 hover:bg-red-50 text-red-600"
-        >
-          <Trash2 className="w-4 h-4 mr-2" /> Reset All Stats
-        </Button>
-        
-        <Button
-          variant="default" 
-          onClick={() => saveStatsMutation.mutate()}
-          disabled={saveStatsMutation.isPending}
-        >
-          <Save className="w-4 h-4 mr-2" /> Save Stats
-        </Button>
-      </div>
-      
       <Card className="mb-6">
         <CardContent className="pt-6">
           <Tabs defaultValue="1" onValueChange={setActiveQuarter}>
-            <div className="mb-4">
+            <div className="flex justify-between items-center mb-4">
               <TabsList>
                 <TabsTrigger value="1">Quarter 1</TabsTrigger>
                 <TabsTrigger value="2">Quarter 2</TabsTrigger>
@@ -748,6 +721,32 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
                 <TabsTrigger value="4">Quarter 4</TabsTrigger>
                 <TabsTrigger value="totals">Game Totals</TabsTrigger>
               </TabsList>
+              
+              <div className="flex space-x-2">
+                <Button 
+                  onClick={() => setResetQuarterDialogOpen(true)}
+                  variant="outline"
+                  className="border-red-200 hover:bg-red-50 text-red-600"
+                >
+                  <RotateCcw className="w-4 h-4 mr-2" /> Reset Quarter
+                </Button>
+                
+                <Button 
+                  onClick={() => setResetAllDialogOpen(true)}
+                  variant="outline"
+                  className="border-red-200 hover:bg-red-50 text-red-600"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" /> Reset All Stats
+                </Button>
+                
+                <Button
+                  variant="default" 
+                  onClick={() => saveStatsMutation.mutate()}
+                  disabled={saveStatsMutation.isPending}
+                >
+                  <Save className="w-4 h-4 mr-2" /> Save Stats
+                </Button>
+              </div>
             </div>
             
             {/* Quarter tabs */}
