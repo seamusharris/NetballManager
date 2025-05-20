@@ -162,10 +162,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Extract valid game and player IDs for reference
       const validGameIds: number[] = [];
-      games.forEach((game) => validGameIds.push(game.id));
+      for (const game of games) {
+        if (game && typeof game.id === 'number') {
+          validGameIds.push(game.id);
+        }
+      }
       
       const validPlayerIds: number[] = [];
-      players.forEach((player) => validPlayerIds.push(player.id));
+      for (const player of players) {
+        if (player && typeof player.id === 'number') {
+          validPlayerIds.push(player.id);
+        }
+      }
       
       // First, log the total we'll attempt to import
       console.log(`Processing ${rostersData.length} roster entries...`);

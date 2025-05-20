@@ -30,33 +30,65 @@ interface ImportResult {
  */
 export async function exportAllData(): Promise<ExportResult> {
   try {
-    // Fetch all data
+    console.log("Starting data export process...");
+    
+    // Fetch all players
+    console.log("Fetching players...");
     const playersResponse = await fetch('/api/players');
+    if (!playersResponse.ok) {
+      throw new Error(`Failed to fetch players: ${playersResponse.statusText}`);
+    }
     const players = await playersResponse.json() as Player[];
+    console.log(`Exported ${players.length} players with their avatar colors`);
     
+    // Fetch all opponents
+    console.log("Fetching opponents...");
     const opponentsResponse = await fetch('/api/opponents');
+    if (!opponentsResponse.ok) {
+      throw new Error(`Failed to fetch opponents: ${opponentsResponse.statusText}`);
+    }
     const opponents = await opponentsResponse.json() as Opponent[];
+    console.log(`Exported ${opponents.length} opponents`);
     
+    // Fetch all games
+    console.log("Fetching games...");
     const gamesResponse = await fetch('/api/games');
+    if (!gamesResponse.ok) {
+      throw new Error(`Failed to fetch games: ${gamesResponse.statusText}`);
+    }
     const games = await gamesResponse.json() as Game[];
+    console.log(`Exported ${games.length} games`);
     
     // Fetch rosters and stats for each game
     let allRosters: Roster[] = [];
     let allGameStats: GameStat[] = [];
     
+    console.log("Fetching roster and stat data for each game...");
     for (const game of games) {
+      // Get rosters for this game
       try {
         const rosterResponse = await fetch(`/api/games/${game.id}/rosters`);
-        const rosters = await rosterResponse.json() as Roster[];
-        allRosters = [...allRosters, ...rosters];
+        if (rosterResponse.ok) {
+          const rosters = await rosterResponse.json() as Roster[];
+          allRosters = [...allRosters, ...rosters];
+          console.log(`Exported ${rosters.length} roster entries for game ${game.id}`);
+        } else {
+          console.warn(`No rosters found for game ${game.id}`);
+        }
       } catch (error) {
         console.error(`Failed to fetch rosters for game ${game.id}:`, error);
       }
       
+      // Get game stats for this game
       try {
         const statsResponse = await fetch(`/api/games/${game.id}/stats`);
-        const stats = await statsResponse.json() as GameStat[];
-        allGameStats = [...allGameStats, ...stats];
+        if (statsResponse.ok) {
+          const stats = await statsResponse.json() as GameStat[];
+          allGameStats = [...allGameStats, ...stats];
+          console.log(`Exported ${stats.length} stat entries for game ${game.id}`);
+        } else {
+          console.warn(`No stats found for game ${game.id}`);
+        }
       } catch (error) {
         console.error(`Failed to fetch stats for game ${game.id}:`, error);
       }
