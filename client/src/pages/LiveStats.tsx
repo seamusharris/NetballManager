@@ -647,33 +647,36 @@ export default function LiveStats() {
             return (
               <Card key={playerId} className="mb-3 overflow-hidden">
                 <CardHeader className="py-2 pb-2">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div 
-                      className="h-10 w-10 rounded-full flex items-center justify-center text-white font-bold text-base"
-                      style={{
-                        backgroundColor: '#3b82f6', /* blue-500 */
-                        border: '2px solid white',
-                        boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
-                      }}
-                    >
-                      {position}
+                  {/* Use flex instead of grid for better control */}
+                  <div className="flex flex-wrap items-center gap-2">
+                    {/* First section - player identity, fixed width */}
+                    <div className="flex items-center gap-2 mr-3 min-w-fit">
+                      <div 
+                        className="h-10 w-10 rounded-full flex items-center justify-center text-white font-bold text-base flex-shrink-0"
+                        style={{
+                          backgroundColor: '#3b82f6', /* blue-500 */
+                          border: '2px solid white',
+                          boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                        }}
+                      >
+                        {position}
+                      </div>
+                      
+                      <div className="min-w-[60px]">
+                        <p className="font-semibold text-sm">{player.displayName}</p>
+                      </div>
                     </div>
                     
-                    <div>
-                      <p className="font-semibold text-sm">{player.displayName}</p>
+                    {/* Second section - common stats, filling remaining space */}
+                    <div className="flex-1 flex flex-wrap gap-2">
+                      {commonStats.map(stat => (
+                        statConfig[stat] && (
+                          <div key={`${playerId}-common-${stat}`} className="flex-1 min-w-[120px]">
+                            {renderStatCounter(playerId, stat, false)}
+                          </div>
+                        )
+                      ))}
                     </div>
-                  </div>
-                  
-                  {/* All stats in common grid layout */}
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 w-full">
-                    {/* Common stats on top */}
-                    {commonStats.map(stat => (
-                      statConfig[stat] && (
-                        <div key={`${playerId}-common-${stat}`}>
-                          {renderStatCounter(playerId, stat, false)}
-                        </div>
-                      )
-                    ))}
                   </div>
                 </CardHeader>
                 <CardContent className="py-2 pt-1">
