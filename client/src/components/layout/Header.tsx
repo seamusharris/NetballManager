@@ -12,10 +12,11 @@ interface HeaderProps {
 export default function Header({ setIsMobileOpen }: HeaderProps) {
   const [isTablet, setIsTablet] = useState(false);
 
-  // Detect tablet screen size (including iPad)
+  // Detect tablet screen size (including all iPad sizes)
   useEffect(() => {
     const checkScreenSize = () => {
-      setIsTablet(window.innerWidth >= 768 && window.innerWidth < 1024);
+      // Covers standard iPads and large 12" iPad Pro (up to 1366px)
+      setIsTablet(window.innerWidth >= 768 && window.innerWidth < 1367);
     };
     
     checkScreenSize();
@@ -29,7 +30,8 @@ export default function Header({ setIsMobileOpen }: HeaderProps) {
         <Button 
           variant="ghost" 
           size="icon" 
-          className="text-gray-600 focus:outline-none lg:hidden"
+          className="text-gray-600 focus:outline-none hidden"
+          style={{ display: isTablet || window.innerWidth < 768 ? 'flex' : 'none' }}
           onClick={() => setIsMobileOpen(true)}
         >
           <Menu className="h-5 w-5" />

@@ -511,11 +511,11 @@ export default function LiveStats() {
   const playersOnCourt = getPlayersOnCourt();
   
   return (
-    <div className="container py-4 px-2 md:py-6 md:px-4">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-2">
+    <div className="container py-3 px-2 md:py-4 md:px-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-3 gap-1">
         <div>
-          <h1 className="text-2xl font-bold">Live Stats Tracking</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-xl md:text-2xl font-bold">Live Stats Tracking</h1>
+          <p className="text-muted-foreground text-sm md:text-base">
             Round {game.round} | {formatShortDate(game.date)} vs {opponent ? opponent.teamName : game.opponentName || "Opponent"}
           </p>
         </div>

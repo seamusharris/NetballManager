@@ -12,10 +12,11 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen }: SidebarProps)
   const [location] = useLocation();
   const [isTablet, setIsTablet] = useState(false);
 
-  // Detect tablet screen size (including iPad)
+  // Detect tablet screen size (including all iPad sizes)
   useEffect(() => {
     const checkScreenSize = () => {
-      setIsTablet(window.innerWidth >= 768 && window.innerWidth < 1024);
+      // Includes both standard iPads (768-1024px) and large iPads like 12" Pro (up to 1366px)
+      setIsTablet(window.innerWidth >= 768 && window.innerWidth < 1367);
     };
     
     // Check on mount
@@ -60,7 +61,9 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen }: SidebarProps)
           <h1 className="text-white font-heading font-bold text-lg">NetballManager</h1>
         </div>
         <button 
-          className="text-white focus:outline-none lg:hidden" 
+          className="text-white focus:outline-none hidden" 
+          // Only show for tablet and smaller screens
+          style={{ display: isTablet || window.innerWidth < 768 ? 'block' : 'none' }}
           onClick={() => setIsMobileOpen(false)}
         >
           <X className="w-5 h-5" />

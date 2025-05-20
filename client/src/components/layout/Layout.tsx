@@ -11,10 +11,11 @@ export default function Layout({ children }: LayoutProps) {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isTablet, setIsTablet] = useState(false);
   
-  // Detect iPad/tablet screen size
+  // Detect iPad/tablet screen size including large 12" iPads
   useEffect(() => {
     const checkScreenSize = () => {
-      setIsTablet(window.innerWidth >= 768 && window.innerWidth < 1024);
+      // Include both regular iPads and larger 12" iPad Pro (up to 1366px)
+      setIsTablet(window.innerWidth >= 768 && window.innerWidth < 1367);
     };
     
     checkScreenSize();
