@@ -380,12 +380,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // For new players, ensure they have a unique avatar color
       const playerData = parsedData.data;
+      console.log("Received player data:", playerData);
       
-      // If no specific avatar color is provided, generate one
-      if (!playerData.avatarColor || playerData.avatarColor === 'auto') {
+      // If no specific avatar color is provided, generate one (with more inclusive check for empty strings and null)
+      if (!playerData.avatarColor || playerData.avatarColor === 'auto' || playerData.avatarColor === '') {
+        console.log("Player needs avatar color assignment");
+        
         // Get existing player colors to avoid duplicates
         const existingPlayers = await storage.getPlayers();
         const usedColors = existingPlayers.map(p => p.avatarColor).filter(Boolean);
+        console.log("Used avatar colors:", usedColors);
         
         // Define a set of visually distinct colors
         const availableColors = [
@@ -399,6 +403,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Find an unused color
         const unusedColors = availableColors.filter(color => !usedColors.includes(color));
+        console.log("Available unused colors:", unusedColors.length);
         
         // If we have unused colors, pick one; otherwise select a random one
         if (unusedColors.length > 0) {
@@ -406,6 +411,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         } else {
           playerData.avatarColor = availableColors[Math.floor(Math.random() * availableColors.length)];
         }
+        
+        console.log("Assigned avatar color:", playerData.avatarColor);
       }
       
       // Pass the enhanced data to the storage layer
