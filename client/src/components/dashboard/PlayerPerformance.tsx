@@ -137,10 +137,35 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
       };
     });
     
-    // Count games played from both rosters and game stats
-    // A player has played if they:
-    // 1. Appear in the roster with a position OR
-    // 2. Have stats recorded for the game
+    // Define a variable to hold filtered game ids for later use
+    let filteredGameIds = [...gameIds];
+    const now = new Date();
+    
+    // Filter games based on time range
+    if (timeRange === 'last5') {
+      // Sort games by date (newest first) and get the 5 most recent
+      filteredGameIds = completedGames
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+        .slice(0, 5)
+        .map(game => game.id);
+    } 
+    else if (timeRange === 'month') {
+      // Filter to include only this month's games
+      const currentMonth = now.getMonth();
+      const currentYear = now.getFullYear();
+      
+      filteredGameIds = completedGames
+        .filter(game => {
+          const gameDate = new Date(game.date);
+          return gameDate.getMonth() === currentMonth && gameDate.getFullYear() === currentYear;
+        })
+        .map(game => game.id);
+    }
+    // 'season' includes all games, so no filtering needed
+    
+    console.log(`Filtering player performance to ${filteredGameIds.length} games based on time range: ${timeRange}`);
+    
+    // Count games played from both rosters and game stats - but only for filtered games
     if ((gameRostersMap && Object.keys(gameRostersMap).length > 0) || 
         (gameStatsMap && Object.keys(gameStatsMap).length > 0)) {
       
@@ -152,10 +177,13 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
         playerGameIds[player.id] = new Set();
       });
       
-      // First, process all game rosters to find participation
+      // First, process game rosters to find participation (only for filtered games)
       if (gameRostersMap) {
         Object.entries(gameRostersMap).forEach(([gameIdStr, rosters]) => {
           const gameId = parseInt(gameIdStr);
+          
+          // Skip if this game is not in our filtered set
+          if (!filteredGameIds.includes(gameId)) return;
           
           // For each roster entry in this game
           if (Array.isArray(rosters)) {
@@ -171,11 +199,13 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
         });
       }
       
-      // Then, process all game stats to find additional participation
-      // A player with any stats for a game has participated
+      // Then, process game stats to find additional participation (only for filtered games)
       if (gameStatsMap) {
         Object.entries(gameStatsMap).forEach(([gameIdStr, stats]) => {
           const gameId = parseInt(gameIdStr);
+          
+          // Skip if this game is not in our filtered set
+          if (!filteredGameIds.includes(gameId)) return;
           
           // Group stats by player for this game
           if (Array.isArray(stats)) {
@@ -205,32 +235,7 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
     
     // Process game stats based on selected time range
     if (Object.keys(gameStatsMap).length > 0) {
-      // Filter games based on time range
-      let filteredGameIds = [...gameIds];
-      const now = new Date();
-      
-      if (timeRange === 'last5') {
-        // Sort games by date (newest first) and get the 5 most recent
-        const sortedGameIds = completedGames
-          .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-          .slice(0, 5)
-          .map(game => game.id);
-        
-        filteredGameIds = sortedGameIds;
-      } 
-      else if (timeRange === 'month') {
-        // Filter to include only this month's games
-        const currentMonth = now.getMonth();
-        const currentYear = now.getFullYear();
-        
-        filteredGameIds = completedGames
-          .filter(game => {
-            const gameDate = new Date(game.date);
-            return gameDate.getMonth() === currentMonth && gameDate.getFullYear() === currentYear;
-          })
-          .map(game => game.id);
-      }
-      // 'season' includes all games, so no filtering needed
+      // We already have the filtered game IDs from above
       
       console.log(`Filtering player performance to ${filteredGameIds.length} games based on time range: ${timeRange}`);
       
