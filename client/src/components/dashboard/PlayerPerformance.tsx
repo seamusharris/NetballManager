@@ -201,28 +201,8 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
         });
       }
       
-      // Then, process game stats to find additional participation (only for filtered games)
-      if (gameStatsMap) {
-        Object.entries(gameStatsMap).forEach(([gameIdStr, stats]) => {
-          const gameId = parseInt(gameIdStr);
-          
-          // Skip if this game is not in our filtered set
-          if (!filteredGameIds.includes(gameId)) return;
-          
-          // Group stats by player for this game
-          if (Array.isArray(stats)) {
-            // Get unique player IDs that have stats for this game
-            const playerIdsWithStats = new Set(stats.map(stat => stat.playerId));
-            
-            // Mark each player as having participated in this game
-            playerIdsWithStats.forEach(playerId => {
-              if (playerId && playerGameIds[playerId]) {
-                playerGameIds[playerId].add(gameId);
-              }
-            });
-          }
-        });
-      }
+      // Remove this section - we should only count games played based on roster data, not stats
+      // This prevents players who have stats but are no longer on the roster from being counted
       
       // Update games played count for each player
       players.forEach(player => {
