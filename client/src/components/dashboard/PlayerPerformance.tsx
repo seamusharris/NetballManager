@@ -257,37 +257,15 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
     setPlayerStatsMap(newPlayerStatsMap);
   }, [gameStatsMap, isLoading, players]);
   
-  // Generate a fixed color mapping for each player by ID
+  // Get the player's stored avatar color
   const getAvatarColor = (player: Player): string => {
-    // Fixed color mapping by player ID to ensure consistency
-    const colorMap: Record<number, string> = {
-      1: 'bg-blue-500',     // Lucia
-      2: 'bg-purple-500',   // Isla
-      3: 'bg-pink-500',     // JoJo
-      4: 'bg-green-500',    // Abby D
-      5: 'bg-accent',       // Abbey N
-      6: 'bg-secondary',    // Mila
-      7: 'bg-orange-500',   // Emily
-      8: 'bg-primary',      // Ollie
-      9: 'bg-red-500',      // Evie
-    };
-    
-    // For any player not in the map, generate a deterministic color based on player ID
-    if (!colorMap[player.id]) {
-      // Use a deterministic algorithm based on ID to choose from a set of good colors
-      const availableColors = [
-        'bg-blue-600', 'bg-purple-600', 'bg-green-600', 'bg-yellow-600', 
-        'bg-pink-600', 'bg-indigo-600', 'bg-red-600', 'bg-cyan-600', 
-        'bg-amber-600', 'bg-lime-600', 'bg-emerald-600', 'bg-teal-600',
-        'bg-violet-600', 'bg-fuchsia-600', 'bg-rose-600'
-      ];
-      
-      // Use player ID modulo the number of colors to select one deterministically
-      const colorIndex = player.id % availableColors.length;
-      return availableColors[colorIndex];
+    // If the player has a stored avatar color, use it
+    if (player?.avatarColor) {
+      return player.avatarColor;
     }
     
-    return colorMap[player.id];
+    // Default fallback if the player has no stored color
+    return 'bg-gray-500';
   };
   
   const getRatingClass = (rating: number): string => {

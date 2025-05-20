@@ -134,7 +134,7 @@ export default function QuarterRoster({
           ).map(player => (
             <div key={player.id} className="flex items-center justify-between bg-white p-2 rounded border border-gray-200">
               <div className="flex items-center">
-                <Avatar className="h-6 w-6 mr-2 bg-primary text-white text-xs">
+                <Avatar className={`h-6 w-6 mr-2 ${player.avatarColor || 'bg-primary'} text-white text-xs`}>
                   <span>{getInitials(player.firstName, player.lastName)}</span>
                 </Avatar>
                 <span className="text-sm font-medium">{player.displayName}</span>
