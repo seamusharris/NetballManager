@@ -6,7 +6,17 @@ import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Save } from 'lucide-react';
+import { Save, RotateCcw, Trash2 } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Player, Roster, GameStat } from '@shared/schema';
 
 interface StatisticsFormProps {
@@ -19,6 +29,8 @@ interface StatisticsFormProps {
 export default function StatisticsForm({ gameId, players, rosters, gameStats }: StatisticsFormProps) {
   const [activeTab, setActiveTab] = useState('1');
   const [playerStats, setPlayerStats] = useState<Record<string, Record<number, Record<string, string>>>>({});
+  const [resetAllDialogOpen, setResetAllDialogOpen] = useState(false);
+  const [resetQuarterDialogOpen, setResetQuarterDialogOpen] = useState(false);
   const { toast } = useToast();
   
   // Initialize player stats from database values
@@ -142,6 +154,86 @@ export default function StatisticsForm({ gameId, players, rosters, gameStats }: 
     
     return { quarters: totals, game: gameTotal };
   };
+  
+  // Reset all stats for current quarter
+  const resetQuarterStats = () => {
+    const quarter = activeTab;
+    const quarterPlayerIds = getQuarterPlayers(quarter);
+    
+    const resetStats: Record<number, Record<string, string>> = {};
+    
+    // Initialize with zero values for all players in this quarter
+    quarterPlayerIds.forEach(playerId => {
+      resetStats[playerId] = {
+        goalsFor: '0',
+        goalsAgainst: '0',
+        missedGoals: '0',
+        rebounds: '0',
+        intercepts: '0',
+        badPass: '0',
+        handlingError: '0',
+        infringement: '0'
+      };
+    });
+    
+    // Update the player stats state
+    setPlayerStats(prevStats => {
+      const newStats = { ...prevStats };
+      newStats[quarter] = resetStats;
+      return newStats;
+    });
+    
+    toast({
+      title: "Quarter stats reset",
+      description: `All statistics for Quarter ${quarter} have been reset to zero. Remember to save changes.`
+    });
+    
+    setResetQuarterDialogOpen(false);
+  };
+  
+  // Reset all stats for the game
+  const resetAllStats = () => {
+    // Initialize stats with zeroes for all quarters and players
+    const newPlayerStats = initPlayerStats();
+    
+    // Clear all stat values
+    Object.keys(newPlayerStats).forEach(quarter => {
+      Object.keys(newPlayerStats[quarter]).forEach(playerIdStr => {
+        const playerId = parseInt(playerIdStr);
+        newPlayerStats[quarter][playerId] = {
+          goalsFor: '0',
+          goalsAgainst: '0',
+          missedGoals: '0',
+          rebounds: '0',
+          intercepts: '0',
+          badPass: '0',
+          handlingError: '0',
+          infringement: '0'
+        };
+      });
+    });
+    
+    setPlayerStats(newPlayerStats);
+    
+    toast({
+      title: "All game stats reset",
+      description: "All statistics for this game have been reset to zero. Remember to save changes."
+    });
+    
+    setResetAllDialogOpen(false);
+  };
+  
+  // Delete stats mutation
+  const deleteStatsMutation = useMutation({
+    mutationFn: async (statId: number) => {
+      return apiRequest('DELETE', `/api/gamestats/${statId}`);
+    },
+    onSuccess: () => {
+      // Invalidate queries to refresh the data after deletion
+      queryClient.invalidateQueries({ queryKey: ['/api/games', gameId, 'stats'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/games'] });
+    }
+  });
   
   // Save statistics mutation
   const saveMutation = useMutation({
@@ -374,8 +466,26 @@ export default function StatisticsForm({ gameId, players, rosters, gameStats }: 
         </CardContent>
       </Card>
       
-      {/* Save Button */}
-      <div className="flex justify-end">
+      {/* Action Buttons */}
+      <div className="flex justify-between">
+        <div className="space-x-2">
+          <Button 
+            onClick={() => setResetQuarterDialogOpen(true)}
+            variant="outline"
+            className="border-red-200 hover:bg-red-50 text-red-600"
+          >
+            <RotateCcw className="w-4 h-4 mr-2" /> Reset Quarter
+          </Button>
+          
+          <Button 
+            onClick={() => setResetAllDialogOpen(true)}
+            variant="outline"
+            className="border-red-200 hover:bg-red-50 text-red-600"
+          >
+            <Trash2 className="w-4 h-4 mr-2" /> Reset All Stats
+          </Button>
+        </div>
+        
         <Button 
           onClick={() => saveMutation.mutate()}
           disabled={saveMutation.isPending}
@@ -384,6 +494,52 @@ export default function StatisticsForm({ gameId, players, rosters, gameStats }: 
           <Save className="w-4 h-4 mr-2" /> Save Statistics
         </Button>
       </div>
+      
+      {/* Reset Quarter Confirmation Dialog */}
+      <AlertDialog open={resetQuarterDialogOpen} onOpenChange={setResetQuarterDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Reset Quarter Statistics</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will reset all statistics for Quarter {activeTab} to zero. 
+              This action only affects the form and won't be saved until you click "Save Statistics".
+              Are you sure you want to continue?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={resetQuarterStats}
+              className="bg-red-500 hover:bg-red-600 text-white"
+            >
+              Reset Quarter
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      
+      {/* Reset All Stats Confirmation Dialog */}
+      <AlertDialog open={resetAllDialogOpen} onOpenChange={setResetAllDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Reset All Game Statistics</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will reset all statistics for the entire game to zero.
+              This action only affects the form and won't be saved until you click "Save Statistics".
+              Are you sure you want to continue?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={resetAllStats}
+              className="bg-red-500 hover:bg-red-600 text-white"
+            >
+              Reset All Statistics
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       
       {/* Quarter Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
