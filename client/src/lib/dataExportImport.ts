@@ -57,8 +57,8 @@ export async function exportAllData(): Promise<ExportResult> {
       players,
       opponents,
       games,
-      rosters: gameRosters,
-      stats: gameStats,
+      rosters: Object.values(gameRosters).flat(),
+      gameStats: Object.values(gameStats).flat(),
       exportDate: new Date().toISOString()
     };
     
@@ -88,8 +88,38 @@ export async function importData(jsonData: string): Promise<ImportResult> {
     const data = JSON.parse(jsonData);
     
     // Validate the data structure
-    if (!data.players || !data.opponents || !data.games || !data.rosters || !data.stats) {
+    if (!data.players || !data.opponents || !data.games) {
       throw new Error('Invalid data format. The import file is missing required data sections.');
+    }
+    
+    // Handle both new and old backup formats
+    // Convert old format (data.stats) to new format (data.gameStats) if needed
+    if (data.stats && !data.gameStats) {
+      // Handle older backup format where game stats were stored under 'stats'
+      data.gameStats = [];
+      
+      // Convert from record format to array format if needed
+      if (typeof data.stats === 'object' && !Array.isArray(data.stats)) {
+        Object.values(data.stats).forEach((statsArray) => {
+          if (Array.isArray(statsArray)) {
+            data.gameStats = [...data.gameStats, ...statsArray];
+          }
+        });
+      } else if (Array.isArray(data.stats)) {
+        data.gameStats = data.stats;
+      }
+    }
+    
+    // Handle rosters in both formats
+    if (!Array.isArray(data.rosters) && typeof data.rosters === 'object') {
+      // Convert from record to array format
+      const flatRosters = [];
+      Object.values(data.rosters).forEach((rostersArray) => {
+        if (Array.isArray(rostersArray)) {
+          flatRosters.push(...rostersArray);
+        }
+      });
+      data.rosters = flatRosters;
     }
     
     // Count successful imports
