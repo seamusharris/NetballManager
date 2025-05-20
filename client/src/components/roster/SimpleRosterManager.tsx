@@ -355,7 +355,9 @@ export default function SimpleRosterManager({
       try {
         // First delete existing roster entries
         console.log(`Deleting all existing roster entries for game ${selectedGameId}`);
-        await apiRequest('DELETE', `/api/games/${selectedGameId}/rosters`);
+        await apiRequest(`/api/games/${selectedGameId}/rosters`, {
+          method: 'DELETE'
+        });
         
         // Create all the new entries
         const savePromises = [];
@@ -378,7 +380,11 @@ export default function SimpleRosterManager({
                 playerId: playerId
               };
               
-              savePromises.push(apiRequest('POST', '/api/rosters', rosterEntry));
+              savePromises.push(apiRequest(`/api/rosters`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(rosterEntry)
+              }));
             }
           }
         }
