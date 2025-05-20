@@ -671,20 +671,12 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
   const getSortedPlayersForTotals = () => {
     const allPlayers = getAllPlayers();
     
-    // If no sorting config is set, return players sorted by position
+    // If no sorting config is set, return players sorted alphabetically by display name
     if (!sortConfig) {
-      // Define position order: GS, GA, WA, C, WD, GD, GK
-      const posOrder = { GS: 1, GA: 2, WA: 3, C: 4, WD: 5, GD: 6, GK: 7, Unknown: 8 };
-      
       return [...allPlayers].sort((a, b) => {
-        // Find their position in quarter 1 (or earliest appearance)
-        const aRoster = rosters.find(r => r.playerId === a.id);
-        const bRoster = rosters.find(r => r.playerId === b.id);
-        
-        const aPos = aRoster?.position || 'Unknown';
-        const bPos = bRoster?.position || 'Unknown';
-        
-        return posOrder[aPos as keyof typeof posOrder] - posOrder[bPos as keyof typeof posOrder];
+        const aName = a.displayName || `${a.firstName} ${a.lastName}`;
+        const bName = b.displayName || `${b.firstName} ${b.lastName}`;
+        return aName.localeCompare(bName);
       });
     }
     
@@ -764,7 +756,7 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead className="w-36 border-r">Position - Name</TableHead>
+                        <TableHead className="w-36 border-r"></TableHead>
                         
                         {/* Create header cells for each stat category */}
                         {statCategories.map((category, categoryIndex) => (
