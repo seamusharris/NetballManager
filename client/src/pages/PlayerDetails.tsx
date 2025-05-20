@@ -288,7 +288,7 @@ export default function PlayerDetails() {
   };
 
   const handleEditPlayer = () => {
-    // Navigate to the edit player form with this player's ID
+    // Navigate to the players page with the edit parameter
     navigate(`/players?edit=${playerId}`);
   };
 
