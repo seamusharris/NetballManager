@@ -290,17 +290,17 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
       console.log(`Using stats from ${Object.keys(filteredGameStats).length} games (filtered from ${Object.keys(gameStatsMap).length} total) for dashboard player performance`);
     }
     
-    // Process player ratings - use only the most recent quarter 1 stats
+    // Process player ratings - use only the most recent quarter 1 stats from filtered games
     Object.values(newPlayerStatsMap).forEach(playerStat => {
-      // Use the appropriate stats source based on whether we're filtering
-      const statsSource = Object.keys(gameStatsMap).length > 0 ? 
-        (Object.keys(filteredGameStats || {}).length > 0 ? filteredGameStats : gameStatsMap) : 
-        gameStatsMap;
+      // Get the appropriate stats source - prefer filtered stats if available
+      const statsToUse = filteredGameStats && Object.keys(filteredGameStats).length > 0 
+        ? filteredGameStats 
+        : gameStatsMap;
       
       // Find all quarter 1 stats for this player across games
-      const quarter1Stats = Object.values(statsSource || {})
+      const quarter1Stats = Object.values(statsToUse)
         .flatMap(gameStats => 
-          gameStats.filter(stat => 
+          gameStats.filter((stat: GameStat) => 
             stat.playerId === playerStat.playerId && 
             stat.quarter === 1 && 
             stat.rating !== undefined && 
