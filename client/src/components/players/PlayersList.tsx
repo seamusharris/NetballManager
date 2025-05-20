@@ -30,7 +30,8 @@ import {
 } from '@/components/ui/table';
 import { ArrowDown, ArrowUp, ArrowUpDown, Search } from 'lucide-react';
 import { Game, Player, Position, GameStat } from '@shared/schema';
-import { cn, getInitials, allPositions, positionGroups } from '@/lib/utils';
+import { cn, getInitials, positionGroups } from '@/lib/utils';
+import { allPositions } from '@shared/schema';
 
 interface PlayersListProps {
   players: Player[];

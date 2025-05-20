@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Wand2, Copy, Save, Trash2 } from 'lucide-react';
-import { Player, Game, Opponent, Position, allPositions } from '@shared/schema';
+import { Player, Game, Opponent, Position, allPositions, POSITIONS } from '@shared/schema';
 import { formatShortDate, positionLabels, isOnCourtPosition } from '@/lib/utils';
 import ExportButtons from '@/components/common/ExportButtons';
 import { exportRosterToPDF, exportRosterToExcel } from '@/lib/exportUtils';
