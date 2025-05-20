@@ -169,17 +169,7 @@ export default function PlayersList({ players, isLoading, onEdit, onDelete }: Pl
               </Select>
             </div>
             
-            <div className="self-end">
-              <Button 
-                className="bg-accent hover:bg-accent-light text-white"
-                onClick={() => {
-                  // Apply filters (not needed as we're filtering in real-time)
-                  setCurrentPage(1);
-                }}
-              >
-                Apply Filters
-              </Button>
-            </div>
+
           </div>
         </CardContent>
       </Card>
