@@ -4,17 +4,13 @@ import { useParams, useLocation } from 'wouter';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Game, Player, GameStat, Roster, allPositions } from '@shared/schema';
-import { getInitials, formatShortDate, positionLabels } from '@/lib/utils';
-import { 
-  PlusCircle, MinusCircle, Save, Undo, Redo, 
-  RefreshCw, XCircle, CheckCircle, Plus, Minus 
-} from 'lucide-react';
+import { Game, Player, GameStat, Roster, allPositions, Position } from '@shared/schema';
+import { getInitials, formatShortDate, positionLabels, generatePlayerAvatarColor } from '@/lib/utils';
+import { Save, Undo, Redo, Plus, Minus } from 'lucide-react';
 
 // Stat types that can be tracked
 type StatType = 'goalsFor' | 'goalsAgainst' | 'missedGoals' | 'rebounds' | 
@@ -42,31 +38,110 @@ const emptyQuarterStats = {
   infringement: 0
 };
 
-// Stat button configuration
-interface StatButton {
-  stat: StatType;
-  label: string;
-  color: string;
-  icon: React.ReactNode;
-}
+// Different stat availabilities by position - true means the stat is available for this position
+const positionStatConfig: Record<Position, Record<StatType, boolean>> = {
+  'GS': {
+    goalsFor: true,
+    goalsAgainst: false,
+    missedGoals: true,
+    rebounds: true,
+    intercepts: true,
+    badPass: true,
+    handlingError: true,
+    pickUp: true,
+    infringement: true
+  },
+  'GA': {
+    goalsFor: true,
+    goalsAgainst: false,
+    missedGoals: true,
+    rebounds: true,
+    intercepts: true,
+    badPass: true,
+    handlingError: true,
+    pickUp: true,
+    infringement: true
+  },
+  'WA': {
+    goalsFor: false,
+    goalsAgainst: false,
+    missedGoals: false,
+    rebounds: false,
+    intercepts: true,
+    badPass: true,
+    handlingError: true,
+    pickUp: true,
+    infringement: true
+  },
+  'C': {
+    goalsFor: false,
+    goalsAgainst: false,
+    missedGoals: false,
+    rebounds: false,
+    intercepts: true,
+    badPass: true,
+    handlingError: true,
+    pickUp: true,
+    infringement: true
+  },
+  'WD': {
+    goalsFor: false,
+    goalsAgainst: false,
+    missedGoals: false,
+    rebounds: false,
+    intercepts: true,
+    badPass: true,
+    handlingError: true,
+    pickUp: true,
+    infringement: true
+  },
+  'GD': {
+    goalsFor: false,
+    goalsAgainst: true,
+    missedGoals: false,
+    rebounds: true,
+    intercepts: true,
+    badPass: true,
+    handlingError: true,
+    pickUp: true,
+    infringement: true
+  },
+  'GK': {
+    goalsFor: false,
+    goalsAgainst: true,
+    missedGoals: false,
+    rebounds: true,
+    intercepts: true,
+    badPass: true,
+    handlingError: true,
+    pickUp: true,
+    infringement: true
+  }
+};
 
-// Group stats into categories
-const statButtons: Record<string, StatButton[]> = {
-  'Shooting': [
-    { stat: 'goalsFor', label: 'Goal', color: 'bg-green-100 hover:bg-green-200 text-green-700', icon: <PlusCircle className="h-4 w-4" /> },
-    { stat: 'goalsAgainst', label: 'Goal Against', color: 'bg-red-100 hover:bg-red-200 text-red-700', icon: <MinusCircle className="h-4 w-4" /> },
-    { stat: 'missedGoals', label: 'Miss', color: 'bg-orange-100 hover:bg-orange-200 text-orange-700', icon: <XCircle className="h-4 w-4" /> },
-  ],
-  'Defense': [
-    { stat: 'rebounds', label: 'Rebound', color: 'bg-blue-100 hover:bg-blue-200 text-blue-700', icon: <Plus className="h-4 w-4" /> },
-    { stat: 'intercepts', label: 'Intercept', color: 'bg-indigo-100 hover:bg-indigo-200 text-indigo-700', icon: <Plus className="h-4 w-4" /> },
-    { stat: 'pickUp', label: 'Pick Up', color: 'bg-purple-100 hover:bg-purple-200 text-purple-700', icon: <Plus className="h-4 w-4" /> },
-  ],
-  'Errors': [
-    { stat: 'badPass', label: 'Bad Pass', color: 'bg-amber-100 hover:bg-amber-200 text-amber-700', icon: <Minus className="h-4 w-4" /> },
-    { stat: 'handlingError', label: 'Handling Error', color: 'bg-pink-100 hover:bg-pink-200 text-pink-700', icon: <Minus className="h-4 w-4" /> },
-    { stat: 'infringement', label: 'Infringement', color: 'bg-rose-100 hover:bg-rose-200 text-rose-700', icon: <Minus className="h-4 w-4" /> },
-  ]
+// Stat colors and labels
+const statColors: Record<StatType, string> = {
+  goalsFor: 'bg-green-100 hover:bg-green-200 text-green-700',
+  missedGoals: 'bg-orange-100 hover:bg-orange-200 text-orange-700',
+  goalsAgainst: 'bg-red-100 hover:bg-red-200 text-red-700',
+  rebounds: 'bg-blue-100 hover:bg-blue-200 text-blue-700',
+  intercepts: 'bg-indigo-100 hover:bg-indigo-200 text-indigo-700',
+  pickUp: 'bg-purple-100 hover:bg-purple-200 text-purple-700',
+  badPass: 'bg-amber-100 hover:bg-amber-200 text-amber-700',
+  handlingError: 'bg-pink-100 hover:bg-pink-200 text-pink-700',
+  infringement: 'bg-rose-100 hover:bg-rose-200 text-rose-700'
+};
+
+const statLabels: Record<StatType, string> = {
+  goalsFor: 'Goal',
+  missedGoals: 'Miss',
+  goalsAgainst: 'Goal Against',
+  rebounds: 'Rebound',
+  intercepts: 'Intercept',
+  pickUp: 'Pick Up',
+  badPass: 'Bad Pass',
+  handlingError: 'Handling Error',
+  infringement: 'Infringement'
 };
 
 export default function LiveStats() {
@@ -118,7 +193,7 @@ export default function LiveStats() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(gameStat)
-      } as RequestInit),
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/games', gameId, 'stats'] });
     }
@@ -126,11 +201,11 @@ export default function LiveStats() {
   
   // Initialize the live stats when existing data is loaded
   useEffect(() => {
-    if (existingStats && existingStats.length > 0 && players) {
+    if (existingStats && players) {
       const initialStats: GameStats = {};
       
       // Initialize empty stats for all players
-      players.forEach(player => {
+      players.forEach((player: Player) => {
         initialStats[player.id] = {
           1: { ...emptyQuarterStats },
           2: { ...emptyQuarterStats },
@@ -140,29 +215,31 @@ export default function LiveStats() {
       });
       
       // Populate with existing stats
-      existingStats.forEach(stat => {
-        if (!initialStats[stat.playerId]) {
-          initialStats[stat.playerId] = {
-            1: { ...emptyQuarterStats },
-            2: { ...emptyQuarterStats },
-            3: { ...emptyQuarterStats },
-            4: { ...emptyQuarterStats }
-          };
-        }
-        
-        // Safety check for undefined quarters
-        if (!initialStats[stat.playerId][stat.quarter]) {
-          initialStats[stat.playerId][stat.quarter] = { ...emptyQuarterStats };
-        }
-        
-        // Populate individual stat values
-        Object.keys(emptyQuarterStats).forEach(key => {
-          const statKey = key as StatType;
-          if (stat[statKey] !== undefined) {
-            initialStats[stat.playerId][stat.quarter][statKey] = stat[statKey] as number;
+      if (existingStats.length > 0) {
+        existingStats.forEach((stat: GameStat) => {
+          if (!initialStats[stat.playerId]) {
+            initialStats[stat.playerId] = {
+              1: { ...emptyQuarterStats },
+              2: { ...emptyQuarterStats },
+              3: { ...emptyQuarterStats },
+              4: { ...emptyQuarterStats }
+            };
           }
+          
+          // Safety check for undefined quarters
+          if (!initialStats[stat.playerId][stat.quarter]) {
+            initialStats[stat.playerId][stat.quarter] = { ...emptyQuarterStats };
+          }
+          
+          // Populate individual stat values
+          Object.keys(emptyQuarterStats).forEach(key => {
+            const statKey = key as StatType;
+            if (stat[statKey] !== undefined) {
+              initialStats[stat.playerId][stat.quarter][statKey] = stat[statKey] as number;
+            }
+          });
         });
-      });
+      }
       
       setLiveStats(initialStats);
       // Clear undo/redo stacks when loading fresh data
@@ -173,27 +250,36 @@ export default function LiveStats() {
   
   // Get player details by ID
   const getPlayer = (playerId: number): Player | undefined => {
-    return players?.find(p => p.id === playerId);
+    return players?.find((p: Player) => p.id === playerId);
   };
   
   // Get current position for a player in the specified quarter
-  const getPlayerPosition = (playerId: number, quarter: number): string => {
+  const getPlayerPosition = (playerId: number, quarter: number): Position | '' => {
     if (!rosters) return '';
     
-    const playerRoster = rosters.find(r => 
+    const playerRoster = rosters.find((r: Roster) => 
       r.playerId === playerId && r.quarter === quarter
     );
     
     return playerRoster ? playerRoster.position : '';
   };
   
-  // Get list of players on court in the current quarter
-  const getPlayersOnCourt = (): number[] => {
+  // Get list of players on court in the current quarter, sorted by position (GS to GK)
+  const getPlayersOnCourt = (): {playerId: number, position: Position}[] => {
     if (!rosters) return [];
     
-    return rosters
-      .filter(r => r.quarter === currentQuarter && allPositions.includes(r.position))
-      .map(r => r.playerId);
+    // Get all players on court with their positions
+    const positionMap = rosters
+      .filter((r: Roster) => r.quarter === currentQuarter && allPositions.includes(r.position))
+      .map((r: Roster) => ({
+        playerId: r.playerId,
+        position: r.position as Position
+      }));
+    
+    // Sort by position order (GS, GA, WA, C, WD, GD, GK)
+    return positionMap.sort((a, b) => {
+      return allPositions.indexOf(a.position) - allPositions.indexOf(b.position);
+    });
   };
   
   // Record a new stat
@@ -311,8 +397,8 @@ export default function LiveStats() {
     
     Object.keys(liveStats).forEach(playerIdStr => {
       const playerId = parseInt(playerIdStr);
-      const playerStats = liveStats[playerId][currentQuarter];
-      if (playerStats && playerStats[stat]) {
+      const playerStats = liveStats[playerId]?.[currentQuarter];
+      if (playerStats && playerStats[stat] !== undefined) {
         total += playerStats[stat] || 0;
       }
     });
@@ -328,8 +414,8 @@ export default function LiveStats() {
       const playerId = parseInt(playerIdStr);
       
       [1, 2, 3, 4].forEach(quarter => {
-        const playerStats = liveStats[playerId][quarter];
-        if (playerStats && playerStats[stat]) {
+        const playerStats = liveStats[playerId]?.[quarter];
+        if (playerStats && playerStats[stat] !== undefined) {
           total += playerStats[stat] || 0;
         }
       });
@@ -338,9 +424,39 @@ export default function LiveStats() {
     return total;
   };
   
-  // Format score for display (our goals vs their goals)
-  const formatScore = (ourGoals: number, theirGoals: number): string => {
-    return `${ourGoals} - ${theirGoals}`;
+  // Render a stat counter button
+  const renderStatCounter = (playerId: number, stat: StatType) => {
+    const currentValue = liveStats[playerId]?.[currentQuarter]?.[stat] || 0;
+    
+    return (
+      <div className="flex flex-col items-center p-2 rounded-md border">
+        <p className="text-xs font-medium mb-1">{statLabels[stat]}</p>
+        <div className="flex items-center gap-1">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 w-8 p-0"
+            onClick={() => recordStat(playerId, stat, -1)}
+            disabled={currentValue <= 0}
+          >
+            <Minus className="h-4 w-4" />
+          </Button>
+          
+          <span className="w-8 text-center font-semibold">
+            {currentValue}
+          </span>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            className={`h-8 w-8 p-0 ${statColors[stat]}`}
+            onClick={() => recordStat(playerId, stat, 1)}
+          >
+            <Plus className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+    );
   };
   
   // Loading state
@@ -380,8 +496,6 @@ export default function LiveStats() {
   }
   
   const playersOnCourt = getPlayersOnCourt();
-  const currentScore = formatScore(getGameTotal('goalsFor'), getGameTotal('goalsAgainst'));
-  const quarterScore = formatScore(getQuarterTotal('goalsFor'), getQuarterTotal('goalsAgainst'));
   
   return (
     <div className="container py-4 px-2 md:py-6 md:px-4">
@@ -483,132 +597,61 @@ export default function LiveStats() {
         </Card>
       </div>
       
-      {/* Players on court */}
+      {/* Players stat cards */}
       <div className="mb-6">
-        <h2 className="text-lg font-semibold mb-2">Players on Court - Quarter {currentQuarter}</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2">
-          {playersOnCourt.map(playerId => {
+        <h2 className="text-lg font-semibold mb-3">Players on Court - Quarter {currentQuarter}</h2>
+        
+        {playersOnCourt.length === 0 ? (
+          <Card className="p-4 text-center">
+            <p>No players have been assigned to positions for this quarter yet.</p>
+            <p className="text-sm text-muted-foreground mt-1">Set up your roster first to track stats.</p>
+          </Card>
+        ) : (
+          playersOnCourt.map(({playerId, position}) => {
             const player = getPlayer(playerId);
             if (!player) return null;
             
-            const position = getPlayerPosition(playerId, currentQuarter);
+            const statConfig = positionStatConfig[position];
+            const playerStats = liveStats[playerId]?.[currentQuarter] || emptyQuarterStats;
+            const avatarColor = generatePlayerAvatarColor(playerId);
             
             return (
-              <Card key={playerId} className="overflow-hidden">
-                <CardHeader className="p-3 pb-2">
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-2">
-                      <Avatar className="h-8 w-8">
-                        <AvatarFallback className="bg-primary text-primary-foreground">
-                          {getInitials(player.firstName, player.lastName)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="text-sm font-semibold leading-none">{player.displayName}</p>
-                        <p className="text-xs text-muted-foreground mt-1">{positionLabels[position as any] || position}</p>
+              <Card key={playerId} className="mb-4">
+                <CardHeader className="py-3">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-10 w-10">
+                      <AvatarFallback style={{backgroundColor: avatarColor}}>
+                        {getInitials(player.firstName, player.lastName)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <p className="font-semibold">{player.displayName}</p>
+                        <Badge variant="outline">{position}</Badge>
                       </div>
+                      <p className="text-xs text-muted-foreground mt-1">{positionLabels[position]}</p>
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent className="p-3 pt-0">
-                  <div className="grid grid-cols-3 gap-1 mt-1">
-                    <div className="text-center">
-                      <p className="text-xs text-muted-foreground">Goals</p>
-                      <p className="font-semibold">{liveStats[playerId]?.[currentQuarter]?.goalsFor || 0}</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-xs text-muted-foreground">Int</p>
-                      <p className="font-semibold">{liveStats[playerId]?.[currentQuarter]?.intercepts || 0}</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-xs text-muted-foreground">Reb</p>
-                      <p className="font-semibold">{liveStats[playerId]?.[currentQuarter]?.rebounds || 0}</p>
-                    </div>
+                <CardContent>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                    {/* Render stat counters based on position */}
+                    {Object.entries(statConfig).map(([stat, isAvailable]) => {
+                      if (isAvailable) {
+                        return (
+                          <div key={`${playerId}-${stat}`}>
+                            {renderStatCounter(playerId, stat as StatType)}
+                          </div>
+                        );
+                      }
+                      return null;
+                    })}
                   </div>
                 </CardContent>
               </Card>
             );
-          })}
-        </div>
-      </div>
-      
-      {/* Stat recording section */}
-      <div className="mb-4">
-        <Tabs defaultValue="Shooting">
-          <TabsList className="mb-2">
-            {Object.keys(statButtons).map(category => (
-              <TabsTrigger key={category} value={category}>
-                {category}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-          
-          {Object.entries(statButtons).map(([category, buttons]) => (
-            <TabsContent key={category} value={category} className="mt-0">
-              <Card>
-                <CardHeader className="py-3">
-                  <CardTitle className="text-lg">{category} Stats</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                    {buttons.map(button => (
-                      <div key={button.stat} className="space-y-2">
-                        <p className="text-sm font-medium">{button.label}</p>
-                        
-                        <div className="grid grid-cols-1 gap-2">
-                          {playersOnCourt.map(playerId => {
-                            const player = getPlayer(playerId);
-                            if (!player) return null;
-                            
-                            const currentValue = liveStats[playerId]?.[currentQuarter]?.[button.stat] || 0;
-                            
-                            return (
-                              <div key={`${playerId}-${button.stat}`} className="flex items-center justify-between p-2 rounded-md border">
-                                <div className="flex items-center gap-2">
-                                  <Avatar className="h-8 w-8">
-                                    <AvatarFallback className="bg-primary text-primary-foreground">
-                                      {getInitials(player.firstName, player.lastName)}
-                                    </AvatarFallback>
-                                  </Avatar>
-                                  <span className="text-sm font-medium">{player.displayName}</span>
-                                </div>
-                                
-                                <div className="flex items-center gap-1">
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="h-8 w-8 p-0"
-                                    onClick={() => recordStat(playerId, button.stat, -1)}
-                                    disabled={currentValue <= 0}
-                                  >
-                                    <Minus className="h-4 w-4" />
-                                  </Button>
-                                  
-                                  <span className="w-8 text-center font-semibold">
-                                    {currentValue}
-                                  </span>
-                                  
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className={`h-8 w-8 p-0 ${button.color}`}
-                                    onClick={() => recordStat(playerId, button.stat, 1)}
-                                  >
-                                    <Plus className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          ))}
-        </Tabs>
+          })
+        )}
       </div>
       
       {/* Save button at the bottom */}
