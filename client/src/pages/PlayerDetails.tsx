@@ -82,6 +82,7 @@ export default function PlayerDetails() {
         const allRosters = await response.json();
         // Filter rosters for only this player
         const playerRosters = allRosters.filter((roster: any) => roster.playerId === playerId);
+        console.log(`Game ${gameId} rosters for player ${playerId}:`, playerRosters);
         return { gameId, rosters: playerRosters };
       });
       
