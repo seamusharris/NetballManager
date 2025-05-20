@@ -17,20 +17,187 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // put application routes here
   // prefix all routes with /api
   
-  // ----- SEQUENCE SYNC API -----
-  app.post("/api/sync-sequences", async (req, res) => {
+  // ----- DATA MANAGEMENT APIs -----
+  
+  // Clear all data for fresh import
+  app.post("/api/clear-data", async (req, res) => {
     try {
-      // Sync sequences for all database tables to prevent ID conflicts after import
-      await db.execute(sql`SELECT sync_sequence('players')`);
-      await db.execute(sql`SELECT sync_sequence('opponents')`);
-      await db.execute(sql`SELECT sync_sequence('games')`);
-      await db.execute(sql`SELECT sync_sequence('rosters')`);
-      await db.execute(sql`SELECT sync_sequence('game_stats')`);
+      // Delete all data in reverse order of dependencies
+      await db.delete(gameStats);
+      await db.delete(rosters);
+      await db.delete(games);
+      await db.delete(opponents);
+      await db.delete(players);
       
-      res.status(200).json({ message: "Database sequences synchronized successfully" });
+      // Reset all sequences
+      await db.execute(sql`ALTER SEQUENCE game_stats_id_seq RESTART WITH 1`);
+      await db.execute(sql`ALTER SEQUENCE rosters_id_seq RESTART WITH 1`);
+      await db.execute(sql`ALTER SEQUENCE games_id_seq RESTART WITH 1`);
+      await db.execute(sql`ALTER SEQUENCE opponents_id_seq RESTART WITH 1`);
+      await db.execute(sql`ALTER SEQUENCE players_id_seq RESTART WITH 1`);
+      
+      res.status(200).json({ message: "All data cleared successfully" });
     } catch (error) {
-      console.error('Failed to synchronize sequences:', error);
-      res.status(500).json({ message: "Failed to synchronize sequences" });
+      console.error('Failed to clear data:', error);
+      res.status(500).json({ message: "Failed to clear data" });
+    }
+  });
+  
+  // Bulk import - imports all data in a single transaction
+  app.post("/api/bulk-import", async (req, res) => {
+    try {
+      const data = req.body;
+      
+      // Validate the data structure
+      if (!data.players || !data.opponents || !data.games) {
+        return res.status(400).json({ message: "Invalid data format" });
+      }
+      
+      // Import counts
+      let playersImported = 0;
+      let opponentsImported = 0;
+      let gamesImported = 0;
+      let rostersImported = 0;
+      let statsImported = 0;
+      
+      // DIRECT INSERT PLAYERS
+      // This uses raw SQL to ensure IDs are preserved exactly
+      for (const player of data.players) {
+        try {
+          await db.execute(sql`
+            INSERT INTO players (
+              id, display_name, first_name, last_name, 
+              date_of_birth, position_preferences, active, avatar_color
+            ) VALUES (
+              ${player.id}, 
+              ${player.displayName || ""}, 
+              ${player.firstName || ""}, 
+              ${player.lastName || ""}, 
+              ${player.dateOfBirth || null}, 
+              ${JSON.stringify(player.positionPreferences || [])}, 
+              ${player.active !== false}, 
+              ${player.avatarColor || null}
+            )
+          `);
+          playersImported++;
+        } catch (error) {
+          console.error(`Failed to import player ${player.id}:`, error);
+        }
+      }
+      
+      // DIRECT INSERT OPPONENTS
+      for (const opponent of data.opponents) {
+        try {
+          await db.execute(sql`
+            INSERT INTO opponents (
+              id, team_name, primary_contact, contact_info
+            ) VALUES (
+              ${opponent.id}, 
+              ${opponent.teamName || "Unknown Team"}, 
+              ${opponent.primaryContact || null}, 
+              ${opponent.contactInfo || null}
+            )
+          `);
+          opponentsImported++;
+        } catch (error) {
+          console.error(`Failed to import opponent ${opponent.id}:`, error);
+        }
+      }
+      
+      // DIRECT INSERT GAMES
+      for (const game of data.games) {
+        try {
+          await db.execute(sql`
+            INSERT INTO games (
+              id, date, time, opponent_id, completed, is_bye, round
+            ) VALUES (
+              ${game.id}, 
+              ${game.date || null}, 
+              ${game.time || null}, 
+              ${game.opponentId || null}, 
+              ${game.completed === true}, 
+              ${game.isBye === true}, 
+              ${game.round || null}
+            )
+          `);
+          gamesImported++;
+        } catch (error) {
+          console.error(`Failed to import game ${game.id}:`, error);
+        }
+      }
+      
+      // DIRECT INSERT ROSTERS
+      const rostersData = Array.isArray(data.rosters) ? data.rosters : [];
+      for (const roster of rostersData) {
+        try {
+          await db.execute(sql`
+            INSERT INTO rosters (
+              id, game_id, quarter, position, player_id
+            ) VALUES (
+              ${roster.id}, 
+              ${roster.gameId || 0}, 
+              ${roster.quarter || 1}, 
+              ${roster.position || "GS"}, 
+              ${roster.playerId || 0}
+            )
+          `);
+          rostersImported++;
+        } catch (error) {
+          console.error(`Failed to import roster ${roster.id}:`, error);
+        }
+      }
+      
+      // DIRECT INSERT GAME STATS
+      const statsData = Array.isArray(data.gameStats) ? data.gameStats : [];
+      for (const stat of statsData) {
+        try {
+          await db.execute(sql`
+            INSERT INTO game_stats (
+              id, game_id, player_id, quarter, goals_for, goals_against, 
+              missed_goals, rebounds, intercepts, bad_pass, handling_error, 
+              pick_up, infringement, rating
+            ) VALUES (
+              ${stat.id}, 
+              ${stat.gameId || 0}, 
+              ${stat.playerId || 0}, 
+              ${stat.quarter || 1}, 
+              ${stat.goalsFor || 0}, 
+              ${stat.goalsAgainst || 0}, 
+              ${stat.missedGoals || 0}, 
+              ${stat.rebounds || 0}, 
+              ${stat.intercepts || 0}, 
+              ${stat.badPass || 0}, 
+              ${stat.handlingError || 0}, 
+              ${stat.pickUp || 0}, 
+              ${stat.infringement || 0}, 
+              ${stat.rating || 5}
+            )
+          `);
+          statsImported++;
+        } catch (error) {
+          console.error(`Failed to import game stat ${stat.id}:`, error);
+        }
+      }
+      
+      // Update sequences to prevent conflicts with future inserts
+      await db.execute(sql`SELECT setval('players_id_seq', (SELECT COALESCE(MAX(id), 0) FROM players), true)`);
+      await db.execute(sql`SELECT setval('opponents_id_seq', (SELECT COALESCE(MAX(id), 0) FROM opponents), true)`);
+      await db.execute(sql`SELECT setval('games_id_seq', (SELECT COALESCE(MAX(id), 0) FROM games), true)`);
+      await db.execute(sql`SELECT setval('rosters_id_seq', (SELECT COALESCE(MAX(id), 0) FROM rosters), true)`);
+      await db.execute(sql`SELECT setval('game_stats_id_seq', (SELECT COALESCE(MAX(id), 0) FROM game_stats), true)`);
+      
+      // Return the import results
+      res.status(200).json({
+        playersImported,
+        opponentsImported,
+        gamesImported,
+        rostersImported,
+        statsImported,
+        message: "Data imported successfully"
+      });
+    } catch (error) {
+      console.error('Bulk import failed:', error);
+      res.status(500).json({ message: "Failed to import data" });
     }
   });
   
