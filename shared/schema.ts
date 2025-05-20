@@ -19,7 +19,10 @@ export const players = pgTable("players", {
   avatarColor: text("avatar_color"),
 });
 
+// Default schema without ID for normal creation
 export const insertPlayerSchema = createInsertSchema(players).omit({ id: true });
+// Schema with ID for import operations
+export const importPlayerSchema = createInsertSchema(players);
 export type InsertPlayer = z.infer<typeof insertPlayerSchema>;
 export type Player = typeof players.$inferSelect;
 
@@ -31,7 +34,10 @@ export const opponents = pgTable("opponents", {
   contactInfo: text("contact_info"),
 });
 
+// Default schema without ID for normal creation
 export const insertOpponentSchema = createInsertSchema(opponents).omit({ id: true });
+// Schema with ID for import operations
+export const importOpponentSchema = createInsertSchema(opponents);
 export type InsertOpponent = z.infer<typeof insertOpponentSchema>;
 export type Opponent = typeof opponents.$inferSelect;
 
@@ -46,7 +52,10 @@ export const games = pgTable("games", {
   round: text("round"), // Round number in the season or special values like "SF" or "GF"
 });
 
+// Default schema without ID for normal creation
 export const insertGameSchema = createInsertSchema(games).omit({ id: true });
+// Schema with ID for import operations
+export const importGameSchema = createInsertSchema(games);
 export type InsertGame = z.infer<typeof insertGameSchema>;
 export type Game = typeof games.$inferSelect;
 
@@ -59,7 +68,10 @@ export const rosters = pgTable("rosters", {
   playerId: integer("player_id").notNull(),
 });
 
+// Default schema without ID for normal creation
 export const insertRosterSchema = createInsertSchema(rosters).omit({ id: true });
+// Schema with ID for import operations
+export const importRosterSchema = createInsertSchema(rosters);
 export type InsertRoster = z.infer<typeof insertRosterSchema>;
 export type Roster = typeof rosters.$inferSelect;
 
@@ -81,7 +93,10 @@ export const gameStats = pgTable("game_stats", {
   rating: integer("rating").default(0), // Player rating from 0-10
 });
 
+// Default schema without ID for normal creation
 export const insertGameStatSchema = createInsertSchema(gameStats).omit({ id: true });
+// Schema with ID for import operations
+export const importGameStatSchema = createInsertSchema(gameStats);
 export type InsertGameStat = z.infer<typeof insertGameStatSchema>;
 export type GameStat = typeof gameStats.$inferSelect;
 

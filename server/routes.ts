@@ -81,14 +81,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/players", async (req, res) => {
     try {
-      const parsedData = insertPlayerSchema.safeParse(req.body);
+      // Check if we're doing an import operation (with ID) or regular create
+      const hasId = req.body.id !== undefined;
+      
+      // Use the appropriate schema based on operation type
+      const schema = hasId ? importPlayerSchema : insertPlayerSchema;
+      const parsedData = schema.safeParse(req.body);
+      
       if (!parsedData.success) {
         return res.status(400).json({ message: "Invalid player data", errors: parsedData.error.errors });
       }
       
+      // Pass the parsed data to the storage layer
       const player = await storage.createPlayer(parsedData.data);
       res.status(201).json(player);
     } catch (error) {
+      console.error("Failed to create player:", error);
       res.status(500).json({ message: "Failed to create player" });
     }
   });
@@ -143,14 +151,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/opponents", async (req, res) => {
     try {
-      const parsedData = insertOpponentSchema.safeParse(req.body);
+      // Check if we're doing an import operation (with ID) or regular create
+      const hasId = req.body.id !== undefined;
+      
+      // Use the appropriate schema based on operation type
+      const schema = hasId ? importOpponentSchema : insertOpponentSchema;
+      const parsedData = schema.safeParse(req.body);
+      
       if (!parsedData.success) {
         return res.status(400).json({ message: "Invalid opponent data", errors: parsedData.error.errors });
       }
       
+      // Pass the parsed data to the storage layer
       const opponent = await storage.createOpponent(parsedData.data);
       res.status(201).json(opponent);
     } catch (error) {
+      console.error("Failed to create opponent:", error);
       res.status(500).json({ message: "Failed to create opponent" });
     }
   });
