@@ -799,11 +799,11 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
                                   key={field.id} 
                                   className={`text-center w-[100px] ${isLastInCategory ? 'border-r' : ''}`}
                                 >
-                                  <div className="flex items-center justify-center space-x-2">
+                                  <div className="flex flex-col items-center justify-center">
                                     <Button
                                       variant="outline"
                                       size="icon"
-                                      className="h-7 w-7"
+                                      className="h-7 w-7 mb-1"
                                       onClick={() => {
                                         adjustStatValue(quarter, player.id, field.id, 1);
                                       }}
@@ -824,7 +824,7 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
                                     <Button
                                       variant="outline"
                                       size="icon"
-                                      className="h-7 w-7"
+                                      className="h-7 w-7 mt-1"
                                       onClick={() => {
                                         adjustStatValue(quarter, player.id, field.id, -1);
                                       }}
@@ -932,11 +932,11 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
                         
                         {/* Player rating cell - this is editable */}
                         <TableCell className="border-r">
-                          <div className="flex items-center justify-center space-x-2">
+                          <div className="flex flex-col items-center justify-center">
                             <Button
                               variant="outline"
                               size="icon"
-                              className="h-7 w-7"
+                              className="h-7 w-7 mb-1"
                               onClick={() => {
                                 const currentRating = playerRatings[player.id] || 5;
                                 const newRating = Math.min(10, currentRating + 1);
@@ -961,7 +961,7 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
                             <Button
                               variant="outline"
                               size="icon"
-                              className="h-7 w-7"
+                              className="h-7 w-7 mt-1"
                               onClick={() => {
                                 const currentRating = playerRatings[player.id] || 5;
                                 const newRating = Math.max(0, currentRating - 1);
