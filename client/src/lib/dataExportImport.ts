@@ -162,6 +162,8 @@ export async function importData(jsonData: string): Promise<ImportResult> {
             teamName: opponent.teamName || "Unknown Team",
             primaryColor: opponent.primaryColor || "#000000",
             secondaryColor: opponent.secondaryColor || "#FFFFFF",
+            primaryContact: opponent.primaryContact || "",
+            contactInfo: opponent.contactInfo || "",
             notes: opponent.notes || ""
           })
         });
