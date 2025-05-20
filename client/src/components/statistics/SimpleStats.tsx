@@ -814,7 +814,7 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
                                     <Input
                                       type="number"
                                       min="0"
-                                      className="h-8 w-10 text-center"
+                                      className="h-8 w-14 text-center"
                                       value={formValues[quarter]?.[player.id]?.[field.id] || '0'}
                                       onChange={(e) => {
                                         handleInputChange(quarter, player.id, field.id, e.target.value);
@@ -951,7 +951,7 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
                               type="number"
                               min="0"
                               max="10"
-                              className="h-8 w-10 text-center"
+                              className="h-8 w-14 text-center"
                               value={playerRatings[player.id] || 5}
                               onChange={(e) => {
                                 handleRatingChange(player.id, e.target.value);
