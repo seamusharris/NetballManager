@@ -132,13 +132,14 @@ export async function importData(jsonData: string): Promise<ImportResult> {
       try {
         // Always preserve avatar colors and IDs during import
         const playerData = {
+          id: player.id, // Preserve the original ID
           displayName: player.displayName || "",
           firstName: player.firstName || "",
           lastName: player.lastName || "",
           dateOfBirth: player.dateOfBirth || null,
           positionPreferences: Array.isArray(player.positionPreferences) ? player.positionPreferences : [],
           active: player.active !== false,
-          avatarColor: player.avatarColor // Important: Keep original color exactly as is
+          avatarColor: player.avatarColor // Keep original color exactly as is
         };
         
         const response = await fetch('/api/players', {
@@ -163,6 +164,7 @@ export async function importData(jsonData: string): Promise<ImportResult> {
     for (const opponent of data.opponents) {
       try {
         const opponentData = {
+          id: opponent.id, // Preserve the original ID
           teamName: opponent.teamName || "Unknown Team",
           primaryColor: opponent.primaryColor || "#000000",
           secondaryColor: opponent.secondaryColor || "#FFFFFF",
@@ -192,15 +194,11 @@ export async function importData(jsonData: string): Promise<ImportResult> {
     console.log(`Importing ${data.games.length} games...`);
     for (const game of data.games) {
       try {
-        // Use mapped opponent ID or fall back to original
-        const mappedOpponentId = game.opponentId ? 
-          (opponentIdMap[game.opponentId] || game.opponentId) : 
-          null;
-          
         const gameData = {
+          id: game.id, // Preserve the original ID
           date: game.date || null,
           time: game.time || null,
-          opponentId: mappedOpponentId,
+          opponentId: game.opponentId, // No need for ID mapping, using original IDs
           completed: game.completed === true,
           isBye: game.isBye === true,
           round: game.round || null,
@@ -232,19 +230,10 @@ export async function importData(jsonData: string): Promise<ImportResult> {
       try {
         if (!roster || typeof roster !== 'object') continue;
         
-        // Map the IDs to new IDs if available
-        const mappedGameId = gameIdMap[roster.gameId] || roster.gameId;
-        const mappedPlayerId = playerIdMap[roster.playerId] || roster.playerId;
-        
-        // Skip if no valid IDs
-        if (!mappedGameId || !mappedPlayerId) {
-          console.warn(`Skipping roster due to missing ID mapping: gameId=${roster.gameId}, playerId=${roster.playerId}`);
-          continue;
-        }
-        
         const rosterData = {
-          gameId: mappedGameId,
-          playerId: mappedPlayerId,
+          id: roster.id, // Preserve the original ID
+          gameId: roster.gameId, // Use original game ID
+          playerId: roster.playerId, // Use original player ID
           quarter: roster.quarter || 1,
           position: roster.position || "GS"
         };
@@ -270,19 +259,10 @@ export async function importData(jsonData: string): Promise<ImportResult> {
       try {
         if (!stat || typeof stat !== 'object') continue;
         
-        // Map the IDs to new IDs if available
-        const mappedGameId = gameIdMap[stat.gameId] || stat.gameId;
-        const mappedPlayerId = playerIdMap[stat.playerId] || stat.playerId;
-        
-        // Skip if no valid IDs
-        if (!mappedGameId || !mappedPlayerId) {
-          console.warn(`Skipping game stat due to missing ID mapping: gameId=${stat.gameId}, playerId=${stat.playerId}`);
-          continue;
-        }
-        
         const statData = {
-          gameId: mappedGameId,
-          playerId: mappedPlayerId,
+          id: stat.id, // Preserve the original ID
+          gameId: stat.gameId, // Use original game ID
+          playerId: stat.playerId, // Use original player ID
           quarter: stat.quarter || 1,
           goalsFor: stat.goalsFor || 0,
           goalsAgainst: stat.goalsAgainst || 0,
