@@ -166,6 +166,13 @@ export default function LiveStats() {
     enabled: !!gameId && !isNaN(gameId)
   });
   
+  // Fetch opponent details if we have a game
+  const { data: opponent, isLoading: opponentLoading } = useQuery({
+    queryKey: ['/api/opponents', game?.opponentId],
+    queryFn: () => apiRequest(`/api/opponents/${game?.opponentId}`),
+    enabled: !!game?.opponentId
+  });
+  
   // Fetch player roster for this game
   const { data: rosters, isLoading: rostersLoading } = useQuery({
     queryKey: ['/api/games', gameId, 'rosters'],
@@ -509,7 +516,7 @@ export default function LiveStats() {
         <div>
           <h1 className="text-2xl font-bold">Live Stats Tracking</h1>
           <p className="text-muted-foreground">
-            Round {game.round} | {formatShortDate(game.date)} vs {game.opponent && game.opponent.teamName}
+            Round {game.round} | {formatShortDate(game.date)} vs {opponent ? opponent.teamName : game.opponentName || "Opponent"}
           </p>
         </div>
         
@@ -548,7 +555,7 @@ export default function LiveStats() {
               </div>
               <div className="text-2xl font-bold">-</div>
               <div className="text-right">
-                <p className="text-sm text-muted-foreground">{game.opponent ? game.opponent.teamName : game.opponentName}</p>
+                <p className="text-sm text-muted-foreground">{opponent ? opponent.teamName : game.opponentName || "Opponent"}</p>
                 <p className="text-3xl font-bold">{getGameTotal('goalsAgainst')}</p>
               </div>
             </div>
