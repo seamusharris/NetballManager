@@ -16,6 +16,46 @@ import {
 export async function registerRoutes(app: Express): Promise<Server> {
   // put application routes here
   // prefix all routes with /api
+  
+  // ----- BACKUP API -----
+  app.post("/api/backup", async (req, res) => {
+    try {
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const filename = `backup-${timestamp}.json`;
+      
+      // Get all data from storage
+      const players = await storage.getPlayers();
+      const opponents = await storage.getOpponents();
+      const games = await storage.getGames();
+      
+      // Get all rosters and game stats for each game
+      const rosters = [];
+      const gameStats = [];
+      
+      for (const game of games) {
+        const gameRosters = await storage.getRostersByGame(game.id);
+        const gameStatsData = await storage.getGameStatsByGame(game.id);
+        
+        rosters.push(...gameRosters);
+        gameStats.push(...gameStatsData);
+      }
+      
+      // Create the backup object
+      const backupData = {
+        players,
+        opponents,
+        games,
+        rosters,
+        gameStats
+      };
+      
+      // Send the data as response
+      res.json(backupData);
+    } catch (error) {
+      console.error('Backup creation failed:', error);
+      res.status(500).json({ message: "Failed to create backup" });
+    }
+  });
 
   // ----- PLAYERS API -----
   app.get("/api/players", async (req, res) => {
