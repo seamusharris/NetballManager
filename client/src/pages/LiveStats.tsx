@@ -625,17 +625,14 @@ export default function LiveStats() {
               <Card key={playerId} className="mb-4">
                 <CardHeader className="py-3">
                   <div className="flex items-center gap-3">
-                    <Avatar className="h-10 w-10">
-                      <AvatarFallback style={{backgroundColor: avatarColor}}>
-                        {getInitials(player.firstName, player.lastName)}
-                      </AvatarFallback>
-                    </Avatar>
+                    <div 
+                      className="h-10 w-10 rounded-full flex items-center justify-center text-white font-bold"
+                      style={{backgroundColor: avatarColor}}
+                    >
+                      {position}
+                    </div>
                     <div>
-                      <div className="flex items-center gap-2">
-                        <p className="font-semibold">{player.displayName}</p>
-                        <Badge variant="outline">{position}</Badge>
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-1">{positionLabels[position]}</p>
+                      <p className="font-semibold">{player.displayName}</p>
                     </div>
                   </div>
                 </CardHeader>
