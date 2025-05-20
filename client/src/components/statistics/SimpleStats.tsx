@@ -327,7 +327,7 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
   };
   
   // Reset all stats for the game
-  const resetAllStats = () => {
+  const resetAllStats = async () => {
     // Get all players in all quarters
     const playersByQuarter: Record<string, number[]> = {
       '1': [], '2': [], '3': [], '4': []
@@ -370,9 +370,28 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
     // Recalculate game totals
     setTimeout(() => calculateGameTotals(), 0);
     
+    // Automatically save the reset statistics to ensure all data is consistent
+    try {
+      // Silently auto-save after reset to ensure dashboards update
+      await saveStatsMutation.mutateAsync();
+      
+      // Additional invalidation to ensure all dashboards update
+      const allPlayerIds = Object.values(playersByQuarter).flat();
+      
+      // Invalidate player performance queries
+      queryClient.invalidateQueries({ queryKey: ['playerGameStats'] });
+      
+      // Invalidate each player's individual page
+      allPlayerIds.forEach(playerId => {
+        queryClient.invalidateQueries({ queryKey: [`/api/players/${playerId}`] });
+      });
+    } catch (error) {
+      console.error("Error auto-saving reset stats:", error);
+    }
+    
     toast({
       title: "All game stats reset",
-      description: "All statistics for this game have been reset to zero. Remember to save changes."
+      description: "All statistics for this game have been reset to zero and saved."
     });
     
     setResetAllDialogOpen(false);
@@ -551,8 +570,19 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
         description: "All player statistics have been saved successfully."
       });
       
-      // Invalidate the game stats query to refresh data
+      // Invalidate all queries that depend on game stats or player performance
       queryClient.invalidateQueries({ queryKey: ['/api/gamestats', gameId] });
+      queryClient.invalidateQueries({ queryKey: ['playerGameStats'] });
+      queryClient.invalidateQueries({ queryKey: ['gameStats'] });
+      
+      // Invalidate specific player queries for players that have stats in this game
+      // This ensures player details pages stay up to date
+      const uniquePlayerIds = new Set(gameStats.map(stat => stat.playerId));
+      uniquePlayerIds.forEach(playerId => {
+        if (playerId) {
+          queryClient.invalidateQueries({ queryKey: [`/api/players/${playerId}`] });
+        }
+      });
     },
     onError: (error: any) => {
       console.error("Error saving stats:", error);
