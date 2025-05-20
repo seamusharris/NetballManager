@@ -767,7 +767,8 @@ export default function SimpleRosterManager({
                       const quarterKey = quarter.toString() as '1'|'2'|'3'|'4';
                       const playersNotInQuarter = players
                         .filter(player => player.active)
-                        .filter(player => !Object.values(localRosterState[quarterKey]).includes(player.id));
+                        .filter(player => !Object.values(localRosterState[quarterKey]).includes(player.id))
+                        .sort((a, b) => a.displayName.localeCompare(b.displayName)); // Sort alphabetically
                       
                       return (
                         <TableCell key={`off-${quarter}`} className="p-1 min-w-[160px]">
