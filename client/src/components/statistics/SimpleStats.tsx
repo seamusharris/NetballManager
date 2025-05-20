@@ -722,17 +722,35 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
   };
   
   return (
-    <Card className="mb-6">
-      <CardContent className="pt-6">
-        <Tabs defaultValue="1" onValueChange={setActiveQuarter}>
-          <div className="flex justify-between items-center mb-4">
-            <TabsList>
-              <TabsTrigger value="1">Quarter 1</TabsTrigger>
-              <TabsTrigger value="2">Quarter 2</TabsTrigger>
-              <TabsTrigger value="3">Quarter 3</TabsTrigger>
-              <TabsTrigger value="4">Quarter 4</TabsTrigger>
-              <TabsTrigger value="totals">Game Totals</TabsTrigger>
-            </TabsList>
+    <>
+      <Card className="mb-6">
+        <CardContent className="pt-6">
+          <Tabs defaultValue="1" onValueChange={setActiveQuarter}>
+            <div className="flex justify-between items-center mb-4">
+              <TabsList>
+                <TabsTrigger value="1">Quarter 1</TabsTrigger>
+                <TabsTrigger value="2">Quarter 2</TabsTrigger>
+                <TabsTrigger value="3">Quarter 3</TabsTrigger>
+                <TabsTrigger value="4">Quarter 4</TabsTrigger>
+                <TabsTrigger value="totals">Game Totals</TabsTrigger>
+              </TabsList>
+              
+              <div className="flex space-x-2">
+                <Button 
+                  onClick={() => setResetQuarterDialogOpen(true)}
+                  variant="outline"
+                  className="border-red-200 hover:bg-red-50 text-red-600"
+                >
+                  <RotateCcw className="w-4 h-4 mr-2" /> Reset Quarter
+                </Button>
+                
+                <Button 
+                  onClick={() => setResetAllDialogOpen(true)}
+                  variant="outline"
+                  className="border-red-200 hover:bg-red-50 text-red-600"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" /> Reset All Stats
+                </Button>
             
             <div className="flex space-x-2 ml-2">
               <Button 
