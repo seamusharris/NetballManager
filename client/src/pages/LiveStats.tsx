@@ -694,7 +694,7 @@ export default function LiveStats() {
                     return (
                       <div className="flex justify-center gap-2 flex-wrap">
                         {posSpecificStats.map(statType => (
-                          <div key={`${playerId}-${statType}`} className="w-[150px]">
+                          <div key={`${playerId}-${statType}`} className="w-[180px]">
                             {renderStatCounter(playerId, statType, false, true)}
                           </div>
                         ))}
@@ -706,19 +706,6 @@ export default function LiveStats() {
             );
           })
         )}
-      </div>
-      
-      {/* Save button at the bottom - tablet optimized */}
-      <div className="flex justify-end mt-3 md:mt-4">
-        <Button
-          size="lg"
-          onClick={saveAllStats}
-          disabled={saveInProgress}
-          className="px-4 md:px-8 h-10 md:h-11 text-sm md:text-base"
-        >
-          <Save className="h-4 w-4 md:h-5 md:w-5 mr-1 md:mr-2" />
-          Save All Statistics
-        </Button>
       </div>
     </div>
   );
