@@ -200,6 +200,21 @@ export default function Statistics() {
         
         {isLoading ? (
           <Skeleton className="h-[500px] w-full" />
+        ) : games.length === 0 ? (
+          <Card className="mb-6 shadow-md">
+            <CardContent className="pt-6">
+              <h3 className="text-lg font-semibold mb-4">No Games Available</h3>
+              <p className="text-muted-foreground mb-4">
+                There are no games available for statistics tracking. Please create games first.
+              </p>
+              <button 
+                className="bg-primary text-white px-4 py-2 rounded hover:bg-primary/90"
+                onClick={() => window.location.href = '/games'}
+              >
+                Go to Games Page
+              </button>
+            </CardContent>
+          </Card>
         ) : selectedGame && selectedOpponent ? (
           <div className="space-y-6">
             <Card className="p-4">
