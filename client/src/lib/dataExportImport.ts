@@ -121,20 +121,24 @@ export async function importData(jsonData: string): Promise<ImportResult> {
     let rostersImported = 0;
     let statsImported = 0;
     
-    // Step 1: Import players
+    // Track ID mappings to maintain relationships (old ID -> new ID)
+    const playerIdMap: Record<number, number> = {};
+    const opponentIdMap: Record<number, number> = {};
+    const gameIdMap: Record<number, number> = {};
+    
+    // Step 1: Import players first with correct ID preservation
+    console.log(`Importing ${data.players.length} players...`);
     for (const player of data.players) {
       try {
-        // Always preserve avatar colors during import
+        // Always preserve avatar colors and IDs during import
         const playerData = {
-          id: player.id,
           displayName: player.displayName || "",
           firstName: player.firstName || "",
           lastName: player.lastName || "",
           dateOfBirth: player.dateOfBirth || null,
-          positionPreferences: player.positionPreferences || [],
+          positionPreferences: Array.isArray(player.positionPreferences) ? player.positionPreferences : [],
           active: player.active !== false,
-          // Always include avatar color, use the original or set to null to let the system assign one
-          avatarColor: player.avatarColor || null
+          avatarColor: player.avatarColor || null // Keep original color
         };
         
         const response = await fetch('/api/players', {
@@ -144,97 +148,111 @@ export async function importData(jsonData: string): Promise<ImportResult> {
         });
         
         if (response.ok) {
+          const result = await response.json();
+          playerIdMap[player.id] = result.id; // Map old ID to new ID
           playersImported++;
+          console.log(`Successfully imported player ${player.displayName} (ID: ${player.id} -> ${result.id})`);
         }
       } catch (error) {
         console.error(`Failed to import player ${player.displayName || player.id}:`, error);
       }
     }
     
-    // Step 2: Import opponents
+    // Step 2: Import opponents with ID preservation
+    console.log(`Importing ${data.opponents.length} opponents...`);
     for (const opponent of data.opponents) {
       try {
+        const opponentData = {
+          teamName: opponent.teamName || "Unknown Team",
+          primaryColor: opponent.primaryColor || "#000000",
+          secondaryColor: opponent.secondaryColor || "#FFFFFF",
+          primaryContact: opponent.primaryContact || "",
+          contactInfo: opponent.contactInfo || "",
+          notes: opponent.notes || ""
+        };
+        
         const response = await fetch('/api/opponents', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            id: opponent.id,
-            teamName: opponent.teamName || "Unknown Team",
-            primaryColor: opponent.primaryColor || "#000000",
-            secondaryColor: opponent.secondaryColor || "#FFFFFF",
-            primaryContact: opponent.primaryContact || "",
-            contactInfo: opponent.contactInfo || "",
-            notes: opponent.notes || ""
-          })
+          body: JSON.stringify(opponentData)
         });
         
         if (response.ok) {
+          const result = await response.json();
+          opponentIdMap[opponent.id] = result.id; // Map old ID to new ID
           opponentsImported++;
+          console.log(`Successfully imported opponent ${opponent.teamName} (ID: ${opponent.id} -> ${result.id})`);
         }
       } catch (error) {
         console.error(`Failed to import opponent ${opponent.teamName || opponent.id}:`, error);
       }
     }
     
-    // Step 3: Import games
+    // Step 3: Import games with proper ID references
+    console.log(`Importing ${data.games.length} games...`);
     for (const game of data.games) {
       try {
+        // Use mapped opponent ID or fall back to original
+        const mappedOpponentId = game.opponentId ? 
+          (opponentIdMap[game.opponentId] || game.opponentId) : 
+          null;
+          
+        const gameData = {
+          date: game.date || null,
+          time: game.time || null,
+          opponentId: mappedOpponentId,
+          completed: game.completed === true,
+          isBye: game.isBye === true,
+          round: game.round || null,
+          venue: game.venue || null,
+          notes: game.notes || null
+        };
+        
         const gameResponse = await fetch('/api/games', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            id: game.id,
-            date: game.date || null,
-            time: game.time || null,
-            opponentId: game.opponentId,
-            completed: game.completed === true,
-            isBye: game.isBye === true,
-            round: game.round,
-            venue: game.venue || null,
-            teamScore: game.teamScore || 0,
-            opponentScore: game.opponentScore || 0,
-            notes: game.notes || null
-          })
+          body: JSON.stringify(gameData)
         });
         
         if (gameResponse.ok) {
           const gameResult = await gameResponse.json();
+          gameIdMap[game.id] = gameResult.id; // Map old ID to new ID
           gamesImported++;
-          
-          // Extra step: ensure the round number is set correctly
-          if (game.round && gameResult.id) {
-            try {
-              await fetch(`/api/games/${gameResult.id}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ round: game.round })
-              });
-            } catch (err) {
-              console.error(`Error updating round for game ${gameResult.id}:`, err);
-            }
-          }
+          console.log(`Successfully imported game on ${game.date} (ID: ${game.id} -> ${gameResult.id})`);
         }
       } catch (error) {
         console.error(`Failed to import game ${formatDate(game.date || "")}:`, error);
       }
     }
     
-    // Step 4: Import rosters
+    // Step 4: Import rosters with proper ID references
     const rostersData = Array.isArray(data.rosters) ? data.rosters : [];
+    console.log(`Importing ${rostersData.length} roster entries...`);
     for (const roster of rostersData) {
       try {
-        if (!roster || typeof roster !== 'object' || !roster.gameId || !roster.playerId) continue;
+        if (!roster || typeof roster !== 'object') continue;
+        
+        // Map the IDs to new IDs if available
+        const mappedGameId = gameIdMap[roster.gameId] || roster.gameId;
+        const mappedPlayerId = playerIdMap[roster.playerId] || roster.playerId;
+        
+        // Skip if no valid IDs
+        if (!mappedGameId || !mappedPlayerId) {
+          console.warn(`Skipping roster due to missing ID mapping: gameId=${roster.gameId}, playerId=${roster.playerId}`);
+          continue;
+        }
+        
+        const rosterData = {
+          gameId: mappedGameId,
+          playerId: mappedPlayerId,
+          quarter: roster.quarter || 1,
+          position: roster.position || "GS"
+        };
         
         const response = await fetch('/api/rosters', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            id: roster.id,
-            gameId: roster.gameId,
-            playerId: roster.playerId,
-            quarter: roster.quarter || 1,
-            position: roster.position || "GS"
-          })
+          body: JSON.stringify(rosterData)
         });
         
         if (response.ok) {
@@ -245,31 +263,43 @@ export async function importData(jsonData: string): Promise<ImportResult> {
       }
     }
     
-    // Step 5: Import game stats
+    // Step 5: Import game stats with proper ID references
     const gameStatsData = Array.isArray(data.gameStats) ? data.gameStats : [];
+    console.log(`Importing ${gameStatsData.length} game statistics entries...`);
     for (const stat of gameStatsData) {
       try {
-        if (!stat || typeof stat !== 'object' || !stat.gameId || !stat.playerId) continue;
+        if (!stat || typeof stat !== 'object') continue;
+        
+        // Map the IDs to new IDs if available
+        const mappedGameId = gameIdMap[stat.gameId] || stat.gameId;
+        const mappedPlayerId = playerIdMap[stat.playerId] || stat.playerId;
+        
+        // Skip if no valid IDs
+        if (!mappedGameId || !mappedPlayerId) {
+          console.warn(`Skipping game stat due to missing ID mapping: gameId=${stat.gameId}, playerId=${stat.playerId}`);
+          continue;
+        }
+        
+        const statData = {
+          gameId: mappedGameId,
+          playerId: mappedPlayerId,
+          quarter: stat.quarter || 1,
+          goalsFor: stat.goalsFor || 0,
+          goalsAgainst: stat.goalsAgainst || 0,
+          missedGoals: stat.missedGoals || 0,
+          rebounds: stat.rebounds || 0,
+          intercepts: stat.intercepts || 0,
+          badPass: stat.badPass || 0,
+          handlingError: stat.handlingError || 0,
+          pickUp: stat.pickUp || 0,
+          infringement: stat.infringement || 0,
+          rating: stat.rating || 5
+        };
         
         const response = await fetch('/api/gamestats', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            id: stat.id,
-            gameId: stat.gameId,
-            playerId: stat.playerId,
-            quarter: stat.quarter || 1,
-            goalsFor: stat.goalsFor || 0,
-            goalsAgainst: stat.goalsAgainst || 0,
-            missedGoals: stat.missedGoals || 0,
-            rebounds: stat.rebounds || 0,
-            intercepts: stat.intercepts || 0,
-            badPass: stat.badPass || 0,
-            handlingError: stat.handlingError || 0,
-            pickUp: stat.pickUp || 0,
-            infringement: stat.infringement || 0,
-            rating: stat.rating || 5
-          })
+          body: JSON.stringify(statData)
         });
         
         if (response.ok) {
@@ -291,4 +321,5 @@ export async function importData(jsonData: string): Promise<ImportResult> {
     console.error('Failed to import data:', error);
     throw new Error('Failed to import data. Please check the file format and try again.');
   }
+}
 }
