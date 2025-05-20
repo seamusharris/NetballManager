@@ -193,6 +193,9 @@ export default function StatisticsForm({ gameId, players, rosters, gameStats }: 
       
       // Invalidate queries to refresh the data
       queryClient.invalidateQueries({ queryKey: ['/api/games', gameId, 'stats'] });
+      
+      // Also invalidate the main games query to update scores on the Games page
+      queryClient.invalidateQueries({ queryKey: ['/api/games'] });
     },
     onError: (error: any) => {
       toast({
