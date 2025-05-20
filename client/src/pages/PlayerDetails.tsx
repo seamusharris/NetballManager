@@ -20,6 +20,7 @@ import { ArrowLeft, Award, Target, Shield, Activity, Edit, Trash2 } from "lucide
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import PlayerForm from "@/components/players/PlayerForm";
 
 export default function PlayerDetails() {
   const { id } = useParams<{ id: string }>();
@@ -29,6 +30,7 @@ export default function PlayerDetails() {
   const { toast } = useToast();
   const [selectedTab, setSelectedTab] = useState("overview");
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   // Fetch player data
   const { data: player, isLoading: isLoadingPlayer } = useQuery<Player>({
@@ -287,9 +289,37 @@ export default function PlayerDetails() {
     setIsDeleteDialogOpen(false);
   };
 
+  // Mutation for updating the player
+  const updateMutation = useMutation({
+    mutationFn: async (updatedPlayer: any) => {
+      return apiRequest(`/api/players/${playerId}`, 'PATCH', updatedPlayer);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/players/${playerId}`] });
+      queryClient.invalidateQueries({ queryKey: ['/api/players'] });
+      toast({
+        title: "Player updated",
+        description: "The player has been successfully updated.",
+        variant: "default",
+      });
+      setIsEditModalOpen(false);
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to update player. Please try again.",
+        variant: "destructive",
+      });
+      console.error("Failed to update player:", error);
+    }
+  });
+
   const handleEditPlayer = () => {
-    // Navigate to the players page with the edit parameter
-    navigate(`/players?edit=${playerId}`);
+    setIsEditModalOpen(true);
+  };
+  
+  const handleUpdatePlayer = (data: any) => {
+    updateMutation.mutate(data);
   };
 
   // Get the player's avatar color
@@ -773,6 +803,32 @@ export default function PlayerDetails() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Edit Player Modal */}
+      {isEditModalOpen && player && (
+        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center overflow-y-auto">
+          <div className="relative bg-white dark:bg-slate-900 p-6 rounded-lg max-w-lg w-full max-h-[90vh] overflow-y-auto">
+            <button 
+              className="absolute right-4 top-4 rounded-sm opacity-70 text-gray-600 hover:opacity-100" 
+              onClick={() => setIsEditModalOpen(false)}
+            >
+              ✕
+              <span className="sr-only">Close</span>
+            </button>
+            
+            <h2 className="text-xl font-semibold mb-2">Edit Player</h2>
+            <p className="text-sm text-gray-500 mb-4">
+              Make changes to {player.displayName}'s details below.
+            </p>
+            
+            <PlayerForm 
+              player={player}
+              onSubmit={handleUpdatePlayer} 
+              isSubmitting={updateMutation.isPending} 
+            />
+          </div>
+        </div>
+      )}
     </>
   );
 }
