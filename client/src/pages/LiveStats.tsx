@@ -694,7 +694,7 @@ export default function LiveStats() {
                     return (
                       <div className="flex justify-center gap-2 flex-wrap">
                         {posSpecificStats.map(statType => (
-                          <div key={`${playerId}-${statType}`}>
+                          <div key={`${playerId}-${statType}`} className="min-w-[120px]">
                             {renderStatCounter(playerId, statType)}
                           </div>
                         ))}
