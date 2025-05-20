@@ -200,10 +200,50 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
       });
     }
     
-    // Process all game stats - summing across ALL completed games for total stats
+    // Define a variable to hold filtered game stats
+    let filteredGameStats: Record<number, GameStat[]> = {};
+    
+    // Process game stats based on selected time range
     if (Object.keys(gameStatsMap).length > 0) {
-      // Process combined stats from all games
-      const allGameStats = Object.values(gameStatsMap).flatMap(stats => stats);
+      // Filter games based on time range
+      let filteredGameIds = [...gameIds];
+      const now = new Date();
+      
+      if (timeRange === 'last5') {
+        // Sort games by date (newest first) and get the 5 most recent
+        const sortedGameIds = completedGames
+          .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+          .slice(0, 5)
+          .map(game => game.id);
+        
+        filteredGameIds = sortedGameIds;
+      } 
+      else if (timeRange === 'month') {
+        // Filter to include only this month's games
+        const currentMonth = now.getMonth();
+        const currentYear = now.getFullYear();
+        
+        filteredGameIds = completedGames
+          .filter(game => {
+            const gameDate = new Date(game.date);
+            return gameDate.getMonth() === currentMonth && gameDate.getFullYear() === currentYear;
+          })
+          .map(game => game.id);
+      }
+      // 'season' includes all games, so no filtering needed
+      
+      console.log(`Filtering player performance to ${filteredGameIds.length} games based on time range: ${timeRange}`);
+      
+      // Filter game stats to only include the games in our filtered list
+      filteredGameStats = Object.entries(gameStatsMap)
+        .filter(([gameId]) => filteredGameIds.includes(Number(gameId)))
+        .reduce((acc, [gameId, stats]) => {
+          acc[Number(gameId)] = stats;
+          return acc;
+        }, {} as Record<number, GameStat[]>);
+      
+      // Process combined stats from filtered games
+      const allGameStats = Object.values(filteredGameStats).flatMap(stats => stats);
       
       // Process stats using a de-duplication approach to handle duplicate records
       // Create a map to track the most recent stat entry for each player in each quarter of each game
@@ -247,13 +287,18 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
         });
       });
       
-      console.log(`Using stats from all ${Object.keys(gameStatsMap).length} completed games for dashboard player performance`);
+      console.log(`Using stats from ${Object.keys(filteredGameStats).length} games (filtered from ${Object.keys(gameStatsMap).length} total) for dashboard player performance`);
     }
     
     // Process player ratings - use only the most recent quarter 1 stats
     Object.values(newPlayerStatsMap).forEach(playerStat => {
-      // Find all quarter 1 stats for this player across all games
-      const quarter1Stats = Object.values(gameStatsMap)
+      // Use the appropriate stats source based on whether we're filtering
+      const statsSource = Object.keys(gameStatsMap).length > 0 ? 
+        (Object.keys(filteredGameStats || {}).length > 0 ? filteredGameStats : gameStatsMap) : 
+        gameStatsMap;
+      
+      // Find all quarter 1 stats for this player across games
+      const quarter1Stats = Object.values(statsSource || {})
         .flatMap(gameStats => 
           gameStats.filter(stat => 
             stat.playerId === playerStat.playerId && 
