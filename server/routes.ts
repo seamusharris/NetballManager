@@ -5,11 +5,11 @@ import { z } from "zod";
 import { sql } from "drizzle-orm";
 import { db } from "./db";
 import { 
-  insertPlayerSchema, 
-  insertOpponentSchema, 
-  insertGameSchema, 
-  insertRosterSchema, 
-  insertGameStatSchema,
+  insertPlayerSchema, importPlayerSchema,
+  insertOpponentSchema, importOpponentSchema,
+  insertGameSchema, importGameSchema,
+  insertRosterSchema, importRosterSchema,
+  insertGameStatSchema, importGameStatSchema,
   POSITIONS
 } from "@shared/schema";
 
