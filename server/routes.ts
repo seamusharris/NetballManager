@@ -420,7 +420,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch("/api/players/:id", async (req, res) => {
     try {
       const id = Number(req.params.id);
-      const updatedPlayer = await storage.updatePlayer(id, req.body);
+      
+      // Get the update data
+      const updateData = req.body;
+      
+      // If avatar color is set to auto or empty, handle it properly
+      if (updateData.avatarColor === 'auto' || updateData.avatarColor === '') {
+        // Get the existing player first
+        const existingPlayer = await storage.getPlayer(id);
+        
+        // If player already has a color, keep it
+        if (existingPlayer && existingPlayer.avatarColor) {
+          updateData.avatarColor = existingPlayer.avatarColor;
+        } else {
+          // Otherwise generate a unique color similar to the create route
+          const existingPlayers = await storage.getPlayers();
+          const usedColors = existingPlayers.map(p => p.avatarColor).filter(Boolean);
+          
+          const availableColors = [
+            'bg-blue-600', 'bg-purple-600', 'bg-green-600', 'bg-red-600', 
+            'bg-orange-600', 'bg-yellow-600', 'bg-pink-600', 'bg-teal-600',
+            'bg-indigo-600', 'bg-cyan-600', 'bg-amber-600', 'bg-lime-600',
+            'bg-emerald-600', 'bg-sky-600', 'bg-violet-600', 'bg-fuchsia-600',
+            'bg-rose-600', 'bg-blue-700', 'bg-purple-700', 'bg-green-700',
+            'bg-red-700', 'bg-orange-700', 'bg-yellow-700', 'bg-pink-700'
+          ];
+          
+          const unusedColors = availableColors.filter(color => !usedColors.includes(color));
+          
+          if (unusedColors.length > 0) {
+            updateData.avatarColor = unusedColors[Math.floor(Math.random() * unusedColors.length)];
+          } else {
+            updateData.avatarColor = availableColors[Math.floor(Math.random() * availableColors.length)];
+          }
+        }
+      }
+      
+      const updatedPlayer = await storage.updatePlayer(id, updateData);
       if (!updatedPlayer) {
         return res.status(404).json({ message: "Player not found" });
       }
