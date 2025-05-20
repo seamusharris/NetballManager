@@ -43,6 +43,13 @@ export const positionLabels: Record<Position, string> = {
 
 export const allPositions: Position[] = ['GS', 'GA', 'WA', 'C', 'WD', 'GD', 'GK'];
 
+// Position groups for filtering
+export const positionGroups = {
+  'attackers': ['GS', 'GA'] as Position[],
+  'mid-courters': ['WA', 'C', 'WD'] as Position[],
+  'defenders': ['GD', 'GK'] as Position[]
+};
+
 export function getQuarterLabel(quarter: number): string {
   return `Quarter ${quarter}`;
 }
