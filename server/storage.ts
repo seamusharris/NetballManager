@@ -102,6 +102,7 @@ export class DatabaseStorage implements IStorage {
     
     // Now that we have the player ID, assign the exact avatar color from the predefined scheme
     // This matches the original color mapping used in the application
+    // Extended with additional colors to ensure new players get distinct colors
     const avatarColors = [
       'bg-blue-600',    // Blue
       'bg-purple-600',  // Purple
@@ -112,6 +113,15 @@ export class DatabaseStorage implements IStorage {
       'bg-orange-500',  // Orange
       'bg-primary',     // Primary
       'bg-red-500',     // Red
+      'bg-yellow-600',  // Yellow
+      'bg-indigo-600',  // Indigo
+      'bg-cyan-600',    // Cyan
+      'bg-amber-600',   // Amber
+      'bg-lime-600',    // Lime
+      'bg-emerald-600', // Emerald
+      'bg-violet-600',  // Violet
+      'bg-fuchsia-600', // Fuchsia
+      'bg-rose-600',    // Rose
     ];
     
     // Use the same deterministic assignment based on player ID
