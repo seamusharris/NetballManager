@@ -117,11 +117,11 @@ export default function PlayerDetails() {
 
   // Calculate aggregate stats
   const calculateAggregateStats = () => {
-    // Get all game IDs where this player participated (either has stats or was in roster)
-    const allParticipatedGameIds = new Set([
-      ...Object.keys(allGameStats).map(id => parseInt(id)),
-      ...Object.keys(allGameRosters).map(id => parseInt(id))
-    ]);
+    // Only count games where the player is on the roster
+    // This ensures we don't count games where a player has stats but was later removed from the roster
+    const allParticipatedGameIds = new Set(
+      Object.keys(allGameRosters).map(id => parseInt(id))
+    );
     
     if (allParticipatedGameIds.size === 0) {
       return {
