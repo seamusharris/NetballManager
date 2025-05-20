@@ -264,8 +264,14 @@ export default function LiveStats() {
     return playerRoster ? playerRoster.position : '';
   };
   
+  // Used to define player-position pairing
+  interface PlayerPosition {
+    playerId: number;
+    position: Position;
+  }
+
   // Get list of players on court in the current quarter, sorted by position (GS to GK)
-  const getPlayersOnCourt = (): {playerId: number, position: Position}[] => {
+  const getPlayersOnCourt = (): PlayerPosition[] => {
     if (!rosters) return [];
     
     // Get all players on court with their positions
@@ -277,7 +283,7 @@ export default function LiveStats() {
       }));
     
     // Sort by position order (GS, GA, WA, C, WD, GD, GK)
-    return positionMap.sort((a, b) => {
+    return positionMap.sort((a: PlayerPosition, b: PlayerPosition) => {
       return allPositions.indexOf(a.position) - allPositions.indexOf(b.position);
     });
   };
