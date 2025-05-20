@@ -1013,5 +1013,49 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
         </Tabs>
       </CardContent>
     </Card>
+    
+    <AlertDialog open={resetQuarterDialogOpen} onOpenChange={setResetQuarterDialogOpen}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Reset Quarter Statistics</AlertDialogTitle>
+          <AlertDialogDescription>
+            This will reset all statistics for Quarter {activeQuarter} to zero. 
+            This action only affects the form and won&apos;t be saved until you click &quot;Save Stats&quot;.
+            Are you sure you want to continue?
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction 
+            onClick={resetQuarterStats}
+            className="bg-red-500 hover:bg-red-600 text-white"
+          >
+            Reset Quarter
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    
+    <AlertDialog open={resetAllDialogOpen} onOpenChange={setResetAllDialogOpen}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Reset All Game Statistics</AlertDialogTitle>
+          <AlertDialogDescription>
+            This will reset all statistics for the entire game to zero.
+            This action only affects the form and won&apos;t be saved until you click &quot;Save Stats&quot;.
+            Are you sure you want to continue?
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction 
+            onClick={resetAllStats}
+            className="bg-red-500 hover:bg-red-600 text-white"
+          >
+            Reset All Statistics
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }
