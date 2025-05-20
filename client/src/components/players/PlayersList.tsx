@@ -532,12 +532,12 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
               <TableHeader>
                 <TableRow className="bg-slate-50">
                   <TableHead 
-                    className="min-w-[70px] border-b cursor-pointer hover:bg-gray-50"
+                    className="min-w-[150px] border-b cursor-pointer hover:bg-gray-50"
                     onClick={() => handleSort('name')}
                   >
                     Player {renderSortIndicator('name')}
                   </TableHead>
-                  <TableHead className="text-center border-r border-b">Position</TableHead>
+                  <TableHead className="text-center w-[100px] border-r border-b">Position</TableHead>
                   
                   {/* Stat category headers */}
                   {statCategories.map((category, index) => (
@@ -599,7 +599,7 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
                               {getInitials(player.firstName, player.lastName)}
                             </span>
                           </div>
-                          <div className="ml-2 w-[40px] truncate">
+                          <div className="ml-2 w-[100px]">
                             <span className="text-sm font-medium text-blue-600">
                               {player.displayName}
                             </span>
