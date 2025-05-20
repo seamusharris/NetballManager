@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'wouter';
 import { cn } from '@/lib/utils';
 import { X, Menu, Home, Users, ClipboardList, Calendar, Flag, BarChart, Database } from 'lucide-react';
@@ -10,6 +10,23 @@ interface SidebarProps {
 
 export default function Sidebar({ isMobileOpen, setIsMobileOpen }: SidebarProps) {
   const [location] = useLocation();
+  const [isTablet, setIsTablet] = useState(false);
+
+  // Detect tablet screen size (including iPad)
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsTablet(window.innerWidth >= 768 && window.innerWidth < 1024);
+    };
+    
+    // Check on mount
+    checkScreenSize();
+    
+    // Check on resize
+    window.addEventListener('resize', checkScreenSize);
+    
+    // Cleanup
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, []);
 
   const isActive = (path: string) => {
     if (path === '/' && location === '/') return true;
@@ -30,8 +47,11 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen }: SidebarProps)
   return (
     <aside 
       className={cn(
-        "bg-sidebar-background w-64 h-full fixed inset-y-0 left-0 z-30 shadow-lg transform transition-transform duration-300 lg:translate-x-0 lg:static lg:inset-0",
-        isMobileOpen ? "translate-x-0" : "-translate-x-full"
+        "bg-sidebar-background w-64 h-full fixed inset-y-0 left-0 z-30 shadow-lg transform transition-transform duration-300",
+        // Default is visible on large screens only
+        "lg:translate-x-0 lg:static lg:inset-0",
+        // On mobile and tablet, use slide-in menu
+        (isTablet || window.innerWidth < 768) ? (isMobileOpen ? "translate-x-0" : "-translate-x-full") : ""
       )}
     >
       <div className="flex items-center justify-between h-16 bg-sidebar-accent px-4">
@@ -53,12 +73,12 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen }: SidebarProps)
             <Link 
               key={link.path} 
               href={link.path}
-              onClick={() => window.innerWidth < 1024 && setIsMobileOpen(false)}
+              onClick={() => (isTablet || window.innerWidth < 768) && setIsMobileOpen(false)}
             >
               <a 
                 className={cn(
-                  "sidebar-link",
-                  isActive(link.path) && "active"
+                  "sidebar-link flex items-center p-2 rounded-md mb-1 hover:bg-sidebar-accent transition-colors",
+                  isActive(link.path) ? "bg-sidebar-accent text-white font-semibold" : "text-sidebar-foreground"
                 )}
               >
                 <span className="w-6">{link.icon}</span>

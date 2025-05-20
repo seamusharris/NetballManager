@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Bell, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,9 +10,22 @@ interface HeaderProps {
 }
 
 export default function Header({ setIsMobileOpen }: HeaderProps) {
+  const [isTablet, setIsTablet] = useState(false);
+
+  // Detect tablet screen size (including iPad)
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsTablet(window.innerWidth >= 768 && window.innerWidth < 1024);
+    };
+    
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, []);
+
   return (
-    <header className="bg-white shadow-sm z-10">
-      <div className="flex items-center justify-between h-16 px-6">
+    <header className="bg-white shadow-sm z-20">
+      <div className="flex items-center justify-between h-16 px-4 md:px-6">
         <Button 
           variant="ghost" 
           size="icon" 
@@ -22,7 +36,8 @@ export default function Header({ setIsMobileOpen }: HeaderProps) {
         </Button>
         
         <div className="flex items-center space-x-4">
-          <div className="relative">
+          {/* Show search only on larger screens to save space on tablet */}
+          <div className={`relative ${isTablet ? 'hidden md:block' : ''}`}>
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input 
               type="text" 
@@ -39,7 +54,8 @@ export default function Header({ setIsMobileOpen }: HeaderProps) {
           </Button>
           
           <div className="flex items-center space-x-2">
-            <span className="text-sm font-semibold">Coach Smith</span>
+            {/* Hide coach name on tablet to save space */}
+            <span className={`text-sm font-semibold ${isTablet ? 'hidden md:inline' : ''}`}>Coach Smith</span>
             <Avatar className="w-8 h-8 bg-accent text-white">
               <span className="text-xs font-bold">CS</span>
             </Avatar>
