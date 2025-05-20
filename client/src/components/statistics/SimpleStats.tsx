@@ -393,8 +393,8 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
   const saveStatsMutation = useMutation({
     mutationFn: async () => {
       const quarters = ['1', '2', '3', '4'];
-      const savePromises = [];
-      const ratingPromises = [];
+      const savePromises: Promise<any>[] = [];
+      const ratingPromises: Promise<any>[] = [];
       
       // First handle player ratings update
       
@@ -735,14 +735,31 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
               <TabsTrigger value="totals">Game Totals</TabsTrigger>
             </TabsList>
             
-            <Button 
-              variant="default" 
-              onClick={() => saveStatsMutation.mutate()}
-              disabled={saveStatsMutation.isPending}
-              className="ml-2"
-            >
-              <Save className="w-4 h-4 mr-2" /> Save Stats
-            </Button>
+            <div className="flex space-x-2 ml-2">
+              <Button 
+                onClick={() => setResetQuarterDialogOpen(true)}
+                variant="outline"
+                className="border-red-200 hover:bg-red-50 text-red-600"
+              >
+                <RotateCcw className="w-4 h-4 mr-2" /> Reset Quarter
+              </Button>
+              
+              <Button 
+                onClick={() => setResetAllDialogOpen(true)}
+                variant="outline"
+                className="border-red-200 hover:bg-red-50 text-red-600"
+              >
+                <Trash2 className="w-4 h-4 mr-2" /> Reset All Stats
+              </Button>
+            
+              <Button
+                variant="default" 
+                onClick={() => saveStatsMutation.mutate()}
+                disabled={saveStatsMutation.isPending}
+              >
+                <Save className="w-4 h-4 mr-2" /> Save Stats
+              </Button>
+            </div>
           </div>
           
           {/* Quarter tabs */}
