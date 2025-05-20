@@ -13,7 +13,6 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
 import { 
   Table,
   TableBody,
@@ -30,22 +29,10 @@ import {
   PaginationNext,
   PaginationPrevious
 } from '@/components/ui/pagination';
-import { 
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { Badge } from '@/components/ui/badge';
-import { Avatar } from '@/components/ui/avatar';
-import { Edit, Eye, Trash2, Search } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { Player, Position } from '@shared/schema';
-import { cn, getInitials, formatDate, allPositions, positionGroups } from '@/lib/utils';
+import { cn, getInitials, allPositions, positionGroups } from '@/lib/utils';
 
 interface PlayersListProps {
   players: Player[];
@@ -54,12 +41,19 @@ interface PlayersListProps {
   onDelete: (id: number) => void;
 }
 
+// Hard-coded player stats - in a real implementation, these would come from the API
+interface PlayerStats {
+  playerId: number;
+  goals: number;
+  goalsAgainst: number;
+  missedGoals: number;
+}
+
 export default function PlayersList({ players, isLoading, onEdit, onDelete }: PlayersListProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [positionFilter, setPositionFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemToDelete, setItemToDelete] = useState<number | null>(null);
   const [_, navigate] = useLocation();
   const itemsPerPage = 10;
   
@@ -103,16 +97,38 @@ export default function PlayersList({ players, isLoading, onEdit, onDelete }: Pl
     setCurrentPage(page);
   };
   
-  const confirmDelete = (id: number) => {
-    setItemToDelete(id);
+  // Mock player stats (in a real implementation, these would be fetched from the API)
+  const getPlayerStats = (playerId: number): PlayerStats => {
+    return {
+      playerId,
+      goals: Math.floor(Math.random() * 10),
+      goalsAgainst: Math.floor(Math.random() * 5),
+      missedGoals: Math.floor(Math.random() * 3)
+    };
   };
   
-  const handleDeleteConfirmed = () => {
-    if (itemToDelete !== null) {
-      onDelete(itemToDelete);
-      setItemToDelete(null);
+  // Get the player's stored avatar color
+  const getAvatarColor = (player: Player): string => {
+    // If the player has a stored avatar color, use it
+    if (player?.avatarColor) {
+      return player.avatarColor;
     }
+    
+    // Default fallback if the player has no stored color
+    return 'bg-gray-500';
   };
+  
+  // Stat categories for the table
+  const statCategories = [
+    { 
+      name: 'Shooting', 
+      fields: [
+        { field: 'goals', label: 'For' },
+        { field: 'goalsAgainst', label: 'Agn' },
+        { field: 'missedGoals', label: 'Miss' },
+      ]
+    }
+  ];
   
   return (
     <div className="space-y-6">
@@ -168,26 +184,52 @@ export default function PlayersList({ players, isLoading, onEdit, onDelete }: Pl
                 </SelectContent>
               </Select>
             </div>
-            
-
           </div>
         </CardContent>
       </Card>
       
-      {/* Players Table */}
+      {/* Players Performance Table */}
       <Card className="overflow-hidden">
         <div className="overflow-x-auto">
           <Table>
-            <TableHeader className="bg-gray-50">
+            <TableHeader>
+              <TableRow className="bg-slate-50">
+                <TableHead className="min-w-[120px] border-b">Player</TableHead>
+                <TableHead className="text-center border-r border-b">Position</TableHead>
+                
+                {/* Stat category headers */}
+                {statCategories.map((category, index) => (
+                  <TableHead 
+                    key={category.name} 
+                    colSpan={category.fields.length}
+                    className={`text-center bg-blue-50 border-r border-b ${index === 0 ? 'border-l' : ''}`}
+                  >
+                    {category.name}
+                  </TableHead>
+                ))}
+              </TableRow>
+              
+              {/* Stat field headers */}
               <TableRow>
-                <TableHead className="px-6 py-3 text-left">Player</TableHead>
-                <TableHead className="px-6 py-3 text-left">Position Preferences</TableHead>
-                <TableHead className="px-6 py-3 text-left">Date of Birth</TableHead>
-                <TableHead className="px-6 py-3 text-left">Status</TableHead>
-                <TableHead className="px-6 py-3 text-right">Actions</TableHead>
+                <TableHead className="border-b"></TableHead>
+                <TableHead className="border-r border-b"></TableHead>
+                
+                {/* Stat field column headers */}
+                {statCategories.map(category => (
+                  category.fields.map((field, fieldIndex) => (
+                    <TableHead 
+                      key={field.field} 
+                      className={`text-center py-2 text-xs font-medium text-gray-500 border-r border-b ${fieldIndex === 0 ? 'border-l' : ''}`}
+                      style={{ width: '80px' }} // Fixed width columns for stats
+                    >
+                      {field.label}
+                    </TableHead>
+                  ))
+                ))}
               </TableRow>
             </TableHeader>
-            <TableBody>
+            
+            <TableBody className="bg-white divide-y divide-gray-200">
               {isLoading ? (
                 Array(5).fill(0).map((_, i) => (
                   <TableRow key={i}>
@@ -203,103 +245,65 @@ export default function PlayersList({ players, isLoading, onEdit, onDelete }: Pl
                   </TableCell>
                 </TableRow>
               ) : (
-                paginatedPlayers.map(player => (
-                  <TableRow key={player.id}>
-                    <TableCell className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <Avatar className={`h-10 w-10 ${player.avatarColor || 'bg-primary'} text-white flex items-center justify-center`}>
-                          <span className="font-bold">{getInitials(player.firstName, player.lastName)}</span>
-                        </Avatar>
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">{player.displayName}</div>
-                          <div className="text-sm text-gray-500">{player.firstName} {player.lastName}</div>
+                paginatedPlayers.map((player, playerIndex) => {
+                  const playerStats = getPlayerStats(player.id);
+                  
+                  return (
+                    <TableRow 
+                      key={player.id} 
+                      className={`hover:bg-gray-100 cursor-pointer transition-colors duration-150 ${playerIndex === paginatedPlayers.length - 1 ? "" : "border-b"}`}
+                      onClick={() => navigate(`/player/${player.id}`)}
+                    >
+                      {/* Player column */}
+                      <TableCell className="px-3 py-2 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className={cn("h-8 w-8 rounded-full flex items-center justify-center text-white", getAvatarColor(player))}>
+                            <span className="text-xs font-semibold">
+                              {getInitials(player.firstName, player.lastName)}
+                            </span>
+                          </div>
+                          <div className="ml-3">
+                            <span className="text-sm font-medium text-blue-600">
+                              {player.displayName}
+                            </span>
+                          </div>
                         </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex gap-1">
-                        {(player.positionPreferences as Position[]).map((position, index) => (
-                          <Badge
-                            key={index}
-                            variant="outline"
-                            className={cn(
-                              "px-2 py-1 text-xs rounded-full",
-                              index === 0 ? "bg-primary/10 text-primary font-semibold" : "bg-gray-100 text-gray-600"
-                            )}
-                          >
-                            {position}
-                          </Badge>
-                        ))}
-                      </div>
-                    </TableCell>
-                    <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {player.dateOfBirth ? formatDate(player.dateOfBirth) : ""}
-                    </TableCell>
-                    <TableCell className="px-6 py-4 whitespace-nowrap">
-                      <Badge
-                        variant="outline"
-                        className={cn(
-                          "px-2 py-1 text-xs rounded-full font-semibold",
-                          player.active 
-                            ? "bg-success/10 text-success" 
-                            : "bg-gray-200 text-gray-600"
-                        )}
-                      >
-                        {player.active ? 'Active' : 'Inactive'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="px-6 py-4 whitespace-nowrap text-right text-sm">
-                      <div className="flex justify-end space-x-2">
-                        <Button 
-                          variant="ghost" 
-                          size="icon"
-                          className="text-accent hover:text-accent-dark"
-                          onClick={() => onEdit(player)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="icon"
-                          className="text-accent hover:text-accent-dark"
-                          onClick={() => navigate(`/player/${player.id}`)}
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button 
-                              variant="ghost" 
-                              size="icon"
-                              className="text-error hover:text-error/80"
-                              onClick={() => confirmDelete(player.id)}
+                      </TableCell>
+                      
+                      {/* Position preferences column */}
+                      <TableCell className="text-center px-2 py-2 border-r">
+                        <div className="flex flex-wrap justify-center gap-1">
+                          {(player.positionPreferences as Position[]).map((position, index) => (
+                            <Badge
+                              key={index}
+                              variant="outline"
+                              className={cn(
+                                "px-2 py-0.5 text-xs rounded-full",
+                                index === 0 ? "bg-primary/10 text-primary font-semibold" : "bg-gray-100 text-gray-600"
+                              )}
                             >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Are you sure you want to delete {player.displayName}? This action cannot be undone.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction 
-                                className="bg-red-500 hover:bg-red-600"
-                                onClick={handleDeleteConfirmed}
-                              >
-                                Delete
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
+                              {position}
+                            </Badge>
+                          ))}
+                        </div>
+                      </TableCell>
+                      
+                      {/* Stat category fields */}
+                      {statCategories.map(category => (
+                        category.fields.map((field, i) => (
+                          <TableCell 
+                            key={field.field} 
+                            className={`py-2 px-2 text-center border-r ${i === 0 ? 'border-l' : ''}`}
+                          >
+                            <span className="text-sm font-medium">
+                              {playerStats[field.field as keyof PlayerStats] || 0}
+                            </span>
+                          </TableCell>
+                        ))
+                      ))}
+                    </TableRow>
+                  );
+                })
               )}
             </TableBody>
           </Table>
