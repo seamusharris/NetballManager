@@ -626,11 +626,11 @@ export default function LiveStats() {
                 <CardHeader className="py-3">
                   <div className="flex items-center gap-3">
                     <div 
-                      className="h-12 w-12 rounded-full flex items-center justify-center text-white font-bold text-base"
+                      className="h-12 w-12 rounded-full flex items-center justify-center text-white font-bold text-lg"
                       style={{
-                        backgroundColor: avatarColor,
+                        backgroundColor: '#3b82f6', /* blue-500 */
                         border: '2px solid white',
-                        boxShadow: '0 0 0 1px rgba(0,0,0,0.1)'
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
                       }}
                     >
                       {position}
