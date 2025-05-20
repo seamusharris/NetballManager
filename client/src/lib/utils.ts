@@ -107,9 +107,20 @@ export function generatePlayerAvatarColor(playerId?: number | null): string {
     'bg-sky-800',      // Dark sky blue
   ];
   
-  // Special case handling for Mila (ID 50)
-  if (playerId === 50) {
-    return 'bg-fuchsia-600'; // Assign a distinct color to Mila
+  // Special case handling for specific players by ID
+  // We need to manually assign colors to certain players to ensure consistency
+  const specialPlayerColors: Record<number, string> = {
+    50: 'bg-fuchsia-600', // Mila
+    // Add the missing players with consistent colors
+    // These IDs can be adjusted based on your actual player IDs
+    56: 'bg-green-600',   // Abby D
+    60: 'bg-indigo-600',  // JoJo
+    64: 'bg-amber-600'    // Abbey N
+  };
+  
+  // Check if this is a player with a special assigned color
+  if (playerId && specialPlayerColors[playerId]) {
+    return specialPlayerColors[playerId];
   }
   
   if (!playerId) return 'bg-gray-500'; // Default fallback if no player id
