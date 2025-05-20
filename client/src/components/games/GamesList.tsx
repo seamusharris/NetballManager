@@ -34,7 +34,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Edit, Trash2, FileText, CalendarRange, Search, Trophy, ThumbsDown, Minus } from 'lucide-react';
+import { Edit, Trash2, FileText, CalendarRange, Search, Trophy, ThumbsDown, Minus, ActivitySquare } from 'lucide-react';
 import { Game, Opponent, GameStat } from '@shared/schema';
 import { formatDate, formatShortDate } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
@@ -572,6 +572,16 @@ export default function GamesList({
                               >
                                 <FileText className="h-3 w-3 mr-1" />
                                 View Stats
+                              </button>
+                            )}
+                            
+                            {!game.isBye && (
+                              <button 
+                                onClick={() => navigate(`/games/${game.id}/livestats`)}
+                                className="inline-flex items-center justify-center rounded-md text-xs py-1 px-2 border border-purple-200 bg-purple-50 text-purple-700 hover:bg-purple-100"
+                              >
+                                <ActivitySquare className="h-3 w-3 mr-1 text-purple-600" />
+                                Live Stats
                               </button>
                             )}
                           </>
