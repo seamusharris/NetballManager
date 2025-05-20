@@ -532,7 +532,7 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
               <TableHeader>
                 <TableRow className="bg-slate-50">
                   <TableHead 
-                    className="min-w-[150px] border-b cursor-pointer hover:bg-gray-50"
+                    className="min-w-[120px] border-b cursor-pointer hover:bg-gray-50"
                     onClick={() => handleSort('name')}
                   >
                     Player {renderSortIndicator('name')}
@@ -599,7 +599,7 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
                               {getInitials(player.firstName, player.lastName)}
                             </span>
                           </div>
-                          <div className="ml-2 w-[100px]">
+                          <div className="ml-2 w-[80px]">
                             <span className="text-sm font-medium text-blue-600">
                               {player.displayName}
                             </span>
