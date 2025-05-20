@@ -65,10 +65,11 @@ export async function exportAllData(): Promise<ExportResult> {
     // Convert to JSON string
     const jsonData = JSON.stringify(exportData, null, 2);
     
-    // Create the filename with current date
+    // Create the filename with current date and time
     const now = new Date();
     const datePart = now.toISOString().split('T')[0]; // YYYY-MM-DD
-    const filename = `netball_export_${datePart}.json`;
+    const timePart = now.toISOString().split('T')[1].split('.')[0].replace(/:/g, '-'); // HH-MM-SS
+    const filename = `netball_export_${datePart}_${timePart}.json`;
     
     return {
       fileContents: jsonData,
