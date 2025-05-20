@@ -764,7 +764,7 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead className="w-36 border-r">Player</TableHead>
+                        <TableHead className="w-36 border-r">Position - Name</TableHead>
                         
                         {/* Create header cells for each stat category */}
                         {statCategories.map((category, categoryIndex) => (
@@ -797,7 +797,7 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
                                 </span>
                               </div>
                               <div className="truncate">
-                                {player.displayName || `${player.firstName} ${player.lastName}`}
+                                {`${position} - ${player.displayName || `${player.firstName} ${player.lastName}`}`}
                               </div>
                             </div>
                           </TableCell>
