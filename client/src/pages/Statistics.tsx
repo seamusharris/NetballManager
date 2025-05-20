@@ -188,7 +188,7 @@ export default function Statistics() {
                   ) : (
                     completedGames.map(game => (
                       <SelectItem key={game.id} value={game.id.toString()}>
-                        vs. {opponents.find(o => o.id === game.opponentId)?.teamName} - {game.date}
+                        Round {game.round} - {opponents.find(o => o.id === game.opponentId)?.teamName}
                       </SelectItem>
                     ))
                   )}
@@ -220,7 +220,7 @@ export default function Statistics() {
             <Card className="p-4">
               <CardContent className="pt-2">
                 <h3 className="text-xl font-semibold mb-2">
-                  Game vs. {selectedOpponent.teamName}
+                  Round {selectedGame.round} vs. {selectedOpponent.teamName}
                 </h3>
                 <p className="text-gray-600">{selectedGame.date} at {selectedGame.time}</p>
                 

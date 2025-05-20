@@ -724,7 +724,7 @@ export default function RosterManager({
               ) : (
                 allGames.map(game => (
                   <SelectItem key={game.id} value={game.id.toString()}>
-                    vs. {opponents.find(o => o.id === game.opponentId)?.teamName} - {formatShortDate(game.date)} {game.completed ? "(Past)" : ""}
+                    Round {game.round} - {opponents.find(o => o.id === game.opponentId)?.teamName} {game.completed ? "(Past)" : ""}
                   </SelectItem>
                 ))
               )}
@@ -741,7 +741,7 @@ export default function RosterManager({
             <div className="flex justify-between items-center mb-6">
               <div>
                 <h3 className="font-heading font-semibold text-neutral-dark text-xl">
-                  vs. {selectedOpponent?.teamName}
+                  Round {selectedGame.round} vs. {selectedOpponent?.teamName}
                 </h3>
                 <p className="text-gray-500 text-sm">
                   {formatShortDate(selectedGame.date)} • {selectedGame.time}
