@@ -195,9 +195,11 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
             rosters.forEach((roster: any) => {
               const playerId = roster.playerId;
               
-              // Only count actual playing positions (GS, GA, WA, C, WD, GD, GK)
+              // Only count actual playing positions (GS, GA, WA, C, WD, GD, GK), not "off"
               // This excludes players who were only listed as "off" for all quarters
-              if (playerId && roster.position && isOnCourtPosition(roster.position) && playerGameIds[playerId]) {
+              if (playerId && roster.position && 
+                  ['GS', 'GA', 'WA', 'C', 'WD', 'GD', 'GK'].includes(roster.position) && 
+                  playerGameIds[playerId]) {
                 playersOnCourt[playerId] = true;
               }
             });
@@ -289,7 +291,7 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
               if (!playerId || !quarter || !newPlayerStatsMap[playerId]) return;
               
               // Only track quarters where player was in an actual playing position
-              if (roster.position && allPositions.includes(roster.position)) {
+              if (roster.position && ['GS', 'GA', 'WA', 'C', 'WD', 'GD', 'GK'].includes(roster.position)) {
                 // Initialize game map for this player if needed
                 if (!onCourtMap[playerId]) {
                   onCourtMap[playerId] = {};
