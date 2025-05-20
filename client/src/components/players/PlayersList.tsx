@@ -45,7 +45,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar } from '@/components/ui/avatar';
 import { Edit, Eye, Trash2, Search } from 'lucide-react';
 import { Player, Position } from '@shared/schema';
-import { cn, getInitials, formatDate, allPositions } from '@/lib/utils';
+import { cn, getInitials, formatDate, allPositions, positionGroups } from '@/lib/utils';
 
 interface PlayersListProps {
   players: Player[];
@@ -71,8 +71,12 @@ export default function PlayersList({ players, isLoading, onEdit, onDelete }: Pl
       player.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       player.lastName.toLowerCase().includes(searchQuery.toLowerCase());
     
+    // Check if the filter is for a position group or individual position
     const matchesPosition = 
       positionFilter === 'all' || 
+      (positionFilter === 'attackers' && (player.positionPreferences as Position[]).some(pos => positionGroups.attackers.includes(pos))) ||
+      (positionFilter === 'mid-courters' && (player.positionPreferences as Position[]).some(pos => positionGroups['mid-courters'].includes(pos))) ||
+      (positionFilter === 'defenders' && (player.positionPreferences as Position[]).some(pos => positionGroups.defenders.includes(pos))) ||
       (player.positionPreferences as Position[]).includes(positionFilter as Position);
     
     const matchesStatus = 
@@ -138,6 +142,12 @@ export default function PlayersList({ players, isLoading, onEdit, onDelete }: Pl
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Positions</SelectItem>
+                  {/* Position Group Options */}
+                  <SelectItem value="attackers">Attackers (GS, GA)</SelectItem>
+                  <SelectItem value="mid-courters">Mid-courters (WA, C, WD)</SelectItem>
+                  <SelectItem value="defenders">Defenders (GD, GK)</SelectItem>
+                  <SelectItem value="group-divider" disabled>─────────────</SelectItem>
+                  {/* Individual Position Options */}
                   {allPositions.map(pos => (
                     <SelectItem key={pos} value={pos}>{pos}</SelectItem>
                   ))}
