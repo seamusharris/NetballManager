@@ -207,7 +207,7 @@ export default function PlayerDetails() {
         }
       });
       
-      // Sum stats for this game
+      // Sum stats for this game - but only for quarters the player actually played on court
       let gameGoals = 0;
       let gameGoalsAgainst = 0;
       let gameMissedGoals = 0;
@@ -219,19 +219,30 @@ export default function PlayerDetails() {
       let gameInfringements = 0;
       let gameRating = 0;
       
+      // Create a map of quarters where player was on court in an actual position
+      const quartersOnCourt = gameRosters.reduce((map, roster) => {
+        if (roster.playerId === playerId && allPositions.includes(roster.position)) {
+          map[roster.quarter] = true;
+        }
+        return map;
+      }, {} as Record<number, boolean>);
+      
       stats.forEach((stat: GameStat) => {
-        gameGoals += stat.goalsFor || 0;
-        gameGoalsAgainst += stat.goalsAgainst || 0;
-        gameMissedGoals += stat.missedGoals || 0;
-        gameRebounds += stat.rebounds || 0;
-        gameIntercepts += stat.intercepts || 0;
-        gameBadPasses += stat.badPass || 0;
-        gameHandlingErrors += stat.handlingError || 0;
-        gamePickUps += stat.pickUp || 0;
-        gameInfringements += stat.infringement || 0;
+        // Only count stats for quarters where player was actually on court
+        if (quartersOnCourt[stat.quarter]) {
+          gameGoals += stat.goalsFor || 0;
+          gameGoalsAgainst += stat.goalsAgainst || 0;
+          gameMissedGoals += stat.missedGoals || 0;
+          gameRebounds += stat.rebounds || 0;
+          gameIntercepts += stat.intercepts || 0;
+          gameBadPasses += stat.badPass || 0;
+          gameHandlingErrors += stat.handlingError || 0;
+          gamePickUps += stat.pickUp || 0;
+          gameInfringements += stat.infringement || 0;
+        }
         
-        // Use quarter 1 rating as the game rating
-        if (stat.quarter === 1 && typeof stat.rating === 'number') {
+        // Only use rating from quarter 1 if player was on court
+        if (stat.quarter === 1 && typeof stat.rating === 'number' && quartersOnCourt[1]) {
           gameRating = stat.rating;
           ratingSum += stat.rating;
           ratingCount++;
