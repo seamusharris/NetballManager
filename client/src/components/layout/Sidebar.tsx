@@ -32,10 +32,12 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen, isTablet }: Sid
     <aside 
       className={cn(
         "bg-sidebar-background w-64 h-full fixed inset-y-0 left-0 z-30 shadow-lg transform transition-transform duration-300",
-        // Default is visible on large desktop screens only (>1366px)
-        !isTablet ? "translate-x-0 static inset-0" : "",
-        // On mobile and tablet, use slide-in menu
-        isTablet ? (isMobileOpen ? "translate-x-0" : "-translate-x-full") : ""
+        // Only show by default on large screens
+        isTablet ? "" : "translate-x-0 static inset-0",
+        // Slide in/out on tablet
+        isTablet && isMobileOpen ? "translate-x-0" : "",
+        // Hidden by default on tablet
+        isTablet && !isMobileOpen ? "-translate-x-full" : ""
       )}
     >
       <div className="flex items-center justify-between h-16 bg-sidebar-accent px-4">
@@ -55,21 +57,22 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen, isTablet }: Sid
         <p className="text-sidebar-foreground text-xs uppercase font-bold tracking-wider mb-3">Main Menu</p>
         <nav>
           {navLinks.map((link) => (
-            <Link 
-              key={link.path} 
-              href={link.path}
-              onClick={() => (isTablet || window.innerWidth < 768) && setIsMobileOpen(false)}
-            >
-              <a 
-                className={cn(
-                  "sidebar-link flex items-center p-2 rounded-md mb-1 hover:bg-sidebar-accent transition-colors",
-                  isActive(link.path) ? "bg-sidebar-accent text-white font-semibold" : "text-sidebar-foreground"
-                )}
+            <div key={link.path} className="mb-1">
+              <Link 
+                href={link.path}
+                onClick={() => isTablet && setIsMobileOpen(false)}
               >
-                <span className="w-6">{link.icon}</span>
-                <span className="ml-2">{link.label}</span>
-              </a>
-            </Link>
+                <div 
+                  className={cn(
+                    "sidebar-link flex items-center p-2 rounded-md hover:bg-sidebar-accent transition-colors",
+                    isActive(link.path) ? "bg-sidebar-accent text-white font-semibold" : "text-sidebar-foreground"
+                  )}
+                >
+                  <span className="w-6">{link.icon}</span>
+                  <span className="ml-2">{link.label}</span>
+                </div>
+              </Link>
+            </div>
           ))}
         </nav>
       </div>
