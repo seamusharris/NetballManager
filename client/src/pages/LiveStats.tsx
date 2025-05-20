@@ -437,35 +437,46 @@ export default function LiveStats() {
     return total;
   };
   
+  // Check if a stat is common across positions
+  const isCommonStat = (stat: StatType, config: Record<StatType, boolean>): boolean => {
+    // These stats are common across most positions
+    return ['intercepts', 'badPass', 'handlingError', 'infringement'].includes(stat) && config[stat];
+  };
+  
+  // Check if a stat is position-specific
+  const isPositionSpecificStat = (stat: StatType, config: Record<StatType, boolean>): boolean => {
+    return config[stat] && !isCommonStat(stat, config);
+  };
+  
   // Render a stat counter button
-  const renderStatCounter = (playerId: number, stat: StatType) => {
+  const renderStatCounter = (playerId: number, stat: StatType, compact: boolean = false) => {
     const currentValue = liveStats[playerId]?.[currentQuarter]?.[stat] || 0;
     
     return (
-      <div className="flex flex-col items-center p-2 rounded-md border">
+      <div className={`flex flex-col items-center ${compact ? 'p-1' : 'p-2'} rounded-md border`}>
         <p className="text-xs font-medium mb-1">{statLabels[stat]}</p>
         <div className="flex items-center gap-1">
           <Button
             variant="outline"
             size="sm"
-            className="h-8 w-8 p-0"
+            className={`${compact ? 'h-6 w-6' : 'h-8 w-8'} p-0`}
             onClick={() => recordStat(playerId, stat, -1)}
             disabled={currentValue <= 0}
           >
-            <Minus className="h-4 w-4" />
+            <Minus className={`${compact ? 'h-3 w-3' : 'h-4 w-4'}`} />
           </Button>
           
-          <span className="w-8 text-center font-semibold">
+          <span className={`${compact ? 'w-6' : 'w-8'} text-center font-semibold`}>
             {currentValue}
           </span>
           
           <Button
             variant="outline"
             size="sm"
-            className={`h-8 w-8 p-0 ${statColors[stat]}`}
+            className={`${compact ? 'h-6 w-6' : 'h-8 w-8'} p-0 ${statColors[stat]}`}
             onClick={() => recordStat(playerId, stat, 1)}
           >
-            <Plus className="h-4 w-4" />
+            <Plus className={`${compact ? 'h-3 w-3' : 'h-4 w-4'}`} />
           </Button>
         </div>
       </div>
@@ -653,26 +664,32 @@ export default function LiveStats() {
                     {/* Common stats that show in header - for more compact layout */}
                     <div className="flex flex-wrap gap-1">
                       {/* Show common stats here */}
-                      {isCommonStat('intercepts', statConfig) && (
+                      {statConfig['intercepts'] && (
                         <div className="inline-block">{renderStatCounter(playerId, 'intercepts', true)}</div>
                       )}
-                      {isCommonStat('badPass', statConfig) && (
+                      {statConfig['badPass'] && (
                         <div className="inline-block">{renderStatCounter(playerId, 'badPass', true)}</div>
                       )}
-                      {isCommonStat('handlingError', statConfig) && (
+                      {statConfig['handlingError'] && (
                         <div className="inline-block">{renderStatCounter(playerId, 'handlingError', true)}</div>
+                      )}
+                      {statConfig['infringement'] && (
+                        <div className="inline-block">{renderStatCounter(playerId, 'infringement', true)}</div>
                       )}
                     </div>
                   </div>
                 </CardHeader>
                 <CardContent className="py-2 pt-1">
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
-                    {/* Render stat counters based on position */}
+                    {/* Render position-specific stat counters */}
                     {Object.entries(statConfig).map(([stat, isAvailable]) => {
-                      if (isAvailable) {
+                      // Only render stats that aren't already shown in the header
+                      const statType = stat as StatType;
+                      if (isAvailable && 
+                          !['intercepts', 'badPass', 'handlingError', 'infringement'].includes(statType)) {
                         return (
                           <div key={`${playerId}-${stat}`}>
-                            {renderStatCounter(playerId, stat as StatType)}
+                            {renderStatCounter(playerId, statType)}
                           </div>
                         );
                       }
