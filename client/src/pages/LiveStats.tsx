@@ -456,7 +456,7 @@ export default function LiveStats() {
     const currentValue = liveStats[playerId]?.[currentQuarter]?.[stat] || 0;
     
     return (
-      <div className={`flex flex-col items-center ${compact ? 'p-1' : 'p-2'} rounded-md border ${important ? 'border-2 border-blue-400' : ''}`}>
+      <div className={`flex flex-col items-center ${compact ? 'p-1' : 'p-2'} rounded-md border`}>
         <p className={`${important ? 'text-sm font-semibold' : 'text-xs font-medium'} mb-1`}>{statLabels[stat]}</p>
         <div className="flex items-center gap-1">
           <Button
@@ -469,17 +469,17 @@ export default function LiveStats() {
             <Minus className={`${compact ? 'h-3 w-3' : 'h-4 w-4'}`} />
           </Button>
           
-          <span className={`${compact ? 'w-6' : 'w-8'} text-center font-semibold ${important ? 'text-lg' : ''}`}>
+          <span className={`${compact ? 'w-6' : 'w-8'} text-center font-semibold ${important ? 'text-base' : ''}`}>
             {currentValue}
           </span>
           
           <Button
             variant="outline"
             size="sm"
-            className={`${compact ? 'h-6 w-6' : important ? 'h-10 w-10' : 'h-8 w-8'} p-0 ${statColors[stat]}`}
+            className={`${compact ? 'h-6 w-6' : 'h-8 w-8'} p-0 ${statColors[stat]}`}
             onClick={() => recordStat(playerId, stat, 1)}
           >
-            <Plus className={`${compact ? 'h-3 w-3' : important ? 'h-5 w-5' : 'h-4 w-4'}`} />
+            <Plus className={`${compact ? 'h-3 w-3' : 'h-4 w-4'}`} />
           </Button>
         </div>
       </div>
