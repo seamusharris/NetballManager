@@ -124,7 +124,7 @@ export async function importData(jsonData: string): Promise<ImportResult> {
     // Step 1: Import players
     for (const player of data.players) {
       try {
-        // Preserve the original avatar color exactly as is
+        // Always preserve avatar colors during import
         const playerData = {
           id: player.id,
           displayName: player.displayName || "",
@@ -133,12 +133,9 @@ export async function importData(jsonData: string): Promise<ImportResult> {
           dateOfBirth: player.dateOfBirth || null,
           positionPreferences: player.positionPreferences || [],
           active: player.active !== false,
+          // Always include avatar color, use the original or set to null to let the system assign one
+          avatarColor: player.avatarColor || null
         };
-        
-        // Only add avatarColor if it exists in the original data
-        if ('avatarColor' in player && player.avatarColor !== undefined) {
-          (playerData as any).avatarColor = player.avatarColor;
-        }
         
         const response = await fetch('/api/players', {
           method: 'POST',
