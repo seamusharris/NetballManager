@@ -190,7 +190,7 @@ export default function GamesList({
   
   // Process game statistics to calculate scores
   useEffect(() => {
-    if (!allGameStats) return;
+    if (!allGameStats || !allRosterData) return;
     
     const newScores: Record<number, GameScore> = {};
     
@@ -203,6 +203,10 @@ export default function GamesList({
         return;
       }
       
+      // Get roster player IDs for this game
+      const rosterEntries = allRosterData[gameId] || [];
+      const rosterPlayerIds = new Set(rosterEntries.map((r: any) => r.playerId));
+      
       // Calculate goals by player in each quarter - this is how it's done in the Statistics page too
       const quarterGoals: Record<number, { for: number; against: number }> = {
         1: { for: 0, against: 0 },
@@ -211,21 +215,19 @@ export default function GamesList({
         4: { for: 0, against: 0 }
       };
       
-      // Calculate the total goals for each quarter, instead of adding up individual player goals
-      // Group stats by quarter and sum the goals directly
-      const quarterTotals: Record<number, { goalsFor: number, goalsAgainst: number }> = {
-        1: { goalsFor: 0, goalsAgainst: 0 },
-        2: { goalsFor: 0, goalsAgainst: 0 },
-        3: { goalsFor: 0, goalsAgainst: 0 },
-        4: { goalsFor: 0, goalsAgainst: 0 }
-      };
-      
       // Create a map of the latest stats for each player and quarter combination
       const latestPlayerStats: Record<string, GameStat> = {};
       
       // Find the latest stat for each player and quarter
+      // Only consider players who are on the roster
       stats.forEach(stat => {
         if (!stat) return;
+        
+        // Only count stats for players who are on the roster
+        if (!rosterPlayerIds.has(stat.playerId)) {
+          console.log(`Skipping stats for player ${stat.playerId} in game ${gameId} as they are not on the roster`);
+          return;
+        }
         
         const key = `${stat.playerId}-${stat.quarter}`;
         if (!latestPlayerStats[key] || stat.id > latestPlayerStats[key].id) {
