@@ -3,15 +3,27 @@ import { Helmet } from 'react-helmet';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Download, Upload, AlertCircle, CheckCircle } from 'lucide-react';
+import { Download, Upload, AlertCircle, CheckCircle, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { exportAllData, importData } from '@/lib/dataExportImport';
 import { queryClient } from '@/lib/queryClient';
+import { 
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 
 export default function DataManagement() {
   const { toast } = useToast();
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState('');
   const [importStats, setImportStats] = useState<{
     playersImported: number;
     opponentsImported: number;
@@ -130,6 +142,55 @@ export default function DataManagement() {
       reader.readAsText(file);
     });
   };
+  
+  // Handle delete all data
+  const handleDeleteClick = () => {
+    setShowDeleteDialog(true);
+    setDeleteConfirmation('');
+  };
+  
+  const handleDeleteAllData = async () => {
+    if (deleteConfirmation !== 'DELETE') {
+      return; // Don't proceed if confirmation text doesn't match
+    }
+    
+    try {
+      setIsDeleting(true);
+      setError(null);
+      
+      // Delete all data tables in order (child tables first to avoid foreign key issues)
+      await fetch('/api/gamestats/all', { method: 'DELETE' });
+      await fetch('/api/rosters/all', { method: 'DELETE' });
+      await fetch('/api/games/all', { method: 'DELETE' });
+      await fetch('/api/opponents/all', { method: 'DELETE' });
+      await fetch('/api/players/all', { method: 'DELETE' });
+      
+      // Invalidate all queries to refresh data
+      await queryClient.invalidateQueries({ queryKey: ['/api/players'] });
+      await queryClient.invalidateQueries({ queryKey: ['/api/opponents'] });
+      await queryClient.invalidateQueries({ queryKey: ['/api/games'] });
+      
+      toast({
+        title: "Data Deleted",
+        description: "All data has been successfully deleted from the system.",
+        variant: "default",
+      });
+      
+      // Close the dialog
+      setShowDeleteDialog(false);
+    } catch (err) {
+      console.error('Delete failed:', err);
+      setError(err instanceof Error ? err.message : 'Delete failed due to an unknown error');
+      
+      toast({
+        title: "Delete Failed",
+        description: "There was a problem deleting your data. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   return (
     <>
@@ -166,7 +227,7 @@ export default function DataManagement() {
           </Alert>
         )}
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <Card>
             <CardHeader>
               <CardTitle>Export Data</CardTitle>
@@ -220,7 +281,72 @@ export default function DataManagement() {
               </Button>
             </CardContent>
           </Card>
+          
+          <Card className="bg-red-50 border-red-200">
+            <CardHeader>
+              <CardTitle className="text-red-700">Delete All Data</CardTitle>
+              <CardDescription className="text-red-600">
+                Permanently delete all data from the system.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="mb-4 text-sm text-red-600">
+                <strong>Warning:</strong> This will delete ALL data in the system including players, opponents, games, rosters, and statistics.
+                This operation cannot be undone. Make sure to export your data first if you want to keep it.
+              </p>
+              <Button 
+                onClick={handleDeleteClick} 
+                disabled={isDeleting}
+                variant="destructive"
+                className="w-full"
+              >
+                {isDeleting ? 'Deleting...' : 'Delete All Data'}
+                <Trash2 className="ml-2 h-4 w-4" />
+              </Button>
+            </CardContent>
+          </Card>
         </div>
+        
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-red-700">Delete All Data</DialogTitle>
+              <DialogDescription>
+                This action cannot be undone. All data will be permanently deleted from the system.
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="py-4">
+              <p className="mb-4 text-sm text-gray-700">
+                To confirm deletion, please type <strong>DELETE</strong> in the field below.
+              </p>
+              <Input 
+                value={deleteConfirmation}
+                onChange={(e) => setDeleteConfirmation(e.target.value)}
+                placeholder="Type DELETE to confirm"
+                className="w-full"
+              />
+            </div>
+            
+            <DialogFooter>
+              <Button 
+                variant="outline" 
+                onClick={() => setShowDeleteDialog(false)}
+                disabled={isDeleting}
+              >
+                Cancel
+              </Button>
+              <Button 
+                variant="destructive" 
+                onClick={handleDeleteAllData}
+                disabled={deleteConfirmation !== 'DELETE' || isDeleting}
+              >
+                {isDeleting ? 'Deleting...' : 'Confirm Delete'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </>
   );
