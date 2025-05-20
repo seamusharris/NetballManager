@@ -67,66 +67,94 @@ export function generateRandomColor(seed: string): string {
 }
 
 export function generatePlayerAvatarColor(playerId?: number | null): string {
-  // Expanded set of visually appealing, distinct colors for avatars
+  // Comprehensive set of visually distinct colors for avatars
+  // Using a wide variety of colors to minimize the chance of duplicates
   const avatarColors = [
-    'bg-blue-600',     // Blue
-    'bg-purple-600',   // Purple
-    'bg-pink-600',     // Pink
-    'bg-green-600',    // Green
-    'bg-accent',       // Accent (teal)
-    'bg-secondary',    // Secondary
-    'bg-orange-500',   // Orange
-    'bg-primary',      // Primary
-    'bg-red-500',      // Red
-    'bg-yellow-600',   // Yellow
-    'bg-indigo-600',   // Indigo
-    'bg-cyan-600',     // Cyan
-    'bg-amber-600',    // Amber
-    'bg-lime-600',     // Lime
-    'bg-emerald-600',  // Emerald
-    'bg-violet-600',   // Violet
-    'bg-fuchsia-600',  // Fuchsia
-    'bg-rose-600',     // Rose
-    'bg-sky-600',      // Sky blue
-    'bg-blue-800',     // Dark blue
-    'bg-indigo-800',   // Dark indigo
-    'bg-violet-800',   // Dark violet
-    'bg-purple-800',   // Dark purple
-    'bg-fuchsia-800',  // Dark fuchsia
-    'bg-pink-800',     // Dark pink
-    'bg-rose-800',     // Dark rose
-    'bg-red-800',      // Dark red
-    'bg-orange-800',   // Dark orange
-    'bg-amber-800',    // Dark amber
-    'bg-yellow-800',   // Dark yellow
-    'bg-lime-800',     // Dark lime
-    'bg-green-800',    // Dark green
-    'bg-emerald-800',  // Dark emerald
-    'bg-teal-800',     // Dark teal
-    'bg-cyan-800',     // Dark cyan
-    'bg-sky-800',      // Dark sky blue
+    // Primary palette - bright and distinct
+    'bg-blue-600',      // Blue
+    'bg-purple-600',    // Purple
+    'bg-pink-600',      // Pink
+    'bg-green-600',     // Green
+    'bg-teal-600',      // Teal
+    'bg-orange-500',    // Orange
+    'bg-red-500',       // Red
+    'bg-yellow-600',    // Yellow
+    'bg-indigo-600',    // Indigo
+    'bg-cyan-600',      // Cyan
+    'bg-amber-600',     // Amber
+    'bg-lime-600',      // Lime
+    'bg-emerald-600',   // Emerald
+    'bg-violet-600',    // Violet
+    'bg-fuchsia-600',   // Fuchsia
+    'bg-rose-600',      // Rose
+    'bg-sky-600',       // Sky blue
+    
+    // Secondary palette - darker variants
+    'bg-blue-800',      // Dark blue
+    'bg-purple-800',    // Dark purple
+    'bg-pink-800',      // Dark pink
+    'bg-green-800',     // Dark green
+    'bg-teal-800',      // Dark teal
+    'bg-orange-800',    // Dark orange
+    'bg-red-800',       // Dark red
+    'bg-yellow-800',    // Dark yellow
+    'bg-indigo-800',    // Dark indigo
+    'bg-cyan-800',      // Dark cyan
+    'bg-amber-800',     // Dark amber
+    'bg-lime-800',      // Dark lime
+    'bg-emerald-800',   // Dark emerald
+    'bg-violet-800',    // Dark violet
+    'bg-fuchsia-800',   // Dark fuchsia
+    'bg-rose-800',      // Dark rose
+    'bg-sky-800',       // Dark sky blue
+    
+    // Tertiary palette - lighter variants for even more options
+    'bg-blue-500',      // Light blue
+    'bg-purple-500',    // Light purple
+    'bg-pink-500',      // Light pink
+    'bg-green-500',     // Light green
+    'bg-teal-500',      // Light teal
+    'bg-orange-400',    // Light orange
+    'bg-red-400',       // Light red
+    'bg-yellow-500',    // Light yellow
+    'bg-indigo-500',    // Light indigo
+    'bg-cyan-500',      // Light cyan
+    'bg-amber-500',     // Light amber
+    'bg-lime-500',      // Light lime
+    'bg-emerald-500',   // Light emerald
+    'bg-violet-500',    // Light violet
+    'bg-fuchsia-500',   // Light fuchsia
+    'bg-rose-500',      // Light rose
+    'bg-sky-500',       // Light sky blue
   ];
   
-  // Special case handling for specific players by ID
-  // We need to manually assign colors to certain players to ensure consistency
-  const specialPlayerColors: Record<number, string> = {
-    50: 'bg-fuchsia-600', // Mila
-    // Colors for players with specific IDs based on database values
-    58: 'bg-teal-600',    // JoJo
-    59: 'bg-orange-600',  // Abby D
-    60: 'bg-red-600'      // Abbey N
+  // Map of specific players to their designated colors to ensure consistency
+  const playerColorMap: Record<number, string> = {
+    // Specific players with fixed colors
+    56: 'bg-blue-600',     // Lucia
+    57: 'bg-emerald-600',  // Isla
+    58: 'bg-teal-600',     // JoJo
+    59: 'bg-orange-500',   // Abby D
+    60: 'bg-red-500',      // Abbey N
+    61: 'bg-yellow-600',   // Emily
+    62: 'bg-indigo-600',   // Ollie
+    63: 'bg-sky-600',      // Evie
+    64: 'bg-purple-600',   // Mila
+    65: 'bg-pink-500',     // Olive (changed from pink-600 to avoid duplication)
+    66: 'bg-lime-600',     // Xanthe (changed from green-600 to avoid duplication)
   };
   
-  // Check if this is a player with a special assigned color
-  if (playerId && specialPlayerColors[playerId]) {
-    return specialPlayerColors[playerId];
+  // Return the designated color for this player if it exists
+  if (playerId && playerColorMap[playerId]) {
+    return playerColorMap[playerId];
   }
   
   if (!playerId) return 'bg-gray-500'; // Default fallback if no player id
   
-  // Use player ID modulo the number of colors to select one deterministically
-  const colorIndex = playerId % avatarColors.length;
-  return avatarColors[colorIndex];
+  // For new players, use a hash function based on ID to better distribute colors
+  // This gives us a more unique distribution than simple modulo
+  const hashIndex = Math.abs((playerId * 13) % avatarColors.length);
+  return avatarColors[hashIndex];
 }
 
 export function calculateTotalGoals(stats: any[], forTeam: boolean = true): number {
