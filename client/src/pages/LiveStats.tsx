@@ -524,9 +524,9 @@ export default function LiveStats() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => navigate(`/games/${gameId}`)}
+            onClick={() => navigate('/games')}
           >
-            Back to Game
+            Back to Games
           </Button>
           
           <Button
