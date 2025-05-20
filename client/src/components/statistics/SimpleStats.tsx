@@ -869,7 +869,7 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
                         className="w-40 border-r cursor-pointer hover:bg-gray-100"
                         onClick={() => requestSort('name')}
                       >
-                        Player
+                        Name
                         {sortConfig?.key === 'name' && (
                           <span className="ml-1">
                             {sortConfig.direction === 'ascending' ? '↑' : '↓'}
