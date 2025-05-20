@@ -40,6 +40,8 @@ interface SortConfig {
 export default function PlayerPerformance({ players, games, className }: PlayerPerformanceProps): JSX.Element {
   const [timeRange, setTimeRange] = useState('last5');
   const [playerStatsMap, setPlayerStatsMap] = useState<Record<number, PlayerStats>>({});
+  // Add this key to force re-calculation when time range changes
+  const [statsKey, setStatsKey] = useState(0);
   const [sortConfig, setSortConfig] = useState<SortConfig>({ field: 'rating', direction: 'desc' });
   
   // Get only completed games
@@ -49,7 +51,7 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
   
   // Use React Query to fetch and cache game statistics and rosters
   const { data: gameStatsMap, isLoading: isLoadingStats } = useQuery({
-    queryKey: ['playerGameStats', ...gameIds],
+    queryKey: ['playerGameStats', ...gameIds, statsKey], // Include statsKey to force refresh when time range changes
     queryFn: async () => {
       if (gameIds.length === 0) {
         return {};
@@ -457,7 +459,14 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
         <div className="flex justify-between items-center mb-4">
           <h3 className="font-heading font-semibold text-neutral-dark">Player Performance</h3>
           
-          <Select value={timeRange} onValueChange={setTimeRange}>
+          <Select 
+            value={timeRange} 
+            onValueChange={(value) => {
+              setTimeRange(value);
+              // Force a recalculation when time range changes
+              setStatsKey(prev => prev + 1);
+            }}
+          >
             <SelectTrigger className="bg-white border rounded-md w-[140px] h-8 text-sm">
               <SelectValue placeholder="Last 5 Games" />
             </SelectTrigger>
