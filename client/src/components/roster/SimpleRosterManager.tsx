@@ -584,7 +584,7 @@ export default function SimpleRosterManager({
               <SelectContent>
                 {allGames.map((game) => (
                   <SelectItem key={game.id} value={game.id.toString()}>
-                    {formatShortDate(game.date)} - {opponents.find(o => o.id === game.opponentId)?.teamName || "Unknown Opponent"}
+                    Round {game.round} - {opponents.find(o => o.id === game.opponentId)?.teamName || "Unknown Opponent"}
                   </SelectItem>
                 ))}
               </SelectContent>
