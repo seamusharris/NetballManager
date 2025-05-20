@@ -259,7 +259,7 @@ export default function PlayerDetails() {
   // Mutation for deleting the player
   const deletePlayerMutation = useMutation({
     mutationFn: async () => {
-      return apiRequest(`/api/players/${playerId}`, 'DELETE');
+      return apiRequest('DELETE', `/api/players/${playerId}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/players'] });
