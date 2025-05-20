@@ -137,8 +137,13 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
       };
     });
     
-    // Count games played from rosters (any game where player had a position in any quarter)
-    if (gameRostersMap && Object.keys(gameRostersMap).length > 0) {
+    // Count games played from both rosters and game stats
+    // A player has played if they:
+    // 1. Appear in the roster with a position OR
+    // 2. Have stats recorded for the game
+    if ((gameRostersMap && Object.keys(gameRostersMap).length > 0) || 
+        (gameStatsMap && Object.keys(gameStatsMap).length > 0)) {
+      
       // Track which games each player participated in
       const playerGameIds: Record<number, Set<number>> = {};
       
@@ -147,22 +152,45 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
         playerGameIds[player.id] = new Set();
       });
       
-      // Process all game rosters
-      Object.entries(gameRostersMap).forEach(([gameIdStr, rosters]) => {
-        const gameId = parseInt(gameIdStr);
-        
-        // For each roster entry in this game
-        if (Array.isArray(rosters)) {
-          rosters.forEach((roster: any) => {
-            const playerId = roster.playerId;
+      // First, process all game rosters to find participation
+      if (gameRostersMap) {
+        Object.entries(gameRostersMap).forEach(([gameIdStr, rosters]) => {
+          const gameId = parseInt(gameIdStr);
+          
+          // For each roster entry in this game
+          if (Array.isArray(rosters)) {
+            rosters.forEach((roster: any) => {
+              const playerId = roster.playerId;
+              
+              // If player is assigned to a position in any quarter, count them as having played
+              if (playerId && roster.position && playerGameIds[playerId]) {
+                playerGameIds[playerId].add(gameId);
+              }
+            });
+          }
+        });
+      }
+      
+      // Then, process all game stats to find additional participation
+      // A player with any stats for a game has participated
+      if (gameStatsMap) {
+        Object.entries(gameStatsMap).forEach(([gameIdStr, stats]) => {
+          const gameId = parseInt(gameIdStr);
+          
+          // Group stats by player for this game
+          if (Array.isArray(stats)) {
+            // Get unique player IDs that have stats for this game
+            const playerIdsWithStats = new Set(stats.map(stat => stat.playerId));
             
-            // If player is assigned to a position in any quarter, count them as having played
-            if (playerId && roster.position && playerGameIds[playerId]) {
-              playerGameIds[playerId].add(gameId);
-            }
-          });
-        }
-      });
+            // Mark each player as having participated in this game
+            playerIdsWithStats.forEach(playerId => {
+              if (playerId && playerGameIds[playerId]) {
+                playerGameIds[playerId].add(gameId);
+              }
+            });
+          }
+        });
+      }
       
       // Update games played count for each player
       players.forEach(player => {
