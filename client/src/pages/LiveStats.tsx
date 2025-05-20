@@ -632,25 +632,41 @@ export default function LiveStats() {
             
             return (
               <Card key={playerId} className="mb-3 overflow-hidden">
-                <CardHeader className="py-2">
-                  <div className="flex items-center gap-2">
-                    <div 
-                      className="h-10 w-10 md:h-12 md:w-12 rounded-full flex items-center justify-center text-white font-bold text-base md:text-lg"
-                      style={{
-                        backgroundColor: '#3b82f6', /* blue-500 */
-                        border: '2px solid white',
-                        boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
-                      }}
-                    >
-                      {position}
+                <CardHeader className="py-2 pb-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <div className="flex items-center gap-2 mr-2">
+                      <div 
+                        className="h-10 w-10 rounded-full flex items-center justify-center text-white font-bold text-base"
+                        style={{
+                          backgroundColor: '#3b82f6', /* blue-500 */
+                          border: '2px solid white',
+                          boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                        }}
+                      >
+                        {position}
+                      </div>
+                      <div>
+                        <p className="font-semibold text-sm">{player.displayName}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-semibold text-sm md:text-base">{player.displayName}</p>
+                    
+                    {/* Common stats that show in header - for more compact layout */}
+                    <div className="flex flex-wrap gap-1">
+                      {/* Show common stats here */}
+                      {isCommonStat('intercepts', statConfig) && (
+                        <div className="inline-block">{renderStatCounter(playerId, 'intercepts', true)}</div>
+                      )}
+                      {isCommonStat('badPass', statConfig) && (
+                        <div className="inline-block">{renderStatCounter(playerId, 'badPass', true)}</div>
+                      )}
+                      {isCommonStat('handlingError', statConfig) && (
+                        <div className="inline-block">{renderStatCounter(playerId, 'handlingError', true)}</div>
+                      )}
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent className="py-2">
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 md:gap-3">
+                <CardContent className="py-2 pt-1">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
                     {/* Render stat counters based on position */}
                     {Object.entries(statConfig).map(([stat, isAvailable]) => {
                       if (isAvailable) {
