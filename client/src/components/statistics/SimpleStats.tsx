@@ -8,7 +8,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Save, ChevronDown, ChevronUp } from 'lucide-react';
+import { Save, ChevronDown, ChevronUp, RotateCcw, Trash2 } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Player, Roster, GameStat } from '@shared/schema';
 
 interface SimpleStatsProps {
@@ -29,6 +39,9 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
   const [playerRatings, setPlayerRatings] = useState<Record<number, number>>({});
   // Add state for sorting the Game Totals table
   const [sortConfig, setSortConfig] = useState<{key: string, direction: 'ascending' | 'descending'} | null>(null);
+  // Add state for reset dialogs
+  const [resetQuarterDialogOpen, setResetQuarterDialogOpen] = useState(false);
+  const [resetAllDialogOpen, setResetAllDialogOpen] = useState(false);
   const { toast } = useToast();
   
   // Function to calculate game totals across all quarters
@@ -263,6 +276,106 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
     // Ensure value doesn't go below 0
     const newValue = Math.max(0, currentValue + amount);
     handleInputChange(quarter, playerId, field, String(newValue));
+  };
+  
+  // Reset all stats for current quarter
+  const resetQuarterStats = () => {
+    const quarter = activeQuarter;
+    
+    // Get all players in this quarter
+    const playersInQuarter: number[] = [];
+    rosters.forEach(roster => {
+      if (roster.quarter.toString() === quarter && !playersInQuarter.includes(roster.playerId)) {
+        playersInQuarter.push(roster.playerId);
+      }
+    });
+    
+    // Reset stats for all players in this quarter
+    setFormValues(prev => {
+      const newValues = { ...prev };
+      
+      playersInQuarter.forEach(playerId => {
+        if (!newValues[quarter]) {
+          newValues[quarter] = {};
+        }
+        
+        newValues[quarter][playerId] = {
+          goalsFor: '0',
+          goalsAgainst: '0',
+          missedGoals: '0',
+          rebounds: '0',
+          intercepts: '0',
+          badPass: '0',
+          handlingError: '0',
+          pickUp: '0',
+          infringement: '0'
+        };
+      });
+      
+      return newValues;
+    });
+    
+    // Recalculate game totals
+    setTimeout(() => calculateGameTotals(), 0);
+    
+    toast({
+      title: "Quarter stats reset",
+      description: `All statistics for Quarter ${quarter} have been reset to zero. Remember to save changes.`
+    });
+    
+    setResetQuarterDialogOpen(false);
+  };
+  
+  // Reset all stats for the game
+  const resetAllStats = () => {
+    // Get all players in all quarters
+    const playersByQuarter: Record<string, number[]> = {
+      '1': [], '2': [], '3': [], '4': []
+    };
+    
+    rosters.forEach(roster => {
+      const quarter = roster.quarter.toString();
+      if (!playersByQuarter[quarter].includes(roster.playerId)) {
+        playersByQuarter[quarter].push(roster.playerId);
+      }
+    });
+    
+    // Reset all stats for all quarters
+    setFormValues(prev => {
+      const newValues = { ...prev };
+      
+      Object.entries(playersByQuarter).forEach(([quarter, playerIds]) => {
+        if (!newValues[quarter]) {
+          newValues[quarter] = {};
+        }
+        
+        playerIds.forEach(playerId => {
+          newValues[quarter][playerId] = {
+            goalsFor: '0',
+            goalsAgainst: '0',
+            missedGoals: '0',
+            rebounds: '0',
+            intercepts: '0',
+            badPass: '0',
+            handlingError: '0',
+            pickUp: '0',
+            infringement: '0'
+          };
+        });
+      });
+      
+      return newValues;
+    });
+    
+    // Recalculate game totals
+    setTimeout(() => calculateGameTotals(), 0);
+    
+    toast({
+      title: "All game stats reset",
+      description: "All statistics for this game have been reset to zero. Remember to save changes."
+    });
+    
+    setResetAllDialogOpen(false);
   };
   
   // Function to handle rating changes
