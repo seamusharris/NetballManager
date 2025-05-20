@@ -62,14 +62,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log("Import data structure:", Object.keys(data));
       
-      // Validate the data structure
-      if (!data.players || !data.opponents || !data.games) {
-        console.error("Missing required data sections:", { 
-          hasPlayers: !!data.players, 
-          hasOpponents: !!data.opponents, 
-          hasGames: !!data.games 
-        });
-        return res.status(400).json({ message: "Invalid data format - missing required sections" });
+      // Provide more detailed debug info
+      console.log("Data keys:", Object.keys(data));
+      
+      // Validate the data structure with more flexibility
+      const hasPlayers = Array.isArray(data.players);
+      const hasOpponents = Array.isArray(data.opponents);
+      const hasGames = Array.isArray(data.games);
+      
+      console.log("Data validation:", { hasPlayers, hasOpponents, hasGames });
+      
+      // Allow partial imports if at least players are available
+      if (!hasPlayers) {
+        console.error("Missing required player data");
+        return res.status(400).json({ message: "Invalid data format - missing player data" });
+      }
+      
+      // Log the structure of the first items for debugging
+      if (hasPlayers && data.players.length > 0) {
+        console.log("Sample player:", Object.keys(data.players[0]));
+      }
+      if (hasGames && data.games.length > 0) {
+        console.log("Sample game:", Object.keys(data.games[0]));
       }
       
       // Import counts

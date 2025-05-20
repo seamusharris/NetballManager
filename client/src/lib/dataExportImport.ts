@@ -130,24 +130,31 @@ export async function importData(jsonData: string): Promise<ImportResult> {
     
     // Import all data in a single bulk operation
     console.log("Importing data in bulk...");
-    const response = await fetch('/api/bulk-import', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: jsonData // Send the entire JSON data as is
-    });
     
-    if (response.ok) {
-      const result = await response.json();
-      playersImported = result.playersImported || 0;
-      opponentsImported = result.opponentsImported || 0;
-      gamesImported = result.gamesImported || 0;
-      rostersImported = result.rostersImported || 0;
-      statsImported = result.statsImported || 0;
+    try {
+      const response = await fetch('/api/bulk-import', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: jsonData // Send the entire JSON data as is
+      });
       
-      console.log(`Import completed successfully: ${playersImported} players, ${opponentsImported} opponents, ${gamesImported} games, ${rostersImported} roster entries, ${statsImported} stats`);
-    } else {
-      const errorData = await response.json();
-      throw new Error(`Import failed: ${errorData.message || 'Unknown error'}`);
+      if (response.ok) {
+        const result = await response.json();
+        playersImported = result.playersImported || 0;
+        opponentsImported = result.opponentsImported || 0;
+        gamesImported = result.gamesImported || 0;
+        rostersImported = result.rostersImported || 0;
+        statsImported = result.statsImported || 0;
+        
+        console.log(`Import completed successfully: ${playersImported} players, ${opponentsImported} opponents, ${gamesImported} games, ${rostersImported} roster entries, ${statsImported} stats`);
+      } else {
+        const errorText = await response.text();
+        console.error("Import API error:", errorText);
+        throw new Error(`Import failed: ${errorText || 'Unknown error'}`);
+      }
+    } catch (importError) {
+      console.error("Failed during bulk import:", importError);
+      throw importError;
     }
     
     return {
