@@ -1,7 +1,7 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Game, Player, GameStat } from '@shared/schema';
+import { Game, Player, GameStat, allPositions } from '@shared/schema';
 import { cn, getInitials } from '@/lib/utils';
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -189,11 +189,23 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
           
           // For each roster entry in this game
           if (Array.isArray(rosters)) {
+            // Create a map to track which players were on court (in actual positions) for at least one quarter
+            const playersOnCourt: Record<number, boolean> = {};
+            
             rosters.forEach((roster: any) => {
               const playerId = roster.playerId;
               
-              // If player is assigned to a position in any quarter, count them as having played
-              if (playerId && roster.position && playerGameIds[playerId]) {
+              // Only count actual playing positions (GS, GA, WA, C, WD, GD, GK)
+              // This excludes players who were only listed as "off" for all quarters
+              if (playerId && roster.position && allPositions.includes(roster.position) && playerGameIds[playerId]) {
+                playersOnCourt[playerId] = true;
+              }
+            });
+            
+            // Add this game to the player's games played only if they had an on-court position
+            Object.keys(playersOnCourt).forEach(playerIdStr => {
+              const playerId = parseInt(playerIdStr);
+              if (playerGameIds[playerId]) {
                 playerGameIds[playerId].add(gameId);
               }
             });
@@ -256,21 +268,69 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
       });
       
       // Now process only the de-duplicated stats to get player totals across all games
+      // Create a map of quarters where each player was on court in an actual position for each game
+      const onCourtMap: Record<number, Record<number, Record<number, boolean>>> = {};
+      
+      // Build the "on court" map from roster data for each player, game, and quarter
+      if (gameRostersMap) {
+        Object.entries(gameRostersMap).forEach(([gameIdStr, rosters]) => {
+          const gameId = parseInt(gameIdStr);
+          
+          // Skip if this game is not in our filtered set
+          if (!filteredGameIds.includes(gameId)) return;
+          
+          // Process each roster entry
+          if (Array.isArray(rosters)) {
+            rosters.forEach((roster: any) => {
+              const playerId = roster.playerId;
+              const quarter = roster.quarter;
+              
+              // Skip if not a valid player or quarter
+              if (!playerId || !quarter || !newPlayerStatsMap[playerId]) return;
+              
+              // Only track quarters where player was in an actual playing position
+              if (roster.position && allPositions.includes(roster.position)) {
+                // Initialize game map for this player if needed
+                if (!onCourtMap[playerId]) {
+                  onCourtMap[playerId] = {};
+                }
+                // Initialize quarter map for this game if needed
+                if (!onCourtMap[playerId][gameId]) {
+                  onCourtMap[playerId][gameId] = {};
+                }
+                // Mark this quarter as one where player was on court
+                onCourtMap[playerId][gameId][quarter] = true;
+              }
+            });
+          }
+        });
+      }
+      
+      // Process stats for each player, counting only stats from quarters they were on court
       Object.values(dedupedStats).forEach(playerQuarterStats => {
         Object.values(playerQuarterStats).forEach(stat => {
           const playerId = stat.playerId;
+          const gameId = stat.gameId;
+          const quarter = stat.quarter;
+          
           if (!newPlayerStatsMap[playerId]) return;
           
-          // Add this player's stats
-          newPlayerStatsMap[playerId].goals += stat.goalsFor || 0;
-          newPlayerStatsMap[playerId].goalsAgainst += stat.goalsAgainst || 0;
-          newPlayerStatsMap[playerId].missedGoals += stat.missedGoals || 0;
-          newPlayerStatsMap[playerId].rebounds += stat.rebounds || 0;
-          newPlayerStatsMap[playerId].intercepts += stat.intercepts || 0;
-          newPlayerStatsMap[playerId].badPass += stat.badPass || 0;
-          newPlayerStatsMap[playerId].handlingError += stat.handlingError || 0;
-          newPlayerStatsMap[playerId].pickUp += stat.pickUp || 0;
-          newPlayerStatsMap[playerId].infringement += stat.infringement || 0;
+          // Check if this player was on court for this quarter in this game
+          const wasOnCourt = onCourtMap[playerId]?.[gameId]?.[quarter] === true;
+          
+          // Only add stats if the player was on court in an actual playing position
+          if (wasOnCourt) {
+            // Add this player's stats
+            newPlayerStatsMap[playerId].goals += stat.goalsFor || 0;
+            newPlayerStatsMap[playerId].goalsAgainst += stat.goalsAgainst || 0;
+            newPlayerStatsMap[playerId].missedGoals += stat.missedGoals || 0;
+            newPlayerStatsMap[playerId].rebounds += stat.rebounds || 0;
+            newPlayerStatsMap[playerId].intercepts += stat.intercepts || 0;
+            newPlayerStatsMap[playerId].badPass += stat.badPass || 0;
+            newPlayerStatsMap[playerId].handlingError += stat.handlingError || 0;
+            newPlayerStatsMap[playerId].pickUp += stat.pickUp || 0;
+            newPlayerStatsMap[playerId].infringement += stat.infringement || 0;
+          }
         });
       });
       
