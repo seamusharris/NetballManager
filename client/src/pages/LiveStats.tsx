@@ -680,21 +680,27 @@ export default function LiveStats() {
                   </div>
                 </CardHeader>
                 <CardContent className="py-2 pt-1">
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 justify-items-center">
-                    {/* Render position-specific stat counters */}
-                    {Object.entries(statConfig).map(([stat, isAvailable]) => {
-                      // Only render stats that aren't already shown in the header
-                      const statType = stat as StatType;
-                      if (isAvailable && !commonStats.includes(statType)) {
-                        return (
-                          <div key={`${playerId}-${stat}`} className="w-full flex justify-center">
+                  {/* Count how many position-specific stats exist */}
+                  {(() => {
+                    // Get position-specific stat types that are available
+                    const posSpecificStats = Object.entries(statConfig)
+                      .filter(([stat, isAvailable]) => isAvailable && !commonStats.includes(stat as StatType))
+                      .map(([stat]) => stat as StatType);
+                    
+                    if (posSpecificStats.length === 0) {
+                      return null; // No second row needed
+                    }
+                      
+                    return (
+                      <div className="flex justify-center gap-2 flex-wrap">
+                        {posSpecificStats.map(statType => (
+                          <div key={`${playerId}-${statType}`}>
                             {renderStatCounter(playerId, statType)}
                           </div>
-                        );
-                      }
-                      return null;
-                    })}
-                  </div>
+                        ))}
+                      </div>
+                    );
+                  })()}
                 </CardContent>
               </Card>
             );
