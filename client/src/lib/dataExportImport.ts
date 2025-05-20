@@ -138,7 +138,7 @@ export async function importData(jsonData: string): Promise<ImportResult> {
           dateOfBirth: player.dateOfBirth || null,
           positionPreferences: Array.isArray(player.positionPreferences) ? player.positionPreferences : [],
           active: player.active !== false,
-          avatarColor: player.avatarColor || null // Keep original color
+          avatarColor: player.avatarColor // Important: Keep original color exactly as is
         };
         
         const response = await fetch('/api/players', {

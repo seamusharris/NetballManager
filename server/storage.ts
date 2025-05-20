@@ -87,7 +87,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createPlayer(insertPlayer: InsertPlayer): Promise<Player> {
-    // Create the player first without avatar color
+    // Check if a specific avatar color was provided (for import/export)
+    let avatarColor = insertPlayer.avatarColor;
+    
+    // Create the player with all properties
     const [player] = await db
       .insert(players)
       .values({
@@ -96,45 +99,52 @@ export class DatabaseStorage implements IStorage {
         lastName: insertPlayer.lastName,
         dateOfBirth: insertPlayer.dateOfBirth || null,
         positionPreferences: insertPlayer.positionPreferences as any, // Cast to any to bypass TS checking
-        active: insertPlayer.active !== undefined ? insertPlayer.active : true
+        active: insertPlayer.active !== undefined ? insertPlayer.active : true,
+        // Include the avatar color if provided
+        ...(avatarColor ? { avatarColor } : {})
       })
       .returning();
     
-    // Now that we have the player ID, assign the exact avatar color from the predefined scheme
-    // This matches the original color mapping used in the application
-    // Extended with additional colors to ensure new players get distinct colors
-    const avatarColors = [
-      'bg-blue-600',    // Blue
-      'bg-purple-600',  // Purple
-      'bg-pink-600',    // Pink
-      'bg-green-600',   // Green
-      'bg-accent',      // Accent (teal)
-      'bg-secondary',   // Secondary
-      'bg-orange-500',  // Orange
-      'bg-primary',     // Primary
-      'bg-red-500',     // Red
-      'bg-yellow-600',  // Yellow
-      'bg-indigo-600',  // Indigo
-      'bg-cyan-600',    // Cyan
-      'bg-amber-600',   // Amber
-      'bg-lime-600',    // Lime
-      'bg-emerald-600', // Emerald
-      'bg-violet-600',  // Violet
-      'bg-fuchsia-600', // Fuchsia
-      'bg-rose-600',    // Rose
-    ];
+    // If no color was provided, generate one deterministically
+    if (!avatarColor) {
+      // This matches the original color mapping used in the application
+      // Extended with additional colors to ensure new players get distinct colors
+      const avatarColors = [
+        'bg-blue-600',    // Blue
+        'bg-purple-600',  // Purple
+        'bg-pink-600',    // Pink
+        'bg-green-600',   // Green
+        'bg-accent',      // Accent (teal)
+        'bg-secondary',   // Secondary
+        'bg-orange-500',  // Orange
+        'bg-primary',     // Primary
+        'bg-red-500',     // Red
+        'bg-yellow-600',  // Yellow
+        'bg-indigo-600',  // Indigo
+        'bg-cyan-600',    // Cyan
+        'bg-amber-600',   // Amber
+        'bg-lime-600',    // Lime
+        'bg-emerald-600', // Emerald
+        'bg-violet-600',  // Violet
+        'bg-fuchsia-600', // Fuchsia
+        'bg-rose-600',    // Rose
+      ];
+      
+      // Use the same deterministic assignment based on player ID
+      avatarColor = avatarColors[player.id % avatarColors.length];
+      
+      // Update the player with the generated avatar color
+      const [updatedPlayer] = await db
+        .update(players)
+        .set({ avatarColor })
+        .where(eq(players.id, player.id))
+        .returning();
+      
+      return updatedPlayer;
+    }
     
-    // Use the same deterministic assignment based on player ID
-    const avatarColor = avatarColors[player.id % avatarColors.length];
-    
-    // Update the player with the generated avatar color
-    const [updatedPlayer] = await db
-      .update(players)
-      .set({ avatarColor })
-      .where(eq(players.id, player.id))
-      .returning();
-    
-    return updatedPlayer;
+    // If color was provided, return the player as is
+    return player;
   }
 
   async updatePlayer(id: number, updatePlayer: Partial<InsertPlayer>): Promise<Player | undefined> {
