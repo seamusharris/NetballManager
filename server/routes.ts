@@ -830,8 +830,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/gamestats", async (req, res) => {
     try {
+      // Log the request body to diagnose issues
+      console.log("Creating game stat with data:", req.body);
+      
       const parsedData = insertGameStatSchema.safeParse(req.body);
       if (!parsedData.success) {
+        console.error("Game stat validation error:", parsedData.error.errors);
         return res.status(400).json({ message: "Invalid game stat data", errors: parsedData.error.errors });
       }
       
@@ -840,9 +844,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Quarter must be between 1 and 4" });
       }
       
-      const stat = await storage.createGameStat(parsedData.data);
+      // Validate position is from allowed set
+      if (!POSITIONS.includes(parsedData.data.position as any)) {
+        console.error("Invalid position:", parsedData.data.position);
+        return res.status(400).json({ message: "Invalid position value" });
+      }
+      
+      // Check if a stat for this position and quarter already exists
+      const existingStats = await storage.getGameStatsByGame(parsedData.data.gameId);
+      const duplicate = existingStats.find(s => 
+        s.gameId === parsedData.data.gameId && 
+        s.position === parsedData.data.position && 
+        s.quarter === parsedData.data.quarter
+      );
+      
+      let stat;
+      
+      if (duplicate) {
+        // Update existing stat instead of creating new one to avoid unique constraint violation
+        console.log(`Updating existing stat ID ${duplicate.id} instead of creating duplicate`);
+        stat = await storage.updateGameStat(duplicate.id, parsedData.data);
+      } else {
+        // Create new stat
+        stat = await storage.createGameStat(parsedData.data);
+      }
+      
+      // Log the successfully created/updated stat
+      console.log("Game stat created/updated successfully:", stat);
       res.status(201).json(stat);
     } catch (error) {
+      console.error("Failed to create game stat:", error);
       res.status(500).json({ message: "Failed to create game stat" });
     }
   });
