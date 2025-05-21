@@ -149,16 +149,25 @@ export default function LiveStatsByPosition() {
   // Mutations - after all queries
   const saveStatMutation = useMutation({
     mutationFn: async (statData: Partial<GameStat>) => {
-      return apiRequest('/api/game-stats', {
-        method: 'POST',
-        body: JSON.stringify(statData),
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
+      try {
+        const response = await apiRequest('/api/game-stats', {
+          method: 'POST',
+          body: JSON.stringify(statData),
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        return response;
+      } catch (error) {
+        console.error("Error in mutation:", error);
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/games', gameId, 'stats'] });
+    },
+    onError: (error) => {
+      console.error("Mutation error:", error);
     }
   });
   
@@ -347,12 +356,21 @@ export default function LiveStatsByPosition() {
       
     } catch (error) {
       console.error("Error saving stats:", error);
+      
+      // More descriptive error message
+      let errorMessage = "Failed to save game statistics.";
+      if (error instanceof Error) {
+        errorMessage += ` Details: ${error.message}`;
+      }
+      
       toast({
         title: "Error",
-        description: "Failed to save game statistics. Please try again.",
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {
+      // Always update the stats from the database after save operation (success or error)
+      queryClient.invalidateQueries({ queryKey: ['/api/games', gameId, 'stats'] });
       setSaveInProgress(false);
     }
   };
