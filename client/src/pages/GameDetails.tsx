@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useParams, Link } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet';
@@ -73,7 +73,9 @@ const calculateQuarterScores = (gameStats: any[]) => {
 };
 
 // Court position roster component
-const CourtPositionRoster = ({ roster, players, quarter = 1 }) => {
+const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) => {
+  const [quarter, setQuarter] = useState(initialQuarter);
+  
   // Group roster by quarter and position
   const rosterByQuarter = useMemo(() => {
     return roster.reduce((acc, entry) => {
@@ -97,18 +99,32 @@ const CourtPositionRoster = ({ roster, players, quarter = 1 }) => {
     
     return positionMap[position] || '';
   };
+
+  // Helper to get player display name
+  const getPlayerName = (playerId) => {
+    if (!players || !playerId) return null;
+    const player = players.find(p => p.id === playerId);
+    return player ? (player.displayName || `${player.firstName} ${player.lastName}`) : null;
+  };
+  
+  // Helper to get player color
+  const getPlayerColor = (playerId) => {
+    if (!players || !playerId) return '#cccccc';
+    const player = players.find(p => p.id === playerId);
+    return player?.avatarColor || '#cccccc';
+  };
   
   return (
     <div className="mt-4">
       <div className="mb-4 flex justify-between items-center">
-        <h3 className="text-lg font-medium">Quarter {quarter} Positions</h3>
+        <h3 className="text-lg font-medium">Court Positions View</h3>
         <div className="flex gap-2">
           {[1, 2, 3, 4].map(q => (
             <Button 
               key={q} 
               variant={q === quarter ? "default" : "outline"} 
               size="sm"
-              onClick={() => {}}
+              onClick={() => setQuarter(q)}
             >
               Q{q}
             </Button>
@@ -127,18 +143,51 @@ const CourtPositionRoster = ({ roster, players, quarter = 1 }) => {
         {/* Position markers */}
         {POSITIONS.map(position => {
           const entry = rosterByQuarter[quarter]?.[position];
-          const player = players?.find(p => p.id === entry?.playerId);
+          const playerName = getPlayerName(entry?.playerId);
+          const playerColor = getPlayerColor(entry?.playerId);
           
           return (
             <div key={position} className={`absolute ${getPositionCoordinates(position)}`}>
-              <div className={`bg-white rounded-full p-2 shadow-md ${!player ? 'border-2 border-red-400' : ''}`}>
+              <div 
+                className={`bg-white rounded-full p-2 shadow-md ${!playerName ? 'border-2 border-red-400' : ''}`}
+                style={{ borderLeft: playerName ? `4px solid ${playerColor}` : undefined }}
+              >
                 <div className="font-bold text-center">{position}</div>
-                {player && <div className="text-sm text-center">{player.name}</div>}
-                {!player && <div className="text-xs text-red-500 text-center">Unassigned</div>}
+                {playerName && (
+                  <div className="text-sm text-center font-medium">{playerName}</div>
+                )}
+                {!playerName && (
+                  <div className="text-xs text-red-500 text-center">Unassigned</div>
+                )}
               </div>
             </div>
           );
         })}
+      </div>
+      
+      {/* Roster list */}
+      <div className="mt-6">
+        <h3 className="text-md font-medium mb-2">Quarter {quarter} Roster</h3>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          {POSITIONS.map(position => {
+            const entry = rosterByQuarter[quarter]?.[position];
+            const playerName = getPlayerName(entry?.playerId);
+            const playerColor = getPlayerColor(entry?.playerId);
+            
+            return (
+              <div 
+                key={position} 
+                className="p-2 bg-white border rounded-md shadow-sm"
+                style={{ borderLeft: `4px solid ${playerColor || '#cccccc'}` }}
+              >
+                <div className="font-bold">{position}</div>
+                <div className={playerName ? 'text-gray-900' : 'text-red-500 italic'}>
+                  {playerName || 'Unassigned'}
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
