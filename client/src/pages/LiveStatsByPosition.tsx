@@ -101,8 +101,6 @@ interface PositionStats {
 type HistoryRecord = PositionStats;
 
 export default function LiveStatsByPosition() {
-  // ***** ALL HOOKS FIRST *****
-  
   // Route params
   const { id } = useParams<{ id: string }>();
   const gameId = parseInt(id);
@@ -110,32 +108,45 @@ export default function LiveStatsByPosition() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
-  // State variables - ALL state hooks must be declared before any other hooks
+  // State variables - must declare all state first
   const [currentQuarter, setCurrentQuarter] = useState<number>(1);
   const [stats, setStats] = useState<PositionStats>({});
   const [undoStack, setUndoStack] = useState<HistoryRecord[]>([]);
   const [redoStack, setRedoStack] = useState<HistoryRecord[]>([]);
   const [saveInProgress, setSaveInProgress] = useState<boolean>(false);
-  const [rosterData, setRosterData] = useState<Roster[]>([]);
-  const [playerData, setPlayerData] = useState<Record<number, Player>>({});
   
-  // Queries - after all state hooks
+  // Queries - must declare all queries after state
   const { data: game, isLoading: isLoadingGame } = useQuery<Game>({
     queryKey: ['/api/games', gameId],
+    queryFn: () => apiRequest(`/api/games/${gameId}`),
     enabled: !!gameId && !isNaN(gameId)
   });
   
   const { data: opponent, isLoading: isLoadingOpponent } = useQuery<Opponent>({
     queryKey: ['/api/opponents', game?.opponentId],
+    queryFn: () => apiRequest(`/api/opponents/${game?.opponentId}`),
     enabled: !!game?.opponentId
+  });
+  
+  const { data: rosters = [], isLoading: isLoadingRoster } = useQuery<Roster[]>({
+    queryKey: ['/api/games', gameId, 'rosters'],
+    queryFn: () => apiRequest(`/api/games/${gameId}/rosters`),
+    enabled: !!gameId && !isNaN(gameId)
+  });
+  
+  const { data: players = [], isLoading: isLoadingPlayers } = useQuery<Player[]>({
+    queryKey: ['/api/players'],
+    queryFn: () => apiRequest('/api/players'),
+    enabled: true
   });
   
   const { data: existingStats = [], isLoading: isLoadingStats } = useQuery<GameStat[]>({
     queryKey: ['/api/games', gameId, 'stats'],
+    queryFn: () => apiRequest(`/api/games/${gameId}/stats`),
     enabled: !!gameId && !isNaN(gameId)
   });
   
-  // Mutations - after queries
+  // Mutations - after all queries
   const saveStatMutation = useMutation({
     mutationFn: async (statData: Partial<GameStat>) => {
       return apiRequest('/api/game-stats', {
@@ -151,13 +162,14 @@ export default function LiveStatsByPosition() {
     }
   });
   
-  // Effect to load stats
+  // Initialize stats from existing data
   useEffect(() => {
     if (existingStats && existingStats.length > 0) {
       console.log(`Initializing LiveStatsByPosition with ${existingStats.length} existing stats`);
       
-      // Initialize empty stats for all positions and quarters
       const initialStats: PositionStats = {};
+      
+      // Initialize positions and quarters
       allPositions.forEach(position => {
         initialStats[position] = {};
         for (let q = 1; q <= 4; q++) {
@@ -165,16 +177,15 @@ export default function LiveStatsByPosition() {
         }
       });
       
-      // Apply existing stats from database
-      existingStats.forEach((stat) => {
+      // Apply existing stats
+      existingStats.forEach((stat: GameStat) => {
         if (stat.position && stat.quarter >= 1 && stat.quarter <= 4) {
           const position = stat.position;
           const quarter = stat.quarter.toString();
           
-          // Log what we found
           console.log(`Found stat for ${position} in Q${quarter}: Goals: ${stat.goalsFor}, Against: ${stat.goalsAgainst}`);
           
-          // Ensure position and quarter exist in our structure
+          // Make sure the position and quarter exist
           if (!initialStats[position]) {
             initialStats[position] = {};
           }
@@ -182,7 +193,7 @@ export default function LiveStatsByPosition() {
             initialStats[position][quarter] = { ...emptyPositionStats };
           }
           
-          // Copy all statistic values
+          // Copy all stat values to our structure
           Object.keys(emptyPositionStats).forEach(key => {
             const statKey = key as StatType;
             if (stat[statKey] !== undefined && stat[statKey] !== null) {
@@ -202,61 +213,25 @@ export default function LiveStatsByPosition() {
     }
   }, [existingStats]);
   
-  // Effect to load roster data
-  useEffect(() => {
-    if (game) {
-      // Fetch roster data for this game
-      apiRequest<Roster[]>(`/api/games/${game.id}/rosters`)
-        .then(rosters => {
-          setRosterData(rosters || []);
-        })
-        .catch(err => {
-          console.error("Error loading roster data:", err);
-        });
-      
-      // Fetch player data
-      apiRequest<Player[]>('/api/players')
-        .then(players => {
-          const playerMap: Record<number, Player> = {};
-          (players || []).forEach(player => {
-            playerMap[player.id] = player;
-          });
-          setPlayerData(playerMap);
-        })
-        .catch(err => {
-          console.error("Error loading player data:", err);
-        });
-    }
-  }, [game]);
-  
-  // ***** HELPER FUNCTIONS AFTER HOOKS *****
-  
   // Get player name for a position in the current quarter
   const getPlayerForPosition = (position: Position): string => {
-    if (!rosterData || rosterData.length === 0 || !playerData) {
-      // Log for debugging
-      console.log("Missing data for player names:", {
-        hasRoster: !!rosterData && rosterData.length > 0,
-        hasPlayers: !!playerData && Object.keys(playerData).length > 0
-      });
-      return positionLabels[position] || position;
+    if (!rosters || rosters.length === 0) {
+      return position; 
     }
     
     // Find roster entry for this position and quarter
-    const rosterEntry = rosterData.find(r => 
+    const rosterEntry = rosters.find(r => 
       r.position === position && r.quarter === currentQuarter
     );
     
     if (!rosterEntry) {
-      console.log(`No roster entry found for position ${position} in quarter ${currentQuarter}`);
-      return positionLabels[position] || position;
+      return position;
     }
     
-    // Get player name from player data
-    const player = playerData[rosterEntry.playerId];
+    // Find the player from the players array
+    const player = players.find(p => p.id === rosterEntry.playerId);
     if (!player) {
-      console.log(`Player not found for ID ${rosterEntry.playerId}`);
-      return positionLabels[position] || position;
+      return position;
     }
     
     return player.displayName;
@@ -265,23 +240,16 @@ export default function LiveStatsByPosition() {
   // Save current state to undo stack
   const addToUndoStack = () => {
     setUndoStack(prev => [...prev, JSON.parse(JSON.stringify(stats))]);
-    setRedoStack([]); // Clear redo stack when new action is taken
+    setRedoStack([]);
   };
   
   // Undo the last action
   const handleUndo = () => {
     if (undoStack.length === 0) return;
     
-    // Get the last state from undo stack
-    const previousState = undoStack[undoStack.length - 1];
-    
-    // Add current state to redo stack
+    const prevState = undoStack[undoStack.length - 1];
     setRedoStack(prev => [JSON.parse(JSON.stringify(stats)), ...prev]);
-    
-    // Restore previous state
-    setStats(previousState);
-    
-    // Remove used state from undo stack
+    setStats(prevState);
     setUndoStack(prev => prev.slice(0, -1));
   };
   
@@ -289,16 +257,9 @@ export default function LiveStatsByPosition() {
   const handleRedo = () => {
     if (redoStack.length === 0) return;
     
-    // Get the last state from redo stack
     const nextState = redoStack[0];
-    
-    // Add current state to undo stack
     setUndoStack(prev => [...prev, JSON.parse(JSON.stringify(stats))]);
-    
-    // Restore next state
     setStats(nextState);
-    
-    // Remove used state from redo stack
     setRedoStack(prev => prev.slice(1));
   };
   
@@ -367,7 +328,6 @@ export default function LiveStatsByPosition() {
       const promises = statsToSave.map(stat => saveStatMutation.mutateAsync(stat));
       await Promise.all(promises);
       
-      // Notify user
       toast({
         title: "Stats Saved",
         description: "All game statistics have been saved successfully."
@@ -423,10 +383,8 @@ export default function LiveStatsByPosition() {
     );
   };
   
-  // ***** CONDITIONAL RENDERING *****
-  
   // Loading state
-  const isLoading = isLoadingGame || isLoadingOpponent || isLoadingStats;
+  const isLoading = isLoadingGame || isLoadingOpponent || isLoadingStats || isLoadingRoster || isLoadingPlayers;
   if (isLoading) {
     return (
       <div className="container mx-auto py-6 px-4">
@@ -451,10 +409,8 @@ export default function LiveStatsByPosition() {
     );
   }
   
-  // ***** MAIN RENDER *****
   return (
     <div className="container py-3 px-2 md:py-4 md:px-4">
-      {/* Header with game info and action buttons */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-3 gap-1">
         <div>
           <h1 className="text-xl md:text-2xl font-bold">Live Stats Tracking</h1>
@@ -505,7 +461,6 @@ export default function LiveStatsByPosition() {
         </div>
       </div>
       
-      {/* Quarter selection tabs */}
       <Tabs value={currentQuarter.toString()} onValueChange={(v) => setCurrentQuarter(parseInt(v))}>
         <TabsList className="grid grid-cols-4 mb-4">
           <TabsTrigger value="1">Quarter 1</TabsTrigger>
