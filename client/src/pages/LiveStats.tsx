@@ -423,6 +423,12 @@ export default function LiveStats() {
     setSaveInProgress(true);
     
     try {
+      console.log("Statistics roster data:", {
+        hasValidRosterEntries: rosters && rosters.length > 0,
+        entries: rosters ? rosters.length : 0,
+        sample: rosters && rosters.length > 0 ? rosters[0] : null
+      });
+      
       // Create mapping from player to position by quarter
       const playerToPositionMap: Record<number, Record<number, Position>> = {};
       
@@ -434,7 +440,16 @@ export default function LiveStats() {
           }
           playerToPositionMap[roster.playerId][roster.quarter] = roster.position;
         });
+      } else {
+        toast({
+          title: "No roster data",
+          description: "Please set up the roster positions before tracking statistics.",
+          variant: "destructive"
+        });
+        return;
       }
+      
+      const statsToSave = [];
       
       // For each player and quarter with stats
       for (const playerId in liveStats) {
@@ -445,68 +460,109 @@ export default function LiveStats() {
           const playerQuarterStats = liveStats[playerIdNum][quarterNum];
           
           // Skip empty quarters
-          if (!playerQuarterStats || Object.values(playerQuarterStats).every(v => v === 0)) {
-            continue;
-          }
+          if (!playerQuarterStats) continue;
           
           // Get the position for this player in this quarter from the mapping
           const position = playerToPositionMap[playerIdNum]?.[quarterNum];
           
           if (position) {
-            // Create a clean stat object without any position property that might be in playerQuarterStats
-            const cleanStats: Record<string, number> = {};
-            Object.keys(emptyQuarterStats).forEach(key => {
-              // Ensure we only include stats that have non-zero values to avoid overwriting with zeros
-              if (playerQuarterStats[key as StatType]) {
-                cleanStats[key] = playerQuarterStats[key as StatType] || 0;
-              }
-            });
+            // Prepare complete stat object with all required fields
+            const statObject = {
+              gameId,
+              position, 
+              quarter: quarterNum,
+              goalsFor: playerQuarterStats.goalsFor || 0,
+              goalsAgainst: playerQuarterStats.goalsAgainst || 0,
+              missedGoals: playerQuarterStats.missedGoals || 0,
+              rebounds: playerQuarterStats.rebounds || 0,
+              intercepts: playerQuarterStats.intercepts || 0,
+              badPass: playerQuarterStats.badPass || 0,
+              handlingError: playerQuarterStats.handlingError || 0,
+              pickUp: playerQuarterStats.pickUp || 0,
+              infringement: playerQuarterStats.infringement || 0
+            };
             
-            // Make sure at least one stat is non-zero before saving
-            const hasNonZeroStat = Object.values(cleanStats).some(value => value > 0);
+            // Check if any stats are non-zero
+            const hasNonZeroStat = 
+              (playerQuarterStats.goalsFor || 0) > 0 || 
+              (playerQuarterStats.goalsAgainst || 0) > 0 || 
+              (playerQuarterStats.missedGoals || 0) > 0 || 
+              (playerQuarterStats.rebounds || 0) > 0 || 
+              (playerQuarterStats.intercepts || 0) > 0 || 
+              (playerQuarterStats.badPass || 0) > 0 || 
+              (playerQuarterStats.handlingError || 0) > 0 || 
+              (playerQuarterStats.pickUp || 0) > 0 || 
+              (playerQuarterStats.infringement || 0) > 0;
             
-            // Only save if there's at least one non-zero stat
             if (hasNonZeroStat) {
               console.log(`Saving non-zero stats for position ${position} in quarter ${quarterNum}`);
-              
-              // Prepare the stat object - fully position-based with no player ID
-              const statObject: Partial<GameStat> = {
-                gameId,
-                position, // Position is the primary identifier
-                quarter: quarterNum,
-                ...cleanStats
-              };
-              
               console.log("Saving stat object:", statObject);
+              statsToSave.push(statObject);
             } else {
               console.log(`Skipping zero stats for position ${position} in quarter ${quarterNum}`);
-              continue; // Skip saving empty stats
             }
-            
-            // Save to database
-            await saveGameStat(statObject);
           } else {
             console.warn(`No position found for player ${playerIdNum} in quarter ${quarterNum}`);
-            toast({
-              title: "Warning",
-              description: `Could not save stats for a player in quarter ${quarterNum} - position not assigned.`,
-              variant: "destructive"
-            });
           }
         }
       }
       
-      toast({
-        title: "Statistics saved",
-        description: "All game statistics have been saved successfully."
-      });
+      // Save all stats one by one
+      let savedCount = 0;
+      let errorCount = 0;
+      
+      for (const stat of statsToSave) {
+        try {
+          await saveGameStat(stat);
+          savedCount++;
+        } catch (err) {
+          console.error(`Error saving stats for position ${stat.position} in quarter ${stat.quarter}:`, err);
+          errorCount++;
+        }
+      }
+      
+      if (savedCount > 0) {
+        toast({
+          title: "Statistics saved",
+          description: `Successfully saved statistics for ${savedCount} positions.${
+            errorCount > 0 ? ` (${errorCount} errors occurred)` : ''
+          }`
+        });
+        
+        // Mark game as completed
+        if (game && !game.completed) {
+          try {
+            await apiRequest(`/api/games/${gameId}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ ...game, completed: true })
+            });
+            queryClient.invalidateQueries({ queryKey: ['/api/games'] });
+            queryClient.invalidateQueries({ queryKey: ['/api/games', gameId] });
+          } catch (err) {
+            console.error("Failed to mark game as completed:", err);
+          }
+        }
+      } else if (errorCount > 0) {
+        toast({
+          title: "Failed to save statistics",
+          description: `Encountered ${errorCount} errors while saving statistics.`,
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "No statistics saved",
+          description: "No statistics were eligible for saving.",
+          variant: "destructive"
+        });
+      }
     } catch (error) {
+      console.error("Error in save all stats process:", error);
       toast({
         title: "Error saving statistics",
         description: "There was a problem saving the statistics. Please try again.",
         variant: "destructive"
       });
-      console.error("Error saving stats:", error);
     } finally {
       setSaveInProgress(false);
     }
