@@ -63,20 +63,65 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
       };
     });
     
-    // Sum up values across quarters
-    for (const quarter of ['1', '2', '3', '4']) {
-      const quarterValues = formValues[quarter] || {};
+    // Use actual game stats from database rather than form values
+    // This ensures we incorporate position-based tracking
+    if (gameStats && gameStats.length > 0) {
+      // Group stats by player
+      const statsByPlayer: Record<number, GameStat[]> = {};
       
-      for (const playerIdStr in quarterValues) {
-        const playerId = parseInt(playerIdStr);
-        if (isNaN(playerId)) continue;
+      gameStats.forEach(stat => {
+        if (!statsByPlayer[stat.playerId]) {
+          statsByPlayer[stat.playerId] = [];
+        }
+        statsByPlayer[stat.playerId].push(stat);
+      });
+      
+      // Calculate totals for each player
+      for (const playerId in statsByPlayer) {
+        const playerStats = statsByPlayer[Number(playerId)];
+        const playerTotals = totals[Number(playerId)] || {
+          goalsFor: 0,
+          goalsAgainst: 0,
+          missedGoals: 0,
+          rebounds: 0,
+          intercepts: 0,
+          badPass: 0,
+          handlingError: 0,
+          pickUp: 0,
+          infringement: 0
+        };
         
-        const playerValues = quarterValues[playerId];
+        // Sum stats across all quarters and positions
+        playerStats.forEach(stat => {
+          playerTotals.goalsFor += stat.goalsFor || 0;
+          playerTotals.goalsAgainst += stat.goalsAgainst || 0;
+          playerTotals.missedGoals += stat.missedGoals || 0;
+          playerTotals.rebounds += stat.rebounds || 0;
+          playerTotals.intercepts += stat.intercepts || 0;
+          playerTotals.badPass += stat.badPass || 0;
+          playerTotals.handlingError += stat.handlingError || 0;
+          playerTotals.pickUp += stat.pickUp || 0;
+          playerTotals.infringement += stat.infringement || 0;
+        });
         
-        if (playerValues && totals[playerId]) {
-          for (const stat in playerValues) {
-            const value = parseInt(playerValues[stat]) || 0;
-            totals[playerId][stat] = (totals[playerId][stat] || 0) + value;
+        totals[Number(playerId)] = playerTotals;
+      }
+    } else {
+      // Fallback to using form values if no database stats are available
+      for (const quarter of ['1', '2', '3', '4']) {
+        const quarterValues = formValues[quarter] || {};
+        
+        for (const playerIdStr in quarterValues) {
+          const playerId = parseInt(playerIdStr);
+          if (isNaN(playerId)) continue;
+          
+          const playerValues = quarterValues[playerId];
+          
+          if (playerValues && totals[playerId]) {
+            for (const stat in playerValues) {
+              const value = parseInt(playerValues[stat]) || 0;
+              totals[playerId][stat] = (totals[playerId][stat] || 0) + value;
+            }
           }
         }
       }

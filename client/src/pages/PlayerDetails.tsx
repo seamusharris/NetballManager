@@ -219,17 +219,68 @@ export default function PlayerDetails() {
       let gameInfringements = 0;
       let gameRating = 0;
       
-      // Create a map of quarters where player was on court in an actual position
-      const quartersOnCourt = gameRosters.reduce((map, roster) => {
+      // Create a map of positions played by quarter
+      const positionsByQuarter = gameRosters.reduce((map, roster) => {
         if (roster.playerId === playerId && allPositions.includes(roster.position)) {
-          map[roster.quarter] = true;
+          map[roster.quarter] = roster.position;
         }
         return map;
-      }, {} as Record<number, boolean>);
+      }, {} as Record<number, Position>);
+      
+      // Create maps for tracking stats by position
+      const statsByPosition: Record<Position, {
+        quarters: number;
+        goalsFor: number;
+        goalsAgainst: number;
+        missedGoals: number;
+        rebounds: number;
+        intercepts: number;
+        badPass: number;
+        handlingError: number;
+        pickUp: number;
+        infringement: number;
+      }> = {} as any;
+      
+      // Initialize stats by position counters
+      allPositions.forEach(pos => {
+        statsByPosition[pos] = {
+          quarters: 0,
+          goalsFor: 0,
+          goalsAgainst: 0,
+          missedGoals: 0,
+          rebounds: 0,
+          intercepts: 0,
+          badPass: 0,
+          handlingError: 0,
+          pickUp: 0,
+          infringement: 0
+        };
+      });
       
       stats.forEach((stat: GameStat) => {
         // Only count stats for quarters where player was actually on court
-        if (quartersOnCourt[stat.quarter]) {
+        const positionPlayed = positionsByQuarter[stat.quarter];
+        
+        if (positionPlayed) {
+          // If the stat has position data and it matches the position played, use it
+          // Otherwise use the position from roster (for backward compatibility)
+          const statPosition = (stat.position && allPositions.includes(stat.position)) 
+            ? stat.position 
+            : positionPlayed;
+            
+          // Increment stats for this position
+          statsByPosition[statPosition].quarters++;
+          statsByPosition[statPosition].goalsFor += stat.goalsFor || 0;
+          statsByPosition[statPosition].goalsAgainst += stat.goalsAgainst || 0;
+          statsByPosition[statPosition].missedGoals += stat.missedGoals || 0;
+          statsByPosition[statPosition].rebounds += stat.rebounds || 0;
+          statsByPosition[statPosition].intercepts += stat.intercepts || 0;
+          statsByPosition[statPosition].badPass += stat.badPass || 0;
+          statsByPosition[statPosition].handlingError += stat.handlingError || 0;
+          statsByPosition[statPosition].pickUp += stat.pickUp || 0;
+          statsByPosition[statPosition].infringement += stat.infringement || 0;
+          
+          // Also increment game totals
           gameGoals += stat.goalsFor || 0;
           gameGoalsAgainst += stat.goalsAgainst || 0;
           gameMissedGoals += stat.missedGoals || 0;
@@ -242,7 +293,7 @@ export default function PlayerDetails() {
         }
         
         // Only use rating from quarter 1 if player was on court
-        if (stat.quarter === 1 && typeof stat.rating === 'number' && quartersOnCourt[1]) {
+        if (stat.quarter === 1 && typeof stat.rating === 'number' && positionsByQuarter[1]) {
           gameRating = stat.rating;
           ratingSum += stat.rating;
           ratingCount++;
