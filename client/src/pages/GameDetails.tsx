@@ -107,7 +107,7 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
     return player ? (player.displayName || `${player.firstName} ${player.lastName}`) : null;
   };
   
-  // Helper to get player color - using more vibrant default colors for better visibility
+  // Function to log and return player color for testing purposes
   const getPlayerColor = (playerId) => {
     if (!players || !playerId) return '#cccccc';
     const player = players.find(p => p.id === playerId);
@@ -119,10 +119,13 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
         '#FF5733', '#33FF57', '#3357FF', '#F033FF', '#FF33F0', 
         '#33FFF0', '#F0FF33', '#8C33FF', '#FF8C33', '#33FF8C'
       ];
-      return defaultColors[playerId % defaultColors.length];
+      const color = defaultColors[playerId % defaultColors.length];
+      console.log(`Using default color for player ${playerId}: ${color}`);
+      return color;
     }
     
     // If player has their own avatar color, return it
+    console.log(`Using player ${playerId} avatar color: ${player.avatarColor}`);
     return player.avatarColor;
   };
   
@@ -174,11 +177,17 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
           return (
             <div key={position} className={`absolute ${getPositionCoordinates(position)}`}>
               <div 
-                className={`rounded-full shadow-md flex flex-col justify-center items-center w-16 h-16 md:w-20 md:h-20 ${!playerName ? 'border-2 border-red-400' : ''}`}
                 style={{ 
-                  background: playerName ? playerColor : 'white',
+                  backgroundColor: playerName ? playerColor : 'white',
                   boxShadow: '0 4px 8px rgba(0, 0, 0, 0.5)',
-                  border: playerName ? '3px solid white' : undefined
+                  border: playerName ? '3px solid white' : '2px solid red',
+                  width: '4rem',
+                  height: '4rem',
+                  borderRadius: '100%',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'center',
+                  alignItems: 'center'
                 }}
               >
                 <div className="font-bold text-center text-sm md:text-base" style={{ color: textColor }}>{position}</div>
