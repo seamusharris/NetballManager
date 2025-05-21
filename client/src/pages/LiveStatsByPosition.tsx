@@ -574,8 +574,8 @@ export default function LiveStatsByPosition() {
     "GK": "Goal Keeper"
   };
   
-  // Common stats shown at the top of each player card - show all of these for every position
-  const commonStats: StatType[] = ['intercepts', 'badPass', 'handlingError', 'infringement', 'pickUp'];
+  // Common stats shown at the top of each player card - in the specific order
+  const commonStats: StatType[] = ['intercepts', 'pickUp', 'badPass', 'handlingError', 'infringement'];
   
   // Position-specific stats shown in the second row
   const positionSpecificStats: Record<Position, StatType[]> = {
@@ -752,7 +752,6 @@ export default function LiveStatsByPosition() {
                 
                 <div className="min-w-[60px]">
                   <p className="font-semibold text-sm">{getPlayerForPosition("GS")}</p>
-                  <p className="text-xs text-muted-foreground">{positionLabels["GS"]}</p>
                 </div>
               </div>
               
@@ -767,18 +766,20 @@ export default function LiveStatsByPosition() {
             </div>
           </CardHeader>
           
-          {/* Only render CardContent if this position has position-specific stats */}
-          {positionSpecificStats["GS"].length > 0 && (
-            <CardContent className="py-2 pt-1">
-              <div className="flex justify-center gap-3 flex-wrap">
-                {positionSpecificStats["GS"].map(stat => (
-                  <div key={`GS-specific-${stat}`} className="min-w-[120px]">
-                    {renderStatCounter("GS", stat, false, stat === "goalsFor" || stat === "goalsAgainst")}
-                  </div>
-                ))}
+          {/* Always render the specific goal stats for GS */}
+          <CardContent className="py-2 pt-1">
+            <div className="flex justify-center gap-3 flex-wrap">
+              <div className="min-w-[120px]">
+                {renderStatCounter("GS", "goalsFor", false, true)}
               </div>
-            </CardContent>
-          )}
+              <div className="min-w-[120px]">
+                {renderStatCounter("GS", "missedGoals", false, true)}
+              </div>
+              <div className="min-w-[120px]">
+                {renderStatCounter("GS", "rebounds", false, true)}
+              </div>
+            </div>
+          </CardContent>
         </Card>
         
         {/* GA */}
@@ -800,7 +801,6 @@ export default function LiveStatsByPosition() {
                 
                 <div className="min-w-[60px]">
                   <p className="font-semibold text-sm">{getPlayerForPosition("GA")}</p>
-                  <p className="text-xs text-muted-foreground">{positionLabels["GA"]}</p>
                 </div>
               </div>
               
@@ -815,18 +815,20 @@ export default function LiveStatsByPosition() {
             </div>
           </CardHeader>
           
-          {/* Only render CardContent if this position has position-specific stats */}
-          {positionSpecificStats["GA"].length > 0 && (
-            <CardContent className="py-2 pt-1">
-              <div className="flex justify-center gap-3 flex-wrap">
-                {positionSpecificStats["GA"].map(stat => (
-                  <div key={`GA-specific-${stat}`} className="min-w-[120px]">
-                    {renderStatCounter("GA", stat, false, stat === "goalsFor" || stat === "goalsAgainst")}
-                  </div>
-                ))}
+          {/* Always render the specific goal stats for GA */}
+          <CardContent className="py-2 pt-1">
+            <div className="flex justify-center gap-3 flex-wrap">
+              <div className="min-w-[120px]">
+                {renderStatCounter("GA", "goalsFor", false, true)}
               </div>
-            </CardContent>
-          )}
+              <div className="min-w-[120px]">
+                {renderStatCounter("GA", "missedGoals", false, true)}
+              </div>
+              <div className="min-w-[120px]">
+                {renderStatCounter("GA", "rebounds", false, true)}
+              </div>
+            </div>
+          </CardContent>
         </Card>
         
         {/* WA */}
@@ -848,7 +850,6 @@ export default function LiveStatsByPosition() {
                 
                 <div className="min-w-[60px]">
                   <p className="font-semibold text-sm">{getPlayerForPosition("WA")}</p>
-                  <p className="text-xs text-muted-foreground">{positionLabels["WA"]}</p>
                 </div>
               </div>
               
@@ -896,7 +897,6 @@ export default function LiveStatsByPosition() {
                 
                 <div className="min-w-[60px]">
                   <p className="font-semibold text-sm">{getPlayerForPosition("C")}</p>
-                  <p className="text-xs text-muted-foreground">{positionLabels["C"]}</p>
                 </div>
               </div>
               
@@ -944,7 +944,6 @@ export default function LiveStatsByPosition() {
                 
                 <div className="min-w-[60px]">
                   <p className="font-semibold text-sm">{getPlayerForPosition("WD")}</p>
-                  <p className="text-xs text-muted-foreground">{positionLabels["WD"]}</p>
                 </div>
               </div>
               
@@ -992,7 +991,6 @@ export default function LiveStatsByPosition() {
                 
                 <div className="min-w-[60px]">
                   <p className="font-semibold text-sm">{getPlayerForPosition("GD")}</p>
-                  <p className="text-xs text-muted-foreground">{positionLabels["GD"]}</p>
                 </div>
               </div>
               
@@ -1007,18 +1005,17 @@ export default function LiveStatsByPosition() {
             </div>
           </CardHeader>
           
-          {/* Only render CardContent if this position has position-specific stats */}
-          {positionSpecificStats["GD"].length > 0 && (
-            <CardContent className="py-2 pt-1">
-              <div className="flex justify-center gap-3 flex-wrap">
-                {positionSpecificStats["GD"].map(stat => (
-                  <div key={`GD-specific-${stat}`} className="min-w-[120px]">
-                    {renderStatCounter("GD", stat, false, stat === "goalsFor" || stat === "goalsAgainst")}
-                  </div>
-                ))}
+          {/* Always render the specific stats for GD */}
+          <CardContent className="py-2 pt-1">
+            <div className="flex justify-center gap-3 flex-wrap">
+              <div className="min-w-[120px]">
+                {renderStatCounter("GD", "goalsAgainst", false, true)}
               </div>
-            </CardContent>
-          )}
+              <div className="min-w-[120px]">
+                {renderStatCounter("GD", "rebounds", false, true)}
+              </div>
+            </div>
+          </CardContent>
         </Card>
         
         {/* GK */}
