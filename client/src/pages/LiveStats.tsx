@@ -749,7 +749,7 @@ export default function LiveStats() {
                       
                       <div className="min-w-[60px]">
                         <p className="font-semibold text-sm">{player.displayName}</p>
-                        <p className="text-xs text-muted-foreground">{positionLabels[position]}</p>
+                        <p className="text-xs text-muted-foreground">{position}</p>
                       </div>
                     </div>
                     
