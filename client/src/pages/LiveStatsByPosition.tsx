@@ -317,8 +317,24 @@ export default function LiveStatsByPosition() {
   // Direct API save function without using the mutation
   const saveStatDirectly = async (stat: Partial<GameStat>): Promise<boolean> => {
     try {
+      // First, check if this stat already exists in the database
+      let existingId: number | null = null;
+      
+      if (existingStats && existingStats.length > 0) {
+        const existing = existingStats.find(s => 
+          s.gameId === stat.gameId && 
+          s.position === stat.position && 
+          s.quarter === stat.quarter
+        );
+        
+        if (existing) {
+          existingId = existing.id;
+        }
+      }
+      
       // Create a simple object with only the required fields
       const payload = {
+        id: existingId, // Include ID if found, for update purposes
         gameId: stat.gameId,
         position: stat.position,
         quarter: stat.quarter,
@@ -334,9 +350,15 @@ export default function LiveStatsByPosition() {
         rating: null
       };
       
+      // Use appropriate endpoint based on whether this is an update or create
+      const endpoint = existingId ? `/api/game-stats/${existingId}` : '/api/game-stats';
+      const method = existingId ? 'PATCH' : 'POST';
+      
+      console.log(`Saving stat: ${method} ${endpoint}`, payload);
+      
       // Make the fetch request directly
-      const response = await fetch('/api/game-stats', {
-        method: 'POST',
+      const response = await fetch(endpoint, {
+        method: method,
         headers: {
           'Content-Type': 'application/json'
         },
@@ -345,8 +367,14 @@ export default function LiveStatsByPosition() {
       
       if (!response.ok) {
         console.error(`API error: ${response.status} ${response.statusText}`);
+        const errorText = await response.text();
+        console.error(`Error response: ${errorText}`);
         return false;
       }
+      
+      // Log the response
+      const responseData = await response.json();
+      console.log(`Save successful: ${method} response:`, responseData);
       
       return true;
     } catch (error) {
@@ -413,7 +441,7 @@ export default function LiveStatsByPosition() {
           toast({
             title: "Partial Save",
             description: `Saved ${successCount} of ${statsToSave.length} statistics.`,
-            variant: "warning"
+            variant: "destructive"
           });
         }
       } else {
