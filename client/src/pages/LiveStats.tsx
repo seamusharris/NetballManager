@@ -547,8 +547,16 @@ export default function LiveStats() {
           await refetchStats();
           console.log("Stats refreshed after saving");
           
-          // Force reimport of data
-          window.location.reload();
+          // Instead of reloading the page, we'll preserve the current stats in memory
+          // and let React Query handle the refresh behind the scenes
+          if (freshStats && freshStats.length > 0 && players && rosters) {
+            console.log("Keeping current state - statistical data saved successfully");
+            
+            // No need to reset the stats - they're already saved in the database
+            // This prevents the visual "reset to zero" effect after saving
+            
+            // Just mark the save as complete and continue
+          }
         } catch (err) {
           console.error("Error refreshing stats:", err);
         }
