@@ -119,7 +119,7 @@ export class StatisticsService {
       if (stat.position) {
         const key = `${stat.position}-${stat.quarter}`;
         
-        // Keep only the newest stat entry for each position/quarter
+        // Always use the data with the highest ID value for each position/quarter
         if (!latestPositionStats[key] || stat.id > latestPositionStats[key].id) {
           latestPositionStats[key] = stat;
         }
