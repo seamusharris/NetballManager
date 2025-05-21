@@ -16,11 +16,12 @@ import { Save, Undo, Redo, Plus, Minus } from 'lucide-react';
 type StatType = 'goalsFor' | 'goalsAgainst' | 'missedGoals' | 'rebounds' | 
                 'intercepts' | 'badPass' | 'handlingError' | 'pickUp' | 'infringement';
 
-// Game stats by quarter and player
+// Game stats by quarter and player/position
 interface GameStats {
   [playerId: number]: {
     [quarter: number]: {
-      [stat in StatType]?: number;
+      [key: string]: number | Position | undefined;
+      position?: Position; // Track which position this player was in
     }
   }
 }
@@ -301,6 +302,9 @@ export default function LiveStats() {
     setUndoStack([...undoStack, JSON.parse(JSON.stringify(liveStats))]);
     setRedoStack([]);
     
+    // Get player's position in this quarter
+    const position = getPlayerPosition(playerId, currentQuarter);
+    
     setLiveStats(prev => {
       const newStats = JSON.parse(JSON.stringify(prev));
       
@@ -316,6 +320,11 @@ export default function LiveStats() {
       // Update the stat
       const currentValue = newStats[playerId][currentQuarter][stat] || 0;
       newStats[playerId][currentQuarter][stat] = Math.max(0, currentValue + value);
+      
+      // Store position with the stats
+      if (position) {
+        newStats[playerId][currentQuarter].position = position;
+      }
       
       return newStats;
     });

@@ -45,6 +45,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Migrate existing player-based stats to include position data
+  app.post("/api/migrate-to-position-stats", async (req, res) => {
+    try {
+      const result = await migrateStatsToPositionBased();
+      res.status(200).json(result);
+    } catch (error) {
+      console.error("Error during stats migration:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: `Migration failed: ${error}` 
+      });
+    }
+  });
+  
   // Bulk import - imports all data in a single transaction
   app.post("/api/bulk-import", async (req, res) => {
     try {
