@@ -456,16 +456,32 @@ export default function LiveStats() {
             // Create a clean stat object without any position property that might be in playerQuarterStats
             const cleanStats: Record<string, number> = {};
             Object.keys(emptyQuarterStats).forEach(key => {
-              cleanStats[key] = playerQuarterStats[key as StatType] || 0;
+              // Ensure we only include stats that have non-zero values to avoid overwriting with zeros
+              if (playerQuarterStats[key as StatType]) {
+                cleanStats[key] = playerQuarterStats[key as StatType] || 0;
+              }
             });
             
-            // Prepare the stat object - fully position-based with no player ID
-            const statObject: Partial<GameStat> = {
-              gameId,
-              position, // Position is the primary identifier
-              quarter: quarterNum,
-              ...cleanStats
-            };
+            // Make sure at least one stat is non-zero before saving
+            const hasNonZeroStat = Object.values(cleanStats).some(value => value > 0);
+            
+            // Only save if there's at least one non-zero stat
+            if (hasNonZeroStat) {
+              console.log(`Saving non-zero stats for position ${position} in quarter ${quarterNum}`);
+              
+              // Prepare the stat object - fully position-based with no player ID
+              const statObject: Partial<GameStat> = {
+                gameId,
+                position, // Position is the primary identifier
+                quarter: quarterNum,
+                ...cleanStats
+              };
+              
+              console.log("Saving stat object:", statObject);
+            } else {
+              console.log(`Skipping zero stats for position ${position} in quarter ${quarterNum}`);
+              continue; // Skip saving empty stats
+            }
             
             // Save to database
             await saveGameStat(statObject);
