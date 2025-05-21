@@ -174,7 +174,8 @@ export default function GameStatistics({
             badPass: 0,
             handlingError: 0,
             pickUp: 0,
-            infringement: 0
+            infringement: 0,
+            rating: null
           };
         }
         
@@ -189,7 +190,8 @@ export default function GameStatistics({
           badPass: stat.badPass,
           handlingError: stat.handlingError,
           pickUp: stat.pickUp,
-          infringement: stat.infringement
+          infringement: stat.infringement,
+          rating: stat.rating
         };
         
         // Also accumulate player totals
@@ -207,7 +209,8 @@ export default function GameStatistics({
             badPass: 0,
             handlingError: 0,
             pickUp: 0,
-            infringement: 0
+            infringement: 0,
+            rating: null
           };
         }
         
@@ -273,22 +276,30 @@ export default function GameStatistics({
       quarter: number;
       stats: Partial<GameStat>;
     }) => {
-      // Find if there's an existing stat entry for this player and quarter
+      // Get the position for this player in this quarter
+      const position = getPositionForPlayerInQuarter(playerId, quarter);
+      
+      if (!position) {
+        console.error(`No position found for player ${playerId} in quarter ${quarter}`);
+        throw new Error(`No position found for player ${playerId} in quarter ${quarter}`);
+      }
+      
+      // Find if there's an existing stat entry for this position and quarter
       const existingStat = gameStats.find(s => 
         s.gameId === game.id && 
-        s.playerId === playerId && 
+        s.position === position && 
         s.quarter === quarter
       );
       
       if (existingStat) {
         // Update existing stats
-        const res = await apiRequest('PATCH', `/api/gamestats/${existingStat.id}`, stats);
+        const res = await apiRequest(`PATCH`, `/api/gamestats/${existingStat.id}`, stats);
         return res.json();
       } else {
         // Create new stats
-        const res = await apiRequest('POST', '/api/gamestats', {
+        const res = await apiRequest(`POST`, `/api/gamestats`, {
           gameId: game.id,
-          playerId,
+          position,
           quarter,
           goalsFor: 0,
           goalsAgainst: 0,
@@ -299,6 +310,7 @@ export default function GameStatistics({
           handlingError: 0,
           pickUp: 0,
           infringement: 0,
+          rating: null,
           ...stats // Override with actual values being updated
         });
         return res.json();
@@ -428,12 +440,12 @@ export default function GameStatistics({
           if (existingStat) {
             // Update existing stats - position-based
             savePromises.push(
-              apiRequest('PATCH', `/api/gamestats/${existingStat.id}`, quarterChanges)
+              apiRequest(`PATCH`, `/api/gamestats/${existingStat.id}`, quarterChanges)
             );
           } else {
             // Create new stats with defaults - position-based
             savePromises.push(
-              apiRequest('POST', '/api/gamestats', {
+              apiRequest(`POST`, `/api/gamestats`, {
                 gameId: game.id,
                 position, // Position is primary identifier, no player ID needed
                 quarter: quarterNum,
@@ -446,6 +458,7 @@ export default function GameStatistics({
                 handlingError: 0,
                 pickUp: 0,
                 infringement: 0,
+                rating: null,
                 ...quarterChanges // Override with actual values being updated
               })
             );
