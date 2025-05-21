@@ -1037,7 +1037,6 @@ export default function LiveStatsByPosition() {
                 
                 <div className="min-w-[60px]">
                   <p className="font-semibold text-sm">{getPlayerForPosition("GK")}</p>
-                  <p className="text-xs text-muted-foreground">{positionLabels["GK"]}</p>
                 </div>
               </div>
               
@@ -1052,18 +1051,17 @@ export default function LiveStatsByPosition() {
             </div>
           </CardHeader>
           
-          {/* Only render CardContent if this position has position-specific stats */}
-          {positionSpecificStats["GK"].length > 0 && (
-            <CardContent className="py-2 pt-1">
-              <div className="flex justify-center gap-3 flex-wrap">
-                {positionSpecificStats["GK"].map(stat => (
-                  <div key={`GK-specific-${stat}`} className="min-w-[120px]">
-                    {renderStatCounter("GK", stat, false, stat === "goalsFor" || stat === "goalsAgainst")}
-                  </div>
-                ))}
+          {/* Always render the specific stats for GK */}
+          <CardContent className="py-2 pt-1">
+            <div className="flex justify-center gap-3 flex-wrap">
+              <div className="min-w-[120px]">
+                {renderStatCounter("GK", "goalsAgainst", false, true)}
               </div>
-            </CardContent>
-          )}
+              <div className="min-w-[120px]">
+                {renderStatCounter("GK", "rebounds", false, true)}
+              </div>
+            </div>
+          </CardContent>
         </Card>
       </div>
     </div>
