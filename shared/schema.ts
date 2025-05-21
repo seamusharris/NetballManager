@@ -7,6 +7,11 @@ export const POSITIONS = ["GS", "GA", "WA", "C", "WD", "GD", "GK"] as const;
 export type Position = typeof POSITIONS[number];
 export const allPositions = [...POSITIONS];
 
+// Game status types
+export const GAME_STATUSES = ["upcoming", "in-progress", "completed", "forfeit"] as const;
+export type GameStatus = typeof GAME_STATUSES[number];
+export const allGameStatuses = [...GAME_STATUSES];
+
 // Player model
 export const players = pgTable("players", {
   id: serial("id").primaryKey(),
@@ -47,7 +52,8 @@ export const games = pgTable("games", {
   date: text("date").notNull(),
   time: text("time").notNull(),
   opponentId: integer("opponent_id"), // Nullable for BYE games
-  completed: boolean("completed").notNull().default(false),
+  completed: boolean("completed").notNull().default(false), // Legacy field, kept for backward compatibility
+  status: text("status").$type<GameStatus>().default("upcoming"), // New field for more detailed game status
   isBye: boolean("is_bye").notNull().default(false),
   round: text("round"), // Round number in the season or special values like "SF" or "GF"
 });
