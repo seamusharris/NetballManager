@@ -576,7 +576,6 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
           } else {
             console.error(`No position assignment found for player ${playerId} in quarter 1`);
           }
-          ratingPromises.push(createRatingPromise);
         }
       });
       
@@ -626,7 +625,9 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
             
             // Delete older duplicates
             for (let i = 1; i < existingStats.length; i++) {
-              const deletePromise = apiRequest('DELETE', `/api/gamestats/${existingStats[i].id}`)
+              const deletePromise = apiRequest(`/api/gamestats/${existingStats[i].id}`, {
+                method: 'DELETE'
+              })
                 .catch(err => {
                   console.log(`Stat record ${existingStats[i].id} already deleted, continuing...`);
                   return null;
@@ -635,18 +636,51 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
             }
             
             // Update the newest stat with new values
-            const updatePromise = apiRequest('PATCH', `/api/gamestats/${newestStat.id}`, statData);
+            const updatePromise = apiRequest(`/api/gamestats/${newestStat.id}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(statData)
+            });
             savePromises.push(updatePromise);
           }
           // Just one existing stat, update it
           else if (existingStats.length === 1) {
-            const updatePromise = apiRequest('PATCH', `/api/gamestats/${existingStats[0].id}`, statData);
+            const updatePromise = apiRequest(`/api/gamestats/${existingStats[0].id}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(statData)
+            });
             savePromises.push(updatePromise);
           }
           // No existing stats, create a new one
           else {
-            const createPromise = apiRequest('POST', '/api/gamestats', statData);
-            savePromises.push(createPromise);
+            // Find the position this player is playing in this quarter
+            // Make sure quarter is a number for comparison
+            const quarterNum = typeof quarter === 'string' ? parseInt(quarter) : quarter;
+            const playerPositionInQuarter = rosters.find(r => 
+              r.gameId === gameId && 
+              r.playerId === playerId && 
+              r.quarter === quarterNum
+            );
+            
+            if (playerPositionInQuarter?.position) {
+              // Use position-based stats instead of player-based
+              const positionBasedStatData = {
+                ...statData,
+                position: playerPositionInQuarter.position,
+                // Remove playerId from stat data since we're using position-based stats
+                playerId: undefined
+              };
+              
+              const newStatPromise = apiRequest('/api/gamestats', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(positionBasedStatData)
+              });
+              savePromises.push(newStatPromise);
+            } else {
+              console.error(`No position assignment found for player ${playerId} in quarter ${quarter}`);
+            }
           }
         }
       });
