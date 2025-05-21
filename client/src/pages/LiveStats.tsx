@@ -212,7 +212,8 @@ export default function LiveStats() {
     queryFn: () => apiRequest(`/api/games/${gameId}/stats`),
     enabled: !!gameId && !isNaN(gameId),
     staleTime: 0, // Consider it always stale to fetch fresh data
-    refetchOnMount: true // Always refetch when component mounts
+    refetchOnMount: 'always', // Always refetch when component mounts
+    refetchOnWindowFocus: true // Refetch when window regains focus
   });
   
   // Fetch all players
@@ -527,11 +528,7 @@ export default function LiveStats() {
       if (savedCount > 0) {
         // Directly fetch the latest data to ensure we have fresh stats
         try {
-          // Manually refetch the latest data
-          await refetchStats();
-          console.log("Stats refreshed after saving");
-          
-          // Invalidate all caches to ensure everything is up to date
+          // First invalidate all caches to ensure everything is up to date
           queryClient.invalidateQueries({ queryKey: ['/api/games', gameId, 'stats'] });
           queryClient.invalidateQueries({ queryKey: ['gameStats', gameId] });
           queryClient.invalidateQueries({ queryKey: ['gameScores', gameId] });
@@ -541,6 +538,17 @@ export default function LiveStats() {
           
           // Wait to ensure everything is refreshed
           await new Promise(resolve => setTimeout(resolve, 500));
+          
+          // Manually refetch the latest data
+          const freshStats = await apiRequest(`/api/games/${gameId}/stats`);
+          console.log(`Manually fetched ${freshStats.length} fresh stats after saving`);
+          
+          // Force refresh UI state
+          await refetchStats();
+          console.log("Stats refreshed after saving");
+          
+          // Reset UI state with the new data
+          setNeedsInitialization(true);
         } catch (err) {
           console.error("Error refreshing stats:", err);
         }
