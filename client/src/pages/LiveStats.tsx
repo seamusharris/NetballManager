@@ -490,15 +490,8 @@ export default function LiveStats() {
       let savedCount = 0;
       let errorCount = 0;
       
-      // Group stats by position and quarter to avoid duplicates
-      const uniqueStats = new Map();
+      // Just use the original stats array - we'll let the server handle duplicates
       for (const stat of statsToSave) {
-        const key = `${stat.position}-${stat.quarter}`;
-        uniqueStats.set(key, stat);
-      }
-      
-      // Convert back to array and save each stat
-      for (const stat of uniqueStats.values()) {
         try {
           await saveGameStat(stat);
           savedCount++;
@@ -527,23 +520,8 @@ export default function LiveStats() {
           }`
         });
         
-        // Mark game as completed
-        if (game && !game.completed) {
-          try {
-            const updatedGame = await apiRequest(`/api/games/${gameId}`, {
-              method: 'PATCH',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ ...game, completed: true })
-            });
-            console.log("Game marked as completed:", updatedGame);
-            
-            // Update game cache to reflect completion status
-            queryClient.setQueryData(['/api/games', gameId], updatedGame);
-            queryClient.invalidateQueries({ queryKey: ['/api/games'] });
-          } catch (err) {
-            console.error("Failed to mark game as completed:", err);
-          }
-        }
+        // We don't automatically mark the game as completed anymore
+        // This allows users to save stats throughout the game
       } else if (errorCount > 0) {
         toast({
           title: "Failed to save statistics",
