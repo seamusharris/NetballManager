@@ -146,47 +146,6 @@ export default function LiveStatsByPosition() {
     enabled: !!gameId && !isNaN(gameId)
   });
   
-  // Mutations - after all queries
-  const saveStatMutation = useMutation({
-    mutationFn: async (statData: Partial<GameStat>) => {
-      try {
-        // Sanitize the data to ensure valid JSON
-        const cleanedData = { ...statData };
-        
-        // Ensure all numeric fields are actually numbers
-        Object.keys(cleanedData).forEach(key => {
-          if (typeof cleanedData[key] === 'number' || key === 'rating') {
-            // Keep as is or ensure null for rating
-            if (key === 'rating') cleanedData[key] = null;
-          } else if (cleanedData[key] === null || cleanedData[key] === undefined) {
-            // Convert null/undefined numeric fields to 0
-            if (key !== 'playerId') {
-              cleanedData[key] = 0;
-            }
-          }
-        });
-        
-        const response = await apiRequest('/api/game-stats', {
-          method: 'POST',
-          body: JSON.stringify(cleanedData),
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        });
-        return response;
-      } catch (error) {
-        console.error("Error in mutation:", error);
-        throw error;
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/games', gameId, 'stats'] });
-    },
-    onError: (error) => {
-      console.error("Mutation error:", error);
-    }
-  });
-  
   // Initialize stats from existing data
   useEffect(() => {
     if (existingStats && existingStats.length > 0) {
@@ -314,81 +273,27 @@ export default function LiveStatsByPosition() {
     });
   };
   
-  // Direct API save function without using the mutation
-  const saveStatDirectly = async (stat: Partial<GameStat>): Promise<boolean> => {
+  // Simple direct update function that doesn't use React Query
+  const updateGameStat = async (id: number, data: any): Promise<boolean> => {
     try {
-      // First, check if this stat already exists in the database
-      let existingId: number | null = null;
+      console.log(`Updating stat ID ${id}:`, data);
       
-      if (existingStats && existingStats.length > 0) {
-        const existing = existingStats.find(s => 
-          s.gameId === stat.gameId && 
-          s.position === stat.position && 
-          s.quarter === stat.quarter
-        );
-        
-        if (existing) {
-          existingId = existing.id;
-        }
-      }
-      
-      // Create a simple object with only the required fields
-      const payload = {
-        id: existingId, // Include ID if found, for update purposes
-        gameId: stat.gameId,
-        position: stat.position,
-        quarter: stat.quarter,
-        goalsFor: stat.goalsFor || 0,
-        goalsAgainst: stat.goalsAgainst || 0,
-        missedGoals: stat.missedGoals || 0,
-        rebounds: stat.rebounds || 0,
-        intercepts: stat.intercepts || 0,
-        badPass: stat.badPass || 0,
-        handlingError: stat.handlingError || 0,
-        pickUp: stat.pickUp || 0,
-        infringement: stat.infringement || 0,
-        rating: null
-      };
-      
-      // Use appropriate endpoint based on whether this is an update or create
-      const endpoint = existingId ? `/api/game-stats/${existingId}` : '/api/game-stats';
-      const method = existingId ? 'PATCH' : 'POST';
-      
-      console.log(`Saving stat: ${method} ${endpoint}`, payload);
-      
-      // Make the fetch request directly
-      const response = await fetch(endpoint, {
-        method: method,
+      const response = await fetch(`/api/game-stats/${id}`, {
+        method: 'PATCH',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(data)
       });
       
       if (!response.ok) {
         console.error(`API error: ${response.status} ${response.statusText}`);
-        const errorText = await response.text();
-        console.error(`Error response: ${errorText}`);
         return false;
       }
       
-      try {
-        // Try to parse response as JSON
-        const responseData = await response.json();
-        console.log(`Save successful: ${method} response:`, responseData);
-        return true;
-      } catch (jsonError) {
-        // If response is not JSON, still consider it successful if status is OK
-        if (response.ok) {
-          console.log(`Save successful with non-JSON response: ${response.status}`);
-          return true;
-        }
-        
-        console.error("Error parsing response as JSON:", jsonError);
-        return false;
-      }
+      return true;
     } catch (error) {
-      console.error("Error in direct save:", error);
+      console.error(`Error updating stat ${id}:`, error);
       return false;
     }
   };
@@ -400,113 +305,103 @@ export default function LiveStatsByPosition() {
     try {
       setSaveInProgress(true);
       
-      // Build stats to save
-      const statsToSave: Array<Partial<GameStat>> = [];
+      // Get the latest data from the server first
+      await queryClient.invalidateQueries({ queryKey: ['/api/games', gameId, 'stats'] });
+      await new Promise(resolve => setTimeout(resolve, 500)); // Wait for data to refresh
       
-      // For each position and quarter with stats
-      Object.entries(stats).forEach(([position, quarters]) => {
-        Object.entries(quarters).forEach(([quarter, statValues]) => {
-          // Only save stats where something actually has a value
-          const hasStatValue = Object.values(statValues).some(val => val > 0);
+      // Get fresh stats data
+      const freshStats = await apiRequest<GameStat[]>(`/api/games/${gameId}/stats`);
+      console.log("Fresh stats from server:", freshStats);
+      
+      let successCount = 0;
+      
+      // For each position and quarter
+      for (const position of allPositions) {
+        for (let quarter = 1; quarter <= 4; quarter++) {
+          // Get our current stats for this position and quarter
+          const currentStats = stats[position]?.[quarter.toString()];
+          if (!currentStats) continue;
           
-          if (hasStatValue) {
-            // Create stat object
-            const statObject: Partial<GameStat> = {
-              gameId,
-              position: position as Position,
-              quarter: parseInt(quarter),
-              // Include all stat values
-              goalsFor: statValues.goalsFor || 0,
-              goalsAgainst: statValues.goalsAgainst || 0,
-              missedGoals: statValues.missedGoals || 0,
-              rebounds: statValues.rebounds || 0,
-              intercepts: statValues.intercepts || 0,
-              badPass: statValues.badPass || 0,
-              handlingError: statValues.handlingError || 0,
-              pickUp: statValues.pickUp || 0,
-              infringement: statValues.infringement || 0,
-              rating: null  // Required field with default null
-            };
-            
-            statsToSave.push(statObject);
-          }
-        });
-      });
-      
-      if (statsToSave.length > 0) {
-        // Save all stats using our direct method
-        let successCount = 0;
-        
-        // First ensure we have proper data loaded from the server
-        // This will fetch fresh data to check against
-        await queryClient.invalidateQueries({ queryKey: ['/api/games', gameId, 'stats'] });
-        
-        // Give server time to respond with latest data
-        await new Promise(resolve => setTimeout(resolve, 300));
-        
-        // Refetch stats to get correct IDs
-        const updatedStats = await apiRequest<GameStat[]>(`/api/games/${gameId}/stats`);
-        console.log("Current server stats:", updatedStats);
-        
-        // Do saves with fresh data
-        for (const stat of statsToSave) {
-          // Try to find matching stat in updated data
-          const existingStat = updatedStats?.find(s => 
-            s.gameId === stat.gameId && 
-            s.position === stat.position && 
-            s.quarter === stat.quarter
+          // Check if there are any non-zero values - skip zeroes
+          const hasValues = Object.values(currentStats).some(val => val > 0);
+          if (!hasValues) continue;
+          
+          // Find matching existing stat in fresh data
+          const existingStat = freshStats?.find(s => 
+            s.gameId === gameId && 
+            s.position === position && 
+            s.quarter === quarter
           );
           
-          // If found, use its ID
+          // Create payload
+          const payload = {
+            gameId: gameId,
+            position: position,
+            quarter: quarter,
+            goalsFor: currentStats.goalsFor || 0,
+            goalsAgainst: currentStats.goalsAgainst || 0,
+            missedGoals: currentStats.missedGoals || 0,
+            rebounds: currentStats.rebounds || 0,
+            intercepts: currentStats.intercepts || 0,
+            badPass: currentStats.badPass || 0,
+            handlingError: currentStats.handlingError || 0,
+            pickUp: currentStats.pickUp || 0,
+            infringement: currentStats.infringement || 0,
+            rating: null
+          };
+          
+          let success = false;
+          
           if (existingStat) {
-            stat.id = existingStat.id;
+            // Update existing stat
+            console.log(`Updating existing stat ID ${existingStat.id} for ${position} Q${quarter}`);
+            success = await updateGameStat(existingStat.id, payload);
+          } else {
+            // Create new stat
+            console.log(`Creating new stat for ${position} Q${quarter}`);
+            try {
+              const response = await fetch('/api/game-stats', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+              });
+              
+              success = response.ok;
+              if (!success) {
+                console.error(`Failed to create stat: ${response.status}`);
+              }
+            } catch (error) {
+              console.error("Error creating stat:", error);
+            }
           }
           
-          const success = await saveStatDirectly(stat);
           if (success) successCount++;
         }
-        
-        if (successCount === statsToSave.length) {
-          toast({
-            title: "Stats Saved",
-            description: `Successfully saved ${successCount} statistics.`
-          });
-        } else if (successCount > 0) {
-          toast({
-            title: "Partial Save",
-            description: `Saved ${successCount} of ${statsToSave.length} statistics.`,
-            variant: "destructive"
-          });
-        } else {
-          toast({
-            title: "Save Failed",
-            description: "Could not save any statistics. Please try again.",
-            variant: "destructive"
-          });
-        }
+      }
+      
+      // Show appropriate toast message
+      if (successCount > 0) {
+        toast({
+          title: "Stats Saved",
+          description: `Successfully saved ${successCount} statistics.`
+        });
       } else {
         toast({
-          title: "No Stats to Save",
-          description: "There are no statistics to save for this game."
+          title: "No Stats Saved",
+          description: "Could not save any statistics. Please try again.",
+          variant: "destructive"
         });
       }
       
     } catch (error) {
       console.error("Error saving stats:", error);
-      
-      // More descriptive error message
-      let errorMessage = "Failed to save game statistics.";
-      if (error instanceof Error) {
-        errorMessage += ` Details: ${error.message}`;
-      }
-      
       toast({
         title: "Error",
-        description: errorMessage,
+        description: "Failed to save statistics. Please try again.",
         variant: "destructive"
       });
     } finally {
-      // Always update the stats from the database after save operation
+      // Refresh data
       queryClient.invalidateQueries({ queryKey: ['/api/games', gameId, 'stats'] });
       setSaveInProgress(false);
     }
