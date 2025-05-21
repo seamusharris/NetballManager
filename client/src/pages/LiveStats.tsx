@@ -228,15 +228,7 @@ export default function LiveStats() {
         body: JSON.stringify(gameStat)
       }),
     onSuccess: () => {
-      // Invalidate all stats-related queries for this game
-      queryClient.invalidateQueries({ queryKey: ['/api/games', gameId, 'stats'] });
-      
-      // Also invalidate calculated statistics
-      queryClient.invalidateQueries({ queryKey: ['gameStats', gameId] });
-      queryClient.invalidateQueries({ queryKey: ['gameScores', gameId] });
-      queryClient.invalidateQueries({ queryKey: ['positionStats', gameId] });
-      queryClient.invalidateQueries({ queryKey: ['playerStats', gameId] });
-      queryClient.invalidateQueries({ queryKey: ['allGameStats'] });
+      // We'll handle all invalidation after saving all stats
     }
   });
   
@@ -466,7 +458,8 @@ export default function LiveStats() {
           const position = playerToPositionMap[playerIdNum]?.[quarterNum];
           
           if (position) {
-            // Prepare complete stat object with all required fields
+            // Always save complete stats for this position, even if they're zeros
+            // This ensures we overwrite any previous values
             const statObject = {
               gameId,
               position, 
@@ -482,25 +475,11 @@ export default function LiveStats() {
               infringement: playerQuarterStats.infringement || 0
             };
             
-            // Check if any stats are non-zero
-            const hasNonZeroStat = 
-              (playerQuarterStats.goalsFor || 0) > 0 || 
-              (playerQuarterStats.goalsAgainst || 0) > 0 || 
-              (playerQuarterStats.missedGoals || 0) > 0 || 
-              (playerQuarterStats.rebounds || 0) > 0 || 
-              (playerQuarterStats.intercepts || 0) > 0 || 
-              (playerQuarterStats.badPass || 0) > 0 || 
-              (playerQuarterStats.handlingError || 0) > 0 || 
-              (playerQuarterStats.pickUp || 0) > 0 || 
-              (playerQuarterStats.infringement || 0) > 0;
-            
-            if (hasNonZeroStat) {
-              console.log(`Saving non-zero stats for position ${position} in quarter ${quarterNum}`);
-              console.log("Saving stat object:", statObject);
-              statsToSave.push(statObject);
-            } else {
-              console.log(`Skipping zero stats for position ${position} in quarter ${quarterNum}`);
-            }
+            // Always save statistics for every position on the court
+            // This ensures we don't have gaps in the data and that scores are accurate
+            console.log(`Saving stats for position ${position} in quarter ${quarterNum}`);
+            console.log("Saving stat object:", statObject);
+            statsToSave.push(statObject);
           } else {
             console.warn(`No position found for player ${playerIdNum} in quarter ${quarterNum}`);
           }
@@ -511,7 +490,15 @@ export default function LiveStats() {
       let savedCount = 0;
       let errorCount = 0;
       
+      // Group stats by position and quarter to avoid duplicates
+      const uniqueStats = new Map();
       for (const stat of statsToSave) {
+        const key = `${stat.position}-${stat.quarter}`;
+        uniqueStats.set(key, stat);
+      }
+      
+      // Convert back to array and save each stat
+      for (const stat of uniqueStats.values()) {
         try {
           await saveGameStat(stat);
           savedCount++;
@@ -522,6 +509,17 @@ export default function LiveStats() {
       }
       
       if (savedCount > 0) {
+        // Invalidate all data to ensure we have fresh stats
+        queryClient.invalidateQueries({ queryKey: ['/api/games', gameId, 'stats'] });
+        queryClient.invalidateQueries({ queryKey: ['gameStats', gameId] });
+        queryClient.invalidateQueries({ queryKey: ['gameScores', gameId] });
+        queryClient.invalidateQueries({ queryKey: ['positionStats', gameId] });
+        queryClient.invalidateQueries({ queryKey: ['playerStats', gameId] });
+        queryClient.invalidateQueries({ queryKey: ['allGameStats'] });
+        
+        // Wait for re-fetched stats before showing the success message
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
         toast({
           title: "Statistics saved",
           description: `Successfully saved statistics for ${savedCount} positions.${
@@ -532,13 +530,16 @@ export default function LiveStats() {
         // Mark game as completed
         if (game && !game.completed) {
           try {
-            await apiRequest(`/api/games/${gameId}`, {
+            const updatedGame = await apiRequest(`/api/games/${gameId}`, {
               method: 'PATCH',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ ...game, completed: true })
             });
+            console.log("Game marked as completed:", updatedGame);
+            
+            // Update game cache to reflect completion status
+            queryClient.setQueryData(['/api/games', gameId], updatedGame);
             queryClient.invalidateQueries({ queryKey: ['/api/games'] });
-            queryClient.invalidateQueries({ queryKey: ['/api/games', gameId] });
           } catch (err) {
             console.error("Failed to mark game as completed:", err);
           }
