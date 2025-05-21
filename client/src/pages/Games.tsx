@@ -65,8 +65,19 @@ export default function Games() {
         body: JSON.stringify(game)
       });
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
+      // Invalidate games list
       queryClient.invalidateQueries({ queryKey: ['/api/games'] });
+      
+      // Also invalidate game stats if the game was marked as completed
+      if (variables.game.completed) {
+        queryClient.invalidateQueries({ queryKey: ['allGameStats'] });
+        queryClient.invalidateQueries({ queryKey: ['gameStats', variables.id] });
+        queryClient.invalidateQueries({ queryKey: ['gameScores', variables.id] });
+        queryClient.invalidateQueries({ queryKey: ['positionStats', variables.id] });
+        queryClient.invalidateQueries({ queryKey: ['playerStats', variables.id] });
+      }
+      
       toast({
         title: "Success",
         description: "Game updated successfully",
