@@ -258,7 +258,7 @@ export function getWinLoseClass(status: 'Win' | 'Loss' | 'Draw'): string {
  * @param game The game object or game status string
  * @returns true if the game is a forfeit game
  */
-export function isForfeitGame(game: { status?: string } | string | undefined): boolean {
+export function isForfeitGame(game: { status?: string | null } | string | undefined): boolean {
   if (!game) return false;
   
   const status = typeof game === 'string' ? game : game.status;

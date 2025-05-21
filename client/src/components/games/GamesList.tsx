@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
+import { isForfeitGame } from '@/lib/utils';
 import { 
   Card, 
   CardContent 
@@ -505,7 +506,7 @@ export default function GamesList({
                             </button>
                             
                             {/* Don't show statistics button for forfeit games */}
-                            {game.status !== 'forfeit' && (
+                            {!isForfeitGame(game) && (
                               <button 
                                 onClick={() => navigate(`/statistics?game=${game.id}`)}
                                 title={
