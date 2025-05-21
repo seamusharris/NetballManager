@@ -35,7 +35,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Edit, Trash2, FileText, CalendarRange, Search, Trophy, ThumbsDown, Minus, ActivitySquare } from 'lucide-react';
-import { Game, Opponent } from '@shared/schema';
+import { Game, Opponent, GameStat } from '@shared/schema';
 import { formatDate, formatShortDate } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
 import { GameScoreDisplay } from '@/components/statistics/GameScoreDisplay';
@@ -123,7 +123,7 @@ export default function GamesList({
       }
       
       // Create a map to store stats by game ID
-      const statsMap: Record<number, GameStat[]> = {};
+      const statsMap: Record<number, any[]> = {};
       
       // Fetch stats for each completed game
       const statsPromises = completedGameIds.map(async (gameId) => {
@@ -145,8 +145,7 @@ export default function GamesList({
     staleTime: 0, // Always refetch when needed
   });
   
-  // Calculate scores for all games
-  // Process roster data to determine if games have rosters set up
+  // Calculate roster statuses
   useEffect(() => {
     if (!allRosterData) return;
     
@@ -189,85 +188,7 @@ export default function GamesList({
     setGameRosterStatus(rosterStatuses);
   }, [allRosterData]);
   
-  // Process game statistics to calculate scores from position-based stats
-  useEffect(() => {
-    if (!allGameStats || !allRosterData) return;
-    
-    const newScores: Record<number, GameScore> = {};
-    
-    // Process each game's stats
-    Object.entries(allGameStats).forEach(([gameIdStr, stats]) => {
-      const gameId = parseInt(gameIdStr);
-      
-      if (!stats || stats.length === 0) {
-        newScores[gameId] = { team: 0, opponent: 0 };
-        return;
-      }
-      
-      // Calculate goals by position in each quarter
-      const quarterGoals: Record<number, { for: number; against: number }> = {
-        1: { for: 0, against: 0 },
-        2: { for: 0, against: 0 },
-        3: { for: 0, against: 0 },
-        4: { for: 0, against: 0 }
-      };
-      
-      // Create a map of the latest stats for each position and quarter combination
-      const latestPositionStats: Record<string, GameStat> = {};
-      
-      // Find the latest stat for each position/quarter combination
-      stats.forEach(stat => {
-        if (!stat || !stat.quarter) return;
-        
-        // For position-based stats (with valid position)
-        if (stat.position) {
-          const key = `${stat.position}-${stat.quarter}`;
-          
-          // Keep only the newest stat entry for each position/quarter
-          if (!latestPositionStats[key] || stat.id > latestPositionStats[key].id) {
-            latestPositionStats[key] = stat;
-          }
-        }
-        // For legacy stats (with null position but valid data)
-        else {
-          // Only include legacy stats if they have valid goal data
-          if (typeof stat.goalsFor === 'number' || typeof stat.goalsAgainst === 'number') {
-            // Use a special key format for legacy stats
-            const key = `legacy-${stat.id}-${stat.quarter}`;
-            latestPositionStats[key] = stat;
-          }
-        }
-      });
-      
-      // Sum up goals from all positions for each quarter
-      Object.values(latestPositionStats).forEach(stat => {
-        if (stat && stat.quarter >= 1 && stat.quarter <= 4) {
-          quarterGoals[stat.quarter].for += (stat.goalsFor || 0);
-          quarterGoals[stat.quarter].against += (stat.goalsAgainst || 0);
-        }
-      });
-      
-      console.log(`Game ${gameId} quarter scores:`, quarterGoals);
-      
-      // Calculate total goals
-      const teamScore = Object.values(quarterGoals).reduce((sum, q) => sum + q.for, 0);
-      const opponentScore = Object.values(quarterGoals).reduce((sum, q) => sum + q.against, 0);
-      
-      console.log(`Game ${gameId} final score: ${teamScore}-${opponentScore}`);
-      
-      newScores[gameId] = { team: teamScore, opponent: opponentScore };
-    });
-    
-    // Apply scores to all games that exist in completedGameIds
-    completedGameIds.forEach(gameId => {
-      // If we don't have scores for this game yet, set to 0-0
-      if (!newScores[gameId]) {
-        newScores[gameId] = { team: 0, opponent: 0 };
-      }
-    });
-    
-    setGameScores(newScores);
-  }, [allGameStats, allRosterData, completedGameIds, games]);
+
   
   // Get opponent name by ID
   const getOpponentName = (opponentId: number | null) => {
