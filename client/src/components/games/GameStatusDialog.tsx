@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Game, GAME_STATUSES, GameStatus } from '@shared/schema';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
@@ -37,11 +37,11 @@ export function GameStatusDialog({
   const queryClient = useQueryClient();
 
   // Reset selected status when dialog opens with a new game
-  useState(() => {
+  useEffect(() => {
     if (game) {
       setSelectedStatus(game.status || 'upcoming');
     }
-  });
+  }, [game]);
 
   // Update game status mutation
   const updateGameStatus = useMutation({
@@ -55,7 +55,11 @@ export function GameStatusDialog({
         completed: selectedStatus === 'completed' || selectedStatus === 'forfeit'
       };
       
-      return await apiRequest(`/api/games/${game.id}`, 'PATCH', updateData);
+      return apiRequest(`/api/games/${game.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updateData)
+      });
     },
     onSuccess: () => {
       // Invalidate relevant queries to refresh the data
