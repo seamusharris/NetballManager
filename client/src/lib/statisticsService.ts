@@ -1,5 +1,6 @@
-import { GameStat, Game, Roster, Position } from '@shared/schema';
+import { GameStat, Game, Roster, Position, Player, allPositions } from '@shared/schema';
 import { apiRequest } from './queryClient';
+import { isForfeitGame, getForfeitGameScore } from './utils';
 
 /**
  * Interface for game score information
@@ -112,18 +113,9 @@ export class StatisticsService {
     const game = await apiRequest(`/api/games/${gameId}`);
     
     // Special handling for forfeit games - return fixed scores (0-10)
-    if (game && game.status === 'forfeit') {
+    if (isForfeitGame(game)) {
       console.log(`Forfeit game detected (ID: ${gameId}), returning standard forfeit score`);
-      
-      return {
-        quarterScores: {
-          '1': { for: 0, against: 0 },
-          '2': { for: 0, against: 5 },
-          '3': { for: 0, against: 5 },
-          '4': { for: 0, against: 0 }
-        },
-        finalScore: { for: 0, against: 10 }
-      };
+      return getForfeitGameScore();
     }
     
     // For non-forfeit games, proceed with normal calculation
@@ -169,7 +161,7 @@ export class StatisticsService {
     });
     
     // Sum up goals from all positions for each quarter
-    Object.values(latestPositionStats).forEach(stat => {
+    Object.values(latestPositionStats).forEach((stat: GameStat) => {
       if (stat && stat.quarter >= 1 && stat.quarter <= 4) {
         const quarterKey = stat.quarter.toString() as '1' | '2' | '3' | '4';
         quarterScores[quarterKey].for += (stat.goalsFor || 0);

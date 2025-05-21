@@ -252,3 +252,43 @@ export function getWinLoseClass(status: 'Win' | 'Loss' | 'Draw'): string {
     default: return 'bg-gray-100 text-gray-600';
   }
 }
+
+/**
+ * Check if a game is a forfeit game
+ * @param game The game object or game status string
+ * @returns true if the game is a forfeit game
+ */
+export function isForfeitGame(game: { status?: string } | string | undefined): boolean {
+  if (!game) return false;
+  
+  const status = typeof game === 'string' ? game : game.status;
+  return status === 'forfeit';
+}
+
+/**
+ * Check if a game allows statistics to be recorded
+ * @param game The game object or game status string
+ * @returns true if the game allows statistics (not forfeit, not BYE)
+ */
+export function gameAllowsStatistics(game: { status?: string, isBye?: boolean } | undefined): boolean {
+  if (!game) return false;
+  
+  // Forfeit games and BYE games don't record statistics
+  return !isForfeitGame(game) && !(game.isBye === true);
+}
+
+/**
+ * Get the fixed score for a forfeit game (0-10)
+ * @returns The forfeit game scores by quarter and final
+ */
+export function getForfeitGameScore() {
+  return {
+    quarterScores: {
+      '1': { for: 0, against: 0 },
+      '2': { for: 0, against: 5 },
+      '3': { for: 0, against: 5 },
+      '4': { for: 0, against: 0 }
+    },
+    finalScore: { for: 0, against: 10 }
+  };
+}
