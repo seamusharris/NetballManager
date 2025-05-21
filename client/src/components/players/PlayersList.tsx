@@ -217,32 +217,51 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
       // Create a map to track the most recent stat entry for each player in each quarter of each game
       const dedupedStats: Record<number, Record<string, GameStat>> = {};
       
-      // First identify the most recent stat for each player in each quarter of each game
-      allGameStats.forEach(stat => {
-        if (!stat || !stat.playerId || !stat.quarter || !stat.gameId) return;
+      // In the position-based model, we need to map position stats to players using roster data
+      Object.entries(gameStatsMap).forEach(([gameIdStr, stats]) => {
+        const gameId = parseInt(gameIdStr);
+        const gameRosters = gameRostersMap[gameId] || [];
         
-        const playerId = stat.playerId;
-        const uniqueKey = `${stat.gameId}-${stat.quarter}`; // Unique key per game and quarter
-        
-        // Initialize player's stats map if needed
-        if (!dedupedStats[playerId]) {
-          dedupedStats[playerId] = {};
-        }
-        
-        // Keep only the most recent stat for this player and quarter in this game
-        if (!dedupedStats[playerId][uniqueKey] || 
-            stat.id > dedupedStats[playerId][uniqueKey].id) {
-          dedupedStats[playerId][uniqueKey] = stat;
-        }
+        // Process each stat entry for this game
+        stats.forEach(stat => {
+          if (!stat || !stat.position || !stat.quarter || !stat.gameId) return;
+          
+          // Find which player was playing this position in this quarter using roster data
+          const rosterEntry = gameRosters.find((r: any) => 
+            r.position === stat.position && 
+            r.quarter === stat.quarter
+          );
+          
+          // Skip if no player was assigned to this position
+          if (!rosterEntry || !rosterEntry.playerId) return;
+          
+          const playerId = rosterEntry.playerId;
+          
+          // Skip if this player is not in our tracked players
+          if (!newPlayerStatsMap[playerId]) return;
+          
+          const uniqueKey = `${stat.gameId}-${stat.quarter}-${stat.position}`; // Unique key per game, quarter, position
+          
+          // Initialize player's stats map if needed
+          if (!dedupedStats[playerId]) {
+            dedupedStats[playerId] = {};
+          }
+          
+          // Keep only the most recent stat for this position, player, and quarter in this game
+          if (!dedupedStats[playerId][uniqueKey] || 
+              stat.id > dedupedStats[playerId][uniqueKey].id) {
+            dedupedStats[playerId][uniqueKey] = stat;
+          }
+        });
       });
       
       // Now process only the de-duplicated stats to get player totals across all games
-      Object.values(dedupedStats).forEach(playerQuarterStats => {
+      Object.entries(dedupedStats).forEach(([playerIdStr, playerQuarterStats]) => {
+        const playerId = parseInt(playerIdStr);
+        if (!newPlayerStatsMap[playerId]) return;
+        
         Object.values(playerQuarterStats).forEach(stat => {
-          const playerId = stat.playerId;
-          if (!newPlayerStatsMap[playerId]) return;
-          
-          // Add this player's stats
+          // Add this player's stats based on the position they played
           newPlayerStatsMap[playerId].goals += stat.goalsFor || 0;
           newPlayerStatsMap[playerId].goalsAgainst += stat.goalsAgainst || 0;
           newPlayerStatsMap[playerId].missedGoals += stat.missedGoals || 0;
@@ -256,34 +275,56 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
       });
     }
     
-    // Process player ratings - use only the most recent quarter 1 stats
-    Object.values(newPlayerStatsMap).forEach(playerStat => {
-      // Find all quarter 1 stats for this player across all games
-      const quarter1Stats = Object.values(gameStatsMap)
-        .flatMap(gameStats => 
-          gameStats.filter(stat => 
-            stat.playerId === playerStat.playerId && 
-            stat.quarter === 1 && 
-            stat.rating !== undefined && 
-            stat.rating !== null
-          )
-        )
-        .sort((a, b) => b.id - a.id); // Sort by ID descending
+    // Process player ratings from position-based stats - use the most recent quarter 1 stats
+    players.forEach(player => {
+      if (!newPlayerStatsMap[player.id]) return;
       
-      // Use the most recent rating if available
-      if (quarter1Stats.length > 0) {
-        const latestRating = quarter1Stats[0].rating;
-        if (typeof latestRating === 'number') {
-          playerStat.rating = latestRating;
-        }
-      } else {
-        // Calculate default rating based on performance
-        const calculatedRating = 5 + 
-          (playerStat.goals * 0.2) +
-          (playerStat.rebounds * 0.3) + 
-          (playerStat.intercepts * 0.4);
+      // Find all positions this player has played in the first quarter of any game
+      let mostRecentRating = null;
+      let mostRecentDate = new Date(0); // Start with oldest possible date
+      
+      // Look through all games
+      Object.entries(gameRostersMap || {}).forEach(([gameIdStr, rosters]) => {
+        const gameId = parseInt(gameIdStr);
+        const gameDate = new Date(games.find(g => g.id === gameId)?.date || '');
         
-        playerStat.rating = Math.min(10, Math.max(1, calculatedRating));
+        // Find quarter 1 roster entries for this player
+        const playerQ1Rosters = rosters.filter((r: any) => 
+          r.playerId === player.id && 
+          r.quarter === 1 && 
+          r.position // Make sure they had a position
+        );
+        
+        // For each position this player played in quarter 1
+        playerQ1Rosters.forEach((roster: any) => {
+          // Find the stats for this position and quarter
+          const gameStats = gameStatsMap?.[gameId] || [];
+          const positionStat = gameStats.find(s => 
+            s.position === roster.position && 
+            s.quarter === 1 &&
+            s.rating !== null && 
+            s.rating !== undefined
+          );
+          
+          // If found and has a rating and is more recent than what we have
+          if (positionStat?.rating !== undefined && positionStat?.rating !== null && gameDate > mostRecentDate) {
+            mostRecentRating = positionStat.rating;
+            mostRecentDate = gameDate;
+          }
+        });
+      });
+      
+      // Update with the most recent rating we found, or calculate a default
+      if (mostRecentRating !== null) {
+        newPlayerStatsMap[player.id].rating = mostRecentRating;
+      } else {
+        // Calculate default rating based on performance stats
+        const calculatedRating = 5 + 
+          (newPlayerStatsMap[player.id].goals * 0.2) +
+          (newPlayerStatsMap[player.id].rebounds * 0.3) + 
+          (newPlayerStatsMap[player.id].intercepts * 0.4);
+        
+        newPlayerStatsMap[player.id].rating = Math.min(10, Math.max(1, calculatedRating));
       }
     });
     
