@@ -250,23 +250,45 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
       // Create a map to track the most recent stat entry for each player in each quarter of each game
       const dedupedStats: Record<number, Record<string, GameStat>> = {};
       
-      // First identify the most recent stat for each player in each quarter of each game
-      allGameStats.forEach(stat => {
-        if (!stat || !stat.playerId || !stat.quarter || !stat.gameId) return;
+      // In the position-based model, we need to match positions to players via the roster
+      // For each game and position/quarter combo, we need to find the player who was in that position
+      
+      // Process all stats for filtered games
+      Object.entries(filteredGameStats).forEach(([gameIdStr, stats]) => {
+        const gameId = parseInt(gameIdStr);
+        const gameRosters = gameRostersMap[gameId] || [];
         
-        const playerId = stat.playerId;
-        const uniqueKey = `${stat.gameId}-${stat.quarter}`; // Unique key per game and quarter
-        
-        // Initialize player's stats map if needed
-        if (!dedupedStats[playerId]) {
-          dedupedStats[playerId] = {};
-        }
-        
-        // Keep only the most recent stat for this player and quarter in this game
-        if (!dedupedStats[playerId][uniqueKey] || 
-            stat.id > dedupedStats[playerId][uniqueKey].id) {
-          dedupedStats[playerId][uniqueKey] = stat;
-        }
+        // Process each stat entry for this game
+        stats.forEach(stat => {
+          if (!stat || !stat.position || !stat.quarter || !stat.gameId) return;
+          
+          // Find which player was playing this position in this quarter
+          const rosterEntry = gameRosters.find((r: any) => 
+            r.position === stat.position && 
+            r.quarter === stat.quarter
+          );
+          
+          // Skip if no player was assigned to this position
+          if (!rosterEntry || !rosterEntry.playerId) return;
+          
+          const playerId = rosterEntry.playerId;
+          
+          // Skip if this player is not in our tracked players
+          if (!newPlayerStatsMap[playerId]) return;
+          
+          const uniqueKey = `${stat.gameId}-${stat.quarter}-${stat.position}`; // Unique key per game, quarter, and position
+          
+          // Initialize player's stats map if needed
+          if (!dedupedStats[playerId]) {
+            dedupedStats[playerId] = {};
+          }
+          
+          // Keep only the most recent stat for this position, player, and quarter in this game
+          if (!dedupedStats[playerId][uniqueKey] || 
+              stat.id > dedupedStats[playerId][uniqueKey].id) {
+            dedupedStats[playerId][uniqueKey] = stat;
+          }
+        });
       });
       
       // Now process only the de-duplicated stats to get player totals across all games
