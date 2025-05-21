@@ -126,7 +126,7 @@ export class StatisticsService {
     const latestPositionStats: Record<string, GameStat> = {};
     
     // Find the latest stat for each position/quarter combination
-    stats.forEach(stat => {
+    stats.forEach((stat: GameStat) => {
       if (!stat || !stat.quarter) return;
       
       // For position-based stats (with valid position)
@@ -224,11 +224,15 @@ export class StatisticsService {
   }
   
   /**
-   * Map position-based statistics to player statistics using roster information
+   * Map position-based statistics to player statistics using roster information - with fresh data
    */
   async mapStatsToPlayers(gameId: number): Promise<Record<number, GameStat[]>> {
-    const stats = await this.getGameStats(gameId);
-    const rosters = await this.getGameRosters(gameId);
+    // Force fresh data fetch to ensure we have the latest stats
+    const timestamp = new Date().getTime();
+    const stats = await apiRequest(`/api/games/${gameId}/stats?_t=${timestamp}`);
+    const rosters = await apiRequest(`/api/games/${gameId}/rosters?_t=${timestamp}`);
+    
+    console.log(`Mapping ${stats.length} fresh stats to players for game ${gameId}`);
     
     // Group stats by player
     const statsByPlayer: Record<number, GameStat[]> = {};
