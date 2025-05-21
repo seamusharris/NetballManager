@@ -722,8 +722,12 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
       
       // Invalidate all queries that depend on game stats or player performance
       queryClient.invalidateQueries({ queryKey: ['/api/gamestats', gameId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/games', gameId, 'stats'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/games', gameId] });
       queryClient.invalidateQueries({ queryKey: ['playerGameStats'] });
       queryClient.invalidateQueries({ queryKey: ['gameStats'] });
+      // Invalidate all game-related queries to ensure scoreboard updates
+      queryClient.invalidateQueries({ queryKey: ['/api/games'] });
       
       // Invalidate specific player queries for all players in the current game
       // This ensures player details pages stay up to date
