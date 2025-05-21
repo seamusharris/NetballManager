@@ -235,6 +235,18 @@ export default function LiveStats() {
     }
   });
   
+  // Check if game is forfeit and redirect if needed
+  useEffect(() => {
+    if (game && game.status === 'forfeit') {
+      toast({
+        title: "Forfeit Game",
+        description: "Statistics tracking is not available for forfeit games.",
+        variant: "destructive"
+      });
+      navigate('/games');
+    }
+  }, [game, navigate, toast]);
+
   // Initialize the live stats when existing data is loaded
   useEffect(() => {
     if (existingStats && players && rosters) {
