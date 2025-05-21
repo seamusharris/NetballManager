@@ -154,16 +154,17 @@ export default function LiveStatsByPosition() {
   const { id } = useParams<{ id: string }>();
   const gameId = parseInt(id);
   const [, navigate] = useLocation();
-  
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
-  // State for tracking the game
+  // Define all state variables first to avoid React hooks order issues
   const [currentQuarter, setCurrentQuarter] = useState<number>(1);
   const [liveStats, setLiveStats] = useState<PositionStats>({});
   const [undoStack, setUndoStack] = useState<HistoryRecord[]>([]);
   const [redoStack, setRedoStack] = useState<HistoryRecord[]>([]);
   const [saveInProgress, setSaveInProgress] = useState<boolean>(false);
+  const [rosterData, setRosterData] = useState<Roster[]>([]);
+  const [playerData, setPlayerData] = useState<Record<number, Player>>({}); 
   
   // Fetch game details
   const { data: game, isLoading: gameLoading } = useQuery({
@@ -588,9 +589,7 @@ export default function LiveStatsByPosition() {
     "GK": ["goalsAgainst", "rebounds"]
   };
   
-  // Get roster information to display player names
-  const [rosterData, setRosterData] = useState<Roster[]>([]);
-  const [playerData, setPlayerData] = useState<Record<number, Player>>({});
+  // We already declared these states at the top of the component
   
   // Load roster information and player data
   useEffect(() => {
