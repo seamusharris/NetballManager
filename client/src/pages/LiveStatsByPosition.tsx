@@ -298,7 +298,7 @@ export default function LiveStatsByPosition() {
     }
   };
   
-  // Super simple approach to stat saving - just use direct POST/PATCH
+  // Complete function to save all stats using our direct utility
   const saveAllStats = async () => {
     if (saveInProgress) return;
     
@@ -306,11 +306,11 @@ export default function LiveStatsByPosition() {
       setSaveInProgress(true);
       toast({
         title: "Saving Stats",
-        description: "Updating one stat at a time..."
+        description: "Please wait while we save all your changes..."
       });
 
-      // Import our direct stat saver functions
-      const { updateStat } = await import('@/lib/directStatSaver');
+      // Import our utility functions
+      const { updateStat, createStat } = await import('@/lib/directStatSaver');
       
       // Get the server's current stats
       const response = await fetch(`/api/games/${gameId}/stats`);
@@ -323,38 +323,106 @@ export default function LiveStatsByPosition() {
         statMap.set(key, stat);
       });
       
-      // Focus on a specific stat we want to update
-      const gsQ4Found = statMap.get("GS:4");
-      if (gsQ4Found) {
-        // Get the current value from our state
-        const updatedValue = stats["GS"]?.["4"]?.missedGoals || 0;
-        
-        // Update this specific stat
-        console.log(`Updating GS Q4 (ID: ${gsQ4Found.id}) - missedGoals:`, updatedValue);
-        
-        const success = await updateStat(gsQ4Found.id, {
-          missedGoals: updatedValue 
+      console.log(`Found ${serverStats.length} existing stats on server`);
+      
+      // Track our success/failure count
+      let successCount = 0;
+      let failureCount = 0;
+      let totalChanges = 0;
+      
+      // Process each position and quarter
+      for (const position of allPositions) {
+        for (let quarter = 1; quarter <= 4; quarter++) {
+          const currentStat = stats[position]?.[quarter.toString()];
+          if (!currentStat) continue;
+          
+          // Check if any value is non-zero (counts as a change)
+          const hasNonZeroValue = Object.values(currentStat).some(val => 
+            typeof val === 'number' && val > 0
+          );
+          
+          if (!hasNonZeroValue) continue; // Skip empty stats
+          
+          // Look up if this stat exists on the server
+          const key = `${position}:${quarter}`;
+          const existingServerStat = statMap.get(key);
+          
+          if (existingServerStat) {
+            // Update existing stat
+            console.log(`Updating ${position} Q${quarter} (ID: ${existingServerStat.id})`);
+            totalChanges++;
+            
+            // Build the update payload - include all fields
+            const payload = {
+              goalsFor: currentStat.goalsFor || 0,
+              goalsAgainst: currentStat.goalsAgainst || 0,
+              missedGoals: currentStat.missedGoals || 0,
+              rebounds: currentStat.rebounds || 0,
+              intercepts: currentStat.intercepts || 0,
+              badPass: currentStat.badPass || 0,
+              handlingError: currentStat.handlingError || 0,
+              pickUp: currentStat.pickUp || 0,
+              infringement: currentStat.infringement || 0
+            };
+            
+            const success = await updateStat(existingServerStat.id, payload);
+            
+            if (success) {
+              successCount++;
+            } else {
+              failureCount++;
+            }
+          } else {
+            // Create new stat
+            console.log(`Creating new stat for ${position} Q${quarter}`);
+            totalChanges++;
+            
+            // Build complete payload
+            const newStatData = {
+              gameId,
+              position,
+              quarter,
+              goalsFor: currentStat.goalsFor || 0,
+              goalsAgainst: currentStat.goalsAgainst || 0,
+              missedGoals: currentStat.missedGoals || 0,
+              rebounds: currentStat.rebounds || 0,
+              intercepts: currentStat.intercepts || 0,
+              badPass: currentStat.badPass || 0,
+              handlingError: currentStat.handlingError || 0,
+              pickUp: currentStat.pickUp || 0,
+              infringement: currentStat.infringement || 0,
+              rating: null
+            };
+            
+            const newId = await createStat(newStatData);
+            if (newId !== null) {
+              successCount++;
+            } else {
+              failureCount++;
+            }
+          }
+        }
+      }
+      
+      // Show result toast
+      if (totalChanges === 0) {
+        toast({
+          title: "No Changes Needed",
+          description: "There were no changes to save."
+        });
+      } else if (successCount > 0) {
+        toast({
+          title: "Stats Saved",
+          description: `Successfully saved ${successCount} of ${totalChanges} stat updates.`,
+          variant: "default"
         });
         
-        if (success) {
-          toast({
-            title: "Success!",
-            description: "Test stat updated. Check the game stats to verify."
-          });
-          
-          // Refresh data
-          queryClient.invalidateQueries({ queryKey: ['/api/games', gameId, 'stats'] });
-        } else {
-          toast({
-            title: "Update Failed",
-            description: "Could not update the test stat. Check console for details.",
-            variant: "destructive"
-          });
-        }
+        // Refresh data
+        await queryClient.invalidateQueries({ queryKey: ['/api/games', gameId, 'stats'] });
       } else {
         toast({
-          title: "Stat Not Found",
-          description: "Could not find the GS Q4 stat to update.",
+          title: "Save Failed",
+          description: `Failed to save any stats. Please try again.`,
           variant: "destructive"
         });
       }
