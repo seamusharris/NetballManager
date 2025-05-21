@@ -298,7 +298,7 @@ export default function LiveStatsByPosition() {
     }
   };
   
-  // Complete function to save all stats using our direct utility
+  // Updated function to save all stats using our corrected utility
   const saveAllStats = async () => {
     if (saveInProgress) return;
     
@@ -309,21 +309,10 @@ export default function LiveStatsByPosition() {
         description: "Please wait while we save all your changes..."
       });
 
-      // Import our utility functions
-      const { updateStat, createStat } = await import('@/lib/directStatSaver');
+      // Import our new fixed utility
+      const { savePositionStat } = await import('@/lib/emerStats');
       
-      // Get the server's current stats
-      const response = await fetch(`/api/games/${gameId}/stats`);
-      const serverStats = await response.json();
-      
-      // Create a map for faster lookups
-      const statMap = new Map();
-      serverStats.forEach(stat => {
-        const key = `${stat.position}:${stat.quarter}`;
-        statMap.set(key, stat);
-      });
-      
-      console.log(`Found ${serverStats.length} existing stats on server`);
+      console.log('Starting stat save with fixed endpoint URLs');
       
       // Track our success/failure count
       let successCount = 0;
@@ -343,63 +332,29 @@ export default function LiveStatsByPosition() {
           
           if (!hasNonZeroValue) continue; // Skip empty stats
           
-          // Look up if this stat exists on the server
-          const key = `${position}:${quarter}`;
-          const existingServerStat = statMap.get(key);
+          console.log(`Processing ${position} Q${quarter} stats`);
+          totalChanges++;
           
-          if (existingServerStat) {
-            // Update existing stat
-            console.log(`Updating ${position} Q${quarter} (ID: ${existingServerStat.id})`);
-            totalChanges++;
-            
-            // Build the update payload - include all fields
-            const payload = {
-              goalsFor: currentStat.goalsFor || 0,
-              goalsAgainst: currentStat.goalsAgainst || 0,
-              missedGoals: currentStat.missedGoals || 0,
-              rebounds: currentStat.rebounds || 0,
-              intercepts: currentStat.intercepts || 0,
-              badPass: currentStat.badPass || 0,
-              handlingError: currentStat.handlingError || 0,
-              pickUp: currentStat.pickUp || 0,
-              infringement: currentStat.infringement || 0
-            };
-            
-            const success = await updateStat(existingServerStat.id, payload);
-            
-            if (success) {
-              successCount++;
-            } else {
-              failureCount++;
-            }
+          // Build the update payload - include all fields
+          const payload = {
+            goalsFor: currentStat.goalsFor || 0,
+            goalsAgainst: currentStat.goalsAgainst || 0,
+            missedGoals: currentStat.missedGoals || 0,
+            rebounds: currentStat.rebounds || 0,
+            intercepts: currentStat.intercepts || 0,
+            badPass: currentStat.badPass || 0,
+            handlingError: currentStat.handlingError || 0,
+            pickUp: currentStat.pickUp || 0,
+            infringement: currentStat.infringement || 0
+          };
+          
+          // Use our new utility that handles both create and update
+          const success = await savePositionStat(gameId, position, quarter, payload);
+          
+          if (success) {
+            successCount++;
           } else {
-            // Create new stat
-            console.log(`Creating new stat for ${position} Q${quarter}`);
-            totalChanges++;
-            
-            // Build complete payload
-            const newStatData = {
-              gameId,
-              position,
-              quarter,
-              goalsFor: currentStat.goalsFor || 0,
-              goalsAgainst: currentStat.goalsAgainst || 0,
-              missedGoals: currentStat.missedGoals || 0,
-              rebounds: currentStat.rebounds || 0,
-              intercepts: currentStat.intercepts || 0,
-              badPass: currentStat.badPass || 0,
-              handlingError: currentStat.handlingError || 0,
-              pickUp: currentStat.pickUp || 0,
-              infringement: currentStat.infringement || 0,
-              rating: null
-            };
-            
-            const newId = await createStat(newStatData);
-            if (newId !== null) {
-              successCount++;
-            } else {
-              failureCount++;
-            }
+            failureCount++;
           }
         }
       }
@@ -412,12 +367,12 @@ export default function LiveStatsByPosition() {
         });
       } else if (successCount > 0) {
         toast({
-          title: "Stats Saved",
+          title: "Stats Saved!",
           description: `Successfully saved ${successCount} of ${totalChanges} stat updates.`,
           variant: "default"
         });
         
-        // Refresh data
+        // Refresh data to show the latest stats
         await queryClient.invalidateQueries({ queryKey: ['/api/games', gameId, 'stats'] });
       } else {
         toast({
