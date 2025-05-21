@@ -38,6 +38,7 @@ import { Edit, Trash2, FileText, CalendarRange, Search, Trophy, ThumbsDown, Minu
 import { Game, Opponent, GameStat } from '@shared/schema';
 import { formatDate, formatShortDate } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
+import { calculateGameScores } from '@/components/games/GameScoreCalculator';
 
 interface GamesListProps {
   games: Game[];
@@ -188,7 +189,7 @@ export default function GamesList({
     setGameRosterStatus(rosterStatuses);
   }, [allRosterData]);
   
-  // Process game statistics to calculate scores
+  // Process game statistics to calculate scores from position-based stats
   useEffect(() => {
     if (!allGameStats || !allRosterData) return;
     
@@ -203,11 +204,7 @@ export default function GamesList({
         return;
       }
       
-      // Get roster player IDs for this game
-      const rosterEntries = allRosterData[gameId] || [];
-      const rosterPlayerIds = new Set(rosterEntries.map((r: any) => r.playerId));
-      
-      // Calculate goals by player in each quarter - this is how it's done in the Statistics page too
+      // Calculate goals by position in each quarter
       const quarterGoals: Record<number, { for: number; against: number }> = {
         1: { for: 0, against: 0 },
         2: { for: 0, against: 0 },
@@ -215,40 +212,35 @@ export default function GamesList({
         4: { for: 0, against: 0 }
       };
       
-      // Create a map of the latest stats for each player and quarter combination
-      const latestPlayerStats: Record<string, GameStat> = {};
+      // Create a map of the latest stats for each position and quarter combination
+      const latestPositionStats: Record<string, GameStat> = {};
       
-      // With position-based stats, we now directly use the position as the key for stats
-      // This is a key part of the position-based model
+      // Find the latest stat for each position/quarter combination
       stats.forEach(stat => {
-        if (!stat || !stat.position) return;
+        if (!stat || !stat.position || !stat.quarter) return;
         
-        // Since we're tracking by position now, we just need to make sure we have the latest stat record
-        // for each position and quarter combination
         const key = `${stat.position}-${stat.quarter}`;
-        if (!latestPlayerStats[key] || stat.id > latestPlayerStats[key].id) {
-          latestPlayerStats[key] = stat;
+        
+        // Keep only the newest stat entry for each position/quarter
+        if (!latestPositionStats[key] || stat.id > latestPositionStats[key].id) {
+          latestPositionStats[key] = stat;
         }
       });
       
-      // Use only the latest stats for calculating quarter goals
-      Object.values(latestPlayerStats).forEach(stat => {
+      // Sum up goals from all positions for each quarter
+      Object.values(latestPositionStats).forEach(stat => {
         if (stat && stat.quarter >= 1 && stat.quarter <= 4) {
-          // Ensure quarter is treated as a valid key for the record
-          const quarter = stat.quarter as keyof typeof quarterGoals;
-          quarterGoals[quarter].for += (stat.goalsFor || 0);
-          quarterGoals[quarter].against += (stat.goalsAgainst || 0);
+          quarterGoals[stat.quarter].for += (stat.goalsFor || 0);
+          quarterGoals[stat.quarter].against += (stat.goalsAgainst || 0);
         }
       });
       
-      // Log the calculated scores for debugging
       console.log(`Game ${gameId} quarter scores:`, quarterGoals);
       
       // Calculate total goals
       const teamScore = Object.values(quarterGoals).reduce((sum, q) => sum + q.for, 0);
       const opponentScore = Object.values(quarterGoals).reduce((sum, q) => sum + q.against, 0);
       
-      // Log the final score for debugging
       console.log(`Game ${gameId} final score: ${teamScore}-${opponentScore}`);
       
       newScores[gameId] = { team: teamScore, opponent: opponentScore };
@@ -263,7 +255,7 @@ export default function GamesList({
     });
     
     setGameScores(newScores);
-  }, [allGameStats, completedGameIds]);
+  }, [allGameStats, allRosterData, completedGameIds, games]);
   
   // Get opponent name by ID
   const getOpponentName = (opponentId: number | null) => {
