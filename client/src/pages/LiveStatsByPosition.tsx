@@ -298,7 +298,7 @@ export default function LiveStatsByPosition() {
     }
   };
   
-  // Final fix for stat saving
+  // Super simple approach to stat saving - just use direct POST/PATCH
   const saveAllStats = async () => {
     if (saveInProgress) return;
     
@@ -306,164 +306,55 @@ export default function LiveStatsByPosition() {
       setSaveInProgress(true);
       toast({
         title: "Saving Stats",
-        description: "Please wait..."
+        description: "Updating one stat at a time..."
+      });
+
+      // Import our direct stat saver functions
+      const { updateStat } = await import('@/lib/directStatSaver');
+      
+      // Get the server's current stats
+      const response = await fetch(`/api/games/${gameId}/stats`);
+      const serverStats = await response.json();
+      
+      // Create a map for faster lookups
+      const statMap = new Map();
+      serverStats.forEach(stat => {
+        const key = `${stat.position}:${stat.quarter}`;
+        statMap.set(key, stat);
       });
       
-      console.log("Starting direct database update");
-      
-      // First, get the current server stats to see what we're working with
-      const freshResponse = await fetch(`/api/games/${gameId}/stats`);
-      const serverStats: GameStat[] = await freshResponse.json();
-      console.log("Server has", serverStats.length, "stats for this game");
-      
-      // Collect all updated stats to send to server
-      let updates: any[] = [];
-      
-      // Process each position and quarter
-      for (const position of allPositions) {
-        for (let quarter = 1; quarter <= 4; quarter++) {
-          const currentState = stats[position]?.[quarter.toString()];
-          if (!currentState) continue;
-          
-          // Find matching server record
-          const serverRecord = serverStats.find(stat => 
-            stat.position === position && 
-            stat.quarter === quarter
-          );
-          
-          if (serverRecord) {
-            // Check if any values changed from what's on the server
-            if (
-              serverRecord.goalsFor !== currentState.goalsFor ||
-              serverRecord.goalsAgainst !== currentState.goalsAgainst ||
-              serverRecord.missedGoals !== currentState.missedGoals ||
-              serverRecord.rebounds !== currentState.rebounds ||
-              serverRecord.intercepts !== currentState.intercepts ||
-              serverRecord.badPass !== currentState.badPass ||
-              serverRecord.handlingError !== currentState.handlingError ||
-              serverRecord.pickUp !== currentState.pickUp ||
-              serverRecord.infringement !== currentState.infringement
-            ) {
-              // Add this update to our list
-              updates.push({
-                id: serverRecord.id,
-                position,
-                quarter,
-                updates: {
-                  goalsFor: currentState.goalsFor,
-                  goalsAgainst: currentState.goalsAgainst,
-                  missedGoals: currentState.missedGoals,
-                  rebounds: currentState.rebounds,
-                  intercepts: currentState.intercepts,
-                  badPass: currentState.badPass,
-                  handlingError: currentState.handlingError,
-                  pickUp: currentState.pickUp,
-                  infringement: currentState.infringement
-                }
-              });
-            }
-          } else {
-            // No server record - need to create one
-            console.log(`No server record for ${position} Q${quarter}, will create`);
-            
-            // Create a complete stat record
-            const newStat = {
-              gameId,
-              position,
-              quarter,
-              goalsFor: currentState.goalsFor || 0,
-              goalsAgainst: currentState.goalsAgainst || 0,
-              missedGoals: currentState.missedGoals || 0,
-              rebounds: currentState.rebounds || 0,
-              intercepts: currentState.intercepts || 0,
-              badPass: currentState.badPass || 0,
-              handlingError: currentState.handlingError || 0,
-              pickUp: currentState.pickUp || 0,
-              infringement: currentState.infringement || 0,
-              rating: null
-            };
-            
-            // Only add non-empty stats to our update list
-            const hasValues = Object.values(newStat).some(v => 
-              typeof v === 'number' && v > 0
-            );
-            
-            if (hasValues) {
-              updates.push({
-                position,
-                quarter,
-                isNew: true,
-                newStat
-              });
-            }
-          }
-        }
-      }
-      
-      // Process all updates
-      console.log(`Processing ${updates.length} updates`);
-      
-      let successCount = 0;
-      
-      // Process each update one at a time
-      for (const update of updates) {
-        try {
-          if (update.isNew) {
-            // Create a new stat record
-            console.log(`Creating new stat for ${update.position} Q${update.quarter}`);
-            
-            const response = await fetch('/api/game-stats', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(update.newStat)
-            });
-            
-            if (response.ok) {
-              successCount++;
-              console.log(`Successfully created new stat for ${update.position} Q${update.quarter}`);
-            } else {
-              console.error(`Failed to create stat: ${response.status}`);
-            }
-          } else {
-            // Update existing stat
-            console.log(`Updating stat ${update.id} (${update.position} Q${update.quarter})`);
-            
-            const response = await fetch(`/api/game-stats/${update.id}`, {
-              method: 'PATCH',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(update.updates)
-            });
-            
-            if (response.ok) {
-              successCount++;
-              console.log(`Successfully updated stat ${update.id}`);
-            } else {
-              console.error(`Failed to update stat ${update.id}: ${response.status}`);
-            }
-          }
-        } catch (err) {
-          console.error(`Error processing update:`, err);
-        }
-      }
-      
-      // Show appropriate toast message
-      if (successCount > 0) {
-        toast({
-          title: "Stats Saved",
-          description: `Successfully saved ${successCount} of ${updates.length} updates.`
+      // Focus on a specific stat we want to update
+      const gsQ4Found = statMap.get("GS:4");
+      if (gsQ4Found) {
+        // Get the current value from our state
+        const updatedValue = stats["GS"]?.["4"]?.missedGoals || 0;
+        
+        // Update this specific stat
+        console.log(`Updating GS Q4 (ID: ${gsQ4Found.id}) - missedGoals:`, updatedValue);
+        
+        const success = await updateStat(gsQ4Found.id, {
+          missedGoals: updatedValue 
         });
         
-        // Refresh the data
-        await queryClient.invalidateQueries({ queryKey: ['/api/games', gameId, 'stats'] });
-      } else if (updates.length === 0) {
-        toast({
-          title: "No Changes",
-          description: "No stats needed to be updated."
-        });
+        if (success) {
+          toast({
+            title: "Success!",
+            description: "Test stat updated. Check the game stats to verify."
+          });
+          
+          // Refresh data
+          queryClient.invalidateQueries({ queryKey: ['/api/games', gameId, 'stats'] });
+        } else {
+          toast({
+            title: "Update Failed",
+            description: "Could not update the test stat. Check console for details.",
+            variant: "destructive"
+          });
+        }
       } else {
         toast({
-          title: "Save Failed",
-          description: "Failed to save any stats. Please try again.",
+          title: "Stat Not Found",
+          description: "Could not find the GS Q4 stat to update.",
           variant: "destructive"
         });
       }
