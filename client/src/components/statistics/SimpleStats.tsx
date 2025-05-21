@@ -714,37 +714,50 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
       
       return { success: true };
     },
-    onSuccess: () => {
+    onSuccess: async () => {
+      // First, manually fetch the latest stats to update our local view without refreshing
+      try {
+        // Manually fetch latest game stats
+        const freshStats = await fetch(`/api/games/${gameId}/stats`).then(res => res.json());
+        console.log(`Manually fetched ${freshStats.length} fresh stats after saving in SimpleStats`);
+        
+        // Silently update cache with fresh data in the background
+        queryClient.setQueryData(['/api/games', gameId, 'stats'], freshStats);
+      } catch (err) {
+        console.error("Error refreshing stats after save:", err);
+      }
+      
       toast({
         title: "Statistics saved",
         description: "All player statistics have been saved successfully."
       });
       
-      // Invalidate all queries that depend on game stats or player performance
-      queryClient.invalidateQueries({ queryKey: ['/api/gamestats', gameId] });
-      queryClient.invalidateQueries({ queryKey: ['/api/games', gameId, 'stats'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/games', gameId] });
-      queryClient.invalidateQueries({ queryKey: ['playerGameStats'] });
-      queryClient.invalidateQueries({ queryKey: ['gameStats'] });
-      // Invalidate all game-related queries to ensure scoreboard updates
-      queryClient.invalidateQueries({ queryKey: ['/api/games'] });
-      
-      // Invalidate specific player queries for all players in the current game
-      // This ensures player details pages stay up to date
-      // Since stats no longer store playerIds, we need to get them from roster entries
-      const uniquePlayerIds = new Set();
-      
-      // Get all players from roster entries for this game
-      rosters.forEach(roster => {
-        if (roster.gameId === gameId && roster.playerId) {
-          uniquePlayerIds.add(roster.playerId);
-        }
-      });
-      
-      // Invalidate player queries
-      uniquePlayerIds.forEach(playerId => {
-        queryClient.invalidateQueries({ queryKey: [`/api/players/${playerId}`] });
-      });
+      // Invalidate queries but with lower priority (happens in background)
+      setTimeout(() => {
+        // Invalidate all queries that depend on game stats or player performance
+        queryClient.invalidateQueries({ queryKey: ['/api/gamestats', gameId] });
+        queryClient.invalidateQueries({ queryKey: ['/api/games', gameId, 'stats'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/games', gameId] });
+        queryClient.invalidateQueries({ queryKey: ['playerGameStats'] });
+        queryClient.invalidateQueries({ queryKey: ['gameStats'] });
+        // Invalidate all game-related queries to ensure scoreboard updates
+        queryClient.invalidateQueries({ queryKey: ['/api/games'] });
+        
+        // Invalidate specific player queries for all players in the current game
+        const uniquePlayerIds = new Set();
+        
+        // Get all players from roster entries for this game
+        rosters.forEach(roster => {
+          if (roster.gameId === gameId && roster.playerId) {
+            uniquePlayerIds.add(roster.playerId);
+          }
+        });
+        
+        // Invalidate player queries
+        uniquePlayerIds.forEach(playerId => {
+          queryClient.invalidateQueries({ queryKey: [`/api/players/${playerId}`] });
+        });
+      }, 500);
     },
     onError: (error: any) => {
       console.error("Error saving stats:", error);
