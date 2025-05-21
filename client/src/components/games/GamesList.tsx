@@ -440,6 +440,13 @@ export default function GamesList({
                           <>
                             <button 
                               onClick={() => window.location.href = `/roster?game=${game.id}`}
+                              title={
+                                gameRosterStatus[game.id] === 'complete' 
+                                  ? "All positions are filled for all quarters" 
+                                  : gameRosterStatus[game.id] === 'partial'
+                                    ? "Some positions are filled, but roster is incomplete"
+                                    : "No positions are assigned yet"
+                              }
                               className={`inline-flex items-center justify-center rounded-md text-xs py-1 px-2 border ${
                                 gameRosterStatus[game.id] === 'complete'
                                   ? "bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100" 
@@ -455,13 +462,7 @@ export default function GamesList({
                                     ? "text-amber-600"
                                     : "text-red-600"
                               }`} />
-                              {
-                                gameRosterStatus[game.id] === 'complete' 
-                                  ? "Roster Complete" 
-                                  : gameRosterStatus[game.id] === 'partial'
-                                    ? "Roster Partial"
-                                    : "Roster Empty"
-                              }
+                              Roster
                             </button>
                             
                             <button 
