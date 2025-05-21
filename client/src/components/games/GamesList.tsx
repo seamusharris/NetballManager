@@ -217,13 +217,25 @@ export default function GamesList({
       
       // Find the latest stat for each position/quarter combination
       stats.forEach(stat => {
-        if (!stat || !stat.position || !stat.quarter) return;
+        if (!stat || !stat.quarter) return;
         
-        const key = `${stat.position}-${stat.quarter}`;
-        
-        // Keep only the newest stat entry for each position/quarter
-        if (!latestPositionStats[key] || stat.id > latestPositionStats[key].id) {
-          latestPositionStats[key] = stat;
+        // For position-based stats (with valid position)
+        if (stat.position) {
+          const key = `${stat.position}-${stat.quarter}`;
+          
+          // Keep only the newest stat entry for each position/quarter
+          if (!latestPositionStats[key] || stat.id > latestPositionStats[key].id) {
+            latestPositionStats[key] = stat;
+          }
+        }
+        // For legacy stats (with null position but valid data)
+        else {
+          // Only include legacy stats if they have valid goal data
+          if (typeof stat.goalsFor === 'number' || typeof stat.goalsAgainst === 'number') {
+            // Use a special key format for legacy stats
+            const key = `legacy-${stat.id}-${stat.quarter}`;
+            latestPositionStats[key] = stat;
+          }
         }
       });
       
