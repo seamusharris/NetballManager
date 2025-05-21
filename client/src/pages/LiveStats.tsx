@@ -222,13 +222,21 @@ export default function LiveStats() {
   // Create or update game stats
   const { mutate: saveGameStat } = useMutation({
     mutationFn: (gameStat: Partial<GameStat>) => 
-      apiRequest(`/api/games/${gameId}/stats`, {
+      apiRequest(`/api/gamestats`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(gameStat)
       }),
     onSuccess: () => {
+      // Invalidate all stats-related queries for this game
       queryClient.invalidateQueries({ queryKey: ['/api/games', gameId, 'stats'] });
+      
+      // Also invalidate calculated statistics
+      queryClient.invalidateQueries({ queryKey: ['gameStats', gameId] });
+      queryClient.invalidateQueries({ queryKey: ['gameScores', gameId] });
+      queryClient.invalidateQueries({ queryKey: ['positionStats', gameId] });
+      queryClient.invalidateQueries({ queryKey: ['playerStats', gameId] });
+      queryClient.invalidateQueries({ queryKey: ['allGameStats'] });
     }
   });
   
