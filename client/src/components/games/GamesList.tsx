@@ -72,6 +72,9 @@ export default function GamesList({
   // Use an enum-like type for roster status
   type RosterStatus = 'not-started' | 'partial' | 'complete';
   const [gameRosterStatus, setGameRosterStatus] = useState<Record<number, RosterStatus>>({});
+  // Track if each game has stats (none/partial/complete)
+  type StatsStatus = 'none' | 'partial' | 'complete';
+  const [gameStatsStatus, setGameStatsStatus] = useState<Record<number, StatsStatus>>({}); 
   
   // Fetch game stats for all completed games
   const completedGameIds = games
@@ -114,19 +117,21 @@ export default function GamesList({
     staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
   });
   
-  // Use React Query to fetch and cache all game statistics
+  // Use React Query to fetch and cache statistics for all games, not just completed ones
+  const allGameIds = games.map(game => game.id);
+  
   const { data: allGameStats, isLoading: isLoadingStats } = useQuery({
-    queryKey: ['allGameStats', ...completedGameIds],
+    queryKey: ['allGameStats', ...allGameIds],
     queryFn: async () => {
-      if (completedGameIds.length === 0) {
+      if (allGameIds.length === 0) {
         return {};
       }
       
       // Create a map to store stats by game ID
       const statsMap: Record<number, any[]> = {};
       
-      // Fetch stats for each completed game
-      const statsPromises = completedGameIds.map(async (gameId) => {
+      // Fetch stats for all games
+      const statsPromises = allGameIds.map(async (gameId) => {
         const response = await fetch(`/api/games/${gameId}/stats`);
         const stats = await response.json();
         return { gameId, stats };
@@ -141,9 +146,38 @@ export default function GamesList({
       
       return statsMap;
     },
-    enabled: completedGameIds.length > 0,
+    enabled: allGameIds.length > 0,
     staleTime: 0, // Always refetch when needed
   });
+
+  // Determine game stats status
+  useEffect(() => {
+    if (!allGameStats) return;
+    
+    const statsStatuses: Record<number, StatsStatus> = {};
+    
+    // Check each game's stats status
+    Object.entries(allGameStats).forEach(([gameIdStr, stats]) => {
+      const gameId = parseInt(gameIdStr);
+      
+      // If there are no stats at all, mark as none
+      if (!stats || stats.length === 0) {
+        statsStatuses[gameId] = 'none';
+        return;
+      }
+      
+      // Find the game to check if it's completed
+      const game = games.find(g => g.id === gameId);
+      
+      if (game?.completed) {
+        statsStatuses[gameId] = 'complete';
+      } else {
+        statsStatuses[gameId] = 'partial';
+      }
+    });
+    
+    setGameStatsStatus(statsStatuses);
+  }, [allGameStats, games]);
   
   // Calculate roster statuses
   useEffect(() => {
