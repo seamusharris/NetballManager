@@ -406,8 +406,12 @@ export default function SimpleRosterManager({
       // This ensures dashboards and player details are updated
       queryClient.invalidateQueries({ queryKey: [`/api/games/${selectedGameId}/rosters`] });
       
+      // Also invalidate game stats since position-based tracking relies on roster positions
+      queryClient.invalidateQueries({ queryKey: [`/api/games/${selectedGameId}/stats`] });
+      
       // Also invalidate player game stats queries since they're filtered by roster
       queryClient.invalidateQueries({ queryKey: ['playerGameStats'] });
+      queryClient.invalidateQueries({ queryKey: ['playerPerformance'] });
       
       // Invalidate specific player queries that might show game counts
       players.forEach(player => {
