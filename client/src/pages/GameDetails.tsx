@@ -88,13 +88,13 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
   // Helper to get position coordinates on court diagram
   const getPositionCoordinates = (position: Position) => {
     const positionMap = {
-      'GS': 'bottom-8 left-1/2 transform -translate-x-1/2',
-      'GA': 'bottom-1/4 right-1/4',
-      'WA': 'bottom-1/2 right-8',
+      'GS': 'bottom-10 left-1/2 transform -translate-x-1/2',
+      'GA': 'bottom-1/3 right-1/5',
+      'WA': 'bottom-1/2 right-10',
       'C': 'top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2',
-      'WD': 'top-1/2 left-8',
-      'GD': 'top-1/4 left-1/4',
-      'GK': 'top-8 left-1/2 transform -translate-x-1/2',
+      'WD': 'top-1/2 left-10',
+      'GD': 'top-1/3 left-1/5',
+      'GK': 'top-10 left-1/2 transform -translate-x-1/2',
     };
     
     return positionMap[position] || '';
@@ -162,6 +162,7 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
                 className={`rounded-full shadow-md flex flex-col justify-center items-center w-16 h-16 md:w-20 md:h-20 ${!playerName ? 'bg-white border-2 border-red-400' : ''}`}
                 style={{ 
                   backgroundColor: playerName ? playerColor : 'white',
+                  boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
                 }}
               >
                 <div className="font-bold text-center text-white text-sm md:text-base">{position}</div>
