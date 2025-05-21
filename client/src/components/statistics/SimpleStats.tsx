@@ -638,7 +638,7 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
             pickUp: parseInt(formData.pickUp) || 0,
             infringement: parseInt(formData.infringement) || 0,
             // Only include rating for quarter 1
-            ...(quarterNum === 1 ? { rating: playerRatings[playerId] || 5 } : {})
+            rating: quarterNum === 1 ? (playerRatings[playerId] || 5) : null
           };
           
           // If there are multiple entries, handle duplicates
