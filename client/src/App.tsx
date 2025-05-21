@@ -12,6 +12,7 @@ import Opponents from "@/pages/Opponents";
 import Statistics from "@/pages/Statistics";
 import PlayerDetails from "@/pages/PlayerDetails";
 import LiveStats from "@/pages/LiveStats";
+import LiveStatsByPosition from "@/pages/LiveStatsByPosition";
 import DataManagement from "@/pages/DataManagement";
 import NotFound from "@/pages/not-found";
 
@@ -28,7 +29,8 @@ function Router() {
         <Route path="/opponents" component={Opponents} />
         <Route path="/statistics" component={Statistics} />
         <Route path="/data-management" component={DataManagement} />
-        <Route path="/games/:id/livestats" component={LiveStats} />
+        <Route path="/games/:id/livestats" component={LiveStatsByPosition} />
+        <Route path="/games/:id/livestats-legacy" component={LiveStats} />
         <Route component={NotFound} />
       </Switch>
     </Layout>
