@@ -548,9 +548,37 @@ export default function LiveStatsByPosition() {
     );
   }
   
+  // Get position color for the avatar
+  const getPositionColor = (position: Position): string => {
+    const colorMap: Record<Position, string> = {
+      "GS": "#f43f5e", // rose-500
+      "GA": "#ef4444", // red-500
+      "WA": "#f97316", // orange-500
+      "C": "#f59e0b",  // amber-500
+      "WD": "#10b981", // emerald-500
+      "GD": "#3b82f6", // blue-500
+      "GK": "#6366f1"  // indigo-500
+    };
+    
+    return colorMap[position] || "#6b7280"; // gray-500 as fallback
+  };
+  
+  // Get position full name
+  const positionLabels: Record<Position, string> = {
+    "GS": "Goal Shooter",
+    "GA": "Goal Attack",
+    "WA": "Wing Attack",
+    "C": "Center",
+    "WD": "Wing Defense",
+    "GD": "Goal Defense",
+    "GK": "Goal Keeper"
+  };
+  
+  // Common stats shown at the top of each player card
+  const commonStats: StatType[] = ['intercepts', 'badPass', 'handlingError', 'infringement', 'pickUp'];
+  
   return (
     <div className="container py-3 px-2 md:py-4 md:px-4">
-      {/* Header and Controls */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-3 gap-1">
         <div>
           <h1 className="text-xl md:text-2xl font-bold">Live Stats Tracking</h1>
@@ -580,195 +608,362 @@ export default function LiveStatsByPosition() {
         </div>
       </div>
       
-      {/* Game scoreboard */}
-      <div className="bg-slate-50 border rounded-md p-3 mb-3 flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
-        <div className="flex items-center gap-4">
-          <div>
-            <h3 className="text-base font-semibold">Score</h3>
-            <div className="flex items-center gap-1">
-              <div className="text-sm font-medium">Q{currentQuarter}: {getQuarterTotal('goalsFor')} - {getQuarterTotal('goalsAgainst')}</div>
-              <div className="text-sm text-muted-foreground">|</div>
-              <div className="text-sm font-medium">Game: {getGameTotal('goalsFor')} - {getGameTotal('goalsAgainst')}</div>
+      {/* Scoreboard and Quarter Selection */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+        <Card className="bg-white shadow-sm">
+          <CardContent className="p-3">
+            <div className="flex justify-between items-center">
+              <div className="text-left">
+                <p className="text-xs md:text-sm text-muted-foreground">Team</p>
+                <p className="text-2xl md:text-3xl font-bold">{getGameTotal('goalsFor')}</p>
+              </div>
+              <div className="text-xl md:text-2xl font-bold">-</div>
+              <div className="text-right">
+                <p className="text-xs md:text-sm text-muted-foreground">{opponent?.teamName || "Opponent"}</p>
+                <p className="text-2xl md:text-3xl font-bold">{getGameTotal('goalsAgainst')}</p>
+              </div>
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
         
-        <div className="flex items-center gap-2">
-          <div className="flex items-center">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleUndo}
-              disabled={undoStack.length === 0}
-              className="h-8 w-8 p-0 rounded-r-none"
-              title="Undo"
-            >
-              <Undo className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleRedo}
-              disabled={redoStack.length === 0}
-              className="h-8 w-8 p-0 rounded-l-none border-l-0"
-              title="Redo"
-            >
-              <Redo className="h-4 w-4" />
-            </Button>
-          </div>
-          
-          <div className="border rounded-md">
-            <Tabs value={currentQuarter.toString()} onValueChange={(val) => setCurrentQuarter(parseInt(val))}>
-              <TabsList className="bg-transparent">
-                <TabsTrigger value="1" className="text-xs px-2">Q1</TabsTrigger>
-                <TabsTrigger value="2" className="text-xs px-2">Q2</TabsTrigger>
-                <TabsTrigger value="3" className="text-xs px-2">Q3</TabsTrigger>
-                <TabsTrigger value="4" className="text-xs px-2">Q4</TabsTrigger>
-              </TabsList>
-            </Tabs>
-          </div>
-        </div>
+        <Card className="overflow-hidden">
+          <CardHeader className="py-2">
+            <div className="flex justify-between items-center">
+              <CardTitle className="text-base md:text-lg font-semibold">Quarter {currentQuarter}</CardTitle>
+              <div className="flex gap-1">
+                {[1, 2, 3, 4].map(quarter => (
+                  <Button
+                    key={quarter}
+                    variant={quarter === currentQuarter ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setCurrentQuarter(quarter)}
+                    className="w-7 h-7 md:w-8 md:h-8 p-0 text-xs md:text-sm"
+                  >
+                    {quarter}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="py-1">
+            <div className="flex justify-between items-center">
+              <div>
+                <p className="text-xs md:text-sm text-muted-foreground">Quarter Score</p>
+                <p className="text-xl md:text-2xl font-bold">{getQuarterTotal('goalsFor')} - {getQuarterTotal('goalsAgainst')}</p>
+              </div>
+              <div className="flex gap-1">
+                <Button
+                  variant="outline" 
+                  size="sm"
+                  onClick={handleUndo}
+                  disabled={undoStack.length === 0}
+                  className="h-7 w-7 md:h-8 md:w-8 p-0"
+                >
+                  <Undo className="h-3.5 w-3.5 md:h-4 md:w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleRedo}
+                  disabled={redoStack.length === 0}
+                  className="h-7 w-7 md:h-8 md:w-8 p-0"
+                >
+                  <Redo className="h-3.5 w-3.5 md:h-4 md:w-4" />
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
       
-      {/* Position rows */}
+      {/* Position Cards - Same format as the original */}
       <div className="space-y-3">
         {/* GS */}
         <Card className="overflow-hidden">
-          <div className="flex flex-row">
-            <div className="bg-primary text-primary-foreground p-3 w-[100px] flex flex-col justify-center items-center">
-              <h3 className="text-sm font-medium">GS</h3>
-              <div className="text-xs">Goal Shooter</div>
-            </div>
-            <CardContent className="p-3 flex-1">
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 lg:grid-cols-7 gap-2">
-                {renderStatCounter("GS", "goalsFor", true, true)}
-                {renderStatCounter("GS", "missedGoals", true)}
-                {renderStatCounter("GS", "rebounds", true)}
-                {renderStatCounter("GS", "badPass", true)}
-                {renderStatCounter("GS", "handlingError", true)}
-                {renderStatCounter("GS", "infringement", true)}
+          <CardHeader className="py-2 pb-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="flex items-center gap-2 mr-3 min-w-fit">
+                <div 
+                  className="h-10 w-10 rounded-full flex items-center justify-center text-white font-bold text-base flex-shrink-0"
+                  style={{
+                    backgroundColor: getPositionColor("GS"),
+                    border: '2px solid white',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                  }}
+                  title="Goal Shooter"
+                >
+                  GS
+                </div>
+                
+                <div className="min-w-[60px]">
+                  <p className="font-semibold text-sm">Goal Shooter</p>
+                  <p className="text-xs text-muted-foreground">Position</p>
+                </div>
               </div>
-            </CardContent>
-          </div>
+              
+              {/* Common stats */}
+              <div className="flex-1 flex flex-wrap gap-2">
+                {commonStats.map(stat => (
+                  positionStats["GS"][stat] && (
+                    <div key={`GS-common-${stat}`} className="flex-1 min-w-[120px]">
+                      {renderStatCounter("GS", stat, false, false)}
+                    </div>
+                  )
+                ))}
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="py-2 pt-1">
+            {/* Position-specific stats */}
+            <div className="flex justify-center gap-2 flex-wrap">
+              {renderStatCounter("GS", "goalsFor", false, true)}
+              {renderStatCounter("GS", "missedGoals", false, false)}
+              {renderStatCounter("GS", "rebounds", false, false)}
+            </div>
+          </CardContent>
         </Card>
         
         {/* GA */}
         <Card className="overflow-hidden">
-          <div className="flex flex-row">
-            <div className="bg-primary text-primary-foreground p-3 w-[100px] flex flex-col justify-center items-center">
-              <h3 className="text-sm font-medium">GA</h3>
-              <div className="text-xs">Goal Attack</div>
-            </div>
-            <CardContent className="p-3 flex-1">
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 lg:grid-cols-7 gap-2">
-                {renderStatCounter("GA", "goalsFor", true, true)}
-                {renderStatCounter("GA", "missedGoals", true)}
-                {renderStatCounter("GA", "rebounds", true)}
-                {renderStatCounter("GA", "intercepts", true)}
-                {renderStatCounter("GA", "badPass", true)}
-                {renderStatCounter("GA", "handlingError", true)}
-                {renderStatCounter("GA", "infringement", true)}
+          <CardHeader className="py-2 pb-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="flex items-center gap-2 mr-3 min-w-fit">
+                <div 
+                  className="h-10 w-10 rounded-full flex items-center justify-center text-white font-bold text-base flex-shrink-0"
+                  style={{
+                    backgroundColor: getPositionColor("GA"),
+                    border: '2px solid white',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                  }}
+                  title="Goal Attack"
+                >
+                  GA
+                </div>
+                
+                <div className="min-w-[60px]">
+                  <p className="font-semibold text-sm">Goal Attack</p>
+                  <p className="text-xs text-muted-foreground">Position</p>
+                </div>
               </div>
-            </CardContent>
-          </div>
+              
+              {/* Common stats */}
+              <div className="flex-1 flex flex-wrap gap-2">
+                {commonStats.map(stat => (
+                  positionStats["GA"][stat] && (
+                    <div key={`GA-common-${stat}`} className="flex-1 min-w-[120px]">
+                      {renderStatCounter("GA", stat, false, false)}
+                    </div>
+                  )
+                ))}
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="py-2 pt-1">
+            {/* Position-specific stats */}
+            <div className="flex justify-center gap-2 flex-wrap">
+              {renderStatCounter("GA", "goalsFor", false, true)}
+              {renderStatCounter("GA", "missedGoals", false, false)}
+              {renderStatCounter("GA", "rebounds", false, false)}
+            </div>
+          </CardContent>
         </Card>
         
         {/* WA */}
         <Card className="overflow-hidden">
-          <div className="flex flex-row">
-            <div className="bg-primary text-primary-foreground p-3 w-[100px] flex flex-col justify-center items-center">
-              <h3 className="text-sm font-medium">WA</h3>
-              <div className="text-xs">Wing Attack</div>
-            </div>
-            <CardContent className="p-3 flex-1">
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
-                {renderStatCounter("WA", "intercepts", true)}
-                {renderStatCounter("WA", "badPass", true)}
-                {renderStatCounter("WA", "handlingError", true)}
-                {renderStatCounter("WA", "pickUp", true)}
-                {renderStatCounter("WA", "infringement", true)}
+          <CardHeader className="py-2 pb-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="flex items-center gap-2 mr-3 min-w-fit">
+                <div 
+                  className="h-10 w-10 rounded-full flex items-center justify-center text-white font-bold text-base flex-shrink-0"
+                  style={{
+                    backgroundColor: getPositionColor("WA"),
+                    border: '2px solid white',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                  }}
+                  title="Wing Attack"
+                >
+                  WA
+                </div>
+                
+                <div className="min-w-[60px]">
+                  <p className="font-semibold text-sm">Wing Attack</p>
+                  <p className="text-xs text-muted-foreground">Position</p>
+                </div>
               </div>
-            </CardContent>
-          </div>
+              
+              {/* Common stats */}
+              <div className="flex-1 flex flex-wrap gap-2">
+                {commonStats.map(stat => (
+                  positionStats["WA"][stat] && (
+                    <div key={`WA-common-${stat}`} className="flex-1 min-w-[120px]">
+                      {renderStatCounter("WA", stat, false, false)}
+                    </div>
+                  )
+                ))}
+              </div>
+            </div>
+          </CardHeader>
         </Card>
         
         {/* C */}
         <Card className="overflow-hidden">
-          <div className="flex flex-row">
-            <div className="bg-primary text-primary-foreground p-3 w-[100px] flex flex-col justify-center items-center">
-              <h3 className="text-sm font-medium">C</h3>
-              <div className="text-xs">Center</div>
-            </div>
-            <CardContent className="p-3 flex-1">
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
-                {renderStatCounter("C", "intercepts", true)}
-                {renderStatCounter("C", "badPass", true)}
-                {renderStatCounter("C", "handlingError", true)}
-                {renderStatCounter("C", "pickUp", true)}
-                {renderStatCounter("C", "infringement", true)}
+          <CardHeader className="py-2 pb-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="flex items-center gap-2 mr-3 min-w-fit">
+                <div 
+                  className="h-10 w-10 rounded-full flex items-center justify-center text-white font-bold text-base flex-shrink-0"
+                  style={{
+                    backgroundColor: getPositionColor("C"),
+                    border: '2px solid white',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                  }}
+                  title="Center"
+                >
+                  C
+                </div>
+                
+                <div className="min-w-[60px]">
+                  <p className="font-semibold text-sm">Center</p>
+                  <p className="text-xs text-muted-foreground">Position</p>
+                </div>
               </div>
-            </CardContent>
-          </div>
+              
+              {/* Common stats */}
+              <div className="flex-1 flex flex-wrap gap-2">
+                {commonStats.map(stat => (
+                  positionStats["C"][stat] && (
+                    <div key={`C-common-${stat}`} className="flex-1 min-w-[120px]">
+                      {renderStatCounter("C", stat, false, false)}
+                    </div>
+                  )
+                ))}
+              </div>
+            </div>
+          </CardHeader>
         </Card>
         
         {/* WD */}
         <Card className="overflow-hidden">
-          <div className="flex flex-row">
-            <div className="bg-primary text-primary-foreground p-3 w-[100px] flex flex-col justify-center items-center">
-              <h3 className="text-sm font-medium">WD</h3>
-              <div className="text-xs">Wing Defense</div>
-            </div>
-            <CardContent className="p-3 flex-1">
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
-                {renderStatCounter("WD", "intercepts", true)}
-                {renderStatCounter("WD", "badPass", true)}
-                {renderStatCounter("WD", "handlingError", true)}
-                {renderStatCounter("WD", "pickUp", true)}
-                {renderStatCounter("WD", "infringement", true)}
+          <CardHeader className="py-2 pb-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="flex items-center gap-2 mr-3 min-w-fit">
+                <div 
+                  className="h-10 w-10 rounded-full flex items-center justify-center text-white font-bold text-base flex-shrink-0"
+                  style={{
+                    backgroundColor: getPositionColor("WD"),
+                    border: '2px solid white',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                  }}
+                  title="Wing Defense"
+                >
+                  WD
+                </div>
+                
+                <div className="min-w-[60px]">
+                  <p className="font-semibold text-sm">Wing Defense</p>
+                  <p className="text-xs text-muted-foreground">Position</p>
+                </div>
               </div>
-            </CardContent>
-          </div>
+              
+              {/* Common stats */}
+              <div className="flex-1 flex flex-wrap gap-2">
+                {commonStats.map(stat => (
+                  positionStats["WD"][stat] && (
+                    <div key={`WD-common-${stat}`} className="flex-1 min-w-[120px]">
+                      {renderStatCounter("WD", stat, false, false)}
+                    </div>
+                  )
+                ))}
+              </div>
+            </div>
+          </CardHeader>
         </Card>
         
         {/* GD */}
         <Card className="overflow-hidden">
-          <div className="flex flex-row">
-            <div className="bg-primary text-primary-foreground p-3 w-[100px] flex flex-col justify-center items-center">
-              <h3 className="text-sm font-medium">GD</h3>
-              <div className="text-xs">Goal Defense</div>
-            </div>
-            <CardContent className="p-3 flex-1">
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
-                {renderStatCounter("GD", "rebounds", true)}
-                {renderStatCounter("GD", "intercepts", true)}
-                {renderStatCounter("GD", "badPass", true)}
-                {renderStatCounter("GD", "handlingError", true)}
-                {renderStatCounter("GD", "pickUp", true)}
-                {renderStatCounter("GD", "infringement", true)}
+          <CardHeader className="py-2 pb-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="flex items-center gap-2 mr-3 min-w-fit">
+                <div 
+                  className="h-10 w-10 rounded-full flex items-center justify-center text-white font-bold text-base flex-shrink-0"
+                  style={{
+                    backgroundColor: getPositionColor("GD"),
+                    border: '2px solid white',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                  }}
+                  title="Goal Defense"
+                >
+                  GD
+                </div>
+                
+                <div className="min-w-[60px]">
+                  <p className="font-semibold text-sm">Goal Defense</p>
+                  <p className="text-xs text-muted-foreground">Position</p>
+                </div>
               </div>
-            </CardContent>
-          </div>
+              
+              {/* Common stats */}
+              <div className="flex-1 flex flex-wrap gap-2">
+                {commonStats.map(stat => (
+                  positionStats["GD"][stat] && (
+                    <div key={`GD-common-${stat}`} className="flex-1 min-w-[120px]">
+                      {renderStatCounter("GD", stat, false, false)}
+                    </div>
+                  )
+                ))}
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="py-2 pt-1">
+            {/* Position-specific stats */}
+            <div className="flex justify-center gap-2 flex-wrap">
+              {renderStatCounter("GD", "rebounds", false, false)}
+            </div>
+          </CardContent>
         </Card>
         
         {/* GK */}
         <Card className="overflow-hidden">
-          <div className="flex flex-row">
-            <div className="bg-primary text-primary-foreground p-3 w-[100px] flex flex-col justify-center items-center">
-              <h3 className="text-sm font-medium">GK</h3>
-              <div className="text-xs">Goal Keeper</div>
-            </div>
-            <CardContent className="p-3 flex-1">
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 lg:grid-cols-7 gap-2">
-                {renderStatCounter("GK", "goalsAgainst", true, true)}
-                {renderStatCounter("GK", "rebounds", true)}
-                {renderStatCounter("GK", "intercepts", true)}
-                {renderStatCounter("GK", "badPass", true)}
-                {renderStatCounter("GK", "handlingError", true)}
-                {renderStatCounter("GK", "pickUp", true)}
-                {renderStatCounter("GK", "infringement", true)}
+          <CardHeader className="py-2 pb-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="flex items-center gap-2 mr-3 min-w-fit">
+                <div 
+                  className="h-10 w-10 rounded-full flex items-center justify-center text-white font-bold text-base flex-shrink-0"
+                  style={{
+                    backgroundColor: getPositionColor("GK"),
+                    border: '2px solid white',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                  }}
+                  title="Goal Keeper"
+                >
+                  GK
+                </div>
+                
+                <div className="min-w-[60px]">
+                  <p className="font-semibold text-sm">Goal Keeper</p>
+                  <p className="text-xs text-muted-foreground">Position</p>
+                </div>
               </div>
-            </CardContent>
-          </div>
+              
+              {/* Common stats */}
+              <div className="flex-1 flex flex-wrap gap-2">
+                {commonStats.map(stat => (
+                  positionStats["GK"][stat] && (
+                    <div key={`GK-common-${stat}`} className="flex-1 min-w-[120px]">
+                      {renderStatCounter("GK", stat, false, false)}
+                    </div>
+                  )
+                ))}
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="py-2 pt-1">
+            {/* Position-specific stats */}
+            <div className="flex justify-center gap-2 flex-wrap">
+              {renderStatCounter("GK", "goalsAgainst", false, true)}
+              {renderStatCounter("GK", "rebounds", false, false)}
+            </div>
+          </CardContent>
         </Card>
       </div>
     </div>
