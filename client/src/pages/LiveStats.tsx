@@ -234,10 +234,10 @@ export default function LiveStats() {
   
   // Initialize the live stats when existing data is loaded
   useEffect(() => {
-    if (existingStats && players) {
+    if (existingStats && players && rosters) {
       const initialStats: GameStats = {};
       
-      // Initialize empty stats for all players
+      // Initialize stats structure by player
       players.forEach((player: Player) => {
         initialStats[player.id] = {
           1: { ...emptyQuarterStats },
@@ -247,7 +247,7 @@ export default function LiveStats() {
         };
       });
       
-      // Populate with existing stats
+      // Organize existing stats by position and map to player via roster
       if (existingStats.length > 0) {
         existingStats.forEach((stat: GameStat) => {
           if (!initialStats[stat.playerId]) {
@@ -412,11 +412,10 @@ export default function LiveStats() {
           // Get the position for this player in this quarter
           const position = getPlayerPosition(parseInt(playerId), parseInt(quarter));
           
-          // Prepare the stat object - position-based but keeping player ID for history
+          // Prepare the stat object - fully position-based
           const statObject: Partial<GameStat> = {
             gameId,
-            playerId: parseInt(playerId), // Keep player ID for historical tracking
-            position, // Position is now the primary organizing concept
+            position, // Position is the only identifier needed
             quarter: parseInt(quarter),
             ...playerQuarterStats
           };
