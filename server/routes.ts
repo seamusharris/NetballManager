@@ -833,6 +833,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Log the request body to diagnose issues
       console.log("Creating game stat with data:", req.body);
       
+      // Ensure the rating is properly handled
+      if (req.body.rating === undefined || req.body.rating === '') {
+        req.body.rating = null;
+      }
+      
       const parsedData = insertGameStatSchema.safeParse(req.body);
       if (!parsedData.success) {
         console.error("Game stat validation error:", parsedData.error.errors);
@@ -850,28 +855,94 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid position value" });
       }
       
-      // Check if a stat for this position and quarter already exists
-      const existingStats = await storage.getGameStatsByGame(parsedData.data.gameId);
-      const duplicate = existingStats.find(s => 
-        s.gameId === parsedData.data.gameId && 
-        s.position === parsedData.data.position && 
-        s.quarter === parsedData.data.quarter
-      );
-      
-      let stat;
-      
-      if (duplicate) {
-        // Update existing stat instead of creating new one to avoid unique constraint violation
-        console.log(`Updating existing stat ID ${duplicate.id} instead of creating duplicate`);
-        stat = await storage.updateGameStat(duplicate.id, parsedData.data);
-      } else {
-        // Create new stat
-        stat = await storage.createGameStat(parsedData.data);
+      try {
+        // First, try to find an existing stat record
+        const existingStats = await storage.getGameStatsByGame(parsedData.data.gameId);
+        console.log(`Found ${existingStats.length} existing stats for game ${parsedData.data.gameId}`);
+        
+        const duplicate = existingStats.find(s => 
+          s.gameId === parsedData.data.gameId && 
+          s.position === parsedData.data.position && 
+          s.quarter === parsedData.data.quarter
+        );
+        
+        let stat;
+        
+        if (duplicate) {
+          // Update existing stat instead of creating new one to avoid unique constraint violation
+          console.log(`Updating existing stat ID ${duplicate.id} instead of creating duplicate`);
+          try {
+            stat = await storage.updateGameStat(duplicate.id, {
+              goalsFor: parsedData.data.goalsFor,
+              goalsAgainst: parsedData.data.goalsAgainst,
+              missedGoals: parsedData.data.missedGoals,
+              rebounds: parsedData.data.rebounds,
+              intercepts: parsedData.data.intercepts,
+              badPass: parsedData.data.badPass,
+              handlingError: parsedData.data.handlingError,
+              pickUp: parsedData.data.pickUp,
+              infringement: parsedData.data.infringement,
+              rating: parsedData.data.rating
+            });
+          } catch (updateError) {
+            console.error("Error updating existing stat:", updateError);
+            throw updateError;
+          }
+        } else {
+          // Try to insert directly via SQL query to avoid ORM issues
+          try {
+            console.log("Creating new game stat via direct SQL");
+            const result = await db.execute(sql`
+              INSERT INTO game_stats (
+                game_id, position, quarter, goals_for, goals_against, 
+                missed_goals, rebounds, intercepts, bad_pass, 
+                handling_error, pick_up, infringement, rating
+              ) 
+              VALUES (
+                ${parsedData.data.gameId}, 
+                ${parsedData.data.position}, 
+                ${parsedData.data.quarter}, 
+                ${parsedData.data.goalsFor || 0}, 
+                ${parsedData.data.goalsAgainst || 0}, 
+                ${parsedData.data.missedGoals || 0}, 
+                ${parsedData.data.rebounds || 0}, 
+                ${parsedData.data.intercepts || 0}, 
+                ${parsedData.data.badPass || 0}, 
+                ${parsedData.data.handlingError || 0}, 
+                ${parsedData.data.pickUp || 0}, 
+                ${parsedData.data.infringement || 0}, 
+                ${parsedData.data.rating === undefined ? null : parsedData.data.rating}
+              )
+              RETURNING *
+            `);
+            console.log("Insert result:", result);
+            
+            // The result should contain the newly created record
+            if (result.length > 0) {
+              stat = result[0];
+            } else {
+              throw new Error("Failed to insert game stat - no rows returned");
+            }
+          } catch (insertError) {
+            console.error("Error creating new game stat via SQL:", insertError);
+            
+            // Try one more time with the regular ORM method
+            try {
+              stat = await storage.createGameStat(parsedData.data);
+            } catch (ormError) {
+              console.error("ORM method also failed:", ormError);
+              throw ormError;
+            }
+          }
+        }
+        
+        // Log the successfully created/updated stat
+        console.log("Game stat created/updated successfully:", stat);
+        res.status(201).json(stat);
+      } catch (innerError) {
+        console.error("Inner error handling game stats:", innerError);
+        throw innerError;
       }
-      
-      // Log the successfully created/updated stat
-      console.log("Game stat created/updated successfully:", stat);
-      res.status(201).json(stat);
     } catch (error) {
       console.error("Failed to create game stat:", error);
       res.status(500).json({ message: "Failed to create game stat" });
