@@ -1,3 +1,4 @@
+import React, { Suspense, lazy } from "react";
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -16,6 +17,9 @@ import LiveStatsByPosition from "@/pages/LiveStatsByPosition";
 import DataManagement from "@/pages/DataManagement";
 import NotFound from "@/pages/not-found";
 
+// Lazy load the debug component
+const StatsDebug = lazy(() => import("./pages/StatsDebug"));
+
 function Router() {
   return (
     <Layout>
@@ -31,6 +35,11 @@ function Router() {
         <Route path="/data-management" component={DataManagement} />
         <Route path="/games/:id/livestats" component={LiveStatsByPosition} />
         <Route path="/games/:id/livestats-legacy" component={LiveStats} />
+        <Route path="/games/:id/stats-debug" component={() => (
+          <Suspense fallback={<div>Loading debug tool...</div>}>
+            <StatsDebug />
+          </Suspense>
+        )} />
         <Route component={NotFound} />
       </Switch>
     </Layout>

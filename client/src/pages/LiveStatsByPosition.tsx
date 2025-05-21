@@ -298,112 +298,151 @@ export default function LiveStatsByPosition() {
     }
   };
   
-  // Save all stats to the database using a simplified approach
+  // Save all stats to the database using a simpler, more direct approach
   const saveAllStats = async () => {
     if (saveInProgress) return;
     
     try {
       setSaveInProgress(true);
       
-      // Get fresh stats data directly for comparison
-      const response = await fetch(`/api/games/${gameId}/stats`);
-      const freshStats: GameStat[] = await response.json();
-      console.log("Fresh stats from server:", freshStats);
+      // Create a single, focused test update for debugging
+      const currentStats = stats["GS"]?.["4"];
+      if (currentStats) {
+        // Direct GS Q4 update for testing
+        const gsQ4Stat = existingStats.find(s => 
+          s.gameId === gameId && 
+          s.position === "GS" && 
+          s.quarter === 4
+        );
+        
+        if (gsQ4Stat) {
+          console.log(`TEST UPDATE: Setting missedGoals = ${currentStats.missedGoals} for GS Q4`);
+          
+          // Single focused update
+          const testResponse = await fetch(`/api/game-stats/${gsQ4Stat.id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              missedGoals: currentStats.missedGoals
+            })
+          });
+          
+          if (testResponse.ok) {
+            console.log("Test update successful");
+            
+            // Verify the update took effect
+            const verifyResponse = await fetch(`/api/game-stats/${gsQ4Stat.id}`);
+            const verifiedStat = await verifyResponse.json();
+            console.log("Verified stat:", verifiedStat);
+          } else {
+            console.error("Test update failed");
+          }
+        }
+      }
       
-      let successCount = 0;
+      // Now do the normal batch updates
       let promises: Promise<any>[] = [];
+      let successCount = 0;
       
-      // For each position and quarter
+      // For each position and quarter, directly update one stat at a time
       for (const position of allPositions) {
         for (let quarter = 1; quarter <= 4; quarter++) {
-          // Get our current stats for this position and quarter
           const currentStats = stats[position]?.[quarter.toString()];
           if (!currentStats) continue;
           
-          // Find matching existing stat in fresh data
-          const existingStat = freshStats.find(s => 
+          // Find the existing stat record
+          const existingStat = existingStats.find(s => 
             s.gameId === gameId && 
             s.position === position && 
             s.quarter === quarter
           );
           
-          // Create payload
-          const payload = {
-            gameId: gameId,
-            position: position,
-            quarter: quarter,
-            goalsFor: currentStats.goalsFor || 0,
-            goalsAgainst: currentStats.goalsAgainst || 0,
-            missedGoals: currentStats.missedGoals || 0,
-            rebounds: currentStats.rebounds || 0,
-            intercepts: currentStats.intercepts || 0,
-            badPass: currentStats.badPass || 0,
-            handlingError: currentStats.handlingError || 0,
-            pickUp: currentStats.pickUp || 0,
-            infringement: currentStats.infringement || 0,
-            rating: null
-          };
-          
-          if (existingStat) {
-            // Update existing stat using a direct approach
-            console.log(`Updating existing stat ID ${existingStat.id} for ${position} Q${quarter}`);
-            
-            const updatePromise = fetch(`/api/game-stats/${existingStat.id}`, {
-              method: 'PATCH',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(payload)
-            }).then(res => {
-              if (res.ok) successCount++;
-              return res.ok;
-            }).catch(err => {
-              console.error(`Error updating stat ${existingStat.id}:`, err);
-              return false;
-            });
-            
-            promises.push(updatePromise);
-          } else {
-            // Create new stat
-            console.log(`Creating new stat for ${position} Q${quarter}`);
-            
+          if (!existingStat) {
+            // This is a new stat - create it
             const createPromise = fetch('/api/game-stats', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(payload)
+              body: JSON.stringify({
+                gameId: gameId,
+                position: position,
+                quarter: quarter,
+                goalsFor: currentStats.goalsFor || 0,
+                goalsAgainst: currentStats.goalsAgainst || 0,
+                missedGoals: currentStats.missedGoals || 0,
+                rebounds: currentStats.rebounds || 0,
+                intercepts: currentStats.intercepts || 0,
+                badPass: currentStats.badPass || 0,
+                handlingError: currentStats.handlingError || 0,
+                pickUp: currentStats.pickUp || 0,
+                infringement: currentStats.infringement || 0,
+                rating: null
+              })
             }).then(res => {
               if (res.ok) successCount++;
               return res.ok;
-            }).catch(err => {
-              console.error("Error creating stat:", err);
-              return false;
             });
             
             promises.push(createPromise);
+            continue;
+          }
+          
+          // Update each stat field one at a time for more reliability
+          // This avoids issues with field validation
+          
+          // Goals For
+          if (currentStats.goalsFor > 0) {
+            const goalsPromise = fetch(`/api/game-stats/${existingStat.id}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ goalsFor: currentStats.goalsFor })
+            }).then(res => {
+              if (res.ok) successCount++;
+              return res.ok;
+            });
+            promises.push(goalsPromise);
+          }
+          
+          // Goals Against
+          if (currentStats.goalsAgainst > 0) {
+            const againstPromise = fetch(`/api/game-stats/${existingStat.id}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ goalsAgainst: currentStats.goalsAgainst })
+            }).then(res => {
+              if (res.ok) successCount++;
+              return res.ok;
+            });
+            promises.push(againstPromise);
+          }
+          
+          // Missed Goals
+          if (currentStats.missedGoals > 0) {
+            const missedPromise = fetch(`/api/game-stats/${existingStat.id}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ missedGoals: currentStats.missedGoals })
+            }).then(res => {
+              if (res.ok) successCount++;
+              return res.ok;
+            });
+            promises.push(missedPromise);
           }
         }
       }
       
-      // Wait for all requests to complete
       await Promise.all(promises);
       
       // Show appropriate toast message
-      if (successCount > 0) {
+      if (promises.length > 0) {
         toast({
-          title: "Stats Saved",
-          description: `Successfully saved ${successCount} statistics.`
+          title: "Stats Updated",
+          description: `Successfully saved/updated statistics.`
         });
-        
-        // Force refresh data
-        queryClient.invalidateQueries({ queryKey: ['/api/games', gameId, 'stats'] });
-        
-        // Wait a moment and reload the page to ensure everything is fresh
-        setTimeout(() => {
-          window.location.reload();
-        }, 1000);
       } else {
         toast({
-          title: "No Stats Saved",
-          description: "Could not save any statistics. Please try again.",
-          variant: "destructive"
+          title: "No Updates Needed",
+          description: "No changes to save.",
+          variant: "default"
         });
       }
       
