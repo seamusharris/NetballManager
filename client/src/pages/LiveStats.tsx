@@ -206,11 +206,13 @@ export default function LiveStats() {
     enabled: !!gameId && !isNaN(gameId)
   });
   
-  // Fetch existing stats for this game
-  const { data: existingStats, isLoading: statsLoading } = useQuery({
+  // Fetch existing stats for this game with forced refresh when needed
+  const { data: existingStats, isLoading: statsLoading, refetch: refetchStats } = useQuery({
     queryKey: ['/api/games', gameId, 'stats'],
     queryFn: () => apiRequest(`/api/games/${gameId}/stats`),
-    enabled: !!gameId && !isNaN(gameId)
+    enabled: !!gameId && !isNaN(gameId),
+    staleTime: 0, // Consider it always stale to fetch fresh data
+    refetchOnMount: true // Always refetch when component mounts
   });
   
   // Fetch all players
@@ -235,6 +237,8 @@ export default function LiveStats() {
   // Initialize the live stats when existing data is loaded
   useEffect(() => {
     if (existingStats && players && rosters) {
+      console.log(`Initializing live stats with ${existingStats.length} existing stats and ${rosters.length} roster entries`);
+      
       const initialStats: GameStats = {};
       
       // Initialize stats structure by player
@@ -477,9 +481,28 @@ export default function LiveStats() {
             
             // Always save statistics for every position on the court
             // This ensures we don't have gaps in the data and that scores are accurate
-            console.log(`Saving stats for position ${position} in quarter ${quarterNum}`);
-            console.log("Saving stat object:", statObject);
-            statsToSave.push(statObject);
+            console.log(`Saving stats for position ${position} in quarter ${quarterNum}: ` + 
+              `Goals: ${playerQuarterStats.goalsFor || 0}, ` + 
+              `Against: ${playerQuarterStats.goalsAgainst || 0}`);
+            
+            // Create a complete stat object with explicit values for all fields
+            const completeStatObject = {
+              gameId,
+              position,
+              quarter: quarterNum,
+              goalsFor: Number(playerQuarterStats.goalsFor || 0),
+              goalsAgainst: Number(playerQuarterStats.goalsAgainst || 0),
+              missedGoals: Number(playerQuarterStats.missedGoals || 0),
+              rebounds: Number(playerQuarterStats.rebounds || 0),
+              intercepts: Number(playerQuarterStats.intercepts || 0),
+              badPass: Number(playerQuarterStats.badPass || 0),
+              handlingError: Number(playerQuarterStats.handlingError || 0),
+              pickUp: Number(playerQuarterStats.pickUp || 0),
+              infringement: Number(playerQuarterStats.infringement || 0)
+            };
+            
+            console.log("Complete stat object:", completeStatObject);
+            statsToSave.push(completeStatObject);
           } else {
             console.warn(`No position found for player ${playerIdNum} in quarter ${quarterNum}`);
           }
@@ -502,16 +525,25 @@ export default function LiveStats() {
       }
       
       if (savedCount > 0) {
-        // Invalidate all data to ensure we have fresh stats
-        queryClient.invalidateQueries({ queryKey: ['/api/games', gameId, 'stats'] });
-        queryClient.invalidateQueries({ queryKey: ['gameStats', gameId] });
-        queryClient.invalidateQueries({ queryKey: ['gameScores', gameId] });
-        queryClient.invalidateQueries({ queryKey: ['positionStats', gameId] });
-        queryClient.invalidateQueries({ queryKey: ['playerStats', gameId] });
-        queryClient.invalidateQueries({ queryKey: ['allGameStats'] });
-        
-        // Wait for re-fetched stats before showing the success message
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // Directly fetch the latest data to ensure we have fresh stats
+        try {
+          // Manually refetch the latest data
+          await refetchStats();
+          console.log("Stats refreshed after saving");
+          
+          // Invalidate all caches to ensure everything is up to date
+          queryClient.invalidateQueries({ queryKey: ['/api/games', gameId, 'stats'] });
+          queryClient.invalidateQueries({ queryKey: ['gameStats', gameId] });
+          queryClient.invalidateQueries({ queryKey: ['gameScores', gameId] });
+          queryClient.invalidateQueries({ queryKey: ['positionStats', gameId] });
+          queryClient.invalidateQueries({ queryKey: ['playerStats', gameId] });
+          queryClient.invalidateQueries({ queryKey: ['allGameStats'] });
+          
+          // Wait to ensure everything is refreshed
+          await new Promise(resolve => setTimeout(resolve, 500));
+        } catch (err) {
+          console.error("Error refreshing stats:", err);
+        }
         
         toast({
           title: "Statistics saved",

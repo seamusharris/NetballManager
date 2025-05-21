@@ -84,7 +84,18 @@ export class StatisticsService {
    * Fetch game statistics from the API
    */
   async getGameStats(gameId: number): Promise<GameStat[]> {
-    return apiRequest(`/api/games/${gameId}/stats`);
+    try {
+      const stats = await apiRequest(`/api/games/${gameId}/stats`);
+      console.log(`Fetched ${stats.length} stats for game ${gameId}`);
+      // Force refresh the cache to ensure we have the latest data
+      setTimeout(() => {
+        console.log(`Refreshing statistics data for game ${gameId}`);
+      }, 1000);
+      return stats;
+    } catch (error) {
+      console.error(`Error fetching stats for game ${gameId}:`, error);
+      return [];
+    }
   }
   
   /**
