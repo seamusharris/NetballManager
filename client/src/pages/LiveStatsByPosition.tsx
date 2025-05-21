@@ -298,22 +298,20 @@ export default function LiveStatsByPosition() {
     }
   };
   
-  // Save all stats to the database
+  // Save all stats to the database using a simplified approach
   const saveAllStats = async () => {
     if (saveInProgress) return;
     
     try {
       setSaveInProgress(true);
       
-      // Get the latest data from the server first
-      await queryClient.invalidateQueries({ queryKey: ['/api/games', gameId, 'stats'] });
-      await new Promise(resolve => setTimeout(resolve, 500)); // Wait for data to refresh
-      
-      // Get fresh stats data
-      const freshStats = await apiRequest<GameStat[]>(`/api/games/${gameId}/stats`);
+      // Get fresh stats data directly for comparison
+      const response = await fetch(`/api/games/${gameId}/stats`);
+      const freshStats: GameStat[] = await response.json();
       console.log("Fresh stats from server:", freshStats);
       
       let successCount = 0;
+      let promises: Promise<any>[] = [];
       
       // For each position and quarter
       for (const position of allPositions) {
@@ -322,12 +320,8 @@ export default function LiveStatsByPosition() {
           const currentStats = stats[position]?.[quarter.toString()];
           if (!currentStats) continue;
           
-          // Check if there are any non-zero values - skip zeroes
-          const hasValues = Object.values(currentStats).some(val => val > 0);
-          if (!hasValues) continue;
-          
           // Find matching existing stat in fresh data
-          const existingStat = freshStats?.find(s => 
+          const existingStat = freshStats.find(s => 
             s.gameId === gameId && 
             s.position === position && 
             s.quarter === quarter
@@ -350,34 +344,46 @@ export default function LiveStatsByPosition() {
             rating: null
           };
           
-          let success = false;
-          
           if (existingStat) {
-            // Update existing stat
+            // Update existing stat using a direct approach
             console.log(`Updating existing stat ID ${existingStat.id} for ${position} Q${quarter}`);
-            success = await updateGameStat(existingStat.id, payload);
+            
+            const updatePromise = fetch(`/api/game-stats/${existingStat.id}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload)
+            }).then(res => {
+              if (res.ok) successCount++;
+              return res.ok;
+            }).catch(err => {
+              console.error(`Error updating stat ${existingStat.id}:`, err);
+              return false;
+            });
+            
+            promises.push(updatePromise);
           } else {
             // Create new stat
             console.log(`Creating new stat for ${position} Q${quarter}`);
-            try {
-              const response = await fetch('/api/game-stats', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-              });
-              
-              success = response.ok;
-              if (!success) {
-                console.error(`Failed to create stat: ${response.status}`);
-              }
-            } catch (error) {
-              console.error("Error creating stat:", error);
-            }
+            
+            const createPromise = fetch('/api/game-stats', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload)
+            }).then(res => {
+              if (res.ok) successCount++;
+              return res.ok;
+            }).catch(err => {
+              console.error("Error creating stat:", err);
+              return false;
+            });
+            
+            promises.push(createPromise);
           }
-          
-          if (success) successCount++;
         }
       }
+      
+      // Wait for all requests to complete
+      await Promise.all(promises);
       
       // Show appropriate toast message
       if (successCount > 0) {
@@ -385,6 +391,14 @@ export default function LiveStatsByPosition() {
           title: "Stats Saved",
           description: `Successfully saved ${successCount} statistics.`
         });
+        
+        // Force refresh data
+        queryClient.invalidateQueries({ queryKey: ['/api/games', gameId, 'stats'] });
+        
+        // Wait a moment and reload the page to ensure everything is fresh
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
       } else {
         toast({
           title: "No Stats Saved",
@@ -401,8 +415,6 @@ export default function LiveStatsByPosition() {
         variant: "destructive"
       });
     } finally {
-      // Refresh data
-      queryClient.invalidateQueries({ queryKey: ['/api/games', gameId, 'stats'] });
       setSaveInProgress(false);
     }
   };
