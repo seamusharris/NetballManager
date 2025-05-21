@@ -330,71 +330,88 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
         });
       }
       
-      // Process stats for each player, counting only stats from quarters they were on court
-      Object.values(dedupedStats).forEach(playerQuarterStats => {
+      // Process stats for each player based on the positions they played
+      Object.entries(dedupedStats).forEach(([playerIdStr, playerQuarterStats]) => {
+        const playerId = parseInt(playerIdStr);
+        if (!newPlayerStatsMap[playerId]) return;
+        
+        // Process each position-based stat for this player
         Object.values(playerQuarterStats).forEach(stat => {
-          const playerId = stat.playerId;
-          const gameId = stat.gameId;
-          const quarter = stat.quarter;
-          
-          if (!newPlayerStatsMap[playerId]) return;
-          
-          // Check if this player was on court for this quarter in this game
-          const wasOnCourt = onCourtMap[playerId]?.[gameId]?.[quarter] === true;
-          
-          // Only add stats if the player was on court in an actual playing position
-          if (wasOnCourt) {
-            // Add this player's stats
-            newPlayerStatsMap[playerId].goals += stat.goalsFor || 0;
-            newPlayerStatsMap[playerId].goalsAgainst += stat.goalsAgainst || 0;
-            newPlayerStatsMap[playerId].missedGoals += stat.missedGoals || 0;
-            newPlayerStatsMap[playerId].rebounds += stat.rebounds || 0;
-            newPlayerStatsMap[playerId].intercepts += stat.intercepts || 0;
-            newPlayerStatsMap[playerId].badPass += stat.badPass || 0;
-            newPlayerStatsMap[playerId].handlingError += stat.handlingError || 0;
-            newPlayerStatsMap[playerId].pickUp += stat.pickUp || 0;
-            newPlayerStatsMap[playerId].infringement += stat.infringement || 0;
-          }
+          // Add this player's stats from the position they played
+          newPlayerStatsMap[playerId].goals += stat.goalsFor || 0;
+          newPlayerStatsMap[playerId].goalsAgainst += stat.goalsAgainst || 0;
+          newPlayerStatsMap[playerId].missedGoals += stat.missedGoals || 0;
+          newPlayerStatsMap[playerId].rebounds += stat.rebounds || 0;
+          newPlayerStatsMap[playerId].intercepts += stat.intercepts || 0;
+          newPlayerStatsMap[playerId].badPass += stat.badPass || 0;
+          newPlayerStatsMap[playerId].handlingError += stat.handlingError || 0;
+          newPlayerStatsMap[playerId].pickUp += stat.pickUp || 0;
+          newPlayerStatsMap[playerId].infringement += stat.infringement || 0;
         });
       });
       
       console.log(`Using stats from ${Object.keys(filteredGameStats).length} games (filtered from ${Object.keys(gameStatsMap).length} total) for dashboard player performance`);
     }
     
-    // Process player ratings - use only the most recent quarter 1 stats from filtered games
-    Object.values(newPlayerStatsMap).forEach(playerStat => {
+    // Process player ratings from position-based stats - use the most recent quarter 1 stats
+    players.forEach(player => {
+      if (!newPlayerStatsMap[player.id]) return;
+      
+      // Find all positions this player has played in the first quarter of any game
+      let mostRecentRating = null;
+      let mostRecentDate = new Date(0); // Start with oldest possible date
+      
       // Get the appropriate stats source - prefer filtered stats if available
       const statsToUse = filteredGameStats && Object.keys(filteredGameStats).length > 0 
         ? filteredGameStats 
         : gameStatsMap;
       
-      // Find all quarter 1 stats for this player across games
-      const quarter1Stats = Object.values(statsToUse)
-        .flatMap(gameStats => 
-          gameStats.filter((stat: GameStat) => 
-            stat.playerId === playerStat.playerId && 
-            stat.quarter === 1 && 
-            stat.rating !== undefined && 
-            stat.rating !== null
-          )
-        )
-        .sort((a, b) => b.id - a.id); // Sort by ID descending
-      
-      // Use the most recent rating if available
-      if (quarter1Stats.length > 0) {
-        const latestRating = quarter1Stats[0].rating;
-        if (typeof latestRating === 'number') {
-          playerStat.rating = latestRating;
-          console.log(`Using rating ${latestRating} for player ${playerStat.playerId} from stat ID ${quarter1Stats[0].id}`);
-        }
-      } else {
-        // Calculate default rating based on performance
-        const calculatedRating = 5 + 
-          (playerStat.goals * 0.2) +
-          (playerStat.rebounds * 0.3) + 
-          (playerStat.intercepts * 0.4);
+      // Look through all filtered games
+      Object.entries(gameRostersMap || {}).forEach(([gameIdStr, rosters]) => {
+        const gameId = parseInt(gameIdStr);
         
-        playerStat.rating = Math.min(10, Math.max(1, calculatedRating));
+        // Skip if not in filtered games
+        if (!filteredGameIds.includes(gameId)) return;
+        
+        const gameDate = new Date(games.find(g => g.id === gameId)?.date || '');
+        
+        // Find quarter 1 roster entries for this player
+        const playerQ1Rosters = rosters.filter((r: any) => 
+          r.playerId === player.id && 
+          r.quarter === 1 && 
+          r.position // Make sure they had a position
+        );
+        
+        // For each position this player played in quarter 1
+        playerQ1Rosters.forEach((roster: any) => {
+          // Find the stats for this position and quarter
+          const gameStats = statsToUse[gameId] || [];
+          const positionStat = gameStats.find((s: GameStat) => 
+            s.position === roster.position && 
+            s.quarter === 1 &&
+            s.rating !== null && 
+            s.rating !== undefined
+          );
+          
+          // If found and has a rating and is more recent than what we have
+          if (positionStat?.rating !== undefined && positionStat?.rating !== null && gameDate > mostRecentDate) {
+            mostRecentRating = positionStat.rating;
+            mostRecentDate = gameDate;
+          }
+        });
+      });
+      
+      // Update with the most recent rating we found, or calculate a default
+      if (mostRecentRating !== null) {
+        newPlayerStatsMap[player.id].rating = mostRecentRating;
+      } else {
+        // Calculate default rating based on performance stats
+        const calculatedRating = 5 + 
+          (newPlayerStatsMap[player.id].goals * 0.2) +
+          (newPlayerStatsMap[player.id].rebounds * 0.3) + 
+          (newPlayerStatsMap[player.id].intercepts * 0.4);
+        
+        newPlayerStatsMap[player.id].rating = Math.min(10, Math.max(1, calculatedRating));
       }
     });
     
