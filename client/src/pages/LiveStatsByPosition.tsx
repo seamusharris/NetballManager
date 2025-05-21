@@ -302,36 +302,48 @@ export default function LiveStatsByPosition() {
       // For each position and quarter with stats
       Object.entries(stats).forEach(([position, quarters]) => {
         Object.entries(quarters).forEach(([quarter, statValues]) => {
-          // Create stat object
-          const statObject: Partial<GameStat> = {
-            gameId,
-            position: position as Position,
-            quarter: parseInt(quarter),
-            // Include all stat values
-            goalsFor: statValues.goalsFor || 0,
-            goalsAgainst: statValues.goalsAgainst || 0,
-            missedGoals: statValues.missedGoals || 0,
-            rebounds: statValues.rebounds || 0,
-            intercepts: statValues.intercepts || 0,
-            badPass: statValues.badPass || 0,
-            handlingError: statValues.handlingError || 0,
-            pickUp: statValues.pickUp || 0,
-            infringement: statValues.infringement || 0,
-            rating: null  // Required field with default null
-          };
+          // Only save stats where something actually has a value
+          const hasStatValue = Object.values(statValues).some(val => val > 0);
           
-          statsToSave.push(statObject);
+          if (hasStatValue) {
+            // Create stat object
+            const statObject: Partial<GameStat> = {
+              gameId,
+              position: position as Position,
+              quarter: parseInt(quarter),
+              // Include all stat values
+              goalsFor: statValues.goalsFor || 0,
+              goalsAgainst: statValues.goalsAgainst || 0,
+              missedGoals: statValues.missedGoals || 0,
+              rebounds: statValues.rebounds || 0,
+              intercepts: statValues.intercepts || 0,
+              badPass: statValues.badPass || 0,
+              handlingError: statValues.handlingError || 0,
+              pickUp: statValues.pickUp || 0,
+              infringement: statValues.infringement || 0,
+              rating: null  // Required field with default null
+            };
+            
+            statsToSave.push(statObject);
+          }
         });
       });
       
-      // Save all stats
-      const promises = statsToSave.map(stat => saveStatMutation.mutateAsync(stat));
-      await Promise.all(promises);
-      
-      toast({
-        title: "Stats Saved",
-        description: "All game statistics have been saved successfully."
-      });
+      if (statsToSave.length > 0) {
+        // Save all stats
+        const promises = statsToSave.map(stat => saveStatMutation.mutateAsync(stat));
+        await Promise.all(promises);
+        
+        toast({
+          title: "Stats Saved",
+          description: "All game statistics have been saved successfully."
+        });
+      } else {
+        toast({
+          title: "No Stats to Save",
+          description: "There are no statistics to save for this game."
+        });
+      }
       
     } catch (error) {
       console.error("Error saving stats:", error);
