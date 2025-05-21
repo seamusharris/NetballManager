@@ -478,12 +478,24 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
         const playerId = parseInt(playerIdStr);
         if (isNaN(playerId)) return;
         
-        // Find all existing stats for this player in quarter 1
-        const existingQuarter1Stats = gameStats.filter(stat => 
-          stat.gameId === gameId && 
-          stat.playerId === playerId && 
-          stat.quarter === 1
+        // Find the roster assignments for this player in quarter 1
+        const playerPositionsInQuarter1 = rosters.filter(r => 
+          r.gameId === gameId && 
+          r.playerId === playerId && 
+          r.quarter === 1
         );
+        
+        // Find stats for positions this player played in quarter 1
+        const existingQuarter1Stats = gameStats.filter(stat => {
+          // Find if this player played this position in quarter 1
+          const playedThisPosition = playerPositionsInQuarter1.some(r => 
+            r.position === stat.position
+          );
+          
+          return stat.gameId === gameId && 
+                 stat.quarter === 1 && 
+                 playedThisPosition;
+        });
         
         // If there are multiple entries, handle duplicates
         if (existingQuarter1Stats.length > 1) {
@@ -495,7 +507,9 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
           
           // Delete older duplicates - handle possible 404 errors if records were already deleted
           for (let i = 1; i < existingQuarter1Stats.length; i++) {
-            const deletePromise = apiRequest('DELETE', `/api/gamestats/${existingQuarter1Stats[i].id}`)
+            const deletePromise = apiRequest(`/api/gamestats/${existingQuarter1Stats[i].id}`, {
+              method: 'DELETE'
+            })
               .catch(err => {
                 console.log(`Stat record ${existingQuarter1Stats[i].id} already deleted, continuing...`);
                 return null;
@@ -505,16 +519,24 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
           
           // Update the newest stat with the new rating
           console.log(`UPDATING RATING: Player ${playerId} - changing from ${newestStat.rating} to ${rating} (and deleting ${existingQuarter1Stats.length - 1} duplicates)`);
-          const ratingUpdatePromise = apiRequest('PATCH', `/api/gamestats/${newestStat.id}`, {
-            rating: rating
+          const ratingUpdatePromise = apiRequest(`/api/gamestats/${newestStat.id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              rating: rating
+            })
           });
           ratingPromises.push(ratingUpdatePromise);
         }
         // Just one existing stat, update it
         else if (existingQuarter1Stats.length === 1) {
           console.log(`UPDATING RATING: Player ${playerId} - changing from ${existingQuarter1Stats[0].rating} to ${rating}`);
-          const ratingUpdatePromise = apiRequest('PATCH', `/api/gamestats/${existingQuarter1Stats[0].id}`, {
-            rating: rating
+          const ratingUpdatePromise = apiRequest(`/api/gamestats/${existingQuarter1Stats[0].id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              rating: rating
+            })
           });
           ratingPromises.push(ratingUpdatePromise);
         }
@@ -522,24 +544,38 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
         else {
           console.log(`WARNING: No quarter 1 stat found for player ${playerId}, creating new stat with rating ${rating}`);
           
-          // Create a new stat record for quarter 1 with the rating
-          const newStatData = {
-            gameId,
-            playerId,
-            quarter: 1,
-            goalsFor: 0,
-            goalsAgainst: 0,
-            missedGoals: 0,
-            rebounds: 0,
-            intercepts: 0,
-            badPass: 0,
-            handlingError: 0,
-            pickUp: 0,
-            infringement: 0,
-            rating: rating
-          };
+          // Find the position this player is playing in quarter 1
+          const playerPositionInQ1 = rosters.find(r => 
+            r.gameId === gameId && 
+            r.playerId === playerId && 
+            r.quarter === 1
+          );
           
-          const createRatingPromise = apiRequest('POST', '/api/gamestats', newStatData);
+          if (playerPositionInQ1?.position) {
+            // Create a new stat record for quarter 1 with the rating
+            const createRatingPromise = apiRequest('/api/gamestats', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                gameId,
+                position: playerPositionInQ1.position, // Position-based instead of player-based
+                quarter: 1,
+                goalsFor: 0,
+                goalsAgainst: 0,
+                missedGoals: 0,
+                rebounds: 0,
+                intercepts: 0,
+                badPass: 0,
+                handlingError: 0,
+                pickUp: 0,
+                infringement: 0,
+                rating: rating
+              })
+            });
+            ratingPromises.push(createRatingPromise);
+          } else {
+            console.error(`No position assignment found for player ${playerId} in quarter 1`);
+          }
           ratingPromises.push(createRatingPromise);
         }
       });
