@@ -339,7 +339,7 @@ export default function GamesList({
                 <TableHead className="px-6 py-3 text-left">Round</TableHead>
                 <TableHead className="px-6 py-3 text-left">Opponent</TableHead>
                 <TableHead className="px-6 py-3 text-left">Status</TableHead>
-                <TableHead className="px-6 py-3 text-left">Final Score</TableHead>
+                <TableHead className="px-6 py-3 text-left">Score</TableHead>
                 <TableHead className="px-6 py-3 text-left">Options</TableHead>
                 <TableHead className="px-6 py-3 text-right">Actions</TableHead>
               </TableRow>
@@ -430,11 +430,7 @@ export default function GamesList({
                       </div>
                     </TableCell>
                     <TableCell className="px-6 py-4 whitespace-nowrap">
-                      {game.completed ? (
-                        <GameScoreDisplay gameId={game.id} compact={true} />
-                      ) : (
-                        <span className="text-gray-400">--</span>
-                      )}
+                      <GameScoreDisplay gameId={game.id} compact={true} />
                     </TableCell>
                     <TableCell className="px-6 py-4 whitespace-nowrap">
                       <div className="flex space-x-2">
