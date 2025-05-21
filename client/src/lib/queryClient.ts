@@ -11,7 +11,15 @@ export async function apiRequest<T = any>(
   url: string,
   options?: RequestInit,
 ): Promise<T> {
-  const res = await fetch(url, {
+  // Fix URL format for game stats endpoints to ensure correct path
+  // The server expects /api/gamestats/ (no hyphen) not /api/game-stats/ (with hyphen)
+  let correctedUrl = url;
+  if (url.includes('/api/game-stats/')) {
+    correctedUrl = url.replace('/api/game-stats/', '/api/gamestats/');
+    console.log(`Corrected URL path from ${url} to ${correctedUrl}`);
+  }
+
+  const res = await fetch(correctedUrl, {
     credentials: "include",
     ...options
   });
@@ -26,7 +34,14 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const res = await fetch(queryKey[0] as string, {
+    // Fix URL format for game stats endpoints to ensure correct path
+    let url = queryKey[0] as string;
+    if (url.includes('/api/game-stats/')) {
+      url = url.replace('/api/game-stats/', '/api/gamestats/');
+      console.log(`Corrected query URL from ${queryKey[0]} to ${url}`);
+    }
+    
+    const res = await fetch(url, {
       credentials: "include",
     });
 
