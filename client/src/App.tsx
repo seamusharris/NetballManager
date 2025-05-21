@@ -17,6 +17,9 @@ import LiveStatsByPosition from "@/pages/LiveStatsByPosition";
 import DataManagement from "@/pages/DataManagement";
 import NotFound from "@/pages/not-found";
 
+// Import GameDetails directly for now
+import GameDetails from "./pages/GameDetails";
+
 // Lazy load the debug component
 const StatsDebug = lazy(() => import("./pages/StatsDebug"));
 
@@ -30,7 +33,7 @@ function Router() {
         <Route path="/player/:id" component={PlayerDetails} />
         <Route path="/roster" component={Roster} />
         <Route path="/games" component={Games} />
-        <Route path="/games/:id" component={lazy(() => import("./pages/GameDetails"))} />
+        <Route path="/games/:id" component={GameDetails} />
         <Route path="/opponents" component={Opponents} />
         <Route path="/statistics" component={Statistics} />
         <Route path="/data-management" component={DataManagement} />

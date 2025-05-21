@@ -439,7 +439,7 @@ export function calculateGameScores(stats: GameStat[]) {
   }
   
   // For forfeit games, return standard 0-10 score
-  if (stats.some(s => s.isForfeit)) {
+  if (stats.length > 0 && isForfeitGame({ id: stats[0].gameId } as Game)) {
     return { teamScore: 0, opponentScore: 10 };
   }
   
