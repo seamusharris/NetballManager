@@ -50,6 +50,20 @@ const emptyQuarterStats = {
   infringement: 0
 };
 
+// Get color for each netball position - colors coordinate with position roles
+const getPositionColor = (position: Position | ''): string => {
+  switch(position) {
+    case 'GS': return '#ef4444'; // Goalers (red)
+    case 'GA': return '#f97316'; // Goalers (orange)
+    case 'WA': return '#eab308'; // Mid-court (yellow)
+    case 'C':  return '#22c55e'; // Mid-court (green)
+    case 'WD': return '#06b6d4'; // Defense (cyan)
+    case 'GD': return '#3b82f6'; // Defense (blue)
+    case 'GK': return '#8b5cf6'; // Defense (purple)
+    default:   return '#6b7280'; // Gray for unknown positions
+  }
+};
+
 // Different stat availabilities by position - true means the stat is available for this position
 const positionStatConfig: Record<Position, Record<StatType, boolean>> = {
   'GS': {
@@ -678,16 +692,18 @@ export default function LiveStats() {
                       <div 
                         className="h-10 w-10 rounded-full flex items-center justify-center text-white font-bold text-base flex-shrink-0"
                         style={{
-                          backgroundColor: '#3b82f6', /* blue-500 */
+                          backgroundColor: getPositionColor(position), 
                           border: '2px solid white',
                           boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
                         }}
+                        title={positionLabels[position] || position}
                       >
                         {position}
                       </div>
                       
                       <div className="min-w-[60px]">
                         <p className="font-semibold text-sm">{player.displayName}</p>
+                        <p className="text-xs text-muted-foreground">{positionLabels[position]}</p>
                       </div>
                     </div>
                     
