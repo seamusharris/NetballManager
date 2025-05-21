@@ -35,10 +35,10 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Edit, Trash2, FileText, CalendarRange, Search, Trophy, ThumbsDown, Minus, ActivitySquare } from 'lucide-react';
-import { Game, Opponent, GameStat } from '@shared/schema';
+import { Game, Opponent } from '@shared/schema';
 import { formatDate, formatShortDate } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
-import { calculateGameScores } from '@/components/games/GameScoreCalculator';
+import { GameScoreDisplay } from '@/components/statistics/GameScoreDisplay';
 
 interface GamesListProps {
   games: Game[];
@@ -510,25 +510,7 @@ export default function GamesList({
                     </TableCell>
                     <TableCell className="px-6 py-4 whitespace-nowrap">
                       {game.completed ? (
-                        isLoadingStats ? (
-                          <Skeleton className="h-6 w-20" />
-                        ) : (
-                          <div className="font-medium">
-                            {gameScores[game.id] ? (
-                              <div className={`px-2 py-1 rounded-md inline-flex ${
-                                gameScores[game.id].team > gameScores[game.id].opponent 
-                                  ? "bg-success/10 text-success" 
-                                  : gameScores[game.id].team < gameScores[game.id].opponent 
-                                    ? "bg-error/10 text-error"
-                                    : "bg-warning/10 text-warning"
-                              }`}>
-                                {gameScores[game.id].team} - {gameScores[game.id].opponent}
-                              </div>
-                            ) : (
-                              "No stats"
-                            )}
-                          </div>
-                        )
+                        <GameScoreDisplay gameId={game.id} compact={true} />
                       ) : (
                         <span className="text-gray-400">--</span>
                       )}
