@@ -101,6 +101,8 @@ interface PositionStats {
 type HistoryRecord = PositionStats;
 
 export default function LiveStatsByPosition() {
+  // ***** ALL HOOKS FIRST *****
+  
   // Route params
   const { id } = useParams<{ id: string }>();
   const gameId = parseInt(id);
@@ -108,7 +110,7 @@ export default function LiveStatsByPosition() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
-  // State variables
+  // State variables - ALL state hooks must be declared before any other hooks
   const [currentQuarter, setCurrentQuarter] = useState<number>(1);
   const [stats, setStats] = useState<PositionStats>({});
   const [undoStack, setUndoStack] = useState<HistoryRecord[]>([]);
@@ -117,7 +119,7 @@ export default function LiveStatsByPosition() {
   const [rosterData, setRosterData] = useState<Roster[]>([]);
   const [playerData, setPlayerData] = useState<Record<number, Player>>({});
   
-  // Queries
+  // Queries - after all state hooks
   const { data: game, isLoading: isLoadingGame } = useQuery<Game>({
     queryKey: ['/api/games', gameId],
     enabled: !!gameId && !isNaN(gameId)
@@ -133,7 +135,7 @@ export default function LiveStatsByPosition() {
     enabled: !!gameId && !isNaN(gameId)
   });
   
-  // Mutations
+  // Mutations - after queries
   const saveStatMutation = useMutation({
     mutationFn: async (statData: Partial<GameStat>) => {
       return apiRequest('/api/game-stats', {
@@ -226,6 +228,8 @@ export default function LiveStatsByPosition() {
         });
     }
   }, [game]);
+  
+  // ***** HELPER FUNCTIONS AFTER HOOKS *****
   
   // Get player name for a position in the current quarter
   const getPlayerForPosition = (position: Position): string => {
@@ -404,6 +408,8 @@ export default function LiveStatsByPosition() {
     );
   };
   
+  // ***** CONDITIONAL RENDERING *****
+  
   // Loading state
   const isLoading = isLoadingGame || isLoadingOpponent || isLoadingStats;
   if (isLoading) {
@@ -430,6 +436,7 @@ export default function LiveStatsByPosition() {
     );
   }
   
+  // ***** MAIN RENDER *****
   return (
     <div className="container py-3 px-2 md:py-4 md:px-4">
       {/* Header with game info and action buttons */}
@@ -493,119 +500,114 @@ export default function LiveStatsByPosition() {
         </TabsList>
       </Tabs>
       
-      {/* Position cards - each in a full width row */}
-      <div className="grid grid-cols-1 gap-4">
-        {/* GS Position Card - Full width row layout */}
-        <Card>
-          <div className="flex flex-col md:flex-row">
-            <div className="p-4 md:w-72 border-r border-gray-100">
-              <div className="flex items-center gap-3">
-                <div className="bg-blue-500 text-white font-bold h-10 w-10 rounded-full flex items-center justify-center">
+      {/* Position cards - grid layout */}
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        {/* GS Position Card */}
+        <Card className="flex flex-col">
+          <CardHeader className="py-3 px-3">
+            <div className="flex flex-col">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="bg-blue-500 text-white font-bold h-8 w-8 rounded-full flex items-center justify-center">
                   GS
                 </div>
-                <div>
-                  <h3 className="font-bold text-lg">{getPlayerForPosition("GS")}</h3>
-                  <p className="text-sm text-muted-foreground">Goal Shooter</p>
+                
+                <div className="min-w-[60px]">
+                  <p className="font-semibold text-sm">{getPlayerForPosition("GS")}</p>
                 </div>
               </div>
               
-              {/* Position-specific stats for GS shown prominently */}
-              <div className="mt-4 space-y-3">
-                <div className="w-full">
-                  {renderStatCounter("GS", "goalsFor", false, true)}
-                </div>
-                <div className="w-full">
-                  {renderStatCounter("GS", "missedGoals", false, true)}
-                </div>
-                <div className="w-full">
-                  {renderStatCounter("GS", "rebounds", false, true)}
-                </div>
-              </div>
-            </div>
-            
-            {/* Common stats on the right side */}
-            <div className="flex-1 p-4">
-              <h4 className="text-sm font-medium mb-3 text-muted-foreground">Common Statistics</h4>
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+              {/* Common stats - show all for every position */}
+              <div className="flex-1 flex flex-wrap gap-2">
                 {commonStats.map(stat => (
-                  <div key={`GS-${stat}`}>
+                  <div key={`GS-${stat}`} className="flex-1 min-w-[70px]">
                     {renderStatCounter("GS", stat)}
                   </div>
                 ))}
               </div>
             </div>
-          </div>
+          </CardHeader>
+          
+          {/* Position-specific stats for GS */}
+          <CardContent className="py-2 pt-1">
+            <div className="flex justify-center gap-3 flex-wrap">
+              <div className="min-w-[120px]">
+                {renderStatCounter("GS", "goalsFor", false, true)}
+              </div>
+              <div className="min-w-[120px]">
+                {renderStatCounter("GS", "missedGoals", false, true)}
+              </div>
+              <div className="min-w-[120px]">
+                {renderStatCounter("GS", "rebounds", false, true)}
+              </div>
+            </div>
+          </CardContent>
         </Card>
         
-        {/* GA Position Card - Full width row layout */}
-        <Card>
-          <div className="flex flex-col md:flex-row">
-            <div className="p-4 md:w-72 border-r border-gray-100">
-              <div className="flex items-center gap-3">
-                <div className="bg-blue-500 text-white font-bold h-10 w-10 rounded-full flex items-center justify-center">
+        {/* GA Position Card */}
+        <Card className="flex flex-col">
+          <CardHeader className="py-3 px-3">
+            <div className="flex flex-col">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="bg-blue-500 text-white font-bold h-8 w-8 rounded-full flex items-center justify-center">
                   GA
                 </div>
-                <div>
-                  <h3 className="font-bold text-lg">{getPlayerForPosition("GA")}</h3>
-                  <p className="text-sm text-muted-foreground">Goal Attack</p>
+                
+                <div className="min-w-[60px]">
+                  <p className="font-semibold text-sm">{getPlayerForPosition("GA")}</p>
                 </div>
               </div>
               
-              {/* Position-specific stats for GA shown prominently */}
-              <div className="mt-4 space-y-3">
-                <div className="w-full">
-                  {renderStatCounter("GA", "goalsFor", false, true)}
-                </div>
-                <div className="w-full">
-                  {renderStatCounter("GA", "missedGoals", false, true)}
-                </div>
-                <div className="w-full">
-                  {renderStatCounter("GA", "rebounds", false, true)}
-                </div>
-              </div>
-            </div>
-            
-            {/* Common stats on the right side */}
-            <div className="flex-1 p-4">
-              <h4 className="text-sm font-medium mb-3 text-muted-foreground">Common Statistics</h4>
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+              {/* Common stats - show all for every position */}
+              <div className="flex-1 flex flex-wrap gap-2">
                 {commonStats.map(stat => (
-                  <div key={`GA-${stat}`}>
+                  <div key={`GA-${stat}`} className="flex-1 min-w-[70px]">
                     {renderStatCounter("GA", stat)}
                   </div>
                 ))}
               </div>
             </div>
-          </div>
-        </Card>
-        
-        {/* WA Position Card - Full width row layout */}
-        <Card>
-          <div className="flex flex-col md:flex-row">
-            <div className="p-4 md:w-72 border-r border-gray-100">
-              <div className="flex items-center gap-3">
-                <div className="bg-blue-500 text-white font-bold h-10 w-10 rounded-full flex items-center justify-center">
-                  WA
-                </div>
-                <div>
-                  <h3 className="font-bold text-lg">{getPlayerForPosition("WA")}</h3>
-                  <p className="text-sm text-muted-foreground">Wing Attack</p>
-                </div>
+          </CardHeader>
+          
+          {/* Position-specific stats for GA */}
+          <CardContent className="py-2 pt-1">
+            <div className="flex justify-center gap-3 flex-wrap">
+              <div className="min-w-[120px]">
+                {renderStatCounter("GA", "goalsFor", false, true)}
+              </div>
+              <div className="min-w-[120px]">
+                {renderStatCounter("GA", "missedGoals", false, true)}
+              </div>
+              <div className="min-w-[120px]">
+                {renderStatCounter("GA", "rebounds", false, true)}
               </div>
             </div>
-            
-            {/* Common stats on the right side */}
-            <div className="flex-1 p-4">
-              <h4 className="text-sm font-medium mb-3 text-muted-foreground">Common Statistics</h4>
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+          </CardContent>
+        </Card>
+        
+        {/* WA Position Card */}
+        <Card className="flex flex-col">
+          <CardHeader className="py-3 px-3">
+            <div className="flex flex-col">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="bg-blue-500 text-white font-bold h-8 w-8 rounded-full flex items-center justify-center">
+                  WA
+                </div>
+                
+                <div className="min-w-[60px]">
+                  <p className="font-semibold text-sm">{getPlayerForPosition("WA")}</p>
+                </div>
+              </div>
+              
+              {/* Common stats - show all for every position */}
+              <div className="flex-1 flex flex-wrap gap-2">
                 {commonStats.map(stat => (
-                  <div key={`WA-${stat}`}>
+                  <div key={`WA-${stat}`} className="flex-1 min-w-[70px]">
                     {renderStatCounter("WA", stat)}
                   </div>
                 ))}
               </div>
             </div>
-          </div>
+          </CardHeader>
         </Card>
         
         {/* C Position Card */}
