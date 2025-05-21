@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { queryClient } from '@/lib/queryClient';
@@ -7,6 +7,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Save } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Input } from '@/components/ui/input';
 import { 
   Game, 
   GameStat, 
@@ -605,17 +607,107 @@ export default function GameStatistics({
             
             {['1', '2', '3', '4', 'total'].map(quarter => (
               <TabsContent key={quarter} value={quarter}>
-                <QuarterStatistics 
-                  quarter={quarter}
-                  players={players}
-                  rosters={quarter !== 'total' ? rosterByQuarterAndPosition[quarter] : null}
-                  stats={statsByQuarterAndPlayer[quarter]}
-                  onStatChange={(playerId, statName, value) => 
-                    quarter !== 'total' && handleStatChange(playerId, parseInt(quarter), statName, value)
-                  }
-                  isEditable={quarter !== 'total'}
-                  isPending={saveStatsMutation.isPending}
-                />
+                {/* Using inline component while we transition to position-based stats */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">
+                    {quarter === 'total' ? 'Game Totals' : `Quarter ${quarter} Stats`}
+                  </h3>
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Player</TableHead>
+                          <TableHead>Position</TableHead>
+                          <TableHead>GF</TableHead>
+                          <TableHead>GA</TableHead>
+                          <TableHead>MG</TableHead>
+                          <TableHead>RB</TableHead>
+                          <TableHead>INT</TableHead>
+                          <TableHead>BP</TableHead>
+                          <TableHead>HE</TableHead>
+                          <TableHead>PU</TableHead>
+                          <TableHead>INF</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {Object.entries(quarter !== 'total' ? (rosterByQuarterAndPosition[quarter] || {}) : playerTotals).map(([posOrId, playerIdOrStat]) => {
+                          // For specific quarters, render based on position
+                          if (quarter !== 'total') {
+                            const position = posOrId as Position;
+                            const playerId = playerIdOrStat as number | null;
+                            if (playerId === null) return null;
+                            
+                            const player = players.find(p => p.id === playerId);
+                            if (!player) return null;
+                            
+                            const stat = statsByQuarterAndPlayer[quarter]?.[playerId];
+                            
+                            return (
+                              <TableRow key={position}>
+                                <TableCell>{player.displayName}</TableCell>
+                                <TableCell>{position}</TableCell>
+                                <TableCell>
+                                  {isEditable && (
+                                    <Input 
+                                      type="number" 
+                                      min="0"
+                                      value={stat?.goalsFor || 0}
+                                      onChange={(e) => handleStatChange(playerId, parseInt(quarter), 'goalsFor', parseInt(e.target.value) || 0)}
+                                      className="w-12 text-center"
+                                    />
+                                  )}
+                                  {!isEditable && (stat?.goalsFor || 0)}
+                                </TableCell>
+                                <TableCell>
+                                  {isEditable && (
+                                    <Input 
+                                      type="number" 
+                                      min="0"
+                                      value={stat?.goalsAgainst || 0}
+                                      onChange={(e) => handleStatChange(playerId, parseInt(quarter), 'goalsAgainst', parseInt(e.target.value) || 0)}
+                                      className="w-12 text-center"
+                                    />
+                                  )}
+                                  {!isEditable && (stat?.goalsAgainst || 0)}
+                                </TableCell>
+                                <TableCell>{stat?.missedGoals || 0}</TableCell>
+                                <TableCell>{stat?.rebounds || 0}</TableCell>
+                                <TableCell>{stat?.intercepts || 0}</TableCell>
+                                <TableCell>{stat?.badPass || 0}</TableCell>
+                                <TableCell>{stat?.handlingError || 0}</TableCell>
+                                <TableCell>{stat?.pickUp || 0}</TableCell>
+                                <TableCell>{stat?.infringement || 0}</TableCell>
+                              </TableRow>
+                            );
+                          } else {
+                            // For totals, render based on player ID
+                            const playerId = parseInt(posOrId);
+                            const player = players.find(p => p.id === playerId);
+                            if (!player) return null;
+                            
+                            const stat = playerTotals[playerId];
+                            
+                            return (
+                              <TableRow key={playerId}>
+                                <TableCell>{player.displayName}</TableCell>
+                                <TableCell>All</TableCell>
+                                <TableCell>{stat?.goalsFor || 0}</TableCell>
+                                <TableCell>{stat?.goalsAgainst || 0}</TableCell>
+                                <TableCell>{stat?.missedGoals || 0}</TableCell>
+                                <TableCell>{stat?.rebounds || 0}</TableCell>
+                                <TableCell>{stat?.intercepts || 0}</TableCell>
+                                <TableCell>{stat?.badPass || 0}</TableCell>
+                                <TableCell>{stat?.handlingError || 0}</TableCell>
+                                <TableCell>{stat?.pickUp || 0}</TableCell>
+                                <TableCell>{stat?.infringement || 0}</TableCell>
+                              </TableRow>
+                            );
+                          }
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
               </TabsContent>
             ))}
           </Tabs>
