@@ -77,20 +77,36 @@ export default function RecentGames({ games, opponents, className }: RecentGames
       4: { for: 0, against: 0 }
     };
     
-    // Create a map of the latest stats for each player and quarter combination
-    const latestPlayerStats: Record<string, GameStat> = {};
+    // Create a map of the latest stats for each position/quarter combination (or legacy stats)
+    const latestPositionStats: Record<string, GameStat> = {};
     
-    // Find the latest stat for each player and quarter
+    // Find the latest stat for each position/quarter combination
     gameStatsList.forEach(stat => {
-      const key = `${stat.playerId}-${stat.quarter}`;
-      if (!latestPlayerStats[key] || stat.id > latestPlayerStats[key].id) {
-        latestPlayerStats[key] = stat;
+      if (!stat || !stat.quarter) return;
+      
+      // For position-based stats (with valid position)
+      if (stat.position) {
+        const key = `${stat.position}-${stat.quarter}`;
+        
+        // Keep only the newest stat entry for each position/quarter
+        if (!latestPositionStats[key] || stat.id > latestPositionStats[key].id) {
+          latestPositionStats[key] = stat;
+        }
+      }
+      // For legacy stats (with null position but valid data)
+      else {
+        // Only include legacy stats if they have valid goal data
+        if (typeof stat.goalsFor === 'number' || typeof stat.goalsAgainst === 'number') {
+          // Use a special key format for legacy stats
+          const key = `legacy-${stat.id}-${stat.quarter}`;
+          latestPositionStats[key] = stat;
+        }
       }
     });
     
     // Use only the latest stats for calculating quarter goals
-    Object.values(latestPlayerStats).forEach(stat => {
-      if (stat.quarter >= 1 && stat.quarter <= 4) {
+    Object.values(latestPositionStats).forEach(stat => {
+      if (stat && stat.quarter >= 1 && stat.quarter <= 4) {
         quarterGoals[stat.quarter].for += (stat.goalsFor || 0);
         quarterGoals[stat.quarter].against += (stat.goalsAgainst || 0);
       }
