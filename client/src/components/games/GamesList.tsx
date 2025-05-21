@@ -218,18 +218,31 @@ export default function GamesList({
       // Create a map of the latest stats for each player and quarter combination
       const latestPlayerStats: Record<string, GameStat> = {};
       
-      // Find the latest stat for each player and quarter
-      // Only consider players who are on the roster
+      // Find the latest stat for each position and quarter
+      // With position-based stats, we need to map positions to players via roster
       stats.forEach(stat => {
         if (!stat) return;
         
-        // Only count stats for players who are on the roster
-        if (!rosterPlayerIds.has(stat.playerId)) {
-          console.log(`Skipping stats for player ${stat.playerId} in game ${gameId} as they are not on the roster`);
+        // Find which player was playing this position in this quarter
+        const rosterEntry = rosters.find(r => 
+          r.gameId === gameId && 
+          r.position === stat.position && 
+          r.quarter === stat.quarter
+        );
+        
+        // Skip if no player was assigned to this position
+        if (!rosterEntry) {
+          console.log(`Skipping stats for position ${stat.position} in quarter ${stat.quarter} as no player was assigned`);
           return;
         }
         
-        const key = `${stat.playerId}-${stat.quarter}`;
+        // Only count stats for players who are on the roster
+        if (!rosterPlayerIds.has(rosterEntry.playerId)) {
+          console.log(`Skipping stats for player ${rosterEntry.playerId} in game ${gameId} as they are not on the roster`);
+          return;
+        }
+        
+        const key = `${rosterEntry.playerId}-${stat.quarter}`;
         if (!latestPlayerStats[key] || stat.id > latestPlayerStats[key].id) {
           latestPlayerStats[key] = stat;
         }
