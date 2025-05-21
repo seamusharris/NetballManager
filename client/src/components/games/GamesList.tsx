@@ -595,6 +595,17 @@ export default function GamesList({
           </Table>
         </div>
       </Card>
+    
+      {/* Game Status Dialog */}
+      <GameStatusDialog
+        game={selectedGame}
+        open={statusDialogOpen}
+        onOpenChange={setStatusDialogOpen}
+        onSuccess={() => {
+          // Refetch all relevant data after a successful status update
+          setSelectedGame(null);
+        }}
+      />
     </div>
   );
 }

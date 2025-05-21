@@ -1,6 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { runAddGameStatusMigration } from "./migrations/addGameStatus";
 
 const app = express();
 app.use(express.json());
@@ -37,6 +38,16 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Run migrations
+  try {
+    log("Running database migrations...", "migration");
+    await runAddGameStatusMigration();
+    log("Database migrations completed successfully!", "migration");
+  } catch (error) {
+    log(`Error running migrations: ${error}`, "migration-error");
+    console.error("Error during database migrations:", error);
+  }
+  
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
