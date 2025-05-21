@@ -432,5 +432,38 @@ export class StatisticsService {
   }
 }
 
+// Calculate game scores from statistics
+export function calculateGameScores(stats: GameStat[]) {
+  if (!stats || stats.length === 0) {
+    return { teamScore: 0, opponentScore: 0 };
+  }
+  
+  // For forfeit games, return standard 0-10 score
+  if (stats.some(s => s.isForfeit)) {
+    return { teamScore: 0, opponentScore: 10 };
+  }
+  
+  // Calculate regular game scores
+  const teamScore = stats.reduce((total, stat) => 
+    total + (stat.goalsFor || 0), 0);
+  
+  const opponentScore = stats.reduce((total, stat) => 
+    total + (stat.goalsAgainst || 0), 0);
+  
+  return { teamScore, opponentScore };
+}
+
+// Get appropriate color for game status
+export function getGameStatusColor(status: GameStatus): string {
+  const colorMap = {
+    'upcoming': 'blue',
+    'in-progress': 'amber',
+    'completed': 'green',
+    'forfeit': 'red'
+  };
+  
+  return colorMap[status] || 'gray';
+}
+
 // Create a singleton instance for use throughout the app
 export const statisticsService = new StatisticsService();
