@@ -464,15 +464,13 @@ export default function GamesList({
                               }
                             </button>
                             
-                            {game.completed && (
-                              <button 
+                            <button 
                                 onClick={() => navigate(`/statistics?game=${game.id}`)}
                                 className="inline-flex items-center justify-center rounded-md text-xs py-1 px-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground"
                               >
                                 <FileText className="h-3 w-3 mr-1" />
                                 View Stats
                               </button>
-                            )}
                             
                             {!game.isBye && 
                              !game.completed && 
