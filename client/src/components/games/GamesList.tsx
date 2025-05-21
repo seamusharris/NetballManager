@@ -501,10 +501,29 @@ export default function GamesList({
                             
                             <button 
                                 onClick={() => navigate(`/statistics?game=${game.id}`)}
-                                className="inline-flex items-center justify-center rounded-md text-xs py-1 px-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground"
+                                title={
+                                  !gameStatsStatus[game.id] || gameStatsStatus[game.id] === 'none'
+                                    ? "No statistics recorded yet"
+                                    : gameStatsStatus[game.id] === 'partial'
+                                      ? "Statistics have been recorded but game is not marked as completed"
+                                      : "Complete game statistics are available"
+                                }
+                                className={`inline-flex items-center justify-center rounded-md text-xs py-1 px-2 border ${
+                                  !gameStatsStatus[game.id] || gameStatsStatus[game.id] === 'none'
+                                    ? "bg-red-50 border-red-200 text-red-700 hover:bg-red-100" 
+                                    : gameStatsStatus[game.id] === 'partial'
+                                      ? "bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100"
+                                      : "bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100"
+                                }`}
                               >
-                                <FileText className="h-3 w-3 mr-1" />
-                                View Stats
+                                <FileText className={`h-3 w-3 mr-1 ${
+                                  !gameStatsStatus[game.id] || gameStatsStatus[game.id] === 'none'
+                                    ? "text-red-600"
+                                    : gameStatsStatus[game.id] === 'partial'
+                                      ? "text-amber-600"
+                                      : "text-emerald-600"
+                                }`} />
+                                Statistics
                               </button>
                             
                             {!game.isBye && 
