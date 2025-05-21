@@ -593,6 +593,13 @@ export default function RosterManager({
       // Refresh the roster data
       queryClient.invalidateQueries({ queryKey: ['/api/games', selectedGameId, 'rosters'] });
       
+      // Also invalidate stats data since position changes affect stats calculations
+      queryClient.invalidateQueries({ queryKey: ['/api/games', selectedGameId, 'stats'] });
+      
+      // Invalidate player game stats and performance data
+      queryClient.invalidateQueries({ queryKey: ['playerGameStats'] });
+      queryClient.invalidateQueries({ queryKey: ['playerPerformance'] });
+      
       toast({
         title: "Quarter Copied",
         description: `Positions from Quarter ${quarterToCopy} copied to Quarter ${activeQuarter}`,
