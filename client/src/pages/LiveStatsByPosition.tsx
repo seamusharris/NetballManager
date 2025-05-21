@@ -3,7 +3,7 @@ import { useParams, useLocation } from 'wouter';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
-import { GameStat, Position, allPositions, Opponent, Game } from '@shared/schema';
+import { GameStat, Position, allPositions, Opponent, Game, Player, Roster } from '@shared/schema';
 import { Button } from '@/components/ui/button';
 import { 
   Card, 
@@ -584,8 +584,52 @@ export default function LiveStatsByPosition() {
     "WA": [],
     "C": [],
     "WD": [],
-    "GD": ["rebounds"],
+    "GD": ["goalsAgainst", "rebounds"],
     "GK": ["goalsAgainst", "rebounds"]
+  };
+  
+  // Get roster information to display player names
+  const [rosterData, setRosterData] = useState<Roster[]>([]);
+  const [playerData, setPlayerData] = useState<Record<number, Player>>({});
+  
+  // Load roster information and player data
+  useEffect(() => {
+    if (game) {
+      // Fetch roster information for this game
+      const fetchRosterData = apiRequest<Roster[]>(`/api/games/${game.id}/rosters`);
+      // Fetch all players at once
+      const fetchAllPlayers = apiRequest<Player[]>(`/api/players`);
+      
+      // Run both requests in parallel
+      Promise.all([fetchRosterData, fetchAllPlayers])
+        .then(([rosters, players]) => {
+          setRosterData(rosters);
+          
+          // Create a map of player ID to player data
+          const playerMap: Record<number, Player> = {};
+          players.forEach(player => {
+            playerMap[player.id] = player;
+          });
+          setPlayerData(playerMap);
+        })
+        .catch(err => {
+          console.error("Error loading roster data:", err);
+        });
+    }
+  }, [game]);
+  
+  // Get player name for a position in current quarter
+  const getPlayerForPosition = (position: Position): string => {
+    if (!rosterData.length) return positionLabels[position]; // Fallback to position label
+    
+    const rosterEntry = rosterData.find(r => 
+      r.position === position && r.quarter === currentQuarter
+    );
+    
+    if (!rosterEntry) return positionLabels[position]; // Fallback if no roster entry
+    
+    const player = playerData[rosterEntry.playerId];
+    return player ? player.displayName : positionLabels[position]; // Return player name or fallback
   };
   
   return (
@@ -693,7 +737,7 @@ export default function LiveStatsByPosition() {
         <Card className="overflow-hidden">
           <CardHeader className="py-2 pb-2">
             <div className="flex flex-wrap items-center gap-2">
-              <div className="flex items-center gap-2 mr-3 min-w-fit">
+              <div className="flex items-center gap-2 mr-3 w-[180px]">
                 <div 
                   className="h-10 w-10 rounded-full flex items-center justify-center text-white font-bold text-base flex-shrink-0"
                   style={{
@@ -707,15 +751,15 @@ export default function LiveStatsByPosition() {
                 </div>
                 
                 <div className="min-w-[60px]">
-                  <p className="font-semibold text-sm">Goal Shooter</p>
-                  <p className="text-xs text-muted-foreground">Position</p>
+                  <p className="font-semibold text-sm">{getPlayerForPosition("GS")}</p>
+                  <p className="text-xs text-muted-foreground">{positionLabels["GS"]}</p>
                 </div>
               </div>
               
               {/* Common stats - show all for every position */}
               <div className="flex-1 flex flex-wrap gap-2">
                 {commonStats.map(stat => (
-                  <div key={`GS-common-${stat}`} className="flex-1 min-w-[120px]">
+                  <div key={`GS-common-${stat}`} className="flex-1 min-w-[120px] max-w-[140px]">
                     {renderStatCounter("GS", stat, false, false)}
                   </div>
                 ))}
@@ -726,9 +770,9 @@ export default function LiveStatsByPosition() {
           {/* Only render CardContent if this position has position-specific stats */}
           {positionSpecificStats["GS"].length > 0 && (
             <CardContent className="py-2 pt-1">
-              <div className="flex justify-center gap-2 flex-wrap">
+              <div className="flex justify-center gap-3 flex-wrap">
                 {positionSpecificStats["GS"].map(stat => (
-                  <div key={`GS-specific-${stat}`}>
+                  <div key={`GS-specific-${stat}`} className="min-w-[120px]">
                     {renderStatCounter("GS", stat, false, stat === "goalsFor" || stat === "goalsAgainst")}
                   </div>
                 ))}
@@ -741,7 +785,7 @@ export default function LiveStatsByPosition() {
         <Card className="overflow-hidden">
           <CardHeader className="py-2 pb-2">
             <div className="flex flex-wrap items-center gap-2">
-              <div className="flex items-center gap-2 mr-3 min-w-fit">
+              <div className="flex items-center gap-2 mr-3 w-[180px]">
                 <div 
                   className="h-10 w-10 rounded-full flex items-center justify-center text-white font-bold text-base flex-shrink-0"
                   style={{
@@ -755,15 +799,15 @@ export default function LiveStatsByPosition() {
                 </div>
                 
                 <div className="min-w-[60px]">
-                  <p className="font-semibold text-sm">Goal Attack</p>
-                  <p className="text-xs text-muted-foreground">Position</p>
+                  <p className="font-semibold text-sm">{getPlayerForPosition("GA")}</p>
+                  <p className="text-xs text-muted-foreground">{positionLabels["GA"]}</p>
                 </div>
               </div>
               
               {/* Common stats - show all for every position */}
               <div className="flex-1 flex flex-wrap gap-2">
                 {commonStats.map(stat => (
-                  <div key={`GA-common-${stat}`} className="flex-1 min-w-[120px]">
+                  <div key={`GA-common-${stat}`} className="flex-1 min-w-[120px] max-w-[140px]">
                     {renderStatCounter("GA", stat, false, false)}
                   </div>
                 ))}
@@ -774,9 +818,9 @@ export default function LiveStatsByPosition() {
           {/* Only render CardContent if this position has position-specific stats */}
           {positionSpecificStats["GA"].length > 0 && (
             <CardContent className="py-2 pt-1">
-              <div className="flex justify-center gap-2 flex-wrap">
+              <div className="flex justify-center gap-3 flex-wrap">
                 {positionSpecificStats["GA"].map(stat => (
-                  <div key={`GA-specific-${stat}`}>
+                  <div key={`GA-specific-${stat}`} className="min-w-[120px]">
                     {renderStatCounter("GA", stat, false, stat === "goalsFor" || stat === "goalsAgainst")}
                   </div>
                 ))}
@@ -789,7 +833,7 @@ export default function LiveStatsByPosition() {
         <Card className="overflow-hidden">
           <CardHeader className="py-2 pb-2">
             <div className="flex flex-wrap items-center gap-2">
-              <div className="flex items-center gap-2 mr-3 min-w-fit">
+              <div className="flex items-center gap-2 mr-3 w-[180px]">
                 <div 
                   className="h-10 w-10 rounded-full flex items-center justify-center text-white font-bold text-base flex-shrink-0"
                   style={{
@@ -803,15 +847,15 @@ export default function LiveStatsByPosition() {
                 </div>
                 
                 <div className="min-w-[60px]">
-                  <p className="font-semibold text-sm">Wing Attack</p>
-                  <p className="text-xs text-muted-foreground">Position</p>
+                  <p className="font-semibold text-sm">{getPlayerForPosition("WA")}</p>
+                  <p className="text-xs text-muted-foreground">{positionLabels["WA"]}</p>
                 </div>
               </div>
               
               {/* Common stats - show all for every position */}
               <div className="flex-1 flex flex-wrap gap-2">
                 {commonStats.map(stat => (
-                  <div key={`WA-common-${stat}`} className="flex-1 min-w-[120px]">
+                  <div key={`WA-common-${stat}`} className="flex-1 min-w-[120px] max-w-[140px]">
                     {renderStatCounter("WA", stat, false, false)}
                   </div>
                 ))}
@@ -822,9 +866,9 @@ export default function LiveStatsByPosition() {
           {/* Only render CardContent if this position has position-specific stats */}
           {positionSpecificStats["WA"].length > 0 && (
             <CardContent className="py-2 pt-1">
-              <div className="flex justify-center gap-2 flex-wrap">
+              <div className="flex justify-center gap-3 flex-wrap">
                 {positionSpecificStats["WA"].map(stat => (
-                  <div key={`WA-specific-${stat}`}>
+                  <div key={`WA-specific-${stat}`} className="min-w-[120px]">
                     {renderStatCounter("WA", stat, false, stat === "goalsFor" || stat === "goalsAgainst")}
                   </div>
                 ))}
@@ -837,7 +881,7 @@ export default function LiveStatsByPosition() {
         <Card className="overflow-hidden">
           <CardHeader className="py-2 pb-2">
             <div className="flex flex-wrap items-center gap-2">
-              <div className="flex items-center gap-2 mr-3 min-w-fit">
+              <div className="flex items-center gap-2 mr-3 w-[180px]">
                 <div 
                   className="h-10 w-10 rounded-full flex items-center justify-center text-white font-bold text-base flex-shrink-0"
                   style={{
@@ -851,15 +895,15 @@ export default function LiveStatsByPosition() {
                 </div>
                 
                 <div className="min-w-[60px]">
-                  <p className="font-semibold text-sm">Center</p>
-                  <p className="text-xs text-muted-foreground">Position</p>
+                  <p className="font-semibold text-sm">{getPlayerForPosition("C")}</p>
+                  <p className="text-xs text-muted-foreground">{positionLabels["C"]}</p>
                 </div>
               </div>
               
               {/* Common stats - show all for every position */}
               <div className="flex-1 flex flex-wrap gap-2">
                 {commonStats.map(stat => (
-                  <div key={`C-common-${stat}`} className="flex-1 min-w-[120px]">
+                  <div key={`C-common-${stat}`} className="flex-1 min-w-[120px] max-w-[140px]">
                     {renderStatCounter("C", stat, false, false)}
                   </div>
                 ))}
@@ -870,9 +914,9 @@ export default function LiveStatsByPosition() {
           {/* Only render CardContent if this position has position-specific stats */}
           {positionSpecificStats["C"].length > 0 && (
             <CardContent className="py-2 pt-1">
-              <div className="flex justify-center gap-2 flex-wrap">
+              <div className="flex justify-center gap-3 flex-wrap">
                 {positionSpecificStats["C"].map(stat => (
-                  <div key={`C-specific-${stat}`}>
+                  <div key={`C-specific-${stat}`} className="min-w-[120px]">
                     {renderStatCounter("C", stat, false, stat === "goalsFor" || stat === "goalsAgainst")}
                   </div>
                 ))}
@@ -885,7 +929,7 @@ export default function LiveStatsByPosition() {
         <Card className="overflow-hidden">
           <CardHeader className="py-2 pb-2">
             <div className="flex flex-wrap items-center gap-2">
-              <div className="flex items-center gap-2 mr-3 min-w-fit">
+              <div className="flex items-center gap-2 mr-3 w-[180px]">
                 <div 
                   className="h-10 w-10 rounded-full flex items-center justify-center text-white font-bold text-base flex-shrink-0"
                   style={{
@@ -899,15 +943,15 @@ export default function LiveStatsByPosition() {
                 </div>
                 
                 <div className="min-w-[60px]">
-                  <p className="font-semibold text-sm">Wing Defense</p>
-                  <p className="text-xs text-muted-foreground">Position</p>
+                  <p className="font-semibold text-sm">{getPlayerForPosition("WD")}</p>
+                  <p className="text-xs text-muted-foreground">{positionLabels["WD"]}</p>
                 </div>
               </div>
               
               {/* Common stats - show all for every position */}
               <div className="flex-1 flex flex-wrap gap-2">
                 {commonStats.map(stat => (
-                  <div key={`WD-common-${stat}`} className="flex-1 min-w-[120px]">
+                  <div key={`WD-common-${stat}`} className="flex-1 min-w-[120px] max-w-[140px]">
                     {renderStatCounter("WD", stat, false, false)}
                   </div>
                 ))}
@@ -918,9 +962,9 @@ export default function LiveStatsByPosition() {
           {/* Only render CardContent if this position has position-specific stats */}
           {positionSpecificStats["WD"].length > 0 && (
             <CardContent className="py-2 pt-1">
-              <div className="flex justify-center gap-2 flex-wrap">
+              <div className="flex justify-center gap-3 flex-wrap">
                 {positionSpecificStats["WD"].map(stat => (
-                  <div key={`WD-specific-${stat}`}>
+                  <div key={`WD-specific-${stat}`} className="min-w-[120px]">
                     {renderStatCounter("WD", stat, false, stat === "goalsFor" || stat === "goalsAgainst")}
                   </div>
                 ))}
@@ -933,7 +977,7 @@ export default function LiveStatsByPosition() {
         <Card className="overflow-hidden">
           <CardHeader className="py-2 pb-2">
             <div className="flex flex-wrap items-center gap-2">
-              <div className="flex items-center gap-2 mr-3 min-w-fit">
+              <div className="flex items-center gap-2 mr-3 w-[180px]">
                 <div 
                   className="h-10 w-10 rounded-full flex items-center justify-center text-white font-bold text-base flex-shrink-0"
                   style={{
@@ -947,15 +991,15 @@ export default function LiveStatsByPosition() {
                 </div>
                 
                 <div className="min-w-[60px]">
-                  <p className="font-semibold text-sm">Goal Defense</p>
-                  <p className="text-xs text-muted-foreground">Position</p>
+                  <p className="font-semibold text-sm">{getPlayerForPosition("GD")}</p>
+                  <p className="text-xs text-muted-foreground">{positionLabels["GD"]}</p>
                 </div>
               </div>
               
               {/* Common stats - show all for every position */}
               <div className="flex-1 flex flex-wrap gap-2">
                 {commonStats.map(stat => (
-                  <div key={`GD-common-${stat}`} className="flex-1 min-w-[120px]">
+                  <div key={`GD-common-${stat}`} className="flex-1 min-w-[120px] max-w-[140px]">
                     {renderStatCounter("GD", stat, false, false)}
                   </div>
                 ))}
@@ -966,9 +1010,9 @@ export default function LiveStatsByPosition() {
           {/* Only render CardContent if this position has position-specific stats */}
           {positionSpecificStats["GD"].length > 0 && (
             <CardContent className="py-2 pt-1">
-              <div className="flex justify-center gap-2 flex-wrap">
+              <div className="flex justify-center gap-3 flex-wrap">
                 {positionSpecificStats["GD"].map(stat => (
-                  <div key={`GD-specific-${stat}`}>
+                  <div key={`GD-specific-${stat}`} className="min-w-[120px]">
                     {renderStatCounter("GD", stat, false, stat === "goalsFor" || stat === "goalsAgainst")}
                   </div>
                 ))}
@@ -981,7 +1025,7 @@ export default function LiveStatsByPosition() {
         <Card className="overflow-hidden">
           <CardHeader className="py-2 pb-2">
             <div className="flex flex-wrap items-center gap-2">
-              <div className="flex items-center gap-2 mr-3 min-w-fit">
+              <div className="flex items-center gap-2 mr-3 w-[180px]">
                 <div 
                   className="h-10 w-10 rounded-full flex items-center justify-center text-white font-bold text-base flex-shrink-0"
                   style={{
@@ -995,15 +1039,15 @@ export default function LiveStatsByPosition() {
                 </div>
                 
                 <div className="min-w-[60px]">
-                  <p className="font-semibold text-sm">Goal Keeper</p>
-                  <p className="text-xs text-muted-foreground">Position</p>
+                  <p className="font-semibold text-sm">{getPlayerForPosition("GK")}</p>
+                  <p className="text-xs text-muted-foreground">{positionLabels["GK"]}</p>
                 </div>
               </div>
               
               {/* Common stats - show all for every position */}
               <div className="flex-1 flex flex-wrap gap-2">
                 {commonStats.map(stat => (
-                  <div key={`GK-common-${stat}`} className="flex-1 min-w-[120px]">
+                  <div key={`GK-common-${stat}`} className="flex-1 min-w-[120px] max-w-[140px]">
                     {renderStatCounter("GK", stat, false, false)}
                   </div>
                 ))}
@@ -1014,9 +1058,9 @@ export default function LiveStatsByPosition() {
           {/* Only render CardContent if this position has position-specific stats */}
           {positionSpecificStats["GK"].length > 0 && (
             <CardContent className="py-2 pt-1">
-              <div className="flex justify-center gap-2 flex-wrap">
+              <div className="flex justify-center gap-3 flex-wrap">
                 {positionSpecificStats["GK"].map(stat => (
-                  <div key={`GK-specific-${stat}`}>
+                  <div key={`GK-specific-${stat}`} className="min-w-[120px]">
                     {renderStatCounter("GK", stat, false, stat === "goalsFor" || stat === "goalsAgainst")}
                   </div>
                 ))}
