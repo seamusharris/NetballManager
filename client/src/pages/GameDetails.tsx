@@ -107,11 +107,21 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
     return player ? (player.displayName || `${player.firstName} ${player.lastName}`) : null;
   };
   
-  // Helper to get player color
+  // Helper to get player color - using more vibrant default colors for better visibility
   const getPlayerColor = (playerId) => {
     if (!players || !playerId) return '#cccccc';
     const player = players.find(p => p.id === playerId);
-    return player?.avatarColor || '#cccccc';
+    
+    // If player has no avatar color, assign a default based on player ID
+    if (!player?.avatarColor) {
+      const defaultColors = [
+        '#FF5733', '#33FF57', '#3357FF', '#F033FF', '#FF33F0', 
+        '#33FFF0', '#F0FF33', '#8C33FF', '#FF8C33', '#33FF8C'
+      ];
+      return defaultColors[playerId % defaultColors.length];
+    }
+    
+    return player.avatarColor;
   };
   
   return (
@@ -150,7 +160,10 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
             <div key={position} className={`absolute ${getPositionCoordinates(position)}`}>
               <div 
                 className={`bg-white rounded-full p-2 shadow-md ${!playerName ? 'border-2 border-red-400' : ''}`}
-                style={{ borderLeft: playerName ? `4px solid ${playerColor}` : undefined }}
+                style={{ 
+                  backgroundColor: playerName ? `${playerColor}20` : 'white', // 20 adds 12.5% opacity
+                  border: playerName ? `3px solid ${playerColor}` : undefined,
+                }}
               >
                 <div className="font-bold text-center">{position}</div>
                 {playerName && (
@@ -177,11 +190,17 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
             return (
               <div 
                 key={position} 
-                className="p-2 bg-white border rounded-md shadow-sm"
-                style={{ borderLeft: `4px solid ${playerColor || '#cccccc'}` }}
+                className="p-2 border rounded-md shadow-sm"
+                style={{ 
+                  backgroundColor: playerName ? `${playerColor}20` : 'white',
+                  border: playerName ? `2px solid ${playerColor}` : '1px solid #ddd',
+                }}
               >
                 <div className="font-bold">{position}</div>
-                <div className={playerName ? 'text-gray-900' : 'text-red-500 italic'}>
+                <div 
+                  className={playerName ? 'text-gray-900 font-medium' : 'text-red-500 italic'}
+                  style={{ color: playerName ? playerColor : undefined }}
+                >
                   {playerName || 'Unassigned'}
                 </div>
               </div>
