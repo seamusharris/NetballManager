@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet';
 import { useToast } from '@/hooks/use-toast';
@@ -18,8 +18,17 @@ export default function Games() {
   const { toast } = useToast();
   const [_, navigate] = useLocation();
   
+  // Immediate query invalidation when component mounts
+  useEffect(() => {
+    // Force a refresh of all game data and statistics
+    queryClient.invalidateQueries({ queryKey: ['/api/games'] });
+    queryClient.invalidateQueries({ queryKey: ['gameScores'] });
+    queryClient.invalidateQueries({ queryKey: ['gameStats'] });
+  }, []);
+  
   const { data: games = [], isLoading: isLoadingGames } = useQuery<any[]>({
     queryKey: ['/api/games'],
+    staleTime: 0, // Consider data stale immediately
   });
   
   const { data: opponents = [], isLoading: isLoadingOpponents } = useQuery<any[]>({
