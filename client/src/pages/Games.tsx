@@ -18,11 +18,11 @@ export default function Games() {
   const { toast } = useToast();
   const [_, navigate] = useLocation();
   
-  const { data: games = [], isLoading: isLoadingGames } = useQuery({
+  const { data: games = [], isLoading: isLoadingGames } = useQuery<any[]>({
     queryKey: ['/api/games'],
   });
   
-  const { data: opponents = [], isLoading: isLoadingOpponents } = useQuery({
+  const { data: opponents = [], isLoading: isLoadingOpponents } = useQuery<any[]>({
     queryKey: ['/api/opponents'],
   });
   
@@ -30,8 +30,13 @@ export default function Games() {
   
   const createMutation = useMutation({
     mutationFn: async (newGame: any) => {
-      const res = await apiRequest('POST', '/api/games', newGame);
-      return res.json();
+      return await apiRequest('/api/games', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newGame)
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/games'] });
@@ -52,8 +57,13 @@ export default function Games() {
   
   const updateMutation = useMutation({
     mutationFn: async ({ id, game }: { id: number, game: any }) => {
-      const res = await apiRequest('PATCH', `/api/games/${id}`, game);
-      return res.json();
+      return await apiRequest(`/api/games/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(game)
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/games'] });
@@ -74,7 +84,9 @@ export default function Games() {
   
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
-      await apiRequest('DELETE', `/api/games/${id}`);
+      return await apiRequest(`/api/games/${id}`, {
+        method: 'DELETE'
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/games'] });
@@ -129,8 +141,8 @@ export default function Games() {
         </div>
         
         <GamesList 
-          games={games} 
-          opponents={opponents}
+          games={games as Game[]} 
+          opponents={opponents as any[]}
           isLoading={isLoading}
           onEdit={setEditingGame}
           onDelete={handleDeleteGame}
@@ -141,7 +153,7 @@ export default function Games() {
           <DialogContent className="sm:max-w-[550px]">
             <DialogTitle className="sr-only">Schedule New Game</DialogTitle>
             <GameForm 
-              opponents={opponents}
+              opponents={opponents as any[]}
               onSubmit={handleCreateGame} 
               isSubmitting={createMutation.isPending} 
             />
@@ -153,7 +165,7 @@ export default function Games() {
             <DialogTitle className="sr-only">Edit Game</DialogTitle>
             <GameForm 
               game={editingGame || undefined}
-              opponents={opponents}
+              opponents={opponents as any[]}
               onSubmit={handleUpdateGame} 
               isSubmitting={updateMutation.isPending} 
             />
