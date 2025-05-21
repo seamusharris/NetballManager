@@ -233,18 +233,33 @@ export default function LiveStatsByPosition() {
   
   // Get player name for a position in the current quarter
   const getPlayerForPosition = (position: Position): string => {
-    if (!rosterData || rosterData.length === 0) return position;
+    if (!rosterData || rosterData.length === 0 || !playerData) {
+      // Log for debugging
+      console.log("Missing data for player names:", {
+        hasRoster: !!rosterData && rosterData.length > 0,
+        hasPlayers: !!playerData && Object.keys(playerData).length > 0
+      });
+      return positionLabels[position] || position;
+    }
     
     // Find roster entry for this position and quarter
     const rosterEntry = rosterData.find(r => 
       r.position === position && r.quarter === currentQuarter
     );
     
-    if (!rosterEntry) return position;
+    if (!rosterEntry) {
+      console.log(`No roster entry found for position ${position} in quarter ${currentQuarter}`);
+      return positionLabels[position] || position;
+    }
     
     // Get player name from player data
     const player = playerData[rosterEntry.playerId];
-    return player ? player.displayName : position;
+    if (!player) {
+      console.log(`Player not found for ID ${rosterEntry.playerId}`);
+      return positionLabels[position] || position;
+    }
+    
+    return player.displayName;
   };
   
   // Save current state to undo stack
