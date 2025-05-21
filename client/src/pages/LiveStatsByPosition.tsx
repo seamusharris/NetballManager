@@ -372,11 +372,21 @@ export default function LiveStatsByPosition() {
         return false;
       }
       
-      // Log the response
-      const responseData = await response.json();
-      console.log(`Save successful: ${method} response:`, responseData);
-      
-      return true;
+      try {
+        // Try to parse response as JSON
+        const responseData = await response.json();
+        console.log(`Save successful: ${method} response:`, responseData);
+        return true;
+      } catch (jsonError) {
+        // If response is not JSON, still consider it successful if status is OK
+        if (response.ok) {
+          console.log(`Save successful with non-JSON response: ${response.status}`);
+          return true;
+        }
+        
+        console.error("Error parsing response as JSON:", jsonError);
+        return false;
+      }
     } catch (error) {
       console.error("Error in direct save:", error);
       return false;
@@ -427,7 +437,31 @@ export default function LiveStatsByPosition() {
         // Save all stats using our direct method
         let successCount = 0;
         
+        // First ensure we have proper data loaded from the server
+        // This will fetch fresh data to check against
+        await queryClient.invalidateQueries({ queryKey: ['/api/games', gameId, 'stats'] });
+        
+        // Give server time to respond with latest data
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
+        // Refetch stats to get correct IDs
+        const updatedStats = await apiRequest<GameStat[]>(`/api/games/${gameId}/stats`);
+        console.log("Current server stats:", updatedStats);
+        
+        // Do saves with fresh data
         for (const stat of statsToSave) {
+          // Try to find matching stat in updated data
+          const existingStat = updatedStats?.find(s => 
+            s.gameId === stat.gameId && 
+            s.position === stat.position && 
+            s.quarter === stat.quarter
+          );
+          
+          // If found, use its ID
+          if (existingStat) {
+            stat.id = existingStat.id;
+          }
+          
           const success = await saveStatDirectly(stat);
           if (success) successCount++;
         }
@@ -437,10 +471,16 @@ export default function LiveStatsByPosition() {
             title: "Stats Saved",
             description: `Successfully saved ${successCount} statistics.`
           });
-        } else {
+        } else if (successCount > 0) {
           toast({
             title: "Partial Save",
             description: `Saved ${successCount} of ${statsToSave.length} statistics.`,
+            variant: "destructive"
+          });
+        } else {
+          toast({
+            title: "Save Failed",
+            description: "Could not save any statistics. Please try again.",
             variant: "destructive"
           });
         }
