@@ -574,8 +574,19 @@ export default function LiveStatsByPosition() {
     "GK": "Goal Keeper"
   };
   
-  // Common stats shown at the top of each player card
+  // Common stats shown at the top of each player card - show all of these for every position
   const commonStats: StatType[] = ['intercepts', 'badPass', 'handlingError', 'infringement', 'pickUp'];
+  
+  // Position-specific stats shown in the second row
+  const positionSpecificStats: Record<Position, StatType[]> = {
+    "GS": ["goalsFor", "missedGoals", "rebounds"],
+    "GA": ["goalsFor", "missedGoals", "rebounds"],
+    "WA": [],
+    "C": [],
+    "WD": [],
+    "GD": ["rebounds"],
+    "GK": ["goalsAgainst", "rebounds"]
+  };
   
   return (
     <div className="container py-3 px-2 md:py-4 md:px-4">
@@ -701,26 +712,29 @@ export default function LiveStatsByPosition() {
                 </div>
               </div>
               
-              {/* Common stats */}
+              {/* Common stats - show all for every position */}
               <div className="flex-1 flex flex-wrap gap-2">
                 {commonStats.map(stat => (
-                  positionStats["GS"][stat] && (
-                    <div key={`GS-common-${stat}`} className="flex-1 min-w-[120px]">
-                      {renderStatCounter("GS", stat, false, false)}
-                    </div>
-                  )
+                  <div key={`GS-common-${stat}`} className="flex-1 min-w-[120px]">
+                    {renderStatCounter("GS", stat, false, false)}
+                  </div>
                 ))}
               </div>
             </div>
           </CardHeader>
-          <CardContent className="py-2 pt-1">
-            {/* Position-specific stats */}
-            <div className="flex justify-center gap-2 flex-wrap">
-              {renderStatCounter("GS", "goalsFor", false, true)}
-              {renderStatCounter("GS", "missedGoals", false, false)}
-              {renderStatCounter("GS", "rebounds", false, false)}
-            </div>
-          </CardContent>
+          
+          {/* Only render CardContent if this position has position-specific stats */}
+          {positionSpecificStats["GS"].length > 0 && (
+            <CardContent className="py-2 pt-1">
+              <div className="flex justify-center gap-2 flex-wrap">
+                {positionSpecificStats["GS"].map(stat => (
+                  <div key={`GS-specific-${stat}`}>
+                    {renderStatCounter("GS", stat, false, stat === "goalsFor" || stat === "goalsAgainst")}
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          )}
         </Card>
         
         {/* GA */}
@@ -746,26 +760,29 @@ export default function LiveStatsByPosition() {
                 </div>
               </div>
               
-              {/* Common stats */}
+              {/* Common stats - show all for every position */}
               <div className="flex-1 flex flex-wrap gap-2">
                 {commonStats.map(stat => (
-                  positionStats["GA"][stat] && (
-                    <div key={`GA-common-${stat}`} className="flex-1 min-w-[120px]">
-                      {renderStatCounter("GA", stat, false, false)}
-                    </div>
-                  )
+                  <div key={`GA-common-${stat}`} className="flex-1 min-w-[120px]">
+                    {renderStatCounter("GA", stat, false, false)}
+                  </div>
                 ))}
               </div>
             </div>
           </CardHeader>
-          <CardContent className="py-2 pt-1">
-            {/* Position-specific stats */}
-            <div className="flex justify-center gap-2 flex-wrap">
-              {renderStatCounter("GA", "goalsFor", false, true)}
-              {renderStatCounter("GA", "missedGoals", false, false)}
-              {renderStatCounter("GA", "rebounds", false, false)}
-            </div>
-          </CardContent>
+          
+          {/* Only render CardContent if this position has position-specific stats */}
+          {positionSpecificStats["GA"].length > 0 && (
+            <CardContent className="py-2 pt-1">
+              <div className="flex justify-center gap-2 flex-wrap">
+                {positionSpecificStats["GA"].map(stat => (
+                  <div key={`GA-specific-${stat}`}>
+                    {renderStatCounter("GA", stat, false, stat === "goalsFor" || stat === "goalsAgainst")}
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          )}
         </Card>
         
         {/* WA */}
@@ -791,18 +808,29 @@ export default function LiveStatsByPosition() {
                 </div>
               </div>
               
-              {/* Common stats */}
+              {/* Common stats - show all for every position */}
               <div className="flex-1 flex flex-wrap gap-2">
                 {commonStats.map(stat => (
-                  positionStats["WA"][stat] && (
-                    <div key={`WA-common-${stat}`} className="flex-1 min-w-[120px]">
-                      {renderStatCounter("WA", stat, false, false)}
-                    </div>
-                  )
+                  <div key={`WA-common-${stat}`} className="flex-1 min-w-[120px]">
+                    {renderStatCounter("WA", stat, false, false)}
+                  </div>
                 ))}
               </div>
             </div>
           </CardHeader>
+          
+          {/* Only render CardContent if this position has position-specific stats */}
+          {positionSpecificStats["WA"].length > 0 && (
+            <CardContent className="py-2 pt-1">
+              <div className="flex justify-center gap-2 flex-wrap">
+                {positionSpecificStats["WA"].map(stat => (
+                  <div key={`WA-specific-${stat}`}>
+                    {renderStatCounter("WA", stat, false, stat === "goalsFor" || stat === "goalsAgainst")}
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          )}
         </Card>
         
         {/* C */}
@@ -828,18 +856,29 @@ export default function LiveStatsByPosition() {
                 </div>
               </div>
               
-              {/* Common stats */}
+              {/* Common stats - show all for every position */}
               <div className="flex-1 flex flex-wrap gap-2">
                 {commonStats.map(stat => (
-                  positionStats["C"][stat] && (
-                    <div key={`C-common-${stat}`} className="flex-1 min-w-[120px]">
-                      {renderStatCounter("C", stat, false, false)}
-                    </div>
-                  )
+                  <div key={`C-common-${stat}`} className="flex-1 min-w-[120px]">
+                    {renderStatCounter("C", stat, false, false)}
+                  </div>
                 ))}
               </div>
             </div>
           </CardHeader>
+          
+          {/* Only render CardContent if this position has position-specific stats */}
+          {positionSpecificStats["C"].length > 0 && (
+            <CardContent className="py-2 pt-1">
+              <div className="flex justify-center gap-2 flex-wrap">
+                {positionSpecificStats["C"].map(stat => (
+                  <div key={`C-specific-${stat}`}>
+                    {renderStatCounter("C", stat, false, stat === "goalsFor" || stat === "goalsAgainst")}
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          )}
         </Card>
         
         {/* WD */}
@@ -865,18 +904,29 @@ export default function LiveStatsByPosition() {
                 </div>
               </div>
               
-              {/* Common stats */}
+              {/* Common stats - show all for every position */}
               <div className="flex-1 flex flex-wrap gap-2">
                 {commonStats.map(stat => (
-                  positionStats["WD"][stat] && (
-                    <div key={`WD-common-${stat}`} className="flex-1 min-w-[120px]">
-                      {renderStatCounter("WD", stat, false, false)}
-                    </div>
-                  )
+                  <div key={`WD-common-${stat}`} className="flex-1 min-w-[120px]">
+                    {renderStatCounter("WD", stat, false, false)}
+                  </div>
                 ))}
               </div>
             </div>
           </CardHeader>
+          
+          {/* Only render CardContent if this position has position-specific stats */}
+          {positionSpecificStats["WD"].length > 0 && (
+            <CardContent className="py-2 pt-1">
+              <div className="flex justify-center gap-2 flex-wrap">
+                {positionSpecificStats["WD"].map(stat => (
+                  <div key={`WD-specific-${stat}`}>
+                    {renderStatCounter("WD", stat, false, stat === "goalsFor" || stat === "goalsAgainst")}
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          )}
         </Card>
         
         {/* GD */}
@@ -902,24 +952,29 @@ export default function LiveStatsByPosition() {
                 </div>
               </div>
               
-              {/* Common stats */}
+              {/* Common stats - show all for every position */}
               <div className="flex-1 flex flex-wrap gap-2">
                 {commonStats.map(stat => (
-                  positionStats["GD"][stat] && (
-                    <div key={`GD-common-${stat}`} className="flex-1 min-w-[120px]">
-                      {renderStatCounter("GD", stat, false, false)}
-                    </div>
-                  )
+                  <div key={`GD-common-${stat}`} className="flex-1 min-w-[120px]">
+                    {renderStatCounter("GD", stat, false, false)}
+                  </div>
                 ))}
               </div>
             </div>
           </CardHeader>
-          <CardContent className="py-2 pt-1">
-            {/* Position-specific stats */}
-            <div className="flex justify-center gap-2 flex-wrap">
-              {renderStatCounter("GD", "rebounds", false, false)}
-            </div>
-          </CardContent>
+          
+          {/* Only render CardContent if this position has position-specific stats */}
+          {positionSpecificStats["GD"].length > 0 && (
+            <CardContent className="py-2 pt-1">
+              <div className="flex justify-center gap-2 flex-wrap">
+                {positionSpecificStats["GD"].map(stat => (
+                  <div key={`GD-specific-${stat}`}>
+                    {renderStatCounter("GD", stat, false, stat === "goalsFor" || stat === "goalsAgainst")}
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          )}
         </Card>
         
         {/* GK */}
@@ -945,25 +1000,29 @@ export default function LiveStatsByPosition() {
                 </div>
               </div>
               
-              {/* Common stats */}
+              {/* Common stats - show all for every position */}
               <div className="flex-1 flex flex-wrap gap-2">
                 {commonStats.map(stat => (
-                  positionStats["GK"][stat] && (
-                    <div key={`GK-common-${stat}`} className="flex-1 min-w-[120px]">
-                      {renderStatCounter("GK", stat, false, false)}
-                    </div>
-                  )
+                  <div key={`GK-common-${stat}`} className="flex-1 min-w-[120px]">
+                    {renderStatCounter("GK", stat, false, false)}
+                  </div>
                 ))}
               </div>
             </div>
           </CardHeader>
-          <CardContent className="py-2 pt-1">
-            {/* Position-specific stats */}
-            <div className="flex justify-center gap-2 flex-wrap">
-              {renderStatCounter("GK", "goalsAgainst", false, true)}
-              {renderStatCounter("GK", "rebounds", false, false)}
-            </div>
-          </CardContent>
+          
+          {/* Only render CardContent if this position has position-specific stats */}
+          {positionSpecificStats["GK"].length > 0 && (
+            <CardContent className="py-2 pt-1">
+              <div className="flex justify-center gap-2 flex-wrap">
+                {positionSpecificStats["GK"].map(stat => (
+                  <div key={`GK-specific-${stat}`}>
+                    {renderStatCounter("GK", stat, false, stat === "goalsFor" || stat === "goalsAgainst")}
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          )}
         </Card>
       </div>
     </div>
