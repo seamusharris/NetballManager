@@ -293,27 +293,33 @@ export default function GameStatistics({
       
       if (existingStat) {
         // Update existing stats
-        const res = await apiRequest(`PATCH`, `/api/gamestats/${existingStat.id}`, stats);
-        return res.json();
+        return await apiRequest(`/api/gamestats/${existingStat.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(stats)
+        });
       } else {
         // Create new stats
-        const res = await apiRequest(`POST`, `/api/gamestats`, {
-          gameId: game.id,
-          position,
-          quarter,
-          goalsFor: 0,
-          goalsAgainst: 0,
-          missedGoals: 0,
-          rebounds: 0,
-          intercepts: 0,
-          badPass: 0,
-          handlingError: 0,
-          pickUp: 0,
-          infringement: 0,
-          rating: null,
-          ...stats // Override with actual values being updated
+        return await apiRequest(`/api/gamestats`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            gameId: game.id,
+            position,
+            quarter,
+            goalsFor: 0,
+            goalsAgainst: 0,
+            missedGoals: 0,
+            rebounds: 0,
+            intercepts: 0,
+            badPass: 0,
+            handlingError: 0,
+            pickUp: 0,
+            infringement: 0,
+            rating: null,
+            ...stats // Override with actual values being updated
+          })
         });
-        return res.json();
       }
     },
     onSuccess: (data) => {
@@ -440,26 +446,34 @@ export default function GameStatistics({
           if (existingStat) {
             // Update existing stats - position-based
             savePromises.push(
-              apiRequest(`PATCH`, `/api/gamestats/${existingStat.id}`, quarterChanges)
+              apiRequest(`/api/gamestats/${existingStat.id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(quarterChanges)
+              })
             );
           } else {
             // Create new stats with defaults - position-based
             savePromises.push(
-              apiRequest(`POST`, `/api/gamestats`, {
-                gameId: game.id,
-                position, // Position is primary identifier, no player ID needed
-                quarter: quarterNum,
-                goalsFor: 0,
-                goalsAgainst: 0,
-                missedGoals: 0,
-                rebounds: 0,
-                intercepts: 0,
-                badPass: 0,
-                handlingError: 0,
-                pickUp: 0,
-                infringement: 0,
-                rating: null,
-                ...quarterChanges // Override with actual values being updated
+              apiRequest(`/api/gamestats`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  gameId: game.id,
+                  position, // Position is primary identifier, no player ID needed
+                  quarter: quarterNum,
+                  goalsFor: 0,
+                  goalsAgainst: 0,
+                  missedGoals: 0,
+                  rebounds: 0,
+                  intercepts: 0,
+                  badPass: 0,
+                  handlingError: 0,
+                  pickUp: 0,
+                  infringement: 0,
+                  rating: null,
+                  ...quarterChanges // Override with actual values being updated
+                })
               })
             );
           }
