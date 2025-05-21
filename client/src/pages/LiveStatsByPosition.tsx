@@ -314,6 +314,47 @@ export default function LiveStatsByPosition() {
     });
   };
   
+  // Direct API save function without using the mutation
+  const saveStatDirectly = async (stat: Partial<GameStat>): Promise<boolean> => {
+    try {
+      // Create a simple object with only the required fields
+      const payload = {
+        gameId: stat.gameId,
+        position: stat.position,
+        quarter: stat.quarter,
+        goalsFor: stat.goalsFor || 0,
+        goalsAgainst: stat.goalsAgainst || 0,
+        missedGoals: stat.missedGoals || 0,
+        rebounds: stat.rebounds || 0,
+        intercepts: stat.intercepts || 0,
+        badPass: stat.badPass || 0,
+        handlingError: stat.handlingError || 0,
+        pickUp: stat.pickUp || 0,
+        infringement: stat.infringement || 0,
+        rating: null
+      };
+      
+      // Make the fetch request directly
+      const response = await fetch('/api/game-stats', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+      
+      if (!response.ok) {
+        console.error(`API error: ${response.status} ${response.statusText}`);
+        return false;
+      }
+      
+      return true;
+    } catch (error) {
+      console.error("Error in direct save:", error);
+      return false;
+    }
+  };
+  
   // Save all stats to the database
   const saveAllStats = async () => {
     if (saveInProgress) return;
@@ -355,14 +396,26 @@ export default function LiveStatsByPosition() {
       });
       
       if (statsToSave.length > 0) {
-        // Save all stats
-        const promises = statsToSave.map(stat => saveStatMutation.mutateAsync(stat));
-        await Promise.all(promises);
+        // Save all stats using our direct method
+        let successCount = 0;
         
-        toast({
-          title: "Stats Saved",
-          description: "All game statistics have been saved successfully."
-        });
+        for (const stat of statsToSave) {
+          const success = await saveStatDirectly(stat);
+          if (success) successCount++;
+        }
+        
+        if (successCount === statsToSave.length) {
+          toast({
+            title: "Stats Saved",
+            description: `Successfully saved ${successCount} statistics.`
+          });
+        } else {
+          toast({
+            title: "Partial Save",
+            description: `Saved ${successCount} of ${statsToSave.length} statistics.`,
+            variant: "warning"
+          });
+        }
       } else {
         toast({
           title: "No Stats to Save",
@@ -385,7 +438,7 @@ export default function LiveStatsByPosition() {
         variant: "destructive"
       });
     } finally {
-      // Always update the stats from the database after save operation (success or error)
+      // Always update the stats from the database after save operation
       queryClient.invalidateQueries({ queryKey: ['/api/games', gameId, 'stats'] });
       setSaveInProgress(false);
     }
