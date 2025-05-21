@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { queryClient } from '@/lib/queryClient';
@@ -36,6 +36,7 @@ export default function GameStatistics({
 }: GameStatisticsProps) {
   const [activeQuarter, setActiveQuarter] = useState('1');
   const { toast } = useToast();
+  const pendingChangesRef = React.useRef<Record<number, Record<number, Record<string, any>>>>({});
   
   // Transform rosters to more usable format
   const rosterByQuarterAndPosition: Record<string, Record<Position, number | null>> = {
@@ -111,8 +112,60 @@ export default function GameStatistics({
           statsByQuarterAndPlayer[quarter][playerId] = {
             id: 0,
             gameId: game.id,
-            playerId,
             quarter: parseInt(quarter),
+            position: getPositionForPlayerInQuarter(playerId, parseInt(quarter)) || 'GS', // Fallback position
+            goalsFor: 0,
+            goalsAgainst: 0,
+            missedGoals: 0,
+            rebounds: 0,
+            intercepts: 0,
+            badPass: 0,
+            handlingError: 0,
+            pickUp: 0,
+            infringement: 0,
+            rating: null
+          };
+        }
+        
+        if (!playerTotals[playerId]) {
+          playerTotals[playerId] = {
+            id: 0,
+            gameId: game.id,
+            quarter: 0, // 0 for totals
+            position: getPositionForPlayerInQuarter(playerId, 1) || 'GS', // Use position from first quarter
+            goalsFor: 0,
+            goalsAgainst: 0,
+            missedGoals: 0,
+            rebounds: 0,
+            intercepts: 0,
+            badPass: 0,
+            handlingError: 0,
+            pickUp: 0,
+            infringement: 0,
+            rating: null
+          };
+        }
+      }
+    });
+  });
+  
+  // Fill in actual stats where they exist - using position-based approach
+  gameStats.forEach(stat => {
+    if (stat && stat.quarter !== undefined && stat.position) {
+      const quarterKey = stat.quarter.toString();
+      // Find player for this position and quarter from roster
+      const playerId = rosterByQuarterAndPosition[quarterKey][stat.position as Position];
+      
+      // Only process if we found a player in the roster for this position
+      if (playerId !== null && quarterKey in statsByQuarterAndPlayer) {
+        // Update the player's stats for this quarter
+        if (!statsByQuarterAndPlayer[quarterKey][playerId]) {
+          // Initialize if needed
+          statsByQuarterAndPlayer[quarterKey][playerId] = {
+            id: stat.id,
+            gameId: game.id,
+            quarter: stat.quarter,
+            position: stat.position,
             goalsFor: 0,
             goalsAgainst: 0,
             missedGoals: 0,
@@ -125,12 +178,27 @@ export default function GameStatistics({
           };
         }
         
+        // Set the stat values from the position-based record
+        statsByQuarterAndPlayer[quarterKey][playerId] = {
+          ...statsByQuarterAndPlayer[quarterKey][playerId],
+          goalsFor: stat.goalsFor,
+          goalsAgainst: stat.goalsAgainst,
+          missedGoals: stat.missedGoals,
+          rebounds: stat.rebounds,
+          intercepts: stat.intercepts,
+          badPass: stat.badPass,
+          handlingError: stat.handlingError,
+          pickUp: stat.pickUp,
+          infringement: stat.infringement
+        };
+        
+        // Also accumulate player totals
         if (!playerTotals[playerId]) {
           playerTotals[playerId] = {
             id: 0,
             gameId: game.id,
-            playerId,
-            quarter: 0, // 0 for totals
+            quarter: 0,
+            position: stat.position,
             goalsFor: 0,
             goalsAgainst: 0,
             missedGoals: 0,
@@ -142,48 +210,18 @@ export default function GameStatistics({
             infringement: 0
           };
         }
+        
+        // Add to player totals
+        playerTotals[playerId].goalsFor += (stat.goalsFor || 0);
+        playerTotals[playerId].goalsAgainst += (stat.goalsAgainst || 0);
+        playerTotals[playerId].missedGoals += (stat.missedGoals || 0);
+        playerTotals[playerId].rebounds += (stat.rebounds || 0);
+        playerTotals[playerId].intercepts += (stat.intercepts || 0);
+        playerTotals[playerId].badPass += (stat.badPass || 0);
+        playerTotals[playerId].handlingError += (stat.handlingError || 0);
+        playerTotals[playerId].pickUp += (stat.pickUp || 0);
+        playerTotals[playerId].infringement += (stat.infringement || 0);
       }
-    });
-  });
-  
-  // Fill in actual stats where they exist
-  gameStats.forEach(stat => {
-    if (stat && stat.quarter !== undefined) {
-      const quarterKey = stat.quarter.toString();
-      if (quarterKey in statsByQuarterAndPlayer) {
-        statsByQuarterAndPlayer[quarterKey][stat.playerId] = stat;
-      }
-    }
-    
-    // Accumulate totals - with additional null checks
-    if (stat && stat.playerId !== undefined) {
-      if (!playerTotals[stat.playerId]) {
-        playerTotals[stat.playerId] = {
-          id: 0,
-          gameId: game.id,
-          playerId: stat.playerId,
-          quarter: 0,
-          goalsFor: 0,
-          goalsAgainst: 0,
-          missedGoals: 0,
-          rebounds: 0,
-          intercepts: 0,
-          badPass: 0,
-          handlingError: 0,
-          pickUp: 0,
-          infringement: 0
-        };
-      }
-      
-      playerTotals[stat.playerId].goalsFor += (stat.goalsFor || 0);
-      playerTotals[stat.playerId].goalsAgainst += (stat.goalsAgainst || 0);
-      playerTotals[stat.playerId].missedGoals += (stat.missedGoals || 0);
-      playerTotals[stat.playerId].rebounds += (stat.rebounds || 0);
-      playerTotals[stat.playerId].intercepts += (stat.intercepts || 0);
-      playerTotals[stat.playerId].badPass += (stat.badPass || 0);
-      playerTotals[stat.playerId].handlingError += (stat.handlingError || 0);
-      playerTotals[stat.playerId].pickUp += (stat.pickUp || 0);
-      playerTotals[stat.playerId].infringement += (stat.infringement || 0);
     }
   });
   
@@ -296,6 +334,13 @@ export default function GameStatistics({
   ) => {
     console.log(`Updating stat: Player ${playerId}, Quarter ${quarter}, ${statName} = ${value}`);
     
+    // Get the position this player is playing in this quarter
+    const position = getPositionForPlayerInQuarter(playerId, quarter);
+    if (!position) {
+      console.warn(`Player ${playerId} has no position assignment for quarter ${quarter}`);
+      return;
+    }
+    
     // Initialize nested objects if they don't exist
     if (!pendingChangesRef.current[playerId]) {
       pendingChangesRef.current[playerId] = {};
@@ -315,8 +360,8 @@ export default function GameStatistics({
       quarterStats[playerId] = {
         id: 0,
         gameId: game.id,
-        playerId,
         quarter,
+        position,
         goalsFor: 0,
         goalsAgainst: 0,
         missedGoals: 0,
@@ -325,7 +370,8 @@ export default function GameStatistics({
         badPass: 0,
         handlingError: 0,
         pickUp: 0,
-        infringement: 0
+        infringement: 0,
+        rating: null
       };
     }
     
@@ -348,7 +394,7 @@ export default function GameStatistics({
     });
   };
   
-  // Mutation for batch saving stats
+  // Mutation for batch saving stats using position-based approach
   const batchSaveStatsMutation = useMutation({
     mutationFn: async () => {
       const pendingChanges = pendingChangesRef.current;
@@ -361,26 +407,36 @@ export default function GameStatistics({
         // For each quarter that has changes for this player
         for (const quarter in playerQuarters) {
           const quarterChanges = playerQuarters[quarter];
+          const quarterNum = Number(quarter);
+          const playerIdNum = Number(playerId);
           
-          // Find if there's an existing stat entry
+          // Get the position for this player in this quarter
+          const position = getPositionForPlayerInQuarter(playerIdNum, quarterNum);
+          
+          if (!position) {
+            console.warn(`No position found for player ${playerId} in quarter ${quarter}`);
+            continue; // Skip if no position assigned
+          }
+          
+          // Find if there's an existing stat entry for this position and quarter
           const existingStat = gameStats.find(s => 
             s.gameId === game.id && 
-            s.playerId === Number(playerId) && 
-            s.quarter === Number(quarter)
+            s.position === position && 
+            s.quarter === quarterNum
           );
           
           if (existingStat) {
-            // Update existing stats
+            // Update existing stats - position-based
             savePromises.push(
               apiRequest('PATCH', `/api/gamestats/${existingStat.id}`, quarterChanges)
             );
           } else {
-            // Create new stats with defaults
+            // Create new stats with defaults - position-based
             savePromises.push(
               apiRequest('POST', '/api/gamestats', {
                 gameId: game.id,
-                playerId: Number(playerId),
-                quarter: Number(quarter),
+                position, // Position is primary identifier, no player ID needed
+                quarter: quarterNum,
                 goalsFor: 0,
                 goalsAgainst: 0,
                 missedGoals: 0,
@@ -390,8 +446,6 @@ export default function GameStatistics({
                 handlingError: 0,
                 pickUp: 0,
                 infringement: 0,
-                // Include position information from roster
-                position: getPositionForPlayerInQuarter(Number(playerId), Number(quarter)),
                 ...quarterChanges // Override with actual values being updated
               })
             );
