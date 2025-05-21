@@ -108,6 +108,25 @@ export class StatisticsService {
    * This is the critical function that updates scores everywhere
    */
   async calculateGameScores(gameId: number): Promise<GameScores> {
+    // First check if this is a forfeit game
+    const game = await apiRequest(`/api/games/${gameId}`);
+    
+    // Special handling for forfeit games - return fixed scores (0-10)
+    if (game && game.status === 'forfeit') {
+      console.log(`Forfeit game detected (ID: ${gameId}), returning standard forfeit score`);
+      
+      return {
+        quarterScores: {
+          '1': { for: 0, against: 0 },
+          '2': { for: 0, against: 5 },
+          '3': { for: 0, against: 5 },
+          '4': { for: 0, against: 0 }
+        },
+        finalScore: { for: 0, against: 10 }
+      };
+    }
+    
+    // For non-forfeit games, proceed with normal calculation
     // Force fresh data fetch to ensure we have the latest stats
     const timestamp = new Date().getTime();
     const stats = await apiRequest(`/api/games/${gameId}/stats?_t=${timestamp}`);
@@ -269,7 +288,15 @@ export class StatisticsService {
    */
   async calculatePlayerPerformance(playerId: number, gameIds?: number[]): Promise<PlayerPerformance> {
     // Get all games if not specified
-    const games = gameIds || (await apiRequest('/api/games')).map((g: Game) => g.id);
+    const allGames = gameIds 
+      ? await Promise.all(gameIds.map(id => apiRequest(`/api/games/${id}`)))
+      : await apiRequest('/api/games');
+    
+    // Filter out forfeit games (they don't count for player statistics)
+    const validGames = allGames.filter(g => g.status !== 'forfeit');
+    
+    // Get IDs of non-forfeit games only
+    const games = validGames.map(g => g.id);
     
     // Initialize player performance
     const performance: PlayerPerformance = {

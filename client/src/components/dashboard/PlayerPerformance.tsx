@@ -143,10 +143,13 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
     let filteredGameIds = [...gameIds];
     const now = new Date();
     
+    // First filter out forfeit games - they should not count in player statistics
+    const validGames = completedGames.filter(game => game.status !== 'forfeit');
+    
     // Filter games based on time range
     if (timeRange === 'last5') {
       // Sort games by date (newest first) and get the 5 most recent
-      filteredGameIds = completedGames
+      filteredGameIds = validGames
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
         .slice(0, 5)
         .map(game => game.id);
@@ -156,14 +159,17 @@ export default function PlayerPerformance({ players, games, className }: PlayerP
       const currentMonth = now.getMonth();
       const currentYear = now.getFullYear();
       
-      filteredGameIds = completedGames
+      filteredGameIds = validGames
         .filter(game => {
           const gameDate = new Date(game.date);
           return gameDate.getMonth() === currentMonth && gameDate.getFullYear() === currentYear;
         })
         .map(game => game.id);
     }
-    // 'season' includes all games, so no filtering needed
+    else {
+      // Even with 'season' (all games), we still need to filter out forfeit games
+      filteredGameIds = validGames.map(game => game.id);
+    }
     
     console.log(`Filtering player performance to ${filteredGameIds.length} games based on time range: ${timeRange}`);
     
