@@ -107,7 +107,25 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
     return player ? (player.displayName || `${player.firstName} ${player.lastName}`) : null;
   };
   
-  // Function to log and return player color for testing purposes
+  // Convert Tailwind color classes to hex color values
+  const convertTailwindToHex = (tailwindClass) => {
+    const colorMap = {
+      'bg-red-500': '#ef4444',
+      'bg-orange-500': '#f97316',
+      'bg-yellow-600': '#ca8a04',
+      'bg-green-500': '#22c55e',
+      'bg-emerald-600': '#059669',
+      'bg-teal-600': '#0d9488',
+      'bg-blue-600': '#2563eb',
+      'bg-indigo-600': '#4f46e5',
+      'bg-purple-600': '#9333ea',
+      'bg-pink-600': '#db2777',
+    };
+    
+    return colorMap[tailwindClass] || '#6366f1'; // default to indigo-500 if not found
+  };
+  
+  // Function to get player color, converting from Tailwind class names to hex
   const getPlayerColor = (playerId) => {
     if (!players || !playerId) return '#cccccc';
     const player = players.find(p => p.id === playerId);
@@ -124,7 +142,14 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
       return color;
     }
     
-    // If player has their own avatar color, return it
+    // Check if the avatarColor is a Tailwind class (starts with 'bg-')
+    if (player.avatarColor.startsWith('bg-')) {
+      const hexColor = convertTailwindToHex(player.avatarColor);
+      console.log(`Converting ${player.avatarColor} to hex: ${hexColor} for player ${playerId}`);
+      return hexColor;
+    }
+    
+    // If it's already a hex color, return it
     console.log(`Using player ${playerId} avatar color: ${player.avatarColor}`);
     return player.avatarColor;
   };
