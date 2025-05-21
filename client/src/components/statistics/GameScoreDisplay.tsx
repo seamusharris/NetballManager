@@ -10,8 +10,9 @@ interface GameScoreDisplayProps {
 }
 
 export function GameScoreDisplay({ gameId, compact = false }: GameScoreDisplayProps) {
-  // Force a fresh fetch every time with staleTime set to 0
-  const { scores, isLoading, error } = useGameStatistics(gameId, true);
+  // Only force a fresh fetch when not in compact mode (detailed view)
+  // Compact mode is used in lists and should be more cache-friendly
+  const { scores, isLoading, error } = useGameStatistics(gameId, !compact);
 
   if (isLoading) {
     return compact ? (
