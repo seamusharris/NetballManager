@@ -174,13 +174,18 @@ export class StatisticsService {
       const key = `${stat.position}-${stat.quarter}`;
       
       // Skip if we already have a newer stat for this position/quarter
-      if (positionStats[key] && positionStats[key].id > stat.id) {
-        return;
+      if (positionStats[key] && stat.id) {
+        // Skip this stat if we already have a newer one
+        const existingStat = stats.find(s => 
+          s.position === stat.position && 
+          s.quarter === stat.quarter && 
+          s.id > stat.id
+        );
+        if (existingStat) return;
       }
       
       // Convert to PositionStats interface
       positionStats[key] = {
-        id: stat.id,
         gameId: stat.gameId,
         quarter: stat.quarter,
         position: stat.position,
