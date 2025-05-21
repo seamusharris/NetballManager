@@ -5,10 +5,16 @@ import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { GameStat, Position, allPositions, Opponent, Game } from '@shared/schema';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { 
+  Card, 
+  CardContent, 
+  CardHeader, 
+  CardTitle 
+} from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, Minus, Plus, RotateCcw, Save } from 'lucide-react';
+import { Plus, Minus, ArrowLeft, Save, Undo, Redo } from 'lucide-react';
 
 // Define the types of statistics we track
 type StatType = 'goalsFor' | 'goalsAgainst' | 'missedGoals' | 'rebounds' | 
@@ -481,8 +487,8 @@ export default function LiveStatsByPosition() {
     return total;
   };
   
-  // Render a button for adjusting a stat
-  const renderStatButton = (position: Position, stat: StatType, compact: boolean = false, important: boolean = false) => {
+  // Render a stat counter button (matching original design)
+  const renderStatCounter = (position: Position, stat: StatType, compact: boolean = false, important: boolean = false) => {
     // Skip stats that don't apply to this position
     if (!positionStats[position][stat]) {
       return null;
@@ -521,11 +527,6 @@ export default function LiveStatsByPosition() {
     );
   };
   
-  // Go back to games list
-  const handleBackClick = () => {
-    navigate('/games');
-  };
-  
   // Loading state
   if (gameLoading || opponentLoading || statsLoading) {
     return (
@@ -542,281 +543,328 @@ export default function LiveStatsByPosition() {
       <div className="container mx-auto py-6 px-4">
         <h1 className="text-2xl font-bold mb-4">Game Not Found</h1>
         <p className="mb-4">The game you're looking for doesn't exist or has been deleted.</p>
-        <Button onClick={handleBackClick}>Go Back to Games</Button>
+        <Button onClick={() => navigate('/games')}>Go Back to Games</Button>
       </div>
     );
   }
   
   return (
-    <div className="container mx-auto py-6 px-4 md:px-6">
-      <div className="space-y-6">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold">Live Stats Tracking</h1>
-          <Button variant="outline" onClick={handleBackClick}>
+    <div className="container mx-auto py-6 px-4">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-2xl font-bold">Live Stats - Round {game.round}</h1>
+          <p className="text-gray-600">
+            {game.date} vs. {opponent?.teamName || 'Unknown Opponent'}
+          </p>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => navigate('/games')}
+          >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Games
           </Button>
         </div>
-        
-        <Card className="mb-6">
-          <CardContent className="p-4">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      </div>
+      
+      {/* Score */}
+      <Card className="mb-6">
+        <CardContent className="p-4">
+          <div className="flex justify-between items-center">
+            <div>
+              <h2 className="text-lg font-semibold">Score:</h2>
+            </div>
+            <div className="flex gap-4">
               <div>
-                <h2 className="text-xl font-semibold">
-                  Round {game.round} vs. {opponent?.teamName || 'Unknown Opponent'}
-                </h2>
-                <p className="text-gray-600">{game.date} {game.time}</p>
+                <span className="text-gray-600">Quarter {currentQuarter}:</span>{" "}
+                <span className="text-xl font-bold">{getQuarterTotal('goalsFor')} - {getQuarterTotal('goalsAgainst')}</span>
               </div>
-              
-              <div className="flex items-center gap-2">
-                <div className="text-center px-4 py-2 bg-gray-100 rounded-md">
-                  <p className="text-sm text-gray-500">Current Quarter</p>
-                  <p className="text-2xl font-bold">{getQuarterTotal('goalsFor')} - {getQuarterTotal('goalsAgainst')}</p>
-                </div>
-                
-                <div className="text-center px-4 py-2 bg-gray-100 rounded-md">
-                  <p className="text-sm text-gray-500">Game Total</p>
-                  <p className="text-2xl font-bold">{getGameTotal('goalsFor')} - {getGameTotal('goalsAgainst')}</p>
-                </div>
+              <div>
+                <span className="text-gray-600">Game:</span>{" "}
+                <span className="text-xl font-bold">{getGameTotal('goalsFor')} - {getGameTotal('goalsAgainst')}</span>
               </div>
             </div>
-          </CardContent>
-        </Card>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="col-span-1 md:col-span-2">
-            <Card className="mb-6">
-              <CardContent className="p-4">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-semibold">Statistics Entry</h3>
-                  <div className="flex gap-2">
-                    <Button 
-                      variant="outline" 
-                      onClick={handleUndo} 
-                      disabled={undoStack.length === 0}
-                      className="h-8 w-8 p-0"
-                      title="Undo"
-                    >
-                      <RotateCcw className="h-4 w-4" />
-                    </Button>
-                    
-                    <Button
-                      onClick={saveAllStats}
-                      disabled={saveInProgress}
-                      className="bg-green-600 hover:bg-green-700"
-                    >
-                      <Save className="h-4 w-4 mr-2" />
-                      {saveInProgress ? 'Saving...' : 'Save Stats'}
-                    </Button>
-                  </div>
-                </div>
-                
-                <Tabs value={currentQuarter.toString()} onValueChange={(val) => setCurrentQuarter(parseInt(val))}>
-                  <TabsList className="grid grid-cols-4 mb-4 w-full">
-                    <TabsTrigger value="1">Quarter 1</TabsTrigger>
-                    <TabsTrigger value="2">Quarter 2</TabsTrigger>
-                    <TabsTrigger value="3">Quarter 3</TabsTrigger>
-                    <TabsTrigger value="4">Quarter 4</TabsTrigger>
-                  </TabsList>
-                  
-                  {/* All quarters share the same content, just with different data */}
-                  {["1", "2", "3", "4"].map((quarter) => (
-                    <TabsContent key={quarter} value={quarter} className="mt-0">
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        {/* Shooting positions */}
-                        <div>
-                          <h4 className="text-lg font-semibold mb-2">Shooting Circle</h4>
-                          <Card className="mb-4">
-                            <CardContent className="p-4">
-                              <h5 className="text-md font-semibold mb-2">GS</h5>
-                              <div className="grid grid-cols-2 gap-2">
-                                {renderStatButton("GS", "goalsFor", true, true)}
-                                {renderStatButton("GS", "missedGoals", true, true)}
-                                {renderStatButton("GS", "rebounds", true)}
-                                {renderStatButton("GS", "badPass", true)}
-                                {renderStatButton("GS", "handlingError", true)}
-                                {renderStatButton("GS", "infringement", true)}
-                              </div>
-                            </CardContent>
-                          </Card>
-                          
-                          <Card className="mb-4">
-                            <CardContent className="p-4">
-                              <h5 className="text-md font-semibold mb-2">GA</h5>
-                              <div className="grid grid-cols-2 gap-2">
-                                {renderStatButton("GA", "goalsFor", true, true)}
-                                {renderStatButton("GA", "missedGoals", true, true)}
-                                {renderStatButton("GA", "rebounds", true)}
-                                {renderStatButton("GA", "intercepts", true)}
-                                {renderStatButton("GA", "badPass", true)}
-                                {renderStatButton("GA", "handlingError", true)}
-                                {renderStatButton("GA", "infringement", true)}
-                              </div>
-                            </CardContent>
-                          </Card>
-                        </div>
-                        
-                        {/* Mid-court positions */}
-                        <div>
-                          <h4 className="text-lg font-semibold mb-2">Mid Court</h4>
-                          <Card className="mb-4">
-                            <CardContent className="p-4">
-                              <h5 className="text-md font-semibold mb-2">WA</h5>
-                              <div className="grid grid-cols-2 gap-2">
-                                {renderStatButton("WA", "intercepts", true)}
-                                {renderStatButton("WA", "badPass", true)}
-                                {renderStatButton("WA", "handlingError", true)}
-                                {renderStatButton("WA", "pickUp", true)}
-                                {renderStatButton("WA", "infringement", true)}
-                              </div>
-                            </CardContent>
-                          </Card>
-                          
-                          <Card className="mb-4">
-                            <CardContent className="p-4">
-                              <h5 className="text-md font-semibold mb-2">C</h5>
-                              <div className="grid grid-cols-2 gap-2">
-                                {renderStatButton("C", "intercepts", true)}
-                                {renderStatButton("C", "badPass", true)}
-                                {renderStatButton("C", "handlingError", true)}
-                                {renderStatButton("C", "pickUp", true)}
-                                {renderStatButton("C", "infringement", true)}
-                              </div>
-                            </CardContent>
-                          </Card>
-                          
-                          <Card className="mb-4">
-                            <CardContent className="p-4">
-                              <h5 className="text-md font-semibold mb-2">WD</h5>
-                              <div className="grid grid-cols-2 gap-2">
-                                {renderStatButton("WD", "intercepts", true)}
-                                {renderStatButton("WD", "badPass", true)}
-                                {renderStatButton("WD", "handlingError", true)}
-                                {renderStatButton("WD", "pickUp", true)}
-                                {renderStatButton("WD", "infringement", true)}
-                              </div>
-                            </CardContent>
-                          </Card>
-                        </div>
-                        
-                        {/* Defensive positions */}
-                        <div>
-                          <h4 className="text-lg font-semibold mb-2">Defensive Circle</h4>
-                          <Card className="mb-4">
-                            <CardContent className="p-4">
-                              <h5 className="text-md font-semibold mb-2">GD</h5>
-                              <div className="grid grid-cols-2 gap-2">
-                                {renderStatButton("GD", "rebounds", true)}
-                                {renderStatButton("GD", "intercepts", true)}
-                                {renderStatButton("GD", "badPass", true)}
-                                {renderStatButton("GD", "handlingError", true)}
-                                {renderStatButton("GD", "pickUp", true)}
-                                {renderStatButton("GD", "infringement", true)}
-                              </div>
-                            </CardContent>
-                          </Card>
-                          
-                          <Card className="mb-4">
-                            <CardContent className="p-4">
-                              <h5 className="text-md font-semibold mb-2">GK</h5>
-                              <div className="grid grid-cols-2 gap-2">
-                                {renderStatButton("GK", "goalsAgainst", true, true)}
-                                {renderStatButton("GK", "rebounds", true)}
-                                {renderStatButton("GK", "intercepts", true)}
-                                {renderStatButton("GK", "badPass", true)}
-                                {renderStatButton("GK", "handlingError", true)}
-                                {renderStatButton("GK", "pickUp", true)}
-                                {renderStatButton("GK", "infringement", true)}
-                              </div>
-                            </CardContent>
-                          </Card>
-                        </div>
-                      </div>
-                    </TabsContent>
-                  ))}
-                </Tabs>
-              </CardContent>
-            </Card>
           </div>
+        </CardContent>
+      </Card>
+      
+      {/* Main content */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        {/* Left column - Game controls */}
+        <div className="lg:col-span-1">
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle>Quarter</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Tabs value={currentQuarter.toString()} onValueChange={(val) => setCurrentQuarter(parseInt(val))}>
+                <TabsList className="grid grid-cols-4 mb-4 w-full">
+                  <TabsTrigger value="1">Q1</TabsTrigger>
+                  <TabsTrigger value="2">Q2</TabsTrigger>
+                  <TabsTrigger value="3">Q3</TabsTrigger>
+                  <TabsTrigger value="4">Q4</TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </CardContent>
+          </Card>
           
-          {/* Right sidebar for game information and stats summary */}
-          <div className="col-span-1">
-            <Card className="mb-6">
-              <CardContent className="p-4">
-                <h3 className="text-lg font-semibold mb-2">Game Summary</h3>
-                
-                <div className="space-y-4">
-                  <div>
-                    <h4 className="text-md font-medium mb-1">Score by Quarter</h4>
-                    <div className="grid grid-cols-4 gap-2 mb-2">
-                      {[1, 2, 3, 4].map(q => (
-                        <div key={q} className="text-center p-2 bg-gray-50 rounded">
-                          <p className="text-xs text-gray-500">Q{q}</p>
-                          <p className="font-semibold">
-                            {liveStats["GS"]?.[q.toString()]?.goalsFor + (liveStats["GA"]?.[q.toString()]?.goalsFor || 0) || 0} - {liveStats["GK"]?.[q.toString()]?.goalsAgainst || 0}
-                          </p>
-                        </div>
-                      ))}
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle>Controls</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <Button 
+                className="w-full" 
+                onClick={saveAllStats}
+                disabled={saveInProgress}
+              >
+                <Save className="h-4 w-4 mr-2" />
+                {saveInProgress ? 'Saving...' : 'Save Stats'}
+              </Button>
+              
+              <Button 
+                variant="outline" 
+                className="w-full" 
+                onClick={handleUndo}
+                disabled={undoStack.length === 0}
+              >
+                <Undo className="h-4 w-4 mr-2" />
+                Undo
+              </Button>
+              
+              <Button 
+                variant="outline" 
+                className="w-full" 
+                onClick={handleRedo}
+                disabled={redoStack.length === 0}
+              >
+                <Redo className="h-4 w-4 mr-2" />
+                Redo
+              </Button>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader>
+              <CardTitle>Quarter Stats</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {/* Shooting */}
+                <div>
+                  <h4 className="text-sm font-medium mb-1">Shooting</h4>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 text-sm">Goals:</span>
+                      <span className="font-semibold">{getQuarterTotal('goalsFor')}</span>
                     </div>
-                    <div className="bg-gray-100 rounded p-2 text-center">
-                      <p className="text-sm text-gray-500">Final Score</p>
-                      <p className="text-xl font-bold">{getGameTotal('goalsFor')} - {getGameTotal('goalsAgainst')}</p>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 text-sm">Misses:</span>
+                      <span className="font-semibold">{getQuarterTotal('missedGoals')}</span>
                     </div>
-                  </div>
-                  
-                  <div>
-                    <h4 className="text-md font-medium mb-1">Team Stats</h4>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="bg-gray-50 p-2 rounded">
-                        <p className="text-xs text-gray-500">Rebounds</p>
-                        <p className="font-semibold">{getGameTotal('rebounds')}</p>
-                      </div>
-                      <div className="bg-gray-50 p-2 rounded">
-                        <p className="text-xs text-gray-500">Intercepts</p>
-                        <p className="font-semibold">{getGameTotal('intercepts')}</p>
-                      </div>
-                      <div className="bg-gray-50 p-2 rounded">
-                        <p className="text-xs text-gray-500">Bad Passes</p>
-                        <p className="font-semibold">{getGameTotal('badPass')}</p>
-                      </div>
-                      <div className="bg-gray-50 p-2 rounded">
-                        <p className="text-xs text-gray-500">Handling Errors</p>
-                        <p className="font-semibold">{getGameTotal('handlingError')}</p>
-                      </div>
-                      <div className="bg-gray-50 p-2 rounded">
-                        <p className="text-xs text-gray-500">Pick Ups</p>
-                        <p className="font-semibold">{getGameTotal('pickUp')}</p>
-                      </div>
-                      <div className="bg-gray-50 p-2 rounded">
-                        <p className="text-xs text-gray-500">Infringements</p>
-                        <p className="font-semibold">{getGameTotal('infringement')}</p>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <h4 className="text-md font-medium mb-1">Shooting</h4>
-                    <div className="flex justify-between items-center">
-                      <p className="text-sm">Goals</p>
-                      <p className="font-semibold">{getGameTotal('goalsFor')}</p>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <p className="text-sm">Misses</p>
-                      <p className="font-semibold">{getGameTotal('missedGoals')}</p>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <p className="text-sm">Shoot %</p>
-                      <p className="font-semibold">
-                        {getGameTotal('goalsFor') + getGameTotal('missedGoals') > 0
-                          ? Math.round((getGameTotal('goalsFor') / (getGameTotal('goalsFor') + getGameTotal('missedGoals'))) * 100)
-                          : 0}%
-                      </p>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 text-sm">Against:</span>
+                      <span className="font-semibold">{getQuarterTotal('goalsAgainst')}</span>
                     </div>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
+                
+                <Separator />
+                
+                {/* Defense */}
+                <div>
+                  <h4 className="text-sm font-medium mb-1">Defense</h4>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 text-sm">Intercepts:</span>
+                      <span className="font-semibold">{getQuarterTotal('intercepts')}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 text-sm">Rebounds:</span>
+                      <span className="font-semibold">{getQuarterTotal('rebounds')}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 text-sm">Pick Ups:</span>
+                      <span className="font-semibold">{getQuarterTotal('pickUp')}</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <Separator />
+                
+                {/* Errors */}
+                <div>
+                  <h4 className="text-sm font-medium mb-1">Errors</h4>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 text-sm">Bad Pass:</span>
+                      <span className="font-semibold">{getQuarterTotal('badPass')}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 text-sm">Handling:</span>
+                      <span className="font-semibold">{getQuarterTotal('handlingError')}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 text-sm">Infringements:</span>
+                      <span className="font-semibold">{getQuarterTotal('infringement')}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+        
+        {/* Right column - Statistics Entry */}
+        <div className="lg:col-span-3">
+          <Card>
+            <CardHeader>
+              <CardTitle>Position Stats - Quarter {currentQuarter}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                {/* Shooting Circle */}
+                <div>
+                  <h3 className="text-lg font-semibold mb-3">Shooting Circle</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* GS */}
+                    <Card>
+                      <CardHeader className="py-3">
+                        <CardTitle className="text-base">Goal Shooter (GS)</CardTitle>
+                      </CardHeader>
+                      <CardContent className="py-2">
+                        <div className="grid grid-cols-2 gap-2">
+                          {renderStatCounter("GS", "goalsFor", true, true)}
+                          {renderStatCounter("GS", "missedGoals", true)}
+                          {renderStatCounter("GS", "rebounds", true)}
+                          {renderStatCounter("GS", "badPass", true)}
+                          {renderStatCounter("GS", "handlingError", true)}
+                          {renderStatCounter("GS", "infringement", true)}
+                        </div>
+                      </CardContent>
+                    </Card>
+                    
+                    {/* GA */}
+                    <Card>
+                      <CardHeader className="py-3">
+                        <CardTitle className="text-base">Goal Attack (GA)</CardTitle>
+                      </CardHeader>
+                      <CardContent className="py-2">
+                        <div className="grid grid-cols-2 gap-2">
+                          {renderStatCounter("GA", "goalsFor", true, true)}
+                          {renderStatCounter("GA", "missedGoals", true)}
+                          {renderStatCounter("GA", "rebounds", true)}
+                          {renderStatCounter("GA", "intercepts", true)}
+                          {renderStatCounter("GA", "badPass", true)}
+                          {renderStatCounter("GA", "handlingError", true)}
+                          {renderStatCounter("GA", "infringement", true)}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
+                
+                {/* Mid Court */}
+                <div>
+                  <h3 className="text-lg font-semibold mb-3">Mid Court</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {/* WA */}
+                    <Card>
+                      <CardHeader className="py-3">
+                        <CardTitle className="text-base">Wing Attack (WA)</CardTitle>
+                      </CardHeader>
+                      <CardContent className="py-2">
+                        <div className="grid grid-cols-2 gap-2">
+                          {renderStatCounter("WA", "intercepts", true)}
+                          {renderStatCounter("WA", "badPass", true)}
+                          {renderStatCounter("WA", "handlingError", true)}
+                          {renderStatCounter("WA", "pickUp", true)}
+                          {renderStatCounter("WA", "infringement", true)}
+                        </div>
+                      </CardContent>
+                    </Card>
+                    
+                    {/* C */}
+                    <Card>
+                      <CardHeader className="py-3">
+                        <CardTitle className="text-base">Center (C)</CardTitle>
+                      </CardHeader>
+                      <CardContent className="py-2">
+                        <div className="grid grid-cols-2 gap-2">
+                          {renderStatCounter("C", "intercepts", true)}
+                          {renderStatCounter("C", "badPass", true)}
+                          {renderStatCounter("C", "handlingError", true)}
+                          {renderStatCounter("C", "pickUp", true)}
+                          {renderStatCounter("C", "infringement", true)}
+                        </div>
+                      </CardContent>
+                    </Card>
+                    
+                    {/* WD */}
+                    <Card>
+                      <CardHeader className="py-3">
+                        <CardTitle className="text-base">Wing Defense (WD)</CardTitle>
+                      </CardHeader>
+                      <CardContent className="py-2">
+                        <div className="grid grid-cols-2 gap-2">
+                          {renderStatCounter("WD", "intercepts", true)}
+                          {renderStatCounter("WD", "badPass", true)}
+                          {renderStatCounter("WD", "handlingError", true)}
+                          {renderStatCounter("WD", "pickUp", true)}
+                          {renderStatCounter("WD", "infringement", true)}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
+                
+                {/* Defensive Circle */}
+                <div>
+                  <h3 className="text-lg font-semibold mb-3">Defensive Circle</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* GD */}
+                    <Card>
+                      <CardHeader className="py-3">
+                        <CardTitle className="text-base">Goal Defense (GD)</CardTitle>
+                      </CardHeader>
+                      <CardContent className="py-2">
+                        <div className="grid grid-cols-2 gap-2">
+                          {renderStatCounter("GD", "rebounds", true)}
+                          {renderStatCounter("GD", "intercepts", true)}
+                          {renderStatCounter("GD", "badPass", true)}
+                          {renderStatCounter("GD", "handlingError", true)}
+                          {renderStatCounter("GD", "pickUp", true)}
+                          {renderStatCounter("GD", "infringement", true)}
+                        </div>
+                      </CardContent>
+                    </Card>
+                    
+                    {/* GK */}
+                    <Card>
+                      <CardHeader className="py-3">
+                        <CardTitle className="text-base">Goal Keeper (GK)</CardTitle>
+                      </CardHeader>
+                      <CardContent className="py-2">
+                        <div className="grid grid-cols-2 gap-2">
+                          {renderStatCounter("GK", "goalsAgainst", true, true)}
+                          {renderStatCounter("GK", "rebounds", true)}
+                          {renderStatCounter("GK", "intercepts", true)}
+                          {renderStatCounter("GK", "badPass", true)}
+                          {renderStatCounter("GK", "handlingError", true)}
+                          {renderStatCounter("GK", "pickUp", true)}
+                          {renderStatCounter("GK", "infringement", true)}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
