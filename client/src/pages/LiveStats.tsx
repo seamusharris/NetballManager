@@ -547,8 +547,8 @@ export default function LiveStats() {
           await refetchStats();
           console.log("Stats refreshed after saving");
           
-          // Reset UI state with the new data
-          setNeedsInitialization(true);
+          // Force reimport of data
+          window.location.reload();
         } catch (err) {
           console.error("Error refreshing stats:", err);
         }

@@ -491,12 +491,20 @@ export default function GameStatistics({
       return { success: true, count: savePromises.length };
     },
     onSuccess: () => {
-      // Refresh the game stats data
+      // Refresh ALL game data to ensure scores update everywhere
       queryClient.invalidateQueries({ queryKey: ['/api/games', game.id, 'stats'] });
+      queryClient.invalidateQueries({ queryKey: ['gameStats', game.id] });
+      queryClient.invalidateQueries({ queryKey: ['gameScores', game.id] });
+      queryClient.invalidateQueries({ queryKey: ['positionStats', game.id] });
+      queryClient.invalidateQueries({ queryKey: ['playerStats', game.id] });
+      queryClient.invalidateQueries({ queryKey: ['allGameStats'] });
+      
+      // Force refresh all game data
+      queryClient.invalidateQueries({ queryKey: ['/api/games'] });
       
       toast({
         title: "Statistics Saved",
-        description: "All statistics have been saved successfully",
+        description: "All statistics have been saved successfully and scores updated",
       });
     },
     onError: (error) => {
