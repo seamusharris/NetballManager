@@ -685,7 +685,24 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
             const newStatPromise = apiRequest('/api/gamestats', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(statData)
+              body: JSON.stringify({
+                gameId: statData.gameId,
+                position: statData.position,
+                quarter: statData.quarter,
+                goalsFor: statData.goalsFor || 0,
+                goalsAgainst: statData.goalsAgainst || 0,
+                missedGoals: statData.missedGoals || 0,
+                rebounds: statData.rebounds || 0,
+                intercepts: statData.intercepts || 0,
+                badPass: statData.badPass || 0,
+                handlingError: statData.handlingError || 0,
+                pickUp: statData.pickUp || 0,
+                infringement: statData.infringement || 0,
+                rating: statData.rating !== undefined ? statData.rating : null
+              })
+            }).catch(err => {
+              console.error(`Failed to create stat for position ${statData.position} in quarter ${statData.quarter}:`, err);
+              return null;
             });
             savePromises.push(newStatPromise);
           }
