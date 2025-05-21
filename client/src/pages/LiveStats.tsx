@@ -395,10 +395,14 @@ export default function LiveStats() {
             continue;
           }
           
+          // Get the position for this player in this quarter
+          const position = getPlayerPosition(parseInt(playerId), parseInt(quarter));
+          
           // Prepare the stat object
           const statObject: Partial<GameStat> = {
             gameId,
             playerId: parseInt(playerId),
+            position, // Include position data
             quarter: parseInt(quarter),
             ...playerQuarterStats
           };
