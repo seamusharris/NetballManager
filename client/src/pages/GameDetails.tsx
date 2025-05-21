@@ -112,8 +112,9 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
     if (!players || !playerId) return '#cccccc';
     const player = players.find(p => p.id === playerId);
     
-    // If player has no avatar color, assign a default based on player ID
-    if (!player?.avatarColor || player.avatarColor === '#FFFFFF' || player.avatarColor === '#ffffff') {
+    // First, check if we need to use a default color
+    if (!player || !player.avatarColor || player.avatarColor === '#FFFFFF' || player.avatarColor === '#ffffff') {
+      // Use a very obvious, distinctive color based on player ID for maximum visibility
       const defaultColors = [
         '#FF5733', '#33FF57', '#3357FF', '#F033FF', '#FF33F0', 
         '#33FFF0', '#F0FF33', '#8C33FF', '#FF8C33', '#33FF8C'
@@ -121,6 +122,7 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
       return defaultColors[playerId % defaultColors.length];
     }
     
+    // If player has their own avatar color, return it
     return player.avatarColor;
   };
   
@@ -172,11 +174,11 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
           return (
             <div key={position} className={`absolute ${getPositionCoordinates(position)}`}>
               <div 
-                className={`rounded-full shadow-md flex flex-col justify-center items-center w-16 h-16 md:w-20 md:h-20 ${!playerName ? 'bg-white border-2 border-red-400' : ''}`}
+                className={`rounded-full shadow-md flex flex-col justify-center items-center w-16 h-16 md:w-20 md:h-20 ${!playerName ? 'border-2 border-red-400' : ''}`}
                 style={{ 
-                  backgroundColor: playerName ? playerColor : 'white',
-                  boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
-                  border: playerName ? '2px solid rgba(255,255,255,0.5)' : undefined
+                  background: playerName ? playerColor : 'white',
+                  boxShadow: '0 4px 8px rgba(0, 0, 0, 0.5)',
+                  border: playerName ? '3px solid white' : undefined
                 }}
               >
                 <div className="font-bold text-center text-sm md:text-base" style={{ color: textColor }}>{position}</div>
