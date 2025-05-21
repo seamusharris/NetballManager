@@ -13,6 +13,7 @@ import {
   players, opponents, games, rosters, gameStats,
   POSITIONS
 } from "@shared/schema";
+import { migrateStatsToPositionBased } from "./migrations/migrateToPositionBasedStats";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // put application routes here

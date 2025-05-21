@@ -4,29 +4,29 @@ import { gameStats, rosters } from "../../shared/schema";
 import { log } from "../vite";
 
 /**
- * This script migrates existing player-based game stats to the new position-based model.
- * For each stat record, it finds what position the player was playing in that game/quarter
- * and stores that position instead of the player ID.
+ * This script populates the position field in game_stats table based on roster data.
+ * With our transitional schema, we retain both player_id and position fields to allow
+ * for a gradual migration to a position-based stats model.
  */
 export async function migrateStatsToPositionBased() {
   try {
-    log("Starting migration to position-based stats", "migration");
+    log("Starting migration to add position data to stats", "migration");
     
     // Get all existing game stats
-    const allStats = await db.query.gameStats.findMany();
+    const allStats = await db.select().from(gameStats);
     log(`Found ${allStats.length} stat records to migrate`, "migration");
     
     // Process each stat record
     for (const stat of allStats) {
       try {
         // Find what position this player was playing in this game/quarter
-        const rosterEntries = await db.query.rosters.findMany({
-          where: and(
+        const rosterEntries = await db.select().from(rosters).where(
+          and(
             eq(rosters.gameId, stat.gameId),
             eq(rosters.playerId, stat.playerId),
             eq(rosters.quarter, stat.quarter)
           )
-        });
+        );
 
         // If we found a position assignment for this player in this game/quarter
         if (rosterEntries.length > 0) {
@@ -38,12 +38,12 @@ export async function migrateStatsToPositionBased() {
 
           const position = rosterEntries[0].position;
           
-          // Update the record with the position instead of player ID
+          // Update the record to add the position field
           await db.update(gameStats)
             .set({ position: position })
             .where(eq(gameStats.id, stat.id));
             
-          log(`Migrated stat ID ${stat.id} from player ${stat.playerId} to position ${position}`, "migration");
+          log(`Added position ${position} to stat ID ${stat.id} for player ${stat.playerId}`, "migration");
         } else {
           log(`Could not find position for player ${stat.playerId} in game ${stat.gameId}, quarter ${stat.quarter}. Stat ID: ${stat.id}`, "migration");
         }
@@ -52,11 +52,11 @@ export async function migrateStatsToPositionBased() {
       }
     }
     
-    log("Migration to position-based stats completed", "migration");
+    log("Position data migration completed", "migration");
     
     return {
       success: true,
-      message: `Successfully migrated ${allStats.length} stat records to position-based model`,
+      message: `Successfully added position data to ${allStats.length} stat records`,
       totalRecords: allStats.length
     };
   } catch (err) {
