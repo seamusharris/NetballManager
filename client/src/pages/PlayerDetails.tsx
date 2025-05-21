@@ -259,27 +259,27 @@ export default function PlayerDetails() {
       });
       
       stats.forEach((stat: GameStat) => {
-        // Only count stats for quarters where player was actually on court
+        // In position-based model, we need to match stats to the positions the player played
+        // Only process stats for positions the player actually played in this quarter
         const positionPlayed = positionsByQuarter[stat.quarter];
         
-        if (positionPlayed) {
-          // If the stat has position data and it matches the position played, use it
-          // Otherwise use the position from roster (for backward compatibility)
-          const statPosition = (stat.position && allPositions.includes(stat.position)) 
-            ? stat.position 
-            : positionPlayed;
-            
+        // Match stat positions with positions player actually played
+        if (positionPlayed && stat.position === positionPlayed) {
+          const position = stat.position;
+          
           // Increment stats for this position
-          statsByPosition[statPosition].quarters++;
-          statsByPosition[statPosition].goalsFor += stat.goalsFor || 0;
-          statsByPosition[statPosition].goalsAgainst += stat.goalsAgainst || 0;
-          statsByPosition[statPosition].missedGoals += stat.missedGoals || 0;
-          statsByPosition[statPosition].rebounds += stat.rebounds || 0;
-          statsByPosition[statPosition].intercepts += stat.intercepts || 0;
-          statsByPosition[statPosition].badPass += stat.badPass || 0;
-          statsByPosition[statPosition].handlingError += stat.handlingError || 0;
-          statsByPosition[statPosition].pickUp += stat.pickUp || 0;
-          statsByPosition[statPosition].infringement += stat.infringement || 0;
+          if (position && statsByPosition[position]) {
+            statsByPosition[position].quarters++;
+            statsByPosition[position].goalsFor += stat.goalsFor || 0;
+            statsByPosition[position].goalsAgainst += stat.goalsAgainst || 0;
+            statsByPosition[position].missedGoals += stat.missedGoals || 0;
+            statsByPosition[position].rebounds += stat.rebounds || 0;
+            statsByPosition[position].intercepts += stat.intercepts || 0;
+            statsByPosition[position].badPass += stat.badPass || 0;
+            statsByPosition[position].handlingError += stat.handlingError || 0;
+            statsByPosition[position].pickUp += stat.pickUp || 0;
+            statsByPosition[position].infringement += stat.infringement || 0;
+          }
           
           // Also increment game totals
           gameGoals += stat.goalsFor || 0;
