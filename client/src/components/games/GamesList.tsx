@@ -471,8 +471,10 @@ export default function GamesList({
                     </TableCell>
                     <TableCell className="px-6 py-4 whitespace-nowrap">
                       <div className="flex space-x-2">
-                        {game.isBye ? (
-                          <span className="text-gray-400 text-xs italic">No actions available for BYE rounds</span>
+                        {game.isBye || game.status === 'forfeit' ? (
+                          <span className="text-gray-400 text-xs italic">
+                            {game.isBye ? "No actions available for BYE rounds" : "No actions available for forfeit games"}
+                          </span>
                         ) : (
                           <>
                             <button 
@@ -502,7 +504,9 @@ export default function GamesList({
                               Roster
                             </button>
                             
-                            <button 
+                            {/* Don't show statistics button for forfeit games */}
+                            {game.status !== 'forfeit' && (
+                              <button 
                                 onClick={() => navigate(`/statistics?game=${game.id}`)}
                                 title={
                                   !gameStatsStatus[game.id] || gameStatsStatus[game.id] === 'none'
@@ -528,6 +532,7 @@ export default function GamesList({
                                 }`} />
                                 Statistics
                               </button>
+                            )}
                             
                             {!game.isBye && 
                              !game.completed && 
