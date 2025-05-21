@@ -587,21 +587,36 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
           const playerId = parseInt(playerIdStr);
           if (isNaN(playerId)) continue;
           
-          // Find the player's stats for this quarter and game
+          // Make sure quarter is a number for comparison
+          const quarterNum = typeof quarter === 'string' ? parseInt(quarter) : quarter;
+          
+          // Find the position this player is playing in this quarter
+          const playerPositionInQuarter = rosters.find(r => 
+            r.gameId === gameId && 
+            r.playerId === playerId && 
+            r.quarter === quarterNum
+          );
+          
+          if (!playerPositionInQuarter?.position) {
+            console.error(`No position assignment found for player ${playerId} in quarter ${quarter}`);
+            continue;
+          }
+          
+          // Find stats for this position, quarter, and game (position-based instead of player-based)
           const existingStats = gameStats.filter(stat => 
             stat.gameId === gameId && 
-            stat.playerId === playerId && 
-            stat.quarter.toString() === quarter
+            stat.position === playerPositionInQuarter.position && 
+            stat.quarter === quarterNum
           );
           
           // Get the form values for this player and quarter
           const formData = quarterData[playerId];
           
-          // Create the stat data object
+          // Create the stat data object - using position instead of playerId for position-based stats
           const statData = {
             gameId,
-            playerId, 
-            quarter: parseInt(quarter),
+            position: playerPositionInQuarter.position, // Position-based tracking
+            quarter: quarterNum,
             goalsFor: parseInt(formData.goalsFor) || 0,
             goalsAgainst: parseInt(formData.goalsAgainst) || 0,
             missedGoals: parseInt(formData.missedGoals) || 0,
@@ -612,7 +627,7 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
             pickUp: parseInt(formData.pickUp) || 0,
             infringement: parseInt(formData.infringement) || 0,
             // Only include rating for quarter 1
-            ...(quarter === '1' ? { rating: playerRatings[playerId] || 5 } : {})
+            ...(quarterNum === 1 ? { rating: playerRatings[playerId] || 5 } : {})
           };
           
           // If there are multiple entries, handle duplicates
@@ -654,33 +669,14 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
           }
           // No existing stats, create a new one
           else {
-            // Find the position this player is playing in this quarter
-            // Make sure quarter is a number for comparison
-            const quarterNum = typeof quarter === 'string' ? parseInt(quarter) : quarter;
-            const playerPositionInQuarter = rosters.find(r => 
-              r.gameId === gameId && 
-              r.playerId === playerId && 
-              r.quarter === quarterNum
-            );
-            
-            if (playerPositionInQuarter?.position) {
-              // Use position-based stats instead of player-based
-              const positionBasedStatData = {
-                ...statData,
-                position: playerPositionInQuarter.position,
-                // Remove playerId from stat data since we're using position-based stats
-                playerId: undefined
-              };
-              
-              const newStatPromise = apiRequest('/api/gamestats', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(positionBasedStatData)
-              });
-              savePromises.push(newStatPromise);
-            } else {
-              console.error(`No position assignment found for player ${playerId} in quarter ${quarter}`);
-            }
+            // We already have the position from earlier in the code
+            // Create a new stat record with the stat data (which already includes position)
+            const newStatPromise = apiRequest('/api/gamestats', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(statData)
+            });
+            savePromises.push(newStatPromise);
           }
         }
       });
