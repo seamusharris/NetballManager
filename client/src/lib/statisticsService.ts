@@ -173,10 +173,14 @@ export class StatisticsService {
   }
   
   /**
-   * Get position-based statistics for a game
+   * Get position-based statistics for a game - with fresh data
    */
   async getPositionStats(gameId: number): Promise<Record<string, PositionStats>> {
-    const stats = await this.getGameStats(gameId);
+    // Force fresh data fetch to ensure we have the latest stats
+    const timestamp = new Date().getTime();
+    const stats = await apiRequest(`/api/games/${gameId}/stats?_t=${timestamp}`);
+    
+    console.log(`Calculating position stats with ${stats.length} fresh stats for game ${gameId}`);
     
     // Create a map of the latest stats for each position/quarter combination
     const positionStats: Record<string, PositionStats> = {};

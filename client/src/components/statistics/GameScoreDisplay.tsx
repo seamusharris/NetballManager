@@ -10,7 +10,8 @@ interface GameScoreDisplayProps {
 }
 
 export function GameScoreDisplay({ gameId, compact = false }: GameScoreDisplayProps) {
-  const { scores, isLoading, error } = useGameStatistics(gameId);
+  // Force a fresh fetch every time with staleTime set to 0
+  const { scores, isLoading, error } = useGameStatistics(gameId, true);
 
   if (isLoading) {
     return compact ? (

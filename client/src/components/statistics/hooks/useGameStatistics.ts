@@ -4,17 +4,24 @@ import { GameStat } from '@shared/schema';
 
 /**
  * Custom hook to fetch game statistics
+ * @param gameId - The ID of the game to fetch statistics for
+ * @param forceFresh - Whether to force fresh data every time (bypassing cache)
  */
-export function useGameStatistics(gameId: number) {
+export function useGameStatistics(gameId: number, forceFresh: boolean = false) {
+  // Create a unique timestamp to force fresh data
+  const timestamp = Date.now();
+  const freshQueryKey = forceFresh ? `${timestamp}` : '';
+  
   // Fetch raw statistics data
   const { 
     data: rawStats, 
     isLoading: isLoadingRawStats,
     error: rawStatsError
   } = useQuery({
-    queryKey: ['gameStats', gameId],
+    queryKey: ['gameStats', gameId, freshQueryKey],
     queryFn: () => statisticsService.getGameStats(gameId),
     enabled: !!gameId,
+    staleTime: forceFresh ? 0 : 5 * 60 * 1000, // 0 for fresh, 5 minutes otherwise
   });
   
   // Calculate game scores
@@ -23,9 +30,10 @@ export function useGameStatistics(gameId: number) {
     isLoading: isLoadingScores,
     error: scoresError
   } = useQuery({
-    queryKey: ['gameScores', gameId],
+    queryKey: ['gameScores', gameId, freshQueryKey],
     queryFn: () => statisticsService.calculateGameScores(gameId),
     enabled: !!gameId,
+    staleTime: forceFresh ? 0 : 5 * 60 * 1000, // 0 for fresh, 5 minutes otherwise
   });
   
   // Get position-based statistics
@@ -34,9 +42,10 @@ export function useGameStatistics(gameId: number) {
     isLoading: isLoadingPositionStats,
     error: positionStatsError
   } = useQuery({
-    queryKey: ['positionStats', gameId],
+    queryKey: ['positionStats', gameId, freshQueryKey],
     queryFn: () => statisticsService.getPositionStats(gameId),
     enabled: !!gameId,
+    staleTime: forceFresh ? 0 : 5 * 60 * 1000, // 0 for fresh, 5 minutes otherwise
   });
   
   // Map stats to players using roster information
@@ -45,9 +54,10 @@ export function useGameStatistics(gameId: number) {
     isLoading: isLoadingPlayerStats,
     error: playerStatsError
   } = useQuery({
-    queryKey: ['playerStats', gameId],
+    queryKey: ['playerStats', gameId, freshQueryKey],
     queryFn: () => statisticsService.mapStatsToPlayers(gameId),
     enabled: !!gameId,
+    staleTime: forceFresh ? 0 : 5 * 60 * 1000, // 0 for fresh, 5 minutes otherwise
   });
   
   // Combine loading and error states
