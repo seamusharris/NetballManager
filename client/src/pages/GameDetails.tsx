@@ -159,18 +159,17 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
           return (
             <div key={position} className={`absolute ${getPositionCoordinates(position)}`}>
               <div 
-                className={`bg-white rounded-full p-2 shadow-md ${!playerName ? 'border-2 border-red-400' : ''}`}
+                className={`rounded-full shadow-md flex flex-col justify-center items-center w-16 h-16 md:w-20 md:h-20 ${!playerName ? 'bg-white border-2 border-red-400' : ''}`}
                 style={{ 
-                  backgroundColor: playerName ? `${playerColor}20` : 'white', // 20 adds 12.5% opacity
-                  border: playerName ? `3px solid ${playerColor}` : undefined,
+                  backgroundColor: playerName ? playerColor : 'white',
                 }}
               >
-                <div className="font-bold text-center">{position}</div>
+                <div className="font-bold text-center text-white text-sm md:text-base">{position}</div>
                 {playerName && (
-                  <div className="text-sm text-center font-medium">{playerName}</div>
+                  <div className="text-xs md:text-sm text-center font-medium text-white leading-tight">{playerName}</div>
                 )}
                 {!playerName && (
-                  <div className="text-xs text-red-500 text-center">Unassigned</div>
+                  <div className="text-xs text-white text-center">Unassigned</div>
                 )}
               </div>
             </div>
