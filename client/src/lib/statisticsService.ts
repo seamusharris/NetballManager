@@ -187,6 +187,15 @@ export class StatisticsService {
    * Get position-based statistics for a game - with fresh data
    */
   async getPositionStats(gameId: number): Promise<Record<string, PositionStats>> {
+    // First check if this is a forfeit game
+    const game = await apiRequest(`/api/games/${gameId}`);
+    
+    // Return empty stats for forfeit games
+    if (isForfeitGame(game)) {
+      console.log(`Forfeit game detected (ID: ${gameId}), returning empty position stats`);
+      return {};
+    }
+    
     // Force fresh data fetch to ensure we have the latest stats
     const timestamp = new Date().getTime();
     const stats = await apiRequest(`/api/games/${gameId}/stats?_t=${timestamp}`);
@@ -197,7 +206,7 @@ export class StatisticsService {
     const positionStats: Record<string, PositionStats> = {};
     
     // Find the latest stat for each position/quarter combination
-    stats.forEach(stat => {
+    stats.forEach((stat: GameStat) => {
       if (!stat || !stat.quarter || !stat.position) return;
       
       const key = `${stat.position}-${stat.quarter}`;
@@ -205,7 +214,7 @@ export class StatisticsService {
       // Skip if we already have a newer stat for this position/quarter
       if (positionStats[key] && stat.id) {
         // Skip this stat if we already have a newer one
-        const existingStat = stats.find(s => 
+        const existingStat = stats.find((s: GameStat) => 
           s.position === stat.position && 
           s.quarter === stat.quarter && 
           s.id > stat.id
@@ -238,6 +247,15 @@ export class StatisticsService {
    * Map position-based statistics to player statistics using roster information - with fresh data
    */
   async mapStatsToPlayers(gameId: number): Promise<Record<number, GameStat[]>> {
+    // First check if this is a forfeit game
+    const game = await apiRequest(`/api/games/${gameId}`);
+    
+    // Return empty stats map for forfeit games
+    if (isForfeitGame(game)) {
+      console.log(`Forfeit game detected (ID: ${gameId}), returning empty player stats mapping`);
+      return {};
+    }
+    
     // Force fresh data fetch to ensure we have the latest stats
     const timestamp = new Date().getTime();
     const stats = await apiRequest(`/api/games/${gameId}/stats?_t=${timestamp}`);
@@ -249,12 +267,12 @@ export class StatisticsService {
     const statsByPlayer: Record<number, GameStat[]> = {};
     
     // Process each stat and map to the player who played that position
-    stats.forEach(stat => {
+    stats.forEach((stat: GameStat) => {
       // Only process stats with valid position
       if (!stat.position) return;
       
       // Find which player was in this position for this quarter
-      const playerInPosition = rosters.find(r => 
+      const playerInPosition = rosters.find((r: Roster) => 
         r.quarter === stat.quarter && 
         r.position === stat.position &&
         r.gameId === gameId
@@ -285,10 +303,10 @@ export class StatisticsService {
       : await apiRequest('/api/games');
     
     // Filter out forfeit games (they don't count for player statistics)
-    const validGames = allGames.filter(g => g.status !== 'forfeit');
+    const validGames = allGames.filter((g: Game) => g.status !== 'forfeit');
     
     // Get IDs of non-forfeit games only
-    const games = validGames.map(g => g.id);
+    const games = validGames.map((g: Game) => g.id);
     
     // Initialize player performance
     const performance: PlayerPerformance = {
