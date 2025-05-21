@@ -461,6 +461,89 @@ export default function LiveStatsByPosition() {
         </div>
       </div>
       
+      {/* Live Score Tracking */}
+      <div className="bg-white rounded-lg shadow-md p-3 mb-4">
+        <div className="grid grid-cols-5 gap-2">
+          <div className="text-center font-semibold">Team</div>
+          <div className="text-center font-semibold">Q1</div>
+          <div className="text-center font-semibold">Q2</div>
+          <div className="text-center font-semibold">Q3</div>
+          <div className="text-center font-semibold">Q4</div>
+          
+          {/* Our team score */}
+          <div className="text-left font-bold">Our Team</div>
+          <div className="text-center font-bold bg-blue-50 rounded py-1">
+            {Object.values(stats).reduce((sum, pos) => {
+              return sum + (pos['1']?.goalsFor || 0);
+            }, 0)}
+          </div>
+          <div className="text-center font-bold bg-blue-50 rounded py-1">
+            {Object.values(stats).reduce((sum, pos) => {
+              return sum + (pos['2']?.goalsFor || 0);
+            }, 0)}
+          </div>
+          <div className="text-center font-bold bg-blue-50 rounded py-1">
+            {Object.values(stats).reduce((sum, pos) => {
+              return sum + (pos['3']?.goalsFor || 0);
+            }, 0)}
+          </div>
+          <div className="text-center font-bold bg-blue-50 rounded py-1">
+            {Object.values(stats).reduce((sum, pos) => {
+              return sum + (pos['4']?.goalsFor || 0);
+            }, 0)}
+          </div>
+          
+          {/* Opponent team score */}
+          <div className="text-left font-bold">{opponent?.teamName || 'Opponent'}</div>
+          <div className="text-center font-bold bg-red-50 rounded py-1">
+            {Object.values(stats).reduce((sum, pos) => {
+              return sum + (pos['1']?.goalsAgainst || 0);
+            }, 0)}
+          </div>
+          <div className="text-center font-bold bg-red-50 rounded py-1">
+            {Object.values(stats).reduce((sum, pos) => {
+              return sum + (pos['2']?.goalsAgainst || 0);
+            }, 0)}
+          </div>
+          <div className="text-center font-bold bg-red-50 rounded py-1">
+            {Object.values(stats).reduce((sum, pos) => {
+              return sum + (pos['3']?.goalsAgainst || 0);
+            }, 0)}
+          </div>
+          <div className="text-center font-bold bg-red-50 rounded py-1">
+            {Object.values(stats).reduce((sum, pos) => {
+              return sum + (pos['4']?.goalsAgainst || 0);
+            }, 0)}
+          </div>
+        </div>
+        
+        {/* Total Score */}
+        <div className="mt-3 flex justify-center items-center gap-3">
+          <div className="text-center">
+            <span className="font-bold text-lg">Game Total:</span>
+          </div>
+          <div className="bg-blue-100 rounded-lg px-4 py-2">
+            <span className="font-bold text-lg">
+              {Object.values(stats).reduce((sum, pos) => {
+                return sum + (pos['1']?.goalsFor || 0) + (pos['2']?.goalsFor || 0) + 
+                            (pos['3']?.goalsFor || 0) + (pos['4']?.goalsFor || 0);
+              }, 0)}
+            </span>
+          </div>
+          <div className="text-center">
+            <span className="font-bold text-xl">vs</span>
+          </div>
+          <div className="bg-red-100 rounded-lg px-4 py-2">
+            <span className="font-bold text-lg">
+              {Object.values(stats).reduce((sum, pos) => {
+                return sum + (pos['1']?.goalsAgainst || 0) + (pos['2']?.goalsAgainst || 0) + 
+                            (pos['3']?.goalsAgainst || 0) + (pos['4']?.goalsAgainst || 0);
+              }, 0)}
+            </span>
+          </div>
+        </div>
+      </div>
+      
       <Tabs value={currentQuarter.toString()} onValueChange={(v) => setCurrentQuarter(parseInt(v))}>
         <TabsList className="grid grid-cols-4 mb-4">
           <TabsTrigger value="1">Quarter 1</TabsTrigger>
