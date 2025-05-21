@@ -16,13 +16,24 @@ import { Save, Undo, Redo, Plus, Minus } from 'lucide-react';
 type StatType = 'goalsFor' | 'goalsAgainst' | 'missedGoals' | 'rebounds' | 
                 'intercepts' | 'badPass' | 'handlingError' | 'pickUp' | 'infringement';
 
-// Game stats by quarter and player/position
+// Quarter stats including both regular stats and position info
+interface QuarterStats {
+  goalsFor: number;
+  goalsAgainst: number;
+  missedGoals: number;
+  rebounds: number;
+  intercepts: number;
+  badPass: number;
+  handlingError: number;
+  pickUp: number;
+  infringement: number;
+  position?: Position; // Track which position this player was in
+}
+
+// Game stats by quarter and player
 interface GameStats {
   [playerId: number]: {
-    [quarter: number]: {
-      [key: string]: number | Position | undefined;
-      position?: Position; // Track which position this player was in
-    }
+    [quarter: number]: QuarterStats
   }
 }
 

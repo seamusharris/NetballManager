@@ -13,7 +13,7 @@ import {
   players, opponents, games, rosters, gameStats,
   POSITIONS
 } from "@shared/schema";
-import { migrateStatsToPositionBased } from "./migrations/migrateToPositionBasedStats";
+import { fixGameStatsSchema } from "./fixDbSchema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // put application routes here
@@ -45,16 +45,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Migrate existing player-based stats to include position data
-  app.post("/api/migrate-to-position-stats", async (req, res) => {
+  // Fix game stats schema if needed
+  app.post("/api/fix-game-stats-schema", async (req, res) => {
     try {
-      const result = await migrateStatsToPositionBased();
+      const result = await fixGameStatsSchema();
       res.status(200).json(result);
     } catch (error) {
-      console.error("Error during stats migration:", error);
+      console.error("Error fixing game stats schema:", error);
       res.status(500).json({ 
         success: false, 
-        message: `Migration failed: ${error}` 
+        message: `Schema fix failed: ${error}` 
       });
     }
   });
