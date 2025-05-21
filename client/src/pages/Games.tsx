@@ -3,7 +3,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Plus } from 'lucide-react';
 import GamesList from '@/components/games/GamesList';
 import GameForm from '@/components/games/GameForm';
@@ -139,6 +139,7 @@ export default function Games() {
         
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogContent className="sm:max-w-[550px]">
+            <DialogTitle className="sr-only">Schedule New Game</DialogTitle>
             <GameForm 
               opponents={opponents}
               onSubmit={handleCreateGame} 
@@ -149,6 +150,7 @@ export default function Games() {
         
         <Dialog open={!!editingGame} onOpenChange={(open) => !open && setEditingGame(null)}>
           <DialogContent className="sm:max-w-[550px]">
+            <DialogTitle className="sr-only">Edit Game</DialogTitle>
             <GameForm 
               game={editingGame || undefined}
               opponents={opponents}

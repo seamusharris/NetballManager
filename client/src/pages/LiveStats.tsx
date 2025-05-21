@@ -466,7 +466,7 @@ export default function LiveStats() {
             toast({
               title: "Warning",
               description: `Could not save stats for a player in quarter ${quarterNum} - position not assigned.`,
-              variant: "warning"
+              variant: "destructive"
             });
           }
         }
