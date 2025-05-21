@@ -150,9 +150,25 @@ export default function LiveStatsByPosition() {
   const saveStatMutation = useMutation({
     mutationFn: async (statData: Partial<GameStat>) => {
       try {
+        // Sanitize the data to ensure valid JSON
+        const cleanedData = { ...statData };
+        
+        // Ensure all numeric fields are actually numbers
+        Object.keys(cleanedData).forEach(key => {
+          if (typeof cleanedData[key] === 'number' || key === 'rating') {
+            // Keep as is or ensure null for rating
+            if (key === 'rating') cleanedData[key] = null;
+          } else if (cleanedData[key] === null || cleanedData[key] === undefined) {
+            // Convert null/undefined numeric fields to 0
+            if (key !== 'playerId') {
+              cleanedData[key] = 0;
+            }
+          }
+        });
+        
         const response = await apiRequest('/api/game-stats', {
           method: 'POST',
-          body: JSON.stringify(statData),
+          body: JSON.stringify(cleanedData),
           headers: {
             'Content-Type': 'application/json'
           }
