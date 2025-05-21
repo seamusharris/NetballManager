@@ -7,7 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import TeamPerformance from './TeamPerformance';
 import RecentGames from './RecentGames';
 import UpcomingGames from './UpcomingGames';
-import PlayerPerformance from './PlayerPerformance';
+import PlayerPerformance from './PlayerPerformance2';
 
 import PerformanceCharts from './PerformanceCharts';
 import { Player, Game, Opponent } from '@shared/schema';
