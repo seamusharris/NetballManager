@@ -500,8 +500,8 @@ export default function LiveStatsByPosition() {
         </TabsList>
       </Tabs>
       
-      {/* Position cards - grid layout */}
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      {/* Position cards - each in its own full-width row */}
+      <div className="grid grid-cols-1 gap-4">
         {/* GS Position Card */}
         <Card className="flex flex-col">
           <CardHeader className="py-3 px-3">
