@@ -218,31 +218,14 @@ export default function GamesList({
       // Create a map of the latest stats for each player and quarter combination
       const latestPlayerStats: Record<string, GameStat> = {};
       
-      // Find the latest stat for each position and quarter
-      // With position-based stats, we need to map positions to players via roster
+      // With position-based stats, we now directly use the position as the key for stats
+      // This is a key part of the position-based model
       stats.forEach(stat => {
-        if (!stat) return;
+        if (!stat || !stat.position) return;
         
-        // Find which player was playing this position in this quarter
-        const rosterEntry = rosters.find(r => 
-          r.gameId === gameId && 
-          r.position === stat.position && 
-          r.quarter === stat.quarter
-        );
-        
-        // Skip if no player was assigned to this position
-        if (!rosterEntry) {
-          console.log(`Skipping stats for position ${stat.position} in quarter ${stat.quarter} as no player was assigned`);
-          return;
-        }
-        
-        // Only count stats for players who are on the roster
-        if (!rosterPlayerIds.has(rosterEntry.playerId)) {
-          console.log(`Skipping stats for player ${rosterEntry.playerId} in game ${gameId} as they are not on the roster`);
-          return;
-        }
-        
-        const key = `${rosterEntry.playerId}-${stat.quarter}`;
+        // Since we're tracking by position now, we just need to make sure we have the latest stat record
+        // for each position and quarter combination
+        const key = `${stat.position}-${stat.quarter}`;
         if (!latestPlayerStats[key] || stat.id > latestPlayerStats[key].id) {
           latestPlayerStats[key] = stat;
         }

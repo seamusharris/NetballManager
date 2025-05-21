@@ -72,9 +72,10 @@ export default function PlayerDetails() {
       const statsPromises = gameIds.map(async (gameId) => {
         const response = await fetch(`/api/games/${gameId}/stats?_t=${Date.now()}`);
         const allStats = await response.json() as GameStat[];
-        // Filter stats for only this player
-        const playerStats = allStats.filter(stat => stat.playerId === playerId);
-        return { gameId, stats: playerStats };
+        
+        // With position-based stats, we need to get player's positions from roster
+        // and then find stats for those positions
+        return { gameId, stats: allStats };
       });
       
       // Fetch roster data for each completed game to check participation
