@@ -89,11 +89,11 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
   const getPositionCoordinates = (position: Position) => {
     const positionMap = {
       'GS': 'bottom-10 left-1/2 transform -translate-x-1/2',
-      'GA': 'bottom-1/3 right-1/5',
+      'GA': 'bottom-24 right-12',
       'WA': 'bottom-1/2 right-10',
       'C': 'top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2',
       'WD': 'top-1/2 left-10',
-      'GD': 'top-1/3 left-1/5',
+      'GD': 'top-24 left-12',
       'GK': 'top-10 left-1/2 transform -translate-x-1/2',
     };
     
@@ -113,7 +113,7 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
     const player = players.find(p => p.id === playerId);
     
     // If player has no avatar color, assign a default based on player ID
-    if (!player?.avatarColor) {
+    if (!player?.avatarColor || player.avatarColor === '#FFFFFF' || player.avatarColor === '#ffffff') {
       const defaultColors = [
         '#FF5733', '#33FF57', '#3357FF', '#F033FF', '#FF33F0', 
         '#33FFF0', '#F0FF33', '#8C33FF', '#FF8C33', '#33FF8C'
@@ -156,6 +156,19 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
           const playerName = getPlayerName(entry?.playerId);
           const playerColor = getPlayerColor(entry?.playerId);
           
+          // Calculate contrast color for text
+          const isLightColor = (color: string) => {
+            // Remove the # if present
+            const hex = color.replace('#', '');
+            const r = parseInt(hex.substr(0, 2), 16);
+            const g = parseInt(hex.substr(2, 2), 16);
+            const b = parseInt(hex.substr(4, 2), 16);
+            // Calculate luminance - if > 0.5, it's a light color
+            return (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.5;
+          };
+          
+          const textColor = playerName && isLightColor(playerColor) ? 'black' : 'white';
+          
           return (
             <div key={position} className={`absolute ${getPositionCoordinates(position)}`}>
               <div 
@@ -163,14 +176,15 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
                 style={{ 
                   backgroundColor: playerName ? playerColor : 'white',
                   boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
+                  border: playerName ? '2px solid rgba(255,255,255,0.5)' : undefined
                 }}
               >
-                <div className="font-bold text-center text-white text-sm md:text-base">{position}</div>
+                <div className="font-bold text-center text-sm md:text-base" style={{ color: textColor }}>{position}</div>
                 {playerName && (
-                  <div className="text-xs md:text-sm text-center font-medium text-white leading-tight">{playerName}</div>
+                  <div className="text-xs md:text-sm text-center font-medium leading-tight" style={{ color: textColor }}>{playerName}</div>
                 )}
                 {!playerName && (
-                  <div className="text-xs text-white text-center">Unassigned</div>
+                  <div className="text-xs text-red-500 text-center">Unassigned</div>
                 )}
               </div>
             </div>
