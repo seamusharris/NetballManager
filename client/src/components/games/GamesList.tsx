@@ -558,8 +558,19 @@ export default function GamesList({
                         <Button 
                           variant="ghost" 
                           size="icon"
+                          className="text-primary hover:text-primary-dark"
+                          onClick={() => navigate(`/games/${game.id}`)}
+                          title="View game details"
+                        >
+                          <FileText className="h-4 w-4" />
+                        </Button>
+                        
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
                           className="text-accent hover:text-accent-dark"
                           onClick={() => onEdit(game)}
+                          title="Edit game"
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
@@ -571,6 +582,7 @@ export default function GamesList({
                               size="icon"
                               className="text-error hover:text-error/80"
                               onClick={() => confirmDelete(game.id)}
+                              title="Delete game"
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>

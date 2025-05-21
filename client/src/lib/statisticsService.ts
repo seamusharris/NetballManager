@@ -1,4 +1,4 @@
-import { GameStat, Game, Roster, Position, Player, allPositions } from '@shared/schema';
+import { GameStat, Game, Roster, Position, Player, allPositions, GameStatus } from '@shared/schema';
 import { apiRequest } from './queryClient';
 import { isForfeitGame, getForfeitGameScore } from './utils';
 
