@@ -181,12 +181,23 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
         '1': {}, '2': {}, '3': {}, '4': {}
       };
       
-      // Group stats by quarter and player
+      // Group stats by quarter and position
       gameStats.forEach(stat => {
         if (!stat) return;
         
         const quarter = String(stat.quarter);
-        const playerId = stat.playerId;
+        
+        // Since stats are now position-based, we need to find the player associated with this position/quarter
+        const rosterEntry = rosters.find(r => 
+          r.gameId === gameId && 
+          r.position === stat.position && 
+          r.quarter === stat.quarter
+        );
+        
+        // If we can't find a roster entry for this position, skip it
+        if (!rosterEntry) return;
+        
+        const playerId = rosterEntry.playerId;
         
         if (!statsByQuarterAndPlayer[quarter][playerId]) {
           statsByQuarterAndPlayer[quarter][playerId] = [];
@@ -699,14 +710,14 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
       
       // Invalidate specific player queries for all players in the current game
       // This ensures player details pages stay up to date
+      // Since stats no longer store playerIds, we need to get them from roster entries
       const uniquePlayerIds = new Set();
-      gameStats.forEach(stat => {
-        if (stat.playerId) uniquePlayerIds.add(stat.playerId);
-      });
       
-      // Also include players from the roster to ensure everyone involved is updated
+      // Get all players from roster entries for this game
       rosters.forEach(roster => {
-        if (roster.playerId) uniquePlayerIds.add(roster.playerId);
+        if (roster.gameId === gameId && roster.playerId) {
+          uniquePlayerIds.add(roster.playerId);
+        }
       });
       
       // Invalidate player queries
