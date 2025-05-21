@@ -69,11 +69,22 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
       // Group stats by player
       const statsByPlayer: Record<number, GameStat[]> = {};
       
+      // Map position-based stats to players using the roster
       gameStats.forEach(stat => {
-        if (!statsByPlayer[stat.playerId]) {
-          statsByPlayer[stat.playerId] = [];
+        // Find which player was in this position for this quarter
+        const playerInPosition = rosters.find(r => 
+          r.quarter === stat.quarter && 
+          r.position === stat.position
+        );
+        
+        if (playerInPosition && playerInPosition.playerId) {
+          const playerId = playerInPosition.playerId;
+          
+          if (!statsByPlayer[playerId]) {
+            statsByPlayer[playerId] = [];
+          }
+          statsByPlayer[playerId].push(stat);
         }
-        statsByPlayer[stat.playerId].push(stat);
       });
       
       // Calculate totals for each player

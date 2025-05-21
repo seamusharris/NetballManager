@@ -647,28 +647,34 @@ export default function GameStatistics({
                                 <TableCell>{player.displayName}</TableCell>
                                 <TableCell>{position}</TableCell>
                                 <TableCell>
-                                  {isEditable && (
+                                  {quarter !== 'total' ? (
                                     <Input 
                                       type="number" 
                                       min="0"
                                       value={stat?.goalsFor || 0}
-                                      onChange={(e) => handleStatChange(playerId, parseInt(quarter), 'goalsFor', parseInt(e.target.value) || 0)}
+                                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => 
+                                        handleStatChange(playerId, parseInt(quarter), 'goalsFor', parseInt(e.target.value) || 0)
+                                      }
                                       className="w-12 text-center"
                                     />
+                                  ) : (
+                                    stat?.goalsFor || 0
                                   )}
-                                  {!isEditable && (stat?.goalsFor || 0)}
                                 </TableCell>
                                 <TableCell>
-                                  {isEditable && (
+                                  {quarter !== 'total' ? (
                                     <Input 
                                       type="number" 
                                       min="0"
                                       value={stat?.goalsAgainst || 0}
-                                      onChange={(e) => handleStatChange(playerId, parseInt(quarter), 'goalsAgainst', parseInt(e.target.value) || 0)}
+                                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => 
+                                        handleStatChange(playerId, parseInt(quarter), 'goalsAgainst', parseInt(e.target.value) || 0)
+                                      }
                                       className="w-12 text-center"
                                     />
+                                  ) : (
+                                    stat?.goalsAgainst || 0
                                   )}
-                                  {!isEditable && (stat?.goalsAgainst || 0)}
                                 </TableCell>
                                 <TableCell>{stat?.missedGoals || 0}</TableCell>
                                 <TableCell>{stat?.rebounds || 0}</TableCell>
