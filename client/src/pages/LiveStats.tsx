@@ -412,10 +412,11 @@ export default function LiveStats() {
           // Get the position for this player in this quarter
           const position = getPlayerPosition(parseInt(playerId), parseInt(quarter));
           
-          // Prepare the stat object - now fully position-based
+          // Prepare the stat object - position-based but keeping player ID for history
           const statObject: Partial<GameStat> = {
             gameId,
-            position, // Stats are now only associated with position
+            playerId: parseInt(playerId), // Keep player ID for historical tracking
+            position, // Position is now the primary organizing concept
             quarter: parseInt(quarter),
             ...playerQuarterStats
           };
