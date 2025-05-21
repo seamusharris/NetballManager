@@ -81,16 +81,14 @@ export interface StatUpdate {
 export class StatisticsService {
   
   /**
-   * Fetch game statistics from the API
+   * Fetch game statistics from the API - with mandatory cache bypass
    */
   async getGameStats(gameId: number): Promise<GameStat[]> {
     try {
-      const stats = await apiRequest(`/api/games/${gameId}/stats`);
-      console.log(`Fetched ${stats.length} stats for game ${gameId}`);
-      // Force refresh the cache to ensure we have the latest data
-      setTimeout(() => {
-        console.log(`Refreshing statistics data for game ${gameId}`);
-      }, 1000);
+      // Add timestamp to force a fresh network request every time
+      const timestamp = new Date().getTime();
+      const stats = await apiRequest(`/api/games/${gameId}/stats?_t=${timestamp}`);
+      console.log(`Fetched ${stats.length} fresh stats for game ${gameId}`);
       return stats;
     } catch (error) {
       console.error(`Error fetching stats for game ${gameId}:`, error);
@@ -107,9 +105,14 @@ export class StatisticsService {
   
   /**
    * Calculate game scores (for and against) by quarter and final
+   * This is the critical function that updates scores everywhere
    */
   async calculateGameScores(gameId: number): Promise<GameScores> {
-    const stats = await this.getGameStats(gameId);
+    // Force fresh data fetch to ensure we have the latest stats
+    const timestamp = new Date().getTime();
+    const stats = await apiRequest(`/api/games/${gameId}/stats?_t=${timestamp}`);
+    
+    console.log(`Calculating scores with ${stats.length} fresh stats for game ${gameId}`);
     
     // Initialize score structure
     const quarterScores = {
