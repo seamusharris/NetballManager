@@ -2,10 +2,12 @@ import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet';
 import { useLocation } from 'wouter';
+import { ChevronLeft } from 'lucide-react';
 import GameStatistics from '@/components/statistics/GameStatistics';
 import SimpleStats from '@/components/statistics/SimpleStats';
 import ExportButtons from '@/components/common/ExportButtons';
 import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { 
   Select, 
   SelectContent, 
@@ -173,11 +175,31 @@ export default function Statistics() {
       
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-heading font-bold text-neutral-dark">Game Statistics</h2>
+          <div className="flex items-center gap-3">
+            <h2 className="text-2xl font-heading font-bold text-neutral-dark">Game Statistics</h2>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate('/games')}
+              className="hidden sm:flex items-center"
+            >
+              <ChevronLeft className="h-4 w-4 mr-1" />
+              Back to Games
+            </Button>
+          </div>
           {games.length === 0 ? (
             <div></div> /* Empty div to maintain flex layout */
           ) : (
             <div className="flex space-x-3">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate('/games')}
+                className="sm:hidden"
+              >
+                <ChevronLeft className="h-4 w-4" />
+                <span className="sr-only">Back</span>
+              </Button>
               <Select value={selectedGameId?.toString() || ''} onValueChange={(value) => setSelectedGameId(Number(value))}>
                 <SelectTrigger className="w-[250px]">
                   <SelectValue placeholder="Select Game" />
