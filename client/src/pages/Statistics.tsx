@@ -279,7 +279,12 @@ export default function Statistics() {
               </CardContent>
             </Card>
             
-            {fixedRosters.length > 0 ? (
+            {selectedGame.status === 'forfeit' ? (
+              <Card className="p-6 text-center">
+                <p className="text-gray-600 mb-2">This game is marked as a forfeit.</p>
+                <p className="text-gray-600">Statistics editing is not available for forfeit games.</p>
+              </Card>
+            ) : fixedRosters.length > 0 ? (
               <SimpleStats
                 gameId={selectedGame.id}
                 players={players}

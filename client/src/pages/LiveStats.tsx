@@ -764,6 +764,19 @@ export default function LiveStats() {
     );
   }
   
+  // Error state - game is a forfeit
+  if (game.status === 'forfeit') {
+    return (
+      <div className="container py-6">
+        <h1 className="text-2xl font-bold mb-4">Cannot edit statistics</h1>
+        <p>This game is marked as a forfeit. Statistics editing is not available for forfeit games.</p>
+        <Button className="mt-4" onClick={() => navigate('/games')}>
+          Back to Games
+        </Button>
+      </div>
+    );
+  }
+  
   const playersOnCourt = getPlayersOnCourt();
   
   return (
