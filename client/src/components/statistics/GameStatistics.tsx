@@ -75,6 +75,22 @@ export default function GameStatistics({
     console.log("Final quarter roster assignments:", rosterByQuarterAndPosition);
   }
   
+  // Helper function to get position for a player in a specific quarter
+  const getPositionForPlayerInQuarter = (playerId: number, quarter: number): Position | undefined => {
+    const quarterKey = quarter.toString();
+    const quarterRoster = rosterByQuarterAndPosition[quarterKey];
+    
+    // Find the position this player was assigned to in this quarter
+    for (const [position, id] of Object.entries(quarterRoster)) {
+      if (id === playerId) {
+        return position as Position;
+      }
+    }
+    
+    // If not found in roster, return undefined
+    return undefined;
+  };
+  
   // Group stats by quarter and player
   const statsByQuarterAndPlayer: Record<string, Record<number, GameStat>> = {
     '1': {},
@@ -374,6 +390,8 @@ export default function GameStatistics({
                 handlingError: 0,
                 pickUp: 0,
                 infringement: 0,
+                // Include position information from roster
+                position: getPositionForPlayerInQuarter(Number(playerId), Number(quarter)),
                 ...quarterChanges // Override with actual values being updated
               })
             );
