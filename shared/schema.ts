@@ -75,11 +75,11 @@ export const importRosterSchema = createInsertSchema(rosters);
 export type InsertRoster = z.infer<typeof insertRosterSchema>;
 export type Roster = typeof rosters.$inferSelect;
 
-// Game statistics model - primarily position-based
+// Game statistics model - fully position-based
 export const gameStats = pgTable("game_stats", {
   id: serial("id").primaryKey(),
   gameId: integer("game_id").notNull(),
-  playerId: integer("player_id"), // Optional, maintained for backward compatibility
+  position: text("position").$type<Position>().notNull(), // Position is the primary organizing concept
   quarter: integer("quarter").notNull(), // 1-4
   goalsFor: integer("goals_for").notNull().default(0),
   goalsAgainst: integer("goals_against").notNull().default(0),
@@ -91,7 +91,6 @@ export const gameStats = pgTable("game_stats", {
   pickUp: integer("pick_up").notNull().default(0),
   infringement: integer("infringement").notNull().default(0),
   rating: integer("rating"), // Position performance rating from 0-10
-  position: text("position").$type<Position>(), // Primary organizing concept for position-based stats
 }, 
 // Add unique constraint to ensure we have exactly one stat record per position/quarter combo
 (table) => {
