@@ -35,10 +35,12 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Edit, Trash2, FileText, CalendarRange, Search, Trophy, ThumbsDown, Minus, ActivitySquare } from 'lucide-react';
-import { Game, Opponent, GameStat } from '@shared/schema';
+import { Game, Opponent, GameStat, GameStatus } from '@shared/schema';
 import { formatDate, formatShortDate } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
 import { GameScoreDisplay } from '@/components/statistics/GameScoreDisplay';
+import { GameStatusBadge } from './GameStatusBadge';
+import { GameStatusDialog } from './GameStatusDialog';
 
 interface GamesListProps {
   games: Game[];
@@ -74,7 +76,11 @@ export default function GamesList({
   const [gameRosterStatus, setGameRosterStatus] = useState<Record<number, RosterStatus>>({});
   // Track if each game has stats (none/partial/complete)
   type StatsStatus = 'none' | 'partial' | 'complete';
-  const [gameStatsStatus, setGameStatsStatus] = useState<Record<number, StatsStatus>>({}); 
+  const [gameStatsStatus, setGameStatsStatus] = useState<Record<number, StatsStatus>>({});
+  
+  // Status dialog state
+  const [statusDialogOpen, setStatusDialogOpen] = useState(false);
+  const [selectedGame, setSelectedGame] = useState<Game | null>(null);
   
   // Fetch game stats for all completed games
   const completedGameIds = games
@@ -431,16 +437,13 @@ export default function GamesList({
                           </Badge>
                         ) : (
                           <>
-                            <Badge
-                              variant="outline"
-                              className={`px-2 py-1 text-xs rounded-full font-semibold ${
-                                game.completed 
-                                  ? "bg-success/10 text-success" 
-                                  : "bg-accent/10 text-accent"
-                              }`}
-                            >
-                              {game.completed ? 'Completed' : 'Upcoming'}
-                            </Badge>
+                            <GameStatusBadge 
+                              status={game.status || (game.completed ? 'completed' : 'upcoming')}
+                              onClick={() => {
+                                setSelectedGame(game);
+                                setStatusDialogOpen(true);
+                              }}
+                            />
                             
                             {game.completed && gameScores[game.id] && (
                               <div className={`p-1 rounded-full ${
