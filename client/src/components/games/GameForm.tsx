@@ -27,7 +27,6 @@ const formSchema = insertGameSchema.extend({
   date: z.string().min(1, "Date is required"),
   time: z.string().min(1, "Time is required"),
   opponentId: z.string(), // No validation directly on the field
-  completed: z.boolean().default(false),
   isBye: z.boolean().default(false),
   round: z.string().optional()
 }).refine(
@@ -64,7 +63,6 @@ export default function GameForm({ game, opponents, onSubmit, isSubmitting }: Ga
       date: game?.date || "",
       time: game?.time || "",
       opponentId: game?.opponentId ? String(game.opponentId) : "",
-      completed: game?.completed || false,
       isBye: game?.isBye || false,
       round: game?.round || ""
     },
@@ -78,8 +76,7 @@ export default function GameForm({ game, opponents, onSubmit, isSubmitting }: Ga
         time: values.time,
         round: values.round,
         isBye: true,
-        // BYE games can't be completed since they don't have stats
-        completed: false
+        status: 'upcoming' // Default status for new BYE games
       };
       
       console.log("Submitting BYE game:", byeGameData);
@@ -93,7 +90,7 @@ export default function GameForm({ game, opponents, onSubmit, isSubmitting }: Ga
       time: values.time,
       round: values.round,
       opponentId: parseInt(values.opponentId),
-      completed: values.completed,
+      status: 'upcoming', // Default status for new games
       isBye: false
     };
     
@@ -217,29 +214,7 @@ export default function GameForm({ game, opponents, onSubmit, isSubmitting }: Ga
           )}
         />
         
-        {!form.watch("isBye") && (
-          <FormField
-            control={form.control}
-            name="completed"
-            render={({ field }) => (
-              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-                <div className="space-y-0.5">
-                  <FormLabel>Game Status</FormLabel>
-                  <FormDescription>
-                    Mark as completed to enter statistics for this game
-                  </FormDescription>
-                </div>
-                <FormControl>
-                  <Switch
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        )}
+        {/* Note: Game status is now managed through the status badge */}
         
         <div className="flex justify-end space-x-2">
           <Button type="button" variant="outline" onClick={() => form.reset()}>
