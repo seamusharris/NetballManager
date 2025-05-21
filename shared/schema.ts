@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, json } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, json, unique } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -91,6 +91,12 @@ export const gameStats = pgTable("game_stats", {
   pickUp: integer("pick_up").notNull().default(0),
   infringement: integer("infringement").notNull().default(0),
   rating: integer("rating").default(0), // Position performance rating from 0-10
+}, 
+// Add unique constraint to ensure we have exactly one stat record per position/quarter combo
+(table) => {
+  return {
+    positionQuarterUnique: unique().on(table.gameId, table.position, table.quarter)
+  };
 });
 
 // Default schema without ID for normal creation

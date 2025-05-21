@@ -248,29 +248,45 @@ export default function LiveStats() {
       });
       
       // Organize existing stats by position and map to player via roster
-      if (existingStats.length > 0) {
+      // Create a position-to-player mapping from roster data
+      const positionToPlayer: Record<number, Record<string, number>> = {};
+      
+      // Initialize quarters in the position-to-player mapping
+      for (let q = 1; q <= 4; q++) {
+        positionToPlayer[q] = {};
+      }
+      
+      // Populate the position-to-player mapping from roster data
+      if (rosters && rosters.length > 0) {
+        rosters.forEach((roster: Roster) => {
+          if (!positionToPlayer[roster.quarter]) {
+            positionToPlayer[roster.quarter] = {};
+          }
+          positionToPlayer[roster.quarter][roster.position] = roster.playerId;
+        });
+      }
+      
+      // Process the existing stats and map them to players via roster
+      if (existingStats && existingStats.length > 0) {
         existingStats.forEach((stat: GameStat) => {
-          if (!initialStats[stat.playerId]) {
-            initialStats[stat.playerId] = {
-              1: { ...emptyQuarterStats },
-              2: { ...emptyQuarterStats },
-              3: { ...emptyQuarterStats },
-              4: { ...emptyQuarterStats }
-            };
-          }
-          
-          // Safety check for undefined quarters
-          if (!initialStats[stat.playerId][stat.quarter]) {
-            initialStats[stat.playerId][stat.quarter] = { ...emptyQuarterStats };
-          }
-          
-          // Populate individual stat values
-          Object.keys(emptyQuarterStats).forEach(key => {
-            const statKey = key as StatType;
-            if (stat[statKey] !== undefined) {
-              initialStats[stat.playerId][stat.quarter][statKey] = stat[statKey] as number;
+          if (stat.position && stat.quarter >= 1 && stat.quarter <= 4) {
+            const playerId = positionToPlayer[stat.quarter]?.[stat.position];
+            
+            if (playerId && initialStats[playerId]) {
+              // Ensure quarter stats are initialized
+              if (!initialStats[playerId][stat.quarter]) {
+                initialStats[playerId][stat.quarter] = { ...emptyQuarterStats };
+              }
+              
+              // Populate individual stat values from position-based stats
+              Object.keys(emptyQuarterStats).forEach(key => {
+                const statKey = key as StatType;
+                if (stat[statKey] !== undefined) {
+                  initialStats[playerId][stat.quarter][statKey] = stat[statKey] as number;
+                }
+              });
             }
-          });
+          }
         });
       }
       
@@ -385,7 +401,7 @@ export default function LiveStats() {
     }
   };
   
-  // Save all stats to the database
+  // Save all stats to the database using pure position-based approach
   const saveAllStats = async () => {
     if (!liveStats || Object.keys(liveStats).length === 0) {
       toast({
@@ -399,29 +415,60 @@ export default function LiveStats() {
     setSaveInProgress(true);
     
     try {
+      // Create mapping from player to position by quarter
+      const playerToPositionMap: Record<number, Record<number, Position>> = {};
+      
+      // Build the player-to-position mapping from roster data
+      if (rosters && rosters.length > 0) {
+        rosters.forEach((roster: Roster) => {
+          if (!playerToPositionMap[roster.playerId]) {
+            playerToPositionMap[roster.playerId] = {};
+          }
+          playerToPositionMap[roster.playerId][roster.quarter] = roster.position;
+        });
+      }
+      
       // For each player and quarter with stats
       for (const playerId in liveStats) {
-        for (const quarter in liveStats[playerId]) {
-          const playerQuarterStats = liveStats[playerId][parseInt(quarter)];
+        const playerIdNum = parseInt(playerId);
+        
+        for (const quarter in liveStats[playerIdNum]) {
+          const quarterNum = parseInt(quarter);
+          const playerQuarterStats = liveStats[playerIdNum][quarterNum];
           
           // Skip empty quarters
           if (!playerQuarterStats || Object.values(playerQuarterStats).every(v => v === 0)) {
             continue;
           }
           
-          // Get the position for this player in this quarter
-          const position = getPlayerPosition(parseInt(playerId), parseInt(quarter));
+          // Get the position for this player in this quarter from the mapping
+          const position = playerToPositionMap[playerIdNum]?.[quarterNum];
           
-          // Prepare the stat object - fully position-based
-          const statObject: Partial<GameStat> = {
-            gameId,
-            position, // Position is the only identifier needed
-            quarter: parseInt(quarter),
-            ...playerQuarterStats
-          };
-          
-          // Save to database
-          await saveGameStat(statObject);
+          if (position) {
+            // Create a clean stat object without any position property that might be in playerQuarterStats
+            const cleanStats: Record<string, number> = {};
+            Object.keys(emptyQuarterStats).forEach(key => {
+              cleanStats[key] = playerQuarterStats[key as StatType] || 0;
+            });
+            
+            // Prepare the stat object - fully position-based with no player ID
+            const statObject: Partial<GameStat> = {
+              gameId,
+              position, // Position is the primary identifier
+              quarter: quarterNum,
+              ...cleanStats
+            };
+            
+            // Save to database
+            await saveGameStat(statObject);
+          } else {
+            console.warn(`No position found for player ${playerIdNum} in quarter ${quarterNum}`);
+            toast({
+              title: "Warning",
+              description: `Could not save stats for a player in quarter ${quarterNum} - position not assigned.`,
+              variant: "warning"
+            });
+          }
         }
       }
       
