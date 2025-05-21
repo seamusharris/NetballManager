@@ -137,9 +137,10 @@ export default function GamesList({
       // Create a map to store stats by game ID
       const statsMap: Record<number, any[]> = {};
       
-      // Fetch stats for all games
+      // Fetch stats for all games with a timestamp to prevent caching
+      const timestamp = new Date().getTime(); // Add timestamp to force fresh data
       const statsPromises = allGameIds.map(async (gameId) => {
-        const response = await fetch(`/api/games/${gameId}/stats`);
+        const response = await fetch(`/api/games/${gameId}/stats?_t=${timestamp}`);
         const stats = await response.json();
         return { gameId, stats };
       });
@@ -155,6 +156,8 @@ export default function GamesList({
     },
     enabled: allGameIds.length > 0,
     staleTime: 0, // Always refetch when needed
+    refetchOnMount: true, // Always refetch when component mounts
+    refetchOnWindowFocus: true // Refetch when window regains focus
   });
 
   // Determine game stats status
