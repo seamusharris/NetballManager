@@ -14,6 +14,7 @@ import {
   POSITIONS
 } from "@shared/schema";
 import { fixGameStatsSchema } from "./fixDbSchema";
+import { setPositionsForStats } from "./migrations/setPositionsForStats";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // put application routes here
@@ -55,6 +56,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ 
         success: false, 
         message: `Schema fix failed: ${error}` 
+      });
+    }
+  });
+  
+  // Add position data to existing stats
+  app.post("/api/add-positions-to-stats", async (req, res) => {
+    try {
+      const result = await setPositionsForStats();
+      res.status(200).json(result);
+    } catch (error) {
+      console.error("Error adding positions to stats:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: `Position migration failed: ${error}` 
       });
     }
   });
