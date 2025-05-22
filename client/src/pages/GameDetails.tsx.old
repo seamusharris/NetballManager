@@ -13,7 +13,6 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { StatItemBox } from '@/components/games/StatItemBox';
 import { 
   ChevronLeft, Edit, BarChart3, ClipboardList, Activity
 } from 'lucide-react';
