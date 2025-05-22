@@ -183,7 +183,7 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
     return player.avatarColor;
   };
   
-  // Get player performance stats for display in left column
+  // Get actual player position stats from game data
   const getPlayerPerformanceStats = (position) => {
     const entry = rosterByQuarter[quarter]?.[position];
     if (!entry || !entry.playerId) return null;
@@ -191,16 +191,21 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
     const playerName = getPlayerName(entry.playerId);
     if (!playerName) return null;
     
-    // For this demo, just return some placeholder stats
-    // In a real implementation, you would fetch these from your stats database
+    // Find actual stats for this position and quarter
+    const positionStats = gameStats?.find(
+      stat => stat.position === position && stat.quarter === quarter
+    );
+    
     return {
       playerId: entry.playerId,
       name: playerName,
       stats: {
-        goals: Math.floor(Math.random() * 15),
-        intercepts: Math.floor(Math.random() * 10),
-        rebounds: Math.floor(Math.random() * 8),
-        assists: Math.floor(Math.random() * 12),
+        // Real game stats from the database
+        goals: positionStats?.goalsFor || 0,
+        intercepts: positionStats?.intercepts || 0,
+        rebounds: positionStats?.rebounds || 0,
+        // There's no actual "assists" in our schema, so derive from other stats
+        assists: positionStats?.pickUp || 0,
       }
     };
   };
