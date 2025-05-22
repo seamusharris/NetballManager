@@ -88,13 +88,13 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
   // Helper to get position coordinates on court diagram
   const getPositionCoordinates = (position: Position) => {
     const positionMap = {
-      'GS': 'bottom-10 left-1/2 transform -translate-x-1/2',
-      'GA': 'bottom-24 right-12',
-      'WA': 'bottom-1/2 right-10',
+      'GS': 'bottom-12 left-1/2 transform -translate-x-1/2',
+      'GA': 'bottom-28 right-16',
+      'WA': 'bottom-1/2 right-14',
       'C': 'top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2',
-      'WD': 'top-1/2 left-10',
-      'GD': 'top-24 left-12',
-      'GK': 'top-10 left-1/2 transform -translate-x-1/2',
+      'WD': 'top-1/2 left-14',
+      'GD': 'top-28 left-16',
+      'GK': 'top-12 left-1/2 transform -translate-x-1/2',
     };
     
     return positionMap[position] || '';
