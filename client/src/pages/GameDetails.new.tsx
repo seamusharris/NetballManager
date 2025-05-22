@@ -599,9 +599,9 @@ export default function GameDetails() {
                 
                 {/* Right column - Roster positions with stats (half width) */}
                 <div className="flex-1">
-                  <div className="flex flex-col space-y-0 justify-between h-full">
+                  <div className="flex flex-col space-y-4">
                     {/* Top third - Attack positions (GS, GA) */}
-                    <div className="flex space-x-3 my-3 items-start" style={{ height: '33%' }}>
+                    <div className="flex justify-center space-x-3">
                       {POSITIONS.slice(0, 2).map(position => {
                         const entry = rosterByQuarter[quarter]?.[position];
                         const playerName = getPlayerName(entry?.playerId);
@@ -610,6 +610,7 @@ export default function GameDetails() {
                         
                         return (
                           <PositionStatsBox
+                            key={position}
                             position={position}
                             playerName={playerName}
                             playerColor={playerColor}
@@ -620,7 +621,7 @@ export default function GameDetails() {
                     </div>
                     
                     {/* Middle third positions (WA, C, WD) */}
-                    <div className="flex space-x-3 my-3" style={{ height: '33%' }}>
+                    <div className="flex justify-center space-x-3">
                       {POSITIONS.slice(2, 5).map(position => {
                         const entry = rosterByQuarter[quarter]?.[position];
                         const playerName = getPlayerName(entry?.playerId);
@@ -629,6 +630,7 @@ export default function GameDetails() {
                         
                         return (
                           <PositionStatsBox
+                            key={position}
                             position={position}
                             playerName={playerName}
                             playerColor={playerColor}
@@ -639,7 +641,7 @@ export default function GameDetails() {
                     </div>
                     
                     {/* Bottom third - Defense positions (GD, GK) */}
-                    <div className="flex space-x-3 my-3" style={{ height: '33%' }}>
+                    <div className="flex justify-center space-x-3">
                       {POSITIONS.slice(5).map(position => {
                         const entry = rosterByQuarter[quarter]?.[position];
                         const playerName = getPlayerName(entry?.playerId);
@@ -648,6 +650,7 @@ export default function GameDetails() {
                         
                         return (
                           <PositionStatsBox
+                            key={position}
                             position={position}
                             playerName={playerName}
                             playerColor={playerColor}
