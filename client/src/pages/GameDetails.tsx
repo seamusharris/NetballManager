@@ -196,37 +196,13 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
         </div>
       </div>
       
-      {/* Centered layout with 3 columns */}
-      <div className="flex justify-center">
-        <div className="grid grid-cols-3 gap-8 max-w-6xl w-full">
-          {/* Left column - invisible but takes up space for equal layout */}
-          <div className="invisible">
-            <div className="flex flex-col justify-between h-[650px]">
-              {/* Top third - same height as roster buttons */}
-              <div className="space-y-3">
-                {POSITIONS.slice(0, 2).map(p => (
-                  <div key={p} className="h-[64px] border rounded-md"></div>
-                ))}
-              </div>
-              
-              {/* Middle third */}
-              <div className="space-y-3">
-                {POSITIONS.slice(2, 5).map(p => (
-                  <div key={p} className="h-[64px] border rounded-md"></div>
-                ))}
-              </div>
-              
-              {/* Bottom third */}
-              <div className="space-y-3">
-                {POSITIONS.slice(5).map(p => (
-                  <div key={p} className="h-[64px] border rounded-md"></div>
-                ))}
-              </div>
-            </div>
-          </div>
+      <div className="flex flex-row justify-center">
+        <div className="w-full max-w-3xl flex items-start justify-center px-8">
+          {/* Left spacer to center the court with the right roster */}
+          <div className="w-[200px] mr-8"></div>
           
-          {/* Center column - Court diagram */}
-          <div className="relative mx-auto w-full max-w-lg aspect-[2/3] bg-green-100 rounded-lg border border-green-300">
+          {/* Court diagram and roster buttons side by side */}
+          <div className="relative w-full max-w-lg aspect-[2/3] bg-green-100 rounded-lg border border-green-300">
             {/* Court markings - three equal sections */}
             <div className="absolute inset-0 flex flex-col">
               <div className="h-1/3 border-b border-white flex items-center justify-end">
