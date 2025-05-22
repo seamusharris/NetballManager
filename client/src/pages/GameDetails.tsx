@@ -223,11 +223,11 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
         </div>
       </div>
       
-      {/* Two-column layout */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-7xl mx-auto px-4">
-        {/* Left column - Court diagram (enlarged) */}
+      {/* Two-column layout with 1/3 and 2/3 width columns */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-7xl mx-auto px-4">
+        {/* Left column - Court diagram (1/3 width) */}
         <div>
-          <div className="relative w-full max-w-lg mx-auto aspect-[2/3] bg-green-100 rounded-lg border border-green-300 shadow-md">
+          <div className="relative w-full mx-auto aspect-[2/3] bg-green-100 rounded-lg border border-green-300 shadow-md">
             {/* Court markings - three equal sections */}
             <div className="absolute inset-0 flex flex-col">
               <div className="h-1/3 border-b border-white"></div>
@@ -278,8 +278,8 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
           </div>
         </div>
         
-        {/* Right column - Roster positions with stats */}
-        <div>
+        {/* Right column - Roster positions with stats (2/3 width) */}
+        <div className="md:col-span-2">
           <div className="flex flex-col space-y-6">
             {/* Top third - Attack */}
             <div className="space-y-3">
