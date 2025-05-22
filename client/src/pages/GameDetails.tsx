@@ -361,53 +361,13 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
                 const playerStats = getPlayerPerformanceStats(position);
                 
                 return (
-                  <div 
-                    key={position} 
-                    className="p-3 border rounded-md shadow-sm flex-1 flex flex-col"
-                    style={{ 
-                      backgroundColor: playerName ? `${playerColor}10` : 'white',
-                      border: playerName ? `2px solid ${playerColor}` : '1px solid #ddd',
-                    }}
-                  >
-                    
-                    {playerName && playerStats && (
-                      <div className="mt-1 bg-gray-50 p-3 rounded-md border border-gray-100">
-                        <div className="flex flex-col space-y-2 text-sm">
-                          {/* Left stats column */}
-                          <div className="space-y-2">
-                            <div className="flex justify-between">
-                              <div className="flex justify-between w-full">
-                                <span className="text-gray-600">Goals</span>
-                                <span className="font-semibold">{playerStats.stats.goals}</span>
-                              </div>
-                            </div>
-                            <div className="flex justify-between">
-                              <div className="flex justify-between w-full">
-                                <span className="text-gray-600">Rebounds</span>
-                                <span className="font-semibold">{playerStats.stats.rebounds}</span>
-                              </div>
-                            </div>
-                          </div>
-                          
-                          {/* Right stats column */}
-                          <div className="space-y-2">
-                            <div className="flex justify-between">
-                              <div className="flex justify-between w-full">
-                                <span className="text-gray-600">Int</span>
-                                <span className="font-semibold">{playerStats.stats.intercepts}</span>
-                              </div>
-                            </div>
-                            <div className="flex justify-between">
-                              <div className="flex justify-between w-full">
-                                <span className="text-gray-600">Assists</span>
-                                <span className="font-semibold">{playerStats.stats.assists}</span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                  <PositionBox 
+                    key={position}
+                    position={position as Position}
+                    playerName={playerName}
+                    playerColor={playerColor}
+                    playerStats={playerStats}
+                  />
                 );
               })}
             </div>
@@ -421,53 +381,13 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
                 const playerStats = getPlayerPerformanceStats(position);
                 
                 return (
-                  <div 
-                    key={position} 
-                    className="p-3 border rounded-md shadow-sm flex-1 flex flex-col"
-                    style={{ 
-                      backgroundColor: playerName ? `${playerColor}10` : 'white',
-                      border: playerName ? `2px solid ${playerColor}` : '1px solid #ddd',
-                    }}
-                  >
-                    
-                    {playerName && playerStats && (
-                      <div className="mt-1 bg-gray-50 p-3 rounded-md border border-gray-100">
-                        <div className="flex flex-col space-y-2 text-sm">
-                          {/* Left stats column */}
-                          <div className="space-y-2">
-                            <div className="flex justify-between">
-                              <div className="flex justify-between w-full">
-                                <span className="text-gray-600">Goals</span>
-                                <span className="font-semibold">{playerStats.stats.goals}</span>
-                              </div>
-                            </div>
-                            <div className="flex justify-between">
-                              <div className="flex justify-between w-full">
-                                <span className="text-gray-600">Rebounds</span>
-                                <span className="font-semibold">{playerStats.stats.rebounds}</span>
-                              </div>
-                            </div>
-                          </div>
-                          
-                          {/* Right stats column */}
-                          <div className="space-y-2">
-                            <div className="flex justify-between">
-                              <div className="flex justify-between w-full">
-                                <span className="text-gray-600">Int</span>
-                                <span className="font-semibold">{playerStats.stats.intercepts}</span>
-                              </div>
-                            </div>
-                            <div className="flex justify-between">
-                              <div className="flex justify-between w-full">
-                                <span className="text-gray-600">Assists</span>
-                                <span className="font-semibold">{playerStats.stats.assists}</span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                  <PositionBox 
+                    key={position}
+                    position={position as Position}
+                    playerName={playerName}
+                    playerColor={playerColor}
+                    playerStats={playerStats}
+                  />
                 );
               })}
             </div>
@@ -481,53 +401,13 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
                 const playerStats = getPlayerPerformanceStats(position);
                 
                 return (
-                  <div 
-                    key={position} 
-                    className="p-3 border rounded-md shadow-sm flex-1 flex flex-col"
-                    style={{ 
-                      backgroundColor: playerName ? `${playerColor}10` : 'white',
-                      border: playerName ? `2px solid ${playerColor}` : '1px solid #ddd',
-                    }}
-                  >
-                    
-                    {playerName && playerStats && (
-                      <div className="mt-1 bg-gray-50 p-3 rounded-md border border-gray-100">
-                        <div className="flex flex-col space-y-2 text-sm">
-                          {/* Left stats column */}
-                          <div className="space-y-2">
-                            <div className="flex justify-between">
-                              <div className="flex justify-between w-full">
-                                <span className="text-gray-600">Goals</span>
-                                <span className="font-semibold">{playerStats.stats.goals}</span>
-                              </div>
-                            </div>
-                            <div className="flex justify-between">
-                              <div className="flex justify-between w-full">
-                                <span className="text-gray-600">Rebounds</span>
-                                <span className="font-semibold">{playerStats.stats.rebounds}</span>
-                              </div>
-                            </div>
-                          </div>
-                          
-                          {/* Right stats column */}
-                          <div className="space-y-2">
-                            <div className="flex justify-between">
-                              <div className="flex justify-between w-full">
-                                <span className="text-gray-600">Int</span>
-                                <span className="font-semibold">{playerStats.stats.intercepts}</span>
-                              </div>
-                            </div>
-                            <div className="flex justify-between">
-                              <div className="flex justify-between w-full">
-                                <span className="text-gray-600">Assists</span>
-                                <span className="font-semibold">{playerStats.stats.assists}</span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                  <PositionBox 
+                    key={position}
+                    position={position as Position}
+                    playerName={playerName}
+                    playerColor={playerColor}
+                    playerStats={playerStats}
+                  />
                 );
               })}
             </div>

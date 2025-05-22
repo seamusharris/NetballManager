@@ -1,5 +1,5 @@
 import React from 'react';
-import { Position } from '@shared/schema';
+import { Position } from '../../../../shared/schema';
 import { PositionStatsBox } from './PositionStatsBox';
 
 interface PositionBoxProps {
