@@ -140,7 +140,7 @@ export function StatsPerformanceDemo() {
                       "p-3 border rounded-md cursor-pointer transition-colors",
                       selectedGameId === game.id 
                         ? "border-primary bg-primary/5" 
-                        : "hover:bg-accent"
+                        : "hover:bg-muted/50"
                     )}
                     onClick={() => handleGameSelect(game.id)}
                   >
@@ -210,7 +210,7 @@ export function StatsPerformanceDemo() {
                       </thead>
                       <tbody>
                         {gameStats.map(stat => (
-                          <tr key={`${stat.position}-${stat.quarter}`} className="hover:bg-accent/10">
+                          <tr key={`${stat.position}-${stat.quarter}`} className="hover:bg-muted/50 transition-colors">
                             <td className="p-2 border-b">
                               <Badge variant="outline">{stat.position}</Badge>
                             </td>
