@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Game, Player, GameStat, Roster, allPositions, Position } from '@shared/schema';
 import { getInitials, formatShortDate, positionLabels, generatePlayerAvatarColor } from '@/lib/utils';
 import { Save, Undo, Redo, Plus, Minus } from 'lucide-react';
+import { Helmet } from 'react-helmet';
 
 // Stat types that can be tracked
 type StatType = 'goalsFor' | 'goalsAgainst' | 'missedGoals' | 'rebounds' | 
@@ -793,6 +794,9 @@ export default function LiveStats() {
   
   return (
     <div className="container py-3 px-2 md:py-4 md:px-4">
+      <Helmet>
+        <title>Live Stats Tracking | NetballManager</title>
+      </Helmet>
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-3 gap-1">
         <div>
           <h1 className="text-xl md:text-2xl font-bold">Live Stats Tracking</h1>
