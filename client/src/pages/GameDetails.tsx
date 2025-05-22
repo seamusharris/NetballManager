@@ -46,8 +46,6 @@ const getOpponentName = (opponents: any[], opponentId: number | null) => {
   return opponent ? opponent.teamName : 'Unknown Opponent';
 };
 
-// We now use the shared GameStatusButton component instead
-
 // Calculate quarter by quarter scores
 const calculateQuarterScores = (gameStats: any[], game: any) => {
   // Special handling for forfeit games - use consistent scoring for forfeit games
@@ -196,150 +194,147 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
         </div>
       </div>
       
-      <div className="flex flex-row mx-auto max-w-5xl">
-        {/* Court and roster buttons container - centered with equal margins */}
-        <div className="flex space-x-20 mx-auto">
+      <div className="flex justify-center my-4">
+        <div className="flex items-start space-x-16">
           {/* Court diagram */}
           <div className="relative w-full max-w-lg aspect-[2/3] bg-green-100 rounded-lg border border-green-300">
-            {/* Court markings - three equal sections */}
+            {/* Court markings */}
             <div className="absolute inset-0 flex flex-col">
               <div className="h-1/3 border-b border-white"></div>
               <div className="h-1/3 border-b border-white"></div>
               <div className="h-1/3"></div>
             </div>
             
-            {/* Position buttons column - separate from court */}
-            <div className="absolute right-[-260px] h-full flex flex-col justify-between">
-              {/* Top third - GS, GA buttons */}
-              <div className="flex flex-col space-y-2 w-[220px]">
-                {POSITIONS.slice(0, 2).map(position => {
-                  const entry = rosterByQuarter[quarter]?.[position];
-                  const playerName = getPlayerName(entry?.playerId);
-                  const playerColor = getPlayerColor(entry?.playerId);
-                  
-                  return (
-                    <div 
-                      key={position} 
-                      className="p-3 border rounded-md shadow-sm flex flex-col"
-                      style={{ 
-                        backgroundColor: playerName ? `${playerColor}20` : 'white',
-                        border: playerName ? `2px solid ${playerColor}` : '1px solid #ddd',
-                      }}
-                    >
-                      <div className="font-bold">{position}</div>
-                      <div 
-                        className={playerName ? 'text-gray-900 font-medium' : 'text-red-500 italic'}
-                        style={{ color: playerName ? playerColor : undefined }}
-                      >
-                        {playerName || 'Unassigned'}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+            {/* Position markers */}
+            {POSITIONS.map(position => {
+              const entry = rosterByQuarter[quarter]?.[position];
+              const playerName = getPlayerName(entry?.playerId);
+              const playerColor = getPlayerColor(entry?.playerId);
               
-              {/* Middle third - WA, C, WD buttons */}
-              <div className="flex flex-col space-y-2 w-[220px]">
-                {POSITIONS.slice(2, 5).map(position => {
-                  const entry = rosterByQuarter[quarter]?.[position];
-                  const playerName = getPlayerName(entry?.playerId);
-                  const playerColor = getPlayerColor(entry?.playerId);
-                  
-                  return (
-                    <div 
-                      key={position} 
-                      className="p-3 border rounded-md shadow-sm flex flex-col"
-                      style={{ 
-                        backgroundColor: playerName ? `${playerColor}20` : 'white',
-                        border: playerName ? `2px solid ${playerColor}` : '1px solid #ddd',
-                      }}
-                    >
-                      <div className="font-bold">{position}</div>
-                      <div 
-                        className={playerName ? 'text-gray-900 font-medium' : 'text-red-500 italic'}
-                        style={{ color: playerName ? playerColor : undefined }}
-                      >
-                        {playerName || 'Unassigned'}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+              // Use the player's avatar color for the background
+              const bgColor = playerName ? playerColor : 'white';
               
-              {/* Bottom third - GD, GK buttons */}
-              <div className="flex flex-col space-y-2 w-[220px]">
-                {POSITIONS.slice(5).map(position => {
-                  const entry = rosterByQuarter[quarter]?.[position];
-                  const playerName = getPlayerName(entry?.playerId);
-                  const playerColor = getPlayerColor(entry?.playerId);
-                  
-                  return (
-                    <div 
-                      key={position} 
-                      className="p-3 border rounded-md shadow-sm flex flex-col"
-                      style={{ 
-                        backgroundColor: playerName ? `${playerColor}20` : 'white',
-                        border: playerName ? `2px solid ${playerColor}` : '1px solid #ddd',
-                      }}
-                    >
-                      <div className="font-bold">{position}</div>
-                      <div 
-                        className={playerName ? 'text-gray-900 font-medium' : 'text-red-500 italic'}
-                        style={{ color: playerName ? playerColor : undefined }}
-                      >
-                        {playerName || 'Unassigned'}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
+              // Use white text for player positions, red for unassigned
+              const textColor = playerName ? 'white' : '#ef4444'; // Red color for unassigned
+              
+              return (
+                <div key={position} className={`absolute ${getPositionCoordinates(position)}`}>
+                  <div 
+                    style={{ 
+                      backgroundColor: bgColor,
+                      boxShadow: '0 4px 8px rgba(0, 0, 0, 0.5)',
+                      border: playerName ? '3px solid white' : '2px solid red',
+                      width: '5rem',
+                      height: '5rem',
+                      borderRadius: '100%',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      padding: '0.25rem'
+                    }}
+                  >
+                    <div className="font-bold text-center text-base md:text-lg" style={{ color: textColor }}>{position}</div>
+                    {playerName && (
+                      <div className="text-xs md:text-sm text-center font-medium leading-tight mx-1" style={{ color: textColor }}>{playerName}</div>
+                    )}
+                    {!playerName && (
+                      <div className="text-xs text-red-500 text-center">Unassigned</div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </div>
           
-          {/* Position markers */}
-          {POSITIONS.map(position => {
-            const entry = rosterByQuarter[quarter]?.[position];
-            const playerName = getPlayerName(entry?.playerId);
-            const playerColor = getPlayerColor(entry?.playerId);
+          {/* Position roster buttons arranged by court thirds */}
+          <div className="flex flex-col justify-between h-[500px] w-[220px]">
+            {/* Top third - GS, GA */}
+            <div className="flex flex-col space-y-2">
+              {POSITIONS.slice(0, 2).map(position => {
+                const entry = rosterByQuarter[quarter]?.[position];
+                const playerName = getPlayerName(entry?.playerId);
+                const playerColor = getPlayerColor(entry?.playerId);
+                
+                return (
+                  <div 
+                    key={position} 
+                    className="p-3 border rounded-md shadow-sm flex flex-col"
+                    style={{ 
+                      backgroundColor: playerName ? `${playerColor}20` : 'white',
+                      border: playerName ? `2px solid ${playerColor}` : '1px solid #ddd',
+                    }}
+                  >
+                    <div className="font-bold">{position}</div>
+                    <div 
+                      className={playerName ? 'text-gray-900 font-medium' : 'text-red-500 italic'}
+                      style={{ color: playerName ? playerColor : undefined }}
+                    >
+                      {playerName || 'Unassigned'}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
             
-            // Use the player's avatar color for the background
-            const bgColor = playerName ? playerColor : 'white';
+            {/* Middle third - WA, C, WD */}
+            <div className="flex flex-col space-y-2">
+              {POSITIONS.slice(2, 5).map(position => {
+                const entry = rosterByQuarter[quarter]?.[position];
+                const playerName = getPlayerName(entry?.playerId);
+                const playerColor = getPlayerColor(entry?.playerId);
+                
+                return (
+                  <div 
+                    key={position} 
+                    className="p-3 border rounded-md shadow-sm flex flex-col"
+                    style={{ 
+                      backgroundColor: playerName ? `${playerColor}20` : 'white',
+                      border: playerName ? `2px solid ${playerColor}` : '1px solid #ddd',
+                    }}
+                  >
+                    <div className="font-bold">{position}</div>
+                    <div 
+                      className={playerName ? 'text-gray-900 font-medium' : 'text-red-500 italic'}
+                      style={{ color: playerName ? playerColor : undefined }}
+                    >
+                      {playerName || 'Unassigned'}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
             
-            // Use white text for player positions, red for unassigned
-            const textColor = playerName ? 'white' : '#ef4444'; // Red color for unassigned
-            
-            return (
-              <div key={position} className={`absolute ${getPositionCoordinates(position)}`}>
-                <div 
-                  style={{ 
-                    backgroundColor: bgColor,
-                    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.5)',
-                    border: playerName ? '3px solid white' : '2px solid red',
-                    width: '5rem',
-                    height: '5rem',
-                    borderRadius: '100%',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    padding: '0.25rem'
-                  }}
-                >
-                  <div className="font-bold text-center text-base md:text-lg" style={{ color: textColor }}>{position}</div>
-                  {playerName && (
-                    <div className="text-xs md:text-sm text-center font-medium leading-tight mx-1" style={{ color: textColor }}>{playerName}</div>
-                  )}
-                  {!playerName && (
-                    <div className="text-xs text-red-500 text-center">Unassigned</div>
-                  )}
-                </div>
-              </div>
-            );
-          })}
+            {/* Bottom third - GD, GK */}
+            <div className="flex flex-col space-y-2">
+              {POSITIONS.slice(5).map(position => {
+                const entry = rosterByQuarter[quarter]?.[position];
+                const playerName = getPlayerName(entry?.playerId);
+                const playerColor = getPlayerColor(entry?.playerId);
+                
+                return (
+                  <div 
+                    key={position} 
+                    className="p-3 border rounded-md shadow-sm flex flex-col"
+                    style={{ 
+                      backgroundColor: playerName ? `${playerColor}20` : 'white',
+                      border: playerName ? `2px solid ${playerColor}` : '1px solid #ddd',
+                    }}
+                  >
+                    <div className="font-bold">{position}</div>
+                    <div 
+                      className={playerName ? 'text-gray-900 font-medium' : 'text-red-500 italic'}
+                      style={{ color: playerName ? playerColor : undefined }}
+                    >
+                      {playerName || 'Unassigned'}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
       </div>
-      
-      {/* We've moved the roster buttons next to the court diagram, so this section is no longer needed */}
     </div>
   );
 };
@@ -431,7 +426,7 @@ const DetailedStatistics = ({ gameStats }) => {
           </thead>
           <tbody>
             {positionTotals.map(stat => (
-              <tr key={stat.position} className="border-b">
+              <tr key={stat.position} className="border-b hover:bg-slate-50">
                 <td className="px-4 py-2 font-medium">{stat.position}</td>
                 <td className="px-4 py-2 text-center">{stat.goalsFor}</td>
                 <td className="px-4 py-2 text-center">{stat.goalsAgainst}</td>
@@ -451,27 +446,23 @@ const DetailedStatistics = ({ gameStats }) => {
   );
 };
 
-// Quarter Score Card
-const QuarterScoreCard = ({ quarterScores }) => {
-  // Calculate cumulative scores
-  const cumulativeScores = quarterScores.reduce((acc, current, index) => {
-    const prevTeamScore = index > 0 ? acc[index - 1].teamCumulative : 0;
-    const prevOpponentScore = index > 0 ? acc[index - 1].opponentCumulative : 0;
-    
-    acc.push({
-      quarter: current.quarter,
-      teamScore: current.teamScore,
-      opponentScore: current.opponentScore,
-      teamCumulative: prevTeamScore + current.teamScore,
-      opponentCumulative: prevOpponentScore + current.opponentScore
-    });
+// Score breakdown component
+const ScoreBreakdown = ({ quarterScores }) => {
+  // Calculate totals
+  const totals = quarterScores.reduce((acc, current, index) => {
+    acc.teamTotal += current.teamScore;
+    acc.opponentTotal += current.opponentScore;
     
     return acc;
-  }, []);
+  }, { teamTotal: 0, opponentTotal: 0 });
+  
+  // Determine win/loss/draw
+  const teamWon = totals.teamTotal > totals.opponentTotal;
+  const isDraw = totals.teamTotal === totals.opponentTotal;
   
   return (
-    <div className="mt-4">
-      <h3 className="text-lg font-medium mb-4">Quarter by Quarter</h3>
+    <div className="my-4">
+      <h3 className="text-lg font-medium mb-4">Score Breakdown</h3>
       
       <div className="overflow-x-auto">
         <table className="w-full table-auto">
@@ -480,24 +471,31 @@ const QuarterScoreCard = ({ quarterScores }) => {
               <th className="px-4 py-2 text-left">Quarter</th>
               <th className="px-4 py-2 text-center">Team Score</th>
               <th className="px-4 py-2 text-center">Opponent Score</th>
-              <th className="px-4 py-2 text-center">Running Total</th>
+              <th className="px-4 py-2 text-center">Difference</th>
             </tr>
           </thead>
           <tbody>
-            {cumulativeScores.map(score => (
-              <tr key={score.quarter} className="border-b">
-                <td className="px-4 py-2 font-medium">Quarter {score.quarter}</td>
-                <td className="px-4 py-2 text-center">{score.teamScore}</td>
-                <td className="px-4 py-2 text-center">{score.opponentScore}</td>
-                <td className="px-4 py-2 text-center">{score.teamCumulative} - {score.opponentCumulative}</td>
-              </tr>
-            ))}
-            <tr className="bg-slate-50 font-semibold">
-              <td className="px-4 py-2">Final</td>
-              <td className="px-4 py-2 text-center">{cumulativeScores.reduce((sum, q) => sum + q.teamScore, 0)}</td>
-              <td className="px-4 py-2 text-center">{cumulativeScores.reduce((sum, q) => sum + q.opponentScore, 0)}</td>
-              <td className="px-4 py-2 text-center">
-                {cumulativeScores[cumulativeScores.length - 1]?.teamCumulative} - {cumulativeScores[cumulativeScores.length - 1]?.opponentCumulative}
+            {quarterScores.map(score => {
+              const diff = score.teamScore - score.opponentScore;
+              return (
+                <tr key={`Q${score.quarter}`} className="border-b hover:bg-slate-50">
+                  <td className="px-4 py-2 font-medium">Quarter {score.quarter}</td>
+                  <td className="px-4 py-2 text-center">{score.teamScore}</td>
+                  <td className="px-4 py-2 text-center">{score.opponentScore}</td>
+                  <td className={`px-4 py-2 text-center ${diff > 0 ? 'text-green-600' : diff < 0 ? 'text-red-600' : ''}`}>
+                    {diff > 0 ? `+${diff}` : diff}
+                  </td>
+                </tr>
+              );
+            })}
+            <tr className="bg-slate-100 font-semibold">
+              <td className="px-4 py-2">Final Score</td>
+              <td className="px-4 py-2 text-center">{totals.teamTotal}</td>
+              <td className="px-4 py-2 text-center">{totals.opponentTotal}</td>
+              <td className={`px-4 py-2 text-center ${teamWon ? 'text-green-600' : isDraw ? '' : 'text-red-600'}`}>
+                {teamWon ? `+${totals.teamTotal - totals.opponentTotal}` : 
+                 isDraw ? '0' : 
+                 totals.teamTotal - totals.opponentTotal}
               </td>
             </tr>
           </tbody>
@@ -507,468 +505,190 @@ const QuarterScoreCard = ({ quarterScores }) => {
   );
 };
 
-
-
-// Status change dialog component for game details page
-const StatusChangeDialog = ({ game }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [selectedStatus, setSelectedStatus] = useState(game.status as GameStatus);
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
-  
-  // Keep selectedStatus in sync with game.status when it changes
-  useEffect(() => {
-    setSelectedStatus(game.status as GameStatus);
-  }, [game.status]);
-  
-  const updateGameStatus = async () => {
-    if (selectedStatus === game.status) {
-      setIsOpen(false);
-      return;
-    }
-    
-    setIsSubmitting(true);
-    try {
-      await fetch(`/api/games/${game.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: selectedStatus })
-      });
-      
-      // Force refresh all game data after status update
-      queryClient.invalidateQueries();
-      
-      toast({
-        title: 'Game status updated',
-        description: `Game status has been updated to ${selectedStatus === 'in-progress' ? 'In Progress' : 
-                      selectedStatus === 'completed' ? 'Completed' : 
-                      selectedStatus === 'upcoming' ? 'Upcoming' : 
-                      selectedStatus === 'forfeit-win' ? 'Forfeit Win' : 
-                      'Forfeit Loss'}.`,
-      });
-      
-      setIsOpen(false);
-    } catch (error) {
-      console.error('Failed to update game status:', error);
-      toast({
-        title: 'Failed to update game status',
-        description: 'An error occurred while updating the game status.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-  
-  return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Badge 
-          variant="outline" 
-          className={`px-2 py-1 text-xs cursor-pointer rounded-full transition-colors
-            ${game.status === 'upcoming' ? "bg-blue-100 text-blue-800 hover:bg-blue-200" : ""}
-            ${game.status === 'in-progress' ? "bg-amber-100 text-amber-800 hover:bg-amber-200" : ""}
-            ${game.status === 'completed' ? "bg-green-100 text-green-800 hover:bg-green-200" : ""}
-            ${game.status === 'forfeit-win' ? "bg-indigo-100 text-indigo-800 hover:bg-indigo-200" : ""}
-            ${game.status === 'forfeit-loss' ? "bg-red-100 text-red-800 hover:bg-red-200" : ""}
-          `}
-        >
-          {game.status === 'upcoming' && "Upcoming"}
-          {game.status === 'in-progress' && "In Progress"}
-          {game.status === 'completed' && "Completed"}
-          {game.status === 'forfeit-win' && "Forfeit Win (10-0)"}
-          {game.status === 'forfeit-loss' && "Forfeit Loss (0-10)"}
-        </Badge>
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Update Game Status</DialogTitle>
-          <DialogDescription>
-            Change the status of this game.
-          </DialogDescription>
-        </DialogHeader>
-        
-        <div className="py-4">
-          <Select 
-            value={selectedStatus} 
-            onValueChange={(value) => setSelectedStatus(value as GameStatus)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select status" />
-            </SelectTrigger>
-            <SelectContent>
-              {allGameStatuses.map((status) => (
-                <SelectItem key={status} value={status}>
-                  {status === 'upcoming' ? 'Upcoming' : 
-                   status === 'in-progress' ? 'In Progress' : 
-                   status === 'completed' ? 'Completed' : 
-                   status === 'forfeit-win' ? 'Forfeit Win (10-0)' : 
-                   'Forfeit Loss (0-10)'}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          
-          {selectedStatus && (
-            <div className="text-sm text-muted-foreground mt-2">
-              {selectedStatus === 'forfeit-win' && (
-                <p>Opponent forfeited the game. Score will be recorded as 10-0 in our favor.</p>
-              )}
-              {selectedStatus === 'forfeit-loss' && (
-                <p>Our team forfeited the game. Score will be recorded as 0-10.</p>
-              )}
-            </div>
-          )}
-        </div>
-        
-        <div className="flex justify-end gap-3">
-          <Button variant="outline" onClick={() => setIsOpen(false)}>
-            Cancel
-          </Button>
-          <Button 
-            onClick={updateGameStatus}
-            disabled={isSubmitting || selectedStatus === game.status}
-          >
-            {isSubmitting ? 'Updating...' : 'Update Status'}
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-};
-
 export default function GameDetails() {
-  // Get game ID from URL
-  const params = useParams();
-  const gameId = Number(params.id);
+  const { id } = useParams();
+  const gameId = parseInt(id);
+  const { toast } = useToast();
   const queryClient = useQueryClient();
   
-  // Fetch game data
-  const { data: game, isLoading: isLoadingGame, refetch: refetchGame } = useQuery({
-    queryKey: ['/api/games', gameId],
-    queryFn: async () => {
-      // Add a timestamp to prevent caching
-      const timestamp = new Date().getTime();
-      const response = await fetch(`/api/games/${gameId}?_t=${timestamp}`);
-      if (!response.ok) throw new Error('Failed to fetch game');
-      return response.json();
-    },
-    refetchOnMount: true,
-    staleTime: 0,
-    refetchInterval: 2000, // Refetch every 2 seconds while this page is open
-    enabled: !!gameId
+  // Use default tab of 'roster' unless coming from a stats-focused page
+  const [activeTab, setActiveTab] = useState('roster');
+  
+  const { data: game, isLoading: gameLoading } = useQuery({
+    queryKey: [`/api/games/${gameId}`],
+    enabled: !isNaN(gameId),
   });
   
-  // Fetch opponents for display
-  const { data: opponents, isLoading: isLoadingOpponents } = useQuery({
-    queryKey: ['/api/opponents'],
-    queryFn: async () => {
-      const response = await fetch('/api/opponents');
-      if (!response.ok) throw new Error('Failed to fetch opponents');
-      return response.json();
-    }
-  });
-  
-  // Fetch players for roster display
-  const { data: players, isLoading: isLoadingPlayers } = useQuery({
+  const { data: players, isLoading: playersLoading } = useQuery({
     queryKey: ['/api/players'],
-    queryFn: async () => {
-      const response = await fetch('/api/players');
-      if (!response.ok) throw new Error('Failed to fetch players');
-      return response.json();
-    }
   });
   
-  // Fetch game statistics
-  const { data: gameStats, isLoading: isLoadingStats } = useQuery({
-    queryKey: ['/api/games', gameId, 'stats'],
-    queryFn: async () => {
-      // Add timestamp to force fresh data
-      const timestamp = new Date().getTime();
-      const response = await fetch(`/api/games/${gameId}/stats?_t=${timestamp}`);
-      if (!response.ok) throw new Error('Failed to fetch game stats');
-      return response.json();
-    },
-    enabled: !!gameId,
-    staleTime: 0, // Always refetch when needed
-    refetchOnMount: true
+  const { data: opponents, isLoading: opponentsLoading } = useQuery({
+    queryKey: ['/api/opponents'],
   });
   
-  // Fetch game roster
-  const { data: roster, isLoading: isLoadingRoster } = useQuery({
-    queryKey: ['/api/games', gameId, 'rosters'],
-    queryFn: async () => {
-      const response = await fetch(`/api/games/${gameId}/rosters`);
-      if (!response.ok) throw new Error('Failed to fetch roster');
-      return response.json();
-    },
-    enabled: !!gameId
+  const { data: roster, isLoading: rosterLoading } = useQuery({
+    queryKey: [`/api/games/${gameId}/rosters`],
+    enabled: !isNaN(gameId),
   });
+  
+  const { data: gameStats, isLoading: statsLoading } = useQuery({
+    queryKey: [`/api/games/${gameId}/stats`],
+    enabled: !isNaN(gameId),
+  });
+  
+  // Calculate the scores based on the game stats
+  const scores = calculateGameScores(game, gameStats);
+  const isForfeit = game?.status === 'forfeit-win' || game?.status === 'forfeit-loss';
   
   // Calculate quarter scores
   const quarterScores = useMemo(() => {
-    if (!game) return [];
-    if (game.status === 'forfeit-win' || game.status === 'forfeit-loss') {
-      // For forfeit games, use special handling
-      const isWin = game.status === 'forfeit-win';
-      return calculateQuarterScores([], game);
-    }
-    if (!gameStats || gameStats.length === 0) return [];
-    return calculateQuarterScores(gameStats, game);
-  }, [gameStats, game]);
+    if (!game || (!gameStats && !isForfeit)) return [];
+    return calculateQuarterScores(gameStats || [], game);
+  }, [game, gameStats, isForfeit]);
   
-  // Calculate game score
-  const { teamScore, opponentScore } = useMemo(() => {
-    if (!game) return { teamScore: 0, opponentScore: 0 };
-    
-    // For forfeit games, provide standard forfeit scores
-    if (game.status === 'forfeit-win') {
-      return { teamScore: 10, opponentScore: 0 };
-    }
-    if (game.status === 'forfeit-loss') {
-      return { teamScore: 0, opponentScore: 10 };
-    }
-    
-    if (!gameStats || gameStats.length === 0) return { teamScore: 0, opponentScore: 0 };
-    return calculateGameScores(gameStats);
-  }, [gameStats, game]);
+  // Overall game result for display
+  const teamScore = quarterScores.reduce((sum, q) => sum + q.teamScore, 0);
+  const opponentScore = quarterScores.reduce((sum, q) => sum + q.opponentScore, 0);
+  const teamWon = teamScore > opponentScore;
+  const isDraw = teamScore === opponentScore;
+  const resultText = teamWon ? 'Win' : isDraw ? 'Draw' : 'Loss';
   
-  // Handle loading state
-  if (isLoadingGame || isLoadingOpponents || isLoadingPlayers || isLoadingStats || isLoadingRoster) {
+  const isLoading = gameLoading || playersLoading || opponentsLoading || rosterLoading || statsLoading;
+  
+  // Function to render the game status with actions available based on the current status
+  const renderGameStatusActions = (game) => {
+    if (!game) return null;
+    
     return (
-      <div className="container mx-auto py-8">
-        <div className="animate-pulse">
-          <div className="h-8 bg-slate-200 rounded w-1/3 mb-4"></div>
-          <div className="h-32 bg-slate-200 rounded mb-6"></div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="h-60 bg-slate-200 rounded"></div>
-            <div className="h-60 bg-slate-200 rounded"></div>
-          </div>
-        </div>
-      </div>
+      <GameDetailsStatusButton 
+        game={game}
+        onStatusChange={() => {
+          // Invalidate game data after status change
+          queryClient.invalidateQueries([`/api/games/${gameId}`]);
+        }}
+      />
     );
-  }
+  };
   
-  if (!game) {
+  if (isLoading) {
     return (
-      <div className="container mx-auto py-8">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <h2 className="text-xl font-semibold">Game Not Found</h2>
-              <p className="text-gray-500 mt-2">The game you're looking for doesn't exist or has been deleted.</p>
-              <Button asChild className="mt-4">
-                <Link to="/games">
-                  <ChevronLeft className="mr-2 h-4 w-4" />
-                  Back to Games
-                </Link>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="container mx-auto p-4">
+        <div className="flex items-center mb-4">
+          <Link href="/games">
+            <a className="flex items-center text-blue-600 hover:text-blue-800">
+              <ChevronLeft className="h-4 w-4 mr-1" />
+              Back to Games
+            </a>
+          </Link>
+        </div>
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
+          <div className="h-4 bg-gray-200 rounded w-1/2 mb-6"></div>
+          <div className="h-24 bg-gray-200 rounded mb-4"></div>
+          <div className="h-64 bg-gray-200 rounded"></div>
+        </div>
       </div>
     );
   }
   
   return (
-    <div className="container mx-auto py-6">
+    <div className="container mx-auto p-4">
       <Helmet>
-        <title>Game Details: {getOpponentName(opponents || [], game.opponentId)} | Netball Stats</title>
+        <title>{`Game Details - ${getOpponentName(opponents || [], game?.opponentId)}`}</title>
       </Helmet>
       
-      {/* Page title and round number + back button */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center">
-          <h1 className="text-2xl font-bold">
-            Game Details - Round {game.round || '(No Round)'}
-          </h1>
-        </div>
-        <Button variant="outline" size="sm" asChild>
-          <Link to="/games">
-            <ChevronLeft className="mr-1 h-4 w-4" />
+      <div className="flex items-center mb-4">
+        <Link href="/games">
+          <Button variant="ghost" className="flex items-center p-0 mr-4">
+            <ChevronLeft className="h-4 w-4 mr-1" />
             Back to Games
-          </Link>
-        </Button>
-        
-        <div className="flex gap-2">
-          {!game.isBye && game.status !== 'forfeit' && (
-            <Button variant="outline" size="sm" asChild>
-              <Link to={`/games/${game.id}/livestats`}>
-                <Activity className="mr-1 h-4 w-4" />
-                Live Stats
-              </Link>
-            </Button>
-          )}
-          <Button variant="outline" size="sm" asChild>
-            <Link to={`/statistics?game=${game.id}`} className="flex items-center">
-              <Edit className="mr-1 h-4 w-4" />
-              <span>Edit Stats</span>
-            </Link>
           </Button>
-        </div>
+        </Link>
+        
+        <h1 className="text-2xl font-bold flex-grow">
+          Game Details
+        </h1>
+        
+        {renderGameStatusActions(game)}
       </div>
       
-      {/* Game header card */}
       <Card className="mb-6">
-        <CardContent className="pt-6">
-          <div className="flex flex-col md:flex-row justify-between items-center">
+        <CardHeader className="pb-3">
+          <div className="flex justify-between items-center">
             <div>
-              <h2 className="text-2xl font-bold">
-                {game.isBye ? 'BYE Round' : `Our Team vs ${getOpponentName(opponents || [], game.opponentId)}`}
-              </h2>
-              <div className="flex items-center mt-1 space-x-3">
-                <span className="text-gray-500">{formatDate(game.date)}</span>
-                <span className="text-gray-500">{game.time}</span>
-                <GameDetailsStatusButton 
-                  game={game}
-                  onStatusChanged={(newStatus) => {
-                    // Force an immediate update of the UI
-                    const updatedGame = {...game, status: newStatus};
-                    queryClient.setQueryData(['/api/games', gameId], updatedGame);
-                    
-                    // Refresh all games data after a delay
-                    setTimeout(() => {
-                      queryClient.invalidateQueries();
-                      refetchGame();
-                    }, 200);
-                  }}
-                />
-              </div>
+              <CardTitle className="text-xl">
+                {game?.opponentId ? getOpponentName(opponents || [], game?.opponentId) : "BYE Round"}
+              </CardTitle>
+              <CardDescription>
+                {formatDate(game?.date)} {game?.time && `at ${game?.time}`}
+                {game?.venue && ` - ${game?.venue}`}
+                {game?.round && ` - Round ${game?.round}`}
+              </CardDescription>
             </div>
             
-            <div className="mt-4 md:mt-0">
-              {(game.status === 'completed' || game.status === 'forfeit' || game.status === 'in-progress') && (
-                <div className="text-center">
-                  <div className="text-gray-500 mb-1">Final Score</div>
-                  <div className="text-3xl font-bold">{teamScore} - {opponentScore}</div>
-                </div>
-              )}
+            <div className="flex flex-col items-end">
+              {/* Score display with win/loss color coding */}
+              <div 
+                className={cn(
+                  "px-4 py-2 rounded-md text-white text-center font-bold",
+                  teamWon ? "bg-green-600" : 
+                  isDraw ? "bg-amber-500" : 
+                  "bg-red-600"
+                )}
+              >
+                <span className="block text-lg">
+                  {teamScore} - {opponentScore}
+                </span>
+                <span className="text-sm">{resultText}</span>
+              </div>
             </div>
           </div>
+        </CardHeader>
+        
+        <CardContent>
+          <Tabs defaultValue={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="mb-4">
+              <TabsTrigger value="roster" className="flex items-center">
+                <ClipboardList className="h-4 w-4 mr-2" />
+                Roster
+              </TabsTrigger>
+              
+              <TabsTrigger 
+                value="stats" 
+                className="flex items-center"
+                disabled={isForfeit}
+              >
+                <BarChart3 className="h-4 w-4 mr-2" />
+                Statistics
+              </TabsTrigger>
+              
+              <TabsTrigger value="scores" className="flex items-center">
+                <Activity className="h-4 w-4 mr-2" />
+                Scores
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="roster">
+              <CourtPositionRoster roster={roster || []} players={players || []} quarter={1} />
+            </TabsContent>
+            
+            <TabsContent value="stats">
+              {isForfeit ? (
+                <div className="text-center p-8 border rounded-md bg-gray-50">
+                  <p className="text-lg text-gray-700">Statistics are not available for forfeit games.</p>
+                </div>
+              ) : (
+                <DetailedStatistics gameStats={gameStats || []} />
+              )}
+            </TabsContent>
+            
+            <TabsContent value="scores">
+              <ScoreBreakdown quarterScores={quarterScores} />
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
-      
-      {/* Game content tabs */}
-      <Tabs defaultValue="summary" className="mt-6">
-        <TabsList className="mb-4">
-          <TabsTrigger value="summary">Summary</TabsTrigger>
-          <TabsTrigger value="roster">Team Roster</TabsTrigger>
-          <TabsTrigger value="statistics">Game Statistics</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="summary">
-          <div className="grid grid-cols-1 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Game Summary</CardTitle>
-                <CardDescription>
-                  Score breakdown for this match
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {game.status === 'forfeit' ? (
-                  <div className="text-center py-4">
-                    <div className="text-lg font-medium mb-2">This game was recorded as a forfeit</div>
-                    <div className="text-gray-500">No statistics were recorded for this game.</div>
-                    <div className="mt-4">
-                      <Badge variant="destructive">Forfeit: 0-10</Badge>
-                    </div>
-                  </div>
-                ) : game.isBye ? (
-                  <div className="text-center py-4">
-                    <div className="text-lg font-medium mb-2">This round was a BYE</div>
-                    <div className="text-gray-500">No game was played.</div>
-                  </div>
-                ) : (
-                  <>
-                    {quarterScores.length > 0 ? (
-                      <QuarterScoreCard quarterScores={quarterScores} />
-                    ) : (
-                      <div className="text-center py-4">
-                        <div className="text-lg font-medium mb-2">No stats recorded yet</div>
-                        <div className="text-gray-500">Record statistics to see the game summary.</div>
-                      </div>
-                    )}
-                  </>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="roster">
-          <Card>
-            <CardHeader>
-              <CardTitle>Team Roster</CardTitle>
-              <CardDescription>
-                Player positions by quarter
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {game.isBye || game.status === 'forfeit' ? (
-                <div className="text-center py-4">
-                  <div className="text-lg font-medium mb-2">
-                    {game.isBye ? 'No roster for BYE rounds' : 'No roster needed for forfeit games'}
-                  </div>
-                  <div className="text-gray-500">
-                    {game.isBye ? 'BYE rounds don\'t require a team roster.' : 'Forfeit games don\'t have player assignments.'}
-                  </div>
-                </div>
-              ) : roster && roster.length > 0 ? (
-                <CourtPositionRoster roster={roster} players={players} quarter={1} />
-              ) : (
-                <div className="text-center py-4">
-                  <div className="text-lg font-medium mb-2">No roster assigned yet</div>
-                  <div className="text-gray-500">Set up the team roster for this game to see positions.</div>
-                  <Button className="mt-4" asChild>
-                    <Link to="/roster">
-                      <ClipboardList className="mr-2 h-4 w-4" />
-                      Set Up Roster
-                    </Link>
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="statistics">
-          <Card>
-            <CardHeader>
-              <CardTitle>Game Statistics</CardTitle>
-              <CardDescription>
-                Detailed performance statistics by position
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {game.isBye || game.status === 'forfeit' ? (
-                <div className="text-center py-4">
-                  <div className="text-lg font-medium mb-2">
-                    {game.isBye ? 'No statistics for BYE rounds' : 'No statistics for forfeit games'}
-                  </div>
-                  <div className="text-gray-500">
-                    {game.isBye ? 'BYE rounds don\'t have any statistical data.' : 'Forfeit games don\'t have performance statistics.'}
-                  </div>
-                </div>
-              ) : gameStats && gameStats.length > 0 ? (
-                <DetailedStatistics gameStats={gameStats} />
-              ) : (
-                <div className="text-center py-4">
-                  <div className="text-lg font-medium mb-2">No statistics recorded yet</div>
-                  <div className="text-gray-500">Record stats during the game to see performance metrics.</div>
-                  <Button className="mt-4" asChild>
-                    <Link to={`/games/${game.id}/livestats`}>
-                      <BarChart3 className="mr-2 h-4 w-4" />
-                      Record Stats
-                    </Link>
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
     </div>
   );
 }
