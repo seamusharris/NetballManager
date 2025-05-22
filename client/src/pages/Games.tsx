@@ -26,6 +26,17 @@ export default function Games() {
     queryClient.invalidateQueries({ queryKey: ['gameStats'] });
   }, []);
   
+  // Fetch games data
+  const { data: games = [], isLoading: isLoadingGames } = useQuery<any[]>({
+    queryKey: ['/api/games'],
+    staleTime: 0, // Consider data stale immediately
+  });
+  
+  // Fetch opponents data
+  const { data: opponents = [], isLoading: isLoadingOpponents } = useQuery<any[]>({
+    queryKey: ['/api/opponents'],
+  });
+  
   // Check for editId parameter in the URL and handle edit game loading
   useEffect(() => {
     if (games.length > 0) {
@@ -46,15 +57,6 @@ export default function Games() {
       }
     }
   }, [games]);
-  
-  const { data: games = [], isLoading: isLoadingGames } = useQuery<any[]>({
-    queryKey: ['/api/games'],
-    staleTime: 0, // Consider data stale immediately
-  });
-  
-  const { data: opponents = [], isLoading: isLoadingOpponents } = useQuery<any[]>({
-    queryKey: ['/api/opponents'],
-  });
   
   const isLoading = isLoadingGames || isLoadingOpponents;
   
@@ -182,9 +184,8 @@ export default function Games() {
         </div>
         
         <GamesList 
-          games={games as Game[]} 
-          opponents={opponents as any[]}
-          isLoading={isLoading}
+          games={games} 
+          isLoading={isLoading} 
           onEdit={setEditingGame}
           onDelete={handleDeleteGame}
           onViewStats={handleViewStats}
