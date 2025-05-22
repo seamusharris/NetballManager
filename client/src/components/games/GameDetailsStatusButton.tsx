@@ -125,13 +125,11 @@ export function GameDetailsStatusButton({
   return (
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
       <DialogTrigger asChild>
-        <Button 
-          variant="ghost" 
-          size="sm"
-          className={`${getStatusClass(game.status as GameStatus)} text-white hover:${getStatusClass(game.status as GameStatus)} hover:text-white hover:opacity-90`}
+        <div 
+          className={`${getStatusClass(game.status as GameStatus)} text-white px-3 py-1.5 text-xs font-medium rounded-full hover:opacity-90 cursor-pointer transition-all duration-200`}
         >
           {getStatusDisplay(game.status as GameStatus)}
-        </Button>
+        </div>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
