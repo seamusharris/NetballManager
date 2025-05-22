@@ -254,22 +254,51 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
                     </div>
                     
                     {playerStats && (
-                      <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm mt-2">
-                        <div className="flex justify-between">
-                          <span className="text-gray-500">Goals:</span>
-                          <span className="font-medium">{playerStats.stats.goals}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-500">Intercepts:</span>
-                          <span className="font-medium">{playerStats.stats.intercepts}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-500">Rebounds:</span>
-                          <span className="font-medium">{playerStats.stats.rebounds}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-500">Assists:</span>
-                          <span className="font-medium">{playerStats.stats.assists}</span>
+                      <div className="mt-3 p-3 bg-gray-50 rounded-md border border-gray-100 shadow-sm">
+                        <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                          {/* Left column - main stats */}
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2">
+                              <div className="h-6 w-6 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                                <ScoreIcon className="h-3.5 w-3.5" />
+                              </div>
+                              <div className="flex-1 flex justify-between">
+                                <span className="text-gray-600">Goals</span>
+                                <span className="font-semibold">{playerStats.stats.goals}</span>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div className="h-6 w-6 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center">
+                                <ArrowDownIcon className="h-3.5 w-3.5" />
+                              </div>
+                              <div className="flex-1 flex justify-between">
+                                <span className="text-gray-600">Rebounds</span>
+                                <span className="font-semibold">{playerStats.stats.rebounds}</span>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          {/* Right column - more stats */}
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2">
+                              <div className="h-6 w-6 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center">
+                                <ShieldIcon className="h-3.5 w-3.5" />
+                              </div>
+                              <div className="flex-1 flex justify-between">
+                                <span className="text-gray-600">Intercepts</span>
+                                <span className="font-semibold">{playerStats.stats.intercepts}</span>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div className="h-6 w-6 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center">
+                                <HandIcon className="h-3.5 w-3.5" />
+                              </div>
+                              <div className="flex-1 flex justify-between">
+                                <span className="text-gray-600">Assists</span>
+                                <span className="font-semibold">{playerStats.stats.assists}</span>
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     )}
