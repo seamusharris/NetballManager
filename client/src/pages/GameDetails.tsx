@@ -39,14 +39,12 @@ import GameDetailsStatusButton from '@/components/games/GameDetailsStatusButton'
 const PositionStatsBox = ({ position, playerName, playerColor, playerStats }) => {
   return (
     <div 
-      key={position} 
-      className="p-2 border rounded-md shadow-sm w-auto" 
+      className="p-2 border rounded-md shadow-sm" 
       style={{ 
         backgroundColor: playerName ? `${playerColor}10` : 'white',
         border: playerName ? `2px solid ${playerColor}` : '1px solid #ddd',
-        minWidth: '80px',
-        maxWidth: '120px',
-        flex: '0 1 auto'
+        width: '110px',
+        height: 'auto'
       }}
     >
       <div className="text-center font-medium mb-1">{position}</div>
@@ -601,7 +599,7 @@ export default function GameDetails() {
                 <div className="flex-1">
                   <div className="flex flex-col space-y-4">
                     {/* Top third - Attack positions (GS, GA) */}
-                    <div className="flex justify-center space-x-3">
+                    <div className="flex justify-center space-x-4">
                       {POSITIONS.slice(0, 2).map(position => {
                         const entry = rosterByQuarter[quarter]?.[position];
                         const playerName = getPlayerName(entry?.playerId);
@@ -621,7 +619,7 @@ export default function GameDetails() {
                     </div>
                     
                     {/* Middle third positions (WA, C, WD) */}
-                    <div className="flex justify-center space-x-3">
+                    <div className="flex justify-center space-x-4">
                       {POSITIONS.slice(2, 5).map(position => {
                         const entry = rosterByQuarter[quarter]?.[position];
                         const playerName = getPlayerName(entry?.playerId);
@@ -641,7 +639,7 @@ export default function GameDetails() {
                     </div>
                     
                     {/* Bottom third - Defense positions (GD, GK) */}
-                    <div className="flex justify-center space-x-3">
+                    <div className="flex justify-center space-x-4">
                       {POSITIONS.slice(5).map(position => {
                         const entry = rosterByQuarter[quarter]?.[position];
                         const playerName = getPlayerName(entry?.playerId);
