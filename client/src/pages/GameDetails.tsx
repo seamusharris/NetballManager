@@ -61,11 +61,12 @@ const calculateQuarterScores = (gameStats: any[], game: any) => {
   if (game && (game.status === 'forfeit-win' || game.status === 'forfeit-loss')) {
     const isWin = game.status === 'forfeit-win';
     
-    // Follow the same quarter distribution pattern as in utils.ts
+    // For forfeit-loss: 5 goals in Q1 against GK and 5 in Q1 against GD
+    // For forfeit-win: GS and GA score 5 goals each in Q1
     return [
-      { quarter: 1, teamScore: 0, opponentScore: 0 },
-      { quarter: 2, teamScore: isWin ? 5 : 0, opponentScore: isWin ? 0 : 5 },
-      { quarter: 3, teamScore: isWin ? 5 : 0, opponentScore: isWin ? 0 : 5 },
+      { quarter: 1, teamScore: isWin ? 10 : 0, opponentScore: isWin ? 0 : 10 },
+      { quarter: 2, teamScore: 0, opponentScore: 0 },
+      { quarter: 3, teamScore: 0, opponentScore: 0 },
       { quarter: 4, teamScore: 0, opponentScore: 0 }
     ];
   }

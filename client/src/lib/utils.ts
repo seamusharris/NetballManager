@@ -298,14 +298,13 @@ export function getForfeitGameScore(game: { status?: string | null } | string | 
   const status = typeof game === 'string' ? game : game.status;
   const isWin = status === 'forfeit-win';
   
-  // For forfeit-win: 10-0 (our favor)
-  // For forfeit-loss: 0-10 (opponent's favor)
-  // Distribute scores evenly across quarters 2 and 3
+  // For forfeit-win: GS and GA score 5 goals each in Q1 (10-0 total)
+  // For forfeit-loss: 5 goals in Q1 against GK and 5 in Q1 against GD (0-10 total)
   return {
     quarterScores: {
-      '1': { for: 0, against: 0 },
-      '2': { for: isWin ? 5 : 0, against: isWin ? 0 : 5 },
-      '3': { for: isWin ? 5 : 0, against: isWin ? 0 : 5 },
+      '1': { for: isWin ? 10 : 0, against: isWin ? 0 : 10 },
+      '2': { for: 0, against: 0 },
+      '3': { for: 0, against: 0 },
       '4': { for: 0, against: 0 }
     },
     teamScore: isWin ? 10 : 0,
