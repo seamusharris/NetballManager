@@ -317,20 +317,20 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
             // Use white text for player positions, red for unassigned
             const textColor = playerName ? 'white' : '#ef4444'; // Red color for unassigned
             
-            // New position coordinates for horizontal court
+            // New position coordinates for horizontal court with horizontal offsets
             const horizontalPositions = {
               // Attack end - left side
-              'GS': 'top-[25%] left-[16.5%] -translate-x-1/2 -translate-y-1/2',
-              'GA': 'top-[75%] left-[16.5%] -translate-x-1/2 -translate-y-1/2',
+              'GS': 'top-[25%] left-[13%] -translate-x-1/2 -translate-y-1/2',
+              'GA': 'top-[75%] left-[20%] -translate-x-1/2 -translate-y-1/2',
               
               // Mid-court - center
-              'WA': 'top-[25%] left-[50%] -translate-x-1/2 -translate-y-1/2',
+              'WA': 'top-[25%] left-[47%] -translate-x-1/2 -translate-y-1/2',
               'C': 'top-[50%] left-[50%] -translate-x-1/2 -translate-y-1/2',
-              'WD': 'top-[75%] left-[50%] -translate-x-1/2 -translate-y-1/2',
+              'WD': 'top-[75%] left-[53%] -translate-x-1/2 -translate-y-1/2',
               
               // Defense end - right side
-              'GD': 'top-[25%] left-[83.5%] -translate-x-1/2 -translate-y-1/2',
-              'GK': 'top-[75%] left-[83.5%] -translate-x-1/2 -translate-y-1/2',
+              'GD': 'top-[25%] left-[80%] -translate-x-1/2 -translate-y-1/2',
+              'GK': 'top-[75%] left-[87%] -translate-x-1/2 -translate-y-1/2',
             };
             
             const positionClass = horizontalPositions[position] || '';
