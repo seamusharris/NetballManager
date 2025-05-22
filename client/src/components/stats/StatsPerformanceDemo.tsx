@@ -30,9 +30,9 @@ export function StatsPerformanceDemo() {
   } = useGames();
   
   // Filter to only include completed games
-  const completedGames = games?.filter(game => 
+  const completedGames = games && Array.isArray(games) ? games.filter(game => 
     game.status === 'completed' || game.status === 'forfeit-win' || game.status === 'forfeit-loss'
-  ) || [];
+  ) : [];
   
   const handleGameSelect = (gameId: number) => {
     setSelectedGameId(gameId);
