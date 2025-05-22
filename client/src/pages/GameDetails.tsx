@@ -226,7 +226,7 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
       {/* Two-column layout with equal width columns */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-7xl mx-auto px-4">
         {/* Left column - Court diagram (half width) */}
-        <div>
+        <div className="flex flex-col">
           <div className="relative w-full mx-auto aspect-[2/3] bg-green-100 rounded-lg border border-green-300 shadow-md">
             {/* Court markings - three equal sections */}
             <div className="absolute inset-0 flex flex-col">
