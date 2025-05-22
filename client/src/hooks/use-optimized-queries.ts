@@ -1,132 +1,107 @@
-import { 
-  useQuery, 
-  useMutation, 
-  UseMutationOptions,
-  UseQueryOptions 
-} from "@tanstack/react-query";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useQuery, QueryKey, UseQueryOptions } from '@tanstack/react-query';
+import { queryClient } from '@/lib/queryClient';
 
-// Different data types have different refresh requirements
-export const STALE_TIMES = {
-  // Static data that rarely changes
-  STATIC: 24 * 60 * 60 * 1000, // 24 hours
+// Define optimized stale times (in milliseconds) based on data type
+const STALE_TIMES = {
+  // Player data changes infrequently
+  PLAYERS: 1000 * 60 * 60, // 1 hour
   
-  // Reference data that changes occasionally
-  REFERENCE: 60 * 60 * 1000, // 1 hour
+  // Game details change infrequently once created
+  GAMES: 1000 * 60 * 30, // 30 minutes
   
-  // Application data that changes regularly but not in real-time
-  STANDARD: 5 * 60 * 1000, // 5 minutes
+  // Game stats might change during active games
+  GAME_STATS: 1000 * 60 * 5, // 5 minutes
   
-  // Game data that can change during a game
-  GAME: 30 * 1000, // 30 seconds
+  // Rosters are usually set once per game
+  ROSTERS: 1000 * 60 * 15, // 15 minutes
   
-  // Live statistics that change frequently during a game
-  LIVE: 10 * 1000 // 10 seconds
+  // Opponents data changes very infrequently
+  OPPONENTS: 1000 * 60 * 60 * 24, // 24 hours
+  
+  // Default stale time for other data
+  DEFAULT: 1000 * 60 * 10 // 10 minutes
 };
 
-// Helper to determine appropriate stale time based on endpoint
-function getStaleTimeForEndpoint(endpoint: string): number {
-  if (endpoint.includes('/api/players') || endpoint.includes('/api/opponents')) {
-    return STALE_TIMES.REFERENCE;
+/**
+ * Get the appropriate stale time based on the API endpoint
+ */
+function getStaleTime(endpoint: string): number {
+  if (endpoint.includes('/players')) {
+    return STALE_TIMES.PLAYERS;
+  } else if (endpoint.includes('/games') && endpoint.includes('/stats')) {
+    return STALE_TIMES.GAME_STATS;
+  } else if (endpoint.includes('/games') && endpoint.includes('/rosters')) {
+    return STALE_TIMES.ROSTERS;
+  } else if (endpoint.includes('/games')) {
+    return STALE_TIMES.GAMES;
+  } else if (endpoint.includes('/opponents')) {
+    return STALE_TIMES.OPPONENTS;
   }
   
-  if (endpoint.includes('/api/games') && !endpoint.includes('/stats')) {
-    return STALE_TIMES.STANDARD;
-  }
-  
-  if (endpoint.includes('/rosters')) {
-    return STALE_TIMES.GAME;
-  }
-  
-  if (endpoint.includes('/stats')) {
-    return STALE_TIMES.LIVE;
-  }
-  
-  // Default stale time
-  return STALE_TIMES.STANDARD;
+  return STALE_TIMES.DEFAULT;
 }
 
 /**
- * Enhanced query hook with optimized stale times based on data type
+ * Optimized query hook that sets appropriate stale times based on data type
  */
 export function useOptimizedQuery<TData = unknown>(
-  endpoint: string | [string, ...unknown[]],
-  options?: Omit<UseQueryOptions<TData, Error, TData>, 'queryKey' | 'queryFn'>
+  endpoint: string,
+  options?: Omit<UseQueryOptions<TData, Error, TData, QueryKey>, 'queryKey' | 'queryFn'>
 ) {
-  const queryKey = Array.isArray(endpoint) ? endpoint : [endpoint];
-  const actualEndpoint = queryKey[0] as string;
-  
   return useQuery<TData, Error>({
-    queryKey,
-    ...options,
-    staleTime: options?.staleTime || getStaleTimeForEndpoint(actualEndpoint)
+    queryKey: [endpoint],
+    queryFn: async () => {
+      try {
+        const response = await fetch(endpoint);
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`API error (${response.status}): ${errorText}`);
+        }
+        
+        return response.json();
+      } catch (error) {
+        console.error(`Error fetching from ${endpoint}:`, error);
+        throw error;
+      }
+    },
+    staleTime: getStaleTime(endpoint),
+    retry: (failureCount, error) => {
+      // Only retry network errors, not 4xx/5xx responses
+      if (error instanceof Error && error.message.includes('API error')) {
+        return false;
+      }
+      return failureCount < 3;
+    },
+    ...options
   });
 }
 
 /**
- * Enhanced mutation hook that automatically invalidates related queries
+ * Prefetch data and add it to the cache
  */
-export function useOptimizedMutation<TData = unknown, TVariables = unknown>(
-  endpoint: string,
-  options?: Omit<UseMutationOptions<TData, Error, TVariables>, 'mutationFn'>
-) {
-  return useMutation<TData, Error, TVariables>({
-    mutationFn: (variables) => apiRequest(endpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(variables)
-    }),
-    ...options,
-    onSuccess: async (data, variables, context) => {
-      // Call the original onSuccess if provided
-      if (options?.onSuccess) {
-        await options.onSuccess(data, variables, context);
+export async function prefetchData(endpoint: string) {
+  await queryClient.prefetchQuery({
+    queryKey: [endpoint],
+    queryFn: async () => {
+      const response = await fetch(endpoint);
+      if (!response.ok) {
+        throw new Error(`API error (${response.status})`);
       }
-      
-      // Extract the base path for cache invalidation
-      let basePath = endpoint.split('/').slice(0, 3).join('/');
-      
-      // Invalidate all queries related to this endpoint
-      await queryClient.invalidateQueries({ queryKey: [basePath] });
-    }
+      return response.json();
+    },
+    staleTime: getStaleTime(endpoint)
   });
 }
 
 /**
- * Enhanced mutation hook for updating data
+ * Invalidate queries by endpoint pattern
  */
-export function useOptimizedUpdateMutation<TData = unknown, TVariables = unknown>(
-  endpoint: string,
-  id: number,
-  options?: Omit<UseMutationOptions<TData, Error, TVariables>, 'mutationFn'>
-) {
-  const fullEndpoint = `${endpoint}/${id}`;
-  
-  return useMutation<TData, Error, TVariables>({
-    mutationFn: (variables) => apiRequest(fullEndpoint, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(variables)
-    }),
-    ...options,
-    onSuccess: async (data, variables, context) => {
-      // Call the original onSuccess if provided
-      if (options?.onSuccess) {
-        await options.onSuccess(data, variables, context);
-      }
-      
-      // Extract the base path for cache invalidation
-      let basePath = endpoint.split('/').slice(0, 3).join('/');
-      
-      // Invalidate all queries related to this endpoint
-      await queryClient.invalidateQueries({ queryKey: [basePath] });
-      
-      // Also invalidate the specific resource
-      await queryClient.invalidateQueries({ queryKey: [fullEndpoint] });
+export function invalidateQueries(pattern: string) {
+  return queryClient.invalidateQueries({ 
+    predicate: (query) => {
+      const queryKey = query.queryKey[0];
+      return typeof queryKey === 'string' && queryKey.includes(pattern);
     }
   });
 }

@@ -23,8 +23,9 @@ import NotFound from "@/pages/not-found";
 // Import GameDetails directly for now
 import GameDetails from "./pages/GameDetails";
 
-// Lazy load the debug component
+// Lazy load components
 const StatsDebug = lazy(() => import("./pages/StatsDebug"));
+const PerformanceDemo = lazy(() => import("./pages/PerformanceDemo"));
 
 /**
  * Loading spinner component for suspense fallbacks

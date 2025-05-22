@@ -1,13 +1,10 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface Props {
   children: ReactNode;
   fallback?: ReactNode;
-  onReset?: () => void;
-  onError?: (error: Error, errorInfo: ErrorInfo) => void;
 }
 
 interface State {
@@ -16,80 +13,66 @@ interface State {
 }
 
 /**
- * Error Boundary component to catch JavaScript errors in child components
- * and display a fallback UI instead of crashing the whole app
+ * Error Boundary component to catch JavaScript errors anywhere in the child component tree,
+ * log those errors, and display a fallback UI instead of crashing the whole app
  */
 class ErrorBoundary extends Component<Props, State> {
-  public state: State = {
-    hasError: false,
-    error: null
-  };
-
-  public static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error };
+  constructor(props: Props) {
+    super(props);
+    this.state = { 
+      hasError: false,
+      error: null
+    };
   }
 
-  public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('Error caught by ErrorBoundary:', error, errorInfo);
-    
-    // Call the optional onError callback
-    if (this.props.onError) {
-      this.props.onError(error, errorInfo);
-    }
+  static getDerivedStateFromError(error: Error): State {
+    // Update state so the next render will show the fallback UI
+    return { 
+      hasError: true,
+      error
+    };
   }
 
-  private handleReset = () => {
-    this.setState({ hasError: false, error: null });
-    
-    // Call the optional onReset callback
-    if (this.props.onReset) {
-      this.props.onReset();
-    }
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    // Log the error to an error reporting service
+    console.error('Error boundary caught an error:', error, errorInfo);
+  }
+
+  handleReset = () => {
+    this.setState({ 
+      hasError: false,
+      error: null
+    });
   };
 
-  public render() {
+  render() {
     if (this.state.hasError) {
-      // If a custom fallback is provided, use it
+      // Custom fallback UI
       if (this.props.fallback) {
         return this.props.fallback;
       }
-
-      // Default error UI
+      
+      // Default fallback UI
       return (
-        <Card className="w-full max-w-xl mx-auto my-6 border-red-200 shadow-md">
-          <CardHeader className="bg-red-50 text-red-700">
-            <CardTitle className="flex items-center gap-2">
-              <AlertCircle className="h-5 w-5" />
-              <span>Something went wrong</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-6">
-            <div className="text-sm text-gray-600 mb-4">
+        <div className="p-4 border border-red-200 rounded-md bg-red-50 text-red-700 my-4">
+          <div className="flex items-center space-x-2">
+            <AlertCircle className="h-5 w-5" />
+            <h2 className="text-lg font-semibold">Something went wrong</h2>
+          </div>
+          <div className="mt-2">
+            <p className="mb-2">
               {this.state.error?.message || 'An unexpected error occurred'}
-            </div>
-            <div className="text-xs bg-gray-50 p-3 rounded border border-gray-200 font-mono overflow-auto max-h-40">
-              {this.state.error?.stack?.split('\n').map((line, i) => (
-                <div key={i} className="pb-1">
-                  {line}
-                </div>
-              ))}
-            </div>
-          </CardContent>
-          <CardFooter className="bg-gray-50 flex justify-end">
+            </p>
             <Button 
-              variant="outline" 
               onClick={this.handleReset}
-              className="mr-2"
+              variant="outline"
+              className="flex items-center space-x-1 text-sm border-red-300 hover:bg-red-100"
             >
-              Try Again
+              <RefreshCw className="h-3 w-3" />
+              <span>Try Again</span>
             </Button>
-            <Button 
-              onClick={() => window.location.reload()}
-            >
-              Reload Page
-            </Button>
-          </CardFooter>
-        </Card>
+          </div>
+        </div>
       );
     }
 
