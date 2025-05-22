@@ -66,9 +66,9 @@ function Router() {
         <Route path="/statistics" component={withErrorBoundary(Statistics, 'Statistics')} />
         <Route path="/data-management" component={withErrorBoundary(DataManagement, 'DataManagement')} />
         <Route path="/settings" component={withErrorBoundary(Settings, 'Settings')} />
-        <Route path="/games/:id/livestats" component={withErrorBoundary(LiveStatsByPosition, 'LiveStats')} />
+        <Route path="/games/:id/livestats" component={withErrorBoundary(LiveStats, 'LiveStats')} />
         <Route path="/games/:id/stats" component={withErrorBoundary(Statistics, 'GameStatistics')} />
-        <Route path="/games/:id/livestats-legacy" component={withErrorBoundary(LiveStats, 'LiveStatsLegacy')} />
+        <Route path="/games/:id/livestats-legacy" component={withErrorBoundary(LiveStatsByPosition, 'LiveStatsPositions')} />
         <Route path="/games/:id/stats-debug">
           {(params) => (
             <ErrorBoundary>
