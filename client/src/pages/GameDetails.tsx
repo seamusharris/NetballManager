@@ -196,16 +196,52 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
       stat => stat.position === position && stat.quarter === quarter
     );
     
-    return {
-      playerId: entry.playerId,
-      name: playerName,
-      stats: {
-        goals: positionStat?.goalsFor || 0,
-        intercepts: positionStat?.intercepts || 0,
-        rebounds: positionStat?.rebounds || 0,
-        assists: positionStat?.badPass || 0, // Using badPass as assists
-      }
+    // Return position-specific relevant statistics
+    const stats = {
+      // Common stats for all positions
+      intercepts: positionStat?.intercepts || 0,
+      badPass: positionStat?.badPass || 0,
+      handlingError: positionStat?.handlingError || 0
     };
+    
+    // Add position-specific stats
+    if (position === 'GS' || position === 'GA') {
+      // Attacking positions
+      return {
+        playerId: entry.playerId,
+        name: playerName,
+        stats: {
+          ...stats,
+          goals: positionStat?.goalsFor || 0,
+          missedGoals: positionStat?.missedGoals || 0,
+          rebounds: positionStat?.rebounds || 0
+        }
+      };
+    } else if (position === 'GD' || position === 'GK') {
+      // Defending positions
+      return {
+        playerId: entry.playerId,
+        name: playerName,
+        stats: {
+          ...stats,
+          goalsAgainst: positionStat?.goalsAgainst || 0,
+          rebounds: positionStat?.rebounds || 0,
+          pickUp: positionStat?.pickUp || 0
+        }
+      };
+    } else {
+      // Mid-court positions (WA, C, WD)
+      return {
+        playerId: entry.playerId,
+        name: playerName,
+        stats: {
+          ...stats,
+          pickUp: positionStat?.pickUp || 0,
+          rebounds: positionStat?.rebounds || 0,
+          infringement: positionStat?.infringement || 0
+        }
+      };
+    }
   };
   
   return (
