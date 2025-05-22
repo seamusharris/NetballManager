@@ -66,10 +66,10 @@ function Router() {
         <Route path="/statistics" component={withErrorBoundary(Statistics, 'Statistics')} />
         <Route path="/data-management" component={withErrorBoundary(DataManagement, 'DataManagement')} />
         <Route path="/settings" component={withErrorBoundary(Settings, 'Settings')} />
-        <Route path="/games/:id/livestats" component={withErrorBoundary(LiveStats, 'LiveStats')} />
-        <Route path="/games/:id/stats" component={withErrorBoundary(Statistics, 'GameStatistics')} />
-        <Route path="/games/:id/livestats-legacy" component={withErrorBoundary(LiveStatsByPosition, 'LiveStatsPositions')} />
-        <Route path="/games/:id/stats-debug">
+        <Route path="/game/:id/livestats" component={withErrorBoundary(LiveStats, 'LiveStats')} />
+        <Route path="/game/:id/stats" component={withErrorBoundary(GameDetails, 'GameDetails')} />
+        <Route path="/game/:id/livestats-legacy" component={withErrorBoundary(LiveStatsByPosition, 'LiveStatsPositions')} />
+        <Route path="/game/:id/stats-debug">
           {(params) => (
             <ErrorBoundary>
               <Suspense fallback={<LoadingSpinner message="Loading debugging tools..." />}>
