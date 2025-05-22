@@ -181,8 +181,7 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
   
   return (
     <div className="mt-4">
-      <div className="mb-4 flex justify-between items-center">
-        <h3 className="text-lg font-medium">Court Positions View</h3>
+      <div className="mb-4 flex justify-center items-center">
         <div className="flex gap-2">
           {[1, 2, 3, 4].map(q => (
             <Button 
@@ -197,9 +196,9 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
         </div>
       </div>
       
-      <div className="flex flex-row space-x-4">
+      <div className="flex flex-row space-x-8 justify-center">
         {/* Court diagram */}
-        <div className="relative w-full max-w-md aspect-[2/3] bg-green-100 rounded-lg border border-green-300">
+        <div className="relative w-full max-w-2xl aspect-[2/3] bg-green-100 rounded-lg border border-green-300">
           {/* Court markings */}
           <div className="absolute inset-0 flex flex-col">
             <div className="h-1/3 border-b border-white"></div>
@@ -257,8 +256,7 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
         </div>
         
         {/* Vertical roster buttons */}
-        <div className="flex flex-col space-y-2">
-          <h3 className="text-md font-medium mb-1">Q{quarter} Roster</h3>
+        <div className="flex flex-col space-y-2 min-w-[200px]">
           {/* Display positions in order from GS to GK */}
           {POSITIONS.map(position => {
             const entry = rosterByQuarter[quarter]?.[position];
@@ -268,7 +266,7 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
             return (
               <div 
                 key={position} 
-                className="p-2 border rounded-md shadow-sm flex flex-col"
+                className="p-3 border rounded-md shadow-sm flex flex-col"
                 style={{ 
                   backgroundColor: playerName ? `${playerColor}20` : 'white',
                   border: playerName ? `2px solid ${playerColor}` : '1px solid #ddd',
