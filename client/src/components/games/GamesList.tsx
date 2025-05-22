@@ -448,7 +448,7 @@ export default function GamesList({
                     </TableCell>
                     <TableCell className="px-6 py-4 whitespace-nowrap">
                       <div className="flex space-x-2">
-                        {game.isBye || game.status === 'forfeit' ? (
+                        {game.isBye || isForfeitGame(game) ? (
                           <span className="text-gray-400 text-xs italic">
                             {game.isBye ? "No actions available for BYE rounds" : "No actions available for forfeit games"}
                           </span>

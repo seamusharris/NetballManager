@@ -303,7 +303,7 @@ export class StatisticsService {
       : await apiRequest('/api/games');
     
     // Filter out forfeit games (they don't count for player statistics)
-    const validGames = allGames.filter((g: Game) => g.status !== 'forfeit');
+    const validGames = allGames.filter((g: Game) => !isForfeitGame(g));
     
     // Get IDs of non-forfeit games only
     const games = validGames.map((g: Game) => g.id);
@@ -459,7 +459,6 @@ export function getGameStatusColor(status: GameStatus): string {
     'upcoming': 'blue',
     'in-progress': 'amber',
     'completed': 'green',
-    'forfeit': 'red',
     'forfeit-win': 'orange',
     'forfeit-loss': 'red'
   };

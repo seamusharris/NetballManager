@@ -53,7 +53,6 @@ export function GameStatusDialog({
         status: selectedStatus,
         // Also update the completed field for backward compatibility
         completed: selectedStatus === 'completed' || 
-                  selectedStatus === 'forfeit' || 
                   selectedStatus === 'forfeit-win' || 
                   selectedStatus === 'forfeit-loss'
       };
@@ -116,8 +115,6 @@ export function GameStatusDialog({
   // Special status explanation
   const getStatusDescription = (status: string) => {
     switch(status) {
-      case 'forfeit': 
-        return 'Game will be recorded as a forfeit with a score of 0-10.';
       case 'forfeit-win':
         return 'Opponent forfeited the game. Score will be recorded as 10-0 in our favor.';
       case 'forfeit-loss':

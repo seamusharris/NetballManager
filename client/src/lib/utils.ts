@@ -262,7 +262,7 @@ export function isForfeitGame(game: { status?: string | null } | string | undefi
   if (!game) return false;
   
   const status = typeof game === 'string' ? game : game.status;
-  return status === 'forfeit' || status === 'forfeit-win' || status === 'forfeit-loss';
+  return status === 'forfeit-win' || status === 'forfeit-loss';
 }
 
 /**
