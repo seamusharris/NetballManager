@@ -837,7 +837,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/gamestats", async (req, res) => {
     try {
       // Log the request body to diagnose issues
-      console.log("Creating game stat with data:", req.body);
+      console.log("Creating/updating game stat with data:", req.body);
       
       // Ensure the rating is properly handled
       if (req.body.rating === undefined || req.body.rating === '') {
@@ -854,6 +854,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (parsedData.data.quarter < 1 || parsedData.data.quarter > 4) {
         return res.status(400).json({ message: "Quarter must be between 1 and 4" });
       }
+      
+      // Check if a stat already exists for this game/position/quarter
+      const existingStats = await storage.getGameStatsByGame(parsedData.data.gameId);
+      const existingStat = existingStats.find(s => 
+        s.position === parsedData.data.position && 
+        s.quarter === parsedData.data.quarter
+      );
       
       // Validate position is from allowed set
       if (!POSITIONS.includes(parsedData.data.position as any)) {
