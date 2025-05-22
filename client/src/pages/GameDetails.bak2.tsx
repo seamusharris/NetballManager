@@ -282,7 +282,7 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
         <div>
           <div className="flex flex-col space-y-0 justify-between h-full">
             {/* Top third - Attack positions (GS, GA) */}
-            <div className="flex space-x-3 my-3 items-start" style={{ height: '33%' }}>
+            <div className="flex space-x-2 mb-2 items-start" style={{ height: '33%' }}>
               {POSITIONS.slice(0, 2).map(position => {
                 const entry = rosterByQuarter[quarter]?.[position];
                 const playerName = getPlayerName(entry?.playerId);
@@ -304,14 +304,20 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
                         <div className="flex flex-col space-y-2 text-sm">
                           {/* Left stats column */}
                           <div className="space-y-2">
-                            <div className="flex justify-between">
-                              <div className="flex justify-between w-full">
+                            <div className="flex items-center gap-2">
+                              <div className="h-6 w-6 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                                <ScoreIcon className="h-3.5 w-3.5" />
+                              </div>
+                              <div className="flex-1 flex justify-between">
                                 <span className="text-gray-600">Goals</span>
                                 <span className="font-semibold">{playerStats.stats.goals}</span>
                               </div>
                             </div>
-                            <div className="flex justify-between">
-                              <div className="flex justify-between w-full">
+                            <div className="flex items-center gap-2">
+                              <div className="h-6 w-6 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center">
+                                <ArrowDownIcon className="h-3.5 w-3.5" />
+                              </div>
+                              <div className="flex-1 flex justify-between">
                                 <span className="text-gray-600">Rebounds</span>
                                 <span className="font-semibold">{playerStats.stats.rebounds}</span>
                               </div>
@@ -320,14 +326,20 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
                           
                           {/* Right stats column */}
                           <div className="space-y-2">
-                            <div className="flex justify-between">
-                              <div className="flex justify-between w-full">
+                            <div className="flex items-center gap-2">
+                              <div className="h-6 w-6 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center">
+                                <ShieldIcon className="h-3.5 w-3.5" />
+                              </div>
+                              <div className="flex-1 flex justify-between">
                                 <span className="text-gray-600">Int</span>
                                 <span className="font-semibold">{playerStats.stats.intercepts}</span>
                               </div>
                             </div>
-                            <div className="flex justify-between">
-                              <div className="flex justify-between w-full">
+                            <div className="flex items-center gap-2">
+                              <div className="h-6 w-6 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center">
+                                <HandIcon className="h-3.5 w-3.5" />
+                              </div>
+                              <div className="flex-1 flex justify-between">
                                 <span className="text-gray-600">Assists</span>
                                 <span className="font-semibold">{playerStats.stats.assists}</span>
                               </div>
@@ -342,7 +354,7 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
             </div>
             
             {/* Middle third positions (WA, C, WD) */}
-            <div className="flex space-x-3 my-3" style={{ height: '33%' }}>
+            <div className="flex space-x-2 my-2" style={{ height: '33%' }}>
               {POSITIONS.slice(2, 5).map(position => {
                 const entry = rosterByQuarter[quarter]?.[position];
                 const playerName = getPlayerName(entry?.playerId);
@@ -364,14 +376,20 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
                         <div className="flex flex-col space-y-2 text-sm">
                           {/* Left stats column */}
                           <div className="space-y-2">
-                            <div className="flex justify-between">
-                              <div className="flex justify-between w-full">
+                            <div className="flex items-center gap-2">
+                              <div className="h-6 w-6 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                                <ScoreIcon className="h-3.5 w-3.5" />
+                              </div>
+                              <div className="flex-1 flex justify-between">
                                 <span className="text-gray-600">Goals</span>
                                 <span className="font-semibold">{playerStats.stats.goals}</span>
                               </div>
                             </div>
-                            <div className="flex justify-between">
-                              <div className="flex justify-between w-full">
+                            <div className="flex items-center gap-2">
+                              <div className="h-6 w-6 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center">
+                                <ArrowDownIcon className="h-3.5 w-3.5" />
+                              </div>
+                              <div className="flex-1 flex justify-between">
                                 <span className="text-gray-600">Rebounds</span>
                                 <span className="font-semibold">{playerStats.stats.rebounds}</span>
                               </div>
@@ -380,14 +398,20 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
                           
                           {/* Right stats column */}
                           <div className="space-y-2">
-                            <div className="flex justify-between">
-                              <div className="flex justify-between w-full">
+                            <div className="flex items-center gap-2">
+                              <div className="h-6 w-6 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center">
+                                <ShieldIcon className="h-3.5 w-3.5" />
+                              </div>
+                              <div className="flex-1 flex justify-between">
                                 <span className="text-gray-600">Int</span>
                                 <span className="font-semibold">{playerStats.stats.intercepts}</span>
                               </div>
                             </div>
-                            <div className="flex justify-between">
-                              <div className="flex justify-between w-full">
+                            <div className="flex items-center gap-2">
+                              <div className="h-6 w-6 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center">
+                                <HandIcon className="h-3.5 w-3.5" />
+                              </div>
+                              <div className="flex-1 flex justify-between">
                                 <span className="text-gray-600">Assists</span>
                                 <span className="font-semibold">{playerStats.stats.assists}</span>
                               </div>
@@ -402,7 +426,7 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
             </div>
             
             {/* Bottom third - Defense positions (GD, GK) */}
-            <div className="flex space-x-3 my-3" style={{ height: '33%' }}>
+            <div className="flex space-x-2 mt-2" style={{ height: '33%' }}>
               {POSITIONS.slice(5).map(position => {
                 const entry = rosterByQuarter[quarter]?.[position];
                 const playerName = getPlayerName(entry?.playerId);
@@ -424,14 +448,20 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
                         <div className="flex flex-col space-y-2 text-sm">
                           {/* Left stats column */}
                           <div className="space-y-2">
-                            <div className="flex justify-between">
-                              <div className="flex justify-between w-full">
+                            <div className="flex items-center gap-2">
+                              <div className="h-6 w-6 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                                <ScoreIcon className="h-3.5 w-3.5" />
+                              </div>
+                              <div className="flex-1 flex justify-between">
                                 <span className="text-gray-600">Goals</span>
                                 <span className="font-semibold">{playerStats.stats.goals}</span>
                               </div>
                             </div>
-                            <div className="flex justify-between">
-                              <div className="flex justify-between w-full">
+                            <div className="flex items-center gap-2">
+                              <div className="h-6 w-6 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center">
+                                <ArrowDownIcon className="h-3.5 w-3.5" />
+                              </div>
+                              <div className="flex-1 flex justify-between">
                                 <span className="text-gray-600">Rebounds</span>
                                 <span className="font-semibold">{playerStats.stats.rebounds}</span>
                               </div>
@@ -440,14 +470,20 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
                           
                           {/* Right stats column */}
                           <div className="space-y-2">
-                            <div className="flex justify-between">
-                              <div className="flex justify-between w-full">
+                            <div className="flex items-center gap-2">
+                              <div className="h-6 w-6 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center">
+                                <ShieldIcon className="h-3.5 w-3.5" />
+                              </div>
+                              <div className="flex-1 flex justify-between">
                                 <span className="text-gray-600">Int</span>
                                 <span className="font-semibold">{playerStats.stats.intercepts}</span>
                               </div>
                             </div>
-                            <div className="flex justify-between">
-                              <div className="flex justify-between w-full">
+                            <div className="flex items-center gap-2">
+                              <div className="h-6 w-6 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center">
+                                <HandIcon className="h-3.5 w-3.5" />
+                              </div>
+                              <div className="flex-1 flex justify-between">
                                 <span className="text-gray-600">Assists</span>
                                 <span className="font-semibold">{playerStats.stats.assists}</span>
                               </div>
