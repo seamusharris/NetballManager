@@ -78,6 +78,13 @@ function Router() {
             </ErrorBoundary>
           )}
         </Route>
+        <Route path="/performance">
+          <ErrorBoundary>
+            <Suspense fallback={<LoadingSpinner message="Loading performance demo..." />}>
+              <PerformanceDemo />
+            </Suspense>
+          </ErrorBoundary>
+        </Route>
         <Route component={withErrorBoundary(NotFound, 'NotFound')} />
       </Switch>
     </Layout>
