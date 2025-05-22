@@ -23,18 +23,16 @@ import { Game, GameStatus, allGameStatuses } from '@shared/schema';
 // Helper function to get appropriate styling for game status
 export function getStatusClass(status: GameStatus | string | null): string {
   switch (status) {
-    case 'upcoming':
-      return 'bg-blue-500';
     case 'in-progress':
-      return 'bg-amber-500';
+      return 'bg-amber-100 text-amber-800 hover:bg-amber-200';
     case 'completed':
-      return 'bg-green-500';
+      return 'bg-green-100 text-green-800 hover:bg-green-200';
     case 'forfeit-win':
-      return 'bg-green-600';
+      return 'bg-orange-100 text-orange-800 hover:bg-orange-200';
     case 'forfeit-loss':
-      return 'bg-red-600';
-    default:
-      return 'bg-gray-500';
+      return 'bg-red-100 text-red-800 hover:bg-red-200';
+    default: // upcoming
+      return 'bg-blue-100 text-blue-800 hover:bg-blue-200';
   }
 }
 
@@ -126,7 +124,7 @@ export function GameDetailsStatusButton({
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
       <DialogTrigger asChild>
         <div 
-          className={`${getStatusClass(game.status as GameStatus)} text-white px-3 py-1.5 text-xs font-medium rounded-full hover:opacity-90 cursor-pointer transition-all duration-200`}
+          className={`${getStatusClass(game.status as GameStatus)} px-3 py-1.5 text-xs font-semibold rounded-full cursor-pointer transition-all duration-200`}
         >
           {getStatusDisplay(game.status as GameStatus)}
         </div>
