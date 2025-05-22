@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -63,7 +63,13 @@ export function getStatusDisplay(status: string): string {
 export function GameStatusButton({ game, className = '', size = 'default', withDialog = true }: GameStatusButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // Update selectedStatus whenever game.status changes
   const [selectedStatus, setSelectedStatus] = useState<GameStatus>(game.status as GameStatus);
+  
+  // Keep selectedStatus in sync with game.status when it changes
+  useEffect(() => {
+    setSelectedStatus(game.status as GameStatus);
+  }, [game.status]);
   
   const badgeSize = size === 'sm' ? 'px-2 py-1 text-xs' : 'px-3 py-1';
   
