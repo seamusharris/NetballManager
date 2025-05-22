@@ -297,14 +297,35 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
 
 // Detailed statistics component
 const DetailedStatistics = ({ gameStats }) => {
-  // Group stats by position
+  // Get the latest stat for each position/quarter combination
+  const deduplicatedStats = useMemo(() => {
+    // Create a map of the latest stats for each position/quarter combination
+    const latestPositionStats = {};
+    
+    // Process each stat to find the latest for each position/quarter
+    gameStats.forEach(stat => {
+      if (!stat || !stat.quarter || !stat.position) return;
+      
+      const key = `${stat.position}-${stat.quarter}`;
+      
+      // Always use the data with the highest ID value for each position/quarter
+      if (!latestPositionStats[key] || stat.id > latestPositionStats[key].id) {
+        latestPositionStats[key] = stat;
+      }
+    });
+    
+    // Convert map back to array
+    return Object.values(latestPositionStats);
+  }, [gameStats]);
+  
+  // Group deduplicated stats by position
   const statsByPosition = useMemo(() => {
-    return gameStats.reduce((acc, stat) => {
+    return deduplicatedStats.reduce((acc, stat) => {
       if (!acc[stat.position]) acc[stat.position] = [];
       acc[stat.position].push(stat);
       return acc;
     }, {});
-  }, [gameStats]);
+  }, [deduplicatedStats]);
   
   // Calculate totals for each position
   const positionTotals = useMemo(() => {
