@@ -107,9 +107,8 @@ export default function GameDetails() {
     queryFn: () => apiRequest('/api/opponents')
   });
 
-  const rosterByQuarter = useMemo(() => {
-    return roster ? RosterSummary({ roster, players }) : {};
-  }, [roster, players]);
+  // Process roster data directly without useMemo to avoid hook errors
+  const rosterByQuarter = roster && players ? processRosterData(roster, players) : {};
 
   const getPlayerName = (playerId) => {
     if (!playerId || !players) return null;
