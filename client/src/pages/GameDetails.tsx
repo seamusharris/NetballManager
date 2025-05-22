@@ -248,33 +248,91 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
           })}
         </div>
         
-        {/* Vertical roster buttons */}
-        <div className="flex flex-col space-y-2 min-w-[200px]">
-          {/* Display positions in order from GS to GK */}
-          {POSITIONS.map(position => {
-            const entry = rosterByQuarter[quarter]?.[position];
-            const playerName = getPlayerName(entry?.playerId);
-            const playerColor = getPlayerColor(entry?.playerId);
-            
-            return (
-              <div 
-                key={position} 
-                className="p-3 border rounded-md shadow-sm flex flex-col"
-                style={{ 
-                  backgroundColor: playerName ? `${playerColor}20` : 'white',
-                  border: playerName ? `2px solid ${playerColor}` : '1px solid #ddd',
-                }}
-              >
-                <div className="font-bold">{position}</div>
+        {/* Vertical roster buttons aligned with court thirds */}
+        <div className="flex flex-col min-w-[200px] h-full justify-between">
+          {/* Top third - GS, GA */}
+          <div className="flex flex-col space-y-2 mb-4">
+            {POSITIONS.slice(0, 2).map(position => {
+              const entry = rosterByQuarter[quarter]?.[position];
+              const playerName = getPlayerName(entry?.playerId);
+              const playerColor = getPlayerColor(entry?.playerId);
+              
+              return (
                 <div 
-                  className={playerName ? 'text-gray-900 font-medium' : 'text-red-500 italic'}
-                  style={{ color: playerName ? playerColor : undefined }}
+                  key={position} 
+                  className="p-3 border rounded-md shadow-sm flex flex-col"
+                  style={{ 
+                    backgroundColor: playerName ? `${playerColor}20` : 'white',
+                    border: playerName ? `2px solid ${playerColor}` : '1px solid #ddd',
+                  }}
                 >
-                  {playerName || 'Unassigned'}
+                  <div className="font-bold">{position}</div>
+                  <div 
+                    className={playerName ? 'text-gray-900 font-medium' : 'text-red-500 italic'}
+                    style={{ color: playerName ? playerColor : undefined }}
+                  >
+                    {playerName || 'Unassigned'}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
+          
+          {/* Middle third - WA, C, WD */}
+          <div className="flex flex-col space-y-2 mb-4">
+            {POSITIONS.slice(2, 5).map(position => {
+              const entry = rosterByQuarter[quarter]?.[position];
+              const playerName = getPlayerName(entry?.playerId);
+              const playerColor = getPlayerColor(entry?.playerId);
+              
+              return (
+                <div 
+                  key={position} 
+                  className="p-3 border rounded-md shadow-sm flex flex-col"
+                  style={{ 
+                    backgroundColor: playerName ? `${playerColor}20` : 'white',
+                    border: playerName ? `2px solid ${playerColor}` : '1px solid #ddd',
+                  }}
+                >
+                  <div className="font-bold">{position}</div>
+                  <div 
+                    className={playerName ? 'text-gray-900 font-medium' : 'text-red-500 italic'}
+                    style={{ color: playerName ? playerColor : undefined }}
+                  >
+                    {playerName || 'Unassigned'}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          
+          {/* Bottom third - GD, GK */}
+          <div className="flex flex-col space-y-2">
+            {POSITIONS.slice(5).map(position => {
+              const entry = rosterByQuarter[quarter]?.[position];
+              const playerName = getPlayerName(entry?.playerId);
+              const playerColor = getPlayerColor(entry?.playerId);
+              
+              return (
+                <div 
+                  key={position} 
+                  className="p-3 border rounded-md shadow-sm flex flex-col"
+                  style={{ 
+                    backgroundColor: playerName ? `${playerColor}20` : 'white',
+                    border: playerName ? `2px solid ${playerColor}` : '1px solid #ddd',
+                  }}
+                >
+                  <div className="font-bold">{position}</div>
+                  <div 
+                    className={playerName ? 'text-gray-900 font-medium' : 'text-red-500 italic'}
+                    style={{ color: playerName ? playerColor : undefined }}
+                  >
+                    {playerName || 'Unassigned'}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
       
