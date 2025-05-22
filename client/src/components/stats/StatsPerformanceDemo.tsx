@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { useGames, useGameStats } from '@/hooks/use-data-loader';
+import { useGames } from '@/hooks/use-data-loader';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2, RefreshCw, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Game, GameStat } from '@shared/schema';
 
 /**
  * A demo component to showcase optimized data loading with
@@ -16,6 +17,10 @@ import { cn } from '@/lib/utils';
  */
 export function StatsPerformanceDemo() {
   const [selectedGameId, setSelectedGameId] = useState<number | null>(null);
+  const [activeTab, setActiveTab] = useState("games");
+  const [gameStats, setGameStats] = useState<GameStat[] | null>(null);
+  const [statsLoading, setStatsLoading] = useState(false);
+  const [statsError, setStatsError] = useState(false);
   
   const { 
     data: games, 
@@ -24,13 +29,6 @@ export function StatsPerformanceDemo() {
     refetch: refetchGames
   } = useGames();
   
-  const {
-    data: gameStats,
-    isLoading: statsLoading,
-    isError: statsError, 
-    refetch: refetchStats
-  } = useGameStats(selectedGameId);
-  
   // Filter to only include completed games
   const completedGames = games?.filter(game => 
     game.status === 'completed' || game.status === 'forfeit-win' || game.status === 'forfeit-loss'
@@ -38,6 +36,44 @@ export function StatsPerformanceDemo() {
   
   const handleGameSelect = (gameId: number) => {
     setSelectedGameId(gameId);
+  };
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    
+    // Load game stats when switching to the stats tab
+    if (value === "stats" && selectedGameId) {
+      loadGameStats(selectedGameId);
+    }
+  };
+
+  const loadGameStats = async (gameId: number) => {
+    if (!gameId) return;
+    
+    setStatsLoading(true);
+    setStatsError(false);
+    
+    try {
+      const response = await fetch(`/api/games/${gameId}/stats`);
+      
+      if (!response.ok) {
+        throw new Error(`Failed to load game stats: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      setGameStats(data);
+    } catch (error) {
+      console.error("Error loading game stats:", error);
+      setStatsError(true);
+    } finally {
+      setStatsLoading(false);
+    }
+  };
+
+  const refreshStats = () => {
+    if (selectedGameId) {
+      loadGameStats(selectedGameId);
+    }
   };
   
   return (
@@ -55,7 +91,7 @@ export function StatsPerformanceDemo() {
       </CardHeader>
       
       <CardContent>
-        <Tabs defaultValue="games" className="w-full">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="games">Game List</TabsTrigger>
             <TabsTrigger value="stats" disabled={!selectedGameId}>
@@ -150,7 +186,7 @@ export function StatsPerformanceDemo() {
                   <Button 
                     variant="outline" 
                     size="sm"
-                    onClick={() => refetchStats()}
+                    onClick={refreshStats}
                     disabled={statsLoading}
                     className="flex items-center gap-1"
                   >
@@ -159,61 +195,64 @@ export function StatsPerformanceDemo() {
                   </Button>
                 </div>
                 
-                <div className="border rounded-md p-4">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {Array.from(new Set(gameStats?.map(stat => stat.position) || [])).map(position => (
-                      <div key={position} className="border rounded-md p-3">
-                        <h4 className="font-medium mb-2">{position}</h4>
-                        <div className="space-y-1">
-                          {gameStats
-                            ?.filter(stat => stat.position === position)
-                            .map(stat => (
-                              <div key={stat.id} className="flex justify-between text-sm">
-                                <span>Quarter {stat.quarter}</span>
-                                <div className="flex items-center gap-1">
-                                  {stat.goalsFor > 0 && (
-                                    <Badge variant="outline" className="text-xs">
-                                      {stat.goalsFor} Goals
-                                    </Badge>
-                                  )}
-                                  {stat.intercepts > 0 && (
-                                    <Badge variant="outline" className="text-xs">
-                                      {stat.intercepts} Int
-                                    </Badge>
-                                  )}
-                                </div>
+                {gameStats && gameStats.length > 0 ? (
+                  <div className="border rounded-md overflow-hidden">
+                    <table className="w-full border-collapse">
+                      <thead className="bg-muted/50">
+                        <tr>
+                          <th className="p-2 text-sm font-medium text-left border-b">Position</th>
+                          <th className="p-2 text-sm font-medium text-left border-b">Quarter</th>
+                          <th className="p-2 text-sm font-medium text-center border-b">Goals</th>
+                          <th className="p-2 text-sm font-medium text-center border-b">Intercepts</th>
+                          <th className="p-2 text-sm font-medium text-center border-b">Errors</th>
+                          <th className="p-2 text-sm font-medium text-center border-b">Misc</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {gameStats.map(stat => (
+                          <tr key={`${stat.position}-${stat.quarter}`} className="hover:bg-accent/10">
+                            <td className="p-2 border-b">
+                              <Badge variant="outline">{stat.position}</Badge>
+                            </td>
+                            <td className="p-2 border-b">Q{stat.quarter}</td>
+                            <td className="p-2 text-center border-b">
+                              <div className="flex items-center justify-center gap-1">
+                                <span className="font-medium">{stat.goalsFor || 0}</span>
+                                <span className="text-sm text-muted-foreground">({stat.missedGoals || 0} miss)</span>
                               </div>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
+                            </td>
+                            <td className="p-2 text-center border-b">{stat.intercepts || 0}</td>
+                            <td className="p-2 text-center border-b">
+                              {(stat.badPass || 0) + (stat.handlingError || 0)}
+                            </td>
+                            <td className="p-2 text-center border-b">
+                              <div className="flex items-center justify-center gap-2">
+                                <span className="text-xs text-muted-foreground">Pick: {stat.pickUp || 0}</span>
+                                <span className="text-xs text-muted-foreground">Inf: {stat.infringement || 0}</span>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
-                </div>
+                ) : (
+                  <div className="p-8 text-center text-muted-foreground border rounded-md">
+                    No statistics available for this game
+                  </div>
+                )}
               </>
             )}
           </TabsContent>
         </Tabs>
       </CardContent>
       
-      <CardFooter className="bg-muted/50 flex justify-between text-xs text-muted-foreground">
-        <div className="flex items-center gap-1">
-          <div className="flex items-center">
-            <CheckCircle2 className="h-3 w-3 text-green-500 mr-1" />
-            <span>Optimized Query Caching</span>
-          </div>
+      <CardFooter className="flex justify-between text-sm text-muted-foreground border-t pt-4">
+        <div className="flex items-center gap-2">
+          <CheckCircle2 className="h-4 w-4 text-green-500" />
+          <span>Data caching enabled</span>
         </div>
-        <div className="flex items-center gap-1">
-          <div className="flex items-center">
-            <CheckCircle2 className="h-3 w-3 text-green-500 mr-1" />
-            <span>Connection Pool Management</span>
-          </div>
-        </div>
-        <div className="flex items-center gap-1">
-          <div className="flex items-center">
-            <CheckCircle2 className="h-3 w-3 text-green-500 mr-1" />
-            <span>Indexed Database Queries</span>
-          </div>
-        </div>
+        <div>Stale time: 5 minutes</div>
       </CardFooter>
     </Card>
   );
