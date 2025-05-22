@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet';
 import { TEAM_NAME } from '@/lib/settings';
 import { PositionBox } from '@/components/games/PositionBox';
+import { StatItemBox } from '@/components/games/StatItemBox';
 import { 
   Card, 
   CardContent, 
@@ -28,39 +29,12 @@ import {
   DialogTitle,
   DialogFooter
 } from '@/components/ui/dialog';
-import GameStatusBadge from '@/components/games/GameStatusBadge';
-import GameStatusButton from '@/components/games/GameStatusButton';
-import CourtPositionRoster from '@/components/roster/CourtPositionRoster';
-import { capitalize } from '@/lib/utils';
+import { GameStatusBadge } from '@/components/games/GameStatusBadge';
+import { GameStatusButton } from '@/components/games/GameStatusButton';
+import { GameDetailsStatusButton } from '@/components/games/GameDetailsStatusButton';
 import { apiRequest } from '@/lib/queryClient';
-import GameDetailsStatusButton from '@/components/games/GameDetailsStatusButton';
 
-// Simplified Position Box Component that uses StatItemBox
-const PositionStatsBox = ({ position, playerName, playerColor, playerStats }) => {
-  return (
-    <div 
-      className="p-2 border rounded-md shadow-sm" 
-      style={{ 
-        backgroundColor: playerName ? `${playerColor}10` : 'white',
-        border: playerName ? `2px solid ${playerColor}` : '1px solid #ddd',
-        width: '110px',
-        height: 'auto'
-      }}
-    >
-      <div className="text-center font-medium mb-1">{position}</div>
-      {playerName && playerStats && (
-        <div className="bg-gray-50 p-2 rounded-md border border-gray-100">
-          <div className="flex flex-col space-y-1 text-xs">
-            <StatItemBox label="Goals" value={playerStats.stats.goals} />
-            <StatItemBox label="Rebounds" value={playerStats.stats.rebounds} />
-            <StatItemBox label="Int" value={playerStats.stats.intercepts} />
-            <StatItemBox label="Assists" value={playerStats.stats.assists} />
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
+// Using the external PositionBox component instead of inline version
 
 // Component for rendering a player circle on the court
 const PlayerCircle = ({ position, playerName, playerColor, x, y }) => {
@@ -460,12 +434,10 @@ export default function GameDetails() {
                 <h3 className="text-sm font-medium mb-2">Game Scores</h3>
                 <div 
                   className={cn("flex items-center justify-between p-4 rounded-lg", {
-                    "bg-green-50 border border-green-200": teamWon && game.status === 'completed',
-                    "bg-red-50 border border-red-200": teamLost && game.status === 'completed',
+                    "bg-green-50 border border-green-200": (teamWon && game.status === 'completed') || game.status === 'forfeit-win',
+                    "bg-red-50 border border-red-200": (teamLost && game.status === 'completed') || game.status === 'forfeit-loss',
                     "bg-yellow-50 border border-yellow-200": isDraw,
-                    "bg-gray-50 border border-gray-200": game.status !== 'completed' && game.status !== 'forfeit-win' && game.status !== 'forfeit-loss',
-                    "bg-green-50 border border-green-200": game.status === 'forfeit-win',
-                    "bg-red-50 border border-red-200": game.status === 'forfeit-loss'
+                    "bg-gray-50 border border-gray-200": game.status !== 'completed' && game.status !== 'forfeit-win' && game.status !== 'forfeit-loss'
                   })}
                 >
                   <div className="text-center">
@@ -607,12 +579,17 @@ export default function GameDetails() {
                         const playerStats = getPlayerPerformanceStats(position);
                         
                         return (
-                          <PositionStatsBox
+                          <PositionBox
                             key={position}
                             position={position}
                             playerName={playerName}
                             playerColor={playerColor}
-                            playerStats={playerStats}
+                            stats={{
+                              goals: playerStats?.stats.goals || 0,
+                              rebounds: playerStats?.stats.rebounds || 0,
+                              intercepts: playerStats?.stats.intercepts || 0,
+                              assists: playerStats?.stats.assists || 0
+                            }}
                           />
                         );
                       })}
@@ -627,12 +604,17 @@ export default function GameDetails() {
                         const playerStats = getPlayerPerformanceStats(position);
                         
                         return (
-                          <PositionStatsBox
+                          <PositionBox
                             key={position}
                             position={position}
                             playerName={playerName}
                             playerColor={playerColor}
-                            playerStats={playerStats}
+                            stats={{
+                              goals: playerStats?.stats.goals || 0,
+                              rebounds: playerStats?.stats.rebounds || 0,
+                              intercepts: playerStats?.stats.intercepts || 0,
+                              assists: playerStats?.stats.assists || 0
+                            }}
                           />
                         );
                       })}
@@ -647,12 +629,17 @@ export default function GameDetails() {
                         const playerStats = getPlayerPerformanceStats(position);
                         
                         return (
-                          <PositionStatsBox
+                          <PositionBox
                             key={position}
                             position={position}
                             playerName={playerName}
                             playerColor={playerColor}
-                            playerStats={playerStats}
+                            stats={{
+                              goals: playerStats?.stats.goals || 0,
+                              rebounds: playerStats?.stats.rebounds || 0,
+                              intercepts: playerStats?.stats.intercepts || 0,
+                              assists: playerStats?.stats.assists || 0
+                            }}
                           />
                         );
                       })}
