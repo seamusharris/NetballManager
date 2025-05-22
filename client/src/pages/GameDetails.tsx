@@ -280,9 +280,9 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
         
         {/* Right column - Roster positions with stats (half width) */}
         <div>
-          <div className="flex flex-col space-y-3">
-            {/* Top third - Attack positions */}
-            <div className="space-y-2">
+          <div className="flex flex-col space-y-0 justify-between h-full">
+            {/* Top third - Attack positions (GS, GA) */}
+            <div className="space-y-3 mb-3" style={{ height: '33%' }}>
               {POSITIONS.slice(0, 2).map(position => {
                 const entry = rosterByQuarter[quarter]?.[position];
                 const playerName = getPlayerName(entry?.playerId);
@@ -371,9 +371,8 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
               })}
             </div>
             
-            {/* Middle third */}
-            <div className="space-y-3">
-              <h3 className="text-sm font-medium text-gray-500">Mid Court</h3>
+            {/* Middle third positions (WA, C, WD) */}
+            <div className="space-y-3 my-3" style={{ height: '33%' }}>
               {POSITIONS.slice(2, 5).map(position => {
                 const entry = rosterByQuarter[quarter]?.[position];
                 const playerName = getPlayerName(entry?.playerId);
@@ -462,9 +461,8 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
               })}
             </div>
             
-            {/* Bottom third */}
-            <div className="space-y-3">
-              <h3 className="text-sm font-medium text-gray-500">Defense Third</h3>
+            {/* Bottom third - Defense positions (GD, GK) */}
+            <div className="space-y-3 mt-3" style={{ height: '33%' }}>
               {POSITIONS.slice(5).map(position => {
                 const entry = rosterByQuarter[quarter]?.[position];
                 const playerName = getPlayerName(entry?.playerId);
