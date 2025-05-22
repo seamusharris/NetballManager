@@ -296,8 +296,8 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
       
       {/* Horizontal court layout with stats below */}
       <div className="flex flex-col gap-6 max-w-7xl mx-auto px-4">
-        {/* Horizontal court diagram */}
-        <div className="relative w-full mx-auto h-44 bg-green-100 rounded-lg border border-green-300 shadow-md">
+        {/* Horizontal court diagram - taller and more proportional to an actual netball court */}
+        <div className="relative w-full mx-auto h-64 bg-green-100 rounded-lg border border-green-300 shadow-md">
           {/* Court markings - three equal vertical sections for horizontal layout */}
           <div className="absolute inset-0 flex flex-row">
             <div className="w-1/3 border-r border-green-200"></div>
@@ -308,10 +308,14 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
           {/* Center line */}
           <div className="absolute top-1/2 left-0 right-0 h-px border-t border-dashed border-green-300"></div>
           
-          {/* Center circles for horizontal layout */}
-          <div className="w-12 h-12 absolute top-[50%] left-[16.5%] -translate-x-1/2 -translate-y-1/2 border-2 border-green-300 rounded-full"></div>
-          <div className="w-12 h-12 absolute top-[50%] left-[50%] -translate-x-1/2 -translate-y-1/2 border-2 border-green-300 rounded-full"></div>
-          <div className="w-12 h-12 absolute top-[50%] left-[83.5%] -translate-x-1/2 -translate-y-1/2 border-2 border-green-300 rounded-full"></div>
+          {/* Goal circles - larger for better proportions */}
+          <div className="w-20 h-20 absolute top-[50%] left-[16.5%] -translate-x-1/2 -translate-y-1/2 border-2 border-green-300 rounded-full"></div>
+          <div className="w-20 h-20 absolute top-[50%] left-[50%] -translate-x-1/2 -translate-y-1/2 border-2 border-green-300 rounded-full"></div>
+          <div className="w-20 h-20 absolute top-[50%] left-[83.5%] -translate-x-1/2 -translate-y-1/2 border-2 border-green-300 rounded-full"></div>
+          
+          {/* Goal posts (semicircles) at each end */}
+          <div className="absolute top-[50%] left-0 transform -translate-y-1/2 w-4 h-16 border-r-2 border-green-400 rounded-r-full"></div>
+          <div className="absolute top-[50%] right-0 transform -translate-y-1/2 w-4 h-16 border-l-2 border-green-400 rounded-l-full"></div>
 
           {/* Updated position coordinates for horizontal court */}
           {POSITIONS.map(position => {
@@ -350,8 +354,8 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
                     backgroundColor: bgColor,
                     boxShadow: '0 4px 8px rgba(0, 0, 0, 0.5)',
                     border: playerName ? '3px solid white' : '2px solid red',
-                    width: '4rem',
-                    height: '4rem',
+                    width: '5rem',
+                    height: '5rem',
                     borderRadius: '100%',
                     display: 'flex',
                     flexDirection: 'column',
@@ -360,12 +364,12 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
                     padding: '0.25rem'
                   }}
                 >
-                  <div className="font-bold text-center text-base" style={{ color: textColor }}>{position}</div>
+                  <div className="font-bold text-center text-lg" style={{ color: textColor }}>{position}</div>
                   {playerName && (
-                    <div className="text-xs text-center font-medium leading-tight" style={{ color: textColor }}>{playerName}</div>
+                    <div className="text-sm text-center font-medium leading-tight" style={{ color: textColor }}>{playerName}</div>
                   )}
                   {!playerName && (
-                    <div className="text-xs text-red-500 text-center">Unassigned</div>
+                    <div className="text-sm text-red-500 text-center">Unassigned</div>
                   )}
                 </div>
               </div>
