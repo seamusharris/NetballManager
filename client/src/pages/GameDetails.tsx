@@ -615,7 +615,7 @@ export default function GameDetails() {
             </Button>
           )}
           <Button variant="outline" size="sm" asChild>
-            <Link to="#">
+            <Link to={`/games/edit/${game.id}`}>
               <Edit className="mr-1 h-4 w-4" />
               Edit Game
             </Link>
