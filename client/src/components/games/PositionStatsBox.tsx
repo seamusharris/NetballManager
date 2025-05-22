@@ -19,14 +19,16 @@ export const PositionStatsBox: React.FC<PositionStatsBoxProps> = ({
   // Get the stats for this position
   const statsToShow = positionStats[position] || [];
   
+  // Create a more compact grid layout by splitting stats into columns
   const content = (
-    <div className="mt-1 bg-gray-50 p-3 rounded-md border border-gray-100">
-      <div className="flex flex-col space-y-2 text-sm">
+    <div className="mt-1 bg-gray-50 p-2 rounded-md border border-gray-100">
+      <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-xs">
         {statsToShow.map((statKey) => (
           <StatItemBox 
             key={statKey}
             label={statLabels[statKey as StatCategory]} 
-            value={stats[statKey] || 0} 
+            value={stats[statKey] || 0}
+            compact={true}
           />
         ))}
       </div>
@@ -38,8 +40,8 @@ export const PositionStatsBox: React.FC<PositionStatsBoxProps> = ({
   }
   
   return (
-    <div className={`p-3 border rounded-md shadow-sm flex-1 flex flex-col ${className}`}>
-      <div className="font-semibold text-lg">{position}</div>
+    <div className={`p-2 border rounded-md shadow-sm flex-1 flex flex-col ${className}`}>
+      <div className="font-semibold text-sm">{position}</div>
       {content}
     </div>
   );
