@@ -31,15 +31,15 @@ interface GameStatusButtonProps {
 export function getStatusClass(status: string): string {
   switch (status) {
     case 'in-progress':
-      return 'bg-amber-500 hover:bg-amber-600';
+      return 'bg-amber-100 text-amber-800 hover:bg-amber-200';
     case 'completed':
-      return 'bg-emerald-500 hover:bg-emerald-600';
+      return 'bg-green-100 text-green-800 hover:bg-green-200';
     case 'forfeit-win':
-      return 'bg-blue-500 hover:bg-blue-600';
+      return 'bg-orange-100 text-orange-800 hover:bg-orange-200';
     case 'forfeit-loss':
-      return 'bg-red-500 hover:bg-red-600';
+      return 'bg-red-100 text-red-800 hover:bg-red-200';
     default:
-      return 'bg-neutral hover:bg-neutral-dark';
+      return 'bg-blue-100 text-blue-800 hover:bg-blue-200';
   }
 }
 
@@ -67,7 +67,7 @@ export function GameStatusButton({ game, className = '', size = 'default', withD
   const [selectedStatus, setSelectedStatus] = useState<GameStatus>(game.status as GameStatus);
   
   // Keep selectedStatus in sync with game.status when it changes
-  useEffect(() => {
+  React.useEffect(() => {
     setSelectedStatus(game.status as GameStatus);
   }, [game.status]);
   
@@ -110,6 +110,7 @@ export function GameStatusButton({ game, className = '', size = 'default', withD
   if (!withDialog) {
     return (
       <Badge 
+        variant="outline"
         className={`${getStatusClass(game.status as string)} ${badgeSize} ${className}`}
       >
         {getStatusDisplay(game.status as string)}
@@ -123,7 +124,8 @@ export function GameStatusButton({ game, className = '', size = 'default', withD
       <DialogTrigger asChild>
         <div>
           <Badge 
-            className={`${getStatusClass(game.status as string)} cursor-pointer ${badgeSize} ${className}`}
+            variant="outline"
+            className={`${getStatusClass(game.status as string)} cursor-pointer ${badgeSize} ${className} rounded-full`}
           >
             {getStatusDisplay(game.status as string)}
           </Badge>
