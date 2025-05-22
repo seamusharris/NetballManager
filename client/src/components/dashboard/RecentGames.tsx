@@ -156,7 +156,7 @@ export default function RecentGames({ games, opponents, className }: RecentGames
             recentGames.map(game => (
               <Link key={game.id} href={`/games/${game.id}`}>
                 <div 
-                  className={`flex justify-between items-center p-4 my-4 border-l-4 rounded ${getResultClass(game)} cursor-pointer hover:bg-accent/10 transition-colors`}
+                  className={`flex justify-between items-center p-4 mb-4 mt-2 border-l-4 rounded ${getResultClass(game)} cursor-pointer hover:bg-accent/10 transition-colors`}
                 >
                   <div>
                     <p className="font-semibold">vs. {getOpponentName(game.opponentId)}</p>
