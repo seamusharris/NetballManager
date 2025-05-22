@@ -154,25 +154,26 @@ export default function RecentGames({ games, opponents, className }: RecentGames
             <p className="text-gray-500 text-center py-4">No recent games to display</p>
           ) : (
             recentGames.map(game => (
-              <div 
-                key={game.id} 
-                className={`flex justify-between items-center p-3 border-l-4 rounded ${getResultClass(game)}`}
-              >
-                <div>
-                  <p className="font-semibold">vs. {getOpponentName(game.opponentId)}</p>
-                  <div className="flex items-center gap-2">
-                    <p className="text-xs text-gray-500">{formatShortDate(game.date)}</p>
-                    {game.round && (
-                      <span className="text-xs px-1.5 py-0.5 bg-secondary/10 text-secondary rounded-full">
-                        Round {game.round}
-                      </span>
-                    )}
+              <Link key={game.id} href={`/games/${game.id}`}>
+                <div 
+                  className={`flex justify-between items-center p-3 border-l-4 rounded ${getResultClass(game)} cursor-pointer hover:bg-accent/10 transition-colors`}
+                >
+                  <div>
+                    <p className="font-semibold">vs. {getOpponentName(game.opponentId)}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-xs text-gray-500">{formatShortDate(game.date)}</p>
+                      {game.round && (
+                        <span className="text-xs px-1.5 py-0.5 bg-secondary/10 text-secondary rounded-full">
+                          Round {game.round}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className={`font-bold ${getResultTextClass(game)}`}>{getResultText(game)}</p>
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className={`font-bold ${getResultTextClass(game)}`}>{getResultText(game)}</p>
-                </div>
-              </div>
+              </Link>
             ))
           )}
         </div>

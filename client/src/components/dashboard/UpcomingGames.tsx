@@ -35,24 +35,25 @@ export default function UpcomingGames({ games, opponents, className }: UpcomingG
         {upcomingGames.length > 0 ? (
           <div className="space-y-4">
             {upcomingGames.map((game, index) => (
-              <div 
-                key={game.id} 
-                className={`flex justify-between items-center p-3 border-l-4 rounded ${
-                  index === 0 ? 'border-primary bg-primary/5' : 'border-accent bg-accent/5'
-                }`}
-              >
-                <div>
-                  <p className="font-semibold">vs. {getOpponentName(game.opponentId)}</p>
-                  <div className="flex items-center gap-2">
-                    <p className="text-xs text-gray-500">{formatShortDate(game.date)} • {game.time}</p>
-                    {game.round && (
-                      <span className="text-xs px-1.5 py-0.5 bg-secondary/10 text-secondary rounded-full">
-                        Round {game.round}
-                      </span>
-                    )}
+              <Link key={game.id} href={`/games/${game.id}`}>
+                <div 
+                  className={`flex justify-between items-center p-3 border-l-4 rounded cursor-pointer hover:bg-accent/10 transition-colors ${
+                    index === 0 ? 'border-primary bg-primary/5' : 'border-accent bg-accent/5'
+                  }`}
+                >
+                  <div>
+                    <p className="font-semibold">vs. {getOpponentName(game.opponentId)}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-xs text-gray-500">{formatShortDate(game.date)} • {game.time}</p>
+                      {game.round && (
+                        <span className="text-xs px-1.5 py-0.5 bg-secondary/10 text-secondary rounded-full">
+                          Round {game.round}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         ) : (
