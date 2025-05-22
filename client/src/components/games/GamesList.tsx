@@ -124,40 +124,54 @@ export default function GamesList({
     staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
   });
   
-  // Use React Query to fetch and cache statistics for all games, not just completed ones
-  const allGameIds = games.map(game => game.id);
-  
+  // Use React Query to fetch and cache statistics for all games in a single request
   const { data: allGameStats, isLoading: isLoadingStats } = useQuery({
-    queryKey: ['allGameStats', ...allGameIds],
+    queryKey: ['allGameStats', completedGameIds.length],
     queryFn: async () => {
-      if (allGameIds.length === 0) {
+      if (completedGameIds.length === 0) {
         return {};
       }
       
       // Create a map to store stats by game ID
       const statsMap: Record<number, any[]> = {};
       
-      // Fetch stats for all games with a timestamp to prevent caching
-      const timestamp = new Date().getTime(); // Add timestamp to force fresh data
-      const statsPromises = allGameIds.map(async (gameId) => {
-        const response = await fetch(`/api/games/${gameId}/stats?_t=${timestamp}`);
-        const stats = await response.json();
-        return { gameId, stats };
+      // Initialize stats map with empty arrays for all games
+      games.forEach(game => {
+        statsMap[game.id] = [];
       });
       
-      const results = await Promise.all(statsPromises);
-      
-      // Organize stats by game ID
-      results.forEach(result => {
-        statsMap[result.gameId] = result.stats;
-      });
+      // Only perform API request if we have completed games
+      if (completedGameIds.length > 0) {
+        try {
+          // Get all stats for completed games in a single batch request
+          const timestamp = new Date().getTime();
+          const response = await fetch(`/api/gamestats/batch?gameIds=${completedGameIds.join(',')}&_t=${timestamp}`);
+          
+          if (!response.ok) {
+            console.error("Error fetching game stats batch:", response.status);
+            return statsMap; // Return empty map on error
+          }
+          
+          const allStats = await response.json();
+          
+          // Group stats by gameId
+          allStats.forEach((stat: any) => {
+            if (!statsMap[stat.gameId]) {
+              statsMap[stat.gameId] = [];
+            }
+            statsMap[stat.gameId].push(stat);
+          });
+        } catch (error) {
+          console.error("Error fetching game stats:", error);
+        }
+      }
       
       return statsMap;
     },
-    enabled: allGameIds.length > 0,
-    staleTime: 0, // Always refetch when needed
-    refetchOnMount: true, // Always refetch when component mounts
-    refetchOnWindowFocus: true // Refetch when window regains focus
+    enabled: completedGameIds.length > 0,
+    staleTime: 30000, // Consider data fresh for 30 seconds
+    refetchOnMount: true,
+    refetchOnWindowFocus: true
   });
 
   // Determine game stats status
