@@ -33,24 +33,20 @@ import { GameStatusButton } from '@/components/games/GameStatusButton';
 import { apiRequest } from '@/lib/queryClient';
 import { GameDetailsStatusButton } from '@/components/games/GameDetailsStatusButton';
 
-// This is a helper component that normalizes roster data into a format easier to work with
-const RosterSummary = ({ roster, players }) => {
+// This is a helper function that normalizes roster data into a format easier to work with
+const processRosterData = (roster, players) => {
+  if (!roster || !Array.isArray(roster) || !players) return {};
+  
   // Build a position-to-player lookup
-  const positionData = useMemo(() => {
-    if (!roster || !players) return {};
+  return roster.reduce((acc, entry) => {
+    // Each entry has: quarter, position, playerId
+    if (!acc[entry.quarter]) {
+      acc[entry.quarter] = {};
+    }
     
-    return roster.reduce((acc, entry) => {
-      // Each entry has: quarter, position, playerId
-      if (!acc[entry.quarter]) {
-        acc[entry.quarter] = {};
-      }
-      
-      acc[entry.quarter][entry.position] = entry.playerId;
-      return acc;
-    }, {});
-  }, [roster, players]);
-
-  return positionData;
+    acc[entry.quarter][entry.position] = entry.playerId;
+    return acc;
+  }, {});
 };
 
 export default function GameDetails() {
@@ -191,68 +187,64 @@ export default function GameDetails() {
     };
   };
 
-  // Calculate quarter-by-quarter score breakdown
-  const quarterScores = useMemo(() => {
-    if (!gameStats || !gameStats.length) return [];
+  // Calculate quarter-by-quarter score breakdown directly to avoid hook errors
+  const getDefaultQuarterScores = () => {
+    return Array(4).fill(0).map((_, i) => ({
+      quarter: i + 1,
+      teamTotal: 0,
+      opponentTotal: 0,
+      teamQuarter: 0,
+      opponentQuarter: 0
+    }));
+  };
+  
+  // Use a simple approach without hooks
+  let quarterScores = getDefaultQuarterScores();
+  
+  // Only calculate if we have valid game stats
+  if (gameStats && Array.isArray(gameStats) && gameStats.length > 0) {
+    // Create a fixed size array for quarters
+    const quarterData = [
+      { quarter: 1, teamScore: 0, opponentScore: 0 },
+      { quarter: 2, teamScore: 0, opponentScore: 0 },
+      { quarter: 3, teamScore: 0, opponentScore: 0 },
+      { quarter: 4, teamScore: 0, opponentScore: 0 }
+    ];
     
-    // Group stats by quarter (using an object instead of array to avoid useMemo dependency issues)
-    const scoresByQuarterObj = {};
-    
+    // Process all stats safely
     gameStats.forEach(stat => {
-      const quarterIdx = stat.quarter - 1;
-      if (!scoresByQuarterObj[quarterIdx]) {
-        scoresByQuarterObj[quarterIdx] = { 
-          quarter: stat.quarter, 
-          teamScore: 0, 
-          opponentScore: 0 
-        };
-      }
+      if (!stat || typeof stat.quarter !== 'number' || stat.quarter < 1 || stat.quarter > 4) return;
       
-      // Only count goals from GS and GA positions
+      const quarterIdx = stat.quarter - 1;
+      
+      // Count team goals from GS and GA positions
       if (stat.position === 'GS' || stat.position === 'GA') {
-        scoresByQuarterObj[quarterIdx].teamScore += (stat.goalsFor || 0);
+        quarterData[quarterIdx].teamScore += (stat.goalsFor || 0);
       }
       
       // Count opponent goals scored against GD and GK
       if (stat.position === 'GD' || stat.position === 'GK') {
-        scoresByQuarterObj[quarterIdx].opponentScore += (stat.goalsAgainst || 0);
+        quarterData[quarterIdx].opponentScore += (stat.goalsAgainst || 0);
       }
     });
     
-    // Fill in any missing quarters (in case there are no stats for a quarter yet)
-    const filledScores = [];
-    for (let i = 0; i < 4; i++) {
-      filledScores[i] = scoresByQuarterObj[i] || { 
-        quarter: i + 1, 
-        teamScore: 0, 
-        opponentScore: 0 
+    // Calculate running totals
+    let runningTeamTotal = 0;
+    let runningOpponentTotal = 0;
+    
+    quarterScores = quarterData.map(quarter => {
+      runningTeamTotal += quarter.teamScore;
+      runningOpponentTotal += quarter.opponentScore;
+      
+      return {
+        quarter: quarter.quarter,
+        teamTotal: runningTeamTotal,
+        opponentTotal: runningOpponentTotal,
+        teamQuarter: quarter.teamScore,
+        opponentQuarter: quarter.opponentScore
       };
-    }
-    
-    // Generate running totals
-    const runningTotals = [];
-    filledScores.forEach((current, index) => {
-      if (index === 0) {
-        runningTotals.push({
-          quarter: current.quarter,
-          teamTotal: current.teamScore,
-          opponentTotal: current.opponentScore,
-          teamQuarter: current.teamScore,
-          opponentQuarter: current.opponentScore
-        });
-      } else {
-        runningTotals.push({
-          quarter: current.quarter,
-          teamTotal: runningTotals[index - 1].teamTotal + current.teamScore,
-          opponentTotal: runningTotals[index - 1].opponentTotal + current.opponentScore,
-          teamQuarter: current.teamScore,
-          opponentQuarter: current.opponentScore
-        });
-      }
     });
-    
-    return runningTotals;
-  }, [gameStats ? gameStats.length : 0]);
+  }
 
   const finalScore = quarterScores.length > 0 ? {
     teamScore: quarterScores.reduce((sum, q) => sum + q.teamQuarter, 0),
@@ -411,14 +403,15 @@ export default function GameDetails() {
               <div>
                 <h3 className="text-sm font-medium mb-2">Game Scores</h3>
                 <div 
-                  className={cn("flex items-center justify-between p-4 rounded-lg", {
-                    "bg-green-50 border border-green-200": teamWon && game.status === 'completed',
-                    "bg-red-50 border border-red-200": teamLost && game.status === 'completed',
-                    "bg-yellow-50 border border-yellow-200": isDraw,
-                    "bg-gray-50 border border-gray-200": game.status !== 'completed' && game.status !== 'forfeit-win' && game.status !== 'forfeit-loss',
-                    "bg-green-50 border border-green-200": game.status === 'forfeit-win',
-                    "bg-red-50 border border-red-200": game.status === 'forfeit-loss'
-                  })}
+                  className={cn("flex items-center justify-between p-4 rounded-lg", 
+                    (teamWon && game.status === 'completed') || game.status === 'forfeit-win'
+                      ? "bg-green-50 border border-green-200"
+                      : (teamLost && game.status === 'completed') || game.status === 'forfeit-loss'
+                        ? "bg-red-50 border border-red-200"
+                        : isDraw
+                          ? "bg-yellow-50 border border-yellow-200"
+                          : "bg-gray-50 border border-gray-200"
+                  )}
                 >
                   <div className="text-center">
                     <div className="text-sm font-medium">
