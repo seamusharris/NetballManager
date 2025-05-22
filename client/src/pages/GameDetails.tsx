@@ -15,7 +15,23 @@ import { Button } from '@/components/ui/button';
 import { ChevronLeft, Edit, BarChart3, ClipboardList, Activity } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { formatDate, cn } from '@/lib/utils';
-import { GameStatus, Position, POSITIONS } from '@shared/schema';
+import { GameStatus, Position, POSITIONS, allGameStatuses } from '@shared/schema';
+import { useToast } from '@/hooks/use-toast';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { 
   calculateGameScores, 
   getGameStatusColor 
@@ -436,6 +452,135 @@ const QuarterScoreCard = ({ quarterScores }) => {
 
 
 
+// Status change dialog component for game details page
+const StatusChangeDialog = ({ game }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState(game.status as GameStatus);
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  
+  // Keep selectedStatus in sync with game.status when it changes
+  useEffect(() => {
+    setSelectedStatus(game.status as GameStatus);
+  }, [game.status]);
+  
+  const updateGameStatus = async () => {
+    if (selectedStatus === game.status) {
+      setIsOpen(false);
+      return;
+    }
+    
+    setIsSubmitting(true);
+    try {
+      await fetch(`/api/games/${game.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: selectedStatus })
+      });
+      
+      // Force refresh all game data after status update
+      queryClient.invalidateQueries();
+      
+      toast({
+        title: 'Game status updated',
+        description: `Game status has been updated to ${selectedStatus === 'in-progress' ? 'In Progress' : 
+                      selectedStatus === 'completed' ? 'Completed' : 
+                      selectedStatus === 'upcoming' ? 'Upcoming' : 
+                      selectedStatus === 'forfeit-win' ? 'Forfeit Win' : 
+                      'Forfeit Loss'}.`,
+      });
+      
+      setIsOpen(false);
+    } catch (error) {
+      console.error('Failed to update game status:', error);
+      toast({
+        title: 'Failed to update game status',
+        description: 'An error occurred while updating the game status.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <Badge 
+          variant="outline" 
+          className={`px-2 py-1 text-xs cursor-pointer rounded-full transition-colors
+            ${game.status === 'upcoming' ? "bg-blue-100 text-blue-800 hover:bg-blue-200" : ""}
+            ${game.status === 'in-progress' ? "bg-amber-100 text-amber-800 hover:bg-amber-200" : ""}
+            ${game.status === 'completed' ? "bg-green-100 text-green-800 hover:bg-green-200" : ""}
+            ${game.status === 'forfeit-win' ? "bg-indigo-100 text-indigo-800 hover:bg-indigo-200" : ""}
+            ${game.status === 'forfeit-loss' ? "bg-red-100 text-red-800 hover:bg-red-200" : ""}
+          `}
+        >
+          {game.status === 'upcoming' && "Upcoming"}
+          {game.status === 'in-progress' && "In Progress"}
+          {game.status === 'completed' && "Completed"}
+          {game.status === 'forfeit-win' && "Forfeit Win (10-0)"}
+          {game.status === 'forfeit-loss' && "Forfeit Loss (0-10)"}
+        </Badge>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Update Game Status</DialogTitle>
+          <DialogDescription>
+            Change the status of this game.
+          </DialogDescription>
+        </DialogHeader>
+        
+        <div className="py-4">
+          <Select 
+            value={selectedStatus} 
+            onValueChange={(value) => setSelectedStatus(value as GameStatus)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select status" />
+            </SelectTrigger>
+            <SelectContent>
+              {allGameStatuses.map((status) => (
+                <SelectItem key={status} value={status}>
+                  {status === 'upcoming' ? 'Upcoming' : 
+                   status === 'in-progress' ? 'In Progress' : 
+                   status === 'completed' ? 'Completed' : 
+                   status === 'forfeit-win' ? 'Forfeit Win (10-0)' : 
+                   'Forfeit Loss (0-10)'}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          
+          {selectedStatus && (
+            <div className="text-sm text-muted-foreground mt-2">
+              {selectedStatus === 'forfeit-win' && (
+                <p>Opponent forfeited the game. Score will be recorded as 10-0 in our favor.</p>
+              )}
+              {selectedStatus === 'forfeit-loss' && (
+                <p>Our team forfeited the game. Score will be recorded as 0-10.</p>
+              )}
+            </div>
+          )}
+        </div>
+        
+        <div className="flex justify-end gap-3">
+          <Button variant="outline" onClick={() => setIsOpen(false)}>
+            Cancel
+          </Button>
+          <Button 
+            onClick={updateGameStatus}
+            disabled={isSubmitting || selectedStatus === game.status}
+          >
+            {isSubmitting ? 'Updating...' : 'Update Status'}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
 export default function GameDetails() {
   // Get game ID from URL
   const params = useParams();
@@ -617,48 +762,11 @@ export default function GameDetails() {
               <div className="flex items-center mt-1 space-x-3">
                 <span className="text-gray-500">{formatDate(game.date)}</span>
                 <span className="text-gray-500">{game.time}</span>
-                <Badge 
-                  variant="outline"
-                  className={`px-2 py-1 text-xs cursor-pointer rounded-full transition-colors
-                    ${game.status === 'upcoming' ? "bg-blue-100 text-blue-800 hover:bg-blue-200" : ""}
-                    ${game.status === 'in-progress' ? "bg-amber-100 text-amber-800 hover:bg-amber-200" : ""}
-                    ${game.status === 'completed' ? "bg-green-100 text-green-800 hover:bg-green-200" : ""}
-                    ${game.status === 'forfeit-win' ? "bg-indigo-100 text-indigo-800 hover:bg-indigo-200" : ""}
-                    ${game.status === 'forfeit-loss' ? "bg-red-100 text-red-800 hover:bg-red-200" : ""}
-                  `}
-                  onClick={() => {
-                    // Force data refresh after dialog closes
-                    const prevStatus = game.status;
-                    let newStatus = '';
-                    
-                    if (prevStatus === 'upcoming') newStatus = 'in-progress';
-                    else if (prevStatus === 'in-progress') newStatus = 'completed';
-                    else if (prevStatus === 'completed') newStatus = 'upcoming';
-                    else if (prevStatus === 'forfeit-win') newStatus = 'upcoming';
-                    else if (prevStatus === 'forfeit-loss') newStatus = 'upcoming';
-                    
-                    if (newStatus) {
-                      fetch(`/api/games/${game.id}`, {
-                        method: 'PATCH',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ status: newStatus })
-                      })
-                      .then(response => {
-                        if (response.ok) {
-                          // Force refresh all game data after status update
-                          queryClient.invalidateQueries();
-                          console.log(`Game status updated from ${prevStatus} to ${newStatus}`);
-                        }
-                      });
-                    }
-                  }}
-                >
-                  {game.status === 'upcoming' && "Upcoming"}
-                  {game.status === 'in-progress' && "In Progress"}
-                  {game.status === 'completed' && "Completed"}
-                  {game.status === 'forfeit-win' && "Forfeit Win (10-0)"}
-                  {game.status === 'forfeit-loss' && "Forfeit Loss (0-10)"}
-                </Badge>
+                <GameStatusButton 
+                  game={game}
+                  size="sm"
+                  withDialog={true} 
+                />
               </div>
             </div>
             
