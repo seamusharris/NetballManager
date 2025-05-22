@@ -196,101 +196,16 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
         </div>
       </div>
       
-      <div className="flex flex-row space-x-8 justify-center">
-        {/* Court diagram and roster buttons side by side */}
-        <div className="relative w-full max-w-lg aspect-[2/3] bg-green-100 rounded-lg border border-green-300">
-          {/* Court markings - three equal sections */}
-          <div className="absolute inset-0 flex flex-col">
-            <div className="h-1/3 border-b border-white flex items-center justify-end">
-              {/* Top third - GS, GA buttons */}
-              <div className="absolute right-[-220px] flex flex-col space-y-2 w-[200px]">
-                {POSITIONS.slice(0, 2).map(position => {
-                  const entry = rosterByQuarter[quarter]?.[position];
-                  const playerName = getPlayerName(entry?.playerId);
-                  const playerColor = getPlayerColor(entry?.playerId);
-                  
-                  return (
-                    <div 
-                      key={position} 
-                      className="p-3 border rounded-md shadow-sm flex flex-col"
-                      style={{ 
-                        backgroundColor: playerName ? `${playerColor}20` : 'white',
-                        border: playerName ? `2px solid ${playerColor}` : '1px solid #ddd',
-                      }}
-                    >
-                      <div className="font-bold">{position}</div>
-                      <div 
-                        className={playerName ? 'text-gray-900 font-medium' : 'text-red-500 italic'}
-                        style={{ color: playerName ? playerColor : undefined }}
-                      >
-                        {playerName || 'Unassigned'}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+      <div className="flex justify-center mx-auto w-full max-w-5xl">
+        <div className="flex items-start space-x-16">
+          {/* Court diagram */}
+          <div className="relative w-full max-w-lg aspect-[2/3] bg-green-100 rounded-lg border border-green-300">
+            {/* Court markings - three equal sections */}
+            <div className="absolute inset-0 flex flex-col">
+              <div className="h-1/3 border-b border-white"></div>
+              <div className="h-1/3 border-b border-white"></div>
+              <div className="h-1/3"></div>
             </div>
-            
-            <div className="h-1/3 border-b border-white flex items-center justify-end">
-              {/* Middle third - WA, C, WD buttons */}
-              <div className="absolute right-[-220px] flex flex-col space-y-2 w-[200px]">
-                {POSITIONS.slice(2, 5).map(position => {
-                  const entry = rosterByQuarter[quarter]?.[position];
-                  const playerName = getPlayerName(entry?.playerId);
-                  const playerColor = getPlayerColor(entry?.playerId);
-                  
-                  return (
-                    <div 
-                      key={position} 
-                      className="p-3 border rounded-md shadow-sm flex flex-col"
-                      style={{ 
-                        backgroundColor: playerName ? `${playerColor}20` : 'white',
-                        border: playerName ? `2px solid ${playerColor}` : '1px solid #ddd',
-                      }}
-                    >
-                      <div className="font-bold">{position}</div>
-                      <div 
-                        className={playerName ? 'text-gray-900 font-medium' : 'text-red-500 italic'}
-                        style={{ color: playerName ? playerColor : undefined }}
-                      >
-                        {playerName || 'Unassigned'}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-            
-            <div className="h-1/3 flex items-center justify-end">
-              {/* Bottom third - GD, GK buttons */}
-              <div className="absolute right-[-220px] flex flex-col space-y-2 w-[200px]">
-                {POSITIONS.slice(5).map(position => {
-                  const entry = rosterByQuarter[quarter]?.[position];
-                  const playerName = getPlayerName(entry?.playerId);
-                  const playerColor = getPlayerColor(entry?.playerId);
-                  
-                  return (
-                    <div 
-                      key={position} 
-                      className="p-3 border rounded-md shadow-sm flex flex-col"
-                      style={{ 
-                        backgroundColor: playerName ? `${playerColor}20` : 'white',
-                        border: playerName ? `2px solid ${playerColor}` : '1px solid #ddd',
-                      }}
-                    >
-                      <div className="font-bold">{position}</div>
-                      <div 
-                        className={playerName ? 'text-gray-900 font-medium' : 'text-red-500 italic'}
-                        style={{ color: playerName ? playerColor : undefined }}
-                      >
-                        {playerName || 'Unassigned'}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
           
           {/* Position markers */}
           {POSITIONS.map(position => {
