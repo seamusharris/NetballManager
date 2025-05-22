@@ -124,7 +124,7 @@ export function GameDetailsStatusButton({
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
       <DialogTrigger asChild>
         <div 
-          className={`${getStatusClass(game.status as GameStatus)} px-3 py-1.5 text-xs font-semibold rounded-full cursor-pointer transition-all duration-200 border border-current`}
+          className={`${getStatusClass(game.status as GameStatus)} px-3 py-1.5 text-xs font-semibold rounded-full cursor-pointer transition-all duration-200 border border-transparent`}
         >
           {getStatusDisplay(game.status as GameStatus)}
         </div>
