@@ -495,7 +495,7 @@ export default function GamesList({
                             {/* Don't show statistics button for forfeit games */}
                             {!isForfeitGame(game) && (
                               <button 
-                                onClick={() => navigate(`/statistics?game=${game.id}`)}
+                                onClick={() => navigate(`/game/${game.id}/stats`)}
                                 title={
                                   !gameStatsStatus[game.id] || gameStatsStatus[game.id] === 'none'
                                     ? "No statistics recorded yet"

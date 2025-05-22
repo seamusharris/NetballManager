@@ -14,7 +14,7 @@ export default function LiveStatsButton({ gameId, isDisabled }: LiveStatsButtonP
     <Button
       variant="outline"
       size="sm"
-      onClick={() => navigate(`/game/${gameId}/livestats`)}
+      onClick={() => navigate(`/game/${gameId}/details`)}
       // For position-based stats, enable the button even if the game is completed
       // This allows users to make corrections to statistics
       disabled={isDisabled && typeof isDisabled === 'boolean'}
