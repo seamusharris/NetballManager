@@ -198,7 +198,7 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
       
       <div className="flex flex-row space-x-8 justify-center">
         {/* Court diagram */}
-        <div className="relative w-full max-w-2xl aspect-[2/3] bg-green-100 rounded-lg border border-green-300">
+        <div className="relative w-full max-w-lg aspect-[2/3] bg-green-100 rounded-lg border border-green-300">
           {/* Court markings */}
           <div className="absolute inset-0 flex flex-col">
             <div className="h-1/3 border-b border-white"></div>
