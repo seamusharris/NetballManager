@@ -5,7 +5,6 @@ import { Helmet } from 'react-helmet';
 import { TEAM_NAME } from '@/lib/settings';
 import { StatItemBox } from '@/components/games/StatItemBox';
 import { PositionStatsBox } from '@/components/games/PositionStatsBox';
-import { GameStatus, POSITIONS } from '@shared/schema';
 import { 
   Card, 
   CardContent, 
@@ -22,6 +21,7 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { formatDate, cn } from '@/lib/utils';
 import { GameStatus, Position, POSITIONS, allGameStatuses } from '@shared/schema';
+import { primaryPositionStats, secondaryPositionStats, statLabels } from '@/lib/positionStats';
 import { useToast } from '@/hooks/use-toast';
 import {
   Dialog,
