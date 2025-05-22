@@ -938,7 +938,7 @@ export default function GameDetails() {
         <div className="flex flex-wrap gap-2">
           {!isForfeitGame && (
             <Button asChild>
-              <Link to={`/games/${gameId}/stats`}>
+              <Link to={`/game/${gameId}/stats`}>
                 <BarChart3 className="mr-2 h-4 w-4" />
                 View Statistics
               </Link>
