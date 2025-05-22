@@ -278,8 +278,8 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
           </div>
         </div>
         
-        {/* Right column - Roster positions with stats (2/3 width) */}
-        <div className="md:col-span-2">
+        {/* Right column - Roster positions with stats (half width) */}
+        <div>
           <div className="flex flex-col space-y-6">
             {/* Top third - Attack */}
             <div className="space-y-3">
