@@ -617,10 +617,50 @@ export default function GameDetails() {
               <div className="flex items-center mt-1 space-x-3">
                 <span className="text-gray-500">{formatDate(game.date)}</span>
                 <span className="text-gray-500">{game.time}</span>
-                <GameStatusButton 
-                  game={game} 
-                  size="sm" 
-                />
+                <Badge 
+                  variant="outline"
+                  className={cn(
+                    "px-2 py-1 text-xs cursor-pointer",
+                    "rounded-full transition-colors",
+                    game.status === 'upcoming' && "bg-blue-100 text-blue-800 hover:bg-blue-200",
+                    game.status === 'in-progress' && "bg-amber-100 text-amber-800 hover:bg-amber-200",
+                    game.status === 'completed' && "bg-green-100 text-green-800 hover:bg-green-200",
+                    game.status === 'forfeit-win' && "bg-indigo-100 text-indigo-800 hover:bg-indigo-200",
+                    game.status === 'forfeit-loss' && "bg-red-100 text-red-800 hover:bg-red-200"
+                  )}
+                  onClick={() => {
+                    // Force data refresh after dialog closes
+                    const prevStatus = game.status;
+                    let newStatus = '';
+                    
+                    if (prevStatus === 'upcoming') newStatus = 'in-progress';
+                    else if (prevStatus === 'in-progress') newStatus = 'completed';
+                    else if (prevStatus === 'completed') newStatus = 'upcoming';
+                    else if (prevStatus === 'forfeit-win') newStatus = 'upcoming';
+                    else if (prevStatus === 'forfeit-loss') newStatus = 'upcoming';
+                    
+                    if (newStatus) {
+                      fetch(`/api/games/${game.id}`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ status: newStatus })
+                      })
+                      .then(response => {
+                        if (response.ok) {
+                          // Force refresh all game data after status update
+                          queryClient.invalidateQueries();
+                          console.log(`Game status updated from ${prevStatus} to ${newStatus}`);
+                        }
+                      });
+                    }
+                  }}
+                >
+                  {game.status === 'upcoming' && "Upcoming"}
+                  {game.status === 'in-progress' && "In Progress"}
+                  {game.status === 'completed' && "Completed"}
+                  {game.status === 'forfeit-win' && "Forfeit Win (10-0)"}
+                  {game.status === 'forfeit-loss' && "Forfeit Loss (0-10)"}
+                </Badge>
               </div>
             </div>
             
