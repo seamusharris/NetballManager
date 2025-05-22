@@ -535,19 +535,19 @@ export default function GameDetails() {
         <title>Game Details: {getOpponentName(opponents || [], game.opponentId)} | Netball Stats</title>
       </Helmet>
       
-      {/* Back button + page title */}
+      {/* Page title and round number + back button */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center">
-          <Button variant="outline" size="sm" asChild className="mr-4">
-            <Link to="/games">
-              <ChevronLeft className="mr-1 h-4 w-4" />
-              Back to Games
-            </Link>
-          </Button>
           <h1 className="text-2xl font-bold">
-            Game Details
+            Game Details - Round {game.round || '(No Round)'}
           </h1>
         </div>
+        <Button variant="outline" size="sm" asChild>
+          <Link to="/games">
+            <ChevronLeft className="mr-1 h-4 w-4" />
+            Back to Games
+          </Link>
+        </Button>
         
         <div className="flex gap-2">
           {!game.isBye && game.status !== 'forfeit' && (
