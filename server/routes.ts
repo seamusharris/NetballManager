@@ -872,6 +872,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch game stats" });
     }
   });
+  
+  // Batch endpoint to fetch stats for multiple games in a single request
+  app.get("/api/gamestats/batch", async (req, res) => {
+    try {
+      const gameIdsParam = req.query.gameIds as string;
+      
+      if (!gameIdsParam) {
+        return res.status(400).json({ message: "gameIds query parameter is required" });
+      }
+      
+      // Parse and validate game IDs
+      const gameIds = gameIdsParam.split(',').map(id => parseInt(id)).filter(id => !isNaN(id));
+      
+      if (gameIds.length === 0) {
+        return res.status(400).json({ message: "No valid game IDs provided" });
+      }
+      
+      console.log(`Batch fetching stats for ${gameIds.length} games:`, gameIds);
+      
+      // Fetch stats for all games in parallel
+      const statsPromises = gameIds.map(id => storage.getGameStatsByGame(id));
+      const statsResults = await Promise.all(statsPromises);
+      
+      // Flatten the array of arrays into a single array of all stats
+      const allStats = statsResults.flat();
+      
+      console.log(`Returning batch of ${allStats.length} stats for ${gameIds.length} games`);
+      res.json(allStats);
+    } catch (error) {
+      console.error("Error in batch stats API:", error);
+      res.status(500).json({ message: "Failed to fetch batch game stats" });
+    }
+  });
 
   app.post("/api/gamestats", async (req, res) => {
     try {
