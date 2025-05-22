@@ -332,7 +332,6 @@ export default function GamesList({
                   // Reset filters
                   setSearchQuery('');
                   setStatusFilter('all');
-                  setDateFilter('all');
                 }}
               >
                 Reset Filters
