@@ -18,8 +18,8 @@ import DataManagement from "@/pages/DataManagement";
 import Settings from "@/pages/Settings";
 import NotFound from "@/pages/not-found";
 
-// Import the fixed GameDetails component
-import GameDetails from "./pages/GameDetails.fixed";
+// Import GameDetails directly for now
+import GameDetails from "./pages/GameDetails";
 
 // Lazy load the debug component
 const StatsDebug = lazy(() => import("./pages/StatsDebug"));
