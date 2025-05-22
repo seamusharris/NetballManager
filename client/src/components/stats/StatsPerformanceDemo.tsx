@@ -61,6 +61,7 @@ export function StatsPerformanceDemo() {
       }
       
       const data = await response.json();
+      console.log("Loaded game stats:", data);
       setGameStats(data);
     } catch (error) {
       console.error("Error loading game stats:", error);
@@ -217,18 +218,18 @@ export function StatsPerformanceDemo() {
                             <td className="p-2 border-b">Q{stat.quarter}</td>
                             <td className="p-2 text-center border-b">
                               <div className="flex items-center justify-center gap-1">
-                                <span className="font-medium">{stat.goalsFor || 0}</span>
-                                <span className="text-sm text-muted-foreground">({stat.missedGoals || 0} miss)</span>
+                                <span className="font-medium">{stat.goalsFor}</span>
+                                <span className="text-sm text-muted-foreground">({stat.missedGoals} miss)</span>
                               </div>
                             </td>
-                            <td className="p-2 text-center border-b">{stat.intercepts || 0}</td>
+                            <td className="p-2 text-center border-b">{stat.intercepts}</td>
                             <td className="p-2 text-center border-b">
                               {(stat.badPass || 0) + (stat.handlingError || 0)}
                             </td>
                             <td className="p-2 text-center border-b">
                               <div className="flex items-center justify-center gap-2">
-                                <span className="text-xs text-muted-foreground">Pick: {stat.pickUp || 0}</span>
-                                <span className="text-xs text-muted-foreground">Inf: {stat.infringement || 0}</span>
+                                <span className="text-xs text-muted-foreground">Pick: {stat.pickUp}</span>
+                                <span className="text-xs text-muted-foreground">Inf: {stat.infringement}</span>
                               </div>
                             </td>
                           </tr>
