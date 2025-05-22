@@ -282,7 +282,7 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
         <div>
           <div className="flex flex-col space-y-0 justify-between h-full">
             {/* Top third - Attack positions (GS, GA) */}
-            <div className="space-y-2 mb-2" style={{ height: '33%' }}>
+            <div className="flex space-x-2 mb-2 items-start" style={{ height: '33%' }}>
               {POSITIONS.slice(0, 2).map(position => {
                 const entry = rosterByQuarter[quarter]?.[position];
                 const playerName = getPlayerName(entry?.playerId);
@@ -292,20 +292,12 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
                 return (
                   <div 
                     key={position} 
-                    className="p-4 border rounded-md shadow-md flex flex-col"
+                    className="p-3 border rounded-md shadow-sm flex-1 flex flex-col"
                     style={{ 
                       backgroundColor: playerName ? `${playerColor}10` : 'white',
                       border: playerName ? `2px solid ${playerColor}` : '1px solid #ddd',
                     }}
                   >
-                    <div className="flex justify-center mb-2">
-                      <div 
-                        className="h-8 w-8 rounded-full flex items-center justify-center text-white font-bold text-sm"
-                        style={{ backgroundColor: playerName ? playerColor : '#cbd5e1' }}
-                      >
-                        {position}
-                      </div>
-                    </div>
                     
                     {playerName && playerStats && (
                       <div className="mt-1 bg-gray-50 p-3 rounded-md border border-gray-100">
@@ -362,7 +354,7 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
             </div>
             
             {/* Middle third positions (WA, C, WD) */}
-            <div className="space-y-2 my-2" style={{ height: '33%' }}>
+            <div className="flex space-x-2 my-2" style={{ height: '33%' }}>
               {POSITIONS.slice(2, 5).map(position => {
                 const entry = rosterByQuarter[quarter]?.[position];
                 const playerName = getPlayerName(entry?.playerId);
@@ -372,20 +364,12 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
                 return (
                   <div 
                     key={position} 
-                    className="p-4 border rounded-md shadow-md flex flex-col"
+                    className="p-3 border rounded-md shadow-sm flex-1 flex flex-col"
                     style={{ 
                       backgroundColor: playerName ? `${playerColor}10` : 'white',
                       border: playerName ? `2px solid ${playerColor}` : '1px solid #ddd',
                     }}
                   >
-                    <div className="flex justify-center mb-2">
-                      <div 
-                        className="h-8 w-8 rounded-full flex items-center justify-center text-white font-bold text-sm"
-                        style={{ backgroundColor: playerName ? playerColor : '#cbd5e1' }}
-                      >
-                        {position}
-                      </div>
-                    </div>
                     
                     {playerName && playerStats && (
                       <div className="mt-1 bg-gray-50 p-3 rounded-md border border-gray-100">
@@ -442,7 +426,7 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
             </div>
             
             {/* Bottom third - Defense positions (GD, GK) */}
-            <div className="space-y-2 mt-2" style={{ height: '33%' }}>
+            <div className="flex space-x-2 mt-2" style={{ height: '33%' }}>
               {POSITIONS.slice(5).map(position => {
                 const entry = rosterByQuarter[quarter]?.[position];
                 const playerName = getPlayerName(entry?.playerId);
@@ -452,20 +436,12 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
                 return (
                   <div 
                     key={position} 
-                    className="p-4 border rounded-md shadow-md flex flex-col"
+                    className="p-3 border rounded-md shadow-sm flex-1 flex flex-col"
                     style={{ 
                       backgroundColor: playerName ? `${playerColor}10` : 'white',
                       border: playerName ? `2px solid ${playerColor}` : '1px solid #ddd',
                     }}
                   >
-                    <div className="flex justify-center mb-2">
-                      <div 
-                        className="h-8 w-8 rounded-full flex items-center justify-center text-white font-bold text-sm"
-                        style={{ backgroundColor: playerName ? playerColor : '#cbd5e1' }}
-                      >
-                        {position}
-                      </div>
-                    </div>
                     
                     {playerName && playerStats && (
                       <div className="mt-1 bg-gray-50 p-3 rounded-md border border-gray-100">
