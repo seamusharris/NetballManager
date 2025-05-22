@@ -15,6 +15,7 @@ import PlayerDetails from "@/pages/PlayerDetails";
 import LiveStats from "@/pages/LiveStats";
 import LiveStatsByPosition from "@/pages/LiveStatsByPosition";
 import DataManagement from "@/pages/DataManagement";
+import Settings from "@/pages/Settings";
 import NotFound from "@/pages/not-found";
 
 // Import GameDetails directly for now
@@ -38,6 +39,7 @@ function Router() {
         <Route path="/opponents" component={Opponents} />
         <Route path="/statistics" component={Statistics} />
         <Route path="/data-management" component={DataManagement} />
+        <Route path="/settings" component={Settings} />
         <Route path="/games/:id/livestats" component={LiveStatsByPosition} />
         <Route path="/games/:id/stats" component={Statistics} />
         <Route path="/games/:id/livestats-legacy" component={LiveStats} />

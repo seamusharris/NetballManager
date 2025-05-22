@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'wouter';
 import { cn } from '@/lib/utils';
-import { X, Menu, Home, Users, ClipboardList, Calendar, Flag, BarChart, Database } from 'lucide-react';
+import { X, Menu, Home, Users, ClipboardList, Calendar, Flag, BarChart, Database, Settings as SettingsIcon } from 'lucide-react';
 
 interface SidebarProps {
   isMobileOpen: boolean;
@@ -26,6 +26,7 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen, isTablet }: Sid
     { path: '/opponents', label: 'Opponents', icon: <Flag className="w-5 h-5" /> },
     { path: '/statistics', label: 'Statistics', icon: <BarChart className="w-5 h-5" /> },
     { path: '/data-management', label: 'Data Management', icon: <Database className="w-5 h-5" /> },
+    { path: '/settings', label: 'Settings', icon: <SettingsIcon className="w-5 h-5" /> },
   ];
 
   return (

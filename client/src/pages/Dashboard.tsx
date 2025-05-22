@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet';
 import DashboardSummary from '@/components/dashboard/DashboardSummary';
+import { TEAM_NAME } from '@/lib/settings';
 
 export default function Dashboard() {
   const { data: players, isLoading: isLoadingPlayers } = useQuery({
@@ -20,8 +21,8 @@ export default function Dashboard() {
   return (
     <>
       <Helmet>
-        <title>Dashboard | NetballManager</title>
-        <meta name="description" content="View your netball team's performance metrics, upcoming games, and player statistics" />
+        <title>Dashboard | {TEAM_NAME} Stats Tracker</title>
+        <meta name="description" content={`View ${TEAM_NAME} team's performance metrics, upcoming games, and player statistics`} />
       </Helmet>
       
       <DashboardSummary 
