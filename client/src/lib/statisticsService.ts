@@ -112,10 +112,10 @@ export class StatisticsService {
     // First check if this is a forfeit game
     const game = await apiRequest(`/api/games/${gameId}`);
     
-    // Special handling for forfeit games - return fixed scores (0-10)
+    // Special handling for forfeit games - return scores based on forfeit type
     if (isForfeitGame(game)) {
-      console.log(`Forfeit game detected (ID: ${gameId}), returning standard forfeit score`);
-      return getForfeitGameScore();
+      console.log(`Forfeit game detected (ID: ${gameId}, status: ${game.status}), returning appropriate forfeit score`);
+      return getForfeitGameScore(game);
     }
     
     // For non-forfeit games, proceed with normal calculation
@@ -459,7 +459,9 @@ export function getGameStatusColor(status: GameStatus): string {
     'upcoming': 'blue',
     'in-progress': 'amber',
     'completed': 'green',
-    'forfeit': 'red'
+    'forfeit': 'red',
+    'forfeit-win': 'orange',
+    'forfeit-loss': 'red'
   };
   
   return colorMap[status] || 'gray';

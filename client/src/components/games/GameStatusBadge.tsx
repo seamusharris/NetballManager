@@ -27,6 +27,14 @@ export function GameStatusBadge({ status, onClick, className }: GameStatusBadgeP
     'forfeit': { 
       text: 'Forfeit', 
       style: 'bg-red-100 text-red-800 hover:bg-red-200'
+    },
+    'forfeit-win': { 
+      text: 'Forfeit (Win)', 
+      style: 'bg-orange-100 text-orange-800 hover:bg-orange-200'
+    },
+    'forfeit-loss': { 
+      text: 'Forfeit (Loss)', 
+      style: 'bg-red-100 text-red-800 hover:bg-red-200'
     }
   };
 

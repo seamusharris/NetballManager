@@ -256,13 +256,13 @@ export function getWinLoseClass(status: 'Win' | 'Loss' | 'Draw'): string {
 /**
  * Check if a game is a forfeit game
  * @param game The game object or game status string
- * @returns true if the game is a forfeit game
+ * @returns true if the game is any type of forfeit game
  */
 export function isForfeitGame(game: { status?: string | null } | string | undefined): boolean {
   if (!game) return false;
   
   const status = typeof game === 'string' ? game : game.status;
-  return status === 'forfeit';
+  return status === 'forfeit' || status === 'forfeit-win' || status === 'forfeit-loss';
 }
 
 /**
@@ -278,17 +278,23 @@ export function gameAllowsStatistics(game: { status?: string, isBye?: boolean } 
 }
 
 /**
- * Get the fixed score for a forfeit game (0-10)
+ * Get the fixed score for a forfeit game
+ * @param game The game object or game status string
  * @returns The forfeit game scores by quarter and final
  */
-export function getForfeitGameScore() {
+export function getForfeitGameScore(game: { status?: string | null } | string | undefined) {
+  if (!game) return { quarterScores: {}, finalScore: { for: 0, against: 0 } };
+  
+  const status = typeof game === 'string' ? game : game.status;
+  const isWin = status === 'forfeit-win';
+  
   return {
     quarterScores: {
-      '1': { for: 0, against: 0 },
-      '2': { for: 0, against: 5 },
-      '3': { for: 0, against: 5 },
-      '4': { for: 0, against: 0 }
+      '1': { for: isWin ? 0 : 0, against: isWin ? 0 : 0 },
+      '2': { for: isWin ? 5 : 0, against: isWin ? 0 : 5 },
+      '3': { for: isWin ? 5 : 0, against: isWin ? 0 : 5 },
+      '4': { for: isWin ? 0 : 0, against: isWin ? 0 : 0 }
     },
-    finalScore: { for: 0, against: 10 }
+    finalScore: { for: isWin ? 10 : 0, against: isWin ? 0 : 10 }
   };
 }
