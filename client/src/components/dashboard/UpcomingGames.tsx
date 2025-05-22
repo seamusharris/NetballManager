@@ -35,7 +35,7 @@ export default function UpcomingGames({ games, opponents, className }: UpcomingG
         {upcomingGames.length > 0 ? (
           <div className="space-y-8">
             {upcomingGames.map((game, index) => (
-              <Link key={game.id} href={`/games/${game.id}`}>
+              <Link key={game.id} href={`/game/${game.id}`}>
                 <div 
                   className={`flex justify-between items-center p-4 mb-4 mt-2 border-l-4 rounded cursor-pointer hover:bg-accent/10 transition-colors ${
                     index === 0 ? 'border-primary bg-primary/5' : 'border-accent bg-accent/5'
