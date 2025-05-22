@@ -386,8 +386,7 @@ export default function GamesList({
                 sortedGames.map(game => (
                   <TableRow 
                     key={game.id}
-                    className="cursor-pointer hover:bg-gray-50"
-                    onClick={() => navigate(`/game/${game.id}`)}
+                    className="hover:bg-gray-50"
                   >
                     <TableCell className="px-6 py-4 whitespace-nowrap">
                       <div className="flex flex-col">
@@ -543,14 +542,22 @@ export default function GamesList({
                         )}
                       </div>
                     </TableCell>
-                    <TableCell className="px-6 py-4 whitespace-nowrap text-right text-sm" onClick={(e) => e.stopPropagation()}>
+                    <TableCell className="px-6 py-4 whitespace-nowrap text-right text-sm">
                       <div className="flex justify-end space-x-2">
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          className="text-blue-500 hover:text-blue-700"
+                          onClick={() => navigate(`/game/${game.id}`)}
+                          title="View game details"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
                         <Button 
                           variant="ghost" 
                           size="icon"
                           className="text-accent hover:text-accent-dark"
                           onClick={(e) => {
-                            e.stopPropagation();
                             onEdit(game);
                           }}
                           title="Edit game"
