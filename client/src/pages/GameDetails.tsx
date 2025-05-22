@@ -89,7 +89,7 @@ const calculateQuarterScores = (gameStats: any[], game: any) => {
 };
 
 // Court position roster component
-const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) => {
+const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuarter = 1 }) => {
   const [quarter, setQuarter] = useState(initialQuarter);
   
   // Group roster by quarter and position
@@ -192,15 +192,18 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
     if (!playerName) return null;
     
     // Find the statistics for this position in this quarter
-    // Since we don't have access to gameStats here, return basic stats with the player info
+    const positionStat = gameStats?.find?.(
+      stat => stat.position === position && stat.quarter === quarter
+    );
+    
     return {
       playerId: entry.playerId,
       name: playerName,
       stats: {
-        goals: 0,
-        intercepts: 0,
-        rebounds: 0,
-        assists: 0,
+        goals: positionStat?.goalsFor || 0,
+        intercepts: positionStat?.intercepts || 0,
+        rebounds: positionStat?.rebounds || 0,
+        assists: positionStat?.badPass || 0, // Using badPass as assists
       }
     };
   };
