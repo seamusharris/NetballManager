@@ -301,7 +301,7 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
                     
                     {playerName && playerStats && (
                       <div className="mt-1 bg-gray-50 p-3 rounded-md border border-gray-100">
-                        <div className="flex flex-col space-y-2 text-sm">
+                        <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
                           {/* Left stats column */}
                           <div className="space-y-2">
                             <div className="flex items-center gap-2">
@@ -373,7 +373,7 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
                     
                     {playerName && playerStats && (
                       <div className="mt-1 bg-gray-50 p-3 rounded-md border border-gray-100">
-                        <div className="flex flex-col space-y-2 text-sm">
+                        <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
                           {/* Left stats column */}
                           <div className="space-y-2">
                             <div className="flex items-center gap-2">
@@ -445,7 +445,7 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
                     
                     {playerName && playerStats && (
                       <div className="mt-1 bg-gray-50 p-3 rounded-md border border-gray-100">
-                        <div className="flex flex-col space-y-2 text-sm">
+                        <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
                           {/* Left stats column */}
                           <div className="space-y-2">
                             <div className="flex items-center gap-2">
