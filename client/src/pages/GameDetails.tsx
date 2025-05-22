@@ -2,6 +2,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { useParams, Link } from 'wouter';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet';
+import { TEAM_NAME } from '@/lib/settings';
 import { 
   Card, 
   CardContent, 
@@ -958,7 +959,7 @@ export default function GameDetails() {
           <h1 className="text-2xl font-bold">
             {game.opponentId ? (
               <span>
-                {game.round ? `Round ${game.round}` : 'Game'} vs {opponentName}
+                {TEAM_NAME} vs {opponentName} {game.round && `(Round ${game.round})`}
               </span>
             ) : (
               <span>BYE Round</span>
