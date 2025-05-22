@@ -197,67 +197,69 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
         </div>
       </div>
       
-      <div className="relative w-full max-w-md mx-auto aspect-[2/3] bg-green-100 rounded-lg border border-green-300">
-        {/* Court markings */}
-        <div className="absolute inset-0 flex flex-col">
-          <div className="h-1/3 border-b border-white"></div>
-          <div className="h-1/3 border-b border-white"></div>
-          <div className="h-1/3"></div>
+      <div className="flex flex-row space-x-4">
+        {/* Court diagram */}
+        <div className="relative w-full max-w-md aspect-[2/3] bg-green-100 rounded-lg border border-green-300">
+          {/* Court markings */}
+          <div className="absolute inset-0 flex flex-col">
+            <div className="h-1/3 border-b border-white"></div>
+            <div className="h-1/3 border-b border-white"></div>
+            <div className="h-1/3"></div>
+          </div>
+          
+          {/* Position markers */}
+          {POSITIONS.map(position => {
+            const entry = rosterByQuarter[quarter]?.[position];
+            const playerName = getPlayerName(entry?.playerId);
+            const playerColor = getPlayerColor(entry?.playerId);
+            
+            // Calculate contrast color for text
+            const isLightColor = (color: string) => {
+              // Remove the # if present
+              const hex = color.replace('#', '');
+              const r = parseInt(hex.substr(0, 2), 16);
+              const g = parseInt(hex.substr(2, 2), 16);
+              const b = parseInt(hex.substr(4, 2), 16);
+              // Calculate luminance - if > 0.5, it's a light color
+              return (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.5;
+            };
+            
+            const textColor = playerName && isLightColor(playerColor) ? 'black' : 'white';
+            
+            return (
+              <div key={position} className={`absolute ${getPositionCoordinates(position)}`}>
+                <div 
+                  style={{ 
+                    backgroundColor: playerName ? playerColor : 'white',
+                    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.5)',
+                    border: playerName ? '3px solid white' : '2px solid red',
+                    width: '5rem',
+                    height: '5rem',
+                    borderRadius: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    padding: '0.25rem'
+                  }}
+                >
+                  <div className="font-bold text-center text-base md:text-lg" style={{ color: textColor }}>{position}</div>
+                  {playerName && (
+                    <div className="text-xs md:text-sm text-center font-medium leading-tight mx-1" style={{ color: textColor }}>{playerName}</div>
+                  )}
+                  {!playerName && (
+                    <div className="text-xs text-red-500 text-center">Unassigned</div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
         </div>
         
-        {/* Position markers */}
-        {POSITIONS.map(position => {
-          const entry = rosterByQuarter[quarter]?.[position];
-          const playerName = getPlayerName(entry?.playerId);
-          const playerColor = getPlayerColor(entry?.playerId);
-          
-          // Calculate contrast color for text
-          const isLightColor = (color: string) => {
-            // Remove the # if present
-            const hex = color.replace('#', '');
-            const r = parseInt(hex.substr(0, 2), 16);
-            const g = parseInt(hex.substr(2, 2), 16);
-            const b = parseInt(hex.substr(4, 2), 16);
-            // Calculate luminance - if > 0.5, it's a light color
-            return (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.5;
-          };
-          
-          const textColor = playerName && isLightColor(playerColor) ? 'black' : 'white';
-          
-          return (
-            <div key={position} className={`absolute ${getPositionCoordinates(position)}`}>
-              <div 
-                style={{ 
-                  backgroundColor: playerName ? playerColor : 'white',
-                  boxShadow: '0 4px 8px rgba(0, 0, 0, 0.5)',
-                  border: playerName ? '3px solid white' : '2px solid red',
-                  width: '5rem',
-                  height: '5rem',
-                  borderRadius: '100%',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  padding: '0.25rem'
-                }}
-              >
-                <div className="font-bold text-center text-base md:text-lg" style={{ color: textColor }}>{position}</div>
-                {playerName && (
-                  <div className="text-xs md:text-sm text-center font-medium leading-tight mx-1" style={{ color: textColor }}>{playerName}</div>
-                )}
-                {!playerName && (
-                  <div className="text-xs text-red-500 text-center">Unassigned</div>
-                )}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-      
-      {/* Roster list */}
-      <div className="mt-6">
-        <h3 className="text-md font-medium mb-2">Quarter {quarter} Roster</h3>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+        {/* Vertical roster buttons */}
+        <div className="flex flex-col space-y-2">
+          <h3 className="text-md font-medium mb-1">Q{quarter} Roster</h3>
+          {/* Display positions in order from GS to GK */}
           {POSITIONS.map(position => {
             const entry = rosterByQuarter[quarter]?.[position];
             const playerName = getPlayerName(entry?.playerId);
@@ -266,7 +268,7 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
             return (
               <div 
                 key={position} 
-                className="p-2 border rounded-md shadow-sm"
+                className="p-2 border rounded-md shadow-sm flex flex-col"
                 style={{ 
                   backgroundColor: playerName ? `${playerColor}20` : 'white',
                   border: playerName ? `2px solid ${playerColor}` : '1px solid #ddd',
@@ -284,6 +286,8 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
           })}
         </div>
       </div>
+      
+      {/* We've moved the roster buttons next to the court diagram, so this section is no longer needed */}
     </div>
   );
 };
