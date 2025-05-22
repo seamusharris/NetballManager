@@ -193,13 +193,15 @@ export default function GameDetails() {
 
   // Calculate quarter-by-quarter score breakdown
   const quarterScores = useMemo(() => {
-    if (!gameStats) return [];
+    if (!gameStats || !gameStats.length) return [];
     
-    // Group stats by quarter
-    const scoresByQuarter = gameStats.reduce((acc, stat) => {
+    // Group stats by quarter (using an object instead of array to avoid useMemo dependency issues)
+    const scoresByQuarterObj = {};
+    
+    gameStats.forEach(stat => {
       const quarterIdx = stat.quarter - 1;
-      if (!acc[quarterIdx]) {
-        acc[quarterIdx] = { 
+      if (!scoresByQuarterObj[quarterIdx]) {
+        scoresByQuarterObj[quarterIdx] = { 
           quarter: stat.quarter, 
           teamScore: 0, 
           opponentScore: 0 
@@ -208,21 +210,19 @@ export default function GameDetails() {
       
       // Only count goals from GS and GA positions
       if (stat.position === 'GS' || stat.position === 'GA') {
-        acc[quarterIdx].teamScore += (stat.goalsFor || 0);
+        scoresByQuarterObj[quarterIdx].teamScore += (stat.goalsFor || 0);
       }
       
       // Count opponent goals scored against GD and GK
       if (stat.position === 'GD' || stat.position === 'GK') {
-        acc[quarterIdx].opponentScore += (stat.goalsAgainst || 0);
+        scoresByQuarterObj[quarterIdx].opponentScore += (stat.goalsAgainst || 0);
       }
-      
-      return acc;
-    }, []);
+    });
     
     // Fill in any missing quarters (in case there are no stats for a quarter yet)
     const filledScores = [];
     for (let i = 0; i < 4; i++) {
-      filledScores[i] = scoresByQuarter[i] || { 
+      filledScores[i] = scoresByQuarterObj[i] || { 
         quarter: i + 1, 
         teamScore: 0, 
         opponentScore: 0 
@@ -230,9 +230,10 @@ export default function GameDetails() {
     }
     
     // Generate running totals
-    const runningTotals = filledScores.reduce((acc, current, index) => {
+    const runningTotals = [];
+    filledScores.forEach((current, index) => {
       if (index === 0) {
-        acc.push({
+        runningTotals.push({
           quarter: current.quarter,
           teamTotal: current.teamScore,
           opponentTotal: current.opponentScore,
@@ -240,19 +241,18 @@ export default function GameDetails() {
           opponentQuarter: current.opponentScore
         });
       } else {
-        acc.push({
+        runningTotals.push({
           quarter: current.quarter,
-          teamTotal: acc[index - 1].teamTotal + current.teamScore,
-          opponentTotal: acc[index - 1].opponentTotal + current.opponentScore,
+          teamTotal: runningTotals[index - 1].teamTotal + current.teamScore,
+          opponentTotal: runningTotals[index - 1].opponentTotal + current.opponentScore,
           teamQuarter: current.teamScore,
           opponentQuarter: current.opponentScore
         });
       }
-      return acc;
-    }, []);
+    });
     
     return runningTotals;
-  }, [gameStats]);
+  }, [gameStats ? gameStats.length : 0]);
 
   const finalScore = quarterScores.length > 0 ? {
     teamScore: quarterScores.reduce((sum, q) => sum + q.teamQuarter, 0),
