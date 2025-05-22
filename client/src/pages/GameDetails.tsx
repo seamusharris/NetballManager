@@ -196,14 +196,22 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
         </div>
       </div>
       
-      <div className="flex flex-row space-x-8 justify-center">
-        {/* Court diagram and roster buttons side by side */}
-        <div className="relative w-full max-w-lg aspect-[2/3] bg-green-100 rounded-lg border border-green-300">
-          {/* Court markings - three equal sections */}
-          <div className="absolute inset-0 flex flex-col">
-            <div className="h-1/3 border-b border-white flex items-center justify-end">
+      <div className="flex flex-row mx-auto max-w-5xl">
+        {/* Court and roster buttons container - centered with equal margins */}
+        <div className="flex space-x-20 mx-auto">
+          {/* Court diagram */}
+          <div className="relative w-full max-w-lg aspect-[2/3] bg-green-100 rounded-lg border border-green-300">
+            {/* Court markings - three equal sections */}
+            <div className="absolute inset-0 flex flex-col">
+              <div className="h-1/3 border-b border-white"></div>
+              <div className="h-1/3 border-b border-white"></div>
+              <div className="h-1/3"></div>
+            </div>
+            
+            {/* Position buttons column - separate from court */}
+            <div className="absolute right-[-260px] h-full flex flex-col justify-between">
               {/* Top third - GS, GA buttons */}
-              <div className="absolute right-[-220px] flex flex-col space-y-2 w-[200px]">
+              <div className="flex flex-col space-y-2 w-[220px]">
                 {POSITIONS.slice(0, 2).map(position => {
                   const entry = rosterByQuarter[quarter]?.[position];
                   const playerName = getPlayerName(entry?.playerId);
@@ -229,11 +237,9 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
                   );
                 })}
               </div>
-            </div>
-            
-            <div className="h-1/3 border-b border-white flex items-center justify-end">
+              
               {/* Middle third - WA, C, WD buttons */}
-              <div className="absolute right-[-220px] flex flex-col space-y-2 w-[200px]">
+              <div className="flex flex-col space-y-2 w-[220px]">
                 {POSITIONS.slice(2, 5).map(position => {
                   const entry = rosterByQuarter[quarter]?.[position];
                   const playerName = getPlayerName(entry?.playerId);
@@ -259,11 +265,9 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
                   );
                 })}
               </div>
-            </div>
-            
-            <div className="h-1/3 flex items-center justify-end">
+              
               {/* Bottom third - GD, GK buttons */}
-              <div className="absolute right-[-220px] flex flex-col space-y-2 w-[200px]">
+              <div className="flex flex-col space-y-2 w-[220px]">
                 {POSITIONS.slice(5).map(position => {
                   const entry = rosterByQuarter[quarter]?.[position];
                   const playerName = getPlayerName(entry?.playerId);
