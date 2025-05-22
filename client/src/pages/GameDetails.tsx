@@ -222,100 +222,11 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
         </div>
       </div>
       
-      {/* Three-column balanced layout */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-7xl mx-auto px-4">
-        {/* Left column - Player stats by position */}
+      {/* Two-column layout */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-7xl mx-auto px-4">
+        {/* Left column - Court diagram (enlarged) */}
         <div>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg">Position Performance</CardTitle>
-              <CardDescription>Player stats by position for Q{quarter}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {POSITIONS.map(position => {
-                const entry = rosterByQuarter[quarter]?.[position];
-                const playerName = getPlayerName(entry?.playerId);
-                const playerColor = getPlayerColor(entry?.playerId);
-                const playerStats = getPlayerPerformanceStats(position);
-                
-                return (
-                  <div key={position} className="p-3 border rounded-lg">
-                    <div className="flex items-center gap-2 mb-2">
-                      <div 
-                        className="h-8 w-8 rounded-full flex items-center justify-center text-sm font-bold"
-                        style={{ 
-                          backgroundColor: playerName ? playerColor : '#f3f4f6',
-                          color: playerName ? 'white' : '#9ca3af',
-                        }}
-                      >
-                        {position}
-                      </div>
-                      <div>
-                        <div className="font-medium">
-                          {playerName || <span className="text-gray-400 italic">Unassigned</span>}
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {playerStats && (
-                      <div className="mt-3 p-3 bg-gray-50 rounded-md border border-gray-100 shadow-sm">
-                        <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-                          {/* Left column - main stats */}
-                          <div className="space-y-2">
-                            <div className="flex items-center gap-2">
-                              <div className="h-6 w-6 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center">
-                                <ScoreIcon className="h-3.5 w-3.5" />
-                              </div>
-                              <div className="flex-1 flex justify-between">
-                                <span className="text-gray-600">Goals</span>
-                                <span className="font-semibold">{playerStats.stats.goals}</span>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <div className="h-6 w-6 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center">
-                                <ArrowDownIcon className="h-3.5 w-3.5" />
-                              </div>
-                              <div className="flex-1 flex justify-between">
-                                <span className="text-gray-600">Rebounds</span>
-                                <span className="font-semibold">{playerStats.stats.rebounds}</span>
-                              </div>
-                            </div>
-                          </div>
-                          
-                          {/* Right column - more stats */}
-                          <div className="space-y-2">
-                            <div className="flex items-center gap-2">
-                              <div className="h-6 w-6 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center">
-                                <ShieldIcon className="h-3.5 w-3.5" />
-                              </div>
-                              <div className="flex-1 flex justify-between">
-                                <span className="text-gray-600">Intercepts</span>
-                                <span className="font-semibold">{playerStats.stats.intercepts}</span>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <div className="h-6 w-6 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center">
-                                <HandIcon className="h-3.5 w-3.5" />
-                              </div>
-                              <div className="flex-1 flex justify-between">
-                                <span className="text-gray-600">Assists</span>
-                                <span className="font-semibold">{playerStats.stats.assists}</span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </CardContent>
-          </Card>
-        </div>
-        
-        {/* Middle column - Court diagram */}
-        <div>
-          <div className="relative w-full max-w-md mx-auto aspect-[2/3] bg-green-100 rounded-lg border border-green-300">
+          <div className="relative w-full max-w-lg mx-auto aspect-[2/3] bg-green-100 rounded-lg border border-green-300 shadow-md">
             {/* Court markings - three equal sections */}
             <div className="absolute inset-0 flex flex-col">
               <div className="h-1/3 border-b border-white"></div>
@@ -366,7 +277,7 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
           </div>
         </div>
         
-        {/* Right column - Roster positions */}
+        {/* Right column - Roster positions with stats */}
         <div>
           <div className="flex flex-col space-y-6">
             {/* Top third - Attack */}
@@ -376,23 +287,85 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
                 const entry = rosterByQuarter[quarter]?.[position];
                 const playerName = getPlayerName(entry?.playerId);
                 const playerColor = getPlayerColor(entry?.playerId);
+                const playerStats = getPlayerPerformanceStats(position);
                 
                 return (
                   <div 
                     key={position} 
-                    className="p-4 border rounded-md shadow-sm flex flex-col"
+                    className="p-4 border rounded-md shadow-md flex flex-col"
                     style={{ 
-                      backgroundColor: playerName ? `${playerColor}20` : 'white',
+                      backgroundColor: playerName ? `${playerColor}10` : 'white',
                       border: playerName ? `2px solid ${playerColor}` : '1px solid #ddd',
                     }}
                   >
-                    <div className="font-bold text-lg">{position}</div>
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="font-bold text-lg">{position}</div>
+                      {playerName && (
+                        <div 
+                          className="h-8 w-8 rounded-full flex items-center justify-center text-white font-bold text-sm"
+                          style={{ backgroundColor: playerColor }}
+                        >
+                          {playerName.substring(0, 2)}
+                        </div>
+                      )}
+                    </div>
+                    
                     <div 
-                      className={playerName ? 'text-gray-900 font-medium' : 'text-red-500 italic'}
+                      className={`${playerName ? 'text-gray-900 font-medium' : 'text-red-500 italic'} mb-3`}
                       style={{ color: playerName ? playerColor : undefined }}
                     >
                       {playerName || 'Unassigned'}
                     </div>
+                    
+                    {playerName && playerStats && (
+                      <div className="mt-1 bg-gray-50 p-3 rounded-md border border-gray-100">
+                        <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                          {/* Left stats column */}
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2">
+                              <div className="h-6 w-6 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                                <ScoreIcon className="h-3.5 w-3.5" />
+                              </div>
+                              <div className="flex-1 flex justify-between">
+                                <span className="text-gray-600">Goals</span>
+                                <span className="font-semibold">{playerStats.stats.goals}</span>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div className="h-6 w-6 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center">
+                                <ArrowDownIcon className="h-3.5 w-3.5" />
+                              </div>
+                              <div className="flex-1 flex justify-between">
+                                <span className="text-gray-600">Rebounds</span>
+                                <span className="font-semibold">{playerStats.stats.rebounds}</span>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          {/* Right stats column */}
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2">
+                              <div className="h-6 w-6 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center">
+                                <ShieldIcon className="h-3.5 w-3.5" />
+                              </div>
+                              <div className="flex-1 flex justify-between">
+                                <span className="text-gray-600">Int</span>
+                                <span className="font-semibold">{playerStats.stats.intercepts}</span>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div className="h-6 w-6 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center">
+                                <HandIcon className="h-3.5 w-3.5" />
+                              </div>
+                              <div className="flex-1 flex justify-between">
+                                <span className="text-gray-600">Assists</span>
+                                <span className="font-semibold">{playerStats.stats.assists}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -405,23 +378,85 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
                 const entry = rosterByQuarter[quarter]?.[position];
                 const playerName = getPlayerName(entry?.playerId);
                 const playerColor = getPlayerColor(entry?.playerId);
+                const playerStats = getPlayerPerformanceStats(position);
                 
                 return (
                   <div 
                     key={position} 
-                    className="p-4 border rounded-md shadow-sm flex flex-col"
+                    className="p-4 border rounded-md shadow-md flex flex-col"
                     style={{ 
-                      backgroundColor: playerName ? `${playerColor}20` : 'white',
+                      backgroundColor: playerName ? `${playerColor}10` : 'white',
                       border: playerName ? `2px solid ${playerColor}` : '1px solid #ddd',
                     }}
                   >
-                    <div className="font-bold text-lg">{position}</div>
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="font-bold text-lg">{position}</div>
+                      {playerName && (
+                        <div 
+                          className="h-8 w-8 rounded-full flex items-center justify-center text-white font-bold text-sm"
+                          style={{ backgroundColor: playerColor }}
+                        >
+                          {playerName.substring(0, 2)}
+                        </div>
+                      )}
+                    </div>
+                    
                     <div 
-                      className={playerName ? 'text-gray-900 font-medium' : 'text-red-500 italic'}
+                      className={`${playerName ? 'text-gray-900 font-medium' : 'text-red-500 italic'} mb-3`}
                       style={{ color: playerName ? playerColor : undefined }}
                     >
                       {playerName || 'Unassigned'}
                     </div>
+                    
+                    {playerName && playerStats && (
+                      <div className="mt-1 bg-gray-50 p-3 rounded-md border border-gray-100">
+                        <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                          {/* Left stats column */}
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2">
+                              <div className="h-6 w-6 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                                <ScoreIcon className="h-3.5 w-3.5" />
+                              </div>
+                              <div className="flex-1 flex justify-between">
+                                <span className="text-gray-600">Goals</span>
+                                <span className="font-semibold">{playerStats.stats.goals}</span>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div className="h-6 w-6 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center">
+                                <ArrowDownIcon className="h-3.5 w-3.5" />
+                              </div>
+                              <div className="flex-1 flex justify-between">
+                                <span className="text-gray-600">Rebounds</span>
+                                <span className="font-semibold">{playerStats.stats.rebounds}</span>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          {/* Right stats column */}
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2">
+                              <div className="h-6 w-6 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center">
+                                <ShieldIcon className="h-3.5 w-3.5" />
+                              </div>
+                              <div className="flex-1 flex justify-between">
+                                <span className="text-gray-600">Int</span>
+                                <span className="font-semibold">{playerStats.stats.intercepts}</span>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div className="h-6 w-6 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center">
+                                <HandIcon className="h-3.5 w-3.5" />
+                              </div>
+                              <div className="flex-1 flex justify-between">
+                                <span className="text-gray-600">Assists</span>
+                                <span className="font-semibold">{playerStats.stats.assists}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -434,23 +469,85 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
                 const entry = rosterByQuarter[quarter]?.[position];
                 const playerName = getPlayerName(entry?.playerId);
                 const playerColor = getPlayerColor(entry?.playerId);
+                const playerStats = getPlayerPerformanceStats(position);
                 
                 return (
                   <div 
                     key={position} 
-                    className="p-4 border rounded-md shadow-sm flex flex-col"
+                    className="p-4 border rounded-md shadow-md flex flex-col"
                     style={{ 
-                      backgroundColor: playerName ? `${playerColor}20` : 'white',
+                      backgroundColor: playerName ? `${playerColor}10` : 'white',
                       border: playerName ? `2px solid ${playerColor}` : '1px solid #ddd',
                     }}
                   >
-                    <div className="font-bold text-lg">{position}</div>
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="font-bold text-lg">{position}</div>
+                      {playerName && (
+                        <div 
+                          className="h-8 w-8 rounded-full flex items-center justify-center text-white font-bold text-sm"
+                          style={{ backgroundColor: playerColor }}
+                        >
+                          {playerName.substring(0, 2)}
+                        </div>
+                      )}
+                    </div>
+                    
                     <div 
-                      className={playerName ? 'text-gray-900 font-medium' : 'text-red-500 italic'}
+                      className={`${playerName ? 'text-gray-900 font-medium' : 'text-red-500 italic'} mb-3`}
                       style={{ color: playerName ? playerColor : undefined }}
                     >
                       {playerName || 'Unassigned'}
                     </div>
+                    
+                    {playerName && playerStats && (
+                      <div className="mt-1 bg-gray-50 p-3 rounded-md border border-gray-100">
+                        <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                          {/* Left stats column */}
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2">
+                              <div className="h-6 w-6 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                                <ScoreIcon className="h-3.5 w-3.5" />
+                              </div>
+                              <div className="flex-1 flex justify-between">
+                                <span className="text-gray-600">Goals</span>
+                                <span className="font-semibold">{playerStats.stats.goals}</span>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div className="h-6 w-6 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center">
+                                <ArrowDownIcon className="h-3.5 w-3.5" />
+                              </div>
+                              <div className="flex-1 flex justify-between">
+                                <span className="text-gray-600">Rebounds</span>
+                                <span className="font-semibold">{playerStats.stats.rebounds}</span>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          {/* Right stats column */}
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2">
+                              <div className="h-6 w-6 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center">
+                                <ShieldIcon className="h-3.5 w-3.5" />
+                              </div>
+                              <div className="flex-1 flex justify-between">
+                                <span className="text-gray-600">Int</span>
+                                <span className="font-semibold">{playerStats.stats.intercepts}</span>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div className="h-6 w-6 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center">
+                                <HandIcon className="h-3.5 w-3.5" />
+                              </div>
+                              <div className="flex-1 flex justify-between">
+                                <span className="text-gray-600">Assists</span>
+                                <span className="font-semibold">{playerStats.stats.assists}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 );
               })}
