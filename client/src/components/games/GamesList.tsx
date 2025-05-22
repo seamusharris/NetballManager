@@ -405,7 +405,11 @@ export default function GamesList({
                 </TableRow>
               ) : (
                 sortedGames.map(game => (
-                  <TableRow key={game.id}>
+                  <TableRow 
+                    key={game.id}
+                    className="cursor-pointer hover:bg-gray-50"
+                    onClick={() => navigate(`/games/${game.id}`)}
+                  >
                     <TableCell className="px-6 py-4 whitespace-nowrap">
                       <div className="flex flex-col">
                         <span className="font-medium text-gray-900">{formatDate(game.date)}</span>
@@ -443,7 +447,8 @@ export default function GamesList({
                           <>
                             <GameStatusBadge 
                               status={game.status || (game.completed ? 'completed' : 'upcoming')}
-                              onClick={() => {
+                              onClick={(e) => {
+                                e.stopPropagation(); // Prevent row click
                                 setSelectedGame(game);
                                 setStatusDialogOpen(true);
                               }}
@@ -553,23 +558,16 @@ export default function GamesList({
                         )}
                       </div>
                     </TableCell>
-                    <TableCell className="px-6 py-4 whitespace-nowrap text-right text-sm">
+                    <TableCell className="px-6 py-4 whitespace-nowrap text-right text-sm" onClick={(e) => e.stopPropagation()}>
                       <div className="flex justify-end space-x-2">
                         <Button 
                           variant="ghost" 
                           size="icon"
-                          className="text-primary hover:text-primary-dark"
-                          onClick={() => navigate(`/games/${game.id}`)}
-                          title="View game details"
-                        >
-                          <FileText className="h-4 w-4" />
-                        </Button>
-                        
-                        <Button 
-                          variant="ghost" 
-                          size="icon"
                           className="text-accent hover:text-accent-dark"
-                          onClick={() => onEdit(game)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onEdit(game);
+                          }}
                           title="Edit game"
                         >
                           <Edit className="h-4 w-4" />
@@ -581,7 +579,10 @@ export default function GamesList({
                               variant="ghost" 
                               size="icon"
                               className="text-error hover:text-error/80"
-                              onClick={() => confirmDelete(game.id)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                confirmDelete(game.id);
+                              }}
                               title="Delete game"
                             >
                               <Trash2 className="h-4 w-4" />
