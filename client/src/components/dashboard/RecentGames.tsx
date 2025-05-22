@@ -147,7 +147,7 @@ export default function RecentGames({ games, opponents, className }: RecentGames
             View all
           </Link>
         </div>
-        <div className="space-y-6">
+        <div className="space-y-8">
           {isLoading ? (
             <p className="text-gray-500 text-center py-4">Loading recent games...</p>
           ) : recentGames.length === 0 ? (

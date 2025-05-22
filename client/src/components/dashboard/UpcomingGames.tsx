@@ -33,7 +33,7 @@ export default function UpcomingGames({ games, opponents, className }: UpcomingG
         </div>
         
         {upcomingGames.length > 0 ? (
-          <div className="space-y-6">
+          <div className="space-y-8">
             {upcomingGames.map((game, index) => (
               <Link key={game.id} href={`/games/${game.id}`}>
                 <div 
