@@ -5,6 +5,7 @@ import { Helmet } from 'react-helmet';
 import { TEAM_NAME } from '@/lib/settings';
 import { StatItemBox } from '@/components/games/StatItemBox';
 import { PositionStatsBox } from '@/components/games/PositionStatsBox';
+import { PositionBox } from '@/components/games/PositionBox';
 import { GamePositionStatsBox } from '@/components/games/GamePositionStatsBox';
 import { 
   Card, 

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Position } from '@shared/schema';
 import { StatItemBox } from './StatItemBox';
-import { primaryPositionStats, secondaryPositionStats, statLabels, StatCategory } from '@/lib/positionStats';
+import { positionStats, statLabels, StatCategory } from '@/lib/positionStats';
 
 interface PositionStatsBoxProps {
   position: Position;
@@ -12,31 +12,17 @@ interface PositionStatsBoxProps {
 
 export const PositionStatsBox: React.FC<PositionStatsBoxProps> = ({ 
   position, 
-  stats, 
+  stats,
   className = "",
   noWrapper = false
 }) => {
-  // Get the primary and secondary stats for this position
-  const primaryStats = primaryPositionStats[position];
-  const secondaryStats = secondaryPositionStats[position];
+  // Get the stats for this position
+  const statsToShow = positionStats[position] || [];
   
-  // Render just the stats content if noWrapper is true
   const content = (
-    <div className="flex flex-col space-y-2 text-sm">
-      {/* Primary stats column */}
-      <div className="space-y-2">
-        {primaryStats.map((statKey) => (
-          <StatItemBox 
-            key={statKey}
-            label={statLabels[statKey as StatCategory]} 
-            value={stats[statKey] || 0} 
-          />
-        ))}
-      </div>
-      
-      {/* Secondary stats column */}
-      <div className="space-y-2 mt-2 pt-2 border-t">
-        {secondaryStats.map((statKey) => (
+    <div className="mt-1 bg-gray-50 p-3 rounded-md border border-gray-100">
+      <div className="flex flex-col space-y-2 text-sm">
+        {statsToShow.map((statKey) => (
           <StatItemBox 
             key={statKey}
             label={statLabels[statKey as StatCategory]} 
@@ -47,9 +33,13 @@ export const PositionStatsBox: React.FC<PositionStatsBoxProps> = ({
     </div>
   );
   
-  // Return either wrapped or unwrapped content
-  return noWrapper ? content : (
-    <div className={`mt-1 bg-gray-50 p-3 rounded-md border border-gray-100 ${className}`}>
+  if (noWrapper) {
+    return content;
+  }
+  
+  return (
+    <div className={`p-3 border rounded-md shadow-sm flex-1 flex flex-col ${className}`}>
+      <div className="font-semibold text-lg">{position}</div>
       {content}
     </div>
   );
