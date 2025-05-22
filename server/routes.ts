@@ -715,6 +715,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = Number(req.params.id);
       
+      console.log('Updating game with ID:', id);
+      console.log('Update payload:', req.body);
+      
       // If we're updating a game to be a BYE round, allow opponentId to be null
       if (req.body.isBye === true) {
         // Make opponentId null if updating to BYE game
@@ -724,10 +727,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Opponent is required for non-BYE games" });
       }
       
+      // Handle status changes - make sure completed field is also updated for compatibility
+      if (req.body.status) {
+        const completedStatuses = ['completed', 'forfeit-win', 'forfeit-loss'];
+        req.body.completed = completedStatuses.includes(req.body.status);
+        console.log(`Status changed to ${req.body.status}, setting completed to ${req.body.completed}`);
+      }
+      
+      // Log all available games before update for debugging
+      const allGames = await storage.getGames();
+      console.log('Available games:', allGames.map(g => ({ 
+        id: g.id, 
+        date: g.date, 
+        status: g.status, 
+        completed: g.completed 
+      })));
+      
       const updatedGame = await storage.updateGame(id, req.body);
       if (!updatedGame) {
+        console.log('Game not found for update');
         return res.status(404).json({ message: "Game not found" });
       }
+      
+      console.log('Game updated successfully:', updatedGame);
+      
       res.json(updatedGame);
     } catch (error) {
       console.error("Game update error:", error);
