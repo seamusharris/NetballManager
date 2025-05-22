@@ -48,15 +48,21 @@ export function GameScoreDisplay({ gameId, compact = false }: GameScoreDisplayPr
     // Determine win/loss/draw status
     const isWin = scores.finalScore.for > scores.finalScore.against;
     const isLoss = scores.finalScore.for < scores.finalScore.against;
+    const isDraw = scores.finalScore.for === scores.finalScore.against;
+    
+    // Set background color based on game result
+    const bgColor = isWin 
+      ? "bg-green-100 text-green-800 border-green-200" 
+      : isLoss 
+        ? "bg-red-100 text-red-800 border-red-200" 
+        : "bg-amber-100 text-amber-800 border-amber-200";
     
     return (
-      <div className="font-semibold text-center flex items-center justify-center gap-1">
-        <div className={`px-2 py-1 rounded ${isWin ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}`}>
-          {scores.finalScore.for}
-        </div>
-        <span className="mx-1">-</span>
-        <div className={`px-2 py-1 rounded ${isLoss ? "bg-red-100 text-red-800" : "bg-gray-100 text-gray-800"}`}>
-          {scores.finalScore.against}
+      <div className="font-semibold text-center">
+        <div className={`inline-flex items-center justify-center px-3 py-1 rounded border ${bgColor}`}>
+          <span className={isWin ? "font-bold" : ""}>{scores.finalScore.for}</span>
+          <span className="mx-2">-</span>
+          <span className={isLoss ? "font-bold" : ""}>{scores.finalScore.against}</span>
         </div>
       </div>
     );
