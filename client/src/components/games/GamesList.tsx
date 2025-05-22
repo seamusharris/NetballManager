@@ -376,7 +376,7 @@ export default function GamesList({
                   <TableRow 
                     key={game.id}
                     className="cursor-pointer hover:bg-gray-50"
-                    onClick={() => navigate(`/games/${game.id}`)}
+                    onClick={() => navigate(`/game/${game.id}`)}
                   >
                     <TableCell className="px-6 py-4 whitespace-nowrap">
                       <div className="flex flex-col">
