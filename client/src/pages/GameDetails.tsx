@@ -434,13 +434,16 @@ const QuarterScoreCard = ({ quarterScores }) => {
   );
 };
 
+
+
 export default function GameDetails() {
   // Get game ID from URL
   const params = useParams();
   const gameId = Number(params.id);
+  const queryClient = useQueryClient();
   
   // Fetch game data
-  const { data: game, isLoading: isLoadingGame, refetch } = useQuery({
+  const { data: game, isLoading: isLoadingGame } = useQuery({
     queryKey: ['/api/games', gameId],
     queryFn: async () => {
       // Add a timestamp to prevent caching
@@ -614,18 +617,10 @@ export default function GameDetails() {
               <div className="flex items-center mt-1 space-x-3">
                 <span className="text-gray-500">{formatDate(game.date)}</span>
                 <span className="text-gray-500">{game.time}</span>
-                <div
-                  onClick={() => {
-                    // Force a refetch after any change
-                    refetch();
-                    queryClient.invalidateQueries({ queryKey: ['/api/games'] });
-                  }}
-                >
-                  <GameStatusButton
-                    game={game}
-                    size="sm"
-                  />
-                </div>
+                <GameStatusButton 
+                  game={game} 
+                  size="sm" 
+                />
               </div>
             </div>
             

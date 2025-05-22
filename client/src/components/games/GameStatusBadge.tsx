@@ -126,12 +126,13 @@ export function GameStatusButton({
     
     setIsSubmitting(true);
     try {
+      // Send the update request
       await apiRequest(`/api/games/${game.id}`, 'PATCH', {
         status: selectedStatus
       });
+      
       // Force refresh all game data after status update
-      queryClient.invalidateQueries({ queryKey: ['/api/games'] });
-      queryClient.invalidateQueries({ queryKey: [`/api/games/${game.id}`] });
+      queryClient.invalidateQueries();  // Invalidate everything to ensure all data is refreshed
       
       toast({
         title: 'Game status updated',
