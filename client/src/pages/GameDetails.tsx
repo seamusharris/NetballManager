@@ -294,128 +294,105 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
         </div>
       </div>
       
-      {/* Two-column layout with equal width columns */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-7xl mx-auto px-4">
-        {/* Left column - Court diagram (half width) */}
-        <div className="flex flex-col">
-          <div className="relative w-full mx-auto aspect-[2/3] bg-green-100 rounded-lg border border-green-300 shadow-md">
-            {/* Court markings - three equal sections */}
-            <div className="absolute inset-0 flex flex-col">
-              <div className="h-1/3 border-b border-white"></div>
-              <div className="h-1/3 border-b border-white"></div>
-              <div className="h-1/3"></div>
-            </div>
-
-            {/* Position markers */}
-            {POSITIONS.map(position => {
-              const entry = rosterByQuarter[quarter]?.[position];
-              const playerName = getPlayerName(entry?.playerId);
-              const playerColor = getPlayerColor(entry?.playerId);
-              
-              // Use the player's avatar color for the background
-              const bgColor = playerName ? playerColor : 'white';
-              
-              // Use white text for player positions, red for unassigned
-              const textColor = playerName ? 'white' : '#ef4444'; // Red color for unassigned
-              
-              return (
-                <div key={position} className={`absolute ${getPositionCoordinates(position)}`}>
-                  <div 
-                    style={{ 
-                      backgroundColor: bgColor,
-                      boxShadow: '0 4px 8px rgba(0, 0, 0, 0.5)',
-                      border: playerName ? '3px solid white' : '2px solid red',
-                      width: '5rem',
-                      height: '5rem',
-                      borderRadius: '100%',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      padding: '0.25rem'
-                    }}
-                  >
-                    <div className="font-bold text-center text-base md:text-lg" style={{ color: textColor }}>{position}</div>
-                    {playerName && (
-                      <div className="text-xs md:text-sm text-center font-medium leading-tight mx-1" style={{ color: textColor }}>{playerName}</div>
-                    )}
-                    {!playerName && (
-                      <div className="text-xs text-red-500 text-center">Unassigned</div>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
+      {/* Horizontal court layout with stats below */}
+      <div className="flex flex-col gap-6 max-w-7xl mx-auto px-4">
+        {/* Horizontal court diagram */}
+        <div className="relative w-full mx-auto h-44 bg-green-100 rounded-lg border border-green-300 shadow-md">
+          {/* Court markings - three equal vertical sections for horizontal layout */}
+          <div className="absolute inset-0 flex flex-row">
+            <div className="w-1/3 border-r border-green-200"></div>
+            <div className="w-1/3 border-r border-green-200"></div>
+            <div className="w-1/3"></div>
           </div>
+          
+          {/* Center line */}
+          <div className="absolute top-1/2 left-0 right-0 h-px border-t border-dashed border-green-300"></div>
+          
+          {/* Center circles for horizontal layout */}
+          <div className="w-12 h-12 absolute top-[50%] left-[16.5%] -translate-x-1/2 -translate-y-1/2 border-2 border-green-300 rounded-full"></div>
+          <div className="w-12 h-12 absolute top-[50%] left-[50%] -translate-x-1/2 -translate-y-1/2 border-2 border-green-300 rounded-full"></div>
+          <div className="w-12 h-12 absolute top-[50%] left-[83.5%] -translate-x-1/2 -translate-y-1/2 border-2 border-green-300 rounded-full"></div>
+
+          {/* Updated position coordinates for horizontal court */}
+          {POSITIONS.map(position => {
+            const entry = rosterByQuarter[quarter]?.[position];
+            const playerName = getPlayerName(entry?.playerId);
+            const playerColor = getPlayerColor(entry?.playerId);
+            
+            // Use the player's avatar color for the background
+            const bgColor = playerName ? playerColor : 'white';
+            
+            // Use white text for player positions, red for unassigned
+            const textColor = playerName ? 'white' : '#ef4444'; // Red color for unassigned
+            
+            // New position coordinates for horizontal court
+            const horizontalPositions = {
+              // Attack end - left side
+              'GS': 'top-[25%] left-[16.5%] -translate-x-1/2 -translate-y-1/2',
+              'GA': 'top-[75%] left-[16.5%] -translate-x-1/2 -translate-y-1/2',
+              
+              // Mid-court - center
+              'WA': 'top-[25%] left-[50%] -translate-x-1/2 -translate-y-1/2',
+              'C': 'top-[50%] left-[50%] -translate-x-1/2 -translate-y-1/2',
+              'WD': 'top-[75%] left-[50%] -translate-x-1/2 -translate-y-1/2',
+              
+              // Defense end - right side
+              'GD': 'top-[25%] left-[83.5%] -translate-x-1/2 -translate-y-1/2',
+              'GK': 'top-[75%] left-[83.5%] -translate-x-1/2 -translate-y-1/2',
+            };
+            
+            const positionClass = horizontalPositions[position] || '';
+            
+            return (
+              <div key={position} className={`absolute ${positionClass}`}>
+                <div 
+                  style={{ 
+                    backgroundColor: bgColor,
+                    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.5)',
+                    border: playerName ? '3px solid white' : '2px solid red',
+                    width: '4rem',
+                    height: '4rem',
+                    borderRadius: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    padding: '0.25rem'
+                  }}
+                >
+                  <div className="font-bold text-center text-base" style={{ color: textColor }}>{position}</div>
+                  {playerName && (
+                    <div className="text-xs text-center font-medium leading-tight" style={{ color: textColor }}>{playerName}</div>
+                  )}
+                  {!playerName && (
+                    <div className="text-xs text-red-500 text-center">Unassigned</div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
         </div>
         
-        {/* Right column - Roster positions with stats (half width) */}
-        <div>
-          <div className="flex flex-col space-y-0 justify-between h-full">
-            {/* Top third - Attack positions (GS, GA) */}
-            <div className="flex flex-wrap gap-2 my-3 items-start" style={{ height: '33%' }}>
-              {POSITIONS.slice(0, 2).map(position => {
-                const entry = rosterByQuarter[quarter]?.[position];
-                const playerName = getPlayerName(entry?.playerId);
-                const playerColor = getPlayerColor(entry?.playerId);
-                const playerStats = getPlayerPerformanceStats(position);
-                
-                return (
-                  <div key={position} className="flex-1 min-w-[45%]" style={{ flexBasis: '48%' }}>
-                    <PositionBox 
-                      position={position as Position}
-                      playerName={playerName}
-                      playerColor={playerColor}
-                      playerStats={playerStats}
-                    />
-                  </div>
-                );
-              })}
-            </div>
+        {/* Stats boxes in horizontal grid below the court */}
+        <div className="grid grid-cols-2 md:grid-cols-7 gap-3">
+          {/* All positions in a single row */}
+          {POSITIONS.map(position => {
+            const entry = rosterByQuarter[quarter]?.[position];
+            const playerName = getPlayerName(entry?.playerId);
+            const playerColor = getPlayerColor(entry?.playerId);
+            const playerStats = getPlayerPerformanceStats(position);
             
-            {/* Middle third positions (WA, C, WD) - more space for readability */}
-            <div className="flex flex-wrap gap-2 my-3" style={{ height: '33%' }}>
-              {POSITIONS.slice(2, 5).map(position => {
-                const entry = rosterByQuarter[quarter]?.[position];
-                const playerName = getPlayerName(entry?.playerId);
-                const playerColor = getPlayerColor(entry?.playerId);
-                const playerStats = getPlayerPerformanceStats(position);
-                
-                // For mid-court positions, we need more width
-                return (
-                  <div key={position} className="flex-1 min-w-[33%]" style={{ flexBasis: '31%' }}>
-                    <PositionBox 
-                      position={position as Position}
-                      playerName={playerName}
-                      playerColor={playerColor}
-                      playerStats={playerStats}
-                    />
-                  </div>
-                );
-              })}
-            </div>
-            
-            {/* Bottom third - Defense positions (GD, GK) */}
-            <div className="flex flex-wrap gap-2 my-3" style={{ height: '33%' }}>
-              {POSITIONS.slice(5).map(position => {
-                const entry = rosterByQuarter[quarter]?.[position];
-                const playerName = getPlayerName(entry?.playerId);
-                const playerColor = getPlayerColor(entry?.playerId);
-                const playerStats = getPlayerPerformanceStats(position);
-                
-                return (
-                  <div key={position} className="flex-1 min-w-[45%]" style={{ flexBasis: '48%' }}>
-                    <PositionBox 
-                      position={position as Position}
-                      playerName={playerName}
-                      playerColor={playerColor}
-                      playerStats={playerStats}
-                    />
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+            return (
+              <div key={position} className="col-span-1">
+                <PositionBox 
+                  position={position as Position}
+                  playerName={playerName}
+                  playerColor={playerColor}
+                  playerStats={playerStats}
+                />
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>
