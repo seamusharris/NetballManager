@@ -294,27 +294,17 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
                     key={position} 
                     className="p-4 border rounded-md shadow-md flex flex-col"
                     style={{ 
-                      backgroundColor: playerName ? `${playerColor}10` : 'white',
-                      border: playerName ? `2px solid ${playerColor}` : '1px solid #ddd',
+                      backgroundColor: 'white',
+                      border: '1px solid #ddd',
                     }}
                   >
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="font-bold text-lg">{position}</div>
-                      {playerName && (
-                        <div 
-                          className="h-8 w-8 rounded-full flex items-center justify-center text-white font-bold text-sm"
-                          style={{ backgroundColor: playerColor }}
-                        >
-                          {playerName.substring(0, 2)}
-                        </div>
-                      )}
-                    </div>
-                    
-                    <div 
-                      className={`${playerName ? 'text-gray-900 font-medium' : 'text-red-500 italic'} mb-3`}
-                      style={{ color: playerName ? playerColor : undefined }}
-                    >
-                      {playerName || 'Unassigned'}
+                    <div className="flex justify-center mb-2">
+                      <div 
+                        className="h-8 w-8 rounded-full flex items-center justify-center text-white font-bold text-sm"
+                        style={{ backgroundColor: playerName ? playerColor : '#cbd5e1' }}
+                      >
+                        {position}
+                      </div>
                     </div>
                     
                     {playerName && playerStats && (
@@ -372,7 +362,7 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
             </div>
             
             {/* Middle third positions (WA, C, WD) */}
-            <div className="space-y-3 my-3" style={{ height: '33%' }}>
+            <div className="space-y-2 my-2" style={{ height: '33%' }}>
               {POSITIONS.slice(2, 5).map(position => {
                 const entry = rosterByQuarter[quarter]?.[position];
                 const playerName = getPlayerName(entry?.playerId);
@@ -384,27 +374,17 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
                     key={position} 
                     className="p-4 border rounded-md shadow-md flex flex-col"
                     style={{ 
-                      backgroundColor: playerName ? `${playerColor}10` : 'white',
-                      border: playerName ? `2px solid ${playerColor}` : '1px solid #ddd',
+                      backgroundColor: 'white',
+                      border: '1px solid #ddd',
                     }}
                   >
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="font-bold text-lg">{position}</div>
-                      {playerName && (
-                        <div 
-                          className="h-8 w-8 rounded-full flex items-center justify-center text-white font-bold text-sm"
-                          style={{ backgroundColor: playerColor }}
-                        >
-                          {playerName.substring(0, 2)}
-                        </div>
-                      )}
-                    </div>
-                    
-                    <div 
-                      className={`${playerName ? 'text-gray-900 font-medium' : 'text-red-500 italic'} mb-3`}
-                      style={{ color: playerName ? playerColor : undefined }}
-                    >
-                      {playerName || 'Unassigned'}
+                    <div className="flex justify-center mb-2">
+                      <div 
+                        className="h-8 w-8 rounded-full flex items-center justify-center text-white font-bold text-sm"
+                        style={{ backgroundColor: playerName ? playerColor : '#cbd5e1' }}
+                      >
+                        {position}
+                      </div>
                     </div>
                     
                     {playerName && playerStats && (
