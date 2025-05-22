@@ -646,14 +646,14 @@ const QuarterScores = ({ quarterScores }) => {
 };
 
 // Game details header component
-const GameDetailsHeader = ({ game, opponents }) => {
+const GameDetailsHeader = ({ game, opponents, gameStats = [] }) => {
   const opponentName = getOpponentName(opponents, game?.opponentId);
   const gameDate = game?.date ? formatDate(game.date) : 'TBD';
   const gameTime = game?.time || 'TBD';
   const gameLocation = game?.location || 'TBD';
   
   // Calculate game scores
-  const scores = calculateGameScores(game);
+  const scores = calculateGameScores(gameStats);
   
   return (
     <div>
@@ -704,14 +704,14 @@ const GameDetailsHeader = ({ game, opponents }) => {
           <CardContent>
             <div className="flex items-center justify-center space-x-4 text-2xl font-bold">
               <div 
-                className={`py-2 px-4 rounded-md ${scores.result === 'win' ? 'bg-green-100 text-green-800' : scores.result === 'loss' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'}`}
+                className={`py-2 px-4 rounded-md ${scores.teamScore > scores.opponentScore ? 'bg-green-100 text-green-800' : scores.teamScore < scores.opponentScore ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'}`}
               >
                 <span className="text-lg font-normal">Our Team</span>
                 <div className="text-3xl">{scores.teamScore}</div>
               </div>
               <div className="text-xl">vs.</div>
               <div 
-                className={`py-2 px-4 rounded-md ${scores.result === 'loss' ? 'bg-green-100 text-green-800' : scores.result === 'win' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'}`}
+                className={`py-2 px-4 rounded-md ${scores.teamScore < scores.opponentScore ? 'bg-green-100 text-green-800' : scores.teamScore > scores.opponentScore ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'}`}
               >
                 <span className="text-lg font-normal">{opponentName}</span>
                 <div className="text-3xl">{scores.opponentScore}</div>
@@ -719,8 +719,12 @@ const GameDetailsHeader = ({ game, opponents }) => {
             </div>
             
             <div className="mt-4 text-center">
-              <Badge className={scores.badgeClassName}>
-                {scores.badgeText}
+              <Badge className={scores.teamScore > scores.opponentScore ? 'bg-green-500 hover:bg-green-600' : 
+                                scores.teamScore < scores.opponentScore ? 'bg-red-500 hover:bg-red-600' : 
+                                'bg-gray-500 hover:bg-gray-600'}>
+                {scores.teamScore > scores.opponentScore ? 'Win' : 
+                 scores.teamScore < scores.opponentScore ? 'Loss' : 
+                 'Draw'}
               </Badge>
             </div>
           </CardContent>
@@ -824,7 +828,7 @@ export default function GameDetails() {
         </div>
       ) : (
         <>
-          <GameDetailsHeader game={game} opponents={opponents} />
+          <GameDetailsHeader game={game} opponents={opponents} gameStats={stats} />
           
           <div className="mt-6">
             <Tabs defaultValue="court">
