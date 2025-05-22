@@ -62,7 +62,23 @@ export function StatsPerformanceDemo() {
       
       const data = await response.json();
       console.log("Loaded game stats:", data);
-      setGameStats(data);
+      
+      // Sort by quarter first, then by position
+      const sortedData = [...data].sort((a, b) => {
+        // First sort by quarter
+        if (a.quarter !== b.quarter) {
+          return a.quarter - b.quarter;
+        }
+        
+        // Then sort by position
+        const positionOrder = {
+          "GS": 1, "GA": 2, "WA": 3, "C": 4, "WD": 5, "GD": 6, "GK": 7
+        };
+        
+        return positionOrder[a.position] - positionOrder[b.position];
+      });
+      
+      setGameStats(sortedData);
     } catch (error) {
       console.error("Error loading game stats:", error);
       setStatsError(true);
