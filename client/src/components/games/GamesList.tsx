@@ -68,7 +68,6 @@ export default function GamesList({
 }: GamesListProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [dateFilter, setDateFilter] = useState('all');
   const [itemToDelete, setItemToDelete] = useState<number | null>(null);
   const [_, navigate] = useLocation();
   const [gameScores, setGameScores] = useState<Record<number, GameScore>>({});
@@ -241,7 +240,7 @@ export default function GamesList({
     return opponent ? opponent.teamName : 'Unknown Opponent';
   };
   
-  // Filter games based on search and filters
+  // Filter games based on search and status filters
   const filteredGames = games.filter(game => {
     const opponentName = getOpponentName(game.opponentId);
     
@@ -255,23 +254,8 @@ export default function GamesList({
       statusFilter === 'all' || 
       (statusFilter === 'completed' && game.completed) || 
       (statusFilter === 'upcoming' && !game.completed);
-      
-    // Date filtering (simple implementation - would be more sophisticated in real app)
-    const gameDate = new Date(game.date);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
     
-    const isPast = gameDate < today;
-    const isFuture = gameDate > today;
-    const isToday = gameDate.toDateString() === today.toDateString();
-    
-    const matchesDate = 
-      dateFilter === 'all' || 
-      (dateFilter === 'past' && isPast) ||
-      (dateFilter === 'future' && isFuture) ||
-      (dateFilter === 'today' && isToday);
-    
-    return matchesSearch && matchesStatus && matchesDate;
+    return matchesSearch && matchesStatus;
   });
   
   // Sort games strictly by date (future games first)
@@ -314,7 +298,6 @@ export default function GamesList({
         <CardContent className="p-4">
           <div className="flex flex-wrap gap-4">
             <div className="flex-1 min-w-[200px]">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Search</label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input
@@ -328,7 +311,6 @@ export default function GamesList({
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="All Games" />
@@ -337,21 +319,6 @@ export default function GamesList({
                   <SelectItem value="all">All Games</SelectItem>
                   <SelectItem value="upcoming">Upcoming</SelectItem>
                   <SelectItem value="completed">Completed</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
-              <Select value={dateFilter} onValueChange={setDateFilter}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="All Dates" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Dates</SelectItem>
-                  <SelectItem value="today">Today</SelectItem>
-                  <SelectItem value="future">Upcoming</SelectItem>
-                  <SelectItem value="past">Past</SelectItem>
                 </SelectContent>
               </Select>
             </div>
