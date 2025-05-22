@@ -40,15 +40,19 @@ const PositionStatsBox = ({ position, playerName, playerColor, playerStats }) =>
   return (
     <div 
       key={position} 
-      className="p-3 border rounded-md shadow-sm flex-1 flex flex-col"
+      className="p-2 border rounded-md shadow-sm w-auto" 
       style={{ 
         backgroundColor: playerName ? `${playerColor}10` : 'white',
         border: playerName ? `2px solid ${playerColor}` : '1px solid #ddd',
+        minWidth: '80px',
+        maxWidth: '120px',
+        flex: '0 1 auto'
       }}
     >
+      <div className="text-center font-medium mb-1">{position}</div>
       {playerName && playerStats && (
-        <div className="mt-1 bg-gray-50 p-3 rounded-md border border-gray-100">
-          <div className="flex flex-col space-y-2 text-sm">
+        <div className="bg-gray-50 p-2 rounded-md border border-gray-100">
+          <div className="flex flex-col space-y-1 text-xs">
             <StatItemBox label="Goals" value={playerStats.stats.goals} />
             <StatItemBox label="Rebounds" value={playerStats.stats.rebounds} />
             <StatItemBox label="Int" value={playerStats.stats.intercepts} />
