@@ -26,15 +26,23 @@ export default function Games() {
     queryClient.invalidateQueries({ queryKey: ['gameStats'] });
   }, []);
   
-  // Check for editId parameter in the URL
+  // Check for editId parameter in the URL and handle edit game loading
   useEffect(() => {
-    const searchParams = new URLSearchParams(window.location.search);
-    const editId = searchParams.get('editId');
-    
-    if (editId && games.length > 0) {
-      const gameToEdit = games.find(game => game.id === parseInt(editId));
-      if (gameToEdit) {
-        setEditingGame(gameToEdit);
+    if (games.length > 0) {
+      const searchParams = new URLSearchParams(window.location.search);
+      const editId = searchParams.get('editId');
+      
+      if (editId) {
+        const gameId = parseInt(editId);
+        const gameToEdit = games.find(game => game.id === gameId);
+        if (gameToEdit) {
+          // Set the editing game to trigger the dialog
+          setEditingGame(gameToEdit);
+          
+          // Clear the URL parameter without reloading the page
+          const newUrl = window.location.pathname;
+          window.history.replaceState({}, '', newUrl);
+        }
       }
     }
   }, [games]);
