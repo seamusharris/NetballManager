@@ -413,7 +413,7 @@ export default function GamesList({
                 sortedGames.map(game => (
                   <TableRow 
                     key={game.id}
-                    className="cursor-pointer hover:bg-gray-50"
+                    className="cursor-pointer hover:bg-gray-50 group relative"
                     onClick={() => navigate(`/games/${game.id}`)}
                   >
                     <TooltipProvider delayDuration={600}>
@@ -426,10 +426,27 @@ export default function GamesList({
                             </div>
                           </TableCell>
                         </TooltipTrigger>
-                        <TooltipContent side="top" className="bg-gray-900 text-white p-3 space-y-2 w-64">
-                          <div className="font-medium">{game.round ? `Round ${game.round}` : 'Game'}</div>
-                          <div>vs {getOpponentName(game.opponentId)}</div>
-                          <div className="text-xs text-gray-300">Click for details</div>
+                        <TooltipContent side="top" className="bg-gray-900 text-white p-3 space-y-2 max-w-sm">
+                          <div className="space-y-2">
+                            <div className="font-bold text-base">
+                              {game.round ? `Round ${game.round}` : 'Game'} vs. {getOpponentName(game.opponentId)}
+                            </div>
+                            <div className="text-sm grid grid-cols-2 gap-2">
+                              <div>Date:</div>
+                              <div>{formatDate(game.date)}</div>
+                              <div>Time:</div>
+                              <div>{game.time}</div>
+                              <div>Status:</div>
+                              <div>{game.status || (game.completed ? 'Completed' : 'Upcoming')}</div>
+                              {!game.isBye && gameScores[game.id] && (
+                                <>
+                                  <div>Score:</div>
+                                  <div>{gameScores[game.id].team}-{gameScores[game.id].opponent}</div>
+                                </>
+                              )}
+                            </div>
+                            <div className="text-xs text-gray-300 mt-1">Click for game details</div>
+                          </div>
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
