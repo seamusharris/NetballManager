@@ -388,8 +388,11 @@ export default function GameDetails() {
           </Button>
           
           <GameDetailsStatusButton 
-            gameId={parseInt(id)}
-            currentStatus={game.status as GameStatus}
+            game={game}
+            onStatusChanged={(newStatus) => {
+              queryClient.invalidateQueries({queryKey: ['/api/games']});
+              queryClient.invalidateQueries({queryKey: [`/api/games/${id}`]});
+            }}
           />
         </div>
         
