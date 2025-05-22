@@ -374,7 +374,9 @@ const DetailedStatistics = ({ gameStats }) => {
   // Calculate totals for each position
   const positionTotals = useMemo(() => {
     return Object.entries(statsByPosition).map(([position, stats]) => {
-      const totals = stats.reduce((acc, stat) => {
+      // Ensure stats is an array before using reduce
+      const statsArray = Array.isArray(stats) ? stats : [];
+      const totals = statsArray.reduce((acc, stat) => {
         acc.goalsFor += stat.goalsFor || 0;
         acc.goalsAgainst += stat.goalsAgainst || 0;
         acc.missedGoals += stat.missedGoals || 0;
