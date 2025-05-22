@@ -495,7 +495,10 @@ export default function GamesList({
                             {/* Don't show statistics button for forfeit games */}
                             {!isForfeitGame(game) && (
                               <button 
-                                onClick={() => navigate(`/game/${game.id}/stats`)}
+                                onClick={(e) => {
+                                  e.stopPropagation(); // Prevent row click
+                                  navigate(`/game/${game.id}/stats`);
+                                }}
                                 title={
                                   !gameStatsStatus[game.id] || gameStatsStatus[game.id] === 'none'
                                     ? "No statistics recorded yet"
@@ -526,7 +529,10 @@ export default function GamesList({
                              !game.completed && 
                              gameRosterStatus[game.id] === 'complete' && (
                               <button 
-                                onClick={() => navigate(`/game/${game.id}/livestats`)}
+                                onClick={(e) => {
+                                  e.stopPropagation(); // Prevent row click
+                                  navigate(`/game/${game.id}/livestats`);
+                                }}
                                 className="inline-flex items-center justify-center rounded-md text-xs py-1 px-2 border border-purple-200 bg-purple-50 text-purple-700 hover:bg-purple-100"
                               >
                                 <ActivitySquare className="h-3 w-3 mr-1 text-purple-600" />
