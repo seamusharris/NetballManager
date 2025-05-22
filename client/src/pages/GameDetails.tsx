@@ -280,10 +280,9 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
         
         {/* Right column - Roster positions with stats (half width) */}
         <div>
-          <div className="flex flex-col space-y-6">
-            {/* Top third - Attack */}
-            <div className="space-y-3">
-              <h3 className="text-sm font-medium text-gray-500">Attack Third</h3>
+          <div className="flex flex-col space-y-3">
+            {/* Top third - Attack positions */}
+            <div className="space-y-2">
               {POSITIONS.slice(0, 2).map(position => {
                 const entry = rosterByQuarter[quarter]?.[position];
                 const playerName = getPlayerName(entry?.playerId);
