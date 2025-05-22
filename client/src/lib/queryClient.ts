@@ -53,14 +53,18 @@ export const getQueryFn: <T>(options: {
     return await res.json();
   };
 
+/**
+ * Optimized query client configuration with proper stale times
+ * based on data type and frequency of updates
+ */
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       queryFn: getQueryFn({ on401: "throw" }),
-      refetchInterval: false,
       refetchOnWindowFocus: false,
-      staleTime: Infinity,
       retry: false,
+      // Default stale time - we'll override this for specific queries
+      staleTime: 60 * 1000, // 1 minute
     },
     mutations: {
       retry: false,

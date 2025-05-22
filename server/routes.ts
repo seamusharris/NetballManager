@@ -856,6 +856,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch game stats" });
     }
   });
+  
+  // Add a standard route without hyphens for game stats (for consistency)
+  app.get("/api/gamestats", async (req, res) => {
+    try {
+      // If no game ID is provided, return an empty array
+      if (!req.query.gameId) {
+        return res.json([]);
+      }
+      
+      const gameId = Number(req.query.gameId);
+      const stats = await storage.getGameStatsByGame(gameId);
+      res.json(stats);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch game stats" });
+    }
+  });
 
   app.post("/api/gamestats", async (req, res) => {
     try {
