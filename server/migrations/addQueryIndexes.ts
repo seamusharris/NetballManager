@@ -79,7 +79,5 @@ export async function runAddQueryIndexesMigration(): Promise<void> {
   }
 }
 
-// Allow this migration to be run directly
-if (require.main === module) {
-  runAddQueryIndexesMigration();
-}
+// This will be called by our migration runner script
+// No need for a direct module check in ES modules

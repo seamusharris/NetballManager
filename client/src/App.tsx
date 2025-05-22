@@ -4,7 +4,9 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { Loader2 } from "lucide-react";
 import Layout from "@/components/layout/Layout";
+import ErrorBoundary from "@/components/ui/ErrorBoundary";
 import Dashboard from "@/pages/Dashboard";
 import Players from "@/pages/Players";
 import Roster from "@/pages/Roster";
@@ -24,31 +26,58 @@ import GameDetails from "./pages/GameDetails";
 // Lazy load the debug component
 const StatsDebug = lazy(() => import("./pages/StatsDebug"));
 
+/**
+ * Loading spinner component for suspense fallbacks
+ */
+function LoadingSpinner({ message = "Loading..." }) {
+  return (
+    <div className="flex flex-col items-center justify-center h-32 space-y-4">
+      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <span className="text-sm text-muted-foreground">{message}</span>
+    </div>
+  );
+}
+
+/**
+ * Wrap component with error boundary
+ */
+function withErrorBoundary(Component: React.ComponentType<any>, name: string) {
+  return (props: any) => (
+    <ErrorBoundary>
+      <Component {...props} />
+    </ErrorBoundary>
+  );
+}
+
 function Router() {
   return (
     <Layout>
       <Switch>
-        <Route path="/" component={Dashboard} />
-        <Route path="/dashboard" component={Dashboard} />
-        <Route path="/players" component={Players} />
-        <Route path="/player/:id" component={PlayerDetails} />
-        <Route path="/roster" component={Roster} />
-        <Route path="/games" component={Games} />
-        <Route path="/games/edit/:id" component={Games} />
-        <Route path="/game/:id" component={GameDetails} />
-        <Route path="/opponents" component={Opponents} />
-        <Route path="/statistics" component={Statistics} />
-        <Route path="/data-management" component={DataManagement} />
-        <Route path="/settings" component={Settings} />
-        <Route path="/games/:id/livestats" component={LiveStatsByPosition} />
-        <Route path="/games/:id/stats" component={Statistics} />
-        <Route path="/games/:id/livestats-legacy" component={LiveStats} />
-        <Route path="/games/:id/stats-debug" component={() => (
-          <Suspense fallback={<div>Loading debug tool...</div>}>
-            <StatsDebug />
-          </Suspense>
-        )} />
-        <Route component={NotFound} />
+        <Route path="/" component={withErrorBoundary(Dashboard, 'Dashboard')} />
+        <Route path="/dashboard" component={withErrorBoundary(Dashboard, 'Dashboard')} />
+        <Route path="/players" component={withErrorBoundary(Players, 'Players')} />
+        <Route path="/player/:id" component={withErrorBoundary(PlayerDetails, 'PlayerDetails')} />
+        <Route path="/roster" component={withErrorBoundary(Roster, 'Roster')} />
+        <Route path="/games" component={withErrorBoundary(Games, 'Games')} />
+        <Route path="/games/edit/:id" component={withErrorBoundary(Games, 'GameEdit')} />
+        <Route path="/game/:id" component={withErrorBoundary(GameDetails, 'GameDetails')} />
+        <Route path="/opponents" component={withErrorBoundary(Opponents, 'Opponents')} />
+        <Route path="/statistics" component={withErrorBoundary(Statistics, 'Statistics')} />
+        <Route path="/data-management" component={withErrorBoundary(DataManagement, 'DataManagement')} />
+        <Route path="/settings" component={withErrorBoundary(Settings, 'Settings')} />
+        <Route path="/games/:id/livestats" component={withErrorBoundary(LiveStatsByPosition, 'LiveStats')} />
+        <Route path="/games/:id/stats" component={withErrorBoundary(Statistics, 'GameStatistics')} />
+        <Route path="/games/:id/livestats-legacy" component={withErrorBoundary(LiveStats, 'LiveStatsLegacy')} />
+        <Route path="/games/:id/stats-debug">
+          {(params) => (
+            <ErrorBoundary>
+              <Suspense fallback={<LoadingSpinner message="Loading debugging tools..." />}>
+                <StatsDebug id={params.id} />
+              </Suspense>
+            </ErrorBoundary>
+          )}
+        </Route>
+        <Route component={withErrorBoundary(NotFound, 'NotFound')} />
       </Switch>
     </Layout>
   );
@@ -58,8 +87,10 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <Toaster />
-        <Router />
+        <ErrorBoundary>
+          <Toaster />
+          <Router />
+        </ErrorBoundary>
       </TooltipProvider>
     </QueryClientProvider>
   );

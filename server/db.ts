@@ -7,8 +7,7 @@ import { log } from "./vite";
 neonConfig.webSocketConstructor = ws;
 
 // Configure Neon for better error handling
-neonConfig.fetchConnectionCache = true;
-neonConfig.fetchEndpointCache = true;
+// (fetchConnectionCache is now always true by default)
 
 if (!process.env.DATABASE_URL) {
   throw new Error(
