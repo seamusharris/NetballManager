@@ -20,6 +20,7 @@ import {
   calculateGameScores, 
   getGameStatusColor 
 } from '@/lib/statisticsService';
+import { GameStatusButton } from '@/components/games/GameStatusButton';
 
 // Function to get opponent name
 const getOpponentName = (opponents: any[], opponentId: number | null) => {
@@ -28,32 +29,7 @@ const getOpponentName = (opponents: any[], opponentId: number | null) => {
   return opponent ? opponent.teamName : 'Unknown Opponent';
 };
 
-// Helper to get status badge display
-const getStatusBadge = (status: GameStatus) => {
-  const colorMap = {
-    'upcoming': 'bg-blue-100 text-blue-800',
-    'in-progress': 'bg-amber-100 text-amber-800',
-    'completed': 'bg-green-100 text-green-800',
-    'forfeit': 'bg-red-100 text-red-800',
-    'forfeit-win': 'bg-orange-100 text-orange-800',
-    'forfeit-loss': 'bg-red-100 text-red-800'
-  };
-  
-  const labelMap = {
-    'upcoming': 'Upcoming',
-    'in-progress': 'In Progress',
-    'completed': 'Completed',
-    'forfeit': 'Forfeit',
-    'forfeit-win': 'Forfeit (Win)',
-    'forfeit-loss': 'Forfeit (Loss)'
-  };
-  
-  return (
-    <span className={`px-2 py-1 rounded-full text-xs font-medium ${colorMap[status]}`}>
-      {labelMap[status]}
-    </span>
-  );
-};
+// We now use the shared GameStatusButton component instead
 
 // Calculate quarter by quarter scores
 const calculateQuarterScores = (gameStats: any[], game: any) => {
@@ -634,7 +610,7 @@ export default function GameDetails() {
               <div className="flex items-center mt-1 space-x-3">
                 <span className="text-gray-500">{formatDate(game.date)}</span>
                 <span className="text-gray-500">{game.time}</span>
-                {getStatusBadge(game.status as GameStatus)}
+                <GameStatusButton game={game} size="sm" />
               </div>
             </div>
             

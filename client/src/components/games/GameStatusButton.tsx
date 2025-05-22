@@ -16,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Game, allGameStatuses } from '@shared/schema';
+import { Game, GameStatus, allGameStatuses } from '@shared/schema';
 import { queryClient } from '@/lib/queryClient';
 import { apiRequest } from '@/lib/queryClient';
 import { toast } from '@/hooks/use-toast';
@@ -63,7 +63,7 @@ export function getStatusDisplay(status: string): string {
 export function GameStatusButton({ game, className = '', size = 'default', withDialog = true }: GameStatusButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [selectedStatus, setSelectedStatus] = useState(game.status);
+  const [selectedStatus, setSelectedStatus] = useState<GameStatus>(game.status as GameStatus);
   
   const badgeSize = size === 'sm' ? 'px-2 py-1 text-xs' : 'px-3 py-1';
   
@@ -104,9 +104,9 @@ export function GameStatusButton({ game, className = '', size = 'default', withD
   if (!withDialog) {
     return (
       <Badge 
-        className={`${getStatusClass(game.status)} ${badgeSize} ${className}`}
+        className={`${getStatusClass(game.status as string)} ${badgeSize} ${className}`}
       >
-        {getStatusDisplay(game.status)}
+        {getStatusDisplay(game.status as string)}
       </Badge>
     );
   }
@@ -115,11 +115,13 @@ export function GameStatusButton({ game, className = '', size = 'default', withD
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Badge 
-          className={`${getStatusClass(game.status)} cursor-pointer ${badgeSize} ${className}`}
-        >
-          {getStatusDisplay(game.status)}
-        </Badge>
+        <div>
+          <Badge 
+            className={`${getStatusClass(game.status as string)} cursor-pointer ${badgeSize} ${className}`}
+          >
+            {getStatusDisplay(game.status as string)}
+          </Badge>
+        </div>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
@@ -132,7 +134,7 @@ export function GameStatusButton({ game, className = '', size = 'default', withD
         <div className="py-4">
           <Select 
             value={selectedStatus} 
-            onValueChange={setSelectedStatus}
+            onValueChange={(value: string) => setSelectedStatus(value as GameStatus)}
           >
             <SelectTrigger>
               <SelectValue placeholder="Select status" />
