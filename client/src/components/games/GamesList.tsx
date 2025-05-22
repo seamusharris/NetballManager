@@ -126,7 +126,7 @@ export default function GamesList({
   
   // Use React Query to fetch and cache statistics for all games in a single request
   const { data: allGameStats, isLoading: isLoadingStats } = useQuery({
-    queryKey: ['allGameStats', completedGameIds.length],
+    queryKey: ['batchGameStats', ...completedGameIds],
     queryFn: async () => {
       if (completedGameIds.length === 0) {
         return {};
@@ -143,16 +143,12 @@ export default function GamesList({
       // Only perform API request if we have completed games
       if (completedGameIds.length > 0) {
         try {
+          console.log(`Batch fetching stats for ${completedGameIds.length} games via React Query`);
           // Get all stats for completed games in a single batch request
-          const timestamp = new Date().getTime();
-          const response = await fetch(`/api/gamestats/batch?gameIds=${completedGameIds.join(',')}&_t=${timestamp}`);
+          // Use apiRequest instead of direct fetch for consistent error handling
+          const allStats = await apiRequest(`/api/gamestats/batch?gameIds=${completedGameIds.join(',')}`);
           
-          if (!response.ok) {
-            console.error("Error fetching game stats batch:", response.status);
-            return statsMap; // Return empty map on error
-          }
-          
-          const allStats = await response.json();
+          console.log(`Received ${allStats.length} stats from batch request`);
           
           // Group stats by gameId
           allStats.forEach((stat: any) => {
@@ -162,15 +158,15 @@ export default function GamesList({
             statsMap[stat.gameId].push(stat);
           });
         } catch (error) {
-          console.error("Error fetching game stats:", error);
+          console.error("Error fetching game stats in batch:", error);
         }
       }
       
       return statsMap;
     },
     enabled: completedGameIds.length > 0,
-    staleTime: 30000, // Consider data fresh for 30 seconds
-    refetchOnMount: true,
+    staleTime: 60000, // Consider data fresh for 60 seconds
+    refetchOnMount: 'always', // Always refetch when component mounts
     refetchOnWindowFocus: true
   });
 
