@@ -33,6 +33,7 @@ function Router() {
         <Route path="/player/:id" component={PlayerDetails} />
         <Route path="/roster" component={Roster} />
         <Route path="/games" component={Games} />
+        <Route path="/games/edit/:id" component={Games} />
         <Route path="/games/:id" component={GameDetails} />
         <Route path="/opponents" component={Opponents} />
         <Route path="/statistics" component={Statistics} />
