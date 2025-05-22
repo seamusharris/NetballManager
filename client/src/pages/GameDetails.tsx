@@ -196,13 +196,10 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
         </div>
       </div>
       
-      <div className="flex flex-row justify-center">
-        <div className="w-full max-w-3xl flex items-start justify-center px-8">
-          {/* Left spacer to center the court with the right roster */}
-          <div className="w-[200px] mr-8"></div>
-          
-          {/* Court diagram and roster buttons side by side */}
-          <div className="relative w-full max-w-lg aspect-[2/3] bg-green-100 rounded-lg border border-green-300">
+      {/* Simple two-column layout */}
+      <div className="flex flex-col md:flex-row justify-center gap-8 px-4">
+        {/* Court diagram */}
+        <div className="relative w-full max-w-md mx-auto aspect-[2/3] bg-green-100 rounded-lg border border-green-300">
             {/* Court markings - three equal sections */}
             <div className="absolute inset-0 flex flex-col">
               <div className="h-1/3 border-b border-white flex items-center justify-end">
