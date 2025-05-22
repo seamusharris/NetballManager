@@ -1,5 +1,4 @@
-import React, { useState } from 'react';
-import { useGames } from '@/hooks/use-data-loader';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -18,21 +17,47 @@ import { Game, GameStat } from '@shared/schema';
 export function StatsPerformanceDemo() {
   const [selectedGameId, setSelectedGameId] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState("games");
+  const [games, setGames] = useState<Game[]>([]);
   const [gameStats, setGameStats] = useState<GameStat[] | null>(null);
+  const [gamesLoading, setGamesLoading] = useState(true);
+  const [gamesError, setGamesError] = useState(false);
   const [statsLoading, setStatsLoading] = useState(false);
   const [statsError, setStatsError] = useState(false);
   
-  const { 
-    data: games, 
-    isLoading: gamesLoading, 
-    isError: gamesError,
-    refetch: refetchGames
-  } = useGames();
+  // Fetch games on component mount
+  useEffect(() => {
+    fetchGames();
+  }, []);
   
-  // Filter to only include completed games
-  const completedGames = games && Array.isArray(games) ? games.filter(game => 
-    game.status === 'completed' || game.status === 'forfeit-win' || game.status === 'forfeit-loss'
-  ) : [];
+  // Function to fetch games
+  const fetchGames = async () => {
+    setGamesLoading(true);
+    setGamesError(false);
+    
+    try {
+      const response = await fetch('/api/games');
+      if (!response.ok) {
+        throw new Error(`Failed to load games: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log("Loaded games:", data);
+      
+      // Filter to only include completed games
+      const completedGames = data.filter((game: Game) => 
+        game.status === 'completed' || 
+        game.status === 'forfeit-win' || 
+        game.status === 'forfeit-loss'
+      );
+      
+      setGames(completedGames);
+    } catch (error) {
+      console.error("Error loading games:", error);
+      setGamesError(true);
+    } finally {
+      setGamesLoading(false);
+    }
+  };
   
   const handleGameSelect = (gameId: number) => {
     setSelectedGameId(gameId);
@@ -71,7 +96,7 @@ export function StatsPerformanceDemo() {
         }
         
         // Then sort by position
-        const positionOrder = {
+        const positionOrder: Record<string, number> = {
           "GS": 1, "GA": 2, "WA": 3, "C": 4, "WD": 5, "GD": 6, "GK": 7
         };
         
@@ -85,6 +110,10 @@ export function StatsPerformanceDemo() {
     } finally {
       setStatsLoading(false);
     }
+  };
+
+  const refreshGames = () => {
+    fetchGames();
   };
 
   const refreshStats = () => {
@@ -125,12 +154,12 @@ export function StatsPerformanceDemo() {
             <div className="flex items-center justify-between py-2">
               <h3 className="text-sm font-medium">
                 {gamesLoading ? 'Loading games...' : 
-                 `${completedGames.length} Completed Games`}
+                 `${games.length} Completed Games`}
               </h3>
               <Button 
                 variant="outline" 
                 size="sm"
-                onClick={() => refetchGames()}
+                onClick={refreshGames}
                 disabled={gamesLoading}
                 className="flex items-center gap-1"
               >
@@ -150,7 +179,7 @@ export function StatsPerformanceDemo() {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                {completedGames.map(game => (
+                {games.map(game => (
                   <div
                     key={game.id}
                     className={cn(
