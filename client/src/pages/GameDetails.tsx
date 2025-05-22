@@ -195,7 +195,7 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
       </div>
       
       <div className="flex justify-center my-4">
-        <div className="flex items-start space-x-16">
+        <div className="flex items-start space-x-20">
           {/* Court diagram */}
           <div className="relative w-full max-w-lg aspect-[2/3] bg-green-100 rounded-lg border border-green-300">
             {/* Court markings */}
@@ -248,7 +248,7 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
           </div>
           
           {/* Position roster buttons arranged by court thirds */}
-          <div className="flex flex-col justify-between h-[500px] w-[220px]">
+          <div className="flex flex-col justify-between h-[500px] w-[240px]">
             {/* Top third - GS, GA */}
             <div className="flex flex-col space-y-2">
               {POSITIONS.slice(0, 2).map(position => {
