@@ -783,40 +783,40 @@ const QuarterScores = ({ quarterScores }) => {
   
   return (
     <div>
-      <div className="mt-4 max-w-md mx-auto">
+      <div className="mt-4 max-w-2xl mx-auto">
         <div className={`rounded-md overflow-hidden border ${
           totalTeamScore > totalOpponentScore ? 'border-green-300' :
           totalTeamScore < totalOpponentScore ? 'border-red-300' : 'border-amber-300'
         }`}>
-          <div className={`text-white p-3 text-center ${statusColor}`}>
+          <div className={`text-white p-4 text-center ${statusColor}`}>
             <div className="flex justify-center items-center text-xl">
-              <span className="font-bold text-2xl">{totalTeamScore}</span>
-              <span className="mx-3">-</span>
-              <span className="font-bold text-2xl">{totalOpponentScore}</span>
+              <span className="font-bold text-3xl">{totalTeamScore}</span>
+              <span className="mx-4">-</span>
+              <span className="font-bold text-3xl">{totalOpponentScore}</span>
             </div>
           </div>
-          <div className="bg-white p-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <div className="text-center mb-2 font-medium text-sm text-gray-600">Quarter Scores</div>
-                <div className="grid grid-cols-4 gap-2">
+          <div className="bg-white p-6">
+            <div className="grid grid-cols-2 gap-10">
+              <div className="border-r pr-4">
+                <div className="text-center mb-3 font-medium text-base text-gray-700">Quarter-by-Quarter</div>
+                <div className="grid grid-cols-4 gap-4">
                   {scoringByQuarter.map(score => (
                     <div key={`q-${score.quarter}`} className="text-center">
                       <div className="text-xs text-gray-500 mb-1">Q{score.quarter}</div>
-                      <div className="font-medium">
+                      <div className="font-medium text-lg">
                         {score.teamScore}-{score.opponentScore}
                       </div>
                     </div>
                   ))}
                 </div>
               </div>
-              <div>
-                <div className="text-center mb-2 font-medium text-sm text-gray-600">Running Total</div>
-                <div className="grid grid-cols-4 gap-2">
+              <div className="pl-4">
+                <div className="text-center mb-3 font-medium text-base text-gray-700">Running Total</div>
+                <div className="grid grid-cols-4 gap-4">
                   {cumulativeScores.map(score => (
                     <div key={`cumulative-${score.quarter}`} className="text-center">
                       <div className="text-xs text-gray-500 mb-1">Q{score.quarter}</div>
-                      <div className="font-medium">
+                      <div className="font-medium text-lg">
                         {score.cumulativeTeamScore}-{score.cumulativeOpponentScore}
                       </div>
                     </div>
