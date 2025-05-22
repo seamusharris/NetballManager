@@ -296,8 +296,8 @@ export default function GamesList({
       {/* Filters */}
       <Card>
         <CardContent className="p-4">
-          <div className="flex flex-wrap gap-4">
-            <div className="w-[180px]">
+          <div className="flex flex-wrap justify-between gap-4">
+            <div className="w-[360px]">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input
@@ -310,22 +310,22 @@ export default function GamesList({
               </div>
             </div>
             
-            <div className="w-[140px]">
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="All Games" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Games</SelectItem>
-                  <SelectItem value="upcoming">Upcoming</SelectItem>
-                  <SelectItem value="in-progress">In Progress</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                  <SelectItem value="forfeit">Forfeit</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="self-end">
+            <div className="flex gap-3 items-center">
+              <div className="w-[140px]">
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="All Games" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Games</SelectItem>
+                    <SelectItem value="upcoming">Upcoming</SelectItem>
+                    <SelectItem value="in-progress">In Progress</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                    <SelectItem value="forfeit">Forfeit</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
               <Button 
                 className="bg-accent hover:bg-accent-light text-white"
                 onClick={() => {
