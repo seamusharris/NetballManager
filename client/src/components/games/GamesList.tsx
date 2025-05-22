@@ -36,7 +36,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Edit, Trash2, FileText, CalendarRange, Search, Trophy, ThumbsDown, Minus, ActivitySquare } from 'lucide-react';
+import { Edit, Trash2, FileText, CalendarRange, Search, Trophy, ThumbsDown, Minus, ActivitySquare, Eye } from 'lucide-react';
 import { Game, Opponent, GameStat, GameStatus } from '@shared/schema';
 import { formatDate, formatShortDate } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
