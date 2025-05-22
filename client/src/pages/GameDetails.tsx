@@ -799,7 +799,7 @@ const QuarterScores = ({ quarterScores }) => {
           <div className="bg-white p-6">
             <div className="grid grid-cols-2 gap-10">
               <div className="border-r pr-4">
-                <div className="text-center mb-3 font-medium text-base text-gray-700">Quarter-by-Quarter</div>
+                <div className="text-center mb-3 font-medium text-base text-gray-700">Quarter Scores</div>
                 <div className="grid grid-cols-4 gap-4">
                   {scoringByQuarter.map(score => (
                     <div key={`q-${score.quarter}`} className="text-center">
@@ -812,7 +812,7 @@ const QuarterScores = ({ quarterScores }) => {
                 </div>
               </div>
               <div className="pl-4">
-                <div className="text-center mb-3 font-medium text-base text-gray-700">Running Total</div>
+                <div className="text-center mb-3 font-medium text-base text-gray-700">Game Scores</div>
                 <div className="grid grid-cols-4 gap-4">
                   {cumulativeScores.map(score => (
                     <div key={`cumulative-${score.quarter}`} className="text-center">
@@ -959,7 +959,7 @@ export default function GameDetails() {
           <h1 className="text-2xl font-bold">
             {game.opponentId ? (
               <span>
-                {TEAM_NAME} vs {opponentName} {game.round && `(Round ${game.round})`}
+                {TEAM_NAME} vs {opponentName}
               </span>
             ) : (
               <span>BYE Round</span>
