@@ -185,6 +185,7 @@ export default function Games() {
         
         <GamesList 
           games={games} 
+          opponents={opponents} 
           isLoading={isLoading} 
           onEdit={setEditingGame}
           onDelete={handleDeleteGame}
