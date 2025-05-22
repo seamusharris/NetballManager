@@ -192,14 +192,36 @@ export default function GameDetails() {
   };
 
   const getPlayerPerformanceStats = (position) => {
-    if (!gameStats || !position) return null;
+    if (!gameStats || !position) {
+      return { 
+        stats: { 
+          goals: 0, 
+          missedGoals: 0, 
+          rebounds: 0, 
+          intercepts: 0, 
+          assists: 0 
+        } 
+      };
+    }
     
     // Filter stats for this position and quarter
-    const positionStats = gameStats.filter(
+    const positionStatsList = gameStats.filter(
       stat => stat.position === position && stat.quarter === quarter
-    )[0];
+    );
     
-    if (!positionStats) return { stats: { goals: 0, missedGoals: 0, rebounds: 0, intercepts: 0, assists: 0 } };
+    if (!positionStatsList || positionStatsList.length === 0) {
+      return { 
+        stats: { 
+          goals: 0, 
+          missedGoals: 0, 
+          rebounds: 0, 
+          intercepts: 0, 
+          assists: 0 
+        } 
+      };
+    }
+    
+    const positionStats = positionStatsList[0];
     
     return {
       stats: {
