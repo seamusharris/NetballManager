@@ -120,7 +120,20 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
       'bg-indigo-600': '#4f46e5',
       'bg-purple-600': '#9333ea',
       'bg-pink-600': '#db2777',
+      'bg-pink-500': '#ec4899',
+      'bg-sky-600': '#0284c7',
+      'bg-cyan-600': '#0891b2',
+      'bg-lime-600': '#65a30d',
+      'bg-amber-600': '#d97706',
+      'bg-violet-600': '#7c3aed',
+      'bg-fuchsia-600': '#c026d3',
+      'bg-rose-600': '#e11d48',
     };
+    
+    // Log missing colors to help with debugging
+    if (!colorMap[tailwindClass] && tailwindClass?.startsWith('bg-')) {
+      console.log(`Missing color mapping for ${tailwindClass}, using default color`);
+    }
     
     return colorMap[tailwindClass] || '#6366f1'; // default to indigo-500 if not found
   };
