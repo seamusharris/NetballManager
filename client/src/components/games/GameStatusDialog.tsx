@@ -52,7 +52,10 @@ export function GameStatusDialog({
       const updateData = {
         status: selectedStatus,
         // Also update the completed field for backward compatibility
-        completed: selectedStatus === 'completed' || selectedStatus === 'forfeit'
+        completed: selectedStatus === 'completed' || 
+                  selectedStatus === 'forfeit' || 
+                  selectedStatus === 'forfeit-win' || 
+                  selectedStatus === 'forfeit-loss'
       };
       
       return apiRequest(`/api/games/${game.id}`, {
@@ -104,6 +107,8 @@ export function GameStatusDialog({
       case 'in-progress': return 'In Progress';
       case 'completed': return 'Completed';
       case 'forfeit': return 'Forfeit';
+      case 'forfeit-win': return 'Forfeit (Win)';
+      case 'forfeit-loss': return 'Forfeit (Loss)';
       default: return status;
     }
   };
@@ -113,6 +118,10 @@ export function GameStatusDialog({
     switch(status) {
       case 'forfeit': 
         return 'Game will be recorded as a forfeit with a score of 0-10.';
+      case 'forfeit-win':
+        return 'Opponent forfeited the game. Score will be recorded as 10-0 in our favor.';
+      case 'forfeit-loss':
+        return 'Our team forfeited the game. Score will be recorded as 0-10.';
       case 'in-progress':
         return 'Game is currently being played and will allow live stat entry.';
       default:

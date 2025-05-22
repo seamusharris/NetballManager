@@ -283,7 +283,17 @@ export function gameAllowsStatistics(game: { status?: string, isBye?: boolean } 
  * @returns The forfeit game scores by quarter and final
  */
 export function getForfeitGameScore(game: { status?: string | null } | string | undefined) {
-  if (!game) return { quarterScores: {}, finalScore: { for: 0, against: 0 } };
+  if (!game) {
+    return {
+      quarterScores: {
+        '1': { for: 0, against: 0 },
+        '2': { for: 0, against: 0 },
+        '3': { for: 0, against: 0 },
+        '4': { for: 0, against: 0 }
+      },
+      finalScore: { for: 0, against: 0 }
+    };
+  }
   
   const status = typeof game === 'string' ? game : game.status;
   const isWin = status === 'forfeit-win';
