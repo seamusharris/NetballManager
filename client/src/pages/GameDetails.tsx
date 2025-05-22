@@ -212,17 +212,17 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
             const playerName = getPlayerName(entry?.playerId);
             const playerColor = getPlayerColor(entry?.playerId);
             
-            // Get the same background color as the button with 20% opacity
-            const buttonBgColor = playerName ? `${playerColor}20` : 'white';
+            // Use the player's avatar color for the background
+            const bgColor = playerName ? playerColor : 'white';
             
-            // Get the same text color as the button
-            const textColor = playerName ? playerColor : '#ef4444'; // Red color for unassigned
+            // Use white text for player positions, red for unassigned
+            const textColor = playerName ? 'white' : '#ef4444'; // Red color for unassigned
             
             return (
               <div key={position} className={`absolute ${getPositionCoordinates(position)}`}>
                 <div 
                   style={{ 
-                    backgroundColor: buttonBgColor,
+                    backgroundColor: bgColor,
                     boxShadow: '0 4px 8px rgba(0, 0, 0, 0.5)',
                     border: playerName ? '3px solid white' : '2px solid red',
                     width: '5rem',
