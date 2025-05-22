@@ -14,7 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, Edit, BarChart3, ClipboardList, Activity } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
-import { formatDate } from '@/lib/utils';
+import { formatDate, cn } from '@/lib/utils';
 import { GameStatus, Position, POSITIONS } from '@shared/schema';
 import { 
   calculateGameScores, 
@@ -619,15 +619,13 @@ export default function GameDetails() {
                 <span className="text-gray-500">{game.time}</span>
                 <Badge 
                   variant="outline"
-                  className={cn(
-                    "px-2 py-1 text-xs cursor-pointer",
-                    "rounded-full transition-colors",
-                    game.status === 'upcoming' && "bg-blue-100 text-blue-800 hover:bg-blue-200",
-                    game.status === 'in-progress' && "bg-amber-100 text-amber-800 hover:bg-amber-200",
-                    game.status === 'completed' && "bg-green-100 text-green-800 hover:bg-green-200",
-                    game.status === 'forfeit-win' && "bg-indigo-100 text-indigo-800 hover:bg-indigo-200",
-                    game.status === 'forfeit-loss' && "bg-red-100 text-red-800 hover:bg-red-200"
-                  )}
+                  className={`px-2 py-1 text-xs cursor-pointer rounded-full transition-colors
+                    ${game.status === 'upcoming' ? "bg-blue-100 text-blue-800 hover:bg-blue-200" : ""}
+                    ${game.status === 'in-progress' ? "bg-amber-100 text-amber-800 hover:bg-amber-200" : ""}
+                    ${game.status === 'completed' ? "bg-green-100 text-green-800 hover:bg-green-200" : ""}
+                    ${game.status === 'forfeit-win' ? "bg-indigo-100 text-indigo-800 hover:bg-indigo-200" : ""}
+                    ${game.status === 'forfeit-loss' ? "bg-red-100 text-red-800 hover:bg-red-200" : ""}
+                  `}
                   onClick={() => {
                     // Force data refresh after dialog closes
                     const prevStatus = game.status;
