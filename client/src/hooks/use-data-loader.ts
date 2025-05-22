@@ -121,7 +121,19 @@ export function useOpponents() {
 /**
  * Custom hook to load game stats for a specific game
  */
-export function useGameStats(gameId: string | number) {
+export function useGameStats(gameId: string | number | undefined) {
+  // Return an empty query if gameId is undefined
+  if (gameId === undefined) {
+    return {
+      data: undefined,
+      status: 'idle' as LoadingStatus,
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: () => Promise.resolve()
+    };
+  }
+  
   return useDataLoader<GameStat[]>(`/api/games/${gameId}/stats`, {
     enabled: !!gameId
   });

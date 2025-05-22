@@ -27,9 +27,9 @@ export function StatsPerformanceDemo() {
   const {
     data: gameStats,
     isLoading: statsLoading,
-    isError: statsError,
+    isError: statsError, 
     refetch: refetchStats
-  } = useGameStats(selectedGameId || '');
+  } = useGameStats(selectedGameId);
   
   // Filter to only include completed games
   const completedGames = games?.filter(game => 
