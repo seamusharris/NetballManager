@@ -244,6 +244,35 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
     }
   };
   
+  // Helper function to render position-specific stats
+  const renderPositionStats = (position, playerStats) => {
+    if (position === 'GS' || position === 'GA') {
+      return (
+        <>
+          <StatItemBox label="Goals" value={playerStats.stats.goals} />
+          <StatItemBox label="Missed Goals" value={playerStats.stats.missedGoals} />
+          <StatItemBox label="Rebounds" value={playerStats.stats.rebounds} />
+        </>
+      );
+    } else if (position === 'GD' || position === 'GK') {
+      return (
+        <>
+          <StatItemBox label="Goals Against" value={playerStats.stats.goalsAgainst} />
+          <StatItemBox label="Rebounds" value={playerStats.stats.rebounds} />
+          <StatItemBox label="Pick Ups" value={playerStats.stats.pickUp} />
+        </>
+      );
+    } else {
+      return (
+        <>
+          <StatItemBox label="Pick Ups" value={playerStats.stats.pickUp} />
+          <StatItemBox label="Rebounds" value={playerStats.stats.rebounds} />
+          <StatItemBox label="Infringements" value={playerStats.stats.infringement} />
+        </>
+      );
+    }
+  };
+  
   return (
     <div className="mt-4">
       <div className="mb-4 flex justify-center items-center">
