@@ -298,24 +298,12 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
       <div className="flex flex-col gap-6 max-w-7xl mx-auto px-4">
         {/* Horizontal court diagram - significantly taller and more proportional to an actual netball court */}
         <div className="relative w-full mx-auto h-96 bg-green-100 rounded-lg border border-green-300 shadow-md">
-          {/* Court markings - three equal vertical sections for horizontal layout */}
+          {/* Court markings - only the three equal vertical sections for horizontal layout */}
           <div className="absolute inset-0 flex flex-row">
-            <div className="w-1/3 border-r border-green-200"></div>
-            <div className="w-1/3 border-r border-green-200"></div>
+            <div className="w-1/3 border-r border-green-500"></div>
+            <div className="w-1/3 border-r border-green-500"></div>
             <div className="w-1/3"></div>
           </div>
-          
-          {/* Center line */}
-          <div className="absolute top-1/2 left-0 right-0 h-px border-t border-dashed border-green-300"></div>
-          
-          {/* Goal circles - even larger for better proportions */}
-          <div className="w-28 h-28 absolute top-[50%] left-[16.5%] -translate-x-1/2 -translate-y-1/2 border-2 border-green-300 rounded-full"></div>
-          <div className="w-28 h-28 absolute top-[50%] left-[50%] -translate-x-1/2 -translate-y-1/2 border-2 border-green-300 rounded-full"></div>
-          <div className="w-28 h-28 absolute top-[50%] left-[83.5%] -translate-x-1/2 -translate-y-1/2 border-2 border-green-300 rounded-full"></div>
-          
-          {/* Goal posts (semicircles) at each end - larger for better proportions */}
-          <div className="absolute top-[50%] left-0 transform -translate-y-1/2 w-6 h-24 border-r-2 border-green-400 rounded-r-full"></div>
-          <div className="absolute top-[50%] right-0 transform -translate-y-1/2 w-6 h-24 border-l-2 border-green-400 rounded-l-full"></div>
 
           {/* Updated position coordinates for horizontal court */}
           {POSITIONS.map(position => {
