@@ -131,8 +131,14 @@ export function GameStatusButton({
         status: selectedStatus
       });
       
-      // Force refresh all game data after status update
-      queryClient.invalidateQueries();  // Invalidate everything to ensure all data is refreshed
+      // Force refresh games data specifically
+      queryClient.invalidateQueries({ queryKey: ['/api/games'] });
+      
+      // Specifically target this game's data for immediate refresh
+      queryClient.invalidateQueries({ queryKey: [`/api/games/${game.id}`] });
+      
+      // Force all queries to refetch (this ensures any derived data also refreshes)
+      queryClient.refetchQueries();
       
       toast({
         title: 'Game status updated',

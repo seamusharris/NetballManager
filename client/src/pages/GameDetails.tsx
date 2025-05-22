@@ -588,7 +588,7 @@ export default function GameDetails() {
   const queryClient = useQueryClient();
   
   // Fetch game data
-  const { data: game, isLoading: isLoadingGame } = useQuery({
+  const { data: game, isLoading: isLoadingGame, refetch: refetchGame } = useQuery({
     queryKey: ['/api/games', gameId],
     queryFn: async () => {
       // Add a timestamp to prevent caching
@@ -599,6 +599,7 @@ export default function GameDetails() {
     },
     refetchOnMount: true,
     staleTime: 0,
+    refetchInterval: 2000, // Refetch every 2 seconds while this page is open
     enabled: !!gameId
   });
   
