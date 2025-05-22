@@ -52,14 +52,14 @@ export function GameScoreDisplay({ gameId, compact = false }: GameScoreDisplayPr
     
     // Set background color based on game result
     const bgColor = isWin 
-      ? "bg-green-100 text-green-800 border-green-200" 
+      ? "bg-green-100 border-green-200" 
       : isLoss 
-        ? "bg-red-100 text-red-800 border-red-200" 
-        : "bg-amber-100 text-amber-800 border-amber-200";
+        ? "bg-red-100 border-red-200" 
+        : "bg-amber-100 border-amber-200";
     
     return (
       <div className="font-semibold text-center">
-        <div className={`inline-flex items-center justify-center px-3 py-1 rounded border ${bgColor}`}>
+        <div className={`inline-flex items-center justify-center px-3 py-1 rounded border text-gray-900 ${bgColor}`}>
           <span className={isWin ? "font-bold" : ""}>{scores.finalScore.for}</span>
           <span className="mx-2">-</span>
           <span className={isLoss ? "font-bold" : ""}>{scores.finalScore.against}</span>
