@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'wouter';
 import { cn } from '@/lib/utils';
 import { X, Menu, Home, Users, ClipboardList, Calendar, Flag, BarChart, Database, Settings as SettingsIcon } from 'lucide-react';
+import { TEAM_NAME } from '@/lib/settings';
 
 interface SidebarProps {
   isMobileOpen: boolean;
@@ -44,7 +45,7 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen, isTablet }: Sid
       <div className="flex items-center justify-between h-16 bg-sidebar-accent px-4">
         <div className="flex items-center space-x-2">
           <span className="text-white text-xl">🏐</span>
-          <h1 className="text-white font-heading font-bold text-lg">NetballManager</h1>
+          <h1 className="text-white font-heading font-bold text-lg truncate max-w-[160px]">{TEAM_NAME} Stats</h1>
         </div>
         <button 
           className="text-white focus:outline-none"
