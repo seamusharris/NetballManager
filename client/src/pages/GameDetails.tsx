@@ -206,18 +206,19 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
                   backgroundColor: playerName ? playerColor : 'white',
                   boxShadow: '0 4px 8px rgba(0, 0, 0, 0.5)',
                   border: playerName ? '3px solid white' : '2px solid red',
-                  width: '4rem',
-                  height: '4rem',
+                  width: '5rem',
+                  height: '5rem',
                   borderRadius: '100%',
                   display: 'flex',
                   flexDirection: 'column',
                   justifyContent: 'center',
-                  alignItems: 'center'
+                  alignItems: 'center',
+                  padding: '0.25rem'
                 }}
               >
-                <div className="font-bold text-center text-sm md:text-base" style={{ color: textColor }}>{position}</div>
+                <div className="font-bold text-center text-base md:text-lg" style={{ color: textColor }}>{position}</div>
                 {playerName && (
-                  <div className="text-xs md:text-sm text-center font-medium leading-tight" style={{ color: textColor }}>{playerName}</div>
+                  <div className="text-xs md:text-sm text-center font-medium leading-tight mx-1" style={{ color: textColor }}>{playerName}</div>
                 )}
                 {!playerName && (
                   <div className="text-xs text-red-500 text-center">Unassigned</div>
