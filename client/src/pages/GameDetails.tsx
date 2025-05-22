@@ -610,9 +610,9 @@ export default function GameDetails() {
               <div className="flex items-center mt-1 space-x-3">
                 <span className="text-gray-500">{formatDate(game.date)}</span>
                 <span className="text-gray-500">{game.time}</span>
-                <GameStatusButton 
-                  game={game} 
-                  size="sm" 
+                <GameStatusButton
+                  game={game}
+                  size="sm"
                 />
               </div>
             </div>

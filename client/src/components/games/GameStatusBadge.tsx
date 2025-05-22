@@ -160,7 +160,7 @@ export function GameStatusButton({
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <div>
+        <div data-status-button>
           <GameStatusBadge 
             status={game.status as GameStatus} 
             size={size} 
