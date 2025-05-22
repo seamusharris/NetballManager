@@ -40,6 +40,7 @@ function Router() {
         <Route path="/statistics" component={Statistics} />
         <Route path="/data-management" component={DataManagement} />
         <Route path="/games/:id/livestats" component={LiveStatsByPosition} />
+        <Route path="/games/:id/stats" component={Statistics} />
         <Route path="/games/:id/livestats-legacy" component={LiveStats} />
         <Route path="/games/:id/stats-debug" component={() => (
           <Suspense fallback={<div>Loading debug tool...</div>}>
