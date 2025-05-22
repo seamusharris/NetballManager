@@ -212,24 +212,17 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
             const playerName = getPlayerName(entry?.playerId);
             const playerColor = getPlayerColor(entry?.playerId);
             
-            // Calculate contrast color for text
-            const isLightColor = (color: string) => {
-              // Remove the # if present
-              const hex = color.replace('#', '');
-              const r = parseInt(hex.substr(0, 2), 16);
-              const g = parseInt(hex.substr(2, 2), 16);
-              const b = parseInt(hex.substr(4, 2), 16);
-              // Calculate luminance - if > 0.5, it's a light color
-              return (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.5;
-            };
+            // Get the same background color as the button with 20% opacity
+            const buttonBgColor = playerName ? `${playerColor}20` : 'white';
             
-            const textColor = playerName && isLightColor(playerColor) ? 'black' : 'white';
+            // Get the same text color as the button
+            const textColor = playerName ? playerColor : '#ef4444'; // Red color for unassigned
             
             return (
               <div key={position} className={`absolute ${getPositionCoordinates(position)}`}>
                 <div 
                   style={{ 
-                    backgroundColor: playerName ? playerColor : 'white',
+                    backgroundColor: buttonBgColor,
                     boxShadow: '0 4px 8px rgba(0, 0, 0, 0.5)',
                     border: playerName ? '3px solid white' : '2px solid red',
                     width: '5rem',
