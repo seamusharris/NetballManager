@@ -3,9 +3,17 @@
  * This file contains global settings that can be used across the application
  */
 
-// Team information
-export const TEAM_NAME = "Emeralds";
-export const TEAM_SHORT_NAME = "Emeralds";
+// Function to get stored settings with fallbacks
+const getSetting = (key: string, defaultValue: string): string => {
+  if (typeof window !== 'undefined') {
+    return localStorage.getItem(`app_${key}`) || defaultValue;
+  }
+  return defaultValue;
+};
+
+// Team information - dynamically loaded from localStorage with defaults
+export const TEAM_NAME = getSetting('team_name', 'Emeralds');
+export const TEAM_SHORT_NAME = getSetting('team_short_name', 'Emeralds');
 
 // Application settings
 export const APP_NAME = "Netball Stats Tracker";
