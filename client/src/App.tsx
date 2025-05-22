@@ -19,7 +19,7 @@ import Settings from "@/pages/Settings";
 import NotFound from "@/pages/not-found";
 
 // Import the fixed GameDetails component
-import GameDetails from "./pages/GameDetails.new";
+import GameDetails from "./pages/GameDetails.fixed";
 
 // Lazy load the debug component
 const StatsDebug = lazy(() => import("./pages/StatsDebug"));

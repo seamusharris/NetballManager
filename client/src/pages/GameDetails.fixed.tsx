@@ -4,7 +4,6 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet';
 import { TEAM_NAME } from '@/lib/settings';
 import { PositionBox } from '@/components/games/PositionBox';
-import { StatItemBox } from '@/components/games/StatItemBox';
 import { 
   Card, 
   CardContent, 
@@ -13,24 +12,14 @@ import {
   CardTitle 
 } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { 
-  ChevronLeft, Edit, BarChart3, ClipboardList, Activity
+  ChevronLeft, Edit, ClipboardList
 } from 'lucide-react';
-import { Separator } from '@/components/ui/separator';
 import { formatDate, cn } from '@/lib/utils';
-import { GameStatus, Position, POSITIONS, allGameStatuses } from '@shared/schema';
+import { GameStatus, Position, POSITIONS } from '@shared/schema';
 import { useToast } from '@/hooks/use-toast';
-import { 
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter
-} from '@/components/ui/dialog';
 import { GameStatusBadge } from '@/components/games/GameStatusBadge';
-import { GameStatusButton } from '@/components/games/GameStatusButton';
 import { GameDetailsStatusButton } from '@/components/games/GameDetailsStatusButton';
 import { apiRequest } from '@/lib/queryClient';
 
@@ -74,7 +63,6 @@ export default function GameDetails() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [quarter, setQuarter] = useState(1);
-  const [statusDialogOpen, setStatusDialogOpen] = useState(false);
   const [showStatistics, setShowStatistics] = useState(false);
   
   // Fetch game details
@@ -127,10 +115,11 @@ export default function GameDetails() {
   // Set the document title
   useEffect(() => {
     if (game && game.opponentId) {
-      const opponentName = getOpponentName(game.opponentId);
+      const opponent = opponents.find(p => p.id === game.opponentId);
+      const opponentName = opponent ? opponent.teamName : "Unknown Opponent";
       document.title = `${TEAM_NAME} vs ${opponentName} | Game Details`;
     }
-  }, [game]);
+  }, [game, opponents]);
 
   if (gameLoading) {
     return (
@@ -175,29 +164,6 @@ export default function GameDetails() {
   const round = game.round;
   
   // Helper functions
-  const getOpponentName = (opponentId) => {
-    if (!opponentId || !opponents) return "Unknown Opponent";
-    const opponent = opponents.find(p => p.id === opponentId);
-    return opponent ? opponent.teamName : "Unknown Opponent";
-  };
-  
-  // Get opponent name or mark as BYE
-  const opponentName = game.isBye 
-    ? "BYE" 
-    : getOpponentName(game.opponentId);
-    
-  // Determine game title
-  const gameTitle = game.isBye 
-    ? `${TEAM_NAME} - BYE Round` 
-    : `${TEAM_NAME} vs ${opponentName}`;
-
-  // Helper functions
-  const getOpponentName = (opponentId) => {
-    if (!opponentId || !opponents) return "Unknown Opponent";
-    const opponent = opponents.find(p => p.id === opponentId);
-    return opponent ? opponent.teamName : "Unknown Opponent";
-  };
-  
   const getPlayerName = (playerId) => {
     if (!playerId || !players) return null;
     const player = players.find(p => p.id === playerId);
@@ -210,24 +176,21 @@ export default function GameDetails() {
     return player ? player.avatarColor : null;
   };
   
-  const getColorName = (color) => {
-    const colorMap = {
-      'bg-red-500': 'red',
-      'bg-orange-500': 'orange',
-      'bg-yellow-600': 'yellow',
-      'bg-green-500': 'green',
-      'bg-emerald-600': 'emerald',
-      'bg-teal-600': 'teal',
-      'bg-blue-600': 'blue',
-      'bg-indigo-600': 'indigo',
-      'bg-purple-600': 'purple',
-      'bg-fuchsia-600': 'fuchsia',
-      'bg-pink-600': 'pink',
-      'bg-rose-600': 'rose',
-      'bg-stone-500': 'gray'
-    };
-    return colorMap[color] || 'gray';
+  const getOpponentName = (opponentId) => {
+    if (!opponentId || !opponents) return "Unknown Opponent";
+    const opponent = opponents.find(p => p.id === opponentId);
+    return opponent ? opponent.teamName : "Unknown Opponent";
   };
+
+  // Get opponent name or mark as BYE
+  const opponentName = game.isBye 
+    ? "BYE" 
+    : getOpponentName(game.opponentId);
+    
+  // Determine game title
+  const gameTitle = game.isBye 
+    ? `${TEAM_NAME} - BYE Round` 
+    : `${TEAM_NAME} vs ${opponentName}`;
 
   // Get position coordinates for the court diagram
   const getPositionCoordinates = (position) => {
@@ -283,8 +246,7 @@ export default function GameDetails() {
         missedGoals: positionStats.missedGoals || 0,
         rebounds: positionStats.rebounds || 0,
         intercepts: positionStats.intercepts || 0,
-        assists: positionStats.assists || 0,
-        rating: positionStats.rating
+        assists: positionStats.assists || 0
       }
     };
   };
@@ -341,36 +303,6 @@ export default function GameDetails() {
   const isWin = teamWon && game.status === 'completed';
   const isLoss = teamLost && game.status === 'completed';
   
-  // Handle status change
-  const handleStatusChange = (newStatus) => {
-    if (!id) return;
-    
-    apiRequest(`/api/games/${id}`, {
-      method: 'PATCH',
-      body: JSON.stringify({
-        status: newStatus
-      })
-    })
-    .then(() => {
-      queryClient.invalidateQueries({queryKey: ['/api/games']});
-      queryClient.invalidateQueries({queryKey: [`/api/games/${id}`]});
-      
-      toast({
-        title: "Game status updated",
-        description: `Game status set to ${newStatus}`,
-      });
-      
-      setStatusDialogOpen(false);
-    })
-    .catch(error => {
-      toast({
-        title: "Error updating game status",
-        description: "An error occurred while updating the game status.",
-        variant: "destructive"
-      });
-    });
-  };
-  
   // Organize roster data by quarter
   const rosterByQuarter = getRosterByQuarter({ roster, players });
   
@@ -397,7 +329,7 @@ export default function GameDetails() {
           
           <GameDetailsStatusButton 
             game={game}
-            onStatusChanged={(newStatus) => {
+            onStatusChanged={() => {
               queryClient.invalidateQueries({queryKey: ['/api/games']});
               queryClient.invalidateQueries({queryKey: [`/api/games/${id}`]});
             }}
@@ -435,7 +367,7 @@ export default function GameDetails() {
         
         <Card className="mb-6">
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-6">
               {/* Score display */}
               <div>
                 <h3 className="text-sm font-medium mb-2">Game Scores</h3>
@@ -572,10 +504,10 @@ export default function GameDetails() {
                             playerName={playerName}
                             playerColor={playerColor}
                             stats={{
-                              goals: playerStats?.stats?.goals || 0,
-                              rebounds: playerStats?.stats?.rebounds || 0,
-                              intercepts: playerStats?.stats?.intercepts || 0,
-                              assists: playerStats?.stats?.assists || 0
+                              goals: playerStats.stats.goals || 0,
+                              rebounds: playerStats.stats.rebounds || 0,
+                              intercepts: playerStats.stats.intercepts || 0,
+                              assists: playerStats.stats.assists || 0
                             }}
                           />
                         );
@@ -597,10 +529,10 @@ export default function GameDetails() {
                             playerName={playerName}
                             playerColor={playerColor}
                             stats={{
-                              goals: playerStats?.stats?.goals || 0,
-                              rebounds: playerStats?.stats?.rebounds || 0,
-                              intercepts: playerStats?.stats?.intercepts || 0,
-                              assists: playerStats?.stats?.assists || 0
+                              goals: playerStats.stats.goals || 0,
+                              rebounds: playerStats.stats.rebounds || 0,
+                              intercepts: playerStats.stats.intercepts || 0,
+                              assists: playerStats.stats.assists || 0
                             }}
                           />
                         );
@@ -622,10 +554,10 @@ export default function GameDetails() {
                             playerName={playerName}
                             playerColor={playerColor}
                             stats={{
-                              goals: playerStats?.stats?.goals || 0,
-                              rebounds: playerStats?.stats?.rebounds || 0,
-                              intercepts: playerStats?.stats?.intercepts || 0,
-                              assists: playerStats?.stats?.assists || 0
+                              goals: playerStats.stats.goals || 0,
+                              rebounds: playerStats.stats.rebounds || 0,
+                              intercepts: playerStats.stats.intercepts || 0,
+                              assists: playerStats.stats.assists || 0
                             }}
                           />
                         );
