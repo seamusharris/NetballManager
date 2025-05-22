@@ -56,7 +56,21 @@ const getStatusBadge = (status: GameStatus) => {
 };
 
 // Calculate quarter by quarter scores
-const calculateQuarterScores = (gameStats: any[]) => {
+const calculateQuarterScores = (gameStats: any[], game: any) => {
+  // Special handling for forfeit games - use consistent scoring for forfeit games
+  if (game && (game.status === 'forfeit-win' || game.status === 'forfeit-loss')) {
+    const isWin = game.status === 'forfeit-win';
+    
+    // Follow the same quarter distribution pattern as in utils.ts
+    return [
+      { quarter: 1, teamScore: 0, opponentScore: 0 },
+      { quarter: 2, teamScore: isWin ? 5 : 0, opponentScore: isWin ? 0 : 5 },
+      { quarter: 3, teamScore: isWin ? 5 : 0, opponentScore: isWin ? 0 : 5 },
+      { quarter: 4, teamScore: 0, opponentScore: 0 }
+    ];
+  }
+  
+  // For non-forfeit games, calculate normally
   const quarters = [1, 2, 3, 4];
   
   return quarters.map(quarter => {
@@ -486,15 +500,31 @@ export default function GameDetails() {
   
   // Calculate quarter scores
   const quarterScores = useMemo(() => {
+    if (!game) return [];
+    if (game.status === 'forfeit-win' || game.status === 'forfeit-loss') {
+      // For forfeit games, use special handling
+      const isWin = game.status === 'forfeit-win';
+      return calculateQuarterScores([], game);
+    }
     if (!gameStats || gameStats.length === 0) return [];
-    return calculateQuarterScores(gameStats);
-  }, [gameStats]);
+    return calculateQuarterScores(gameStats, game);
+  }, [gameStats, game]);
   
   // Calculate game score
   const { teamScore, opponentScore } = useMemo(() => {
+    if (!game) return { teamScore: 0, opponentScore: 0 };
+    
+    // For forfeit games, provide standard forfeit scores
+    if (game.status === 'forfeit-win') {
+      return { teamScore: 10, opponentScore: 0 };
+    }
+    if (game.status === 'forfeit-loss') {
+      return { teamScore: 0, opponentScore: 10 };
+    }
+    
     if (!gameStats || gameStats.length === 0) return { teamScore: 0, opponentScore: 0 };
     return calculateGameScores(gameStats);
-  }, [gameStats]);
+  }, [gameStats, game]);
   
   // Handle loading state
   if (isLoadingGame || isLoadingOpponents || isLoadingPlayers || isLoadingStats || isLoadingRoster) {
