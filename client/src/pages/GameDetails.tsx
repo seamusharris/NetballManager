@@ -440,13 +440,17 @@ export default function GameDetails() {
   const gameId = Number(params.id);
   
   // Fetch game data
-  const { data: game, isLoading: isLoadingGame } = useQuery({
+  const { data: game, isLoading: isLoadingGame, refetch } = useQuery({
     queryKey: ['/api/games', gameId],
     queryFn: async () => {
-      const response = await fetch(`/api/games/${gameId}`);
+      // Add a timestamp to prevent caching
+      const timestamp = new Date().getTime();
+      const response = await fetch(`/api/games/${gameId}?_t=${timestamp}`);
       if (!response.ok) throw new Error('Failed to fetch game');
       return response.json();
     },
+    refetchOnMount: true,
+    staleTime: 0,
     enabled: !!gameId
   });
   
@@ -610,10 +614,18 @@ export default function GameDetails() {
               <div className="flex items-center mt-1 space-x-3">
                 <span className="text-gray-500">{formatDate(game.date)}</span>
                 <span className="text-gray-500">{game.time}</span>
-                <GameStatusButton
-                  game={game}
-                  size="sm"
-                />
+                <div
+                  onClick={() => {
+                    // Force a refetch after any change
+                    refetch();
+                    queryClient.invalidateQueries({ queryKey: ['/api/games'] });
+                  }}
+                >
+                  <GameStatusButton
+                    game={game}
+                    size="sm"
+                  />
+                </div>
               </div>
             </div>
             
