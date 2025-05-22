@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet';
 import { 
   Card, 
@@ -35,7 +35,7 @@ export default function Settings() {
   return (
     <div className="container py-8 mx-auto">
       <Helmet>
-        <title>Application Settings | Netball Stats Tracker</title>
+        <title>Application Settings | {TEAM_NAME} Stats Tracker</title>
       </Helmet>
       
       <div className="mb-6">

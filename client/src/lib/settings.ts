@@ -12,8 +12,8 @@ const getSetting = (key: string, defaultValue: string): string => {
 };
 
 // Team information - dynamically loaded from localStorage with defaults
-export const TEAM_NAME = getSetting('team_name', 'Emeralds');
-export const TEAM_SHORT_NAME = getSetting('team_short_name', 'Emeralds');
+export const TEAM_NAME = getSetting('team_name', 'Netball Team');
+export const TEAM_SHORT_NAME = getSetting('team_short_name', 'Netball Team');
 
 // Application settings
 export const APP_NAME = "Netball Stats Tracker";
