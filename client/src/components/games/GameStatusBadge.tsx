@@ -131,14 +131,28 @@ export function GameStatusButton({
         status: selectedStatus
       });
       
-      // Force refresh games data specifically
-      queryClient.invalidateQueries({ queryKey: ['/api/games'] });
+      // Force refresh all data
+      queryClient.invalidateQueries();
       
-      // Specifically target this game's data for immediate refresh
-      queryClient.invalidateQueries({ queryKey: [`/api/games/${game.id}`] });
+      // Force immediate refetch of this specific game
+      queryClient.fetchQuery({
+        queryKey: [`/api/games/${game.id}`]
+      });
       
-      // Force all queries to refetch (this ensures any derived data also refreshes)
-      queryClient.refetchQueries();
+      // Force immediate refetch of all games list
+      queryClient.fetchQuery({
+        queryKey: ['/api/games']
+      });
+      
+      // Update the local game object directly for immediate UI feedback
+      setSelectedStatus(prev => {
+        const statusDisplay = getStatusDisplay(prev);
+        toast({
+          title: "Status temporarily updated",
+          description: `Local UI updated to ${statusDisplay}. Refreshing data from server...`,
+        });
+        return prev;
+      });
       
       toast({
         title: 'Game status updated',

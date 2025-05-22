@@ -37,6 +37,7 @@ import {
   getGameStatusColor 
 } from '@/lib/statisticsService';
 import { GameStatusButton } from '@/components/games/GameStatusButton';
+import { GameDetailsStatusButton } from '@/components/games/GameDetailsStatusButton';
 
 // Function to get opponent name
 const getOpponentName = (opponents: any[], opponentId: number | null) => {
@@ -763,10 +764,19 @@ export default function GameDetails() {
               <div className="flex items-center mt-1 space-x-3">
                 <span className="text-gray-500">{formatDate(game.date)}</span>
                 <span className="text-gray-500">{game.time}</span>
-                <GameStatusButton 
+                <GameDetailsStatusButton 
                   game={game}
-                  size="sm"
-                  withDialog={true} 
+                  onStatusChanged={(newStatus) => {
+                    // Force an immediate update of the UI
+                    const updatedGame = {...game, status: newStatus};
+                    queryClient.setQueryData(['/api/games', gameId], updatedGame);
+                    
+                    // Refresh all games data after a delay
+                    setTimeout(() => {
+                      queryClient.invalidateQueries();
+                      refetchGame();
+                    }, 200);
+                  }}
                 />
               </div>
             </div>
