@@ -3,7 +3,7 @@ import { useParams, Link } from 'wouter';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet';
 import { TEAM_NAME } from '@/lib/settings';
-import { StatItemBox } from '@/components/games/StatItemBox';
+import { PositionBox } from '@/components/games/PositionBox';
 import { 
   Card, 
   CardContent, 
