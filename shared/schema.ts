@@ -8,7 +8,7 @@ export type Position = typeof POSITIONS[number];
 export const allPositions = [...POSITIONS];
 
 // Game status types
-export const GAME_STATUSES = ["upcoming", "in-progress", "completed", "forfeit"] as const;
+export const GAME_STATUSES = ["upcoming", "in-progress", "completed", "forfeit", "forfeit-win", "forfeit-loss"] as const;
 export type GameStatus = typeof GAME_STATUSES[number];
 export const allGameStatuses = [...GAME_STATUSES];
 
