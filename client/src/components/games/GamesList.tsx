@@ -387,7 +387,7 @@ export default function GamesList({
                     <TableCell className="px-6 py-4 whitespace-nowrap">
                       {game.round ? (
                         <div className="font-medium">
-                          <Badge variant="outline" className="px-2 py-1 rounded-full bg-secondary/10 text-secondary">
+                          <Badge variant="outline" className="px-2 py-1 rounded-full bg-blue-100 text-blue-700 border-blue-200">
                             Round {game.round}
                           </Badge>
                         </div>

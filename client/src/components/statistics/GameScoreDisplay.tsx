@@ -45,11 +45,19 @@ export function GameScoreDisplay({ gameId, compact = false }: GameScoreDisplayPr
 
   // Render compact view for lists and tables
   if (compact) {
+    // Determine win/loss/draw status
+    const isWin = scores.finalScore.for > scores.finalScore.against;
+    const isLoss = scores.finalScore.for < scores.finalScore.against;
+    
     return (
-      <div className="font-semibold text-center">
-        <span className="text-green-600">{scores.finalScore.for}</span>
-        <span className="mx-2">-</span>
-        <span className="text-red-600">{scores.finalScore.against}</span>
+      <div className="font-semibold text-center flex items-center justify-center gap-1">
+        <div className={`px-2 py-1 rounded ${isWin ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}`}>
+          {scores.finalScore.for}
+        </div>
+        <span className="mx-1">-</span>
+        <div className={`px-2 py-1 rounded ${isLoss ? "bg-red-100 text-red-800" : "bg-gray-100 text-gray-800"}`}>
+          {scores.finalScore.against}
+        </div>
       </div>
     );
   }
