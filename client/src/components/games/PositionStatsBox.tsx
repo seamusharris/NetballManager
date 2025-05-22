@@ -22,7 +22,7 @@ export const PositionStatsBox: React.FC<PositionStatsBoxProps> = ({
   // Create a more compact grid layout by splitting stats into columns
   const content = (
     <div className="mt-1 bg-gray-50 p-2 rounded-md border border-gray-100">
-      <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-xs">
+      <div className="grid grid-cols-1 gap-y-1 text-xs">
         {statsToShow.map((statKey) => (
           <StatItemBox 
             key={statKey}

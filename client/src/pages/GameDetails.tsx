@@ -353,7 +353,7 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
         <div>
           <div className="flex flex-col space-y-0 justify-between h-full">
             {/* Top third - Attack positions (GS, GA) */}
-            <div className="flex space-x-3 my-3 items-start" style={{ height: '33%' }}>
+            <div className="flex flex-wrap gap-2 my-3 items-start" style={{ height: '33%' }}>
               {POSITIONS.slice(0, 2).map(position => {
                 const entry = rosterByQuarter[quarter]?.[position];
                 const playerName = getPlayerName(entry?.playerId);
@@ -361,39 +361,42 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
                 const playerStats = getPlayerPerformanceStats(position);
                 
                 return (
-                  <PositionBox 
-                    key={position}
-                    position={position as Position}
-                    playerName={playerName}
-                    playerColor={playerColor}
-                    playerStats={playerStats}
-                  />
+                  <div key={position} className="flex-1 min-w-[45%]" style={{ flexBasis: '48%' }}>
+                    <PositionBox 
+                      position={position as Position}
+                      playerName={playerName}
+                      playerColor={playerColor}
+                      playerStats={playerStats}
+                    />
+                  </div>
                 );
               })}
             </div>
             
-            {/* Middle third positions (WA, C, WD) */}
-            <div className="flex space-x-3 my-3" style={{ height: '33%' }}>
+            {/* Middle third positions (WA, C, WD) - more space for readability */}
+            <div className="flex flex-wrap gap-2 my-3" style={{ height: '33%' }}>
               {POSITIONS.slice(2, 5).map(position => {
                 const entry = rosterByQuarter[quarter]?.[position];
                 const playerName = getPlayerName(entry?.playerId);
                 const playerColor = getPlayerColor(entry?.playerId);
                 const playerStats = getPlayerPerformanceStats(position);
                 
+                // For mid-court positions, we need more width
                 return (
-                  <PositionBox 
-                    key={position}
-                    position={position as Position}
-                    playerName={playerName}
-                    playerColor={playerColor}
-                    playerStats={playerStats}
-                  />
+                  <div key={position} className="flex-1 min-w-[33%]" style={{ flexBasis: '31%' }}>
+                    <PositionBox 
+                      position={position as Position}
+                      playerName={playerName}
+                      playerColor={playerColor}
+                      playerStats={playerStats}
+                    />
+                  </div>
                 );
               })}
             </div>
             
             {/* Bottom third - Defense positions (GD, GK) */}
-            <div className="flex space-x-3 my-3" style={{ height: '33%' }}>
+            <div className="flex flex-wrap gap-2 my-3" style={{ height: '33%' }}>
               {POSITIONS.slice(5).map(position => {
                 const entry = rosterByQuarter[quarter]?.[position];
                 const playerName = getPlayerName(entry?.playerId);
@@ -401,13 +404,14 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
                 const playerStats = getPlayerPerformanceStats(position);
                 
                 return (
-                  <PositionBox 
-                    key={position}
-                    position={position as Position}
-                    playerName={playerName}
-                    playerColor={playerColor}
-                    playerStats={playerStats}
-                  />
+                  <div key={position} className="flex-1 min-w-[45%]" style={{ flexBasis: '48%' }}>
+                    <PositionBox 
+                      position={position as Position}
+                      playerName={playerName}
+                      playerColor={playerColor}
+                      playerStats={playerStats}
+                    />
+                  </div>
                 );
               })}
             </div>
