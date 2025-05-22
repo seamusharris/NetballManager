@@ -28,10 +28,12 @@ import {
   DialogTitle,
   DialogFooter
 } from '@/components/ui/dialog';
-import { GameStatusBadge } from '@/components/games/GameStatusBadge';
-import { GameStatusButton } from '@/components/games/GameStatusButton';
+import GameStatusBadge from '@/components/games/GameStatusBadge';
+import GameStatusButton from '@/components/games/GameStatusButton';
+import CourtPositionRoster from '@/components/roster/CourtPositionRoster';
+import { capitalize } from '@/lib/utils';
 import { apiRequest } from '@/lib/queryClient';
-import { GameDetailsStatusButton } from '@/components/games/GameDetailsStatusButton';
+import GameDetailsStatusButton from '@/components/games/GameDetailsStatusButton';
 
 // Simplified Position Box Component that uses StatItemBox
 const PositionStatsBox = ({ position, playerName, playerColor, playerStats }) => {
@@ -156,7 +158,7 @@ export default function GameDetails() {
   });
 
   const rosterByQuarter = useMemo(() => {
-    return roster ? RosterSummary({ roster, players }) : {};
+    return roster ? RosterSummary({ roster, players }).rosterData : {};
   }, [roster, players]);
 
   const getPlayerName = (playerId) => {
