@@ -1,10 +1,16 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'wouter';
 import { isForfeitGame } from '@/lib/utils';
 import { 
   Card, 
   CardContent 
 } from '@/components/ui/card';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Button } from '@/components/ui/button';
 import { 
   Table,
@@ -410,17 +416,29 @@ export default function GamesList({
                     className="cursor-pointer hover:bg-gray-50"
                     onClick={() => navigate(`/games/${game.id}`)}
                   >
-                    <TableCell className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex flex-col">
-                        <span className="font-medium text-gray-900">{formatDate(game.date)}</span>
-                        <span className="text-sm text-gray-500">{game.time}</span>
-                      </div>
-                    </TableCell>
+                    <TooltipProvider delayDuration={600}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <TableCell className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex flex-col">
+                              <span className="font-medium text-gray-900">{formatDate(game.date)}</span>
+                              <span className="text-sm text-gray-500">{game.time}</span>
+                            </div>
+                          </TableCell>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" className="bg-gray-900 text-white p-3 space-y-2 w-64">
+                          <div className="font-medium">{game.round ? `Round ${game.round}` : 'Game'}</div>
+                          <div>vs {getOpponentName(game.opponentId)}</div>
+                          <div className="text-xs text-gray-300">Click for details</div>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                    
                     <TableCell className="px-6 py-4 whitespace-nowrap">
                       {game.round ? (
                         <div className="font-medium">
                           <Badge variant="outline" className="px-2 py-1 rounded-full bg-secondary/10 text-secondary">
-                            {game.round}
+                            Round {game.round}
                           </Badge>
                         </div>
                       ) : (
