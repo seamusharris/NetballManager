@@ -68,6 +68,7 @@ export default function GamesList({
 }: GamesListProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  // Set to null since we removed date filter
   const [itemToDelete, setItemToDelete] = useState<number | null>(null);
   const [_, navigate] = useLocation();
   const [gameScores, setGameScores] = useState<Record<number, GameScore>>({});
@@ -252,8 +253,7 @@ export default function GamesList({
     
     const matchesStatus = 
       statusFilter === 'all' || 
-      (statusFilter === 'completed' && game.completed) || 
-      (statusFilter === 'upcoming' && !game.completed);
+      (statusFilter === game.status);
     
     return matchesSearch && matchesStatus;
   });
@@ -297,7 +297,7 @@ export default function GamesList({
       <Card>
         <CardContent className="p-4">
           <div className="flex flex-wrap gap-4">
-            <div className="flex-1 min-w-[200px]">
+            <div className="w-[180px]">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input
@@ -305,12 +305,12 @@ export default function GamesList({
                   placeholder="Search games..."
                   className="pl-10 pr-4 py-2 w-full"
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
                 />
               </div>
             </div>
             
-            <div>
+            <div className="w-[140px]">
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="All Games" />
@@ -318,7 +318,9 @@ export default function GamesList({
                 <SelectContent>
                   <SelectItem value="all">All Games</SelectItem>
                   <SelectItem value="upcoming">Upcoming</SelectItem>
+                  <SelectItem value="in-progress">In Progress</SelectItem>
                   <SelectItem value="completed">Completed</SelectItem>
+                  <SelectItem value="forfeit">Forfeit</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -414,7 +416,7 @@ export default function GamesList({
                           <>
                             <GameStatusBadge 
                               status={game.status || (game.completed ? 'completed' : 'upcoming')}
-                              onClick={(e) => {
+                              onClick={(e: React.MouseEvent) => {
                                 e.stopPropagation(); // Prevent row click
                                 setSelectedGame(game);
                                 setStatusDialogOpen(true);
