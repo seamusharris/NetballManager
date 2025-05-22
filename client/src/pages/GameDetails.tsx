@@ -187,22 +187,57 @@ export default function GameDetails() {
   };
 
   // Calculate quarter-by-quarter score breakdown directly to avoid hook errors
-  const getDefaultQuarterScores = () => {
-    return Array(4).fill(0).map((_, i) => ({
-      quarter: i + 1,
-      teamTotal: 0,
-      opponentTotal: 0,
-      teamQuarter: 0,
-      opponentQuarter: 0
-    }));
-  };
-  
-  // Use a simple approach without hooks
-  let quarterScores = getDefaultQuarterScores();
-  
-  // Only calculate if we have valid game stats
-  if (gameStats && Array.isArray(gameStats) && gameStats.length > 0) {
-    // Create a fixed size array for quarters
+  // Calculate quarter scores without using hooks
+  const calculateQuarterScores = () => {
+    // Default empty scores with all quarters showing zeros
+    if (!gameStats || !Array.isArray(gameStats) || gameStats.length === 0) {
+      return Array(4).fill(0).map((_, i) => ({
+        quarter: i + 1,
+        teamTotal: 0,
+        opponentTotal: 0,
+        teamQuarter: 0,
+        opponentQuarter: 0
+      }));
+    }
+    
+    // Special handling for forfeit games
+    if (game && (game.status === 'forfeit-win' || game.status === 'forfeit-loss')) {
+      const isWin = game.status === 'forfeit-win';
+      const forfeitscore = 10;
+      
+      return [
+        {
+          quarter: 1,
+          teamTotal: isWin ? forfeitscore : 0,
+          opponentTotal: isWin ? 0 : forfeitscore,
+          teamQuarter: isWin ? forfeitscore : 0,
+          opponentQuarter: isWin ? 0 : forfeitscore
+        },
+        {
+          quarter: 2,
+          teamTotal: isWin ? forfeitscore : 0,
+          opponentTotal: isWin ? 0 : forfeitscore,
+          teamQuarter: 0,
+          opponentQuarter: 0
+        },
+        {
+          quarter: 3,
+          teamTotal: isWin ? forfeitscore : 0,
+          opponentTotal: isWin ? 0 : forfeitscore,
+          teamQuarter: 0,
+          opponentQuarter: 0
+        },
+        {
+          quarter: 4,
+          teamTotal: isWin ? forfeitscore : 0,
+          opponentTotal: isWin ? 0 : forfeitscore,
+          teamQuarter: 0,
+          opponentQuarter: 0
+        }
+      ];
+    }
+    
+    // For regular games, calculate quarter-by-quarter scores
     const quarterData = [
       { quarter: 1, teamScore: 0, opponentScore: 0 },
       { quarter: 2, teamScore: 0, opponentScore: 0 },
@@ -231,7 +266,7 @@ export default function GameDetails() {
     let runningTeamTotal = 0;
     let runningOpponentTotal = 0;
     
-    quarterScores = quarterData.map(quarter => {
+    return quarterData.map(quarter => {
       runningTeamTotal += quarter.teamScore;
       runningOpponentTotal += quarter.opponentScore;
       
@@ -243,7 +278,10 @@ export default function GameDetails() {
         opponentQuarter: quarter.opponentScore
       };
     });
-  }
+  };
+  
+  // Calculate scores without using useMemo
+  const quarterScores = calculateQuarterScores();
 
   const finalScore = quarterScores.length > 0 ? {
     teamScore: quarterScores.reduce((sum, q) => sum + q.teamQuarter, 0),
