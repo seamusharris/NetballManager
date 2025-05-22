@@ -614,10 +614,10 @@ export default function GameDetails() {
               </Link>
             </Button>
           )}
-          <Button variant="outline" size="sm">
-            <Link to={`/games?editId=${game.id}`}>
+          <Button variant="outline" size="sm" asChild>
+            <Link to={`/games?editId=${game.id}`} className="flex items-center">
               <Edit className="mr-1 h-4 w-4" />
-              Edit Game
+              <span>Edit Game</span>
             </Link>
           </Button>
         </div>

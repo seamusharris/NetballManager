@@ -26,6 +26,19 @@ export default function Games() {
     queryClient.invalidateQueries({ queryKey: ['gameStats'] });
   }, []);
   
+  // Check for editId parameter in the URL
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const editId = searchParams.get('editId');
+    
+    if (editId && games.length > 0) {
+      const gameToEdit = games.find(game => game.id === parseInt(editId));
+      if (gameToEdit) {
+        setEditingGame(gameToEdit);
+      }
+    }
+  }, [games]);
+  
   const { data: games = [], isLoading: isLoadingGames } = useQuery<any[]>({
     queryKey: ['/api/games'],
     staleTime: 0, // Consider data stale immediately
