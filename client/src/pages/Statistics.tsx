@@ -25,19 +25,30 @@ export default function Statistics() {
   const [selectedGameId, setSelectedGameId] = useState<number | null>(null);
   const { toast } = useToast();
   
-  // Parse game ID from URL query parameter if present - similar to how Roster page handles it
+  // Parse game ID from URL query parameter or route
   useEffect(() => {
+    // Check for URL query parameter
     const queryParams = new URLSearchParams(window.location.search);
-    const gameId = queryParams.get('game');
+    const gameIdQuery = queryParams.get('game');
     
-    if (gameId && !isNaN(Number(gameId))) {
-      console.log(`Setting selected game ID to ${gameId} from URL parameter`);
+    // Check if we're on a route like /game/:id/stats
+    const path = location;
+    const gameIdFromPath = path.match(/^\/game\/(\d+)\/stats$/);
+    
+    if (gameIdQuery && !isNaN(Number(gameIdQuery))) {
+      console.log(`Setting selected game ID to ${gameIdQuery} from URL parameter`);
       // Set the selected game ID
-      setSelectedGameId(Number(gameId));
+      setSelectedGameId(Number(gameIdQuery));
       // Replace the URL without the query parameter for cleaner navigation
       navigate('/statistics', { replace: true });
     }
-  }, [navigate]);
+    else if (gameIdFromPath && gameIdFromPath[1] && !isNaN(Number(gameIdFromPath[1]))) {
+      console.log(`Setting selected game ID to ${gameIdFromPath[1]} from URL path`);
+      // Set the selected game ID from the path
+      setSelectedGameId(Number(gameIdFromPath[1]));
+      // We don't navigate away since this is the proper path format
+    }
+  }, [navigate, location]);
   
   // Type our data with explicit types from the schema
   const { data: games = [], isLoading: isLoadingGames } = useQuery<Game[]>({
