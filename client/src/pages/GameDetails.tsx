@@ -958,7 +958,7 @@ export default function GameDetails() {
           <h1 className="text-2xl font-bold">
             {game.opponentId ? (
               <span>
-                Emeralds vs {opponentName}
+                {game.round ? `Round ${game.round}` : 'Game'}: vs {opponentName}
               </span>
             ) : (
               <span>BYE Round</span>
