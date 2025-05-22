@@ -27,8 +27,8 @@ export default function UpcomingGames({ games, opponents, className }: UpcomingG
       <CardContent className="p-6">
         <div className="flex justify-between items-center mb-4">
           <h3 className="font-heading font-semibold text-neutral-dark">Upcoming Games</h3>
-          <Link href="/games">
-            <a className="text-accent text-sm hover:underline">View all</a>
+          <Link href="/games" className="text-accent text-sm hover:underline">
+            View all
           </Link>
         </div>
         
@@ -58,8 +58,8 @@ export default function UpcomingGames({ games, opponents, className }: UpcomingG
         ) : (
           <div className="text-center py-6">
             <p className="text-gray-500 mb-4">No upcoming games scheduled</p>
-            <Link href="/games">
-              <a className="text-accent hover:underline">Go to Games</a>
+            <Link href="/games" className="text-accent hover:underline">
+              Go to Games
             </Link>
           </div>
         )}
