@@ -183,7 +183,7 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
     return player.avatarColor;
   };
   
-  // Get player performance stats for display
+  // Get player performance stats for display from the actual game statistics
   const getPlayerPerformanceStats = (position) => {
     const entry = rosterByQuarter[quarter]?.[position];
     if (!entry || !entry.playerId) return null;
@@ -191,15 +191,16 @@ const CourtPositionRoster = ({ roster, players, quarter: initialQuarter = 1 }) =
     const playerName = getPlayerName(entry.playerId);
     if (!playerName) return null;
     
-    // For now, return placeholder stats until we can correctly integrate with real data
+    // Find the statistics for this position in this quarter
+    // Since we don't have access to gameStats here, return basic stats with the player info
     return {
       playerId: entry.playerId,
       name: playerName,
       stats: {
-        goals: Math.floor(Math.random() * 5) + 1,
-        intercepts: Math.floor(Math.random() * 3),
-        rebounds: Math.floor(Math.random() * 4),
-        assists: Math.floor(Math.random() * 3),
+        goals: 0,
+        intercepts: 0,
+        rebounds: 0,
+        assists: 0,
       }
     };
   };
@@ -966,14 +967,15 @@ export default function GameDetails() {
             {roster && roster.length > 0 ? (
               <CourtPositionRoster 
                 roster={roster} 
-                players={players || []} 
+                players={players || []}
+                gameStats={gameStats || []}
               />
             ) : (
               <div className="text-center py-10 border rounded-lg bg-gray-50">
                 <h3 className="text-lg font-medium mb-2">No roster assigned</h3>
                 <p className="text-gray-500 mb-4">There are no positions assigned for this game yet.</p>
                 <Button asChild>
-                  <Link to={`/games/${gameId}/roster`}>
+                  <Link to={`/game/${gameId}/roster`}>
                     <Edit className="mr-2 h-4 w-4" />
                     Set Up Roster
                   </Link>
