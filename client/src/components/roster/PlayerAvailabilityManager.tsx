@@ -34,26 +34,36 @@ export default function PlayerAvailabilityManager({
     return displayName.toLowerCase().includes(searchQuery.toLowerCase());
   });
 
-  // Get player color based on avatarColor
+  // Get player color based on player ID using our existing utility color mapping
   const getPlayerColor = (player: Player) => {
-    // First, check if we need to use a default color
-    if (!player.avatarColor || player.avatarColor === '#FFFFFF' || player.avatarColor === '#ffffff') {
-      // Use a Tailwind color class based on player ID for consistency
-      const colorIndex = player.id % 10;
-      const colorClasses = [
-        'bg-red-500', 'bg-emerald-600', 'bg-teal-600', 'bg-blue-600', 'bg-indigo-600',
-        'bg-purple-600', 'bg-pink-600', 'bg-orange-500', 'bg-yellow-600', 'bg-rose-600'
-      ];
-      return colorClasses[colorIndex];
+    // Use the consistent player colors from our mapping
+    const playerColorMap: Record<number, string> = {
+      56: 'bg-blue-600',     // Lucia
+      57: 'bg-emerald-600',  // Isla
+      58: 'bg-teal-600',     // JoJo
+      59: 'bg-orange-500',   // Abby D
+      60: 'bg-red-500',      // Abbey N
+      61: 'bg-yellow-600',   // Emily
+      62: 'bg-indigo-600',   // Ollie
+      63: 'bg-sky-600',      // Evie
+      64: 'bg-purple-600',   // Mila
+      65: 'bg-pink-500',     // Olive
+      66: 'bg-lime-600',     // Xanthe
+      67: 'bg-violet-600',   // Holly
+    };
+    
+    // Return the designated color for specific players
+    if (player.id && playerColorMap[player.id]) {
+      return playerColorMap[player.id];
     }
     
-    // Check if the avatarColor is a Tailwind class (starts with 'bg-')
-    if (player.avatarColor.startsWith('bg-')) {
-      return player.avatarColor;
-    }
-    
-    // Otherwise, it's a hex color, return gray as default
-    return 'bg-gray-400';
+    // Fallback to a color based on player ID
+    const colorIndex = player.id % 10;
+    const colorClasses = [
+      'bg-red-500', 'bg-emerald-600', 'bg-teal-600', 'bg-blue-600', 'bg-indigo-600',
+      'bg-purple-600', 'bg-pink-600', 'bg-orange-500', 'bg-yellow-600', 'bg-rose-600'
+    ];
+    return colorClasses[colorIndex];
   };
 
   // Get color hex value for styling
@@ -67,9 +77,13 @@ export default function PlayerAvailabilityManager({
       'bg-indigo-600': '#4f46e5',
       'bg-purple-600': '#9333ea',
       'bg-pink-600': '#db2777',
+      'bg-pink-500': '#ec4899',
       'bg-orange-500': '#f97316',
       'bg-yellow-600': '#ca8a04',
       'bg-rose-600': '#e11d48',
+      'bg-lime-600': '#65a30d',
+      'bg-sky-600': '#0284c7',
+      'bg-violet-600': '#7c3aed',
       'bg-gray-400': '#9ca3af'
     };
     
