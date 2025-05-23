@@ -1106,34 +1106,15 @@ export default function GameDetails() {
             </Button>
           </div>
           
-          <div className="space-y-2">
-            <h1 className="text-2xl font-bold">
-              {game.opponentId ? (
-                <span>
-                  {TEAM_NAME} vs {opponentName}
-                </span>
-              ) : (
-                <span>BYE Round</span>
-              )}
-            </h1>
-            
-            {/* Game Status Display - non-clickable */}
-            <div className="inline-flex">
-              <div className={`px-3 py-1 text-xs font-semibold rounded-full border border-gray-200 
-                ${game.status === 'in-progress' ? 'bg-amber-100 text-amber-800' : 
-                game.status === 'completed' ? 'bg-green-100 text-green-800' : 
-                game.status === 'forfeit-win' ? 'bg-orange-100 text-orange-800' : 
-                game.status === 'forfeit-loss' ? 'bg-red-100 text-red-800' : 
-                'bg-blue-100 text-blue-800'}`}
-              >
-                {game.status === 'upcoming' ? 'Upcoming' :
-                 game.status === 'in-progress' ? 'In Progress' :
-                 game.status === 'completed' ? 'Completed' :
-                 game.status === 'forfeit-win' ? 'Forfeit (Win)' :
-                 game.status === 'forfeit-loss' ? 'Forfeit (Loss)' : 'Unknown'}
-              </div>
-            </div>
-          </div>
+          <h1 className="text-2xl font-bold">
+            {game.opponentId ? (
+              <span>
+                {TEAM_NAME} vs {opponentName}
+              </span>
+            ) : (
+              <span>BYE Round</span>
+            )}
+          </h1>
           
           <div className="flex flex-wrap gap-2 mt-4 mb-4">
             
