@@ -406,7 +406,7 @@ export default function GamesList({
                     </TableCell>
                     <TableCell className="px-6 py-4 whitespace-nowrap">
                       {game.isBye ? (
-                        <div className="font-medium text-accent">BYE</div>
+                        <div className="font-medium text-accent">⸺</div>
                       ) : (
                         <div className="font-medium">{getOpponentName(game.opponentId)}</div>
                       )}
@@ -418,7 +418,7 @@ export default function GamesList({
                             variant="outline"
                             className="px-2 py-1 text-xs rounded-full font-semibold bg-gray-200 text-gray-700"
                           >
-                            BYE Round
+                            ⸺
                           </Badge>
                         ) : (
                           <>
@@ -448,7 +448,11 @@ export default function GamesList({
                       </div>
                     </TableCell>
                     <TableCell className="px-6 py-4 whitespace-nowrap">
-                      <GameScoreDisplay gameId={game.id} compact={true} />
+                      {game.isBye ? (
+                        <div className="font-medium text-accent">⸺</div>
+                      ) : (
+                        <GameScoreDisplay gameId={game.id} compact={true} />
+                      )}
                     </TableCell>
 
 
