@@ -877,11 +877,11 @@ export default function LiveStats() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => navigate('/games')}
+            onClick={() => navigate(`/games/${gameId}`)}
             className="border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-gray-900"
           >
             <ChevronLeft className="mr-1 h-4 w-4" />
-            Back to Games
+            Back to Game
           </Button>
           
           <div className="flex space-x-2">
