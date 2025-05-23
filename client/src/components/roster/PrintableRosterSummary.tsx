@@ -279,20 +279,20 @@ export default function PrintableRosterSummary({ game, opponent, roster, players
         <Table className="border-2 border-gray-200 mb-8 w-full table-fixed">
           <TableHeader className="bg-blue-500">
             <TableRow>
-              <TableHead className="text-white font-bold w-[10%]">Position</TableHead>
-              <TableHead className="text-white font-bold text-center w-[22.5%]">Quarter 1</TableHead>
-              <TableHead className="text-white font-bold text-center w-[22.5%]">Quarter 2</TableHead>
-              <TableHead className="text-white font-bold text-center w-[22.5%]">Quarter 3</TableHead>
+              <TableHead className="text-white font-bold w-[10%] border-r border-gray-200">Position</TableHead>
+              <TableHead className="text-white font-bold text-center w-[22.5%] border-r border-gray-200">Quarter 1</TableHead>
+              <TableHead className="text-white font-bold text-center w-[22.5%] border-r border-gray-200">Quarter 2</TableHead>
+              <TableHead className="text-white font-bold text-center w-[22.5%] border-r border-gray-200">Quarter 3</TableHead>
               <TableHead className="text-white font-bold text-center w-[22.5%]">Quarter 4</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {POSITIONS.map(position => (
               <TableRow key={position} className="hover:bg-blue-50">
-                <TableCell className="font-medium text-center">{position}</TableCell>
-                <TableCell className="text-center">{getPlayerName(rosterByQuarter['1'][position])}</TableCell>
-                <TableCell className="text-center">{getPlayerName(rosterByQuarter['2'][position])}</TableCell>
-                <TableCell className="text-center">{getPlayerName(rosterByQuarter['3'][position])}</TableCell>
+                <TableCell className="font-medium text-center border-r border-gray-200">{position}</TableCell>
+                <TableCell className="text-center border-r border-gray-200">{getPlayerName(rosterByQuarter['1'][position])}</TableCell>
+                <TableCell className="text-center border-r border-gray-200">{getPlayerName(rosterByQuarter['2'][position])}</TableCell>
+                <TableCell className="text-center border-r border-gray-200">{getPlayerName(rosterByQuarter['3'][position])}</TableCell>
                 <TableCell className="text-center">{getPlayerName(rosterByQuarter['4'][position])}</TableCell>
               </TableRow>
             ))}
@@ -303,27 +303,27 @@ export default function PrintableRosterSummary({ game, opponent, roster, players
         <Table className="border-2 border-gray-200 w-full table-fixed">
           <TableHeader className="bg-blue-500">
             <TableRow>
-              <TableHead className="text-white font-bold w-[10%]">Players Off</TableHead>
-              <TableHead className="text-white font-bold text-center w-[22.5%]">Quarter 1</TableHead>
-              <TableHead className="text-white font-bold text-center w-[22.5%]">Quarter 2</TableHead>
-              <TableHead className="text-white font-bold text-center w-[22.5%]">Quarter 3</TableHead>
+              <TableHead className="text-white font-bold w-[10%] border-r border-gray-200">Players Off</TableHead>
+              <TableHead className="text-white font-bold text-center w-[22.5%] border-r border-gray-200">Quarter 1</TableHead>
+              <TableHead className="text-white font-bold text-center w-[22.5%] border-r border-gray-200">Quarter 2</TableHead>
+              <TableHead className="text-white font-bold text-center w-[22.5%] border-r border-gray-200">Quarter 3</TableHead>
               <TableHead className="text-white font-bold text-center w-[22.5%]">Quarter 4</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             <TableRow className="hover:bg-blue-50">
-              <TableCell className="font-medium text-center">Off Court</TableCell>
-              <TableCell className="text-center">
+              <TableCell className="font-medium text-center border-r border-gray-200">Off Court</TableCell>
+              <TableCell className="text-center border-r border-gray-200">
                 {offPlayersByQuarter['1'].length > 0 
                   ? offPlayersByQuarter['1'].map(id => getPlayerName(id)).join(', ') 
                   : 'None'}
               </TableCell>
-              <TableCell className="text-center">
+              <TableCell className="text-center border-r border-gray-200">
                 {offPlayersByQuarter['2'].length > 0 
                   ? offPlayersByQuarter['2'].map(id => getPlayerName(id)).join(', ') 
                   : 'None'}
               </TableCell>
-              <TableCell className="text-center">
+              <TableCell className="text-center border-r border-gray-200">
                 {offPlayersByQuarter['3'].length > 0 
                   ? offPlayersByQuarter['3'].map(id => getPlayerName(id)).join(', ') 
                   : 'None'}
