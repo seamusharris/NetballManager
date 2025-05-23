@@ -386,7 +386,8 @@ export default function GamesList({
                 sortedGames.map(game => (
                   <TableRow 
                     key={game.id}
-                    className="hover:bg-gray-50"
+                    className="cursor-pointer hover:bg-gray-50"
+                    onClick={() => navigate(`/game/${game.id}`)}
                   >
                     <TableCell className="px-6 py-4 whitespace-nowrap">
                       <div className="flex flex-col">
@@ -425,11 +426,6 @@ export default function GamesList({
                           <>
                             <GameStatusBadge 
                               status={game.status || (game.completed ? 'completed' : 'upcoming')}
-                              onClick={(e: React.MouseEvent) => {
-                                e.stopPropagation(); // Prevent row click
-                                setSelectedGame(game);
-                                setStatusDialogOpen(true);
-                              }}
                             />
                             
                             {game.completed && gameScores[game.id] && (
@@ -491,38 +487,7 @@ export default function GamesList({
                               Roster
                             </button>
                             
-                            {/* Don't show statistics button for forfeit games */}
-                            {!isForfeitGame(game) && (
-                              <button 
-                                onClick={(e) => {
-                                  e.stopPropagation(); // Prevent row click
-                                  navigate(`/game/${game.id}/stats`);
-                                }}
-                                title={
-                                  !gameStatsStatus[game.id] || gameStatsStatus[game.id] === 'none'
-                                    ? "No statistics recorded yet"
-                                    : gameStatsStatus[game.id] === 'partial'
-                                      ? "Statistics have been recorded but game is not marked as completed"
-                                      : "Complete game statistics are available"
-                                }
-                                className={`inline-flex items-center justify-center rounded-md text-xs py-1 px-2 border ${
-                                  !gameStatsStatus[game.id] || gameStatsStatus[game.id] === 'none'
-                                    ? "bg-red-50 border-red-200 text-red-700 hover:bg-red-100" 
-                                    : gameStatsStatus[game.id] === 'partial'
-                                      ? "bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100"
-                                      : "bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100"
-                                }`}
-                              >
-                                <FileText className={`h-3 w-3 mr-1 ${
-                                  !gameStatsStatus[game.id] || gameStatsStatus[game.id] === 'none'
-                                    ? "text-red-600"
-                                    : gameStatsStatus[game.id] === 'partial'
-                                      ? "text-amber-600"
-                                      : "text-emerald-600"
-                                }`} />
-                                Statistics
-                              </button>
-                            )}
+
                             
                             {!game.isBye && 
                              !game.completed && 
@@ -544,15 +509,7 @@ export default function GamesList({
                     </TableCell>
                     <TableCell className="px-6 py-4 whitespace-nowrap text-right text-sm">
                       <div className="flex justify-end space-x-2">
-                        <Button 
-                          variant="ghost" 
-                          size="icon"
-                          className="text-blue-500 hover:text-blue-700"
-                          onClick={() => navigate(`/game/${game.id}`)}
-                          title="View game details"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
+
                         <Button 
                           variant="ghost" 
                           size="icon"
