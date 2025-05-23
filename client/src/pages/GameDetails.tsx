@@ -8,6 +8,7 @@ import { PositionStatsBox } from '@/components/games/PositionStatsBox';
 import { PositionBox } from '@/components/games/PositionBox';
 import { GamePositionStatsBox } from '@/components/games/GamePositionStatsBox';
 import GameForm from '@/components/games/GameForm';
+import PrintableRosterSummary from '@/components/roster/PrintableRosterSummary';
 import { 
   Card, 
   CardContent, 
@@ -1240,7 +1241,7 @@ export default function GameDetails() {
       
       <div className="mt-8">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="roster">
               <ClipboardList className="mr-2 h-4 w-4" />
               Court Positions
@@ -1252,6 +1253,10 @@ export default function GameDetails() {
             <TabsTrigger value="players">
               <ActivitySquare className="mr-2 h-4 w-4" />
               Player Statistics
+            </TabsTrigger>
+            <TabsTrigger value="print">
+              <FileText className="mr-2 h-4 w-4" />
+              Printable Roster
             </TabsTrigger>
           </TabsList>
           
@@ -1332,6 +1337,28 @@ export default function GameDetails() {
                     {!roster || roster.length === 0 
                       ? "Set Up Roster" 
                       : "Record Statistics"}
+                  </Link>
+                </Button>
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="print" className="mt-6">
+            {roster && roster.length > 0 ? (
+              <PrintableRosterSummary 
+                game={game} 
+                opponent={opponents?.find(o => o.id === game.opponentId) || null}
+                roster={roster}
+                players={players || []}
+              />
+            ) : (
+              <div className="text-center py-10 border rounded-lg bg-gray-50">
+                <h3 className="text-lg font-medium mb-2">No roster assigned</h3>
+                <p className="text-gray-500 mb-4">There are no positions assigned for this game yet.</p>
+                <Button asChild>
+                  <Link to={`/game/${gameId}/roster`}>
+                    <Edit className="mr-2 h-4 w-4" />
+                    Set Up Roster
                   </Link>
                 </Button>
               </div>

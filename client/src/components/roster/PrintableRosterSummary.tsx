@@ -17,7 +17,7 @@ interface PrintableRosterSummaryProps {
 
 export default function PrintableRosterSummary({ game, opponent, roster, players }: PrintableRosterSummaryProps) {
   // Get the player name by ID
-  const getPlayerName = (playerId: number) => {
+  const getPlayerName = (playerId: number | null) => {
     if (!players || !playerId) return '-';
     const player = players.find(p => p.id === playerId);
     return player ? (player.displayName || `${player.firstName} ${player.lastName}`) : '-';
@@ -66,10 +66,10 @@ export default function PrintableRosterSummary({ game, opponent, roster, players
     const tableData = POSITIONS.map(position => {
       return [
         position,
-        getPlayerName(rosterByQuarter['1'][position]),
-        getPlayerName(rosterByQuarter['2'][position]),
-        getPlayerName(rosterByQuarter['3'][position]),
-        getPlayerName(rosterByQuarter['4'][position])
+        getPlayerName(rosterByQuarter['1'][position] || null),
+        getPlayerName(rosterByQuarter['2'][position] || null),
+        getPlayerName(rosterByQuarter['3'][position] || null),
+        getPlayerName(rosterByQuarter['4'][position] || null)
       ];
     });
     
@@ -96,10 +96,10 @@ export default function PrintableRosterSummary({ game, opponent, roster, players
     const data = POSITIONS.map(position => {
       return {
         'Position': position,
-        'Quarter 1': getPlayerName(rosterByQuarter['1'][position]),
-        'Quarter 2': getPlayerName(rosterByQuarter['2'][position]),
-        'Quarter 3': getPlayerName(rosterByQuarter['3'][position]),
-        'Quarter 4': getPlayerName(rosterByQuarter['4'][position])
+        'Quarter 1': getPlayerName(rosterByQuarter['1'][position] || null),
+        'Quarter 2': getPlayerName(rosterByQuarter['2'][position] || null),
+        'Quarter 3': getPlayerName(rosterByQuarter['3'][position] || null),
+        'Quarter 4': getPlayerName(rosterByQuarter['4'][position] || null)
       };
     });
     
