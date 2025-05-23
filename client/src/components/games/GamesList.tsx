@@ -363,8 +363,6 @@ export default function GamesList({
                 <TableHead className="px-6 py-3 text-left">Opponent</TableHead>
                 <TableHead className="px-6 py-3 text-left">Status</TableHead>
                 <TableHead className="px-6 py-3 text-left">Score</TableHead>
-                <TableHead className="px-6 py-3 text-left">Options</TableHead>
-                <TableHead className="px-6 py-3 text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -507,9 +505,7 @@ export default function GamesList({
                         )}
                       </div>
                     </TableCell>
-                    <TableCell className="px-6 py-4 whitespace-nowrap text-right text-sm">
-                      {/* No action buttons here anymore - all buttons moved to Game Details page */}
-                    </TableCell>
+
                   </TableRow>
                 ))
               )}
