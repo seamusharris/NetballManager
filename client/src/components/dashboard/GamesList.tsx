@@ -79,8 +79,8 @@ export default function GamesList({ games, opponents, className }: GamesListProp
           </Select>
         </div>
         
-        <div className="overflow-x-auto">
-          <Table className="border rounded-md overflow-hidden">
+        <div className="overflow-x-auto border-t border-l border-b rounded-md">
+          <Table>
             <TableHeader>
               <TableRow className="bg-slate-50">
                 <TableHead className="w-20 border-r border-b text-center">Round</TableHead>
