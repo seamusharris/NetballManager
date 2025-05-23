@@ -31,7 +31,7 @@ export function useGameStatistics(gameId: number, forceFresh: boolean = false) {
     error: scoresError
   } = useQuery({
     queryKey: ['gameScores', gameId, freshQueryKey],
-    queryFn: () => statisticsService.calculateGameScores(gameId),
+    queryFn: () => statisticsService.calculateGameScores(gameId, forceFresh),
     enabled: !!gameId,
     staleTime: forceFresh ? 0 : 5 * 60 * 1000, // 0 for fresh, 5 minutes otherwise
   });
@@ -43,7 +43,7 @@ export function useGameStatistics(gameId: number, forceFresh: boolean = false) {
     error: positionStatsError
   } = useQuery({
     queryKey: ['positionStats', gameId, freshQueryKey],
-    queryFn: () => statisticsService.getPositionStats(gameId),
+    queryFn: () => statisticsService.getPositionStats(gameId, forceFresh),
     enabled: !!gameId,
     staleTime: forceFresh ? 0 : 5 * 60 * 1000, // 0 for fresh, 5 minutes otherwise
   });
@@ -55,7 +55,7 @@ export function useGameStatistics(gameId: number, forceFresh: boolean = false) {
     error: playerStatsError
   } = useQuery({
     queryKey: ['playerStats', gameId, freshQueryKey],
-    queryFn: () => statisticsService.mapStatsToPlayers(gameId),
+    queryFn: () => statisticsService.mapStatsToPlayers(gameId, forceFresh),
     enabled: !!gameId,
     staleTime: forceFresh ? 0 : 5 * 60 * 1000, // 0 for fresh, 5 minutes otherwise
   });
