@@ -276,20 +276,20 @@ export default function PrintableRosterSummary({ game, opponent, roster, players
           </p>
         </div>
         
-        <Table className="border-2 border-gray-200 mb-8">
+        <Table className="border-2 border-gray-200 mb-8 w-full table-fixed">
           <TableHeader className="bg-blue-500">
             <TableRow>
-              <TableHead className="text-white font-bold">Position</TableHead>
-              <TableHead className="text-white font-bold text-center">Quarter 1</TableHead>
-              <TableHead className="text-white font-bold text-center">Quarter 2</TableHead>
-              <TableHead className="text-white font-bold text-center">Quarter 3</TableHead>
-              <TableHead className="text-white font-bold text-center">Quarter 4</TableHead>
+              <TableHead className="text-white font-bold w-[10%]">Position</TableHead>
+              <TableHead className="text-white font-bold text-center w-[22.5%]">Quarter 1</TableHead>
+              <TableHead className="text-white font-bold text-center w-[22.5%]">Quarter 2</TableHead>
+              <TableHead className="text-white font-bold text-center w-[22.5%]">Quarter 3</TableHead>
+              <TableHead className="text-white font-bold text-center w-[22.5%]">Quarter 4</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {POSITIONS.map(position => (
               <TableRow key={position} className="hover:bg-blue-50">
-                <TableCell className="font-medium">{position}</TableCell>
+                <TableCell className="font-medium text-center">{position}</TableCell>
                 <TableCell className="text-center">{getPlayerName(rosterByQuarter['1'][position])}</TableCell>
                 <TableCell className="text-center">{getPlayerName(rosterByQuarter['2'][position])}</TableCell>
                 <TableCell className="text-center">{getPlayerName(rosterByQuarter['3'][position])}</TableCell>
@@ -300,19 +300,19 @@ export default function PrintableRosterSummary({ game, opponent, roster, players
         </Table>
         
         {/* Players who are off in each quarter */}
-        <Table className="border-2 border-gray-200">
+        <Table className="border-2 border-gray-200 w-full table-fixed">
           <TableHeader className="bg-blue-500">
             <TableRow>
-              <TableHead className="text-white font-bold">Players Off</TableHead>
-              <TableHead className="text-white font-bold text-center">Quarter 1</TableHead>
-              <TableHead className="text-white font-bold text-center">Quarter 2</TableHead>
-              <TableHead className="text-white font-bold text-center">Quarter 3</TableHead>
-              <TableHead className="text-white font-bold text-center">Quarter 4</TableHead>
+              <TableHead className="text-white font-bold w-[10%]">Players Off</TableHead>
+              <TableHead className="text-white font-bold text-center w-[22.5%]">Quarter 1</TableHead>
+              <TableHead className="text-white font-bold text-center w-[22.5%]">Quarter 2</TableHead>
+              <TableHead className="text-white font-bold text-center w-[22.5%]">Quarter 3</TableHead>
+              <TableHead className="text-white font-bold text-center w-[22.5%]">Quarter 4</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             <TableRow className="hover:bg-blue-50">
-              <TableCell className="font-medium">Off Court</TableCell>
+              <TableCell className="font-medium text-center">Off Court</TableCell>
               <TableCell className="text-center">
                 {offPlayersByQuarter['1'].length > 0 
                   ? offPlayersByQuarter['1'].map(id => getPlayerName(id)).join(', ') 
