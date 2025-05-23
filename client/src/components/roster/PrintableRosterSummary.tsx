@@ -119,6 +119,8 @@ export default function PrintableRosterSummary({ game, opponent, roster, players
     // Add table to PDF - use the properly imported autoTable
     import('jspdf-autotable').then((autoTable) => {
       const autoTablePlugin = autoTable.default;
+      
+      // First table - Players by position
       autoTablePlugin(doc, {
         startY: 30,
         head: [['Position', 'Q1', 'Q2', 'Q3', 'Q4']],
@@ -129,7 +131,30 @@ export default function PrintableRosterSummary({ game, opponent, roster, players
         alternateRowStyles: { fillColor: [240, 245, 255] }
       });
       
-      // Save PDF after autotable is applied
+      // Get the Y position after the first table
+      const finalY = (doc as any).lastAutoTable.finalY || 120;
+      
+      // Add "Players Off" section title
+      doc.setFontSize(14);
+      doc.text("Players Off Court", 14, finalY + 15);
+      
+      // Second table - Players off
+      autoTablePlugin(doc, {
+        startY: finalY + 20,
+        head: [['Players Off', 'Q1', 'Q2', 'Q3', 'Q4']],
+        body: [[
+          'Off Court',
+          offPlayersByQuarter['1'].length > 0 ? offPlayersByQuarter['1'].map(id => getPlayerName(id)).join(', ') : 'None',
+          offPlayersByQuarter['2'].length > 0 ? offPlayersByQuarter['2'].map(id => getPlayerName(id)).join(', ') : 'None',
+          offPlayersByQuarter['3'].length > 0 ? offPlayersByQuarter['3'].map(id => getPlayerName(id)).join(', ') : 'None',
+          offPlayersByQuarter['4'].length > 0 ? offPlayersByQuarter['4'].map(id => getPlayerName(id)).join(', ') : 'None',
+        ]],
+        theme: 'grid',
+        styles: { fontSize: 10, cellPadding: 3 },
+        headStyles: { fillColor: [59, 130, 246], textColor: 255 }
+      });
+      
+      // Save PDF after both tables are applied
       doc.save(`${gameDate.replace(/\//g, '-')}_roster_${opponentName.replace(/\s+/g, '_')}.pdf`);
     });
   };
@@ -138,8 +163,8 @@ export default function PrintableRosterSummary({ game, opponent, roster, players
   const handleExportExcel = () => {
     if (!game) return;
     
-    // Prepare the data
-    const data = POSITIONS.map(position => {
+    // Prepare the data for positions by quarter
+    const positionData = POSITIONS.map(position => {
       return {
         'Position': position,
         'Quarter 1': getPlayerName(rosterByQuarter['1'][position] || null),
@@ -149,12 +174,33 @@ export default function PrintableRosterSummary({ game, opponent, roster, players
       };
     });
     
-    // Create worksheet
-    const ws = XLSX.utils.json_to_sheet(data);
+    // Prepare data for players who are off in each quarter
+    const offPlayersData = [{
+      'Players Off': 'Off Court',
+      'Quarter 1': offPlayersByQuarter['1'].length > 0 
+        ? offPlayersByQuarter['1'].map(id => getPlayerName(id)).join(', ') 
+        : 'None',
+      'Quarter 2': offPlayersByQuarter['2'].length > 0 
+        ? offPlayersByQuarter['2'].map(id => getPlayerName(id)).join(', ') 
+        : 'None',
+      'Quarter 3': offPlayersByQuarter['3'].length > 0 
+        ? offPlayersByQuarter['3'].map(id => getPlayerName(id)).join(', ') 
+        : 'None',
+      'Quarter 4': offPlayersByQuarter['4'].length > 0 
+        ? offPlayersByQuarter['4'].map(id => getPlayerName(id)).join(', ') 
+        : 'None'
+    }];
     
-    // Create workbook
+    // Create workbook and worksheets
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Roster");
+    
+    // Add positions worksheet
+    const positionsWs = XLSX.utils.json_to_sheet(positionData);
+    XLSX.utils.book_append_sheet(wb, positionsWs, "Positions");
+    
+    // Add off players worksheet
+    const offPlayersWs = XLSX.utils.json_to_sheet(offPlayersData);
+    XLSX.utils.book_append_sheet(wb, offPlayersWs, "Players Off");
     
     // Save Excel file
     const gameDate = formatDate(game.date).replace(/\//g, '-');
