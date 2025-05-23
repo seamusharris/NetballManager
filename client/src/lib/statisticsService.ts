@@ -113,15 +113,30 @@ export class StatisticsService {
   /**
    * Calculate game scores (for and against) by quarter and final
    * This is the critical function that updates scores everywhere
+   * Now with enhanced global caching support
    */
   async calculateGameScores(gameId: number, forceRefresh: boolean = false): Promise<GameScores> {
+    // Try to get from global cache first if not forcing refresh
+    if (!forceRefresh) {
+      const cachedScores = getCachedScores(gameId);
+      if (cachedScores) {
+        console.log(`Using cached scores for game ${gameId} from global cache`);
+        return cachedScores;
+      }
+    }
+    
     // First check if this is a forfeit game
     const game = await apiRequest(`/api/games/${gameId}`);
     
     // Special handling for forfeit games - return scores based on forfeit type
     if (isForfeitGame(game)) {
       console.log(`Forfeit game detected (ID: ${gameId}, status: ${game.status}), returning appropriate forfeit score`);
-      return getForfeitGameScore(game);
+      const forfeitScore = getForfeitGameScore(game);
+      
+      // Cache the forfeit score with game status for future use
+      cacheScores(gameId, forfeitScore, undefined, game.status);
+      
+      return forfeitScore;
     }
     
     // For non-forfeit games, proceed with normal calculation
@@ -188,10 +203,15 @@ export class StatisticsService {
                quarterScores['3'].against + quarterScores['4'].against
     };
     
-    return {
+    const scores = {
       quarterScores,
       finalScore
     };
+    
+    // Cache the newly calculated scores for future use
+    cacheScores(gameId, scores, stats);
+    
+    return scores;
   }
   
   /**

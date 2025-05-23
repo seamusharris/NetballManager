@@ -86,17 +86,29 @@ export function useGamesScores(gameIds: number[], forceFresh: boolean = false) {
   // Check if any query has an error
   const hasError = results.some(result => result.error);
   
+  // Count how many games had data from cache vs. fetched fresh
+  const cachedCount = results.filter(result => result.isSuccess && !result.isFetching).length;
+  if (cachedCount > 0 && gameIds.length > 0) {
+    console.log(`Used ${cachedCount} cached scores out of ${gameIds.length} total games`);
+  }
+  
   return {
     scoresMap,
     isLoading,
     hasError,
-    // Provide a way to invalidate a specific game's score
+    // Provide a way to invalidate a specific game's score in both React Query and global cache
     invalidateGame: (gameId: number) => {
+      // Invalidate React Query cache
       queryClient.invalidateQueries({queryKey: ['gameScores', gameId]});
+      // Also invalidate our global persistent cache
+      invalidateGameCache(gameId);
     },
     // Provide a way to invalidate all scores
     invalidateAll: () => {
+      // Invalidate all game scores in React Query cache
       queryClient.invalidateQueries({queryKey: ['gameScores']});
+      // Also clear our global persistent cache for all games
+      gameIds.forEach(gameId => clearGameCache(gameId));
     }
   };
 }
