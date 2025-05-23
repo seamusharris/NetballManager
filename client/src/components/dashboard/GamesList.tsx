@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { cn, formatDate } from '@/lib/utils';
 import { useState } from 'react';
 import { GameScoreDisplay } from '../statistics/GameScoreDisplay';
+import { Card, CardContent } from '@/components/ui/card';
 
 interface GamesListProps {
   games: Game[];
@@ -61,23 +62,23 @@ export default function GamesList({ games, opponents, className }: GamesListProp
   };
   
   return (
-    <div className={cn("w-full bg-white rounded-lg shadow-sm overflow-hidden", className)}>
-      <div className="bg-slate-50 pb-4 pt-4 px-6 border-b flex flex-row items-center justify-between">
-        <div className="text-lg font-bold text-gray-900">Game Schedule</div>
-        <Select value={displayMode} onValueChange={setDisplayMode}>
-          <SelectTrigger className="w-[140px]">
-            <SelectValue placeholder="All Games" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Games</SelectItem>
-            <SelectItem value="upcoming">Upcoming Games</SelectItem>
-            <SelectItem value="completed">Completed Games</SelectItem>
-            <SelectItem value="recent">Recent Games</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      
-      <div className="p-0">
+    <Card className={className}>
+      <CardContent className="p-6">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="font-heading font-semibold text-neutral-dark">Game Schedule</h3>
+          <Select value={displayMode} onValueChange={setDisplayMode}>
+            <SelectTrigger className="bg-white border rounded-md w-[140px] h-8 text-sm">
+              <SelectValue placeholder="All Games" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Games</SelectItem>
+              <SelectItem value="upcoming">Upcoming Games</SelectItem>
+              <SelectItem value="completed">Completed Games</SelectItem>
+              <SelectItem value="recent">Recent Games</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
@@ -143,7 +144,7 @@ export default function GamesList({ games, opponents, className }: GamesListProp
             </TableBody>
           </Table>
         </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }
