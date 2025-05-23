@@ -6,6 +6,31 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+export function getTailwindColorClass(hexColor: string): string | undefined {
+  // Simple mapping of hex colors to Tailwind classes
+  const colorMap: Record<string, string> = {
+    '#ef4444': 'bg-red-500',
+    '#f97316': 'bg-orange-500',
+    '#f59e0b': 'bg-amber-500',
+    '#eab308': 'bg-yellow-500',
+    '#84cc16': 'bg-lime-500',
+    '#22c55e': 'bg-green-500',
+    '#10b981': 'bg-emerald-500',
+    '#14b8a6': 'bg-teal-500',
+    '#06b6d4': 'bg-cyan-500',
+    '#0ea5e9': 'bg-sky-500',
+    '#3b82f6': 'bg-blue-500',
+    '#6366f1': 'bg-indigo-500',
+    '#8b5cf6': 'bg-violet-500',
+    '#a855f7': 'bg-purple-500',
+    '#d946ef': 'bg-fuchsia-500',
+    '#ec4899': 'bg-pink-500',
+    '#f43f5e': 'bg-rose-500',
+  };
+
+  return colorMap[hexColor?.toLowerCase()];
+}
+
 export function getInitials(firstName: string, lastName: string): string {
   return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
 }
