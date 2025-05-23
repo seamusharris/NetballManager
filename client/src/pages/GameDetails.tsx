@@ -68,6 +68,271 @@ const getOpponentName = (opponents: any[], opponentId: number | null) => {
 
 // We now use the shared GameStatusButton component instead
 
+// Using the imported StatItemBox from components
+
+// Component to display player statistics from their positions played
+const PlayerStatsByQuarter = ({ roster, players, gameStats }: { roster: any[], players: any[], gameStats: any[] }) => {
+  const [activeQuarter, setActiveQuarter] = useState<number>(0); // 0 means all quarters
+  
+  // Calculate player statistics by combining all positions they played
+  const playerStats = useMemo(() => {
+    // Group roster by player ID
+    const playerPositions: Record<number, { playerId: number, positions: Record<number, string> }> = {};
+    
+    // Create a mapping of player ID to positions they played in each quarter
+    roster.forEach(entry => {
+      if (!entry.playerId) return;
+      
+      if (!playerPositions[entry.playerId]) {
+        playerPositions[entry.playerId] = {
+          playerId: entry.playerId,
+          positions: {}
+        };
+      }
+      
+      playerPositions[entry.playerId].positions[entry.quarter] = entry.position;
+    });
+    
+    // For each player, calculate their statistics based on positions played
+    const result: Record<number, any> = {};
+    
+    Object.values(playerPositions).forEach(player => {
+      // Initialize player stats
+      const playerStat = {
+        playerId: player.playerId,
+        name: getPlayerName(players, player.playerId),
+        color: getPlayerColor(players, player.playerId),
+        quarterStats: {} as Record<number, any>,
+        totalStats: {
+          goals: 0,
+          missedGoals: 0,
+          goalsAgainst: 0,
+          rebounds: 0,
+          intercepts: 0,
+          badPass: 0,
+          handlingError: 0,
+          pickUp: 0,
+          infringement: 0
+        }
+      };
+      
+      // Get stats for each quarter the player played in
+      Object.entries(player.positions).forEach(([quarter, position]) => {
+        const quarterNum = parseInt(quarter);
+        // Find stat for this position and quarter
+        const positionStat = gameStats.find(
+          stat => stat.position === position && stat.quarter === quarterNum
+        );
+        
+        if (positionStat) {
+          // Initialize quarter stats if not already there
+          if (!playerStat.quarterStats[quarterNum]) {
+            playerStat.quarterStats[quarterNum] = {
+              position,
+              goals: 0,
+              missedGoals: 0,
+              goalsAgainst: 0,
+              rebounds: 0,
+              intercepts: 0,
+              badPass: 0,
+              handlingError: 0,
+              pickUp: 0,
+              infringement: 0
+            };
+          }
+          
+          // Add stats from this position in this quarter
+          const stats = playerStat.quarterStats[quarterNum];
+          
+          // Increment stats based on what was recorded for this position
+          if (position === 'GS' || position === 'GA') {
+            stats.goals += positionStat.goalsFor || 0;
+            stats.missedGoals += positionStat.missedGoals || 0;
+          }
+          
+          if (position === 'GD' || position === 'GK') {
+            stats.goalsAgainst += positionStat.goalsAgainst || 0;
+          }
+          
+          // Common stats for all positions
+          stats.rebounds += positionStat.rebounds || 0;
+          stats.intercepts += positionStat.intercepts || 0;
+          stats.badPass += positionStat.badPass || 0;
+          stats.handlingError += positionStat.handlingError || 0;
+          stats.pickUp += positionStat.pickUp || 0;
+          stats.infringement += positionStat.infringement || 0;
+          
+          // Add to total stats
+          playerStat.totalStats.goals += position === 'GS' || position === 'GA' ? (positionStat.goalsFor || 0) : 0;
+          playerStat.totalStats.missedGoals += position === 'GS' || position === 'GA' ? (positionStat.missedGoals || 0) : 0;
+          playerStat.totalStats.goalsAgainst += position === 'GD' || position === 'GK' ? (positionStat.goalsAgainst || 0) : 0;
+          playerStat.totalStats.rebounds += positionStat.rebounds || 0;
+          playerStat.totalStats.intercepts += positionStat.intercepts || 0;
+          playerStat.totalStats.badPass += positionStat.badPass || 0;
+          playerStat.totalStats.handlingError += positionStat.handlingError || 0;
+          playerStat.totalStats.pickUp += positionStat.pickUp || 0;
+          playerStat.totalStats.infringement += positionStat.infringement || 0;
+        }
+      });
+      
+      // Add player to results
+      result[player.playerId] = playerStat;
+    });
+    
+    return Object.values(result);
+  }, [roster, players, gameStats]);
+  
+  // Helper function to get player name (moved from elsewhere in the file)
+  function getPlayerName(players: any[], playerId: number) {
+    if (!players || !playerId) return null;
+    const player = players.find(p => p.id === playerId);
+    return player ? (player.displayName || `${player.firstName} ${player.lastName}`) : null;
+  }
+  
+  // Helper function to get player color (moved from elsewhere in the file)
+  function getPlayerColor(players: any[], playerId: number) {
+    if (!players || !playerId) return '#cccccc';
+    const player = players.find(p => p.id === playerId);
+    
+    // First, check if we need to use a default color
+    if (!player || !player.avatarColor || player.avatarColor === '#FFFFFF' || player.avatarColor === '#ffffff') {
+      // Use a very obvious, distinctive color based on player ID for maximum visibility
+      const defaultColors = [
+        '#FF5733', '#33FF57', '#3357FF', '#F033FF', '#FF33F0', 
+        '#33FFF0', '#F0FF33', '#8C33FF', '#FF8C33', '#33FF8C'
+      ];
+      return defaultColors[playerId % defaultColors.length];
+    }
+    
+    // Check if the avatarColor is a Tailwind class (starts with 'bg-')
+    if (player.avatarColor.startsWith('bg-')) {
+      return convertTailwindToHex(player.avatarColor);
+    }
+    
+    // If it's already a hex color, return it
+    return player.avatarColor;
+  }
+  
+  // Convert Tailwind color classes to hex color values
+  function convertTailwindToHex(tailwindClass: string) {
+    const colorMap = {
+      'bg-red-500': '#ef4444',
+      'bg-orange-500': '#f97316',
+      'bg-yellow-600': '#ca8a04',
+      'bg-green-500': '#22c55e',
+      'bg-emerald-600': '#059669',
+      'bg-teal-600': '#0d9488',
+      'bg-blue-600': '#2563eb',
+      'bg-indigo-600': '#4f46e5',
+      'bg-purple-600': '#9333ea',
+      'bg-pink-600': '#db2777',
+      'bg-pink-500': '#ec4899',
+      'bg-sky-600': '#0284c7',
+      'bg-cyan-600': '#0891b2',
+      'bg-lime-600': '#65a30d',
+      'bg-amber-600': '#d97706',
+      'bg-violet-600': '#7c3aed',
+      'bg-fuchsia-600': '#c026d3',
+      'bg-rose-600': '#e11d48',
+    };
+    
+    return colorMap[tailwindClass] || '#6366f1'; // default to indigo-500 if not found
+  }
+  
+  // Render a quarter tab/button
+  const renderQuarterButton = (quarter: number) => (
+    <Button 
+      key={quarter} 
+      variant={activeQuarter === quarter ? "default" : "outline"} 
+      size="sm"
+      onClick={() => setActiveQuarter(quarter)}
+      className="min-w-[60px]"
+    >
+      {quarter === 0 ? "All" : `Q${quarter}`}
+    </Button>
+  );
+  
+  // Render a player's statistics box
+  const renderPlayerStatsBox = (player: any) => {
+    const relevantStats = activeQuarter === 0 
+      ? player.totalStats
+      : player.quarterStats[activeQuarter];
+      
+    if (!relevantStats) return null;
+    
+    // Get the primary stats to show (depends on positions played)
+    const hasScoringStats = player.totalStats.goals > 0 || player.totalStats.missedGoals > 0;
+    const hasDefensiveStats = player.totalStats.goalsAgainst > 0;
+    
+    return (
+      <div 
+        key={player.playerId}
+        className="p-3 border rounded-md shadow-sm mb-4"
+        style={{ 
+          backgroundColor: `${player.color}10`,
+          borderColor: player.color
+        }}
+      >
+        <div className="flex justify-between items-center mb-3">
+          <div 
+            className="font-semibold text-lg"
+            style={{ color: player.color }}
+          >
+            {player.name}
+          </div>
+          {activeQuarter > 0 && player.quarterStats[activeQuarter] && (
+            <div className="text-sm bg-gray-100 px-2 py-1 rounded">
+              {player.quarterStats[activeQuarter].position}
+            </div>
+          )}
+        </div>
+        
+        {relevantStats && (
+          <div className="mt-1 bg-gray-50 p-3 rounded-md border border-gray-100">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                {/* Left column stats */}
+                {hasScoringStats && (
+                  <>
+                    <StatItemBox label="Goals" value={relevantStats.goals} />
+                    <StatItemBox label="Missed Goals" value={relevantStats.missedGoals} />
+                  </>
+                )}
+                {hasDefensiveStats && (
+                  <StatItemBox label="Goals Against" value={relevantStats.goalsAgainst} />
+                )}
+                {relevantStats.rebounds > 0 && <StatItemBox label="Rebounds" value={relevantStats.rebounds} />}
+                {relevantStats.intercepts > 0 && <StatItemBox label="Intercepts" value={relevantStats.intercepts} />}
+              </div>
+              <div className="space-y-2">
+                {/* Right column stats */}
+                {relevantStats.badPass > 0 && <StatItemBox label="Bad Pass" value={relevantStats.badPass} />}
+                {relevantStats.handlingError > 0 && <StatItemBox label="Handling Errors" value={relevantStats.handlingError} />}
+                {relevantStats.pickUp > 0 && <StatItemBox label="Pick Ups" value={relevantStats.pickUp} />}
+                {relevantStats.infringement > 0 && <StatItemBox label="Infringements" value={relevantStats.infringement} />}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+  
+  return (
+    <div>
+      <div className="mb-4 flex justify-center items-center">
+        <div className="flex gap-2">
+          {[0, 1, 2, 3, 4].map(q => renderQuarterButton(q))}
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {playerStats.map(player => renderPlayerStatsBox(player))}
+      </div>
+    </div>
+  );
+};
+
 // Calculate quarter by quarter scores
 const calculateQuarterScores = (gameStats: any[], game: any) => {
   // Special handling for forfeit games - use consistent scoring for forfeit games
