@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 import * as XLSX from 'xlsx';
@@ -6,13 +6,54 @@ import { Button } from '@/components/ui/button';
 import { Printer, FileText, FileSpreadsheet } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 import { Position, POSITIONS } from '@shared/schema';
+import { useQuery } from '@tanstack/react-query';
 
 interface PrintableStatsSheetProps {
   game: any;
   opponent: any;
+  roster?: any[];
+  players?: any[];
 }
 
-export default function PrintableStatsSheet({ game, opponent }: PrintableStatsSheetProps) {
+export default function PrintableStatsSheet({ game, opponent, roster: propRoster, players: propPlayers }: PrintableStatsSheetProps) {
+  // Fetch roster data if not provided via props
+  const { data: rosterData } = useQuery({
+    queryKey: ['/api/games', game?.id, 'rosters'],
+    queryFn: async () => {
+      if (!game?.id) return [];
+      const res = await fetch(`/api/games/${game.id}/rosters`);
+      return res.json();
+    },
+    enabled: !!game?.id && !propRoster,
+  });
+
+  // Fetch players data if not provided via props
+  const { data: playersData } = useQuery({
+    queryKey: ['/api/players'],
+    queryFn: async () => {
+      const res = await fetch('/api/players');
+      return res.json();
+    },
+    enabled: !propPlayers,
+  });
+
+  const roster = propRoster || rosterData || [];
+  const players = propPlayers || playersData || [];
+
+  // Group roster by quarter and position
+  const rosterByQuarterPosition = roster.reduce((acc, item) => {
+    if (!acc[item.quarter]) {
+      acc[item.quarter] = {};
+    }
+    acc[item.quarter][item.position] = item.playerId;
+    return acc;
+  }, {});
+
+  // Function to get player name by ID
+  const getPlayerName = (playerId) => {
+    const player = players.find(p => p.id === playerId);
+    return player ? player.displayName : '';
+  };
   // Stats categories to track
   const statsCategories = [
     { id: 'goalsFor', label: 'Goals For' },
@@ -58,8 +99,17 @@ export default function PrintableStatsSheet({ game, opponent }: PrintableStatsSh
         doc.setFontSize(11);
         doc.text(`Quarter ${quarter}`, 14, yPos);
         
+        // Create player names array for position header subtext
+        const playerNames = POSITIONS.map(position => {
+          const playerId = rosterByQuarterPosition[quarter]?.[position];
+          return playerId ? getPlayerName(playerId) : '';
+        });
+        
         // Create header row with position columns
         const headers = ['Stat', ...POSITIONS];
+        
+        // Create the player names row
+        const playerRow = ['Player', ...playerNames];
         
         // Create rows for each stat category
         const rows = statsCategories.map(category => {
@@ -69,13 +119,21 @@ export default function PrintableStatsSheet({ game, opponent }: PrintableStatsSh
         // Add the table
         autoTable(doc, {
           startY: yPos + 4,
-          head: [headers],
+          head: [headers, playerRow],
           body: rows,
           theme: 'grid',
           styles: { fontSize: 8, cellPadding: 2 },
           headStyles: { fillColor: [59, 130, 246], textColor: 255 },
           columnStyles: {
             0: { fontStyle: 'bold', cellWidth: 20 }
+          },
+          // Custom styles for player names row
+          didParseCell: (data) => {
+            if (data.section === 'head' && data.row.index === 1) {
+              data.cell.styles.fillColor = [224, 242, 254]; // bg-blue-100
+              data.cell.styles.textColor = [30, 64, 175]; // text-blue-800
+              data.cell.styles.fontStyle = 'normal';
+            }
           },
           margin: { left: 10, right: 10 },
           didDrawPage: (data) => {
@@ -95,8 +153,17 @@ export default function PrintableStatsSheet({ game, opponent }: PrintableStatsSh
         doc.setFontSize(11);
         doc.text(`Quarter ${quarter}`, 14, yPos);
         
+        // Create player names array for position header subtext
+        const playerNames = POSITIONS.map(position => {
+          const playerId = rosterByQuarterPosition[quarter]?.[position];
+          return playerId ? getPlayerName(playerId) : '';
+        });
+        
         // Create header row with position columns
         const headers = ['Stat', ...POSITIONS];
+        
+        // Create the player names row
+        const playerRow = ['Player', ...playerNames];
         
         // Create rows for each stat category
         const rows = statsCategories.map(category => {
@@ -106,13 +173,21 @@ export default function PrintableStatsSheet({ game, opponent }: PrintableStatsSh
         // Add the table
         autoTable(doc, {
           startY: yPos + 4,
-          head: [headers],
+          head: [headers, playerRow],
           body: rows,
           theme: 'grid',
           styles: { fontSize: 8, cellPadding: 2 },
           headStyles: { fillColor: [59, 130, 246], textColor: 255 },
           columnStyles: {
             0: { fontStyle: 'bold', cellWidth: 20 }
+          },
+          // Custom styles for player names row
+          didParseCell: (data) => {
+            if (data.section === 'head' && data.row.index === 1) {
+              data.cell.styles.fillColor = [224, 242, 254]; // bg-blue-100
+              data.cell.styles.textColor = [30, 64, 175]; // text-blue-800
+              data.cell.styles.fontStyle = 'normal';
+            }
           },
           margin: { left: 10, right: 10 },
           didDrawPage: (data) => {
@@ -139,9 +214,18 @@ export default function PrintableStatsSheet({ game, opponent }: PrintableStatsSh
       // Create headers
       const headers = ['Stat Category', ...POSITIONS];
       
-      // Create data array starting with headers
+      // Create player names row
+      const playerNames = ['Players'];
+      for (const position of POSITIONS) {
+        const playerId = rosterByQuarterPosition[quarter]?.[position];
+        const playerName = playerId ? getPlayerName(playerId) : '';
+        playerNames.push(playerName);
+      }
+      
+      // Create data array starting with headers and player names
       const data = [
         headers,
+        playerNames,
         // Add empty rows for each stat category
         ...statsCategories.map(category => {
           return [category.label, '', '', '', '', '', '', ''];
@@ -164,6 +248,17 @@ export default function PrintableStatsSheet({ game, opponent }: PrintableStatsSh
       ];
       
       ws['!cols'] = colWidths;
+      
+      // Style the player names row
+      for (let i = 0; i < playerNames.length; i++) {
+        const cellRef = XLSX.utils.encode_cell({c: i, r: 1}); // second row (r=1)
+        if (!ws[cellRef]) continue;
+        
+        // Create cell style for player names (blue background)
+        if (!ws[cellRef].s) ws[cellRef].s = {};
+        ws[cellRef].s.fill = {fgColor: {rgb: "E0F2FE"}}; // Light blue bg
+        ws[cellRef].s.font = {color: {rgb: "1E40AF"}}; // Blue text
+      }
       
       // Add worksheet to workbook
       XLSX.utils.book_append_sheet(wb, ws, `Quarter ${quarter}`);
@@ -267,6 +362,22 @@ export default function PrintableStatsSheet({ game, opponent }: PrintableStatsSh
                       {POSITIONS.map(position => (
                         <th key={position} className="border border-gray-300 text-white" style={{width: '40px'}}>{position}</th>
                       ))}
+                    </tr>
+                    {/* Player names row */}
+                    <tr className="bg-blue-100">
+                      <th className="border border-gray-300 text-blue-800 text-xs">Player</th>
+                      {POSITIONS.map(position => {
+                        const playerId = rosterByQuarterPosition[quarter]?.[position];
+                        const playerName = playerId ? getPlayerName(playerId) : '';
+                        return (
+                          <th 
+                            key={`player-${position}`} 
+                            className="border border-gray-300 text-blue-800 text-xs font-normal p-1"
+                          >
+                            {playerName}
+                          </th>
+                        );
+                      })}
                     </tr>
                   </thead>
                   <tbody>
