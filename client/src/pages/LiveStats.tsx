@@ -12,6 +12,7 @@ import { Game, Player, GameStat, Roster, allPositions, Position } from '@shared/
 import { getInitials, formatShortDate, positionLabels, generatePlayerAvatarColor } from '@/lib/utils';
 import { Save, Undo, Redo, Plus, Minus, RefreshCw, RotateCcw, ChevronLeft } from 'lucide-react';
 import { Helmet } from 'react-helmet';
+import { clearGameCache, clearAllCache } from '@/lib/scoresCache';
 
 // Stat types that can be tracked
 type StatType = 'goalsFor' | 'goalsAgainst' | 'missedGoals' | 'rebounds' | 
@@ -497,10 +498,8 @@ export default function LiveStats() {
     });
     
     // Clear the game cache when stats are reset to ensure scores are recalculated properly
-    import('@/lib/scoresCache').then(({ clearGameCache }) => {
-      clearGameCache(gameId);
-      console.log(`Cleared score cache for game ${gameId} after resetting quarter ${currentQuarter}`);
-    });
+    clearGameCache(gameId);
+    console.log(`Cleared score cache for game ${gameId} after resetting quarter ${currentQuarter}`);
     
     toast({
       title: "Quarter Reset",
@@ -536,6 +535,10 @@ export default function LiveStats() {
       
       return newStats;
     });
+    
+    // Clear the game cache when all stats are reset to ensure scores are recalculated properly
+    clearGameCache(gameId);
+    console.log(`Cleared score cache for game ${gameId} after resetting all stats`);
     
     toast({
       title: "All Stats Reset",
