@@ -8,6 +8,7 @@ import TeamPerformance from './TeamPerformance';
 import RecentGames from './RecentGames';
 import UpcomingGames from './UpcomingGames';
 import PlayerPerformance from './PlayerPerformance';
+import GamesList from './GamesList';
 
 import PerformanceCharts from './PerformanceCharts';
 import { Player, Game, Opponent } from '@shared/schema';
@@ -67,6 +68,15 @@ export default function DashboardSummary({ players, games, opponents, isLoading 
             <RecentGames games={pastGames} opponents={opponents} />
             <UpcomingGames games={upcomingGames} opponents={opponents} />
           </>
+        )}
+      </div>
+
+      {/* Games List */}
+      <div className="grid grid-cols-1 gap-6">
+        {isLoading ? (
+          <Skeleton className="h-[300px] w-full rounded-lg" />
+        ) : (
+          <GamesList games={games} opponents={opponents} className="w-full" />
         )}
       </div>
 
