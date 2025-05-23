@@ -100,7 +100,8 @@ export default function PrintableRosterSummary({ game, opponent, roster, players
     // Add title
     const gameDate = formatDate(game.date);
     const opponentName = opponent?.teamName || 'Unknown Opponent';
-    const title = `${gameDate} - Roster vs ${opponentName}`;
+    const roundInfo = game.round ? ` (Round ${game.round})` : '';
+    const title = `${gameDate} - Roster vs ${opponentName}${roundInfo}`;
     
     doc.setFontSize(18);
     doc.text(title, 14, 20);
@@ -205,7 +206,8 @@ export default function PrintableRosterSummary({ game, opponent, roster, players
     // Save Excel file
     const gameDate = formatDate(game.date).replace(/\//g, '-');
     const opponentName = opponent?.teamName || 'Unknown';
-    XLSX.writeFile(wb, `${gameDate}_roster_${opponentName.replace(/\s+/g, '_')}.xlsx`);
+    const roundInfo = game.round ? `_Round${game.round}` : '';
+    XLSX.writeFile(wb, `${gameDate}_roster_${opponentName.replace(/\s+/g, '_')}${roundInfo}.xlsx`);
   };
 
   // Print-specific styles (will be active only during printing)
