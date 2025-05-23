@@ -1,9 +1,8 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { useParams, Link } from 'wouter';
-import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet';
-import GameForm from '@/components/games/GameForm';
-import { apiRequest } from '@/lib/queryClient';
+import { EditGameDialog } from '@/components/games/EditGameDialog';
 import { TEAM_NAME } from '@/lib/settings';
 import { StatItemBox } from '@/components/games/StatItemBox';
 import { PositionStatsBox } from '@/components/games/PositionStatsBox';
@@ -751,9 +750,6 @@ export default function GameDetails() {
       </div>
     );
   }
-  
-  // State for managing the edit dialog
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   
   // Mutation for updating the game
   const updateGameMutation = useMutation({
