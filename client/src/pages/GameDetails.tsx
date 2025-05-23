@@ -984,7 +984,7 @@ export default function GameDetails() {
       
       <div className="mt-8">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="roster">
               <ClipboardList className="mr-2 h-4 w-4" />
               Court Positions
@@ -992,6 +992,10 @@ export default function GameDetails() {
             <TabsTrigger value="stats">
               <Activity className="mr-2 h-4 w-4" />
               Position Statistics
+            </TabsTrigger>
+            <TabsTrigger value="players">
+              <ActivitySquare className="mr-2 h-4 w-4" />
+              Player Statistics
             </TabsTrigger>
           </TabsList>
           
@@ -1035,6 +1039,43 @@ export default function GameDetails() {
                   <Link to={`/games/${gameId}/stats`}>
                     <Edit className="mr-2 h-4 w-4" />
                     Record Statistics
+                  </Link>
+                </Button>
+              </div>
+            )}
+          </TabsContent>
+          
+          <TabsContent value="players" className="mt-6">
+            {isForfeitGame ? (
+              <div className="text-center py-10 border rounded-lg bg-gray-50">
+                <h3 className="text-lg font-medium mb-2">Forfeit Game</h3>
+                <p className="text-gray-500">
+                  This game was a {game.status === 'forfeit-win' ? 'forfeit win' : 'forfeit loss'}.
+                  No statistics are recorded for forfeit games.
+                </p>
+              </div>
+            ) : (roster && roster.length > 0 && gameStats && gameStats.length > 0) ? (
+              <PlayerStatsByQuarter 
+                roster={roster} 
+                players={players || []}
+                gameStats={gameStats || []}
+              />
+            ) : (
+              <div className="text-center py-10 border rounded-lg bg-gray-50">
+                <h3 className="text-lg font-medium mb-2">No data available</h3>
+                <p className="text-gray-500 mb-4">
+                  {!roster || roster.length === 0 
+                    ? "There are no positions assigned for this game yet." 
+                    : "There are no statistics recorded for this game yet."}
+                </p>
+                <Button asChild>
+                  <Link to={!roster || roster.length === 0 
+                    ? `/game/${gameId}/roster` 
+                    : `/games/${gameId}/stats`}>
+                    <Edit className="mr-2 h-4 w-4" />
+                    {!roster || roster.length === 0 
+                      ? "Set Up Roster" 
+                      : "Record Statistics"}
                   </Link>
                 </Button>
               </div>
