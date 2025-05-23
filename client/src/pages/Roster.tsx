@@ -57,7 +57,12 @@ export default function Roster() {
   const handleRosterSaved = () => {
     // Invalidate the roster query to refresh data
     if (selectedGameId) {
+      // Invalidate both the roster data and the game data to ensure proper re-fetching
       queryClient.invalidateQueries({ queryKey: ['/api/games', selectedGameId, 'rosters'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/games', selectedGameId] });
+      
+      // Also invalidate the general games list to ensure consistency
+      queryClient.invalidateQueries({ queryKey: ['/api/games'] });
     }
   };
   
