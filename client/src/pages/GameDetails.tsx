@@ -355,7 +355,15 @@ const PlayerStatsByQuarter = ({ roster, players, gameStats }: { roster: any[], p
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {playerStats.map(player => renderPlayerStatsBox(player))}
+        {playerStats
+          .sort((a, b) => {
+            // Sort players alphabetically by display name
+            if (!a.name) return 1;
+            if (!b.name) return -1;
+            return a.name.localeCompare(b.name);
+          })
+          .map(player => renderPlayerStatsBox(player))
+        }
       </div>
     </div>
   );
