@@ -878,7 +878,9 @@ export default function LiveStats() {
             variant="outline"
             size="sm"
             onClick={() => navigate('/games')}
+            className="border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-gray-900"
           >
+            <ChevronLeft className="mr-1 h-4 w-4" />
             Back to Games
           </Button>
           
@@ -887,9 +889,9 @@ export default function LiveStats() {
               variant="outline"
               size="sm"
               onClick={resetCurrentQuarter}
-              className="border-amber-500 hover:bg-amber-50"
+              className="border-amber-500 text-amber-700 hover:bg-amber-50 hover:text-amber-900"
             >
-              <RotateCcw className="h-4 w-4 mr-1 text-amber-600" />
+              <RotateCcw className="h-4 w-4 mr-1" />
               Reset Quarter {currentQuarter}
             </Button>
 
