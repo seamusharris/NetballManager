@@ -968,18 +968,18 @@ export default function LiveStats() {
                   size="sm"
                   onClick={handleUndo}
                   disabled={undoStack.length === 0}
-                  className="h-7 w-7 md:h-8 md:w-8 p-0"
                 >
-                  <Undo className="h-3.5 w-3.5 md:h-4 md:w-4" />
+                  <Undo className="h-3.5 w-3.5 md:h-4 md:w-4 mr-1" />
+                  Undo
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={handleRedo}
                   disabled={redoStack.length === 0}
-                  className="h-7 w-7 md:h-8 md:w-8 p-0"
                 >
-                  <Redo className="h-3.5 w-3.5 md:h-4 md:w-4" />
+                  <Redo className="h-3.5 w-3.5 md:h-4 md:w-4 mr-1" />
+                  Redo
                 </Button>
               </div>
             </div>
