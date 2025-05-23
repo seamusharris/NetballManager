@@ -508,43 +508,7 @@ export default function GamesList({
                       </div>
                     </TableCell>
                     <TableCell className="px-6 py-4 whitespace-nowrap text-right text-sm">
-                      <div className="flex justify-end space-x-2">
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button 
-                              variant="ghost" 
-                              size="icon"
-                              className="text-error hover:text-error/80"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                confirmDelete(game.id);
-                              }}
-                              title="Delete game"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Are you sure you want to delete this {game.isBye ? "BYE round" : `game against ${getOpponentName(game.opponentId)}`}? 
-                                This will also delete all roster assignments and statistics for this game.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction 
-                                className="bg-red-500 hover:bg-red-600"
-                                onClick={handleDeleteConfirmed}
-                              >
-                                Delete
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </div>
+                      {/* No action buttons here anymore - all buttons moved to Game Details page */}
                     </TableCell>
                   </TableRow>
                 ))

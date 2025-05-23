@@ -19,7 +19,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { 
-  ChevronLeft, Edit, BarChart3, ClipboardList, Activity, CalendarRange, ActivitySquare
+  ChevronLeft, Edit, BarChart3, ClipboardList, Activity, CalendarRange, ActivitySquare, Trash2
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { formatDate, cn } from '@/lib/utils';
@@ -34,6 +34,17 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import {
   Select,
   SelectContent,
@@ -843,6 +854,65 @@ export default function GameDetails() {
               <Edit className="mr-2 h-4 w-4 text-blue-600" />
               Edit Game
             </Button>
+            
+            {/* Delete Game Button */}
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="bg-red-50 text-red-700 border-red-200 hover:bg-red-100"
+                >
+                  <Trash2 className="mr-2 h-4 w-4 text-red-600" />
+                  Delete Game
+                </Button>
+              </AlertDialogTrigger>
+              
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Are you sure you want to delete this {game.isBye ? "BYE round" : `game against ${game.opponentId ? opponents?.find(o => o.id === game.opponentId)?.teamName : 'unknown opponent'}`}? 
+                    This will also delete all roster assignments and statistics for this game.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction 
+                    className="bg-red-500 hover:bg-red-600"
+                    onClick={async () => {
+                      try {
+                        await fetch(`/api/games/${gameId}`, {
+                          method: 'DELETE',
+                        });
+                        
+                        // Invalidate queries
+                        queryClient.invalidateQueries({
+                          queryKey: ['/api/games'],
+                        });
+                        
+                        toast({
+                          title: "Game deleted",
+                          description: "Game has been deleted successfully",
+                        });
+                        
+                        // Redirect to games list
+                        window.location.href = '/games';
+                      } catch (error) {
+                        console.error("Error deleting game:", error);
+                        toast({
+                          title: "Error",
+                          description: "Failed to delete game",
+                          variant: "destructive",
+                        });
+                      }
+                    }}
+                  >
+                    Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
             
             {/* Edit Game Dialog */}
             <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
