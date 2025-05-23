@@ -595,8 +595,8 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
             // New position coordinates for horizontal court with horizontal offsets
             const horizontalPositions = {
               // Attack end - left side
-              'GS': 'top-[25%] left-[13%] -translate-x-1/2 -translate-y-1/2',
-              'GA': 'top-[75%] left-[20%] -translate-x-1/2 -translate-y-1/2',
+              'GS': 'top-[25%] left-[10%] -translate-x-1/2 -translate-y-1/2',
+              'GA': 'top-[75%] left-[23%] -translate-x-1/2 -translate-y-1/2',
               
               // Mid-court - center
               'WA': 'top-[25%] left-[43%] -translate-x-1/2 -translate-y-1/2',
@@ -604,8 +604,8 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
               'WD': 'top-[75%] left-[57%] -translate-x-1/2 -translate-y-1/2',
               
               // Defense end - right side
-              'GD': 'top-[25%] left-[80%] -translate-x-1/2 -translate-y-1/2',
-              'GK': 'top-[75%] left-[87%] -translate-x-1/2 -translate-y-1/2',
+              'GD': 'top-[25%] left-[77%] -translate-x-1/2 -translate-y-1/2',
+              'GK': 'top-[75%] left-[90%] -translate-x-1/2 -translate-y-1/2',
             };
             
             const positionClass = horizontalPositions[position] || '';
