@@ -41,51 +41,91 @@ export default function PrintableStatsSheet({ game, opponent }: PrintableStatsSh
     const gameDate = formatDate(game.date);
     const opponentName = opponent?.teamName || 'Unknown Opponent';
     const roundInfo = game.round ? ` (Round ${game.round})` : '';
-    const title = `${gameDate} - Stats Collection Sheet vs ${opponentName}${roundInfo}`;
+    const title = `${gameDate} - Stats Sheet vs ${opponentName}${roundInfo}`;
     
-    doc.setFontSize(16);
-    doc.text(title, 14, 20);
-    
-    // Quarters loop
-    for (let quarter = 1; quarter <= 4; quarter++) {
-      // Add quarter heading
-      doc.setFontSize(14);
-      doc.text(`Quarter ${quarter}`, 14, quarter === 1 ? 30 : (doc as any).lastAutoTable.finalY + 15);
+    doc.setFontSize(14);
+    doc.text(title, 14, 15);
+
+    // Import autotable dynamically
+    Promise.all([import('jspdf-autotable')]).then(([autoTableModule]) => {
+      const autoTable = autoTableModule.default;
       
-      // Create header row with position columns
-      const headers = ['Stat Category', ...POSITIONS];
+      // First page: Quarter 1 & 2
+      let yPos = 20;
       
-      // Create rows for each stat category
-      const rows = statsCategories.map(category => {
-        return [category.label, '', '', '', '', '', '', ''];
-      });
-      
-      // Import autotable plugin dynamically
-      import('jspdf-autotable').then((autoTable) => {
-        const autoTablePlugin = autoTable.default;
-        autoTablePlugin(doc, {
-          startY: quarter === 1 ? 35 : (doc as any).lastAutoTable.finalY + 20,
+      for (let quarter = 1; quarter <= 2; quarter++) {
+        // Add quarter heading
+        doc.setFontSize(11);
+        doc.text(`Quarter ${quarter}`, 14, yPos);
+        
+        // Create header row with position columns
+        const headers = ['Stat', ...POSITIONS];
+        
+        // Create rows for each stat category
+        const rows = statsCategories.map(category => {
+          return [category.label, '', '', '', '', '', '', ''];
+        });
+        
+        // Add the table
+        autoTable(doc, {
+          startY: yPos + 4,
           head: [headers],
           body: rows,
           theme: 'grid',
-          styles: { fontSize: 10, cellPadding: 5 },
+          styles: { fontSize: 8, cellPadding: 2 },
           headStyles: { fillColor: [59, 130, 246], textColor: 255 },
           columnStyles: {
-            0: { fontStyle: 'bold' }
+            0: { fontStyle: 'bold', cellWidth: 20 }
+          },
+          margin: { left: 10, right: 10 },
+          didDrawPage: (data) => {
+            if (data.cursor) {
+              yPos = data.cursor.y + 10;
+            }
           }
         });
+      }
+      
+      // Second page: Quarter 3 & 4
+      doc.addPage();
+      yPos = 20;
+      
+      for (let quarter = 3; quarter <= 4; quarter++) {
+        // Add quarter heading
+        doc.setFontSize(11);
+        doc.text(`Quarter ${quarter}`, 14, yPos);
         
-        // Add new page after Q2
-        if (quarter === 2) {
-          doc.addPage();
-        }
+        // Create header row with position columns
+        const headers = ['Stat', ...POSITIONS];
         
-        // Save PDF after all tables are created
-        if (quarter === 4) {
-          doc.save(`${gameDate.replace(/\//g, '-')}_stats_sheet_${opponentName.replace(/\s+/g, '_')}${roundInfo ? '_Round' + game.round : ''}.pdf`);
-        }
-      });
-    }
+        // Create rows for each stat category
+        const rows = statsCategories.map(category => {
+          return [category.label, '', '', '', '', '', '', ''];
+        });
+        
+        // Add the table
+        autoTable(doc, {
+          startY: yPos + 4,
+          head: [headers],
+          body: rows,
+          theme: 'grid',
+          styles: { fontSize: 8, cellPadding: 2 },
+          headStyles: { fillColor: [59, 130, 246], textColor: 255 },
+          columnStyles: {
+            0: { fontStyle: 'bold', cellWidth: 20 }
+          },
+          margin: { left: 10, right: 10 },
+          didDrawPage: (data) => {
+            if (data.cursor) {
+              yPos = data.cursor.y + 10;
+            }
+          }
+        });
+      }
+      
+      // Save PDF
+      doc.save(`${gameDate.replace(/\//g, '-')}_stats_sheet_${opponentName.replace(/\s+/g, '_')}${roundInfo ? '_Round' + game.round : ''}.pdf`);
+    });
   };
 
   // Export to Excel
@@ -157,6 +197,18 @@ export default function PrintableStatsSheet({ game, opponent }: PrintableStatsSh
       .page-break {
         page-break-after: always;
       }
+      @page {
+        size: A4 portrait;
+        margin: 0.5cm;
+      }
+      .compact-table td, .compact-table th {
+        padding: 0.15rem 0.25rem !important;
+        font-size: 0.8rem !important;
+      }
+      .compact-heading {
+        margin-top: 0.2rem !important;
+        margin-bottom: 0.2rem !important;
+      }
     }
   `;
 
@@ -164,7 +216,7 @@ export default function PrintableStatsSheet({ game, opponent }: PrintableStatsSh
     <div>
       <style>{printStyles}</style>
       
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center mb-6 no-print">
         <h2 className="text-xl font-bold">Stats Collection Sheet</h2>
         <div className="flex gap-2">
           <Button 
@@ -192,68 +244,37 @@ export default function PrintableStatsSheet({ game, opponent }: PrintableStatsSh
       </div>
       
       <div className="print-section">
-        <div className="mb-4">
-          <h1 className="text-2xl font-bold">
-            {formatDate(game?.date || '')} - Stats Collection Sheet
+        <div className="mb-2">
+          <h1 className="text-xl font-bold compact-heading">
+            {formatDate(game?.date || '')} - Stats Sheet
           </h1>
-          <p className="text-lg mb-4">
+          <p className="text-base compact-heading">
             vs {opponent?.teamName || 'Unknown Opponent'}
             {game?.round && ` (Round ${game.round})`}
           </p>
         </div>
         
-        {/* Quarter 1 and 2 */}
-        <div className="mb-8">
-          {[1, 2].map(quarter => (
-            <div key={`quarter-${quarter}`} className={`mb-6 ${quarter === 2 ? 'page-break' : ''}`}>
-              <h3 className="text-xl font-semibold mb-2">Quarter {quarter}</h3>
+        {/* All quarters in a more compact layout */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-2 gap-y-1">
+          {[1, 2, 3, 4].map(quarter => (
+            <div key={`quarter-${quarter}`} className={`mb-2 ${quarter === 3 ? 'page-break md:page-break-avoid' : ''}`}>
+              <h3 className="text-base font-semibold mb-1 compact-heading">Quarter {quarter}</h3>
               <div className="overflow-x-auto">
-                <table className="w-full border-collapse border-2 border-gray-200">
+                <table className="w-full border-collapse border border-gray-200 compact-table">
                   <thead>
                     <tr className="bg-blue-500">
-                      <th className="border p-2 text-white">Stat Category</th>
+                      <th className="border border-gray-300 text-white" style={{width: '90px'}}>Stat</th>
                       {POSITIONS.map(position => (
-                        <th key={position} className="border p-2 text-white w-20">{position}</th>
+                        <th key={position} className="border border-gray-300 text-white" style={{width: '40px'}}>{position}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {statsCategories.map(category => (
                       <tr key={category.id} className="hover:bg-gray-50">
-                        <td className="border p-2 font-medium">{category.label}</td>
+                        <td className="border border-gray-300 font-medium">{category.label}</td>
                         {POSITIONS.map(position => (
-                          <td key={`${position}-${category.id}`} className="border p-2 text-center h-10"></td>
-                        ))}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          ))}
-        </div>
-        
-        {/* Quarter 3 and 4 */}
-        <div>
-          {[3, 4].map(quarter => (
-            <div key={`quarter-${quarter}`} className="mb-6">
-              <h3 className="text-xl font-semibold mb-2">Quarter {quarter}</h3>
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse border-2 border-gray-200">
-                  <thead>
-                    <tr className="bg-blue-500">
-                      <th className="border p-2 text-white">Stat Category</th>
-                      {POSITIONS.map(position => (
-                        <th key={position} className="border p-2 text-white w-20">{position}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {statsCategories.map(category => (
-                      <tr key={category.id} className="hover:bg-gray-50">
-                        <td className="border p-2 font-medium">{category.label}</td>
-                        {POSITIONS.map(position => (
-                          <td key={`${position}-${category.id}`} className="border p-2 text-center h-10"></td>
+                          <td key={`${position}-${category.id}`} className="border border-gray-300 text-center h-6"></td>
                         ))}
                       </tr>
                     ))}
