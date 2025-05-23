@@ -108,7 +108,7 @@ export class StatisticsService {
    * Calculate game scores (for and against) by quarter and final
    * This is the critical function that updates scores everywhere
    */
-  async calculateGameScores(gameId: number): Promise<GameScores> {
+  async calculateGameScores(gameId: number, forceRefresh: boolean = false): Promise<GameScores> {
     // First check if this is a forfeit game
     const game = await apiRequest(`/api/games/${gameId}`);
     
@@ -119,11 +119,16 @@ export class StatisticsService {
     }
     
     // For non-forfeit games, proceed with normal calculation
-    // Force fresh data fetch to ensure we have the latest stats
-    const timestamp = new Date().getTime();
-    const stats = await apiRequest(`/api/games/${gameId}/stats?_t=${timestamp}`);
-    
-    console.log(`Calculating scores with ${stats.length} fresh stats for game ${gameId}`);
+    // Only force a fresh data fetch if explicitly requested
+    let stats;
+    if (forceRefresh) {
+      const timestamp = new Date().getTime();
+      stats = await apiRequest(`/api/games/${gameId}/stats?_t=${timestamp}`);
+      console.log(`Calculating scores with ${stats.length} fresh stats for game ${gameId}`);
+    } else {
+      stats = await apiRequest(`/api/games/${gameId}/stats`);
+      console.log(`Calculating scores with ${stats.length} cached stats for game ${gameId}`);
+    }
     
     // Initialize score structure
     const quarterScores = {
@@ -184,9 +189,9 @@ export class StatisticsService {
   }
   
   /**
-   * Get position-based statistics for a game - with fresh data
+   * Get position-based statistics for a game
    */
-  async getPositionStats(gameId: number): Promise<Record<string, PositionStats>> {
+  async getPositionStats(gameId: number, forceRefresh: boolean = false): Promise<Record<string, PositionStats>> {
     // First check if this is a forfeit game
     const game = await apiRequest(`/api/games/${gameId}`);
     
@@ -196,11 +201,16 @@ export class StatisticsService {
       return {};
     }
     
-    // Force fresh data fetch to ensure we have the latest stats
-    const timestamp = new Date().getTime();
-    const stats = await apiRequest(`/api/games/${gameId}/stats?_t=${timestamp}`);
-    
-    console.log(`Calculating position stats with ${stats.length} fresh stats for game ${gameId}`);
+    // Only force a fresh data fetch if explicitly requested
+    let stats;
+    if (forceRefresh) {
+      const timestamp = new Date().getTime();
+      stats = await apiRequest(`/api/games/${gameId}/stats?_t=${timestamp}`);
+      console.log(`Calculating position stats with ${stats.length} fresh stats for game ${gameId}`);
+    } else {
+      stats = await apiRequest(`/api/games/${gameId}/stats`);
+      console.log(`Calculating position stats with ${stats.length} cached stats for game ${gameId}`);
+    }
     
     // Create a map of the latest stats for each position/quarter combination
     const positionStats: Record<string, PositionStats> = {};
@@ -244,9 +254,9 @@ export class StatisticsService {
   }
   
   /**
-   * Map position-based statistics to player statistics using roster information - with fresh data
+   * Map position-based statistics to player statistics using roster information
    */
-  async mapStatsToPlayers(gameId: number): Promise<Record<number, GameStat[]>> {
+  async mapStatsToPlayers(gameId: number, forceRefresh: boolean = false): Promise<Record<number, GameStat[]>> {
     // First check if this is a forfeit game
     const game = await apiRequest(`/api/games/${gameId}`);
     
@@ -256,12 +266,18 @@ export class StatisticsService {
       return {};
     }
     
-    // Force fresh data fetch to ensure we have the latest stats
-    const timestamp = new Date().getTime();
-    const stats = await apiRequest(`/api/games/${gameId}/stats?_t=${timestamp}`);
-    const rosters = await apiRequest(`/api/games/${gameId}/rosters?_t=${timestamp}`);
-    
-    console.log(`Mapping ${stats.length} fresh stats to players for game ${gameId}`);
+    // Only force a fresh data fetch if explicitly requested
+    let stats, rosters;
+    if (forceRefresh) {
+      const timestamp = new Date().getTime();
+      stats = await apiRequest(`/api/games/${gameId}/stats?_t=${timestamp}`);
+      rosters = await apiRequest(`/api/games/${gameId}/rosters?_t=${timestamp}`);
+      console.log(`Mapping ${stats.length} fresh stats to players for game ${gameId}`);
+    } else {
+      stats = await apiRequest(`/api/games/${gameId}/stats`);
+      rosters = await apiRequest(`/api/games/${gameId}/rosters`);
+      console.log(`Mapping ${stats.length} cached stats to players for game ${gameId}`);
+    }
     
     // Group stats by player
     const statsByPlayer: Record<number, GameStat[]> = {};
