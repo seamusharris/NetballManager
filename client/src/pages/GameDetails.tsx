@@ -475,16 +475,9 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
     if (!players || !playerId) return '#cccccc';
     const player = players.find(p => p.id === playerId);
     
-    // First, check if we need to use a default color
+    // If player doesn't exist or has no color, return a default gray
     if (!player || !player.avatarColor || player.avatarColor === '#FFFFFF' || player.avatarColor === '#ffffff') {
-      // Use a very obvious, distinctive color based on player ID for maximum visibility
-      const defaultColors = [
-        '#FF5733', '#33FF57', '#3357FF', '#F033FF', '#FF33F0', 
-        '#33FFF0', '#F0FF33', '#8C33FF', '#FF8C33', '#33FF8C'
-      ];
-      const color = defaultColors[playerId % defaultColors.length];
-      console.log(`Using default color for player ${playerId}: ${color}`);
-      return color;
+      return '#cccccc'; // Simple gray fallback for all players without colors
     }
     
     // Check if the avatarColor is a Tailwind class (starts with 'bg-')
