@@ -80,9 +80,10 @@ export default function GamesList({ games, opponents, className }: GamesListProp
         </div>
         
         <div className="overflow-x-auto">
-          <Table>
+          <Table className="border rounded-md overflow-hidden">
             <TableHeader>
               <TableRow className="bg-slate-50">
+                <TableHead className="w-20 border-r border-b text-center">Round</TableHead>
                 <TableHead className="w-32 border-r border-b">Date</TableHead>
                 <TableHead className="border-r border-b">Opponent</TableHead>
                 <TableHead className="w-24 text-center border-r border-b">Status</TableHead>
@@ -92,7 +93,7 @@ export default function GamesList({ games, opponents, className }: GamesListProp
             <TableBody className="bg-white divide-y divide-gray-200">
               {filteredGames.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center py-4 text-gray-500 border-b">
+                  <TableCell colSpan={5} className="text-center py-4 text-gray-500 border-b">
                     No games available
                   </TableCell>
                 </TableRow>
@@ -103,6 +104,14 @@ export default function GamesList({ games, opponents, className }: GamesListProp
                     className="hover:bg-gray-50 cursor-pointer transition-colors"
                     onClick={() => window.location.href = `/games/${game.id}`}
                   >
+                    <TableCell className="px-3 py-2 whitespace-nowrap border-r text-center">
+                      {game.round ? (
+                        <span className="font-medium text-gray-900">{game.round}</span>
+                      ) : (
+                        <span className="text-gray-400">—</span>
+                      )}
+                    </TableCell>
+                    
                     <TableCell className="px-3 py-2 whitespace-nowrap border-r">
                       <div className="font-medium text-gray-900">{formatDate(game.date)}</div>
                       <div className="text-xs text-gray-500">{game.time}</div>
@@ -112,11 +121,6 @@ export default function GamesList({ games, opponents, className }: GamesListProp
                       <span className="font-medium">
                         {getOpponentName(game)}
                       </span>
-                      {game.round && (
-                        <span className="text-xs ml-2 text-gray-500">
-                          Round {game.round}
-                        </span>
-                      )}
                     </TableCell>
                     
                     <TableCell className="px-2 py-2 whitespace-nowrap text-center border-r">
