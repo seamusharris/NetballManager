@@ -496,6 +496,12 @@ export default function LiveStats() {
       return newStats;
     });
     
+    // Clear the game cache when stats are reset to ensure scores are recalculated properly
+    import('@/lib/scoresCache').then(({ clearGameCache }) => {
+      clearGameCache(gameId);
+      console.log(`Cleared score cache for game ${gameId} after resetting quarter ${currentQuarter}`);
+    });
+    
     toast({
       title: "Quarter Reset",
       description: `All stats for Quarter ${currentQuarter} have been reset to zero.`,
