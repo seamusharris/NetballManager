@@ -1089,10 +1089,15 @@ export default function GameDetails() {
       <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-gray-50 p-6 rounded-lg">
         <div>
           <div className="flex items-center gap-3 mb-1">
-            <Button variant="outline" size="sm" asChild>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              asChild
+              className="border-gray-200 text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+            >
               <Link to="/games">
                 <ChevronLeft className="mr-1 h-4 w-4" />
-                Back
+                Back to Games
               </Link>
             </Button>
           </div>
@@ -1131,10 +1136,10 @@ export default function GameDetails() {
                 variant="outline" 
                 size="sm" 
                 asChild
-                className="bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
+                className="border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-900"
               >
                 <Link to={`/roster?game=${gameId}`}>
-                  <CalendarRange className="mr-2 h-4 w-4 text-emerald-600" />
+                  <CalendarRange className="mr-2 h-4 w-4" />
                   Manage Roster
                 </Link>
               </Button>
