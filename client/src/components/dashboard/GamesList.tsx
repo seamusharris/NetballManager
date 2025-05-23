@@ -1,11 +1,8 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Link } from 'wouter';
 import { Game, Opponent } from '@shared/schema';
 import { Badge } from '@/components/ui/badge';
 import { cn, formatDate } from '@/lib/utils';
-import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { GameScoreDisplay } from '../statistics/GameScoreDisplay';
 
@@ -64,9 +61,9 @@ export default function GamesList({ games, opponents, className }: GamesListProp
   };
   
   return (
-    <Card className={cn("shadow-sm", className)}>
-      <CardHeader className="bg-slate-50 pb-4 pt-4 px-6 border-b flex flex-row items-center justify-between">
-        <CardTitle className="text-lg font-bold">Game Schedule</CardTitle>
+    <div className={cn("w-full bg-white rounded-lg shadow-sm overflow-hidden", className)}>
+      <div className="bg-slate-50 pb-4 pt-4 px-6 border-b flex flex-row items-center justify-between">
+        <div className="text-lg font-bold text-gray-900">Game Schedule</div>
         <Select value={displayMode} onValueChange={setDisplayMode}>
           <SelectTrigger className="w-[140px]">
             <SelectValue placeholder="All Games" />
@@ -78,8 +75,9 @@ export default function GamesList({ games, opponents, className }: GamesListProp
             <SelectItem value="recent">Recent Games</SelectItem>
           </SelectContent>
         </Select>
-      </CardHeader>
-      <CardContent className="p-0">
+      </div>
+      
+      <div className="p-0">
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
@@ -145,7 +143,7 @@ export default function GamesList({ games, opponents, className }: GamesListProp
             </TableBody>
           </Table>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
