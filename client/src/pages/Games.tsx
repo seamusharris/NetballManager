@@ -43,6 +43,8 @@ export default function Games() {
       const searchParams = new URLSearchParams(window.location.search);
       // Support both editId (legacy) and edit (new) parameters
       const editId = searchParams.get('editId') || searchParams.get('edit');
+      // Get the returnTo parameter if it exists
+      const returnTo = searchParams.get('returnTo');
       
       if (editId) {
         const gameId = parseInt(editId);
@@ -50,6 +52,12 @@ export default function Games() {
         if (gameToEdit) {
           // Set the editing game to trigger the dialog
           setEditingGame(gameToEdit);
+          
+          // Store the return path if provided
+          if (returnTo === 'gameDetails') {
+            // We'll use this to navigate back to game details after editing
+            sessionStorage.setItem('returnToGameDetails', gameId.toString());
+          }
           
           // Clear the URL parameter without reloading the page
           const newUrl = window.location.pathname;
@@ -204,7 +212,20 @@ export default function Games() {
           </DialogContent>
         </Dialog>
         
-        <Dialog open={!!editingGame} onOpenChange={(open) => !open && setEditingGame(null)}>
+        <Dialog open={!!editingGame} onOpenChange={(open) => {
+          if (!open) {
+            setEditingGame(null);
+            
+            // Check if we should return to game details
+            const returnToGameId = sessionStorage.getItem('returnToGameDetails');
+            if (returnToGameId) {
+              // Clear the storage item
+              sessionStorage.removeItem('returnToGameDetails');
+              // Navigate back to the game details page
+              navigate(`/game/${returnToGameId}`);
+            }
+          }
+        }}>
           <DialogContent className="sm:max-w-[550px]">
             <DialogTitle className="sr-only">Edit Game</DialogTitle>
             <GameForm 
