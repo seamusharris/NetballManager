@@ -1018,12 +1018,22 @@ export default function GameDetails() {
   // Fetch roster for this game
   const { 
     data: roster,
-    isLoading: isLoadingRoster
+    isLoading: isLoadingRoster,
+    refetch: refetchRosters
   } = useQuery({
     queryKey: ['/api/games', gameId, 'rosters'],
     queryFn: () => fetch(`/api/games/${gameId}/rosters`).then(res => res.json()),
     enabled: !isNaN(gameId)
   });
+  
+  // Force refetch when component mounts or route changes
+  useEffect(() => {
+    if (gameId && !isNaN(gameId)) {
+      console.log("Loaded roster data:", roster);
+      // Always refetch roster data when navigating to this page
+      refetchRosters();
+    }
+  }, [gameId, refetchRosters]);
   
   // Fetch game stats
   const { 
