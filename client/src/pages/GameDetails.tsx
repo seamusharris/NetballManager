@@ -268,11 +268,36 @@ const PlayerStatsByQuarter = ({ roster, players, gameStats }: { roster: any[], p
   
   // Render a player's statistics box
   const renderPlayerStatsBox = (player: any) => {
-    const relevantStats = activeQuarter === 0 
-      ? player.totalStats
-      : player.quarterStats[activeQuarter];
-      
-    if (!relevantStats) return null;
+    // For 'All' quarters, use totalStats
+    // For specific quarters, use quarterStats or create empty stats if not available
+    let relevantStats;
+    
+    if (activeQuarter === 0) {
+      relevantStats = player.totalStats;
+    } else {
+      // If no stats for this quarter, create empty stats object with zeros
+      if (!player.quarterStats[activeQuarter]) {
+        // Find position from roster
+        const rosterEntry = roster.find(r => 
+          r.playerId === player.playerId && r.quarter === activeQuarter
+        );
+        
+        relevantStats = {
+          position: rosterEntry?.position || 'N/A',
+          goals: 0,
+          missedGoals: 0,
+          goalsAgainst: 0,
+          rebounds: 0,
+          intercepts: 0,
+          badPass: 0,
+          handlingError: 0,
+          pickUp: 0,
+          infringement: 0
+        };
+      } else {
+        relevantStats = player.quarterStats[activeQuarter];
+      }
+    }
     
     // Get the primary stats to show (depends on positions played)
     const hasScoringStats = player.totalStats.goals > 0 || player.totalStats.missedGoals > 0;
