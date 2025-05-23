@@ -509,6 +509,19 @@ export default function GamesList({
                     </TableCell>
                     <TableCell className="px-6 py-4 whitespace-nowrap text-right text-sm">
                       <div className="flex justify-end space-x-2">
+
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          className="text-accent hover:text-accent-dark"
+                          onClick={(e) => {
+                            onEdit(game);
+                          }}
+                          title="Edit game"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button 
