@@ -2,7 +2,9 @@ import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet';
 import SimpleRosterManager from '@/components/roster/SimpleRosterManager';
-import { useLocation } from 'wouter';
+import { useLocation, Link } from 'wouter';
+import { Button } from '@/components/ui/button';
+import { ChevronLeft } from 'lucide-react';
 
 export default function Roster() {
   const [selectedGameId, setSelectedGameId] = useState<number | null>(null);
@@ -66,15 +68,31 @@ export default function Roster() {
         <meta name="description" content="Manage your netball team roster, assign players to positions for each quarter" />
       </Helmet>
       
-      <SimpleRosterManager 
-        players={activePlayers}
-        games={games}
-        opponents={opponents}
-        selectedGameId={selectedGameId}
-        setSelectedGameId={setSelectedGameId}
-        isLoading={isLoading}
-        onRosterSaved={handleRosterSaved}
-      />
+      <div className="mb-6">
+        {selectedGameId && (
+          <Button 
+            variant="outline" 
+            size="sm" 
+            asChild
+            className="mb-4" 
+          >
+            <Link to={`/game/${selectedGameId}`}>
+              <ChevronLeft className="mr-1 h-4 w-4" />
+              Back to Game
+            </Link>
+          </Button>
+        )}
+        
+        <SimpleRosterManager 
+          players={activePlayers}
+          games={games}
+          opponents={opponents}
+          selectedGameId={selectedGameId}
+          setSelectedGameId={setSelectedGameId}
+          isLoading={isLoading}
+          onRosterSaved={handleRosterSaved}
+        />
+      </div>
     </div>
   );
 }
