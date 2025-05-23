@@ -68,6 +68,7 @@ export default function PlayerAvailabilityManager({
       'bg-lime-600': '#65a30d',
       'bg-sky-600': '#0284c7',
       'bg-violet-600': '#7c3aed',
+      'bg-cyan-600': '#0891b2',   // Cyan - Holly's color
       'bg-gray-400': '#9ca3af',
       'bg-accent': '#0d9488',     // Accent (teal)
       'bg-secondary': '#7c3aed',  // Secondary (violet)
