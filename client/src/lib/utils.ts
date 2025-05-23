@@ -6,29 +6,98 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function getTailwindColorClass(hexColor: string): string | undefined {
-  // Simple mapping of hex colors to Tailwind classes
-  const colorMap: Record<string, string> = {
-    '#ef4444': 'bg-red-500',
-    '#f97316': 'bg-orange-500',
-    '#f59e0b': 'bg-amber-500',
-    '#eab308': 'bg-yellow-500',
-    '#84cc16': 'bg-lime-500',
-    '#22c55e': 'bg-green-500',
-    '#10b981': 'bg-emerald-500',
-    '#14b8a6': 'bg-teal-500',
-    '#06b6d4': 'bg-cyan-500',
-    '#0ea5e9': 'bg-sky-500',
-    '#3b82f6': 'bg-blue-500',
-    '#6366f1': 'bg-indigo-500',
-    '#8b5cf6': 'bg-violet-500',
-    '#a855f7': 'bg-purple-500',
-    '#d946ef': 'bg-fuchsia-500',
-    '#ec4899': 'bg-pink-500',
-    '#f43f5e': 'bg-rose-500',
-  };
+// Comprehensive color mapping between Tailwind classes and hex colors
+// This is the single source of truth for all color conversions in the app
+export const TAILWIND_TO_HEX: Record<string, string> = {
+  // Red
+  'bg-red-500': '#ef4444',
+  // Orange
+  'bg-orange-500': '#f97316',
+  // Amber
+  'bg-amber-500': '#f59e0b',
+  'bg-amber-600': '#d97706',
+  // Yellow
+  'bg-yellow-500': '#eab308',
+  'bg-yellow-600': '#ca8a04',
+  // Lime
+  'bg-lime-500': '#84cc16',
+  'bg-lime-600': '#65a30d',
+  // Green
+  'bg-green-500': '#22c55e',
+  'bg-green-600': '#16a34a',
+  // Emerald
+  'bg-emerald-500': '#10b981',
+  'bg-emerald-600': '#059669',
+  // Teal
+  'bg-teal-500': '#14b8a6',
+  'bg-teal-600': '#0d9488',
+  // Cyan
+  'bg-cyan-500': '#06b6d4',
+  'bg-cyan-600': '#0891b2',
+  // Sky
+  'bg-sky-500': '#0ea5e9',
+  'bg-sky-600': '#0284c7',
+  // Blue
+  'bg-blue-500': '#3b82f6',
+  'bg-blue-600': '#2563eb',
+  // Indigo
+  'bg-indigo-500': '#6366f1',
+  'bg-indigo-600': '#4f46e5',
+  // Violet
+  'bg-violet-500': '#8b5cf6',
+  'bg-violet-600': '#7c3aed',
+  // Purple
+  'bg-purple-500': '#a855f7',
+  'bg-purple-600': '#9333ea',
+  // Fuchsia
+  'bg-fuchsia-500': '#d946ef',
+  'bg-fuchsia-600': '#c026d3',
+  // Pink
+  'bg-pink-500': '#ec4899',
+  'bg-pink-600': '#db2777',
+  // Rose
+  'bg-rose-500': '#f43f5e',
+  'bg-rose-600': '#e11d48',
+  // Gray
+  'bg-gray-400': '#9ca3af',
+  // Theme colors
+  'bg-accent': '#0d9488',     // Teal
+  'bg-secondary': '#7c3aed',  // Violet
+  'bg-primary': '#2563eb',    // Blue
+};
 
-  return colorMap[hexColor?.toLowerCase()];
+// Reverse mapping for hex to Tailwind
+export const HEX_TO_TAILWIND: Record<string, string> = 
+  Object.entries(TAILWIND_TO_HEX).reduce((acc, [tailwind, hex]) => {
+    acc[hex.toLowerCase()] = tailwind;
+    return acc;
+  }, {} as Record<string, string>);
+
+/**
+ * Convert a Tailwind color class to its hex equivalent
+ * @param tailwindClass The Tailwind class (e.g., 'bg-red-500')
+ * @returns Hex color code or default (#6366f1 - indigo-500)
+ */
+export function tailwindToHex(tailwindClass: string): string {
+  if (!tailwindClass || typeof tailwindClass !== 'string') return '#6366f1';
+  
+  const hexColor = TAILWIND_TO_HEX[tailwindClass];
+  if (!hexColor) {
+    console.log(`Missing color mapping for ${tailwindClass}, using default color`);
+    return '#6366f1'; // Default to indigo-500
+  }
+  
+  return hexColor;
+}
+
+/**
+ * Convert a hex color to its Tailwind class equivalent 
+ * @param hexColor The hex color code (e.g., '#ef4444')
+ * @returns Tailwind class or undefined
+ */
+export function getTailwindColorClass(hexColor: string): string | undefined {
+  if (!hexColor) return undefined;
+  return HEX_TO_TAILWIND[hexColor.toLowerCase()];
 }
 
 export function getInitials(firstName: string, lastName: string): string {
