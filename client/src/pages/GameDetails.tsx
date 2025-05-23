@@ -775,7 +775,7 @@ export default function GameDetails() {
         <title>Game Details | Netball Stats Tracker</title>
       </Helmet>
       
-      <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-gray-50 p-6 rounded-lg">
         <div>
           <div className="flex items-center gap-3 mb-1">
             <Button variant="outline" size="sm" asChild>
