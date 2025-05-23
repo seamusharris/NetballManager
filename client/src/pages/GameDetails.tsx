@@ -1,7 +1,9 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { useParams, Link } from 'wouter';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet';
+import GameForm from '@/components/games/GameForm';
+import { apiRequest } from '@/lib/queryClient';
 import { TEAM_NAME } from '@/lib/settings';
 import { StatItemBox } from '@/components/games/StatItemBox';
 import { PositionStatsBox } from '@/components/games/PositionStatsBox';
@@ -750,6 +752,49 @@ export default function GameDetails() {
     );
   }
   
+  // State for managing the edit dialog
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  
+  // Mutation for updating the game
+  const updateGameMutation = useMutation({
+    mutationFn: async (gameData: any) => {
+      return await apiRequest(`/api/games/${gameId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(gameData)
+      });
+    },
+    onSuccess: () => {
+      // Refresh game data after successful update
+      queryClient.invalidateQueries({ queryKey: ['/api/games', gameId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/games'] });
+      
+      // Show success message
+      toast({
+        title: "Game updated",
+        description: "The game details have been updated successfully",
+      });
+      
+      // Close the dialog
+      setIsEditDialogOpen(false);
+    },
+    onError: (error: any) => {
+      // Show error message
+      toast({
+        title: "Update failed",
+        description: `Failed to update game: ${error.message || 'Unknown error'}`,
+        variant: "destructive",
+      });
+    }
+  });
+  
+  // Handler for game form submission
+  const handleGameSubmit = (formData: any) => {
+    updateGameMutation.mutate(formData);
+  };
+  
   // Check if this is a forfeit game, which has special display and restrictions
   const isForfeitGame = game.status === 'forfeit-win' || game.status === 'forfeit-loss';
   const opponentName = getOpponentName(opponents || [], game.opponentId);
@@ -834,11 +879,7 @@ export default function GameDetails() {
               variant="outline" 
               size="sm"
               className="bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100"
-              onClick={() => {
-                // Use Link programmatically to navigate to games with edit parameter
-                // Include returnTo parameter to come back to game details after editing
-                window.location.href = `/games?edit=${gameId}&returnTo=gameDetails`;
-              }}
+              onClick={() => setIsEditDialogOpen(true)}
             >
               <Edit className="mr-2 h-4 w-4 text-blue-600" />
               Edit Game
