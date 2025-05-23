@@ -7,6 +7,7 @@ import { GameScoreDisplay } from '../statistics/GameScoreDisplay';
 import { Card, CardContent } from '@/components/ui/card';
 import { GameStatusBadge } from '@/components/games/GameStatusBadge';
 import { Badge } from '@/components/ui/badge';
+import { useLocation } from 'wouter';
 
 interface GamesListProps {
   games: Game[];
@@ -25,6 +26,7 @@ const statusColors = {
 
 export default function GamesList({ games, opponents, className }: GamesListProps): JSX.Element {
   const [displayMode, setDisplayMode] = useState('all');
+  const [, setLocation] = useLocation();
   
   // Filter and sort games based on display mode
   const filteredGames = (() => {
