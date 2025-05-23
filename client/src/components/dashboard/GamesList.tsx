@@ -3,11 +3,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Game, GameStatus, Opponent } from '@shared/schema';
 import { cn, formatDate } from '@/lib/utils';
 import { useState } from 'react';
-import { GameScoreDisplay } from '../statistics/GameScoreDisplay';
 import { Card, CardContent } from '@/components/ui/card';
 import { GameStatusBadge } from '@/components/games/GameStatusBadge';
 import { Badge } from '@/components/ui/badge';
 import { useLocation } from 'wouter';
+import { BatchGameScoreDisplay } from './BatchGameScoreDisplay';
 
 interface GamesListProps {
   games: Game[];
@@ -27,6 +27,11 @@ const statusColors = {
 export default function GamesList({ games, opponents, className }: GamesListProps): JSX.Element {
   const [displayMode, setDisplayMode] = useState('all');
   const [, setLocation] = useLocation();
+  
+  // Navigate to game details page
+  const navigateToGame = (gameId: number) => {
+    setLocation(`/games/${gameId}`);
+  };
   
   // Filter and sort games based on display mode
   const filteredGames = (() => {
@@ -105,7 +110,7 @@ export default function GamesList({ games, opponents, className }: GamesListProp
                   <TableRow 
                     key={game.id}
                     className="hover:bg-gray-50 cursor-pointer transition-colors"
-                    onClick={() => window.location.href = `/games/${game.id}`}
+                    onClick={() => navigateToGame(game.id)}
                   >
                     <TableCell className="px-3 py-2 whitespace-nowrap border-r text-center">
                       {game.round ? (
@@ -139,7 +144,10 @@ export default function GamesList({ games, opponents, className }: GamesListProp
                     
                     <TableCell className="px-2 py-2 whitespace-nowrap text-center">
                       {game.completed ? (
-                        <GameScoreDisplay gameId={game.id} compact={true} />
+                        <div className="text-center">
+                          {/* Use our optimized component that uses caching */}
+                          <BatchGameScoreDisplay gameId={game.id} />
+                        </div>
                       ) : (
                         <span className="text-gray-400">—</span>
                       )}
