@@ -58,8 +58,8 @@ export function GameScoreDisplay({ gameId, compact = false }: GameScoreDisplayPr
         : "bg-amber-100 border-amber-200";
     
     return (
-      <div className="font-semibold text-center">
-        <div className={`inline-flex items-center justify-center px-3 py-1 rounded border text-gray-900 ${bgColor}`}>
+      <div className="font-semibold text-left">
+        <div className={`inline-flex items-center px-3 py-1 rounded border text-gray-900 ${bgColor}`}>
           <span className={isWin ? "font-bold" : ""}>{scores.finalScore.for}</span>
           <span className="mx-2">-</span>
           <span className={isLoss ? "font-bold" : ""}>{scores.finalScore.against}</span>

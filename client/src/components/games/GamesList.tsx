@@ -358,11 +358,11 @@ export default function GamesList({
           <Table>
             <TableHeader className="bg-gray-50">
               <TableRow>
-                <TableHead className="px-6 py-3 text-center font-bold">Date & Time</TableHead>
-                <TableHead className="px-6 py-3 text-center font-bold">Round</TableHead>
-                <TableHead className="px-6 py-3 text-center font-bold">Opponent</TableHead>
-                <TableHead className="px-6 py-3 text-center font-bold">Status</TableHead>
-                <TableHead className="px-6 py-3 text-center font-bold">Score</TableHead>
+                <TableHead className="px-6 py-3 text-left font-bold">Date & Time</TableHead>
+                <TableHead className="px-6 py-3 text-left font-bold">Round</TableHead>
+                <TableHead className="px-6 py-3 text-left font-bold">Opponent</TableHead>
+                <TableHead className="px-6 py-3 text-left font-bold">Status</TableHead>
+                <TableHead className="px-6 py-3 text-left font-bold">Score</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
