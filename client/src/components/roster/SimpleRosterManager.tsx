@@ -582,7 +582,7 @@ export default function SimpleRosterManager({
             variant="default" 
             onClick={() => window.location.href = '/games'}
           >
-            Go to Games Page
+            Go to Games List
           </Button>
         </CardContent>
       </Card>

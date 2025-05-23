@@ -1101,7 +1101,7 @@ export default function GameDetails() {
             >
               <Link to="/games">
                 <ChevronLeft className="mr-1 h-4 w-4" />
-                Back to Games
+                Back to Games List
               </Link>
             </Button>
           </div>

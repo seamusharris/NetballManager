@@ -60,7 +60,7 @@ export default function UpcomingGames({ games, opponents, className }: UpcomingG
           <div className="text-center py-6">
             <p className="text-gray-500 mb-4">No upcoming games scheduled</p>
             <Link href="/games" className="text-accent hover:underline">
-              Go to Games
+              Go to Games List
             </Link>
           </div>
         )}
