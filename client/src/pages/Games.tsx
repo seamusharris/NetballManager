@@ -37,11 +37,12 @@ export default function Games() {
     queryKey: ['/api/opponents'],
   });
   
-  // Check for editId parameter in the URL and handle edit game loading
+  // Check for edit parameter in the URL and handle edit game loading
   useEffect(() => {
     if (games.length > 0) {
       const searchParams = new URLSearchParams(window.location.search);
-      const editId = searchParams.get('editId');
+      // Support both editId (legacy) and edit (new) parameters
+      const editId = searchParams.get('editId') || searchParams.get('edit');
       
       if (editId) {
         const gameId = parseInt(editId);

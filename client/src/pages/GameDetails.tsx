@@ -835,7 +835,8 @@ export default function GameDetails() {
               size="sm"
               className="bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100"
               onClick={() => {
-                // This will be handled by the Games page component
+                // Use Link programmatically to navigate to games with edit parameter
+                // This will be caught by the Games component and show the edit dialog
                 window.location.href = `/games?edit=${gameId}`;
               }}
             >
