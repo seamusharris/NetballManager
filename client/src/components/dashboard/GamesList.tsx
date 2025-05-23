@@ -30,7 +30,7 @@ export default function GamesList({ games, opponents, className }: GamesListProp
   
   // Navigate to game details page
   const navigateToGame = (gameId: number) => {
-    setLocation(`/games/${gameId}`);
+    setLocation(`/game/${gameId}`);
   };
   
   // Filter and sort games based on display mode
