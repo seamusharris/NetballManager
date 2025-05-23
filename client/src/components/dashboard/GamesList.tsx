@@ -1,11 +1,12 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Game, Opponent } from '@shared/schema';
-import { Badge } from '@/components/ui/badge';
+import { Game, GameStatus, Opponent } from '@shared/schema';
 import { cn, formatDate } from '@/lib/utils';
 import { useState } from 'react';
 import { GameScoreDisplay } from '../statistics/GameScoreDisplay';
 import { Card, CardContent } from '@/components/ui/card';
+import { GameStatusBadge } from '@/components/games/GameStatusBadge';
+import { Badge } from '@/components/ui/badge';
 
 interface GamesListProps {
   games: Game[];
@@ -124,15 +125,14 @@ export default function GamesList({ games, opponents, className }: GamesListProp
                     </TableCell>
                     
                     <TableCell className="px-2 py-2 whitespace-nowrap text-center border-r">
-                      <Badge 
-                        variant="outline" 
-                        className={cn(
-                          "font-normal text-xs px-2 py-0.5",
-                          statusColors[game.status as keyof typeof statusColors] || 'bg-gray-100 text-gray-800 border-gray-200'
-                        )}
-                      >
-                        {game.status}
-                      </Badge>
+                      {/* For BYE games, always show "BYE" instead of using the status */}
+                      {game.isBye ? (
+                        <Badge variant="outline" className="rounded-full px-2 py-0.5 bg-gray-100 text-gray-800 border-gray-200">
+                          BYE
+                        </Badge>
+                      ) : (
+                        <GameStatusBadge status={game.status as GameStatus} size="sm" />
+                      )}
                     </TableCell>
                     
                     <TableCell className="px-2 py-2 whitespace-nowrap text-center">
