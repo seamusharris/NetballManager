@@ -1,12 +1,14 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { useParams, Link } from 'wouter';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet';
 import { TEAM_NAME } from '@/lib/settings';
 import { StatItemBox } from '@/components/games/StatItemBox';
 import { PositionStatsBox } from '@/components/games/PositionStatsBox';
 import { PositionBox } from '@/components/games/PositionBox';
 import { GamePositionStatsBox } from '@/components/games/GamePositionStatsBox';
+import GameForm from '@/components/games/GameForm';
+import { apiRequest } from '@/lib/queryClient';
 import { 
   Card, 
   CardContent, 
@@ -834,11 +836,7 @@ export default function GameDetails() {
               variant="outline" 
               size="sm"
               className="bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100"
-              onClick={() => {
-                // Use Link programmatically to navigate to games with edit parameter
-                // This will be caught by the Games component and show the edit dialog
-                window.location.href = `/games?edit=${gameId}`;
-              }}
+              onClick={() => setIsEditDialogOpen(true)}
             >
               <Edit className="mr-2 h-4 w-4 text-blue-600" />
               Edit Game
