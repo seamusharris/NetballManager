@@ -290,10 +290,10 @@ export default function PrintableRosterSummary({ game, opponent, roster, players
             {POSITIONS.map(position => (
               <TableRow key={position} className="hover:bg-blue-50">
                 <TableCell className="font-medium text-center border-r border-gray-200">{position}</TableCell>
-                <TableCell className="text-center border-r border-gray-200">{getPlayerName(rosterByQuarter['1'][position])}</TableCell>
-                <TableCell className="text-center border-r border-gray-200">{getPlayerName(rosterByQuarter['2'][position])}</TableCell>
-                <TableCell className="text-center border-r border-gray-200">{getPlayerName(rosterByQuarter['3'][position])}</TableCell>
-                <TableCell className="text-center">{getPlayerName(rosterByQuarter['4'][position])}</TableCell>
+                <TableCell className="text-left pl-4 border-r border-gray-200">{getPlayerName(rosterByQuarter['1'][position])}</TableCell>
+                <TableCell className="text-left pl-4 border-r border-gray-200">{getPlayerName(rosterByQuarter['2'][position])}</TableCell>
+                <TableCell className="text-left pl-4 border-r border-gray-200">{getPlayerName(rosterByQuarter['3'][position])}</TableCell>
+                <TableCell className="text-left pl-4">{getPlayerName(rosterByQuarter['4'][position])}</TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -313,22 +313,22 @@ export default function PrintableRosterSummary({ game, opponent, roster, players
           <TableBody>
             <TableRow className="hover:bg-blue-50">
               <TableCell className="font-medium text-center border-r border-gray-200">Off Court</TableCell>
-              <TableCell className="text-center border-r border-gray-200">
+              <TableCell className="text-left pl-4 border-r border-gray-200">
                 {offPlayersByQuarter['1'].length > 0 
                   ? offPlayersByQuarter['1'].map(id => getPlayerName(id)).join(', ') 
                   : 'None'}
               </TableCell>
-              <TableCell className="text-center border-r border-gray-200">
+              <TableCell className="text-left pl-4 border-r border-gray-200">
                 {offPlayersByQuarter['2'].length > 0 
                   ? offPlayersByQuarter['2'].map(id => getPlayerName(id)).join(', ') 
                   : 'None'}
               </TableCell>
-              <TableCell className="text-center border-r border-gray-200">
+              <TableCell className="text-left pl-4 border-r border-gray-200">
                 {offPlayersByQuarter['3'].length > 0 
                   ? offPlayersByQuarter['3'].map(id => getPlayerName(id)).join(', ') 
                   : 'None'}
               </TableCell>
-              <TableCell className="text-center">
+              <TableCell className="text-left pl-4">
                 {offPlayersByQuarter['4'].length > 0 
                   ? offPlayersByQuarter['4'].map(id => getPlayerName(id)).join(', ') 
                   : 'None'}
