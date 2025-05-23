@@ -1151,10 +1151,10 @@ export default function GameDetails() {
                 variant="outline" 
                 size="sm" 
                 asChild 
-                className="bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100"
+                className="border-purple-200 text-purple-700 hover:bg-purple-50 hover:text-purple-900"
               >
                 <Link to={`/game/${gameId}/livestats`}>
-                  <ActivitySquare className="mr-2 h-4 w-4 text-purple-600" />
+                  <ActivitySquare className="mr-2 h-4 w-4" />
                   Live Stats
                 </Link>
               </Button>
@@ -1164,10 +1164,10 @@ export default function GameDetails() {
             <Button 
               variant="outline" 
               size="sm"
-              className="bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100"
+              className="border-blue-200 text-blue-700 hover:bg-blue-50 hover:text-blue-900"
               onClick={() => setIsEditDialogOpen(true)}
             >
-              <Edit className="mr-2 h-4 w-4 text-blue-600" />
+              <Edit className="mr-2 h-4 w-4" />
               Edit Game
             </Button>
             
@@ -1177,9 +1177,9 @@ export default function GameDetails() {
                 <Button 
                   variant="outline" 
                   size="sm"
-                  className="bg-red-50 text-red-700 border-red-200 hover:bg-red-100"
+                  className="border-red-200 text-red-700 hover:bg-red-50 hover:text-red-900"
                 >
-                  <Trash2 className="mr-2 h-4 w-4 text-red-600" />
+                  <Trash2 className="mr-2 h-4 w-4" />
                   Delete Game
                 </Button>
               </AlertDialogTrigger>
