@@ -875,7 +875,7 @@ const StatisticsByPosition = ({ gameStats }) => {
 };
 
 // Quarter scores display
-const QuarterScores = ({ quarterScores }) => {
+const QuarterScores = ({ quarterScores, gameStatus }) => {
   // Reshape the data to be quarter-by-quarter for easier rendering
   const scoringByQuarter = useMemo(() => {
     return quarterScores.reduce((acc, current, index) => {
@@ -939,6 +939,11 @@ const QuarterScores = ({ quarterScores }) => {
               <span className="mx-4">-</span>
               <span className="font-bold text-3xl">{totalOpponentScore}</span>
             </div>
+            {gameStatus && (
+              <div className="mt-1 text-sm font-medium">
+                {gameStatus.charAt(0).toUpperCase() + gameStatus.slice(1).replace('-', ' ')}
+              </div>
+            )}
           </div>
           <div className="bg-white p-6">
             <div className="grid grid-cols-2 gap-10">
@@ -1287,7 +1292,7 @@ export default function GameDetails() {
       </div>
       
       {/* Show quarter scores summary */}
-      <QuarterScores quarterScores={quarterScores} />
+      <QuarterScores quarterScores={quarterScores} gameStatus={game?.status} />
       
       <div className="mt-8">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
