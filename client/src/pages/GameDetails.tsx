@@ -878,7 +878,7 @@ export default function GameDetails() {
           </div>
         </div>
         
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 justify-end">
           {!isForfeitGame && (
             <Button asChild>
               <Link to={`/game/${gameId}/stats`}>
