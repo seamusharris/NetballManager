@@ -16,6 +16,11 @@ export default function Roster() {
   const [_, navigate] = useLocation();
   const queryClient = useQueryClient();
   
+  // Load players data
+  const { data: players = [], isLoading: isLoadingPlayers } = useQuery({
+    queryKey: ['/api/players'],
+  });
+  
   // Parse URL query parameters to get game ID
   useEffect(() => {
     // Get the game ID from the URL query parameter if it exists
@@ -56,11 +61,6 @@ export default function Roster() {
       }
     }
   }, [selectedGameId, players]);
-  
-  // Load players data
-  const { data: players = [], isLoading: isLoadingPlayers } = useQuery({
-    queryKey: ['/api/players'],
-  });
   
   // Load games data
   const { data: games = [], isLoading: isLoadingGames } = useQuery({

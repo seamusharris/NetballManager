@@ -59,7 +59,7 @@ export default function PlayerAvailabilityManager({
   // Get color hex value for styling
   const getColorHex = (colorClass: string) => {
     // Convert bg-color-shade to a hex color for borders and text
-    const colorMap = {
+    const colorMap: Record<string, string> = {
       'bg-red-500': '#ef4444',
       'bg-emerald-600': '#059669',
       'bg-teal-600': '#0d9488',
@@ -73,7 +73,7 @@ export default function PlayerAvailabilityManager({
       'bg-gray-400': '#9ca3af'
     };
     
-    return colorMap[colorClass as keyof typeof colorMap] || '#9ca3af';
+    return colorMap[colorClass] || '#9ca3af';
   };
 
   return (
