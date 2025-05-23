@@ -837,15 +837,56 @@ export default function GameDetails() {
               variant="outline" 
               size="sm"
               className="bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100"
-              onClick={() => {
-                // Use Link programmatically to navigate to games with edit parameter
-                // Include returnTo parameter to come back to game details after editing
-                window.location.href = `/games?edit=${gameId}&returnTo=gameDetails`;
-              }}
+              onClick={() => setIsEditDialogOpen(true)}
             >
               <Edit className="mr-2 h-4 w-4 text-blue-600" />
               Edit Game
             </Button>
+            
+            {/* Edit Game Dialog */}
+            <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+              <DialogContent className="sm:max-w-[550px]">
+                <DialogTitle>Edit Game Details</DialogTitle>
+                {opponents && (
+                  <GameForm
+                    game={game}
+                    opponents={opponents}
+                    isSubmitting={false}
+                    onSubmit={async (formData) => {
+                      try {
+                        await fetch(`/api/games/${gameId}`, {
+                          method: 'PATCH',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify(formData)
+                        });
+                        
+                        // Invalidate queries to refresh data
+                        queryClient.invalidateQueries({
+                          queryKey: ['/api/games', gameId],
+                        });
+                        queryClient.invalidateQueries({
+                          queryKey: ['/api/games'],
+                        });
+                        
+                        toast({
+                          title: "Game updated",
+                          description: "Game details have been updated successfully",
+                        });
+                        
+                        setIsEditDialogOpen(false);
+                      } catch (error) {
+                        console.error("Error updating game:", error);
+                        toast({
+                          title: "Error",
+                          description: "Failed to update game details",
+                          variant: "destructive",
+                        });
+                      }
+                    }}
+                  />
+                )}
+              </DialogContent>
+            </Dialog>
           </div>
           
           <div className="text-gray-500">
