@@ -76,12 +76,17 @@ const PlayerStatsByQuarter = ({ roster, players, gameStats }: { roster: any[], p
   
   // Calculate player statistics by combining all positions they played
   const playerStats = useMemo(() => {
-    // Group roster by player ID
-    const playerPositions: Record<number, { playerId: number, positions: Record<number, string> }> = {};
+    // Create a set of all unique player IDs in the roster
+    const uniquePlayerIds = new Set<number>();
     
     // Create a mapping of player ID to positions they played in each quarter
+    const playerPositions: Record<number, { playerId: number, positions: Record<number, string> }> = {};
+    
+    // Add all players from roster
     roster.forEach(entry => {
       if (!entry.playerId) return;
+      
+      uniquePlayerIds.add(entry.playerId);
       
       if (!playerPositions[entry.playerId]) {
         playerPositions[entry.playerId] = {
@@ -93,15 +98,18 @@ const PlayerStatsByQuarter = ({ roster, players, gameStats }: { roster: any[], p
       playerPositions[entry.playerId].positions[entry.quarter] = entry.position;
     });
     
-    // For each player, calculate their statistics based on positions played
+    // For each player in the game, calculate their statistics
     const result: Record<number, any> = {};
     
-    Object.values(playerPositions).forEach(player => {
-      // Initialize player stats
-      const playerStat = {
-        playerId: player.playerId,
-        name: getPlayerName(players, player.playerId),
-        color: getPlayerColor(players, player.playerId),
+    // Make sure all players in the roster are included
+    players.forEach(player => {
+      if (!uniquePlayerIds.has(player.id)) return;
+      
+      // Initialize stats for every player in the roster
+      result[player.id] = {
+        playerId: player.id,
+        name: getPlayerName(players, player.id),
+        color: getPlayerColor(players, player.id),
         quarterStats: {} as Record<number, any>,
         totalStats: {
           goals: 0,
@@ -115,6 +123,12 @@ const PlayerStatsByQuarter = ({ roster, players, gameStats }: { roster: any[], p
           infringement: 0
         }
       };
+    });
+    
+    // Then calculate stats based on positions played
+    Object.values(playerPositions).forEach(player => {
+      // Get the player stats entry we created
+      const playerStat = result[player.playerId];
       
       // Get stats for each quarter the player played in
       Object.entries(player.positions).forEach(([quarter, position]) => {
