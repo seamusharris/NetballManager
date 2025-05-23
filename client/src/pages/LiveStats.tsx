@@ -944,7 +944,7 @@ export default function LiveStats() {
           <CardHeader className="py-2">
             <div className="flex justify-between items-center">
               <CardTitle className="text-base md:text-lg font-semibold">Quarter {currentQuarter}</CardTitle>
-              <div className="flex gap-1">
+              <div className="flex gap-1 justify-end">
                 {[1, 2, 3, 4].map(quarter => (
                   <Button
                     key={quarter}
