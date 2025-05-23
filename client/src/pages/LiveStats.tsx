@@ -677,6 +677,10 @@ export default function LiveStats() {
           queryClient.invalidateQueries({ queryKey: ['playerStats', gameId] });
           queryClient.invalidateQueries({ queryKey: ['allGameStats'] });
           
+          // Also clear the scores cache to ensure immediate UI updates
+          clearGameCache(gameId);
+          console.log(`Cleared score cache for game ${gameId} after saving stats`);
+          
           // Wait to ensure everything is refreshed
           await new Promise(resolve => setTimeout(resolve, 500));
           
