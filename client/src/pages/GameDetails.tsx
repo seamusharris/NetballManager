@@ -299,10 +299,7 @@ const PlayerStatsByQuarter = ({ roster, players, gameStats }: { roster: any[], p
       }
     }
     
-    // Get the primary stats to show (depends on positions played)
-    const hasScoringStats = player.totalStats.goals > 0 || player.totalStats.missedGoals > 0;
-    const hasDefensiveStats = player.totalStats.goalsAgainst > 0;
-    
+    // These stats are displayed for all players regardless of position
     return (
       <div 
         key={player.playerId}
@@ -319,40 +316,32 @@ const PlayerStatsByQuarter = ({ roster, players, gameStats }: { roster: any[], p
           >
             {player.name}
           </div>
-          {activeQuarter > 0 && player.quarterStats[activeQuarter] && (
+          {activeQuarter > 0 && (
             <div className="text-sm bg-gray-100 px-2 py-1 rounded">
-              {player.quarterStats[activeQuarter].position}
+              {relevantStats.position || "N/A"}
             </div>
           )}
         </div>
         
-        {relevantStats && (
-          <div className="mt-1 bg-gray-50 p-3 rounded-md border border-gray-100">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                {/* Left column stats */}
-                {hasScoringStats && (
-                  <>
-                    <StatItemBox label="Goals" value={relevantStats.goals} />
-                    <StatItemBox label="Missed Goals" value={relevantStats.missedGoals} />
-                  </>
-                )}
-                {hasDefensiveStats && (
-                  <StatItemBox label="Goals Against" value={relevantStats.goalsAgainst} />
-                )}
-                <StatItemBox label="Rebounds" value={relevantStats.rebounds} />
-                <StatItemBox label="Intercepts" value={relevantStats.intercepts} />
-              </div>
-              <div className="space-y-2">
-                {/* Right column stats */}
-                <StatItemBox label="Bad Pass" value={relevantStats.badPass} />
-                <StatItemBox label="Handling Errors" value={relevantStats.handlingError} />
-                <StatItemBox label="Pick Ups" value={relevantStats.pickUp} />
-                <StatItemBox label="Infringements" value={relevantStats.infringement} />
-              </div>
+        <div className="mt-1 bg-gray-50 p-3 rounded-md border border-gray-100">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              {/* Left column stats - shown for all players */}
+              <StatItemBox label="Goals" value={relevantStats.goals || 0} />
+              <StatItemBox label="Missed Goals" value={relevantStats.missedGoals || 0} />
+              <StatItemBox label="Goals Against" value={relevantStats.goalsAgainst || 0} />
+              <StatItemBox label="Rebounds" value={relevantStats.rebounds || 0} />
+              <StatItemBox label="Intercepts" value={relevantStats.intercepts || 0} />
+            </div>
+            <div className="space-y-2">
+              {/* Right column stats - shown for all players */}
+              <StatItemBox label="Bad Pass" value={relevantStats.badPass || 0} />
+              <StatItemBox label="Handling Errors" value={relevantStats.handlingError || 0} />
+              <StatItemBox label="Pick Ups" value={relevantStats.pickUp || 0} />
+              <StatItemBox label="Infringements" value={relevantStats.infringement || 0} />
             </div>
           </div>
-        )}
+        </div>
       </div>
     );
   };
