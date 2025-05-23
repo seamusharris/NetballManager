@@ -34,36 +34,20 @@ export default function PlayerAvailabilityManager({
     return displayName.toLowerCase().includes(searchQuery.toLowerCase());
   });
 
-  // Get player color based on player ID using our existing utility color mapping
+  // Get player color using the player's own avatarColor property from their profile
   const getPlayerColor = (player: Player) => {
-    // Use the consistent player colors from our mapping
-    const playerColorMap: Record<number, string> = {
-      56: 'bg-blue-600',     // Lucia
-      57: 'bg-emerald-600',  // Isla
-      58: 'bg-teal-600',     // JoJo
-      59: 'bg-orange-500',   // Abby D
-      60: 'bg-red-500',      // Abbey N
-      61: 'bg-yellow-600',   // Emily
-      62: 'bg-indigo-600',   // Ollie
-      63: 'bg-sky-600',      // Evie
-      64: 'bg-purple-600',   // Mila
-      65: 'bg-pink-500',     // Olive
-      66: 'bg-lime-600',     // Xanthe
-      67: 'bg-violet-600',   // Holly
-    };
-    
-    // Return the designated color for specific players
-    if (player.id && playerColorMap[player.id]) {
-      return playerColorMap[player.id];
+    // Use the player's stored avatarColor if it exists
+    if (player.avatarColor) {
+      // If it's already a Tailwind class (starts with 'bg-'), use it directly
+      if (player.avatarColor.startsWith('bg-')) {
+        return player.avatarColor;
+      }
     }
     
-    // Fallback to a color based on player ID
-    const colorIndex = player.id % 10;
-    const colorClasses = [
-      'bg-red-500', 'bg-emerald-600', 'bg-teal-600', 'bg-blue-600', 'bg-indigo-600',
-      'bg-purple-600', 'bg-pink-600', 'bg-orange-500', 'bg-yellow-600', 'bg-rose-600'
-    ];
-    return colorClasses[colorIndex];
+    // If the player doesn't have an avatarColor or it's not a Tailwind class,
+    // we use a default gray color - this should be very rare as all players
+    // should have colors assigned in the database
+    return 'bg-gray-400';
   };
 
   // Get color hex value for styling
@@ -84,7 +68,11 @@ export default function PlayerAvailabilityManager({
       'bg-lime-600': '#65a30d',
       'bg-sky-600': '#0284c7',
       'bg-violet-600': '#7c3aed',
-      'bg-gray-400': '#9ca3af'
+      'bg-gray-400': '#9ca3af',
+      'bg-accent': '#0d9488',     // Accent (teal)
+      'bg-secondary': '#7c3aed',  // Secondary (violet)
+      'bg-primary': '#2563eb',    // Primary (blue)
+      'bg-green-600': '#16a34a'   // Green
     };
     
     return colorMap[colorClass] || '#9ca3af';

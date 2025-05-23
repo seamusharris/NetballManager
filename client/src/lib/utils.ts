@@ -114,6 +114,7 @@ export function generatePlayerAvatarColor(playerId?: number | null): string {
     'bg-fuchsia-600',   // Fuchsia
     'bg-rose-600',      // Rose
     'bg-sky-600',       // Sky blue
+    'bg-pink-500',      // Light pink
     
     // Secondary palette - darker variants
     'bg-blue-800',      // Dark blue
@@ -154,40 +155,14 @@ export function generatePlayerAvatarColor(playerId?: number | null): string {
     'bg-sky-400',       // Light sky blue
   ];
   
-  // Map of specific players to their designated colors to ensure consistency
-  const playerColorMap: Record<number, string> = {
-    // IMPORTANT: These are the exact colors we want to use for these specific players
-    56: 'bg-blue-600',     // Lucia
-    57: 'bg-emerald-600',  // Isla
-    58: 'bg-teal-600',     // JoJo
-    59: 'bg-orange-500',   // Abby D
-    60: 'bg-red-500',      // Abbey N
-    61: 'bg-yellow-600',   // Emily
-    62: 'bg-indigo-600',   // Ollie
-    63: 'bg-sky-600',      // Evie
-    64: 'bg-purple-600',   // Mila
-    65: 'bg-pink-500',     // Olive
-    66: 'bg-lime-600',     // Xanthe
-  };
-  
-  // Return the designated color for these special players
-  if (playerId && playerColorMap[playerId]) {
-    return playerColorMap[playerId];
-  }
-  
   if (!playerId) return 'bg-gray-500'; // Default fallback if no player id
   
-  // Filter out colors that are already assigned to specific players
-  // This ensures new players never get the same color as our fixed players
-  const reservedColors = Object.values(playerColorMap);
-  const availableColors = avatarColors.filter(color => !reservedColors.includes(color));
-  
-  // Use a better hash function based on prime numbers for more uniqueness
-  // Use player ID to generate a consistent but well-distributed index
+  // Use a consistent color assignment based on player ID
+  // This ensures the same player always gets the same color
   const seed = (playerId * 31) + (playerId % 17); // Using prime numbers for better distribution
-  const hashIndex = Math.abs(seed % availableColors.length);
+  const hashIndex = Math.abs(seed % avatarColors.length);
   
-  return availableColors[hashIndex];
+  return avatarColors[hashIndex];
 }
 
 export function calculateTotalGoals(stats: any[], forTeam: boolean = true): number {
