@@ -73,19 +73,22 @@ export default function PrintableRosterSummary({ game, opponent, roster, players
       ];
     });
     
-    // Add table to PDF
-    (doc as any).autoTable({
-      startY: 30,
-      head: [['Position', 'Q1', 'Q2', 'Q3', 'Q4']],
-      body: tableData,
-      theme: 'grid',
-      styles: { fontSize: 10, cellPadding: 3 },
-      headStyles: { fillColor: [59, 130, 246], textColor: 255 },
-      alternateRowStyles: { fillColor: [240, 245, 255] }
+    // Add table to PDF - use the properly imported autoTable
+    import('jspdf-autotable').then((autoTable) => {
+      const autoTablePlugin = autoTable.default;
+      autoTablePlugin(doc, {
+        startY: 30,
+        head: [['Position', 'Q1', 'Q2', 'Q3', 'Q4']],
+        body: tableData,
+        theme: 'grid',
+        styles: { fontSize: 10, cellPadding: 3 },
+        headStyles: { fillColor: [59, 130, 246], textColor: 255 },
+        alternateRowStyles: { fillColor: [240, 245, 255] }
+      });
+      
+      // Save PDF after autotable is applied
+      doc.save(`${gameDate.replace(/\//g, '-')}_roster_${opponentName.replace(/\s+/g, '_')}.pdf`);
     });
-    
-    // Save PDF
-    doc.save(`${gameDate.replace(/\//g, '-')}_roster_${opponentName.replace(/\s+/g, '_')}.pdf`);
   };
 
   // Export to Excel
