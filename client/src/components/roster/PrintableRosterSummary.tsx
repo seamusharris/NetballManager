@@ -42,6 +42,49 @@ export default function PrintableRosterSummary({ game, opponent, roster, players
     
     return result;
   }, [roster]);
+  
+  // Identify players who are off in each quarter
+  const offPlayersByQuarter = React.useMemo(() => {
+    const result: Record<string, number[]> = {
+      '1': [],
+      '2': [],
+      '3': [],
+      '4': []
+    };
+    
+    // Only process if we have both roster and players
+    if (roster && roster.length > 0 && players && players.length > 0) {
+      // Get all player IDs from the roster
+      const uniquePlayerIds = new Set<number>();
+      roster.forEach(entry => {
+        if (entry.playerId) {
+          uniquePlayerIds.add(entry.playerId);
+        }
+      });
+      
+      // For each quarter, find players who aren't assigned a position
+      for (let quarter = 1; quarter <= 4; quarter++) {
+        const quarterKey = quarter.toString();
+        const assignedPlayers = new Set<number>();
+        
+        // Get all players assigned in this quarter
+        Object.values(rosterByQuarter[quarterKey]).forEach(playerId => {
+          if (playerId !== null) {
+            assignedPlayers.add(playerId);
+          }
+        });
+        
+        // Find players who are on the roster but not assigned in this quarter
+        uniquePlayerIds.forEach(playerId => {
+          if (!assignedPlayers.has(playerId)) {
+            result[quarterKey].push(playerId);
+          }
+        });
+      }
+    }
+    
+    return result;
+  }, [roster, players, rosterByQuarter]);
 
   // Handle print function
   const handlePrint = () => {
@@ -185,7 +228,7 @@ export default function PrintableRosterSummary({ game, opponent, roster, players
           </p>
         </div>
         
-        <Table className="border-2 border-gray-200">
+        <Table className="border-2 border-gray-200 mb-8">
           <TableHeader className="bg-blue-500">
             <TableRow>
               <TableHead className="text-white font-bold">Position</TableHead>
@@ -205,6 +248,44 @@ export default function PrintableRosterSummary({ game, opponent, roster, players
                 <TableCell className="text-center">{getPlayerName(rosterByQuarter['4'][position])}</TableCell>
               </TableRow>
             ))}
+          </TableBody>
+        </Table>
+        
+        {/* Players who are off in each quarter */}
+        <Table className="border-2 border-gray-200">
+          <TableHeader className="bg-blue-500">
+            <TableRow>
+              <TableHead className="text-white font-bold">Players Off</TableHead>
+              <TableHead className="text-white font-bold text-center">Quarter 1</TableHead>
+              <TableHead className="text-white font-bold text-center">Quarter 2</TableHead>
+              <TableHead className="text-white font-bold text-center">Quarter 3</TableHead>
+              <TableHead className="text-white font-bold text-center">Quarter 4</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            <TableRow className="hover:bg-blue-50">
+              <TableCell className="font-medium">Off Court</TableCell>
+              <TableCell className="text-center">
+                {offPlayersByQuarter['1'].length > 0 
+                  ? offPlayersByQuarter['1'].map(id => getPlayerName(id)).join(', ') 
+                  : 'None'}
+              </TableCell>
+              <TableCell className="text-center">
+                {offPlayersByQuarter['2'].length > 0 
+                  ? offPlayersByQuarter['2'].map(id => getPlayerName(id)).join(', ') 
+                  : 'None'}
+              </TableCell>
+              <TableCell className="text-center">
+                {offPlayersByQuarter['3'].length > 0 
+                  ? offPlayersByQuarter['3'].map(id => getPlayerName(id)).join(', ') 
+                  : 'None'}
+              </TableCell>
+              <TableCell className="text-center">
+                {offPlayersByQuarter['4'].length > 0 
+                  ? offPlayersByQuarter['4'].map(id => getPlayerName(id)).join(', ') 
+                  : 'None'}
+              </TableCell>
+            </TableRow>
           </TableBody>
         </Table>
       </div>
