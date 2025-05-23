@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useParams, Link } from 'wouter';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet';
@@ -23,7 +23,7 @@ import {
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { formatDate, cn } from '@/lib/utils';
-import { GameStatus, Position, POSITIONS, allGameStatuses } from '@shared/schema';
+import { GameStatus, Position, POSITIONS } from '@shared/schema';
 import { primaryPositionStats, secondaryPositionStats, statLabels } from '@/lib/positionStats';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -59,27 +59,23 @@ import {
 import { GameStatusButton } from '@/components/games/GameStatusButton';
 
 // Function to get opponent name
-const getOpponentName = (opponents: any[], opponentId: number | null) => {
+const getOpponentName = (opponents, opponentId) => {
   if (!opponentId) return 'BYE Round';
   const opponent = opponents.find(o => o.id === opponentId);
   return opponent ? opponent.teamName : 'Unknown Opponent';
 };
 
-// We now use the shared GameStatusButton component instead
-
-// Using the imported StatItemBox from components
-
 // Component to display player statistics from their positions played
-const PlayerStatsByQuarter = ({ roster, players, gameStats }: { roster: any[], players: any[], gameStats: any[] }) => {
-  const [activeQuarter, setActiveQuarter] = useState<number>(0); // 0 means all quarters
+const PlayerStatsByQuarter = ({ roster, players, gameStats }) => {
+  const [activeQuarter, setActiveQuarter] = useState(0); // 0 means all quarters
   
   // Calculate player statistics by combining all positions they played
   const playerStats = useMemo(() => {
     // Create a set of all unique player IDs in the roster
-    const uniquePlayerIds = new Set<number>();
+    const uniquePlayerIds = new Set();
     
     // Create a mapping of player ID to positions they played in each quarter
-    const playerPositions: Record<number, { playerId: number, positions: Record<number, string> }> = {};
+    const playerPositions = {};
     
     // Add all players from roster
     roster.forEach(entry => {
@@ -98,7 +94,7 @@ const PlayerStatsByQuarter = ({ roster, players, gameStats }: { roster: any[], p
     });
     
     // For each player in the game, calculate their statistics
-    const result: Record<number, any> = {};
+    const result = {};
     
     // Make sure all players in the roster are included
     players.forEach(player => {
@@ -109,7 +105,7 @@ const PlayerStatsByQuarter = ({ roster, players, gameStats }: { roster: any[], p
         playerId: player.id,
         name: getPlayerName(players, player.id),
         color: getPlayerColor(players, player.id),
-        quarterStats: {} as Record<number, any>,
+        quarterStats: {},
         totalStats: {
           goals: 0,
           missedGoals: 0,
@@ -196,14 +192,14 @@ const PlayerStatsByQuarter = ({ roster, players, gameStats }: { roster: any[], p
   }, [roster, players, gameStats]);
   
   // Helper function to get player name (moved from elsewhere in the file)
-  function getPlayerName(players: any[], playerId: number) {
+  function getPlayerName(players, playerId) {
     if (!players || !playerId) return null;
     const player = players.find(p => p.id === playerId);
     return player ? (player.displayName || `${player.firstName} ${player.lastName}`) : null;
   }
   
   // Helper function to get player color (moved from elsewhere in the file)
-  function getPlayerColor(players: any[], playerId: number) {
+  function getPlayerColor(players, playerId) {
     if (!players || !playerId) return '#cccccc';
     const player = players.find(p => p.id === playerId);
     
@@ -227,7 +223,7 @@ const PlayerStatsByQuarter = ({ roster, players, gameStats }: { roster: any[], p
   }
   
   // Convert Tailwind color classes to hex color values
-  function convertTailwindToHex(tailwindClass: string) {
+  function convertTailwindToHex(tailwindClass) {
     const colorMap = {
       'bg-red-500': '#ef4444',
       'bg-orange-500': '#f97316',
@@ -253,7 +249,7 @@ const PlayerStatsByQuarter = ({ roster, players, gameStats }: { roster: any[], p
   }
   
   // Render a quarter tab/button
-  const renderQuarterButton = (quarter: number) => (
+  const renderQuarterButton = (quarter) => (
     <Button 
       key={quarter} 
       variant={activeQuarter === quarter ? "default" : "outline"} 
@@ -266,7 +262,7 @@ const PlayerStatsByQuarter = ({ roster, players, gameStats }: { roster: any[], p
   );
   
   // Render a player's statistics box
-  const renderPlayerStatsBox = (player: any) => {
+  const renderPlayerStatsBox = (player) => {
     // For 'All' quarters, use totalStats
     // For specific quarters, use quarterStats or create empty stats if not available
     let relevantStats;
@@ -369,7 +365,7 @@ const PlayerStatsByQuarter = ({ roster, players, gameStats }: { roster: any[], p
 };
 
 // Calculate quarter by quarter scores
-const calculateQuarterScores = (gameStats: any[], game: any) => {
+const calculateQuarterScores = (gameStats, game) => {
   // Special handling for forfeit games - use consistent scoring for forfeit games
   if (game && (game.status === 'forfeit-win' || game.status === 'forfeit-loss')) {
     const isWin = game.status === 'forfeit-win';
@@ -405,8 +401,8 @@ const calculateQuarterScores = (gameStats: any[], game: any) => {
 };
 
 // Court position roster component
-const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuarter = 1 }) => {
-  const [quarter, setQuarter] = useState(initialQuarter);
+const CourtPositionRoster = ({ roster, players, gameStats }) => {
+  const [quarter, setQuarter] = useState(1);
   
   // Group roster by quarter and position
   const rosterByQuarter = useMemo(() => {
@@ -418,13 +414,13 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
   }, [roster]);
   
   // Helper to get position coordinates on court diagram
-  const getPositionCoordinates = (position: Position) => {
+  const getPositionCoordinates = (position) => {
     const positionMap = {
       'GS': 'top-12 left-1/2 transform -translate-x-1/2',
       'GA': 'top-28 right-16',
-      'WD': 'top-1/2 right-14', // Swapped WD and WA
+      'WA': 'top-1/2 right-14',
       'C': 'top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2',
-      'WA': 'bottom-1/2 left-14', // Swapped WA and WD
+      'WD': 'bottom-1/2 left-14',
       'GD': 'bottom-28 left-16',
       'GK': 'bottom-12 left-1/2 transform -translate-x-1/2',
     };
@@ -437,6 +433,32 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
     if (!players || !playerId) return null;
     const player = players.find(p => p.id === playerId);
     return player ? (player.displayName || `${player.firstName} ${player.lastName}`) : null;
+  };
+  
+  // Helper to get player color for visual indication
+  const getPlayerColor = (playerId) => {
+    if (!players || !playerId) return '#cccccc';
+    const player = players.find(p => p.id === playerId);
+    
+    // First, check if we need to use a default color
+    if (!player || !player.avatarColor || player.avatarColor === '#FFFFFF' || player.avatarColor === '#ffffff') {
+      // Use a very obvious, distinctive color based on player ID for maximum visibility
+      const defaultColors = [
+        '#FF5733', '#33FF57', '#3357FF', '#F033FF', '#FF33F0', 
+        '#33FFF0', '#F0FF33', '#8C33FF', '#FF8C33', '#33FF8C'
+      ];
+      return defaultColors[playerId % defaultColors.length];
+    }
+    
+    // Check if the avatarColor is a Tailwind class (starts with 'bg-')
+    if (player.avatarColor.startsWith('bg-')) {
+      // Get hex value from mapping
+      console.log(`Converting ${player.avatarColor} to hex: ${convertTailwindToHex(player.avatarColor)} for player ${playerId}`);
+      return convertTailwindToHex(player.avatarColor);
+    }
+    
+    // If it's already a hex color, return it
+    return player.avatarColor;
   };
   
   // Convert Tailwind color classes to hex color values
@@ -462,141 +484,116 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
       'bg-rose-600': '#e11d48',
     };
     
-    // Log missing colors to help with debugging
-    if (!colorMap[tailwindClass] && tailwindClass?.startsWith('bg-')) {
-      console.log(`Missing color mapping for ${tailwindClass}, using default color`);
-    }
-    
     return colorMap[tailwindClass] || '#6366f1'; // default to indigo-500 if not found
   };
   
-  // Function to get player color, converting from Tailwind class names to hex
-  const getPlayerColor = (playerId) => {
-    if (!players || !playerId) return '#cccccc';
-    const player = players.find(p => p.id === playerId);
+  // Method to get team score for a quarter
+  const getQuarterScore = (quarter) => {
+    const quarterStats = gameStats.filter(stat => stat.quarter === quarter);
+    const teamScore = quarterStats.reduce((total, stat) => 
+      total + (stat.goalsFor || 0), 0);
+    const opponentScore = quarterStats.reduce((total, stat) => 
+      total + (stat.goalsAgainst || 0), 0);
     
-    // First, check if we need to use a default color
-    if (!player || !player.avatarColor || player.avatarColor === '#FFFFFF' || player.avatarColor === '#ffffff') {
-      // Use a very obvious, distinctive color based on player ID for maximum visibility
-      const defaultColors = [
-        '#FF5733', '#33FF57', '#3357FF', '#F033FF', '#FF33F0', 
-        '#33FFF0', '#F0FF33', '#8C33FF', '#FF8C33', '#33FF8C'
-      ];
-      const color = defaultColors[playerId % defaultColors.length];
-      console.log(`Using default color for player ${playerId}: ${color}`);
-      return color;
-    }
-    
-    // Check if the avatarColor is a Tailwind class (starts with 'bg-')
-    if (player.avatarColor.startsWith('bg-')) {
-      const hexColor = convertTailwindToHex(player.avatarColor);
-      console.log(`Converting ${player.avatarColor} to hex: ${hexColor} for player ${playerId}`);
-      return hexColor;
-    }
-    
-    // If it's already a hex color, return it
-    console.log(`Using player ${playerId} avatar color: ${player.avatarColor}`);
-    return player.avatarColor;
+    return { teamScore, opponentScore };
   };
   
-  // Get player performance stats for display from the actual game statistics
-  const getPlayerPerformanceStats = (position) => {
-    const entry = rosterByQuarter[quarter]?.[position];
-    if (!entry || !entry.playerId) return null;
+  // Get stats for a specific position and quarter
+  const getPositionStats = (position, quarter) => {
+    return gameStats.find(stat => 
+      stat.position === position && stat.quarter === quarter
+    ) || null;
+  };
+  
+  // Render position and stats on court
+  const renderPositionOnCourt = (position, playerStats) => {
+    const hasStats = !!playerStats;
     
-    const playerName = getPlayerName(entry.playerId);
-    if (!playerName) return null;
-    
-    // Find the statistics for this position in this quarter
-    const positionStat = gameStats?.find?.(
-      stat => stat.position === position && stat.quarter === quarter
-    );
-    
-    // Return position-specific relevant statistics
-    const stats = {
-      // Common stats for all positions
-      intercepts: positionStat?.intercepts || 0,
-      badPass: positionStat?.badPass || 0,
-      handlingError: positionStat?.handlingError || 0
+    // Different tailwind utility class based on position
+    const positionData = {
+      'GS': { className: 'bg-red-500', label: 'GS' },
+      'GA': { className: 'bg-orange-500', label: 'GA' },
+      'WA': { className: 'bg-amber-500', label: 'WA' },
+      'C': { className: 'bg-green-500', label: 'C' },
+      'WD': { className: 'bg-blue-500', label: 'WD' },
+      'GD': { className: 'bg-indigo-500', label: 'GD' },
+      'GK': { className: 'bg-purple-500', label: 'GK' },
     };
     
-    // Add position-specific stats
-    if (position === 'GS' || position === 'GA') {
-      // Attacking positions
-      return {
-        playerId: entry.playerId,
-        name: playerName,
-        stats: {
-          ...stats,
-          goals: positionStat?.goalsFor || 0,
-          missedGoals: positionStat?.missedGoals || 0,
-          rebounds: positionStat?.rebounds || 0
-        }
-      };
-    } else if (position === 'GD' || position === 'GK') {
-      // Defending positions
-      return {
-        playerId: entry.playerId,
-        name: playerName,
-        stats: {
-          ...stats,
-          goalsAgainst: positionStat?.goalsAgainst || 0,
-          rebounds: positionStat?.rebounds || 0,
-          pickUp: positionStat?.pickUp || 0
-        }
-      };
-    } else {
-      // Mid-court positions (WA, C, WD)
-      return {
-        playerId: entry.playerId,
-        name: playerName,
-        stats: {
-          ...stats,
-          pickUp: positionStat?.pickUp || 0,
-          rebounds: positionStat?.rebounds || 0,
-          infringement: positionStat?.infringement || 0
-        }
-      };
-    }
-  };
-  
-  // Helper function to render position-specific stats
-  const renderPositionStats = (position, playerStats) => {
-    if (position === 'GS' || position === 'GA') {
-      return (
-        <>
-          <StatItemBox label="Goals" value={playerStats.stats.goals} />
-          <StatItemBox label="Missed Goals" value={playerStats.stats.missedGoals} />
-          <StatItemBox label="Rebounds" value={playerStats.stats.rebounds} />
-        </>
-      );
-    } else if (position === 'GD' || position === 'GK') {
-      return (
-        <>
-          <StatItemBox label="Goals Against" value={playerStats.stats.goalsAgainst} />
-          <StatItemBox label="Rebounds" value={playerStats.stats.rebounds} />
-          <StatItemBox label="Pick Ups" value={playerStats.stats.pickUp} />
-        </>
-      );
-    } else {
-      return (
-        <>
-          <StatItemBox label="Pick Ups" value={playerStats.stats.pickUp} />
-          <StatItemBox label="Rebounds" value={playerStats.stats.rebounds} />
-          <StatItemBox label="Infringements" value={playerStats.stats.infringement} />
-        </>
-      );
-    }
+    // Get the roster entry for this position in this quarter
+    const rosterEntry = rosterByQuarter[quarter]?.[position];
+    const playerId = rosterEntry?.playerId;
+    const playerName = getPlayerName(playerId);
+    const playerColor = getPlayerColor(playerId);
+    
+    // Position coordinate class from helper function
+    const positionCoords = getPositionCoordinates(position);
+    
+    return (
+      <div 
+        key={position} 
+        className={`absolute ${positionCoords} flex flex-col items-center`}
+      >
+        <div 
+          className={`w-16 h-16 rounded-full flex items-center justify-center text-white font-bold`}
+          style={{ backgroundColor: playerColor || '#cccccc' }}
+        >
+          {position}
+        </div>
+        
+        {playerName && (
+          <div className="mt-1 text-xs font-semibold bg-gray-100 rounded px-2 py-1 whitespace-nowrap">
+            {playerName}
+          </div>
+        )}
+        
+        {/* Stats display for this position */}
+        {hasStats && (
+          <div className="mt-1 bg-white rounded-md border shadow-sm p-2 w-32">
+            <div className="text-xs font-semibold mb-1 text-center">Stats</div>
+            <div className="space-y-1">
+              {position === 'GS' || position === 'GA' ? (
+                <>
+                  <div className="flex justify-between text-xs">
+                    <span>Goals:</span>
+                    <span>{playerStats.goalsFor || 0}</span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span>Missed:</span>
+                    <span>{playerStats.missedGoals || 0}</span>
+                  </div>
+                </>
+              ) : position === 'GD' || position === 'GK' ? (
+                <div className="flex justify-between text-xs">
+                  <span>Against:</span>
+                  <span>{playerStats.goalsAgainst || 0}</span>
+                </div>
+              ) : null}
+              
+              <div className="flex justify-between text-xs">
+                <span>Intercepts:</span>
+                <span>{playerStats.intercepts || 0}</span>
+              </div>
+              
+              <div className="flex justify-between text-xs">
+                <span>Rebounds:</span>
+                <span>{playerStats.rebounds || 0}</span>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
   };
   
   return (
-    <div className="mt-4">
-      <div className="mb-4 flex justify-center items-center">
+    <div>
+      <div className="mb-4 flex justify-center">
         <div className="flex gap-2">
           {[1, 2, 3, 4].map(q => (
             <Button 
               key={q} 
-              variant={q === quarter ? "default" : "outline"} 
+              variant={quarter === q ? "default" : "outline"} 
               size="sm"
               onClick={() => setQuarter(q)}
             >
@@ -606,496 +603,393 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
         </div>
       </div>
       
-      {/* Horizontal court layout with stats below */}
-      <div className="flex flex-col gap-6 max-w-7xl mx-auto px-4">
-        {/* Horizontal court diagram - significantly taller and more proportional to an actual netball court */}
-        <div className="relative w-full mx-auto h-96 bg-green-100 rounded-lg border border-green-300 shadow-md">
-          {/* Court markings - only the three equal vertical sections for horizontal layout */}
-          <div className="absolute inset-0 flex flex-row">
-            <div className="w-1/3 border-r border-green-500"></div>
-            <div className="w-1/3 border-r border-green-500"></div>
-            <div className="w-1/3"></div>
-          </div>
-
-          {/* Updated position coordinates for horizontal court */}
-          {POSITIONS.map(position => {
-            const entry = rosterByQuarter[quarter]?.[position];
-            const playerName = getPlayerName(entry?.playerId);
-            const playerColor = getPlayerColor(entry?.playerId);
-            
-            // Use the player's avatar color for the background
-            const bgColor = playerName ? playerColor : 'white';
-            
-            // Use white text for player positions, red for unassigned
-            const textColor = playerName ? 'white' : '#ef4444'; // Red color for unassigned
-            
-            // New position coordinates for horizontal court with horizontal offsets
-            const horizontalPositions = {
-              // Attack end - left side
-              'GS': 'top-[25%] left-[13%] -translate-x-1/2 -translate-y-1/2',
-              'GA': 'top-[75%] left-[20%] -translate-x-1/2 -translate-y-1/2',
-              
-              // Mid-court - center
-              'WA': 'top-[25%] left-[47%] -translate-x-1/2 -translate-y-1/2',
-              'C': 'top-[50%] left-[50%] -translate-x-1/2 -translate-y-1/2',
-              'WD': 'top-[75%] left-[53%] -translate-x-1/2 -translate-y-1/2',
-              
-              // Defense end - right side
-              'GD': 'top-[25%] left-[80%] -translate-x-1/2 -translate-y-1/2',
-              'GK': 'top-[75%] left-[87%] -translate-x-1/2 -translate-y-1/2',
-            };
-            
-            const positionClass = horizontalPositions[position] || '';
-            
-            return (
-              <div key={position} className={`absolute ${positionClass}`}>
-                <div 
-                  style={{ 
-                    backgroundColor: bgColor,
-                    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.5)',
-                    border: playerName ? '3px solid white' : '2px solid red',
-                    width: '5rem',
-                    height: '5rem',
-                    borderRadius: '100%',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    padding: '0.25rem'
-                  }}
-                >
-                  <div className="font-bold text-center text-lg" style={{ color: textColor }}>{position}</div>
-                  {playerName && (
-                    <div className="text-sm text-center font-medium leading-tight" style={{ color: textColor }}>{playerName}</div>
-                  )}
-                  {!playerName && (
-                    <div className="text-sm text-red-500 text-center">Unassigned</div>
-                  )}
-                </div>
-              </div>
-            );
-          })}
+      <div className="relative h-[600px] border rounded-lg bg-gray-50 flex flex-col">
+        {/* Court layout */}
+        <div className="flex-1 relative border-b border-gray-300">
+          {/* Center third line */}
+          <div className="absolute left-0 right-0 top-1/3 border-b border-gray-300"></div>
+          <div className="absolute left-0 right-0 bottom-1/3 border-b border-gray-300"></div>
+          
+          {/* Center circle */}
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-24 h-24 rounded-full border border-gray-300"></div>
+          
+          {/* Goal circles */}
+          <div className="absolute top-5 left-1/2 transform -translate-x-1/2 w-20 h-20 rounded-full border border-gray-300"></div>
+          <div className="absolute bottom-5 left-1/2 transform -translate-x-1/2 w-20 h-20 rounded-full border border-gray-300"></div>
+          
+          {/* Render positions on court */}
+          {POSITIONS.map(position => renderPositionOnCourt(
+            position, 
+            getPositionStats(position, quarter)
+          ))}
         </div>
         
-        {/* Stats boxes in horizontal grid below the court */}
-        <div className="grid grid-cols-2 md:grid-cols-7 gap-3">
-          {/* All positions in a single row */}
-          {POSITIONS.map(position => {
-            const entry = rosterByQuarter[quarter]?.[position];
-            const playerName = getPlayerName(entry?.playerId);
-            const playerColor = getPlayerColor(entry?.playerId);
-            const playerStats = getPlayerPerformanceStats(position);
-            
-            return (
-              <div key={position} className="col-span-1">
-                <PositionBox 
-                  position={position as Position}
-                  playerName={playerName}
-                  playerColor={playerColor}
-                  playerStats={playerStats}
-                />
-              </div>
-            );
-          })}
+        <div className="p-4 bg-white border-t flex justify-between items-center">
+          <div className="text-sm text-gray-500">
+            Quarter {quarter} Score: {getQuarterScore(quarter).teamScore} - {getQuarterScore(quarter).opponentScore}
+          </div>
+          
+          <Button asChild variant="outline" size="sm">
+            <Link to={`/roster?game=${roster[0]?.gameId}`}>
+              <Edit className="mr-2 h-4 w-4" />
+              Edit Roster
+            </Link>
+          </Button>
         </div>
       </div>
     </div>
   );
 };
 
-// Position statistics renderer
+// Component for displaying stats by position
 const StatisticsByPosition = ({ gameStats }) => {
-  const [expanded, setExpanded] = useState<string | null>(null);
+  const [quarter, setQuarter] = useState(0); // 0 means all quarters
+  
+  // Filter stats by selected quarter
+  const filteredStats = useMemo(() => {
+    if (quarter === 0) return gameStats;
+    return gameStats.filter(stat => stat.quarter === quarter);
+  }, [gameStats, quarter]);
   
   // Group stats by position
-  const statsByPosition = useMemo(() => {
-    return gameStats.reduce((acc, stat) => {
-      if (!acc[stat.position]) {
-        acc[stat.position] = {};
-      }
+  const positionStats = useMemo(() => {
+    // Structure to hold aggregated stats for each position
+    const result = {};
+    
+    // Initialize stats for all positions
+    POSITIONS.forEach(position => {
+      result[position] = {
+        position,
+        goalsFor: 0,
+        missedGoals: 0,
+        goalsAgainst: 0,
+        rebounds: 0,
+        intercepts: 0,
+        badPass: 0,
+        handlingError: 0,
+        pickUp: 0, 
+        infringement: 0,
+        rating: null
+      };
+    });
+    
+    // Aggregate stats from all filtered stats
+    filteredStats.forEach(stat => {
+      // Skip null positions
+      if (!stat.position) return;
       
-      if (!acc[stat.position][stat.quarter]) {
-        acc[stat.position][stat.quarter] = {};
+      // Add to aggregated stats
+      const position = result[stat.position];
+      position.goalsFor += stat.goalsFor || 0;
+      position.missedGoals += stat.missedGoals || 0;
+      position.goalsAgainst += stat.goalsAgainst || 0;
+      position.rebounds += stat.rebounds || 0;
+      position.intercepts += stat.intercepts || 0;
+      position.badPass += stat.badPass || 0;
+      position.handlingError += stat.handlingError || 0;
+      position.pickUp += stat.pickUp || 0;
+      position.infringement += stat.infringement || 0;
+      // Only use rating from most recent quarter
+      if (stat.rating !== null && (position.rating === null || stat.quarter > position.quarter)) {
+        position.rating = stat.rating;
+        position.quarter = stat.quarter;
       }
-      
-      acc[stat.position][stat.quarter] = stat;
-      return acc;
-    }, {} as Record<string, Record<number, any>>);
-  }, [gameStats]);
+    });
+    
+    return Object.values(result);
+  }, [filteredStats]);
   
-  // Get combined stats across quarters
-  const combinedStats = useMemo(() => {
-    return Object.entries(statsByPosition).reduce((acc: any, [position, quarters]) => {
-      acc[position] = Object.values(quarters).reduce((stats: any, curr: any) => {
-        stats.goalsFor = (stats.goalsFor || 0) + (curr.goalsFor || 0);
-        stats.goalsAgainst = (stats.goalsAgainst || 0) + (curr.goalsAgainst || 0);
-        stats.missedGoals = (stats.missedGoals || 0) + (curr.missedGoals || 0);
-        stats.intercepts = (stats.intercepts || 0) + (curr.intercepts || 0);
-        stats.rebounds = (stats.rebounds || 0) + (curr.rebounds || 0);
-        stats.handlingError = (stats.handlingError || 0) + (curr.handlingError || 0);
-        stats.badPass = (stats.badPass || 0) + (curr.badPass || 0);
-        stats.pickUp = (stats.pickUp || 0) + (curr.pickUp || 0);
-        stats.infringement = (stats.infringement || 0) + (curr.infringement || 0);
-        return stats;
-      }, {});
-      return acc;
-    }, {});
-  }, [statsByPosition]);
+  // Render a quarter tab/button
+  const renderQuarterButton = (q) => (
+    <Button 
+      key={q} 
+      variant={quarter === q ? "default" : "outline"} 
+      size="sm"
+      onClick={() => setQuarter(q)}
+      className="min-w-[60px]"
+    >
+      {q === 0 ? "All" : `Q${q}`}
+    </Button>
+  );
   
   return (
-    <div className="space-y-4">
-      {POSITIONS.map(position => {
-        const stats = combinedStats[position] || {};
-        const isEmpty = Object.values(stats).every(val => !val);
-        
-        return (
-          <Card key={position} className={isEmpty ? 'border-dashed' : ''}>
-            <CardHeader className="pb-2">
-              <div className="flex justify-between items-center">
-                <CardTitle className="text-base">Position {position}</CardTitle>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => setExpanded(expanded === position ? null : position)}
-                >
-                  {expanded === position ? 'Hide Details' : 'Show Details'}
-                </Button>
+    <div>
+      <div className="mb-4 flex justify-center items-center">
+        <div className="flex gap-2">
+          {[0, 1, 2, 3, 4].map(q => renderQuarterButton(q))}
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {positionStats.map(stats => (
+          <div key={stats.position} className="border rounded-md shadow-sm p-4">
+            <div className="flex items-center mb-3">
+              <div className={`h-8 w-8 rounded-full bg-${stats.position.toLowerCase()}-100 
+                border border-${stats.position.toLowerCase()}-500 
+                flex items-center justify-center text-${stats.position.toLowerCase()}-800 
+                font-semibold text-xs mr-2`}
+              >
+                {stats.position}
               </div>
-            </CardHeader>
-            <CardContent>
-              {isEmpty ? (
-                <div className="text-center text-gray-400 py-2">No statistics recorded</div>
-              ) : (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-y-2 gap-x-4">
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Goals For:</span>
-                    <span className="font-medium">{stats.goalsFor || 0}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Goals Against:</span>
-                    <span className="font-medium">{stats.goalsAgainst || 0}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Intercepts:</span>
-                    <span className="font-medium">{stats.intercepts || 0}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Rebounds:</span>
-                    <span className="font-medium">{stats.rebounds || 0}</span>
-                  </div>
-                </div>
-              )}
+              <h3 className="font-semibold">{stats.position} Statistics</h3>
+            </div>
+            
+            <div className="space-y-2">
+              {/* Show relevant stats based on position */}
+              {stats.position === 'GS' || stats.position === 'GA' ? (
+                <>
+                  <StatItemBox label="Goals" value={stats.goalsFor} />
+                  <StatItemBox label="Missed Goals" value={stats.missedGoals} />
+                </>
+              ) : stats.position === 'GD' || stats.position === 'GK' ? (
+                <StatItemBox label="Goals Against" value={stats.goalsAgainst} />
+              ) : null}
               
-              {expanded === position && !isEmpty && (
-                <div className="mt-4 pt-4 border-t">
-                  <h4 className="font-medium mb-2">Quarter Breakdown</h4>
-                  <div className="space-y-3">
-                    {[1, 2, 3, 4].map(quarter => {
-                      const quarterStats = statsByPosition[position]?.[quarter] || {};
-                      const hasStats = Object.values(quarterStats).some(val => val);
-                      
-                      if (!hasStats) return (
-                        <div key={quarter} className="text-sm text-gray-400">
-                          Q{quarter}: No statistics recorded
-                        </div>
-                      );
-                      
-                      return (
-                        <div key={quarter} className="bg-gray-50 p-3 rounded-md">
-                          <div className="font-medium mb-2">Quarter {quarter}</div>
-                          <div className="grid grid-cols-2 md:grid-cols-3 gap-y-1 gap-x-4 text-sm">
-                            {quarterStats.goalsFor !== undefined && (
-                              <div className="flex justify-between">
-                                <span className="text-gray-500">Goals For:</span>
-                                <span>{quarterStats.goalsFor}</span>
-                              </div>
-                            )}
-                            {quarterStats.goalsAgainst !== undefined && (
-                              <div className="flex justify-between">
-                                <span className="text-gray-500">Goals Against:</span>
-                                <span>{quarterStats.goalsAgainst}</span>
-                              </div>
-                            )}
-                            {quarterStats.missedGoals !== undefined && (
-                              <div className="flex justify-between">
-                                <span className="text-gray-500">Missed Goals:</span>
-                                <span>{quarterStats.missedGoals}</span>
-                              </div>
-                            )}
-                            {quarterStats.intercepts !== undefined && (
-                              <div className="flex justify-between">
-                                <span className="text-gray-500">Intercepts:</span>
-                                <span>{quarterStats.intercepts}</span>
-                              </div>
-                            )}
-                            {quarterStats.rebounds !== undefined && (
-                              <div className="flex justify-between">
-                                <span className="text-gray-500">Rebounds:</span>
-                                <span>{quarterStats.rebounds}</span>
-                              </div>
-                            )}
-                            {quarterStats.handlingError !== undefined && (
-                              <div className="flex justify-between">
-                                <span className="text-gray-500">Handling Errors:</span>
-                                <span>{quarterStats.handlingError}</span>
-                              </div>
-                            )}
-                            {quarterStats.badPass !== undefined && (
-                              <div className="flex justify-between">
-                                <span className="text-gray-500">Bad Passes:</span>
-                                <span>{quarterStats.badPass}</span>
-                              </div>
-                            )}
-                            {quarterStats.pickUp !== undefined && (
-                              <div className="flex justify-between">
-                                <span className="text-gray-500">Pick Ups:</span>
-                                <span>{quarterStats.pickUp}</span>
-                              </div>
-                            )}
-                            {quarterStats.infringement !== undefined && (
-                              <div className="flex justify-between">
-                                <span className="text-gray-500">Infringements:</span>
-                                <span>{quarterStats.infringement}</span>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
+              {/* Common stats for all positions */}
+              <StatItemBox label="Rebounds" value={stats.rebounds} />
+              <StatItemBox label="Intercepts" value={stats.intercepts} />
+              <StatItemBox label="Bad Pass" value={stats.badPass} />
+              <StatItemBox label="Handling Errors" value={stats.handlingError} />
+              <StatItemBox label="Pick Ups" value={stats.pickUp} />
+              <StatItemBox label="Infringements" value={stats.infringement} />
+              
+              {/* Rating display */}
+              {stats.rating !== null && (
+                <div className="mt-3 pt-2 border-t">
+                  <div className="text-sm text-gray-500 mb-1">Coach Rating</div>
+                  <div className="flex items-center">
+                    <div className={`h-8 w-8 rounded-full 
+                      ${stats.rating >= 4 ? 'bg-green-500' : 
+                        stats.rating >= 3 ? 'bg-amber-500' : 
+                        stats.rating >= 2 ? 'bg-orange-500' : 'bg-red-500'} 
+                      text-white font-bold flex items-center justify-center`}
+                    >
+                      {stats.rating}
+                    </div>
+                    <div className="ml-2 text-sm">
+                      {stats.rating >= 4 ? 'Excellent' : 
+                       stats.rating >= 3 ? 'Good' : 
+                       stats.rating >= 2 ? 'Fair' : 'Needs Improvement'}
+                    </div>
                   </div>
                 </div>
               )}
-            </CardContent>
-          </Card>
-        );
-      })}
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
 
-// Quarter scores display
+// Component to display quarter scores
 const QuarterScores = ({ quarterScores, gameStatus }) => {
-  // Reshape the data to be quarter-by-quarter for easier rendering
-  const scoringByQuarter = useMemo(() => {
-    return quarterScores.reduce((acc, current, index) => {
+  // Calculate totals
+  const totals = useMemo(() => {
+    // Accumulate scores
+    const scoresByQuarter = quarterScores.reduce((acc, current, index) => {
       acc.push({
-        quarter: index + 1,
+        quarter: current.quarter,
         teamScore: current.teamScore,
         opponentScore: current.opponentScore
       });
       return acc;
     }, []);
+    
+    // Calculate total
+    const totalTeamScore = scoresByQuarter.reduce((sum, q) => sum + q.teamScore, 0);
+    const totalOpponentScore = scoresByQuarter.reduce((sum, q) => sum + q.opponentScore, 0);
+    
+    return {
+      scoresByQuarter,
+      totalTeamScore,
+      totalOpponentScore,
+      result: totalTeamScore > totalOpponentScore ? 'win' : totalTeamScore < totalOpponentScore ? 'loss' : 'draw'
+    };
   }, [quarterScores]);
   
-  // Calculate total scores
-  const totalTeamScore = quarterScores.reduce((sum, q) => sum + q.teamScore, 0);
-  const totalOpponentScore = quarterScores.reduce((sum, q) => sum + q.opponentScore, 0);
+  // Draw special badge if forfeit
+  const isForfeitGame = gameStatus === 'forfeit-win' || gameStatus === 'forfeit-loss';
   
-  // Calculate cumulative scores by quarter
-  const cumulativeScores = useMemo(() => {
-    let teamRunningTotal = 0;
-    let opponentRunningTotal = 0;
-    
-    return scoringByQuarter.map(score => {
-      teamRunningTotal += score.teamScore;
-      opponentRunningTotal += score.opponentScore;
-      
-      return {
-        quarter: score.quarter,
-        teamScore: score.teamScore,
-        opponentScore: score.opponentScore,
-        cumulativeTeamScore: teamRunningTotal,
-        cumulativeOpponentScore: opponentRunningTotal
-      };
-    });
-  }, [scoringByQuarter]);
+  // Determine full game result
+  let gameResult = null;
   
-  // Check if the team is winning, losing, or tied
-  let scoreStatus;
-  let statusColor;
-  
-  if (totalTeamScore > totalOpponentScore) {
-    scoreStatus = 'winning';
-    statusColor = 'bg-green-500';
-  } else if (totalTeamScore < totalOpponentScore) {
-    scoreStatus = 'losing';
-    statusColor = 'bg-red-500';
-  } else {
-    scoreStatus = 'tied';
-    statusColor = 'bg-amber-500';
+  if (gameStatus === 'completed' || isForfeitGame) {
+    if (isForfeitGame) {
+      gameResult = gameStatus === 'forfeit-win' ? 'FORFEIT WIN' : 'FORFEIT LOSS';
+    } else {
+      const { totalTeamScore, totalOpponentScore } = totals;
+      if (totalTeamScore > totalOpponentScore) {
+        gameResult = 'WIN';
+      } else if (totalTeamScore < totalOpponentScore) {
+        gameResult = 'LOSS';
+      } else {
+        gameResult = 'DRAW';
+      }
+    }
   }
   
+  // Function to render a quarter score
+  const renderQuarterScore = (score) => {
+    const { teamScore, opponentScore, quarter } = score;
+    const isWinningQuarter = teamScore > opponentScore;
+    const isLosingQuarter = teamScore < opponentScore;
+    const isDrawQuarter = teamScore === opponentScore;
+    
+    return (
+      <div 
+        key={quarter}
+        className={`px-4 py-2 rounded-md ${
+          isWinningQuarter ? 'bg-green-50 border border-green-200' : 
+          isLosingQuarter ? 'bg-red-50 border border-red-200' : 
+          'bg-gray-50 border border-gray-200'
+        }`}
+      >
+        <div className="text-xs font-medium text-gray-500 mb-1">Q{quarter}</div>
+        <div className="text-lg font-bold">
+          {teamScore} - {opponentScore}
+        </div>
+      </div>
+    );
+  };
+  
   return (
-    <div>
-      <div className="mt-4 max-w-2xl mx-auto">
-        <div className={`rounded-md overflow-hidden border ${
-          totalTeamScore > totalOpponentScore ? 'border-green-300' :
-          totalTeamScore < totalOpponentScore ? 'border-red-300' : 'border-amber-300'
-        }`}>
-          <div className={`text-white p-4 text-center ${statusColor}`}>
-            <div className="flex justify-center items-center text-xl">
-              <span className="font-bold text-3xl">{totalTeamScore}</span>
-              <span className="mx-4">-</span>
-              <span className="font-bold text-3xl">{totalOpponentScore}</span>
-            </div>
-            {gameStatus && (
-              <div className="mt-1 text-sm font-medium">
-                {gameStatus.charAt(0).toUpperCase() + gameStatus.slice(1).replace('-', ' ')}
-              </div>
-            )}
+    <div className="mt-2 border rounded-md p-4 bg-white">
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-lg font-semibold">Quarter Scores</h3>
+        
+        {gameResult && (
+          <div className={`px-3 py-1 rounded-md text-sm font-semibold ${
+            gameResult === 'WIN' || gameResult === 'FORFEIT WIN' ? 'bg-green-100 text-green-800' : 
+            gameResult === 'LOSS' || gameResult === 'FORFEIT LOSS' ? 'bg-red-100 text-red-800' : 
+            'bg-gray-100 text-gray-800'
+          }`}>
+            {gameResult}
           </div>
-          <div className="bg-white p-6">
-            <div className="grid grid-cols-2 gap-10">
-              <div className="border-r pr-4">
-                <div className="text-center mb-3 font-medium text-base text-gray-700">Quarter Scores</div>
-                <div className="grid grid-cols-4 gap-4">
-                  {scoringByQuarter.map(score => (
-                    <div key={`q-${score.quarter}`} className="text-center">
-                      <div className="text-xs text-gray-500 mb-1">Q{score.quarter}</div>
-                      <div className="font-medium text-lg">
-                        {score.teamScore}-{score.opponentScore}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div className="pl-4">
-                <div className="text-center mb-3 font-medium text-base text-gray-700">Game Scores</div>
-                <div className="grid grid-cols-4 gap-4">
-                  {cumulativeScores.map(score => (
-                    <div key={`cumulative-${score.quarter}`} className="text-center">
-                      <div className="text-xs text-gray-500 mb-1">Q{score.quarter}</div>
-                      <div className="font-medium text-lg">
-                        {score.cumulativeTeamScore}-{score.cumulativeOpponentScore}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
+        )}
+      </div>
+      
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+        {totals.scoresByQuarter.map(renderQuarterScore)}
+      </div>
+      
+      <div className="flex items-center justify-between pt-3 border-t border-gray-200">
+        <div className="text-lg">
+          <span className="font-semibold">Final Score:</span>
+          <span className="ml-2 font-bold text-xl">
+            {totals.totalTeamScore} - {totals.totalOpponentScore}
+          </span>
+        </div>
+        
+        <div className="text-sm text-gray-500">
+          {isForfeitGame ? (
+            <div className="text-red-500 font-semibold">
+              {gameStatus === 'forfeit-win' ? 'Opposition Forfeit' : 'Team Forfeit'}
             </div>
-          </div>
+          ) : gameStatus === 'completed' ? (
+            <div className="text-green-500 font-semibold">Game Complete</div>
+          ) : gameStatus === 'in-progress' ? (
+            <div className="text-amber-500 font-semibold">Game In Progress</div>
+          ) : (
+            <div className="text-blue-500 font-semibold">Upcoming Game</div>
+          )}
         </div>
       </div>
     </div>
   );
 };
 
+// Game Details Component
 export default function GameDetails() {
-  const { id } = useParams();
-  const gameId = parseInt(id);
+  const { gameId } = useParams();
+  const [activeTab, setActiveTab] = useState("roster");
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const queryClient = useQueryClient();
   const { toast } = useToast();
   
-  // State for edit game dialog
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  
-  const [activeTab, setActiveTab] = useState('roster');
-  
   // Fetch game data
-  const { 
-    data: game,
-    isLoading: isLoadingGame
-  } = useQuery({
-    queryKey: ['/api/games', gameId],
-    queryFn: () => fetch(`/api/games/${gameId}`).then(res => res.json()),
-    enabled: !isNaN(gameId)
+  const { data: game, isLoading: isLoadingGame } = useQuery({
+    queryKey: ['/api/games', parseInt(gameId)],
+    enabled: !!gameId
   });
   
-  // Fetch players
-  const { 
-    data: players,
-    isLoading: isLoadingPlayers
-  } = useQuery({
-    queryKey: ['/api/players'],
-    queryFn: () => fetch('/api/players').then(res => res.json())
-  });
-  
-  // Fetch opponents
-  const { 
-    data: opponents,
-    isLoading: isLoadingOpponents
-  } = useQuery({
+  // Fetch opponents for name lookup
+  const { data: opponents, isLoading: isLoadingOpponents } = useQuery({
     queryKey: ['/api/opponents'],
-    queryFn: () => fetch('/api/opponents').then(res => res.json())
   });
   
-  // Fetch roster for this game
-  const { 
-    data: roster,
-    isLoading: isLoadingRoster,
-    refetch: refetchRosters
-  } = useQuery({
-    queryKey: ['/api/games', gameId, 'rosters'],
-    queryFn: () => fetch(`/api/games/${gameId}/rosters`).then(res => res.json()),
-    enabled: !isNaN(gameId)
+  // Fetch players for name lookup
+  const { data: players, isLoading: isLoadingPlayers } = useQuery({
+    queryKey: ['/api/players'],
   });
   
-  // Force refetch when component mounts or route changes
-  useEffect(() => {
-    if (gameId && !isNaN(gameId)) {
-      console.log("Loaded roster data:", roster);
-      // Always refetch roster data when navigating to this page
-      refetchRosters();
-    }
-  }, [gameId, refetchRosters]);
-  
-  // Fetch game stats
-  const { 
-    data: gameStats,
-    isLoading: isLoadingStats
-  } = useQuery({
-    queryKey: ['/api/games', gameId, 'stats'],
-    queryFn: () => fetch(`/api/games/${gameId}/stats`).then(res => res.json()),
-    enabled: !isNaN(gameId)
+  // Fetch roster data for the game
+  const { data: roster, isLoading: isLoadingRoster } = useQuery({
+    queryKey: ['/api/games', parseInt(gameId), 'rosters'],
+    enabled: !!gameId
   });
   
-  // Calculate quarter scores
+  // Fetch game statistics
+  const { data: gameStats, isLoading: isLoadingStats } = useQuery({
+    queryKey: ['/api/games', parseInt(gameId), 'stats'],
+    enabled: !!gameId
+  });
+
+  // Derive opponent name from the game data
+  const opponentName = useMemo(() => {
+    if (!game || !opponents) return "";
+    return getOpponentName(opponents, game.opponentId);
+  }, [game, opponents]);
+  
+  // Calculate quarter scores from the statistics
   const quarterScores = useMemo(() => {
     if (!gameStats || !game) return [];
     return calculateQuarterScores(gameStats, game);
   }, [gameStats, game]);
   
-  // Loading state
-  if (isLoadingGame || isLoadingPlayers || isLoadingOpponents || isLoadingRoster) {
+  // Check if this is a forfeit game
+  const isForfeitGame = game?.status === 'forfeit-win' || game?.status === 'forfeit-loss';
+  
+  // Show loading state while data is being fetched
+  if (isLoadingGame || isLoadingOpponents) {
     return (
-      <div className="py-10 text-center">
-        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mb-4"></div>
-        <p>Loading game details...</p>
+      <div className="flex items-center justify-center h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
       </div>
     );
   }
   
+  // Handle case when game is not found
   if (!game) {
     return (
-      <div className="py-10 text-center">
-        <h1 className="text-2xl font-bold mb-4">Game Not Found</h1>
-        <p className="mb-6">The game you're looking for doesn't exist or has been removed.</p>
-        <Button variant="outline" asChild>
-          <Link to="/games">
-            <ChevronLeft className="mr-2 h-4 w-4" />
-            Back to Games
-          </Link>
-        </Button>
+      <div className="container mx-auto py-10">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Game not found</h1>
+          <p className="mb-6">The game you're looking for doesn't exist or has been deleted.</p>
+          <Button asChild>
+            <Link to="/games">
+              <ChevronLeft className="mr-2 h-4 w-4" />
+              Back to Games
+            </Link>
+          </Button>
+        </div>
       </div>
     );
   }
   
-  // Check if this is a forfeit game, which has special display and restrictions
-  const isForfeitGame = game.status === 'forfeit-win' || game.status === 'forfeit-loss';
-  const opponentName = getOpponentName(opponents || [], game.opponentId);
-
+  // Main render
   return (
-    <div className="container py-8 mx-auto">
+    <div className="container mx-auto py-6 pb-10 max-w-5xl">
       <Helmet>
-        <title>Game Details | Netball Stats Tracker</title>
+        <title>{TEAM_NAME} vs {opponentName} | Game Details</title>
       </Helmet>
       
-      <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-gray-50 p-6 rounded-lg">
-        <div>
-          <div className="flex items-center gap-3 mb-1">
+      <div className="mb-8">
+        <div className="mb-4">
+          <div className="flex">
             <Button 
               variant="outline" 
-              size="sm" 
+              size="sm"
               asChild
               className="border-gray-200 text-gray-700 hover:bg-gray-100 hover:text-gray-900"
             >
@@ -1106,17 +1000,18 @@ export default function GameDetails() {
             </Button>
           </div>
           
-          <h1 className="text-2xl font-bold">
-            {game.opponentId ? (
-              <span>
-                {TEAM_NAME} vs {opponentName}
-              </span>
-            ) : (
-              <span>BYE Round</span>
-            )}
-          </h1>
-          
-          <div className="flex flex-wrap gap-2 mt-4 mb-4">
+          <div className="flex justify-between items-start mt-4">
+            <h1 className="text-2xl font-bold">
+              {game.opponentId ? (
+                <span>
+                  {TEAM_NAME} vs {opponentName}
+                </span>
+              ) : (
+                <span>BYE Round</span>
+              )}
+            </h1>
+            
+            <div className="flex flex-wrap gap-2 justify-end">
             
             {/* Roster Button */}
             {!game.isBye && (
@@ -1237,7 +1132,7 @@ export default function GameDetails() {
                         
                         // Invalidate queries to refresh data
                         queryClient.invalidateQueries({
-                          queryKey: ['/api/games', gameId],
+                          queryKey: ['/api/games', parseInt(gameId)],
                         });
                         queryClient.invalidateQueries({
                           queryKey: ['/api/games'],
@@ -1262,6 +1157,7 @@ export default function GameDetails() {
                 )}
               </DialogContent>
             </Dialog>
+            </div>
           </div>
           
           <div className="text-gray-500">
@@ -1306,7 +1202,7 @@ export default function GameDetails() {
                 <h3 className="text-lg font-medium mb-2">No roster assigned</h3>
                 <p className="text-gray-500 mb-4">There are no positions assigned for this game yet.</p>
                 <Button asChild>
-                  <Link to={`/game/${gameId}/roster`}>
+                  <Link to={`/roster?game=${gameId}`}>
                     <Edit className="mr-2 h-4 w-4" />
                     Set Up Roster
                   </Link>
@@ -1331,7 +1227,7 @@ export default function GameDetails() {
                 <h3 className="text-lg font-medium mb-2">No statistics recorded</h3>
                 <p className="text-gray-500 mb-4">There are no statistics recorded for this game yet.</p>
                 <Button asChild>
-                  <Link to={`/games/${gameId}/stats`}>
+                  <Link to={`/game/${gameId}/livestats`}>
                     <Edit className="mr-2 h-4 w-4" />
                     Record Statistics
                   </Link>
@@ -1349,28 +1245,24 @@ export default function GameDetails() {
                   No statistics are recorded for forfeit games.
                 </p>
               </div>
-            ) : (roster && roster.length > 0 && gameStats && gameStats.length > 0) ? (
+            ) : roster && roster.length > 0 && gameStats && gameStats.length > 0 ? (
               <PlayerStatsByQuarter 
                 roster={roster} 
                 players={players || []}
-                gameStats={gameStats || []}
+                gameStats={gameStats}
               />
             ) : (
               <div className="text-center py-10 border rounded-lg bg-gray-50">
-                <h3 className="text-lg font-medium mb-2">No data available</h3>
+                <h3 className="text-lg font-medium mb-2">No statistics recorded</h3>
                 <p className="text-gray-500 mb-4">
-                  {!roster || roster.length === 0 
-                    ? "There are no positions assigned for this game yet." 
-                    : "There are no statistics recorded for this game yet."}
+                  {roster && roster.length > 0 
+                    ? "There are no statistics recorded for this game yet."
+                    : "You need to set up the roster before recording statistics."}
                 </p>
                 <Button asChild>
-                  <Link to={!roster || roster.length === 0 
-                    ? `/game/${gameId}/roster` 
-                    : `/games/${gameId}/stats`}>
+                  <Link to={roster && roster.length > 0 ? `/game/${gameId}/livestats` : `/roster?game=${gameId}`}>
                     <Edit className="mr-2 h-4 w-4" />
-                    {!roster || roster.length === 0 
-                      ? "Set Up Roster" 
-                      : "Record Statistics"}
+                    {roster && roster.length > 0 ? "Record Statistics" : "Set Up Roster"}
                   </Link>
                 </Button>
               </div>
