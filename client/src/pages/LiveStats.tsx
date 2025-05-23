@@ -877,7 +877,7 @@ export default function LiveStats() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => navigate(`/games/${gameId}`)}
+            onClick={() => navigate(`/game/${gameId}`)}
             className="border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-gray-900"
           >
             <ChevronLeft className="mr-1 h-4 w-4" />
