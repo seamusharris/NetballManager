@@ -18,7 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { 
-  ChevronLeft, Edit, BarChart3, ClipboardList, Activity
+  ChevronLeft, Edit, BarChart3, ClipboardList, Activity, CalendarRange, ActivitySquare
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { formatDate, cn } from '@/lib/utils';
