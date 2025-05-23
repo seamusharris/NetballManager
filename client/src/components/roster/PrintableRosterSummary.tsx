@@ -312,7 +312,7 @@ export default function PrintableRosterSummary({ game, opponent, roster, players
           </TableHeader>
           <TableBody>
             <TableRow>
-              <TableCell className="font-medium text-center border-r border-gray-200">Off</TableCell>
+              <TableCell className="font-medium text-center border-r border-gray-200"></TableCell>
               <TableCell className="text-left pl-4 border-r border-gray-200">
                 {offPlayersByQuarter['1'].length > 0 
                   ? offPlayersByQuarter['1'].map(id => getPlayerName(id)).join(', ') 
