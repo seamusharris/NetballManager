@@ -599,9 +599,9 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
               'GA': 'top-[75%] left-[20%] -translate-x-1/2 -translate-y-1/2',
               
               // Mid-court - center
-              'WA': 'top-[25%] left-[47%] -translate-x-1/2 -translate-y-1/2',
+              'WA': 'top-[25%] left-[43%] -translate-x-1/2 -translate-y-1/2',
               'C': 'top-[50%] left-[50%] -translate-x-1/2 -translate-y-1/2',
-              'WD': 'top-[75%] left-[53%] -translate-x-1/2 -translate-y-1/2',
+              'WD': 'top-[75%] left-[57%] -translate-x-1/2 -translate-y-1/2',
               
               // Defense end - right side
               'GD': 'top-[25%] left-[80%] -translate-x-1/2 -translate-y-1/2',
