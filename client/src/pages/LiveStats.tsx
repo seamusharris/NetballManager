@@ -10,7 +10,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Game, Player, GameStat, Roster, allPositions, Position } from '@shared/schema';
 import { getInitials, formatShortDate, positionLabels, generatePlayerAvatarColor } from '@/lib/utils';
-import { Save, Undo, Redo, Plus, Minus, RefreshCw, RotateCcw } from 'lucide-react';
+import { Save, Undo, Redo, Plus, Minus, RefreshCw, RotateCcw, ChevronLeft } from 'lucide-react';
 import { Helmet } from 'react-helmet';
 
 // Stat types that can be tracked
@@ -873,7 +873,7 @@ export default function LiveStats() {
           </p>
         </div>
         
-        <div className="flex items-center gap-2">
+        <div className="flex justify-between items-center gap-2 w-full">
           <Button
             variant="outline"
             size="sm"
@@ -899,9 +899,9 @@ export default function LiveStats() {
               variant="outline"
               size="sm"
               onClick={resetAllStats}
-              className="border-red-500 hover:bg-red-50"
+              className="border-red-500 text-red-700 hover:bg-red-50 hover:text-red-900"
             >
-              <RefreshCw className="h-4 w-4 mr-1 text-red-600" />
+              <RefreshCw className="h-4 w-4 mr-1" />
               Reset All Stats
             </Button>
             
@@ -910,6 +910,7 @@ export default function LiveStats() {
               size="sm"
               onClick={saveAllStats}
               disabled={saveInProgress}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
             >
               <Save className="h-4 w-4 mr-1" />
               Save All Stats
