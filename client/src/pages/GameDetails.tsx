@@ -301,15 +301,15 @@ const PlayerStatsByQuarter = ({ roster, players, gameStats }: { roster: any[], p
                 {hasDefensiveStats && (
                   <StatItemBox label="Goals Against" value={relevantStats.goalsAgainst} />
                 )}
-                {relevantStats.rebounds > 0 && <StatItemBox label="Rebounds" value={relevantStats.rebounds} />}
-                {relevantStats.intercepts > 0 && <StatItemBox label="Intercepts" value={relevantStats.intercepts} />}
+                <StatItemBox label="Rebounds" value={relevantStats.rebounds} />
+                <StatItemBox label="Intercepts" value={relevantStats.intercepts} />
               </div>
               <div className="space-y-2">
                 {/* Right column stats */}
-                {relevantStats.badPass > 0 && <StatItemBox label="Bad Pass" value={relevantStats.badPass} />}
-                {relevantStats.handlingError > 0 && <StatItemBox label="Handling Errors" value={relevantStats.handlingError} />}
-                {relevantStats.pickUp > 0 && <StatItemBox label="Pick Ups" value={relevantStats.pickUp} />}
-                {relevantStats.infringement > 0 && <StatItemBox label="Infringements" value={relevantStats.infringement} />}
+                <StatItemBox label="Bad Pass" value={relevantStats.badPass} />
+                <StatItemBox label="Handling Errors" value={relevantStats.handlingError} />
+                <StatItemBox label="Pick Ups" value={relevantStats.pickUp} />
+                <StatItemBox label="Infringements" value={relevantStats.infringement} />
               </div>
             </div>
           </div>
