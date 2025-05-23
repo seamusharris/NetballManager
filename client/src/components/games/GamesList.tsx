@@ -450,61 +450,7 @@ export default function GamesList({
                     <TableCell className="px-6 py-4 whitespace-nowrap">
                       <GameScoreDisplay gameId={game.id} compact={true} />
                     </TableCell>
-                    <TableCell className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex space-x-2">
-                        {game.isBye || isForfeitGame(game) ? (
-                          <span className="text-gray-400 text-xs italic">
-                            {game.isBye ? "No actions available for BYE rounds" : "No actions available for forfeit games"}
-                          </span>
-                        ) : (
-                          <>
-                            <button 
-                              onClick={() => window.location.href = `/roster?game=${game.id}`}
-                              title={
-                                gameRosterStatus[game.id] === 'complete' 
-                                  ? "All positions are filled for all quarters" 
-                                  : gameRosterStatus[game.id] === 'partial'
-                                    ? "Some positions are filled, but roster is incomplete"
-                                    : "No positions are assigned yet"
-                              }
-                              className={`inline-flex items-center justify-center rounded-md text-xs py-1 px-2 border ${
-                                gameRosterStatus[game.id] === 'complete'
-                                  ? "bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100" 
-                                  : gameRosterStatus[game.id] === 'partial'
-                                    ? "bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100"
-                                    : "bg-red-50 border-red-200 text-red-700 hover:bg-red-100"
-                              }`}
-                            >
-                              <CalendarRange className={`h-3 w-3 mr-1 ${
-                                gameRosterStatus[game.id] === 'complete'
-                                  ? "text-emerald-600"
-                                  : gameRosterStatus[game.id] === 'partial'
-                                    ? "text-amber-600"
-                                    : "text-red-600"
-                              }`} />
-                              Roster
-                            </button>
-                            
 
-                            
-                            {!game.isBye && 
-                             !game.completed && 
-                             gameRosterStatus[game.id] === 'complete' && (
-                              <button 
-                                onClick={(e) => {
-                                  e.stopPropagation(); // Prevent row click
-                                  navigate(`/game/${game.id}/livestats`);
-                                }}
-                                className="inline-flex items-center justify-center rounded-md text-xs py-1 px-2 border border-purple-200 bg-purple-50 text-purple-700 hover:bg-purple-100"
-                              >
-                                <ActivitySquare className="h-3 w-3 mr-1 text-purple-600" />
-                                Live Stats
-                              </button>
-                            )}
-                          </>
-                        )}
-                      </div>
-                    </TableCell>
 
                   </TableRow>
                 ))
