@@ -669,6 +669,9 @@ export default function GameDetails() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   
+  // State for edit game dialog
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  
   const [activeTab, setActiveTab] = useState('roster');
   
   // Fetch game data
