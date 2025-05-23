@@ -10,7 +10,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Game, Player, GameStat, Roster, allPositions, Position } from '@shared/schema';
 import { getInitials, formatShortDate, positionLabels, generatePlayerAvatarColor } from '@/lib/utils';
-import { Save, Undo, Redo, Plus, Minus } from 'lucide-react';
+import { Save, Undo, Redo, Plus, Minus, RefreshCw, RotateCcw } from 'lucide-react';
 import { Helmet } from 'react-helmet';
 
 // Stat types that can be tracked
@@ -470,6 +470,74 @@ export default function LiveStats() {
     }
   };
   
+  // Reset stats for the current quarter only
+  const resetCurrentQuarter = () => {
+    // Save current state for undo
+    setUndoStack([...undoStack, JSON.parse(JSON.stringify(liveStats))]);
+    setRedoStack([]);
+    
+    setLiveStats(prev => {
+      const newStats = JSON.parse(JSON.stringify(prev));
+      
+      // For each player, reset only the current quarter's stats
+      Object.keys(newStats).forEach(playerId => {
+        if (newStats[playerId][currentQuarter]) {
+          // Preserve the position information but reset all stat values
+          const position = newStats[playerId][currentQuarter].position;
+          newStats[playerId][currentQuarter] = { ...emptyQuarterStats };
+          
+          // Add back the position information
+          if (position) {
+            newStats[playerId][currentQuarter].position = position;
+          }
+        }
+      });
+      
+      return newStats;
+    });
+    
+    toast({
+      title: "Quarter Reset",
+      description: `All stats for Quarter ${currentQuarter} have been reset to zero.`,
+      variant: "default"
+    });
+  };
+  
+  // Reset all stats for all quarters
+  const resetAllStats = () => {
+    // Save current state for undo
+    setUndoStack([...undoStack, JSON.parse(JSON.stringify(liveStats))]);
+    setRedoStack([]);
+    
+    setLiveStats(prev => {
+      const newStats = JSON.parse(JSON.stringify(prev));
+      
+      // For each player, reset all quarters
+      Object.keys(newStats).forEach(playerId => {
+        for (let quarter = 1; quarter <= 4; quarter++) {
+          if (newStats[playerId][quarter]) {
+            // Preserve the position information
+            const position = newStats[playerId][quarter].position;
+            newStats[playerId][quarter] = { ...emptyQuarterStats };
+            
+            // Add back the position information
+            if (position) {
+              newStats[playerId][quarter].position = position;
+            }
+          }
+        }
+      });
+      
+      return newStats;
+    });
+    
+    toast({
+      title: "All Stats Reset",
+      description: "All statistics have been reset to zero for all quarters.",
+      variant: "default"
+    });
+  };
+  
   // Save all stats to the database using pure position-based approach
   const saveAllStats = async () => {
     if (!liveStats || Object.keys(liveStats).length === 0) {
@@ -814,15 +882,37 @@ export default function LiveStats() {
             Back to Games
           </Button>
           
-          <Button
-            variant="default"
-            size="sm"
-            onClick={saveAllStats}
-            disabled={saveInProgress}
-          >
-            <Save className="h-4 w-4 mr-1" />
-            Save All Stats
-          </Button>
+          <div className="flex space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={resetCurrentQuarter}
+              className="border-amber-500 hover:bg-amber-50"
+            >
+              <RotateCcw className="h-4 w-4 mr-1 text-amber-600" />
+              Reset Quarter {currentQuarter}
+            </Button>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={resetAllStats}
+              className="border-red-500 hover:bg-red-50"
+            >
+              <RefreshCw className="h-4 w-4 mr-1 text-red-600" />
+              Reset All Stats
+            </Button>
+            
+            <Button
+              variant="default"
+              size="sm"
+              onClick={saveAllStats}
+              disabled={saveInProgress}
+            >
+              <Save className="h-4 w-4 mr-1" />
+              Save All Stats
+            </Button>
+          </div>
         </div>
       </div>
       
