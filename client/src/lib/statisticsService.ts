@@ -1,6 +1,12 @@
 import { GameStat, Game, Roster, Position, Player, allPositions, GameStatus } from '@shared/schema';
 import { apiRequest } from './queryClient';
 import { isForfeitGame, getForfeitGameScore } from './utils';
+import { 
+  getCachedScores, 
+  cacheScores, 
+  clearGameCache, 
+  invalidateGameCache 
+} from './scoresCache';
 
 /**
  * Interface for game score information

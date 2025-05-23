@@ -1,10 +1,17 @@
 import { useQueries, useQueryClient } from '@tanstack/react-query';
 import { statisticsService, GameScores } from '@/lib/statisticsService';
-import { getCachedScores, cacheScores } from '@/lib/scoresCache';
+import { 
+  getCachedScores, 
+  cacheScores,
+  invalidateGameCache, 
+  clearGameCache 
+} from '@/lib/scoresCache';
+import { apiRequest } from '@/lib/queryClient';
 
 /**
- * Custom hook to fetch multiple game scores efficiently
- * This hook handles batching and smart caching to prevent redundant API calls
+ * Custom hook to fetch multiple game scores efficiently with enhanced global caching
+ * This hook uses a smart caching strategy to avoid redundant API calls and calculations,
+ * with cache that persists across component unmounts and page navigation
  * 
  * @param gameIds - Array of game IDs to fetch scores for
  * @param forceFresh - Whether to force fresh data (bypass cache)
@@ -12,25 +19,56 @@ import { getCachedScores, cacheScores } from '@/lib/scoresCache';
 export function useGamesScores(gameIds: number[], forceFresh: boolean = false) {
   const queryClient = useQueryClient();
   
-  // Use TanStack Query's useQueries for parallel fetching
+  // Log how many games we're fetching scores for
+  if (gameIds.length > 0) {
+    console.log(`Batch fetching stats for ${gameIds.length} games via React Query`);
+  }
+  
+  // Use TanStack Query's useQueries for parallel fetching with enhanced caching
   const results = useQueries({
     queries: gameIds.map(gameId => {
       return {
-        queryKey: ['gameScores', gameId, forceFresh ? Date.now().toString() : ''],
+        queryKey: ['gameScores', gameId, forceFresh ? Date.now().toString() : 'cached'],
         queryFn: async () => {
-          // Try to get from memory cache first (fastest option)
+          // First check if this is a forfeit game (special case)
+          const game = await apiRequest(`/api/games/${gameId}`);
+          
+          // Step 1: Try to get from global memory cache first (fastest option)
           if (!forceFresh) {
-            const cached = getCachedScores(gameId);
-            if (cached) return cached;
+            // For forfeit games, always include game status when checking cache
+            if (game.status === 'forfeit-win' || game.status === 'forfeit-loss') {
+              const cached = getCachedScores(gameId, undefined, game.status);
+              if (cached) return cached;
+            } else {
+              const cached = getCachedScores(gameId);
+              if (cached) return cached;
+            }
           }
           
-          // Fetch from API and store in cache
+          // Step 2: Fetch stats and calculate fresh scores
+          const stats = await statisticsService.getGameStats(gameId);
+          
+          // For forfeit games, use special handling
+          if (game.status === 'forfeit-win' || game.status === 'forfeit-loss') {
+            console.log(`Forfeit game detected (ID: ${gameId}, status: ${game.status}), returning appropriate forfeit score`);
+            const forfeitScore = await statisticsService.calculateGameScores(gameId, forceFresh);
+            // Cache the forfeit score with game status
+            cacheScores(gameId, forfeitScore, stats, game.status);
+            return forfeitScore;
+          }
+          
+          // Regular game calculation
           const scores = await statisticsService.calculateGameScores(gameId, forceFresh);
-          cacheScores(gameId, scores);
+          
+          // Cache the calculated scores in global cache
+          cacheScores(gameId, scores, stats);
+          
           return scores;
         },
-        staleTime: forceFresh ? 0 : 5 * 60 * 1000, // 0 for fresh, 5 minutes otherwise
-        cacheTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
+        staleTime: forceFresh ? 0 : 15 * 60 * 1000, // 0 for fresh, 15 minutes otherwise
+        cacheTime: 30 * 60 * 1000, // Keep in cache for 30 minutes
+        // Enable this query if the game ID is valid
+        enabled: gameId > 0,
       };
     }),
   });
