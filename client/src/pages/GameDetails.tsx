@@ -1116,7 +1116,7 @@ export default function GameDetails() {
             )}
           </h1>
           
-          <div className="flex flex-wrap gap-2 mt-4 mb-4">
+          <div className="flex flex-wrap gap-2 mt-4 mb-4 justify-end">
             
             {/* Roster Button */}
             {!game.isBye && (
