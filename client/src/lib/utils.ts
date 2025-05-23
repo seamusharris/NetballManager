@@ -92,77 +92,10 @@ export function generateRandomColor(seed: string): string {
   return `hsl(${hue}, 60%, 50%)`;
 }
 
-export function generatePlayerAvatarColor(playerId?: number | null): string {
-  // Comprehensive set of visually distinct colors for avatars
-  // Using a wide variety of colors to minimize the chance of duplicates
-  const avatarColors = [
-    // Primary palette - bright and distinct
-    'bg-blue-600',      // Blue
-    'bg-purple-600',    // Purple
-    'bg-pink-600',      // Pink
-    'bg-green-600',     // Green
-    'bg-teal-600',      // Teal
-    'bg-orange-500',    // Orange
-    'bg-red-500',       // Red
-    'bg-yellow-600',    // Yellow
-    'bg-indigo-600',    // Indigo
-    'bg-cyan-600',      // Cyan
-    'bg-amber-600',     // Amber
-    'bg-lime-600',      // Lime
-    'bg-emerald-600',   // Emerald
-    'bg-violet-600',    // Violet
-    'bg-fuchsia-600',   // Fuchsia
-    'bg-rose-600',      // Rose
-    'bg-sky-600',       // Sky blue
-    'bg-pink-500',      // Light pink
-    
-    // Secondary palette - darker variants
-    'bg-blue-800',      // Dark blue
-    'bg-purple-800',    // Dark purple
-    'bg-pink-800',      // Dark pink
-    'bg-green-800',     // Dark green
-    'bg-teal-800',      // Dark teal
-    'bg-orange-800',    // Dark orange
-    'bg-red-800',       // Dark red
-    'bg-yellow-800',    // Dark yellow
-    'bg-indigo-800',    // Dark indigo
-    'bg-cyan-800',      // Dark cyan
-    'bg-amber-800',     // Dark amber
-    'bg-lime-800',      // Dark lime
-    'bg-emerald-800',   // Dark emerald
-    'bg-violet-800',    // Dark violet
-    'bg-fuchsia-800',   // Dark fuchsia
-    'bg-rose-800',      // Dark rose
-    'bg-sky-800',       // Dark sky blue
-    
-    // Tertiary palette - lighter variants for even more options
-    'bg-blue-400',      // Light blue
-    'bg-purple-400',    // Light purple
-    'bg-pink-400',      // Light pink
-    'bg-green-400',     // Light green
-    'bg-teal-400',      // Light teal
-    'bg-orange-400',    // Light orange
-    'bg-red-400',       // Light red
-    'bg-yellow-400',    // Light yellow
-    'bg-indigo-400',    // Light indigo
-    'bg-cyan-400',      // Light cyan
-    'bg-amber-400',     // Light amber
-    'bg-lime-400',      // Light lime
-    'bg-emerald-400',   // Light emerald
-    'bg-violet-400',    // Light violet
-    'bg-fuchsia-400',   // Light fuchsia
-    'bg-rose-400',      // Light rose
-    'bg-sky-400',       // Light sky blue
-  ];
-  
-  if (!playerId) return 'bg-gray-500'; // Default fallback if no player id
-  
-  // Use a consistent color assignment based on player ID
-  // This ensures the same player always gets the same color
-  const seed = (playerId * 31) + (playerId % 17); // Using prime numbers for better distribution
-  const hashIndex = Math.abs(seed % avatarColors.length);
-  
-  return avatarColors[hashIndex];
+export function generatePlayerAvatarColor(): string {
+  // Just return a default fallback color
+  // All player colors should come from their database records
+  return 'bg-gray-500';
 }
 
 export function calculateTotalGoals(stats: any[], forTeam: boolean = true): number {
