@@ -805,6 +805,21 @@ export default function GameDetails() {
         <title>Game Details | Netball Stats Tracker</title>
       </Helmet>
       
+      {/* Edit Game Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Edit Game</DialogTitle>
+          </DialogHeader>
+          <GameForm 
+            game={game} 
+            opponents={opponents || []} 
+            onSubmit={handleGameSubmit}
+            isSubmitting={updateGameMutation.isPending}
+          />
+        </DialogContent>
+      </Dialog>
+      
       <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <div className="flex items-center gap-3 mb-1">
