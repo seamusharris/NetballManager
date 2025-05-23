@@ -836,8 +836,8 @@ export default function GameDetails() {
               className="bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100"
               onClick={() => {
                 // Use Link programmatically to navigate to games with edit parameter
-                // This will be caught by the Games component and show the edit dialog
-                window.location.href = `/games?edit=${gameId}`;
+                // Include returnTo parameter to come back to game details after editing
+                window.location.href = `/games?edit=${gameId}&returnTo=gameDetails`;
               }}
             >
               <Edit className="mr-2 h-4 w-4 text-blue-600" />
