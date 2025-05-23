@@ -408,7 +408,7 @@ export default function GamesList({
                       {game.isBye ? (
                         <div className="font-medium text-accent">BYE</div>
                       ) : (
-                        <div className="font-medium">vs. {getOpponentName(game.opponentId)}</div>
+                        <div className="font-medium">{getOpponentName(game.opponentId)}</div>
                       )}
                     </TableCell>
                     <TableCell className="px-6 py-4 whitespace-nowrap">
