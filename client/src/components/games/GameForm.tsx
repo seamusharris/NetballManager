@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { insertGameSchema, Game, Opponent } from "@shared/schema";
+import { insertGameSchema, Game, Opponent, allGameStatuses } from "@shared/schema";
 
 // Extend the schema for the form validation
 const formSchema = insertGameSchema.extend({
@@ -28,7 +28,8 @@ const formSchema = insertGameSchema.extend({
   time: z.string().min(1, "Time is required"),
   opponentId: z.string(), // No validation directly on the field
   isBye: z.boolean().default(false),
-  round: z.string().optional()
+  round: z.string().optional(),
+  status: z.string().optional()
 }).refine(
   (data) => {
     // If it's a bye, we don't need opponent
@@ -64,7 +65,8 @@ export default function GameForm({ game, opponents, onSubmit, isSubmitting }: Ga
       time: game?.time || "",
       opponentId: game?.opponentId ? String(game.opponentId) : "",
       isBye: game?.isBye || false,
-      round: game?.round || ""
+      round: game?.round || "",
+      status: game?.status || "upcoming"
     },
   });
   
@@ -76,7 +78,7 @@ export default function GameForm({ game, opponents, onSubmit, isSubmitting }: Ga
         time: values.time,
         round: values.round,
         isBye: true,
-        status: 'upcoming' // Default status for new BYE games
+        status: values.status || 'upcoming'
       };
       
       console.log("Submitting BYE game:", byeGameData);
@@ -90,7 +92,7 @@ export default function GameForm({ game, opponents, onSubmit, isSubmitting }: Ga
       time: values.time,
       round: values.round,
       opponentId: parseInt(values.opponentId),
-      status: 'upcoming', // Default status for new games
+      status: values.status || 'upcoming',
       isBye: false
     };
     
@@ -214,7 +216,36 @@ export default function GameForm({ game, opponents, onSubmit, isSubmitting }: Ga
           )}
         />
         
-        {/* Note: Game status is now managed through the status badge */}
+        <FormField
+          control={form.control}
+          name="status"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Game Status</FormLabel>
+              <Select 
+                onValueChange={field.onChange} 
+                defaultValue={field.value}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select game status" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {allGameStatuses.map(status => (
+                    <SelectItem key={status} value={status}>
+                      {status.charAt(0).toUpperCase() + status.slice(1).replace('-', ' ')}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormDescription>
+                Set the current status of this game
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         
         <div className="flex justify-end space-x-2">
           <Button type="button" variant="outline" onClick={() => form.reset()}>
