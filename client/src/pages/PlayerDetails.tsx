@@ -515,7 +515,7 @@ export default function PlayerDetails() {
               
               <div className="mt-6">
                 <h3 className="text-sm font-medium mb-2">Position Preferences</h3>
-                <div className="flex flex-wrap gap-2 justify-end">
+                <div className="flex flex-wrap gap-2">
                   {player.positionPreferences?.map((position, index) => (
                     <span key={index} className={cn(
                       "px-2 py-1 rounded-full text-xs font-medium", 

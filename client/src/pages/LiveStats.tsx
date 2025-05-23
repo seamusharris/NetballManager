@@ -965,7 +965,7 @@ export default function LiveStats() {
                 <p className="text-xs md:text-sm text-muted-foreground">Quarter Score</p>
                 <p className="text-xl md:text-2xl font-bold">{getQuarterTotal('goalsFor')} - {getQuarterTotal('goalsAgainst')}</p>
               </div>
-              <div className="flex gap-1 justify-end">
+              <div className="flex gap-1">
                 <Button
                   variant="outline" 
                   size="sm"
