@@ -801,20 +801,7 @@ export default function GameDetails() {
         <title>Game Details | Netball Stats Tracker</title>
       </Helmet>
       
-      {/* Edit Game Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle>Edit Game</DialogTitle>
-          </DialogHeader>
-          <GameForm 
-            game={game} 
-            opponents={opponents || []} 
-            onSubmit={handleGameSubmit}
-            isSubmitting={updateGameMutation.isPending}
-          />
-        </DialogContent>
-      </Dialog>
+
       
       <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -890,10 +877,12 @@ export default function GameDetails() {
               variant="outline" 
               size="sm"
               className="bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100"
-              onClick={() => setIsEditDialogOpen(true)}
+              asChild
             >
-              <Edit className="mr-2 h-4 w-4 text-blue-600" />
-              Edit Game
+              <Link to={`/games?edit=${gameId}&returnTo=gameDetails`}>
+                <Edit className="mr-2 h-4 w-4 text-blue-600" />
+                Edit Game
+              </Link>
             </Button>
           </div>
           
