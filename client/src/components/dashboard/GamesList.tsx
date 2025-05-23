@@ -87,10 +87,10 @@ export default function GamesList({ games, opponents, className }: GamesListProp
           </Select>
         </div>
         
-        <div className="overflow-x-auto border-t border-l border-b rounded-md">
+        <div className="overflow-x-auto border-t border-l border-b border-r rounded-md">
           <Table>
             <TableHeader>
-              <TableRow className="bg-slate-50">
+              <TableRow className="bg-blue-50">
                 <TableHead className="w-20 border-r border-b text-center">Round</TableHead>
                 <TableHead className="w-32 border-r border-b">Date</TableHead>
                 <TableHead className="border-r border-b">Opponent</TableHead>
