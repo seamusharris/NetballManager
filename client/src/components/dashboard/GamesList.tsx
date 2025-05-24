@@ -128,14 +128,14 @@ export default function GamesList({ games, opponents, className }: GamesListProp
           <div className="flex gap-2 items-center">
             {showOpponentFilter && (
               <Select 
-                value={opponentFilter?.toString() || ""}
-                onValueChange={(value) => setOpponentFilter(value === "" ? null : Number(value))}
+                value={opponentFilter?.toString() || "all"}
+                onValueChange={(value) => setOpponentFilter(value === "all" ? null : Number(value))}
               >
                 <SelectTrigger className="bg-white border rounded-md w-[180px] h-8 text-sm">
                   <SelectValue placeholder="All Opponents" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Opponents</SelectItem>
+                  <SelectItem value="all">All Opponents</SelectItem>
                   {opponents
                     .filter(opp => games.some(game => game.opponentId === opp.id))
                     .sort((a, b) => a.teamName.localeCompare(b.teamName))
