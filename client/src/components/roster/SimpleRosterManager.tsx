@@ -613,7 +613,11 @@ export default function SimpleRosterManager({
               </SelectTrigger>
               <SelectContent>
                 {[...allGames]
-                  .sort((a, b) => (a.round || 0) - (b.round || 0))
+                  .sort((a, b) => {
+                    const roundA = a.round ? parseInt(a.round) : 0;
+                    const roundB = b.round ? parseInt(b.round) : 0;
+                    return roundA - roundB;
+                  })
                   .map((game) => (
                     <SelectItem key={game.id} value={game.id.toString()}>
                       Round {game.round} - {opponents.find(o => o.id === game.opponentId)?.teamName || "Unknown Opponent"}

@@ -8,7 +8,7 @@ import { GameStatusBadge } from '@/components/games/GameStatusBadge';
 import { Badge } from '@/components/ui/badge';
 import { useLocation } from 'wouter';
 import { BatchGameScoreDisplay } from './BatchGameScoreDisplay';
-import { ArrowDownIcon, ArrowUpIcon, FilterIcon } from 'lucide-react';
+import { ArrowDown, ArrowUp, ArrowUpDown, FilterIcon } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 
@@ -206,21 +206,12 @@ export default function GamesList({ games, opponents, className }: GamesListProp
                   <div className="flex items-center">
                     Opponent
                     <div className="ml-1">
-                      {sortColumn === 'opponent' ? (
-                        sortDirection === 'asc' ? (
-                          <ArrowUpIcon 
-                            className="h-4 w-4 text-primary cursor-pointer" 
-                          />
-                        ) : (
-                          <ArrowDownIcon 
-                            className="h-4 w-4 text-primary cursor-pointer" 
-                          />
-                        )
+                      {sortColumn !== 'opponent' ? (
+                        <ArrowUpDown className="ml-1 h-3 w-3 inline" />
                       ) : (
-                        <div className="flex">
-                          <ArrowUpIcon className="h-4 w-4 text-gray-400" />
-                          <ArrowDownIcon className="h-4 w-4 text-gray-400 -ml-1" />
-                        </div>
+                        sortDirection === 'asc' ? 
+                          <ArrowUp className="ml-1 h-3 w-3 inline text-primary" /> : 
+                          <ArrowDown className="ml-1 h-3 w-3 inline text-primary" />
                       )}
                     </div>
                   </div>
@@ -232,21 +223,12 @@ export default function GamesList({ games, opponents, className }: GamesListProp
                   <div className="flex items-center justify-center">
                     Status
                     <div className="ml-1">
-                      {sortColumn === 'status' ? (
-                        sortDirection === 'asc' ? (
-                          <ArrowUpIcon 
-                            className="h-4 w-4 text-primary cursor-pointer" 
-                          />
-                        ) : (
-                          <ArrowDownIcon 
-                            className="h-4 w-4 text-primary cursor-pointer" 
-                          />
-                        )
+                      {sortColumn !== 'status' ? (
+                        <ArrowUpDown className="ml-1 h-3 w-3 inline" />
                       ) : (
-                        <div className="flex">
-                          <ArrowUpIcon className="h-4 w-4 text-gray-400" />
-                          <ArrowDownIcon className="h-4 w-4 text-gray-400 -ml-1" />
-                        </div>
+                        sortDirection === 'asc' ? 
+                          <ArrowUp className="ml-1 h-3 w-3 inline text-primary" /> : 
+                          <ArrowDown className="ml-1 h-3 w-3 inline text-primary" />
                       )}
                     </div>
                   </div>
