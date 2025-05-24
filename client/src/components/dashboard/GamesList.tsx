@@ -126,37 +126,26 @@ export default function GamesList({ games, opponents, className }: GamesListProp
         <div className="flex justify-between items-center mb-4">
           <h3 className="font-heading font-semibold text-neutral-dark">Game Schedule</h3>
           <div className="flex gap-2 items-center">
-            {showOpponentFilter && (
-              <Select 
-                value={opponentFilter?.toString() || "all"}
-                onValueChange={(value) => setOpponentFilter(value === "all" ? null : Number(value))}
-              >
-                <SelectTrigger className="bg-white border rounded-md w-[180px] h-8 text-sm">
-                  <SelectValue placeholder="All Opponents" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Opponents</SelectItem>
-                  {opponents
-                    .filter(opp => games.some(game => game.opponentId === opp.id))
-                    .sort((a, b) => a.teamName.localeCompare(b.teamName))
-                    .map(opponent => (
-                      <SelectItem key={opponent.id} value={opponent.id.toString()}>
-                        {opponent.teamName}
-                      </SelectItem>
-                    ))
-                  }
-                </SelectContent>
-              </Select>
-            )}
-            
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="h-8 px-2"
-              onClick={() => setShowOpponentFilter(!showOpponentFilter)}
+            <Select 
+              value={opponentFilter?.toString() || "all"}
+              onValueChange={(value) => setOpponentFilter(value === "all" ? null : Number(value))}
             >
-              <FilterIcon size={16} className={cn(opponentFilter !== null && "text-blue-500")} />
-            </Button>
+              <SelectTrigger className="bg-white border rounded-md w-[180px] h-8 text-sm">
+                <SelectValue placeholder="All Opponents" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Opponents</SelectItem>
+                {opponents
+                  .filter(opp => games.some(game => game.opponentId === opp.id))
+                  .sort((a, b) => a.teamName.localeCompare(b.teamName))
+                  .map(opponent => (
+                    <SelectItem key={opponent.id} value={opponent.id.toString()}>
+                      {opponent.teamName}
+                    </SelectItem>
+                  ))
+                }
+              </SelectContent>
+            </Select>
             
             <Select value={displayMode} onValueChange={setDisplayMode}>
               <SelectTrigger className="bg-white border rounded-md w-[140px] h-8 text-sm">
@@ -182,10 +171,15 @@ export default function GamesList({ games, opponents, className }: GamesListProp
                 >
                   <div className="flex items-center justify-center">
                     Round
-                    {sortColumn === 'round' && (
+                    {sortColumn === 'round' ? (
                       sortDirection === 'asc' 
                         ? <ArrowUpIcon className="h-3 w-3 ml-1" /> 
                         : <ArrowDownIcon className="h-3 w-3 ml-1" />
+                    ) : (
+                      <div className="ml-1 h-3 w-3 flex flex-col">
+                        <ArrowUpIcon className="h-1.5 w-3 text-gray-400" />
+                        <ArrowDownIcon className="h-1.5 w-3 text-gray-400" />
+                      </div>
                     )}
                   </div>
                 </TableHead>
@@ -195,10 +189,15 @@ export default function GamesList({ games, opponents, className }: GamesListProp
                 >
                   <div className="flex items-center">
                     Date
-                    {sortColumn === 'date' && (
+                    {sortColumn === 'date' ? (
                       sortDirection === 'asc' 
                         ? <ArrowUpIcon className="h-3 w-3 ml-1" /> 
                         : <ArrowDownIcon className="h-3 w-3 ml-1" />
+                    ) : (
+                      <div className="ml-1 h-3 w-3 flex flex-col">
+                        <ArrowUpIcon className="h-1.5 w-3 text-gray-400" />
+                        <ArrowDownIcon className="h-1.5 w-3 text-gray-400" />
+                      </div>
                     )}
                   </div>
                 </TableHead>
@@ -208,10 +207,15 @@ export default function GamesList({ games, opponents, className }: GamesListProp
                 >
                   <div className="flex items-center">
                     Opponent
-                    {sortColumn === 'opponent' && (
+                    {sortColumn === 'opponent' ? (
                       sortDirection === 'asc' 
                         ? <ArrowUpIcon className="h-3 w-3 ml-1" /> 
                         : <ArrowDownIcon className="h-3 w-3 ml-1" />
+                    ) : (
+                      <div className="ml-1 h-3 w-3 flex flex-col">
+                        <ArrowUpIcon className="h-1.5 w-3 text-gray-400" />
+                        <ArrowDownIcon className="h-1.5 w-3 text-gray-400" />
+                      </div>
                     )}
                   </div>
                 </TableHead>
@@ -221,10 +225,15 @@ export default function GamesList({ games, opponents, className }: GamesListProp
                 >
                   <div className="flex items-center justify-center">
                     Status
-                    {sortColumn === 'status' && (
+                    {sortColumn === 'status' ? (
                       sortDirection === 'asc' 
                         ? <ArrowUpIcon className="h-3 w-3 ml-1" /> 
                         : <ArrowDownIcon className="h-3 w-3 ml-1" />
+                    ) : (
+                      <div className="ml-1 h-3 w-3 flex flex-col">
+                        <ArrowUpIcon className="h-1.5 w-3 text-gray-400" />
+                        <ArrowDownIcon className="h-1.5 w-3 text-gray-400" />
+                      </div>
                     )}
                   </div>
                 </TableHead>
