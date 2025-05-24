@@ -847,6 +847,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ----- GAME STATS API -----
+  // Batch endpoint to get stats for multiple games at once
+  app.get("/api/games/stats/batch", async (req, res) => {
+    try {
+      const gameIds = req.query.ids ? String(req.query.ids).split(',').map(id => parseInt(id, 10)) : [];
+      
+      if (!gameIds.length) {
+        return res.status(400).json({ error: "No game IDs provided" });
+      }
+      
+      // Process each game ID in parallel
+      const statsPromises = gameIds.map(gameId => storage.getGameStatsByGame(gameId));
+      const results = await Promise.all(statsPromises);
+      
+      // Create a map of gameId -> stats[]
+      const statsMap = gameIds.reduce((acc, gameId, index) => {
+        acc[gameId] = results[index];
+        return acc;
+      }, {} as Record<number, any[]>);
+      
+      res.json(statsMap);
+    } catch (error) {
+      console.error(`Error getting batch game stats: ${error}`);
+      res.status(500).json({ error: "Failed to get batch game stats" });
+    }
+  });
+
+  // Get all game stats for a specific game
   app.get("/api/games/:gameId/stats", async (req, res) => {
     try {
       const gameId = Number(req.params.gameId);

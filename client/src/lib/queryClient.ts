@@ -62,12 +62,16 @@ export const queryClient = new QueryClient({
     queries: {
       queryFn: getQueryFn({ on401: "throw" }),
       refetchOnWindowFocus: false,
-      retry: false,
+      retry: 1,
       // Default stale time - we'll override this for specific queries
-      staleTime: 60 * 1000, // 1 minute
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      // Cache time longer than stale time allows for faster return to previously seen data
+      gcTime: 15 * 60 * 1000, // 15 minutes
     },
     mutations: {
-      retry: false,
+      retry: 1,
+      // Add a short delay before retrying mutations
+      retryDelay: 1000,
     },
   },
 });
