@@ -5,15 +5,15 @@ import BatchScoreDisplay from '@/components/dashboard/BatchScoreDisplay';
 import { TEAM_NAME } from '@/lib/settings';
 
 export default function Dashboard() {
-  const { data: players, isLoading: isLoadingPlayers } = useQuery({
+  const { data: players = [], isLoading: isLoadingPlayers } = useQuery<any[]>({
     queryKey: ['/api/players'],
   });
 
-  const { data: games, isLoading: isLoadingGames } = useQuery({
+  const { data: games = [], isLoading: isLoadingGames } = useQuery<any[]>({
     queryKey: ['/api/games'],
   });
 
-  const { data: opponents, isLoading: isLoadingOpponents } = useQuery({
+  const { data: opponents = [], isLoading: isLoadingOpponents } = useQuery<any[]>({
     queryKey: ['/api/opponents'],
   });
 
@@ -25,6 +25,9 @@ export default function Dashboard() {
         <title>Dashboard | {TEAM_NAME} Stats Tracker</title>
         <meta name="description" content={`View ${TEAM_NAME} team's performance metrics, upcoming games, and player statistics`} />
       </Helmet>
+      
+      {/* BatchScoreDisplay doesn't render anything but efficiently loads and caches game scores */}
+      {games && games.length > 0 && <BatchScoreDisplay games={games} />}
       
       <DashboardSummary 
         players={players || []} 
