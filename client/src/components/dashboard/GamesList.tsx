@@ -8,6 +8,9 @@ import { GameStatusBadge } from '@/components/games/GameStatusBadge';
 import { Badge } from '@/components/ui/badge';
 import { useLocation } from 'wouter';
 import { BatchGameScoreDisplay } from './BatchGameScoreDisplay';
+import { ArrowDownIcon, ArrowUpIcon, FilterIcon } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
 interface GamesListProps {
   games: Game[];
@@ -27,13 +30,29 @@ const statusColors = {
 export default function GamesList({ games, opponents, className }: GamesListProps): JSX.Element {
   const [displayMode, setDisplayMode] = useState('all');
   const [, setLocation] = useLocation();
+  const [sortColumn, setSortColumn] = useState<string>('date');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [opponentFilter, setOpponentFilter] = useState<number | null>(null);
+  const [showOpponentFilter, setShowOpponentFilter] = useState(false);
   
   // Navigate to game details page
   const navigateToGame = (gameId: number) => {
     setLocation(`/game/${gameId}`);
   };
   
-  // Filter and sort games based on display mode
+  // Handle column sort click
+  const handleSortClick = (column: string) => {
+    if (sortColumn === column) {
+      // Toggle direction if clicking the same column
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      // Set new column and default to ascending
+      setSortColumn(column);
+      setSortDirection('asc');
+    }
+  };
+  
+  // Filter and sort games based on display mode, sort settings, and opponent filter
   const filteredGames = (() => {
     const currentDate = new Date().toISOString().split('T')[0];
     
@@ -55,8 +74,40 @@ export default function GamesList({ games, opponents, className }: GamesListProp
       // 'all' returns all games
     }
     
-    // Finally, sort by date
-    return filtered.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    // Apply opponent filter if set
+    if (opponentFilter !== null) {
+      filtered = filtered.filter(game => game.opponentId === opponentFilter);
+    }
+    
+    // Apply sorting based on selected column and direction
+    return filtered.sort((a, b) => {
+      let comparison = 0;
+      
+      switch (sortColumn) {
+        case 'round':
+          // Convert round values to numbers for comparison
+          const roundA = a.round ? parseInt(a.round) : 0;
+          const roundB = b.round ? parseInt(b.round) : 0;
+          comparison = roundA - roundB;
+          break;
+        case 'date':
+          comparison = (new Date(a.date).getTime() - new Date(b.date).getTime());
+          break;
+        case 'opponent':
+          const opponentA = opponents.find(opp => opp.id === a.opponentId)?.teamName || '';
+          const opponentB = opponents.find(opp => opp.id === b.opponentId)?.teamName || '';
+          comparison = opponentA.localeCompare(opponentB);
+          break;
+        case 'status':
+          comparison = (a.status || '').localeCompare(b.status || '');
+          break;
+        default:
+          comparison = (new Date(a.date).getTime() - new Date(b.date).getTime());
+      }
+      
+      // Apply sort direction
+      return sortDirection === 'asc' ? comparison : -comparison;
+    });
   })();
   
   // Find opponent name for a game
@@ -74,27 +125,109 @@ export default function GamesList({ games, opponents, className }: GamesListProp
       <CardContent className="p-6">
         <div className="flex justify-between items-center mb-4">
           <h3 className="font-heading font-semibold text-neutral-dark">Game Schedule</h3>
-          <Select value={displayMode} onValueChange={setDisplayMode}>
-            <SelectTrigger className="bg-white border rounded-md w-[140px] h-8 text-sm">
-              <SelectValue placeholder="All Games" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Games</SelectItem>
-              <SelectItem value="upcoming">Upcoming Games</SelectItem>
-              <SelectItem value="completed">Completed Games</SelectItem>
-              <SelectItem value="recent">Recent Games</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex gap-2 items-center">
+            {showOpponentFilter && (
+              <Select 
+                value={opponentFilter?.toString() || ""}
+                onValueChange={(value) => setOpponentFilter(value === "" ? null : Number(value))}
+              >
+                <SelectTrigger className="bg-white border rounded-md w-[180px] h-8 text-sm">
+                  <SelectValue placeholder="All Opponents" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">All Opponents</SelectItem>
+                  {opponents
+                    .filter(opp => games.some(game => game.opponentId === opp.id))
+                    .sort((a, b) => a.teamName.localeCompare(b.teamName))
+                    .map(opponent => (
+                      <SelectItem key={opponent.id} value={opponent.id.toString()}>
+                        {opponent.teamName}
+                      </SelectItem>
+                    ))
+                  }
+                </SelectContent>
+              </Select>
+            )}
+            
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="h-8 px-2"
+              onClick={() => setShowOpponentFilter(!showOpponentFilter)}
+            >
+              <FilterIcon size={16} className={cn(opponentFilter !== null && "text-blue-500")} />
+            </Button>
+            
+            <Select value={displayMode} onValueChange={setDisplayMode}>
+              <SelectTrigger className="bg-white border rounded-md w-[140px] h-8 text-sm">
+                <SelectValue placeholder="All Games" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Games</SelectItem>
+                <SelectItem value="upcoming">Upcoming Games</SelectItem>
+                <SelectItem value="completed">Completed Games</SelectItem>
+                <SelectItem value="recent">Recent Games</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
         
         <div className="overflow-x-auto border-t border-l border-b border-r rounded-md">
           <Table>
             <TableHeader>
               <TableRow className="bg-blue-50">
-                <TableHead className="w-20 border-r border-b text-center">Round</TableHead>
-                <TableHead className="w-32 border-r border-b">Date</TableHead>
-                <TableHead className="border-r border-b">Opponent</TableHead>
-                <TableHead className="w-24 text-center border-r border-b">Status</TableHead>
+                <TableHead 
+                  className="w-20 border-r border-b text-center cursor-pointer"
+                  onClick={() => handleSortClick('round')}
+                >
+                  <div className="flex items-center justify-center">
+                    Round
+                    {sortColumn === 'round' && (
+                      sortDirection === 'asc' 
+                        ? <ArrowUpIcon className="h-3 w-3 ml-1" /> 
+                        : <ArrowDownIcon className="h-3 w-3 ml-1" />
+                    )}
+                  </div>
+                </TableHead>
+                <TableHead 
+                  className="w-32 border-r border-b cursor-pointer"
+                  onClick={() => handleSortClick('date')}
+                >
+                  <div className="flex items-center">
+                    Date
+                    {sortColumn === 'date' && (
+                      sortDirection === 'asc' 
+                        ? <ArrowUpIcon className="h-3 w-3 ml-1" /> 
+                        : <ArrowDownIcon className="h-3 w-3 ml-1" />
+                    )}
+                  </div>
+                </TableHead>
+                <TableHead 
+                  className="border-r border-b cursor-pointer"
+                  onClick={() => handleSortClick('opponent')}
+                >
+                  <div className="flex items-center">
+                    Opponent
+                    {sortColumn === 'opponent' && (
+                      sortDirection === 'asc' 
+                        ? <ArrowUpIcon className="h-3 w-3 ml-1" /> 
+                        : <ArrowDownIcon className="h-3 w-3 ml-1" />
+                    )}
+                  </div>
+                </TableHead>
+                <TableHead 
+                  className="w-24 text-center border-r border-b cursor-pointer"
+                  onClick={() => handleSortClick('status')}
+                >
+                  <div className="flex items-center justify-center">
+                    Status
+                    {sortColumn === 'status' && (
+                      sortDirection === 'asc' 
+                        ? <ArrowUpIcon className="h-3 w-3 ml-1" /> 
+                        : <ArrowDownIcon className="h-3 w-3 ml-1" />
+                    )}
+                  </div>
+                </TableHead>
                 <TableHead className="w-24 text-center border-b">Score</TableHead>
               </TableRow>
             </TableHeader>
