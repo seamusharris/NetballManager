@@ -512,13 +512,21 @@ export default function SimpleRosterManager({
     return player.positionPreferences.includes(position);
   };
 
-  // Get players eligible for a position
+  // Get players eligible for a position - now showing ALL active players
   const getEligiblePlayers = (position: Position): Player[] => {
     return players
-      .filter(player => 
-        player.active && player.positionPreferences.includes(position)
-      )
-      .sort((a, b) => a.displayName.localeCompare(b.displayName)); // Sort alphabetically by display name
+      .filter(player => player.active)
+      .sort((a, b) => {
+        // First sort by whether they have this position preference (preferred first)
+        const aHasPreference = player.positionPreferences.includes(position);
+        const bHasPreference = b.positionPreferences.includes(position);
+        
+        if (aHasPreference && !bHasPreference) return -1;
+        if (!aHasPreference && bHasPreference) return 1;
+        
+        // Then sort alphabetically by display name
+        return a.displayName.localeCompare(b.displayName);
+      });
   };
 
   // Create a map to track which players are already selected in a quarter
