@@ -518,7 +518,7 @@ export default function SimpleRosterManager({
       .filter(player => player.active)
       .sort((a, b) => {
         // First sort by whether they have this position preference (preferred first)
-        const aHasPreference = player.positionPreferences.includes(position);
+        const aHasPreference = a.positionPreferences.includes(position);
         const bHasPreference = b.positionPreferences.includes(position);
         
         if (aHasPreference && !bHasPreference) return -1;
