@@ -78,9 +78,14 @@ export default function TeamPerformance({ games, className }: TeamPerformancePro
     let draws = 0;
     
     // Process each completed game
+    let actualGamesWithStats = 0; // Count only games that have statistics
+    
     completedGameIds.forEach(gameId => {
       const gameStats = gameStatsMap[gameId];
       if (!gameStats || gameStats.length === 0) return;
+      
+      // Increment counter for games with actual stats
+      actualGamesWithStats++;
       
       // Calculate scores by quarter
       const gameQuarterScores: Record<number, { team: number, opponent: number }> = {
@@ -135,23 +140,25 @@ export default function TeamPerformance({ games, className }: TeamPerformancePro
       avgOpponentScoreByQuarter[quarter] = Math.round((quarterScores[quarter].opponent / count) * 10) / 10;
     });
     
-    // Calculate overall metrics
-    const winRate = completedGamesCount > 0 ? Math.round((wins / completedGamesCount) * 100) : 0;
+    // Calculate overall metrics using only games that have actual statistics
+    const winRate = actualGamesWithStats > 0 ? Math.round((wins / actualGamesWithStats) * 100) : 0;
     
     // Calculate dynamic average team score from actual game data
-    const avgTeamScore = completedGamesCount > 0 
-      ? Math.round((totalTeamScore / completedGamesCount) * 10) / 10 
+    const avgTeamScore = actualGamesWithStats > 0 
+      ? Math.round((totalTeamScore / actualGamesWithStats) * 10) / 10 
       : 0;
       
     // Calculate average opponent score
-    const avgOpponentScore = completedGamesCount > 0
-      ? Math.round((totalOpponentScore / completedGamesCount) * 10) / 10
+    const avgOpponentScore = actualGamesWithStats > 0
+      ? Math.round((totalOpponentScore / actualGamesWithStats) * 10) / 10
       : 0;
       
     // Calculate performance percentage as (goals for / goals against) * 100
     const goalsPercentage = totalOpponentScore > 0
       ? Math.round((totalTeamScore / totalOpponentScore) * 100)
       : 0;
+      
+    console.log(`Team Performance: ${actualGamesWithStats} games with stats, ${totalTeamScore} total goals for, ${totalOpponentScore} total goals against`);
     
     setQuarterPerformance({
       avgTeamScoreByQuarter,
