@@ -30,10 +30,10 @@ const statusColors = {
 export default function GamesList({ games, opponents, className }: GamesListProps): JSX.Element {
   const [displayMode, setDisplayMode] = useState('all');
   const [, setLocation] = useLocation();
-  const [sortColumn, setSortColumn] = useState<string>('date');
+  const [sortColumn, setSortColumn] = useState<string>('round');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [opponentFilter, setOpponentFilter] = useState<number | null>(null);
-  const [showOpponentFilter, setShowOpponentFilter] = useState(false);
+  const [showOpponentFilter, setShowOpponentFilter] = useState(true);
   
   // Navigate to game details page
   const navigateToGame = (gameId: number) => {
