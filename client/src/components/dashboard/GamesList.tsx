@@ -171,13 +171,23 @@ export default function GamesList({ games, opponents, className }: GamesListProp
                 >
                   <div className="flex items-center justify-center">
                     Round
-                    <div className="ml-1 flex">
-                      <ArrowUpIcon 
-                        className={`h-3 w-3 ${sortColumn === 'round' && sortDirection === 'asc' ? 'text-primary' : 'text-gray-400'}`} 
-                      />
-                      <ArrowDownIcon 
-                        className={`h-3 w-3 ${sortColumn === 'round' && sortDirection === 'desc' ? 'text-primary' : 'text-gray-400'}`} 
-                      />
+                    <div className="ml-1">
+                      {sortColumn === 'round' ? (
+                        sortDirection === 'asc' ? (
+                          <ArrowDownIcon 
+                            className="h-3 w-3 text-primary cursor-pointer" 
+                          />
+                        ) : (
+                          <ArrowUpIcon 
+                            className="h-3 w-3 text-primary cursor-pointer" 
+                          />
+                        )
+                      ) : (
+                        <div className="flex">
+                          <ArrowUpIcon className="h-3 w-3 text-gray-400" />
+                          <ArrowDownIcon className="h-3 w-3 text-gray-400 -ml-1" />
+                        </div>
+                      )}
                     </div>
                   </div>
                 </TableHead>
@@ -187,13 +197,23 @@ export default function GamesList({ games, opponents, className }: GamesListProp
                 >
                   <div className="flex items-center">
                     Date
-                    <div className="ml-1 flex">
-                      <ArrowUpIcon 
-                        className={`h-3 w-3 ${sortColumn === 'date' && sortDirection === 'asc' ? 'text-primary' : 'text-gray-400'}`} 
-                      />
-                      <ArrowDownIcon 
-                        className={`h-3 w-3 ${sortColumn === 'date' && sortDirection === 'desc' ? 'text-primary' : 'text-gray-400'}`} 
-                      />
+                    <div className="ml-1">
+                      {sortColumn === 'date' ? (
+                        sortDirection === 'asc' ? (
+                          <ArrowDownIcon 
+                            className="h-3 w-3 text-primary cursor-pointer" 
+                          />
+                        ) : (
+                          <ArrowUpIcon 
+                            className="h-3 w-3 text-primary cursor-pointer" 
+                          />
+                        )
+                      ) : (
+                        <div className="flex">
+                          <ArrowUpIcon className="h-3 w-3 text-gray-400" />
+                          <ArrowDownIcon className="h-3 w-3 text-gray-400 -ml-1" />
+                        </div>
+                      )}
                     </div>
                   </div>
                 </TableHead>
@@ -203,13 +223,23 @@ export default function GamesList({ games, opponents, className }: GamesListProp
                 >
                   <div className="flex items-center">
                     Opponent
-                    <div className="ml-1 flex">
-                      <ArrowUpIcon 
-                        className={`h-3 w-3 ${sortColumn === 'opponent' && sortDirection === 'asc' ? 'text-primary' : 'text-gray-400'}`} 
-                      />
-                      <ArrowDownIcon 
-                        className={`h-3 w-3 ${sortColumn === 'opponent' && sortDirection === 'desc' ? 'text-primary' : 'text-gray-400'}`} 
-                      />
+                    <div className="ml-1">
+                      {sortColumn === 'opponent' ? (
+                        sortDirection === 'asc' ? (
+                          <ArrowDownIcon 
+                            className="h-3 w-3 text-primary cursor-pointer" 
+                          />
+                        ) : (
+                          <ArrowUpIcon 
+                            className="h-3 w-3 text-primary cursor-pointer" 
+                          />
+                        )
+                      ) : (
+                        <div className="flex">
+                          <ArrowUpIcon className="h-3 w-3 text-gray-400" />
+                          <ArrowDownIcon className="h-3 w-3 text-gray-400 -ml-1" />
+                        </div>
+                      )}
                     </div>
                   </div>
                 </TableHead>
@@ -219,13 +249,23 @@ export default function GamesList({ games, opponents, className }: GamesListProp
                 >
                   <div className="flex items-center justify-center">
                     Status
-                    <div className="ml-1 flex">
-                      <ArrowUpIcon 
-                        className={`h-3 w-3 ${sortColumn === 'status' && sortDirection === 'asc' ? 'text-primary' : 'text-gray-400'}`} 
-                      />
-                      <ArrowDownIcon 
-                        className={`h-3 w-3 ${sortColumn === 'status' && sortDirection === 'desc' ? 'text-primary' : 'text-gray-400'}`} 
-                      />
+                    <div className="ml-1">
+                      {sortColumn === 'status' ? (
+                        sortDirection === 'asc' ? (
+                          <ArrowDownIcon 
+                            className="h-3 w-3 text-primary cursor-pointer" 
+                          />
+                        ) : (
+                          <ArrowUpIcon 
+                            className="h-3 w-3 text-primary cursor-pointer" 
+                          />
+                        )
+                      ) : (
+                        <div className="flex">
+                          <ArrowUpIcon className="h-3 w-3 text-gray-400" />
+                          <ArrowDownIcon className="h-3 w-3 text-gray-400 -ml-1" />
+                        </div>
+                      )}
                     </div>
                   </div>
                 </TableHead>
