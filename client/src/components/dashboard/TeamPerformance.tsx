@@ -17,14 +17,14 @@ export default function TeamPerformance({ games, className }: TeamPerformancePro
     teamWinRate: number;
     avgTeamScore: number;
     avgOpponentScore: number;
-    winPercentage: number;
+    goalsPercentage: number;
   }>({
     avgTeamScoreByQuarter: { 1: 0, 2: 0, 3: 0, 4: 0 },
     avgOpponentScoreByQuarter: { 1: 0, 2: 0, 3: 0, 4: 0 },
     teamWinRate: 0,
     avgTeamScore: 0,
     avgOpponentScore: 0,
-    winPercentage: 0
+    goalsPercentage: 0
   });
   
   // Calculate basic performance metrics
@@ -148,11 +148,9 @@ export default function TeamPerformance({ games, className }: TeamPerformancePro
       ? Math.round((totalOpponentScore / completedGamesCount) * 10) / 10
       : 0;
       
-    // Calculate winning percentage (different from win rate as it includes draws)
-    const totalPoints = wins * 3 + draws * 1; // 3 points for win, 1 for draw
-    const maxPossiblePoints = completedGamesCount * 3; // Maximum possible points if all games were won
-    const winPercentage = maxPossiblePoints > 0
-      ? Math.round((totalPoints / maxPossiblePoints) * 100)
+    // Calculate performance percentage as (goals for / goals against) * 100
+    const goalsPercentage = totalOpponentScore > 0
+      ? Math.round((totalTeamScore / totalOpponentScore) * 100)
       : 0;
     
     setQuarterPerformance({
@@ -161,7 +159,7 @@ export default function TeamPerformance({ games, className }: TeamPerformancePro
       teamWinRate: winRate,
       avgTeamScore,
       avgOpponentScore,
-      winPercentage
+      goalsPercentage
     });
     
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -184,8 +182,8 @@ export default function TeamPerformance({ games, className }: TeamPerformancePro
             <p className="text-3xl font-bold text-primary">{quarterPerformance.teamWinRate}%</p>
           </div>
           <div className="text-center bg-gray-50 p-3 rounded-lg">
-            <p className="text-gray-500 text-sm mb-1">Team Performance</p>
-            <p className="text-3xl font-bold text-primary">{quarterPerformance.winPercentage}%</p>
+            <p className="text-gray-500 text-sm mb-1">Goals Percentage</p>
+            <p className="text-3xl font-bold text-primary">{quarterPerformance.goalsPercentage}%</p>
           </div>
           <div className="text-center bg-gray-50 p-3 rounded-lg">
             <p className="text-gray-500 text-sm mb-1">Games Played</p>
