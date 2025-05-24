@@ -172,21 +172,12 @@ export default function GamesList({ games, opponents, className }: GamesListProp
                   <div className="flex items-center justify-center">
                     Round
                     <div className="ml-1">
-                      {sortColumn === 'round' ? (
-                        sortDirection === 'asc' ? (
-                          <ArrowUpIcon 
-                            className="h-4 w-4 text-primary cursor-pointer" 
-                          />
-                        ) : (
-                          <ArrowDownIcon 
-                            className="h-4 w-4 text-primary cursor-pointer" 
-                          />
-                        )
+                      {sortColumn !== 'round' ? (
+                        <ArrowUpDown className="ml-1 h-3 w-3 inline" />
                       ) : (
-                        <div className="flex">
-                          <ArrowUpIcon className="h-4 w-4 text-gray-400" />
-                          <ArrowDownIcon className="h-4 w-4 text-gray-400 -ml-1" />
-                        </div>
+                        sortDirection === 'asc' ? 
+                          <ArrowUp className="ml-1 h-3 w-3 inline text-primary" /> : 
+                          <ArrowDown className="ml-1 h-3 w-3 inline text-primary" />
                       )}
                     </div>
                   </div>
@@ -198,21 +189,12 @@ export default function GamesList({ games, opponents, className }: GamesListProp
                   <div className="flex items-center">
                     Date
                     <div className="ml-1">
-                      {sortColumn === 'date' ? (
-                        sortDirection === 'asc' ? (
-                          <ArrowUpIcon 
-                            className="h-4 w-4 text-primary cursor-pointer" 
-                          />
-                        ) : (
-                          <ArrowDownIcon 
-                            className="h-4 w-4 text-primary cursor-pointer" 
-                          />
-                        )
+                      {sortColumn !== 'date' ? (
+                        <ArrowUpDown className="ml-1 h-3 w-3 inline" />
                       ) : (
-                        <div className="flex">
-                          <ArrowUpIcon className="h-4 w-4 text-gray-400" />
-                          <ArrowDownIcon className="h-4 w-4 text-gray-400 -ml-1" />
-                        </div>
+                        sortDirection === 'asc' ? 
+                          <ArrowUp className="ml-1 h-3 w-3 inline text-primary" /> : 
+                          <ArrowDown className="ml-1 h-3 w-3 inline text-primary" />
                       )}
                     </div>
                   </div>
