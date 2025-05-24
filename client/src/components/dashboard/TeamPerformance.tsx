@@ -189,7 +189,7 @@ export default function TeamPerformance({ games, className }: TeamPerformancePro
             <p className="text-3xl font-bold text-primary">{quarterPerformance.teamWinRate}%</p>
           </div>
           <div className="text-center bg-gray-50 p-3 rounded-lg">
-            <p className="text-gray-500 text-sm mb-1">Goals Percentage</p>
+            <p className="text-gray-500 text-sm mb-1">Percentage</p>
             <p className="text-3xl font-bold text-primary">{quarterPerformance.goalsPercentage}%</p>
           </div>
           <div className="text-center bg-gray-50 p-3 rounded-lg">
@@ -198,16 +198,16 @@ export default function TeamPerformance({ games, className }: TeamPerformancePro
           </div>
           
           <div className="text-center bg-gray-50 p-3 rounded-lg">
-            <p className="text-gray-500 text-sm mb-1">Avg. Goals For</p>
-            <p className="text-3xl font-bold text-success">{quarterPerformance.avgTeamScore}</p>
+            <p className="text-gray-500 text-sm mb-1">Goals For</p>
+            <p className="text-3xl font-bold text-primary">{quarterPerformance.avgTeamScore}</p>
           </div>
           <div className="text-center bg-gray-50 p-3 rounded-lg">
-            <p className="text-gray-500 text-sm mb-1">Avg. Goals Against</p>
-            <p className="text-3xl font-bold text-error">{quarterPerformance.avgOpponentScore}</p>
+            <p className="text-gray-500 text-sm mb-1">Goals Against</p>
+            <p className="text-3xl font-bold text-primary">{quarterPerformance.avgOpponentScore}</p>
           </div>
           <div className="text-center bg-gray-50 p-3 rounded-lg">
             <p className="text-gray-500 text-sm mb-1">Upcoming Games</p>
-            <p className="text-3xl font-bold text-accent">{games.filter(game => !game.completed && !game.isBye).length}</p>
+            <p className="text-3xl font-bold text-primary">{games.filter(game => !game.completed && !game.isBye).length}</p>
           </div>
         </div>
       </CardContent>
