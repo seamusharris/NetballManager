@@ -27,10 +27,16 @@ export default function DashboardSummary({ players, games, opponents, isLoading 
   // Sort games by date (most recent first)
   const sortedGames = sortByDate(games);
   
-  // Split into past and upcoming games based on date
+  // Split into past and upcoming games based on date and completion status
   const currentDate = new Date().toISOString().split('T')[0];
-  const pastGames = sortedGames.filter(game => game.date < currentDate);
-  const upcomingGames = sortByDate(sortedGames.filter(game => game.date >= currentDate), true);
+  
+  // Include games that are either from past dates OR are completed (even if they're today)
+  const pastGames = sortedGames.filter(game => game.date < currentDate || game.completed);
+  
+  // Only include games that are from today or future AND not completed
+  const upcomingGames = sortByDate(sortedGames.filter(game => 
+    (game.date >= currentDate && !game.completed)
+  ), true);
   
   return (
     <div className="space-y-6">
