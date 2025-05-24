@@ -614,8 +614,9 @@ export default function SimpleRosterManager({
               <SelectContent>
                 {[...allGames]
                   .sort((a, b) => {
-                    const roundA = a.round ? parseInt(a.round) : 0;
-                    const roundB = b.round ? parseInt(b.round) : 0;
+                    // Safely parse round numbers or default to 0
+                    const roundA = a.round ? parseInt(a.round.toString()) : 0;
+                    const roundB = b.round ? parseInt(b.round.toString()) : 0;
                     return roundA - roundB;
                   })
                   .map((game) => (
