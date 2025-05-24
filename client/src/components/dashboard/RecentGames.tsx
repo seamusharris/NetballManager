@@ -21,32 +21,23 @@ export default function RecentGames({ games, opponents, className }: RecentGames
   const gameIds = recentGames.map(game => game.id);
   const enableQuery = gameIds.length > 0;
   
-  // Cache game stats using React Query
+  // Cache game stats using React Query with batch endpoint
   const { data: allGameStats, isLoading } = useQuery({
-    queryKey: ['gameStats', ...gameIds],
+    queryKey: ['batchGameStats', gameIds.join(',')],
     queryFn: async () => {
       if (gameIds.length === 0) {
         return {};
       }
       
-      // Create a map to store stats by game ID
-      const statsMap: Record<number, GameStat[]> = {};
+      // Use the batch endpoint to fetch all stats in a single request
+      const idsParam = gameIds.join(',');
+      const response = await fetch(`/api/games/stats/batch?ids=${idsParam}`);
       
-      // Fetch stats for each game
-      const statsPromises = gameIds.map(async (gameId) => {
-        const response = await fetch(`/api/games/${gameId}/stats`);
-        const stats = await response.json();
-        return { gameId, stats };
-      });
+      if (!response.ok) {
+        throw new Error(`Failed to fetch batch statistics for games ${idsParam}`);
+      }
       
-      const results = await Promise.all(statsPromises);
-      
-      // Organize stats by game ID
-      results.forEach(result => {
-        statsMap[result.gameId] = result.stats;
-      });
-      
-      return statsMap;
+      return await response.json();
     },
     enabled: enableQuery,
     staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
