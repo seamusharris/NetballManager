@@ -16,11 +16,15 @@ export default function TeamPerformance({ games, className }: TeamPerformancePro
     avgOpponentScoreByQuarter: Record<number, number>;
     teamWinRate: number;
     avgTeamScore: number;
+    avgOpponentScore: number;
+    winPercentage: number;
   }>({
     avgTeamScoreByQuarter: { 1: 0, 2: 0, 3: 0, 4: 0 },
     avgOpponentScoreByQuarter: { 1: 0, 2: 0, 3: 0, 4: 0 },
     teamWinRate: 0,
-    avgTeamScore: 0
+    avgTeamScore: 0,
+    avgOpponentScore: 0,
+    winPercentage: 0
   });
   
   // Calculate basic performance metrics
@@ -32,33 +36,27 @@ export default function TeamPerformance({ games, className }: TeamPerformancePro
   const completedGameIds = completedGamesArray.map(game => game.id);
   const enableQuery = completedGameIds.length > 0;
   
-  // Fetch stats for all completed games
+  // Fetch stats for all completed games using batch endpoint
   const { data: gameStatsMap, isLoading } = useQuery({
-    queryKey: ['teamPerformanceStats', ...completedGameIds],
+    queryKey: ['batchTeamPerformanceStats', completedGameIds.join(',')],
     queryFn: async () => {
       if (completedGameIds.length === 0) {
         return {};
       }
       
-      // Fetch stats for each completed game
-      const statsPromises = completedGameIds.map(async (gameId) => {
-        const response = await fetch(`/api/games/${gameId}/stats?_t=${Date.now()}`);
-        const stats = await response.json();
-        return { gameId, stats };
-      });
+      // Use the batch endpoint to fetch all stats in a single request
+      const idsParam = completedGameIds.join(',');
+      const response = await fetch(`/api/games/stats/batch?ids=${idsParam}`);
       
-      const results = await Promise.all(statsPromises);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch batch statistics for games ${idsParam}`);
+      }
       
-      // Create a map of game ID to stats array
-      const statsMap: Record<number, GameStat[]> = {};
-      results.forEach(result => {
-        statsMap[result.gameId] = result.stats;
-      });
-      
-      return statsMap;
+      return await response.json();
     },
     enabled: enableQuery,
-    staleTime: 60000 // 1 minute
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 15 * 60 * 1000    // Keep in cache for 15 minutes
   });
   
   // Calculate team performance metrics from game stats
@@ -144,12 +142,26 @@ export default function TeamPerformance({ games, className }: TeamPerformancePro
     const avgTeamScore = completedGamesCount > 0 
       ? Math.round((totalTeamScore / completedGamesCount) * 10) / 10 
       : 0;
+      
+    // Calculate average opponent score
+    const avgOpponentScore = completedGamesCount > 0
+      ? Math.round((totalOpponentScore / completedGamesCount) * 10) / 10
+      : 0;
+      
+    // Calculate winning percentage (different from win rate as it includes draws)
+    const totalPoints = wins * 3 + draws * 1; // 3 points for win, 1 for draw
+    const maxPossiblePoints = completedGamesCount * 3; // Maximum possible points if all games were won
+    const winPercentage = maxPossiblePoints > 0
+      ? Math.round((totalPoints / maxPossiblePoints) * 100)
+      : 0;
     
     setQuarterPerformance({
       avgTeamScoreByQuarter,
       avgOpponentScoreByQuarter,
       teamWinRate: winRate,
-      avgTeamScore
+      avgTeamScore,
+      avgOpponentScore,
+      winPercentage
     });
     
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -165,23 +177,32 @@ export default function TeamPerformance({ games, className }: TeamPerformancePro
           </Badge>
         </div>
         
-        {/* Key performance indicators - 2x2 grid expanded to take up more space */}
-        <div className="grid grid-cols-2 gap-6 mb-6">
-          <div className="text-center bg-gray-50 p-4 rounded-lg">
+        {/* Key performance indicators - 3x2 grid for more statistics */}
+        <div className="grid grid-cols-3 gap-4 mb-6">
+          <div className="text-center bg-gray-50 p-3 rounded-lg">
             <p className="text-gray-500 text-sm mb-1">Win Rate</p>
-            <p className="text-4xl font-bold text-primary">{quarterPerformance.teamWinRate}%</p>
+            <p className="text-3xl font-bold text-primary">{quarterPerformance.teamWinRate}%</p>
           </div>
-          <div className="text-center bg-gray-50 p-4 rounded-lg">
-            <p className="text-gray-500 text-sm mb-1">Avg. Score</p>
-            <p className="text-4xl font-bold text-primary">{quarterPerformance.avgTeamScore}</p>
+          <div className="text-center bg-gray-50 p-3 rounded-lg">
+            <p className="text-gray-500 text-sm mb-1">Team Performance</p>
+            <p className="text-3xl font-bold text-primary">{quarterPerformance.winPercentage}%</p>
           </div>
-          <div className="text-center bg-gray-50 p-4 rounded-lg">
+          <div className="text-center bg-gray-50 p-3 rounded-lg">
             <p className="text-gray-500 text-sm mb-1">Games Played</p>
-            <p className="text-4xl font-bold text-primary">{completedGamesCount}</p>
+            <p className="text-3xl font-bold text-primary">{completedGamesCount}</p>
           </div>
-          <div className="text-center bg-gray-50 p-4 rounded-lg">
-            <p className="text-gray-500 text-sm mb-1">Upcoming</p>
-            <p className="text-4xl font-bold text-primary">{games.filter(game => !game.completed && !game.isBye).length}</p>
+          
+          <div className="text-center bg-gray-50 p-3 rounded-lg">
+            <p className="text-gray-500 text-sm mb-1">Avg. Goals For</p>
+            <p className="text-3xl font-bold text-success">{quarterPerformance.avgTeamScore}</p>
+          </div>
+          <div className="text-center bg-gray-50 p-3 rounded-lg">
+            <p className="text-gray-500 text-sm mb-1">Avg. Goals Against</p>
+            <p className="text-3xl font-bold text-error">{quarterPerformance.avgOpponentScore}</p>
+          </div>
+          <div className="text-center bg-gray-50 p-3 rounded-lg">
+            <p className="text-gray-500 text-sm mb-1">Upcoming Games</p>
+            <p className="text-3xl font-bold text-accent">{games.filter(game => !game.completed && !game.isBye).length}</p>
           </div>
         </div>
       </CardContent>
