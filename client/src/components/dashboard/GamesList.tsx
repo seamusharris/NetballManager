@@ -171,16 +171,14 @@ export default function GamesList({ games, opponents, className }: GamesListProp
                 >
                   <div className="flex items-center justify-center">
                     Round
-                    {sortColumn === 'round' ? (
-                      sortDirection === 'asc' 
-                        ? <ArrowUpIcon className="h-3 w-3 ml-1" /> 
-                        : <ArrowDownIcon className="h-3 w-3 ml-1" />
-                    ) : (
-                      <div className="ml-1 h-3 w-3 flex flex-col">
-                        <ArrowUpIcon className="h-1.5 w-3 text-gray-400" />
-                        <ArrowDownIcon className="h-1.5 w-3 text-gray-400" />
-                      </div>
-                    )}
+                    <div className="ml-1 flex">
+                      <ArrowUpIcon 
+                        className={`h-3 w-3 ${sortColumn === 'round' && sortDirection === 'asc' ? 'text-primary' : 'text-gray-400'}`} 
+                      />
+                      <ArrowDownIcon 
+                        className={`h-3 w-3 ${sortColumn === 'round' && sortDirection === 'desc' ? 'text-primary' : 'text-gray-400'}`} 
+                      />
+                    </div>
                   </div>
                 </TableHead>
                 <TableHead 
@@ -189,16 +187,14 @@ export default function GamesList({ games, opponents, className }: GamesListProp
                 >
                   <div className="flex items-center">
                     Date
-                    {sortColumn === 'date' ? (
-                      sortDirection === 'asc' 
-                        ? <ArrowUpIcon className="h-3 w-3 ml-1" /> 
-                        : <ArrowDownIcon className="h-3 w-3 ml-1" />
-                    ) : (
-                      <div className="ml-1 h-3 w-3 flex flex-col">
-                        <ArrowUpIcon className="h-1.5 w-3 text-gray-400" />
-                        <ArrowDownIcon className="h-1.5 w-3 text-gray-400" />
-                      </div>
-                    )}
+                    <div className="ml-1 flex">
+                      <ArrowUpIcon 
+                        className={`h-3 w-3 ${sortColumn === 'date' && sortDirection === 'asc' ? 'text-primary' : 'text-gray-400'}`} 
+                      />
+                      <ArrowDownIcon 
+                        className={`h-3 w-3 ${sortColumn === 'date' && sortDirection === 'desc' ? 'text-primary' : 'text-gray-400'}`} 
+                      />
+                    </div>
                   </div>
                 </TableHead>
                 <TableHead 
@@ -207,16 +203,14 @@ export default function GamesList({ games, opponents, className }: GamesListProp
                 >
                   <div className="flex items-center">
                     Opponent
-                    {sortColumn === 'opponent' ? (
-                      sortDirection === 'asc' 
-                        ? <ArrowUpIcon className="h-3 w-3 ml-1" /> 
-                        : <ArrowDownIcon className="h-3 w-3 ml-1" />
-                    ) : (
-                      <div className="ml-1 h-3 w-3 flex flex-col">
-                        <ArrowUpIcon className="h-1.5 w-3 text-gray-400" />
-                        <ArrowDownIcon className="h-1.5 w-3 text-gray-400" />
-                      </div>
-                    )}
+                    <div className="ml-1 flex">
+                      <ArrowUpIcon 
+                        className={`h-3 w-3 ${sortColumn === 'opponent' && sortDirection === 'asc' ? 'text-primary' : 'text-gray-400'}`} 
+                      />
+                      <ArrowDownIcon 
+                        className={`h-3 w-3 ${sortColumn === 'opponent' && sortDirection === 'desc' ? 'text-primary' : 'text-gray-400'}`} 
+                      />
+                    </div>
                   </div>
                 </TableHead>
                 <TableHead 
@@ -225,16 +219,14 @@ export default function GamesList({ games, opponents, className }: GamesListProp
                 >
                   <div className="flex items-center justify-center">
                     Status
-                    {sortColumn === 'status' ? (
-                      sortDirection === 'asc' 
-                        ? <ArrowUpIcon className="h-3 w-3 ml-1" /> 
-                        : <ArrowDownIcon className="h-3 w-3 ml-1" />
-                    ) : (
-                      <div className="ml-1 h-3 w-3 flex flex-col">
-                        <ArrowUpIcon className="h-1.5 w-3 text-gray-400" />
-                        <ArrowDownIcon className="h-1.5 w-3 text-gray-400" />
-                      </div>
-                    )}
+                    <div className="ml-1 flex">
+                      <ArrowUpIcon 
+                        className={`h-3 w-3 ${sortColumn === 'status' && sortDirection === 'asc' ? 'text-primary' : 'text-gray-400'}`} 
+                      />
+                      <ArrowDownIcon 
+                        className={`h-3 w-3 ${sortColumn === 'status' && sortDirection === 'desc' ? 'text-primary' : 'text-gray-400'}`} 
+                      />
+                    </div>
                   </div>
                 </TableHead>
                 <TableHead className="w-24 text-center border-b">Score</TableHead>
