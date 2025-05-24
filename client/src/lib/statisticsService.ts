@@ -104,6 +104,30 @@ export class StatisticsService {
   }
   
   /**
+   * Fetch statistics for multiple games at once using the batch endpoint
+   * This significantly reduces the number of network requests when loading multiple games
+   */
+  async getBatchGameStats(gameIds: number[]): Promise<Record<number, GameStat[]>> {
+    try {
+      // If no game IDs are provided, return an empty object
+      if (!gameIds.length) {
+        return {};
+      }
+      
+      // Format the IDs for the query parameter
+      const idsParam = gameIds.join(',');
+      const timestamp = new Date().getTime(); // For cache busting if needed
+      const statsMap = await apiRequest(`/api/games/stats/batch?ids=${idsParam}&_t=${timestamp}`);
+      
+      console.log(`Fetched batch stats for ${gameIds.length} games in a single request`);
+      return statsMap;
+    } catch (error) {
+      console.error(`Error fetching batch game statistics: ${error}`);
+      return {};
+    }
+  }
+  
+  /**
    * Fetch game rosters from the API
    */
   async getGameRosters(gameId: number): Promise<Roster[]> {

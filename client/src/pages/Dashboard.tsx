@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet';
 import DashboardSummary from '@/components/dashboard/DashboardSummary';
+import BatchScoreDisplay from '@/components/dashboard/BatchScoreDisplay';
 import { TEAM_NAME } from '@/lib/settings';
 
 export default function Dashboard() {
