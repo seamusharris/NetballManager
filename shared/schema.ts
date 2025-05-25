@@ -134,6 +134,43 @@ export type InsertGameStat = z.infer<typeof insertGameStatSchema>;
 export type GameStat = typeof gameStats.$inferSelect;
 
 // User model (extending from existing model)
+// Player-season relationship
+export const playerSeasons = pgTable("player_seasons", {
+  id: serial("id").primaryKey(),
+  playerId: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
+  seasonId: integer("season_id").notNull().references(() => seasons.id, { onDelete: "cascade" }),
+}, (table) => {
+  return {
+    playerSeasonUnique: unique().on(table.playerId, table.seasonId)
+  };
+});
+
+export const insertPlayerSeasonSchema = createInsertSchema(playerSeasons).omit({ id: true });
+export const importPlayerSeasonSchema = createInsertSchema(playerSeasons);
+export type InsertPlayerSeason = z.infer<typeof insertPlayerSeasonSchema>;
+export type PlayerSeason = typeof playerSeasons.$inferSelect;
+
+// Define relations
+export const seasonsRelations = relations(seasons, ({ many }) => ({
+  games: many(games),
+  playerSeasons: many(playerSeasons)
+}));
+
+export const playersRelations = relations(players, ({ many }) => ({
+  playerSeasons: many(playerSeasons)
+}));
+
+export const playerSeasonsRelations = relations(playerSeasons, ({ one }) => ({
+  player: one(players, {
+    fields: [playerSeasons.playerId],
+    references: [players.id],
+  }),
+  season: one(seasons, {
+    fields: [playerSeasons.seasonId],
+    references: [seasons.id],
+  }),
+}));
+
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),

@@ -1,6 +1,7 @@
-import { useState } from 'react';
-import { Position, allPositions } from '@shared/schema';
+import { useState, useEffect } from 'react';
+import { Position, allPositions, Season } from '@shared/schema';
 import { generatePlayerAvatarColor } from '@/lib/utils';
+import { useQuery } from '@tanstack/react-query';
 
 interface SimplePlayerFormProps {
   onSubmit: (data: any) => void;
@@ -18,6 +19,22 @@ export default function SimplePlayerForm({ onSubmit, onCancel, isSubmitting }: S
   const [position2, setPosition2] = useState('none');
   const [position3, setPosition3] = useState('none');
   const [position4, setPosition4] = useState('none');
+  const [selectedSeasons, setSelectedSeasons] = useState<number[]>([]);
+  
+  // Fetch available seasons
+  const { data: seasons = [] } = useQuery<Season[]>({
+    queryKey: ['/api/seasons'],
+  });
+  
+  // Set default to active season
+  useEffect(() => {
+    if (seasons.length > 0) {
+      const activeSeason = seasons.find(season => season.isActive);
+      if (activeSeason) {
+        setSelectedSeasons([activeSeason.id]);
+      }
+    }
+  }, [seasons]);
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

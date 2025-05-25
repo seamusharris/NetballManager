@@ -3,6 +3,7 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { runAddGameStatusMigration } from "./migrations/addGameStatus";
 import { addSeasonsSupport } from "./migrations/addSeasonsSupport";
+import { addPlayerSeasonsTable } from "./migrations/addPlayerSeasons";
 
 const app = express();
 app.use(express.json());
@@ -44,6 +45,7 @@ app.use((req, res, next) => {
     log("Running database migrations...", "migration");
     await runAddGameStatusMigration();
     await addSeasonsSupport();
+    await addPlayerSeasonsTable();
     log("Database migrations completed successfully!", "migration");
   } catch (error) {
     log(`Error running migrations: ${error}`, "migration-error");
