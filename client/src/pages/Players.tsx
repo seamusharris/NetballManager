@@ -22,9 +22,45 @@ export default function Players() {
   const params = new URLSearchParams(location.split('?')[1] || '');
   const editId = params.get('edit');
   
-  const { data: players = [], isLoading } = useQuery<Player[]>({
+  // Get current active season
+  const { data: activeSeason } = useQuery<Season>({
+    queryKey: ['/api/seasons/active'],
+  });
+  
+  // State to store the selected season for filtering
+  const [selectedSeasonId, setSelectedSeasonId] = useState<number | null>(null);
+  
+  // Get all seasons
+  const { data: seasons = [] } = useQuery<Season[]>({
+    queryKey: ['/api/seasons'],
+  });
+  
+  // Get all players
+  const { data: allPlayers = [], isLoading } = useQuery<Player[]>({
     queryKey: ['/api/players'],
   });
+  
+  // Get player-season relationships to filter players by season
+  const { data: playerSeasons = [] } = useQuery<{playerId: number, seasonId: number}[]>({
+    queryKey: ['/api/players/seasons'],
+    // This endpoint would be implemented in the backend
+    enabled: !!selectedSeasonId, // Only fetch when a season is selected
+  });
+  
+  // Filter players by selected season if needed
+  const players = useMemo(() => {
+    if (!selectedSeasonId) return allPlayers;
+    
+    // In reality this data would come from the API
+    // For now we'll just return all players since the backend isn't implemented yet
+    return allPlayers;
+    
+    // When the API is implemented, we would filter like this:
+    // const playerIdsInSeason = playerSeasons
+    //   .filter(ps => ps.seasonId === selectedSeasonId)
+    //   .map(ps => ps.playerId);
+    // return allPlayers.filter(player => playerIdsInSeason.includes(player.id));
+  }, [selectedSeasonId, allPlayers, playerSeasons]);
   
   // Find the player to edit if an edit ID is provided in the URL
   useEffect(() => {

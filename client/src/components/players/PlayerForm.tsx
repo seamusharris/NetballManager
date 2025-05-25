@@ -42,10 +42,16 @@ interface PlayerFormProps {
   player?: Player;
   onSubmit: (data: any) => void;
   isSubmitting: boolean;
+  initialSeasonIds?: number[];
 }
 
-export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFormProps) {
+export default function PlayerForm({ player, onSubmit, isSubmitting, initialSeasonIds = [] }: PlayerFormProps) {
   const isEditing = !!player;
+  
+  // Fetch all seasons for selection
+  const { data: seasons = [] } = useQuery<Season[]>({
+    queryKey: ['/api/seasons'],
+  });
   
   // Extract position preferences for default values
   const getPositionDefaults = () => {
@@ -62,6 +68,18 @@ export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFor
   
   const positionDefaults = getPositionDefaults();
   
+  // Fetch player seasons if we're editing
+  const [selectedSeasonIds, setSelectedSeasonIds] = useState<number[]>(initialSeasonIds || []);
+  
+  // When in edit mode, fetch the player's seasons if initialSeasonIds wasn't provided
+  useEffect(() => {
+    if (isEditing && initialSeasonIds?.length === 0 && player) {
+      // In a real implementation, you would fetch the player's seasons from the API
+      // For now, we're just using the initialSeasonIds prop
+      console.log("Would fetch player seasons for player ID:", player.id);
+    }
+  }, [isEditing, initialSeasonIds, player]);
+  
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -74,6 +92,7 @@ export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFor
       position3: positionDefaults.position3,
       position4: positionDefaults.position4,
       active: player?.active !== undefined ? player.active : true,
+      seasonIds: selectedSeasonIds,
     },
   });
   
@@ -135,6 +154,24 @@ export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFor
     
   }, [position1, position2, position3, position4, form]);
   
+  // Handle season checkbox changes
+  const handleSeasonChange = (seasonId: number, checked: boolean) => {
+    setSelectedSeasonIds(prev => {
+      if (checked) {
+        return [...prev, seasonId];
+      } else {
+        return prev.filter(id => id !== seasonId);
+      }
+    });
+    
+    // Update the form value
+    const newSeasonIds = checked 
+      ? [...selectedSeasonIds, seasonId] 
+      : selectedSeasonIds.filter(id => id !== seasonId);
+    
+    form.setValue('seasonIds', newSeasonIds);
+  };
+
   const handleSubmit = (values: FormValues) => {
     try {
       // Validate at least one position is selected
@@ -171,6 +208,7 @@ export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFor
       const playerData = {
         ...rest,
         positionPreferences,
+        seasonIds: selectedSeasonIds, // Include the selected season IDs
       };
       
       console.log("Player form submitted with data:", playerData);
@@ -320,6 +358,34 @@ export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFor
             </FormItem>
           )}
         />
+        
+        {/* Season selection */}
+        <div className="space-y-3">
+          <h3 className="text-sm font-medium">Assign to Seasons</h3>
+          <p className="text-xs text-gray-500">
+            Select which seasons this player participates in
+          </p>
+          <div className="space-y-2">
+            {seasons.map(season => (
+              <div key={season.id} className="flex items-center space-x-2">
+                <Checkbox 
+                  id={`season-${season.id}`} 
+                  checked={selectedSeasonIds.includes(season.id)}
+                  onCheckedChange={(checked) => handleSeasonChange(season.id, checked === true)}
+                />
+                <label 
+                  htmlFor={`season-${season.id}`}
+                  className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                  {season.name} {season.isActive && <span className="text-primary">(Current)</span>}
+                </label>
+              </div>
+            ))}
+            {seasons.length === 0 && (
+              <p className="text-xs text-gray-500 italic">No seasons available</p>
+            )}
+          </div>
+        </div>
         
         <div>
           <h3 className="text-sm font-medium mb-2">Position Preferences (Ranked)</h3>
