@@ -95,9 +95,20 @@ export default function Roster() {
   
   // Handle player availability change
   const handleAvailabilityChange = (playerId: number, isAvailable: boolean) => {
-    const newAvailablePlayers = isAvailable
-      ? [...availablePlayers, playerId]
-      : availablePlayers.filter(id => id !== playerId);
+    // Create a new array to ensure we don't have duplicate IDs
+    let newAvailablePlayers;
+    
+    if (isAvailable) {
+      // Only add the player if they're not already in the list
+      if (!availablePlayers.includes(playerId)) {
+        newAvailablePlayers = [...availablePlayers, playerId];
+      } else {
+        newAvailablePlayers = [...availablePlayers]; // No change needed
+      }
+    } else {
+      // Remove the player from the list
+      newAvailablePlayers = availablePlayers.filter(id => id !== playerId);
+    }
     
     setAvailablePlayers(newAvailablePlayers);
 
