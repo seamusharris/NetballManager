@@ -637,13 +637,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
           await client.query('DELETE FROM player_seasons WHERE player_id = $1', [id]);
           console.log(`Cleared existing seasons for player ${id}`);
           
+          console.log(`About to insert player-season relationships for player ${id}`);
+          console.log(`Season IDs to add: ${JSON.stringify(finalSeasonIds)}`);
+          
           // Add new relationships one by one
           for (const seasonId of finalSeasonIds) {
-            await client.query(
-              'INSERT INTO player_seasons (player_id, season_id) VALUES ($1, $2)',
-              [id, seasonId]
-            );
-            console.log(`Added player ${id} to season ${seasonId}`);
+            try {
+              console.log(`Attempting to add player ${id} to season ${seasonId}`);
+              await client.query(
+                'INSERT INTO player_seasons (player_id, season_id) VALUES ($1, $2)',
+                [id, seasonId]
+              );
+              console.log(`Successfully added player ${id} to season ${seasonId}`);
+            } catch (insertError) {
+              console.error(`Error inserting player ${id} to season ${seasonId}:`, insertError.message);
+              throw insertError; // Re-throw to trigger rollback
+            }
           }
           
           await client.query('COMMIT');
