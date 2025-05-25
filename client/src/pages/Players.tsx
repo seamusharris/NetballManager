@@ -310,67 +310,74 @@ export default function Players() {
     
     const playerId = editingPlayer.id;
     
-    // Log data for debugging
-    console.log("Using direct player update endpoint");
+    // Fallback to old approach which uses separate endpoints for player and seasons
+    console.log("Using separate API calls for player update");
     console.log("Player ID:", playerId);
     console.log("Form data:", JSON.stringify(data));
     
-    // Prepare full player data with seasons
-    const playerData = {
+    // Step 1: Update basic player data
+    const playerUpdateData = {
       displayName: data.displayName || "",
       firstName: data.firstName || "",
       lastName: data.lastName || "",
       dateOfBirth: data.dateOfBirth || null,
       positionPreferences: Array.isArray(data.positionPreferences) ? data.positionPreferences : [],
-      active: Boolean(data.active),
-      seasonIds: Array.isArray(data.seasonIds) ? data.seasonIds : []
+      active: Boolean(data.active)
     };
     
-    console.log("Sending complete player data:", JSON.stringify(playerData));
+    console.log("Updating basic player data:", JSON.stringify(playerUpdateData));
     
-    // Use our new direct update endpoint that handles everything in one request
-    fetch(`/api/direct/players/${playerId}`, {
+    fetch(`/api/players/${playerId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(playerData)
+      body: JSON.stringify(playerUpdateData)
     })
     .then(async response => {
-      console.log("Direct update response status:", response.status);
+      console.log("Player update response status:", response.status);
       const text = await response.text();
-      console.log("Raw response text:", text);
+      console.log("Raw player update response:", text);
       
-      try {
-        return text ? JSON.parse(text) : { success: false, message: "Empty response" };
-      } catch (e) {
-        console.error("JSON parse error:", e);
-        return { success: false, message: `Invalid JSON: ${text.substring(0, 100)}` };
+      if (!response.ok) {
+        throw new Error(`Player update failed: ${text}`);
       }
+      
+      return JSON.parse(text);
     })
     .then(result => {
-      console.log("Direct update result:", result);
+      console.log("Player basic data updated successfully:", result);
       
-      if (result.success) {
-        toast({
-          title: "Success",
-          description: "Player updated successfully"
-        });
-        
-        // Refresh data and close dialog
-        queryClient.invalidateQueries({queryKey: ['/api/players']});
-        setEditingPlayer(null);
-      } else {
-        console.error("Detailed error from server:", result.error || "No error details");
-        toast({
-          title: "Update Failed",
-          description: result.message || "Failed to update player",
-          variant: "destructive"
-        });
+      // Step 2: Update player's seasons
+      const seasonIds = Array.isArray(data.seasonIds) ? data.seasonIds : [];
+      console.log("Now updating player seasons:", seasonIds);
+      
+      return fetch(`/api/players/${playerId}/seasons`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ seasonIds })
+      });
+    })
+    .then(async response => {
+      console.log("Seasons update response status:", response.status);
+      const text = await response.text();
+      console.log("Raw seasons update response:", text);
+      
+      if (!response.ok) {
+        throw new Error(`Seasons update failed: ${text}`);
       }
+      
+      toast({
+        title: "Success",
+        description: "Player and seasons updated successfully"
+      });
+      
+      // Refresh data and close dialog
+      queryClient.invalidateQueries({queryKey: ['/api/players']});
+      setEditingPlayer(null);
     })
     .catch(error => {
-      console.error("Error during direct player update:", error);
+      console.error("Error during player update:", error);
       toast({
-        title: "Update Error",
+        title: "Update Failed",
         description: String(error),
         variant: "destructive"
       });
