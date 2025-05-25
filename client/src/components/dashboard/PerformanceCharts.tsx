@@ -40,13 +40,24 @@ interface QuarterStats {
   totalReboundOpportunities: number;
 }
 
-export default function PerformanceCharts({ games, className }: PerformanceChartsProps) {
+export default function PerformanceCharts({ games, className, seasonFilter, activeSeason }: PerformanceChartsProps) {
   const [gameRange, setGameRange] = useState('all');
   const [metricType, setMetricType] = useState('all');
   const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
   
-  // Filter games based on selected range
-  const filteredGames = games.filter(game => game.completed);
+  // Filter games by selected season first
+  const seasonFilteredGames = games.filter(game => {
+    if (seasonFilter === 'current' && activeSeason) {
+      return game.seasonId === activeSeason.id;
+    } else if (seasonFilter && seasonFilter !== 'current') {
+      const seasonId = parseInt(seasonFilter);
+      return game.seasonId === seasonId;
+    }
+    return true;
+  });
+  
+  // Then filter by completion status
+  const filteredGames = seasonFilteredGames.filter(game => game.completed);
   const gameIds = filteredGames.map(game => game.id);
   
   // Fetch game stats for all completed games
