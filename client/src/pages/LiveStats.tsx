@@ -780,7 +780,20 @@ export default function LiveStats() {
   const getQuarterTotal = (stat: StatType): number => {
     let total = 0;
     
-    // First, count player stats from liveStats
+    // For position-based stats, the most accurate way is to get stats directly from existingStats
+    if (existingStats) {
+      existingStats.filter(s => s.quarter === currentQuarter).forEach(statEntry => {
+        if (statEntry[stat] !== undefined) {
+          // Add up stats from all positions for this quarter
+          total += statEntry[stat] || 0;
+        }
+      });
+      
+      console.log(`Total for ${stat} in Q${currentQuarter}: ${total}`);
+      return total;
+    }
+    
+    // Fallback to liveStats if existingStats is unavailable
     Object.keys(liveStats).forEach(playerIdStr => {
       const playerId = parseInt(playerIdStr);
       const playerStats = liveStats[playerId]?.[currentQuarter];
@@ -789,29 +802,6 @@ export default function LiveStats() {
       }
     });
     
-    // Then, check for position stats that aren't mapped to players (unassigned positions)
-    if (existingStats) {
-      // Get all positions from the roster for this quarter
-      const assignedPositions = new Set<string>();
-      
-      if (rosters) {
-        rosters.filter(r => r.quarter === currentQuarter).forEach(r => {
-          assignedPositions.add(r.position);
-        });
-      }
-      
-      // Look for position stats that don't have players assigned
-      existingStats.filter(s => s.quarter === currentQuarter).forEach(statEntry => {
-        // Skip if the position has a player assigned (we've already counted these)
-        const hasPlayerAssigned = Array.from(assignedPositions).includes(statEntry.position);
-        
-        if (!hasPlayerAssigned && statEntry[stat] !== undefined) {
-          console.log(`Adding unassigned position ${statEntry.position} stats: ${stat} = ${statEntry[stat]}`);
-          total += statEntry[stat] || 0;
-        }
-      });
-    }
-    
     return total;
   };
   
@@ -819,7 +809,20 @@ export default function LiveStats() {
   const getGameTotal = (stat: StatType): number => {
     let total = 0;
     
-    // First, count player stats from liveStats
+    // For position-based stats, the most accurate way is to get stats directly from existingStats
+    if (existingStats) {
+      // Add up all stats across all quarters directly from the position stats in the database
+      existingStats.forEach(statEntry => {
+        if (statEntry[stat] !== undefined) {
+          total += statEntry[stat] || 0;
+        }
+      });
+      
+      console.log(`Game total for ${stat}: ${total}`);
+      return total;
+    }
+    
+    // Fallback to liveStats if existingStats is unavailable
     Object.keys(liveStats).forEach(playerIdStr => {
       const playerId = parseInt(playerIdStr);
       
@@ -830,35 +833,6 @@ export default function LiveStats() {
         }
       });
     });
-    
-    // Then, check for position stats that aren't mapped to players (unassigned positions)
-    if (existingStats) {
-      // Get all positions from the roster by quarter
-      const assignedPositionsByQuarter: Record<number, Set<string>> = {
-        1: new Set<string>(),
-        2: new Set<string>(),
-        3: new Set<string>(),
-        4: new Set<string>()
-      };
-      
-      if (rosters) {
-        rosters.forEach(r => {
-          assignedPositionsByQuarter[r.quarter].add(r.position);
-        });
-      }
-      
-      // Look for position stats that don't have players assigned
-      existingStats.forEach(statEntry => {
-        const quarter = statEntry.quarter;
-        // Skip if the position has a player assigned (we've already counted these)
-        const hasPlayerAssigned = Array.from(assignedPositionsByQuarter[quarter]).includes(statEntry.position);
-        
-        if (!hasPlayerAssigned && statEntry[stat] !== undefined) {
-          console.log(`Adding unassigned position ${statEntry.position} in Q${quarter} stats to game total: ${stat} = ${statEntry[stat]}`);
-          total += statEntry[stat] || 0;
-        }
-      });
-    }
     
     return total;
   };
