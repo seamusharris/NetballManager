@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { insertGameSchema, Game, Opponent, allGameStatuses } from "@shared/schema";
+import { insertGameSchema, Game, Opponent, Season, allGameStatuses } from "@shared/schema";
 
 // Extend the schema for the form validation
 const formSchema = insertGameSchema.extend({
@@ -29,7 +29,8 @@ const formSchema = insertGameSchema.extend({
   opponentId: z.string(), // No validation directly on the field
   isBye: z.boolean().default(false),
   round: z.string().optional(),
-  status: z.string().optional()
+  status: z.string().optional(),
+  seasonId: z.string().optional() // Season ID as string for form handling
 }).refine(
   (data) => {
     // If it's a bye, we don't need opponent
@@ -46,16 +47,19 @@ const formSchema = insertGameSchema.extend({
 // Convert string opponentId to number for submission
 type FormValues = z.infer<typeof formSchema> & {
   opponentId: string;
+  seasonId: string;
 };
 
 interface GameFormProps {
   game?: Game;
   opponents: Opponent[];
+  seasons: Season[];
+  activeSeason?: Season;
   onSubmit: (data: any) => void;
   isSubmitting: boolean;
 }
 
-export default function GameForm({ game, opponents, onSubmit, isSubmitting }: GameFormProps) {
+export default function GameForm({ game, opponents, seasons, activeSeason, onSubmit, isSubmitting }: GameFormProps) {
   const isEditing = !!game;
   
   const form = useForm<FormValues>({
@@ -66,7 +70,8 @@ export default function GameForm({ game, opponents, onSubmit, isSubmitting }: Ga
       opponentId: game?.opponentId ? String(game.opponentId) : "",
       isBye: game?.isBye || false,
       round: game?.round || "",
-      status: game?.status || "upcoming"
+      status: game?.status || "upcoming",
+      seasonId: game?.seasonId ? String(game.seasonId) : activeSeason ? String(activeSeason.id) : ""
     },
   });
   
@@ -78,7 +83,8 @@ export default function GameForm({ game, opponents, onSubmit, isSubmitting }: Ga
         time: values.time,
         round: values.round,
         isBye: true,
-        status: values.status || 'upcoming'
+        status: values.status || 'upcoming',
+        seasonId: values.seasonId ? parseInt(values.seasonId) : (activeSeason ? activeSeason.id : undefined)
       };
       
       console.log("Submitting BYE game:", byeGameData);
@@ -93,7 +99,8 @@ export default function GameForm({ game, opponents, onSubmit, isSubmitting }: Ga
       round: values.round,
       opponentId: parseInt(values.opponentId),
       status: values.status || 'upcoming',
-      isBye: false
+      isBye: false,
+      seasonId: values.seasonId ? parseInt(values.seasonId) : (activeSeason ? activeSeason.id : undefined)
     };
     
     console.log("Submitting regular game:", formattedValues);
