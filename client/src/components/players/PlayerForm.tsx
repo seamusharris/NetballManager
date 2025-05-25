@@ -70,7 +70,7 @@ export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFor
     
     if (playerSeasons && playerSeasons.length > 0) {
       // Get just the season IDs from the seasons array
-      const seasonIds = playerSeasons.map((season: Season) => season.id);
+      const seasonIds = playerSeasons.map((season: any) => season.id);
       
       console.log("Setting player seasons from API response:", seasonIds);
       setSelectedSeasons(seasonIds);
@@ -219,18 +219,15 @@ export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFor
       console.log("Valid season IDs:", validSeasonIds);
       console.log("Filtered season IDs:", filteredSeasonIds);
       
-      // Construct the final player data object with properly filtered seasons
-      // Make sure we're only passing valid season IDs (numbers that exist in our seasons data)
-      const validatedSeasonIds = filteredSeasonIds
-        .filter(id => {
-          const isValidId = validSeasonIds.includes(id);
-          if (!isValidId) {
-            console.warn(`Removing invalid season ID: ${id}`);
-          }
-          return isValidId;
-        });
-        
-      console.log("Final validated season IDs:", validatedSeasonIds);
+      // Log what valid season IDs are available from our API
+      console.log("Valid season IDs from API (for reference only):", validSeasonIds);
+      
+      // CRITICAL FIX: The player seasons data is getting mixed with player IDs
+      // We need to strictly filter to ONLY use valid season IDs from our seasons array
+      const validatedSeasonIds = selectedSeasons.filter(id => 
+        // Only accept IDs that match our actual seasons
+        seasons.some(season => season.id === id)
+      );
         
       const playerData = {
         ...rest,
@@ -239,6 +236,8 @@ export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFor
           ? validatedSeasonIds 
           : validSeasonIds.filter(id => seasons.find(s => s.id === id)?.isActive),
       };
+      
+      console.log("Submitting player data manually:", playerData);
       
       console.log("Player form submitted with data:", playerData);
       
