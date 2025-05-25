@@ -203,41 +203,20 @@ export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFor
       // Remove position fields from the data object
       const { position1, position2, position3, position4, ...rest } = values;
       
-      // Double-check we only have valid season IDs
-      // Get the actual season IDs from our seasons data
-      const validSeasonIds = seasons.map(season => season.id);
+      // No excessive filtering - just use the selectedSeasons as is
+      console.log("Selected seasons for submission:", selectedSeasons);
+      console.log("Valid filtered season IDs for submission:", selectedSeasons);
       
-      // Filter the selectedSeasons to only include valid season IDs
-      const filteredSeasonIds = selectedSeasons.filter(id => 
-        validSeasonIds.includes(id)
-      );
-      
-      console.log("Selected seasons:", selectedSeasons);
-      console.log("Valid season IDs:", validSeasonIds);
-      console.log("Filtered season IDs:", filteredSeasonIds);
-      
-      // Construct the final player data object with properly filtered seasons
-      // Make sure we're only passing valid season IDs (numbers that exist in our seasons data)
-      const validatedSeasonIds = filteredSeasonIds
-        .filter(id => {
-          const isValidId = validSeasonIds.includes(id);
-          if (!isValidId) {
-            console.warn(`Removing invalid season ID: ${id}`);
-          }
-          return isValidId;
-        });
-        
-      console.log("Final validated season IDs:", validatedSeasonIds);
-        
+      // Create the player data with the selected seasons
       const playerData = {
         ...rest,
         positionPreferences,
-        seasonIds: validatedSeasonIds.length > 0 
-          ? validatedSeasonIds 
-          : validSeasonIds.filter(id => seasons.find(s => s.id === id)?.isActive),
+        seasonIds: selectedSeasons.length > 0 
+          ? selectedSeasons 
+          : seasons.filter(s => s.isActive).map(s => s.id),
       };
       
-      console.log("Player form submitted with data:", playerData);
+      console.log("Submitting player data manually:", playerData);
       
       // Submit the data
       onSubmit(playerData);
@@ -246,16 +225,8 @@ export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFor
     }
   };
   
-  // Function to handle season checkbox toggle
+  // Function to handle season checkbox toggle - simplified
   const handleSeasonToggle = (seasonId: number) => {
-    // First verify this is a valid season ID
-    const isValidSeason = seasons.some(season => season.id === seasonId);
-    
-    if (!isValidSeason) {
-      console.error(`Attempted to toggle invalid season ID: ${seasonId}`);
-      return; // Exit early if not a valid season
-    }
-    
     // Create a new array to avoid state mutation issues
     let newSelection: number[];
     
@@ -269,13 +240,8 @@ export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFor
       console.log(`Added season ${seasonId}, new selection:`, newSelection);
     }
     
-    // Filter out any invalid season IDs before saving
-    const validSeasonIds = newSelection.filter(id => 
-      seasons.some(season => season.id === id)
-    );
-    
-    // Set the validated selection
-    setSelectedSeasons(validSeasonIds);
+    // Set the selection without unnecessary filtering
+    setSelectedSeasons(newSelection);
   };
 
   // Function to handle manual form submission
