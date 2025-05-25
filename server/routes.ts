@@ -16,6 +16,7 @@ import {
 } from "@shared/schema";
 import { fixGameStatsSchema } from "./fixDbSchema";
 import { setPositionsForStats } from "./migrations/setPositionsForStats";
+import { updatePlayerSeasonRelationships, getPlayerSeasons } from "./player-season-routes";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // put application routes here
@@ -574,61 +575,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Player not found" });
       }
       
-      // Always handle player-season relationships, even to clear them all
+      // Handle player-season relationships with direct SQL
       console.log(`Updating player-season relationships for player ${id} with seasons:`, seasonIds);
       
-      // Simple approach: Use individual delete and insert statements with error handling
       try {
-        console.log(`Player ${id} will be associated with these seasons:`, seasonIds);
+        // Import the pool directly
+        const { pool } = await import('./db');
         
-        // Use a simpler approach with separate operations
-        // 1. First delete all existing relationships 
+        // Prepare a client for the transaction
+        const client = await pool.connect();
+        
         try {
-          await fetch(`/api/player-seasons/player/${id}`, {
-            method: 'DELETE',
-          });
-          console.log(`Successfully deleted existing player-season relationships for player ${id}`);
-        } catch (deleteError) {
-          console.error(`Error deleting player-season relationships:`, deleteError);
-        }
-        
-        // 2. Add new relationships one by one with proper error handling
-        if (Array.isArray(seasonIds) && seasonIds.length > 0) {
-          const successfulInserts = [];
+          // Convert seasonIds to a valid array of numbers and filter out invalid values
+          const validSeasonIds = Array.isArray(seasonIds) 
+            ? seasonIds
+                .map(id => typeof id === 'string' ? parseInt(id, 10) : id)
+                .filter(id => typeof id === 'number' && !isNaN(id))
+            : [];
+            
+          console.log(`Player ${id} will be associated with these valid seasons:`, validSeasonIds);
           
-          for (const seasonId of seasonIds) {
-            // Only process valid numeric season IDs
-            if (typeof seasonId === 'number' && !isNaN(seasonId)) {
-              try {
-                // Insert each relationship individually
-                const response = await fetch('/api/player-seasons', {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                  },
-                  body: JSON.stringify({
-                    playerId: id,
-                    seasonId: seasonId
-                  })
-                });
-                
-                if (response.ok) {
-                  successfulInserts.push(seasonId);
-                  console.log(`Added player ${id} to season ${seasonId}`);
-                } else {
-                  console.error(`Failed to add player ${id} to season ${seasonId}: ${response.status}`);
-                }
-              } catch (insertError) {
-                console.error(`Error adding player ${id} to season ${seasonId}:`, insertError);
-              }
-            } else {
-              console.warn(`Skipping invalid season ID: ${seasonId}`);
-            }
+          // Start a transaction
+          await client.query('BEGIN');
+          
+          // 1. Delete all existing relationships for this player
+          await client.query('DELETE FROM player_seasons WHERE player_id = $1', [id]);
+          console.log(`Deleted existing season relationships for player ${id}`);
+          
+          // 2. Add new relationships if there are any
+          if (validSeasonIds.length > 0) {
+            // Create value placeholders for the multi-row insert
+            const placeholders = validSeasonIds.map((_, index) => 
+              `($1, $${index + 2})`
+            ).join(', ');
+            
+            // Prepare all parameter values with player ID first
+            const parameters = [id, ...validSeasonIds];
+            
+            // Create and execute the multi-row insert query
+            const insertQuery = `
+              INSERT INTO player_seasons (player_id, season_id) 
+              VALUES ${placeholders}
+              ON CONFLICT (player_id, season_id) DO NOTHING
+            `;
+            
+            await client.query(insertQuery, parameters);
+            console.log(`Added player ${id} to ${validSeasonIds.length} seasons`);
+          } else {
+            console.log(`No valid seasons provided for player ${id}, all associations cleared`);
           }
           
-          console.log(`Successfully added player ${id} to ${successfulInserts.length} seasons:`, successfulInserts);
-        } else {
-          console.log(`No seasons provided for player ${id}, all associations cleared`);
+          // Commit the transaction
+          await client.query('COMMIT');
+          console.log(`Successfully committed player-season relationships for player ${id}`);
+        } catch (dbError) {
+          // Rollback on error
+          await client.query('ROLLBACK');
+          console.error(`Database error updating player-season relationships:`, dbError);
+        } finally {
+          // Always release the client
+          client.release();
+          console.log(`Released database client`);
         }
       } catch (error) {
         console.error(`Error handling player-season relationships:`, error);
