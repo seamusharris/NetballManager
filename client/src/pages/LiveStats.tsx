@@ -865,21 +865,16 @@ export default function LiveStats() {
     let currentValue = 0;
     
     if (playerId === 0 && position) {
-      // This is an unassigned position - try getting the value from posStats first (pre-extracted),
-      // then fall back to direct search in existingStats if needed
-      if (posStats && typeof posStats[stat] !== 'undefined') {
-        currentValue = posStats[stat];
-        console.log(`Using pre-extracted position stats: ${position} in Q${currentQuarter}, ${stat} = ${currentValue}`);
-      } else {
-        // Direct lookup in existingStats as fallback
-        const positionStat = existingStats?.find(
-          (s: GameStat) => s.position === position && s.quarter === currentQuarter
-        );
-        
-        if (positionStat && typeof positionStat[stat] !== 'undefined') {
-          currentValue = positionStat[stat] || 0;
-          console.log(`Direct lookup in existingStats: ${position} in Q${currentQuarter}, ${stat} = ${currentValue}`);
-        }
+      // This is an unassigned position - get value directly from existingStats
+      const positionStat = existingStats?.find(
+        (s: GameStat) => s.position === position && s.quarter === currentQuarter
+      );
+      
+      if (positionStat && positionStat[stat] !== undefined) {
+        currentValue = positionStat[stat] || 0;
+      } else if (posStats && posStats[stat] !== undefined) {
+        // Fallback to provided posStats if available
+        currentValue = posStats[stat] || 0;
       }
     } else {
       // Normal player stat
@@ -1240,7 +1235,6 @@ export default function LiveStats() {
                   pickUp: positionStat.pickUp || 0,
                   infringement: positionStat.infringement || 0
                 };
-                console.log(`Found stats for unassigned position ${position} in Q${currentQuarter}:`, positionStats);
               }
             }
             
