@@ -987,6 +987,10 @@ export default function GameDetails() {
   const [gameNotes, setGameNotes] = useState<string>("");
   const [isEditingNotes, setIsEditingNotes] = useState<boolean>(false);
   
+  // State for award winner
+  const [isEditingAward, setIsEditingAward] = useState<boolean>(false);
+  const [selectedAwardWinner, setSelectedAwardWinner] = useState<number | null>(null);
+  
   const [activeTab, setActiveTab] = useState('overview');
   
   // Fetch game data
@@ -1332,6 +1336,133 @@ export default function GameDetails() {
                           Set Up Roster
                         </Link>
                       </Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Award Winner Card */}
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-xl font-bold">Player of the Match</CardTitle>
+                  {!isEditingAward ? (
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => {
+                        setIsEditingAward(true);
+                        setSelectedAwardWinner(game.awardWinnerId || null);
+                      }}
+                    >
+                      <Edit className="mr-2 h-4 w-4" />
+                      Select Winner
+                    </Button>
+                  ) : (
+                    <div className="flex space-x-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => {
+                          setIsEditingAward(false);
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                      <Button 
+                        variant="default" 
+                        size="sm" 
+                        onClick={async () => {
+                          try {
+                            const response = await fetch(`/api/games/${gameId}`, {
+                              method: 'PATCH',
+                              headers: {
+                                'Content-Type': 'application/json',
+                              },
+                              body: JSON.stringify({ awardWinnerId: selectedAwardWinner }),
+                            });
+                            
+                            if (response.ok) {
+                              // Invalidate the game query to refresh the data
+                              queryClient.invalidateQueries({ queryKey: ['/api/games', gameId] });
+                              setIsEditingAward(false);
+                              toast({
+                                title: "Award Winner saved",
+                                description: "Player of the match has been updated successfully.",
+                              });
+                            } else {
+                              throw new Error('Failed to save award winner');
+                            }
+                          } catch (error) {
+                            toast({
+                              variant: "destructive",
+                              title: "Error",
+                              description: "Failed to save award winner. Please try again.",
+                            });
+                          }
+                        }}
+                      >
+                        Save
+                      </Button>
+                    </div>
+                  )}
+                </CardHeader>
+                <CardContent>
+                  {isEditingAward ? (
+                    <div className="space-y-4">
+                      <Select
+                        value={selectedAwardWinner?.toString() || ''}
+                        onValueChange={(value) => setSelectedAwardWinner(value ? parseInt(value, 10) : null)}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select player..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">No award winner</SelectItem>
+                          {roster && roster.length > 0 ? (
+                            // Get unique players from roster
+                            Array.from(new Set(roster.map(r => r.playerId)))
+                              .map(playerId => {
+                                const player = players?.find(p => p.id === playerId);
+                                return player ? (
+                                  <SelectItem key={player.id} value={player.id.toString()}>
+                                    {player.displayName || `${player.firstName} ${player.lastName}`}
+                                  </SelectItem>
+                                ) : null;
+                              })
+                          ) : (
+                            <SelectItem value="" disabled>No players in roster</SelectItem>
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  ) : (
+                    <div className="min-h-[60px] flex items-center">
+                      {game.awardWinnerId ? (
+                        (() => {
+                          const player = players?.find(p => p.id === game.awardWinnerId);
+                          if (!player) return <div className="text-gray-500 italic">Player not found</div>;
+                          
+                          const playerColor = getPlayerColor(players || [], player.id);
+                          return (
+                            <div className="flex items-center space-x-2">
+                              <div 
+                                className="w-8 h-8 rounded-full flex items-center justify-center text-white"
+                                style={{ backgroundColor: playerColor }}
+                              >
+                                {player.displayName?.charAt(0) || player.firstName.charAt(0)}
+                              </div>
+                              <div 
+                                className="font-semibold" 
+                                style={{ color: playerColor }}
+                              >
+                                {player.displayName || `${player.firstName} ${player.lastName}`}
+                              </div>
+                            </div>
+                          );
+                        })()
+                      ) : (
+                        <div className="text-gray-500 italic">No award winner has been selected for this game.</div>
+                      )}
                     </div>
                   )}
                 </CardContent>
