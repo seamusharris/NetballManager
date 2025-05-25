@@ -16,8 +16,39 @@ export const db = drizzle(pool, { schema });
 
 // Helper function to update player-season relationships
 export async function updatePlayerSeasons(playerId: number, seasonIds: number[]) {
+  console.log(`DB updatePlayerSeasons: Updating player ${playerId} with seasons:`, seasonIds);
+  
+  // Validate inputs
+  if (!playerId || isNaN(playerId) || playerId <= 0) {
+    console.error(`Invalid player ID: ${playerId}`);
+    return false;
+  }
+  
+  if (!Array.isArray(seasonIds)) {
+    console.error(`Season IDs must be an array, received:`, seasonIds);
+    seasonIds = [];
+  }
+  
+  // Filter out any invalid season IDs
+  const validSeasonIds = seasonIds.filter(id => 
+    typeof id === 'number' && !isNaN(id) && id > 0
+  );
+  
+  console.log(`DB updatePlayerSeasons: Valid season IDs:`, validSeasonIds);
+  
   const client = await pool.connect();
   try {
+    // First check if player exists
+    const playerResult = await client.query(
+      'SELECT id FROM players WHERE id = $1', 
+      [playerId]
+    );
+    
+    if (playerResult.rowCount === 0) {
+      console.error(`Player with ID ${playerId} not found`);
+      return false;
+    }
+    
     // Start transaction
     await client.query('BEGIN');
     
@@ -26,22 +57,28 @@ export async function updatePlayerSeasons(playerId: number, seasonIds: number[])
     console.log(`Deleted existing season relationships for player ${playerId}`);
     
     // Insert new relationships if any exist
-    if (seasonIds && seasonIds.length > 0) {
-      // Process each seasonId individually with error handling
-      for (const seasonId of seasonIds) {
-        try {
-          await client.query(
-            'INSERT INTO player_seasons (player_id, season_id) VALUES ($1, $2) ON CONFLICT (player_id, season_id) DO NOTHING',
-            [playerId, seasonId]
-          );
-          console.log(`Added player ${playerId} to season ${seasonId}`);
-        } catch (insertError) {
-          console.error(`Error adding player ${playerId} to season ${seasonId}:`, insertError);
-          // Continue with next season instead of failing completely
-        }
+    if (validSeasonIds.length > 0) {
+      // Prepare placeholders for bulk insert
+      const placeholders = validSeasonIds.map((_, i) => 
+        `($1, $${i + 2})`
+      ).join(', ');
+      
+      // Parameters array with player ID as first param
+      const params = [playerId, ...validSeasonIds];
+      
+      try {
+        await client.query(
+          `INSERT INTO player_seasons (player_id, season_id) VALUES ${placeholders}`,
+          params
+        );
+        console.log(`Added player ${playerId} to seasons: ${validSeasonIds.join(', ')}`);
+      } catch (insertError) {
+        console.error(`Error adding player ${playerId} to seasons:`, insertError);
+        await client.query('ROLLBACK');
+        return false;
       }
     } else {
-      console.log(`No seasons provided for player ${playerId}, all associations removed`);
+      console.log(`No valid seasons provided for player ${playerId}, all associations removed`);
     }
     
     // Commit transaction
@@ -52,7 +89,7 @@ export async function updatePlayerSeasons(playerId: number, seasonIds: number[])
     // Rollback on error
     await client.query('ROLLBACK');
     console.error('Error updating player seasons:', error);
-    throw error;
+    return false;
   } finally {
     client.release();
   }

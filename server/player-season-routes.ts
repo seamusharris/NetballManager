@@ -141,72 +141,11 @@ export async function updatePlayerSeasons(playerId: number, seasonIds: number[])
     console.log(`Player ID: ${playerId}`);
     console.log(`Season IDs: ${seasonIds.join(', ')}`);
     
-    // Use db for Drizzle ORM operations whenever possible
-    // Check if player exists
-    const player = await db.query.players.findFirst({
-      where: eq(players.id, playerId)
-    });
-    
-    if (!player) {
-      console.error(`Player with ID ${playerId} does not exist`);
-      return false;
-    }
-    
-    // Skip excessive validation - we trust the seasons passed in
-    let validSeasonIds = seasonIds;
-    console.log(`Using provided season IDs: ${validSeasonIds.join(', ')}`);
-    
-    // Only perform basic validation if needed in the future
-    
-    // Get a client from the pool for transaction
-    const { pool } = await import('./db');
-    const client = await pool.connect();
-    
-    try {
-      // Start transaction
-      await client.query('BEGIN');
-      
-      // 1. Delete existing relationships
-      console.log(`Deleting existing player-season relationships for player ${playerId}`);
-      await client.query(
-        'DELETE FROM player_seasons WHERE player_id = $1', 
-        [playerId]
-      );
-      
-      // 2. Insert new relationships as a batch if we have any
-      if (validSeasonIds.length > 0) {
-        // Create values string for bulk insert
-        const values = validSeasonIds.map((_, index) => 
-          `($1, $${index + 2})`
-        ).join(', ');
-        
-        // Create parameters array with player ID as first param
-        const params = [playerId, ...validSeasonIds];
-        
-        console.log(`Inserting ${validSeasonIds.length} player-season relationships`);
-        await client.query(
-          `INSERT INTO player_seasons (player_id, season_id) 
-           VALUES ${values} 
-           ON CONFLICT (player_id, season_id) DO NOTHING`,
-          params
-        );
-      }
-      
-      // Commit transaction
-      await client.query('COMMIT');
-      console.log(`Successfully updated player-season relationships for player ${playerId}`);
-      return true;
-    } catch (txError) {
-      // Rollback transaction on error
-      await client.query('ROLLBACK');
-      console.error("Transaction error:", txError);
-      return false;
-    } finally {
-      // Always release client
-      client.release();
-    }
+    // Use the direct implementation from db.ts to avoid duplication
+    const { updatePlayerSeasons } = await import('./db');
+    return await updatePlayerSeasons(playerId, seasonIds);
   } catch (error) {
-    console.error("Error in updatePlayerSeasons:", error);
+    console.error("Error in player-season-routes updatePlayerSeasons:", error);
     return false;
   }
 }
