@@ -209,8 +209,8 @@ export class DatabaseStorage implements IStorage {
     return player;
   }
 
-  async updatePlayer(id: number, updatePlayer: Partial<InsertPlayer>, seasonIds?: number[]): Promise<Player | undefined> {
-    // Start a transaction to handle both player update and season associations
+  async updatePlayer(id: number, updatePlayer: Partial<InsertPlayer>, seasonIds?: number[] | null): Promise<Player | undefined> {
+    // Only handle the basic player data update here - seasons are handled separately in the route handler
     try {
       // Handle type-safe update to avoid TS errors
       const updateData: Record<string, any> = {};
@@ -223,37 +223,14 @@ export class DatabaseStorage implements IStorage {
       if (updatePlayer.positionPreferences !== undefined) updateData.positionPreferences = updatePlayer.positionPreferences;
       if (updatePlayer.avatarColor !== undefined) updateData.avatarColor = updatePlayer.avatarColor;
       
-      // Update the player first
+      // Update the player data only
       const [updated] = await db
         .update(players)
         .set(updateData)
         .where(eq(players.id, id))
         .returning();
       
-      if (!updated) {
-        return undefined; // Player not found
-      }
-      
-      // Update player seasons if provided
-      if (Array.isArray(seasonIds)) {
-        console.log(`Updating seasons for player ${id}:`, seasonIds);
-        
-        // First remove existing season associations
-        await db.delete(playerSeasons).where(eq(playerSeasons.playerId, id));
-        
-        // Then add new season associations if we have any
-        if (seasonIds.length > 0) {
-          // Create entries for each season
-          for (const seasonId of seasonIds) {
-            await db.insert(playerSeasons).values({
-              playerId: id,
-              seasonId: seasonId
-            });
-          }
-        }
-      }
-      
-      return updated;
+      return updated || undefined;
     } catch (error) {
       console.error('Failed to update player:', error);
       return undefined;

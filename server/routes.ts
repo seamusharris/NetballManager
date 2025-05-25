@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { z } from "zod";
-import { sql } from "drizzle-orm";
+import { sql, eq } from "drizzle-orm";
 import { db } from "./db";
 import { 
   insertPlayerSchema, importPlayerSchema,
@@ -11,7 +11,7 @@ import {
   insertRosterSchema, importRosterSchema,
   insertGameStatSchema, importGameStatSchema,
   insertSeasonSchema,
-  players, opponents, games, rosters, gameStats, seasons,
+  players, opponents, games, rosters, gameStats, seasons, playerSeasons,
   POSITIONS
 } from "@shared/schema";
 import { fixGameStatsSchema } from "./fixDbSchema";
@@ -527,19 +527,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log("Current player seasons:", currentSeasonIds);
         console.log("New player seasons:", seasonIds);
         
-        const updatedPlayer = await storage.updatePlayer(id, updateData, seasonIds);
-        if (!updatedPlayer) {
-          return res.status(404).json({ message: "Player not found" });
+        // Manual approach to ensure correct season association
+        try {
+          // 1. First update the player basic data
+          const updatedPlayer = await storage.updatePlayer(id, updateData, null);
+          if (!updatedPlayer) {
+            return res.status(404).json({ message: "Player not found" });
+          }
+          
+          // 2. Then handle seasons manually
+          if (Array.isArray(seasonIds) && seasonIds.length > 0) {
+            // Remove existing associations
+            console.log("Removing existing season associations for player", id);
+            await db.delete(playerSeasons).where(eq(playerSeasons.playerId, id));
+            
+            // Add new associations one by one
+            console.log("Adding new season associations:", seasonIds);
+            for (const seasonId of seasonIds) {
+              console.log(`Adding player ${id} to season ${seasonId}`);
+              await db.insert(playerSeasons).values({
+                playerId: id,
+                seasonId: seasonId
+              });
+            }
+          }
+          
+          // Verify player-season relationships after update
+          const verifySeasonIds = await storage.getPlayerSeasons(id);
+          console.log("Verified player seasons after update:", verifySeasonIds);
+          
+          res.json(updatedPlayer);
+        } catch (innerError) {
+          console.error("Detailed error during player season update:", innerError);
+          res.status(500).json({ 
+            message: "Failed to update player seasons",
+            error: innerError.message || "Unknown error in season association"
+          });
         }
-        
-        // Verify player-season relationships after update
-        const verifySeasonIds = await storage.getPlayerSeasons(id);
-        console.log("Verified player seasons after update:", verifySeasonIds);
-        
-        res.json(updatedPlayer);
       } catch (updateError) {
         console.error("Error during player update operation:", updateError);
-        throw updateError; // Re-throw to be caught by outer catch
+        res.status(500).json({ 
+          message: "Failed to update player",
+          error: updateError.message || "Unknown error in player update"
+        });
       }
     } catch (error) {
       console.error("Failed to update player:", error);
