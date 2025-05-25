@@ -37,7 +37,7 @@ export default function TeamPerformance({ games, className }: TeamPerformancePro
   const completedGameIds = completedGamesArray.map(game => game.id);
   const enableQuery = completedGameIds.length > 0;
   
-  // Fetch stats for all completed games using batch endpoint
+  // Fetch stats for all completed games individually since batch endpoint is unreliable
   const { data: gameStatsMap, isLoading } = useQuery({
     queryKey: ['batchTeamPerformanceStats', completedGameIds.join(',')],
     queryFn: async () => {
@@ -45,9 +45,22 @@ export default function TeamPerformance({ games, className }: TeamPerformancePro
         return {};
       }
       
-      // Use the batch endpoint to fetch all stats in a single request
-      const idsParam = completedGameIds.join(',');
-      return await apiRequest('GET', `/api/games/stats/batch?gameIds=${idsParam}`);
+      // Instead of using the batch endpoint, fetch each game's stats individually
+      const statsMap: Record<number, any[]> = {};
+      
+      // Process each game ID sequentially
+      for (const gameId of completedGameIds) {
+        try {
+          const stats = await apiRequest('GET', `/api/games/${gameId}/stats`);
+          statsMap[gameId] = stats;
+        } catch (error) {
+          console.error(`Error fetching stats for game ${gameId}:`, error);
+          statsMap[gameId] = []; // Use empty array for failed fetches
+        }
+      }
+      
+      console.log(`Fetched stats for ${Object.keys(statsMap).length} games individually`);
+      return statsMap;
     },
     enabled: enableQuery,
     staleTime: 5 * 60 * 1000, // 5 minutes

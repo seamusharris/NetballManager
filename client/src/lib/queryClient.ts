@@ -86,6 +86,24 @@ export async function apiRequest(
     }
   }
 
+  // Handle GET requests with data as query parameters
+  if (method === 'GET' && processedData !== undefined) {
+    // Convert data object to URLSearchParams
+    const params = new URLSearchParams();
+    for (const key in processedData) {
+      if (processedData.hasOwnProperty(key) && processedData[key] !== undefined) {
+        params.append(key, processedData[key].toString());
+      }
+    }
+    
+    // Add params to URL
+    const queryString = params.toString();
+    if (queryString) {
+      correctedUrl += (correctedUrl.includes('?') ? '&' : '?') + queryString;
+      console.log(`Added query params to URL: ${correctedUrl}`);
+    }
+  }
+
   const options: RequestInit = {
     method,
     credentials: "include",
@@ -99,6 +117,7 @@ export async function apiRequest(
     options.body = JSON.stringify(processedData);
   }
 
+  console.log(`Making ${method} request to ${correctedUrl}`);
   const res = await fetch(correctedUrl, options);
   await throwIfResNotOk(res);
   
