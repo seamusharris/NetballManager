@@ -40,7 +40,20 @@ export default function TeamPerformance({ games, className, activeSeason, select
   
   // Force refresh when selectedSeason or activeSeason changes
   useEffect(() => {
-    setStatsKey(prevKey => prevKey + 1);
+    // Reset component state
+    setQuarterPerformance({
+      avgTeamScoreByQuarter: { 1: 0, 2: 0, 3: 0, 4: 0 },
+      avgOpponentScoreByQuarter: { 1: 0, 2: 0, 3: 0, 4: 0 },
+      teamWinRate: 0,
+      avgTeamScore: 0,
+      avgOpponentScore: 0,
+      goalsPercentage: 0
+    });
+    
+    // Use a timestamp to ensure uniqueness
+    const newKey = Date.now();
+    setStatsKey(newKey);
+    console.log(`TeamPerformance refreshed with key ${newKey} for season: ${selectedSeason?.name || 'current'}`);
   }, [selectedSeason, activeSeason]);
   
   // Get game IDs for completed games to fetch their stats
