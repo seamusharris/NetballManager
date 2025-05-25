@@ -103,13 +103,8 @@ export default function Games() {
   
   const updateMutation = useMutation({
     mutationFn: async ({ id, game }: { id: number, game: any }) => {
-      return await apiRequest(`/api/games/${id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(game)
-      });
+      const res = await apiRequest('PATCH', `/api/games/${id}`, game);
+      return res.json();
     },
     onSuccess: (data, variables) => {
       // Invalidate games list
@@ -141,9 +136,8 @@ export default function Games() {
   
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
-      return await apiRequest(`/api/games/${id}`, {
-        method: 'DELETE'
-      });
+      const res = await apiRequest('DELETE', `/api/games/${id}`);
+      return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/games'] });
