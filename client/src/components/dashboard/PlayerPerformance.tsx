@@ -48,7 +48,13 @@ export default function PlayerPerformance({ players, games, className, seasonFil
   
   // Force refresh when seasonFilter or activeSeason changes
   useEffect(() => {
-    setStatsKey(prevKey => prevKey + 1);
+    // Clear the player stats map to force a clean rebuild
+    setPlayerStatsMap({});
+    
+    // Update statsKey with a timestamp to ensure uniqueness
+    setStatsKey(Date.now());
+    
+    console.log(`PlayerPerformance refreshed with season: ${seasonFilter}, active: ${activeSeason?.name || 'none'}`);
   }, [seasonFilter, activeSeason]);
   
   // Filter games by selected season
