@@ -115,12 +115,18 @@ export default function Players() {
   
   // Handlers
   const handleCreatePlayer = (playerData: any) => {
-    createMutation.mutate(playerData);
+    // Ensure no season data is sent to the server
+    const { seasonIds, ...playerDataWithoutSeasons } = playerData;
+    console.log("Creating player without seasons:", playerDataWithoutSeasons);
+    createMutation.mutate(playerDataWithoutSeasons);
   };
   
   const handleUpdatePlayer = (playerData: any) => {
     if (editingPlayer) {
-      updateMutation.mutate({ id: editingPlayer.id, player: playerData });
+      // Ensure no season data is sent to the server
+      const { seasonIds, ...playerDataWithoutSeasons } = playerData;
+      console.log("Updating player without seasons:", playerDataWithoutSeasons);
+      updateMutation.mutate({ id: editingPlayer.id, player: playerDataWithoutSeasons });
     }
   };
   
