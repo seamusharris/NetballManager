@@ -148,18 +148,23 @@ export class DatabaseStorage implements IStorage {
       }
     }
     
+    console.log("Creating player with avatar color:", avatarColor);
+    
+    // Prepare the player data with guaranteed avatar color
+    const playerData = {
+      displayName: insertPlayer.displayName,
+      firstName: insertPlayer.firstName,
+      lastName: insertPlayer.lastName,
+      dateOfBirth: insertPlayer.dateOfBirth || null,
+      positionPreferences: insertPlayer.positionPreferences as any, // Cast to any to bypass TS checking
+      active: insertPlayer.active !== undefined ? insertPlayer.active : true,
+      avatarColor // Always include avatar color
+    };
+    
     // Create the player with all properties including avatar color
     const [player] = await db
       .insert(players)
-      .values({
-        displayName: insertPlayer.displayName,
-        firstName: insertPlayer.firstName,
-        lastName: insertPlayer.lastName,
-        dateOfBirth: insertPlayer.dateOfBirth || null,
-        positionPreferences: insertPlayer.positionPreferences as any, // Cast to any to bypass TS checking
-        active: insertPlayer.active !== undefined ? insertPlayer.active : true,
-        avatarColor // Always include avatar color
-      })
+      .values(playerData)
       .returning();
     
     return player;

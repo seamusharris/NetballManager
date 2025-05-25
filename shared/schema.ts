@@ -41,7 +41,7 @@ export const players = pgTable("players", {
   dateOfBirth: text("date_of_birth"),
   positionPreferences: json("position_preferences").notNull().$type<Position[]>(),
   active: boolean("active").notNull().default(true),
-  avatarColor: text("avatar_color"),
+  avatarColor: text("avatar_color").notNull().default('bg-blue-600'),
 });
 
 // Default schema without ID for normal creation
