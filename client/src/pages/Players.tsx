@@ -95,8 +95,14 @@ export default function Players() {
   // Delete player mutation
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
-      // DELETE requests typically don't return a response body
-      return await apiRequest('DELETE', `/api/players/${id}`, {});
+      try {
+        // DELETE requests typically don't return a response body
+        await apiRequest('DELETE', `/api/players/${id}`, {});
+        return true; // Return success indicator
+      } catch (error) {
+        console.error("Error in delete mutation:", error);
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/players'] });
