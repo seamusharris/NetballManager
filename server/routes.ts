@@ -594,13 +594,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(`Raw season IDs directly from request body:`, rawSeasonIds);
         
         // Convert seasonIds to a valid array of numbers and filter out invalid values
-        const validSeasonIds = Array.isArray(rawSeasonIds) 
+        let validSeasonIds = Array.isArray(rawSeasonIds) 
           ? rawSeasonIds
               .map(id => typeof id === 'string' ? parseInt(id, 10) : id)
               .filter(id => typeof id === 'number' && !isNaN(id))
           : [];
           
-        console.log(`Player ${id} will be associated with these valid seasons:`, validSeasonIds);
+        // Verify season IDs exist in the database
+        const { rows: existingSeasons } = await pool.query('SELECT id FROM seasons WHERE id = ANY($1::int[])', [validSeasonIds]);
+        const existingSeasonIds = existingSeasons.map(s => s.id);
+        
+        // Filter out season IDs that don't exist in the database
+        validSeasonIds = validSeasonIds.filter(id => existingSeasonIds.includes(id));
+        
+        console.log(`Player ${id} will be associated with these valid seasons (after database verification):`, validSeasonIds);
         
         // Use simple SQL with one transaction to handle the upsert
         const { pool } = await import('./db');
