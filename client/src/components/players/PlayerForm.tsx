@@ -55,10 +55,12 @@ export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFor
   });
   
   // If editing, fetch player's current seasons
-  const { data: playerSeasons = [] } = useQuery<Season[]>({
-    queryKey: ['/api/players', player?.id, 'seasons'],
-    enabled: isEditing && !!player?.id,
-  });
+  const { data: playerSeasonsResponse = { seasons: [] } } = useQuery<{success: boolean, seasons: Season[]}>(
+    {
+      queryKey: ['/api/players', player?.id, 'seasons'],
+      enabled: isEditing && !!player?.id,
+    }
+  );
   
   // Set selected seasons when player seasons data is loaded
   useEffect(() => {
@@ -66,12 +68,11 @@ export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFor
     // to avoid potential stale state from previous edits
     setSelectedSeasons([]);
     
-    if (playerSeasons.length > 0) {
-      // Simply use the season IDs as they come from the API
-      // The API is responsible for providing correct data
-      const seasonIds = playerSeasons.map(season => season.id);
+    if (playerSeasonsResponse.seasons && playerSeasonsResponse.seasons.length > 0) {
+      // Get just the season IDs from the seasons array
+      const seasonIds = playerSeasonsResponse.seasons.map((season: Season) => season.id);
       
-      console.log("Setting player seasons from API:", seasonIds);
+      console.log("Setting player seasons from API response:", seasonIds);
       setSelectedSeasons(seasonIds);
     } else if (seasons.length > 0 && !isEditing) {
       // For new players, select the active season by default
@@ -82,7 +83,7 @@ export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFor
       console.log("Setting active seasons for new player:", activeSeasonIds);
       setSelectedSeasons(activeSeasonIds);
     }
-  }, [playerSeasons, seasons, isEditing]);
+  }, [playerSeasonsResponse, seasons, isEditing]);
   
   // Extract position preferences for default values
   const getPositionDefaults = () => {
