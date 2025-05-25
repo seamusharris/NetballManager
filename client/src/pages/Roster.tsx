@@ -46,8 +46,37 @@ export default function Roster() {
       
       if (storedAvailability) {
         try {
+          // Parse the stored availability data
           const parsedAvailability = JSON.parse(storedAvailability);
-          setAvailablePlayers(parsedAvailability);
+          
+          // Check if the parsed data is an array
+          if (Array.isArray(parsedAvailability)) {
+            // Validate player IDs against the current active players to ensure they exist
+            const activePlayerIds = players.filter(p => p.active).map(p => p.id);
+            const validPlayerIds = parsedAvailability.filter(id => 
+              // Ensure the ID is a number and exists in active players
+              typeof id === 'number' && activePlayerIds.includes(id)
+            );
+            
+            // Remove any duplicates that might exist
+            const uniquePlayerIds = [...new Set(validPlayerIds)];
+            
+            // Debug log for round 11 (gameId 71)
+            if (selectedGameId === 71) {
+              console.log('Round 11 availability data:', {
+                original: parsedAvailability,
+                filtered: uniquePlayerIds,
+                activePlayerCount: activePlayerIds.length
+              });
+            }
+            
+            setAvailablePlayers(uniquePlayerIds);
+          } else {
+            // If not an array, reset to defaults
+            console.error('Stored availability is not an array:', parsedAvailability);
+            const activePlayerIds = players.filter(p => p.active).map(p => p.id);
+            setAvailablePlayers(activePlayerIds);
+          }
         } catch (error) {
           console.error('Error parsing stored player availability:', error);
           // Default to all active players being available if there was an error
