@@ -518,10 +518,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Get the update data
       const updateData = req.body;
-      console.log("======= PLAYER UPDATE ========");
+      console.log("\n\n======= PLAYER UPDATE START ========");
       console.log("Player ID:", id);
       console.log("Player update request body:", JSON.stringify(updateData, null, 2));
-      console.log("==============================");
+      console.log("==================================");
       
       // If avatar color is set to auto or empty, handle it properly
       if (updateData.avatarColor === 'auto' || updateData.avatarColor === '') {
@@ -653,10 +653,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           // If we have season IDs to add, create batch insert
           if (finalSeasonIds.length > 0) {
-            // Build a multi-value insert to do it all at once
-            const values = finalSeasonIds.map((_, i) => `($1, $${i + 2})`).join(', ');
-            const params = [id, ...finalSeasonIds];
-            
             try {
               // Validate the database connection
               const checkConnection = await client.query('SELECT 1 as connection_test');
@@ -671,16 +667,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
               const seasonCheck = await client.query(`SELECT id FROM seasons WHERE id IN (${seasonValues})`);
               console.log(`Found ${seasonCheck.rowCount} valid seasons out of ${finalSeasonIds.length} requested`);
               
-              console.log(`Attempting to add player ${id} to seasons with query:`, 
-                `INSERT INTO player_seasons (player_id, season_id) VALUES ${values} ON CONFLICT (player_id, season_id) DO NOTHING`);
-              console.log(`With parameters:`, params);
+              let successCount = 0;
               
-              const insertResult = await client.query(
-                `INSERT INTO player_seasons (player_id, season_id) VALUES ${values} ON CONFLICT (player_id, season_id) DO NOTHING`,
-                params
-              );
-              console.log(`Insert result:`, insertResult);
-              console.log(`Successfully added player ${id} to seasons: ${finalSeasonIds.join(', ')}`);
+              // Try an alternative direct approach with individual inserts that avoids parameterized queries
+              // First check if the player-seasons table exists
+              try {
+                const tableCheck = await client.query(`
+                  SELECT EXISTS (
+                    SELECT FROM information_schema.tables 
+                    WHERE table_name = 'player_seasons'
+                  );
+                `);
+                console.log(`player_seasons table exists:`, tableCheck.rows[0].exists);
+                
+                // Get the table schema to confirm columns
+                const schemaCheck = await client.query(`
+                  SELECT column_name, data_type 
+                  FROM information_schema.columns 
+                  WHERE table_name = 'player_seasons';
+                `);
+                console.log(`player_seasons schema:`, schemaCheck.rows);
+              } catch (tableCheckError) {
+                console.error(`Error checking player_seasons table:`, tableCheckError);
+              }
+              
+              // Now try to insert each season relationship individually
+              for (const seasonId of finalSeasonIds) {
+                try {
+                  console.log(`\n>> DIRECT INSERT: player ${id} to season ${seasonId}`);
+                  const directInsertResult = await client.query(
+                    `INSERT INTO player_seasons (player_id, season_id) VALUES (${id}, ${seasonId}) 
+                     ON CONFLICT (player_id, season_id) DO NOTHING`
+                  );
+                  console.log(`>> DIRECT INSERT RESULT:`, JSON.stringify(directInsertResult));
+                  successCount++;
+                } catch (directInsertError) {
+                  console.error(`>> ERROR WITH DIRECT INSERT: player ${id}, season ${seasonId}:`);
+                  console.error(directInsertError);
+                  
+                  // Try even more basic approach with explicit values
+                  try {
+                    console.log(`>> FALLBACK INSERT: Using explicit values`);
+                    await client.query(`
+                      INSERT INTO player_seasons (player_id, season_id) 
+                      SELECT ${id}, ${seasonId}
+                      WHERE NOT EXISTS (
+                        SELECT 1 FROM player_seasons 
+                        WHERE player_id = ${id} AND season_id = ${seasonId}
+                      )
+                    `);
+                    console.log(`>> FALLBACK INSERT SUCCESS`);
+                    successCount++;
+                  } catch (fallbackError) {
+                    console.error(`>> FALLBACK INSERT FAILED:`, fallbackError);
+                  }
+                }
+              }
+              
+              console.log(`Successfully added player ${id} to ${successCount} out of ${finalSeasonIds.length} seasons`);
+              console.log(`Seasons: ${finalSeasonIds.join(', ')}`);
             } catch (insertError) {
               console.error(`Error inserting player ${id} to seasons:`, insertError);
               // Fall back to one-by-one insert if batch fails
