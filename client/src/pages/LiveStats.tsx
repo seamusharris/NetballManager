@@ -837,8 +837,19 @@ export default function LiveStats() {
     let currentValue = 0;
     
     if (playerId === 0 && position) {
-      // This is an unassigned position - get value from position stats
-      currentValue = posStats?.[stat] || 0;
+      // This is an unassigned position - get value directly from existingStats
+      const positionStat = existingStats?.find(
+        (s: GameStat) => s.position === position && s.quarter === currentQuarter
+      );
+      
+      if (positionStat && positionStat[stat] !== undefined) {
+        currentValue = positionStat[stat] || 0;
+      } else if (posStats && posStats[stat] !== undefined) {
+        // Fallback to provided posStats if available
+        currentValue = posStats[stat] || 0;
+      }
+      
+      console.log(`Position ${position} in Q${currentQuarter}, stat ${stat} = ${currentValue}`);
     } else {
       // Normal player stat
       currentValue = liveStats[playerId]?.[currentQuarter]?.[stat] || 0;
@@ -889,25 +900,42 @@ export default function LiveStats() {
   // Function to update stats for a position without a player
   const updatePositionStat = async (position: Position, statType: StatType, newValue: number) => {
     try {
+      // Ensure newValue is at least 0
+      const sanitizedValue = Math.max(0, newValue);
+      
       // Find existing stat for this position and quarter
-      const existingStat = existingStats.find(
+      const existingStat = existingStats?.find(
         (stat: GameStat) => stat.position === position && stat.quarter === currentQuarter
       );
       
       if (existingStat) {
         // Update existing stat
-        console.log(`Updating stat for position ${position} in Q${currentQuarter}: ${statType} = ${newValue}`);
+        console.log(`Updating stat for position ${position} in Q${currentQuarter}: ${statType} = ${sanitizedValue}`);
         
-        // Create update payload
+        // Create update payload - create a new object to avoid mutation issues
         const updatePayload = {
-          ...existingStat,
-          [statType]: Math.max(0, newValue)
+          id: existingStat.id,
+          gameId,
+          position,
+          quarter: currentQuarter,
+          goalsFor: existingStat.goalsFor || 0,
+          goalsAgainst: existingStat.goalsAgainst || 0,
+          missedGoals: existingStat.missedGoals || 0,
+          rebounds: existingStat.rebounds || 0,
+          intercepts: existingStat.intercepts || 0,
+          badPass: existingStat.badPass || 0,
+          handlingError: existingStat.handlingError || 0,
+          pickUp: existingStat.pickUp || 0,
+          infringement: existingStat.infringement || 0
         };
+        
+        // Update the specific stat
+        updatePayload[statType] = sanitizedValue;
         
         // Save to server
         await saveGameStat(updatePayload);
         
-        // Refresh stats
+        // Refresh stats to update UI
         await refetchStats();
         
         toast({
@@ -916,9 +944,9 @@ export default function LiveStats() {
         });
       } else {
         // Create new stat
-        console.log(`Creating new stat for position ${position} in Q${currentQuarter}: ${statType} = ${newValue}`);
+        console.log(`Creating new stat for position ${position} in Q${currentQuarter}: ${statType} = ${sanitizedValue}`);
         
-        // Create base stat object
+        // Create base stat object with all stats initialized to 0
         const newStat = {
           gameId,
           position,
@@ -935,12 +963,12 @@ export default function LiveStats() {
         };
         
         // Set the specific stat value
-        newStat[statType] = Math.max(0, newValue);
+        newStat[statType] = sanitizedValue;
         
         // Save to server
         await saveGameStat(newStat);
         
-        // Refresh stats
+        // Refresh stats to update UI
         await refetchStats();
         
         toast({
