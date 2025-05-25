@@ -61,10 +61,36 @@ export default function Players() {
   const updateMutation = useMutation({
     mutationFn: async ({ id, player }: { id: number, player: any }) => {
       console.log("Sending update request for player:", id, player);
-      const res = await apiRequest('PATCH', `/api/players/${id}`, player);
-      const updatedPlayer = await res.json();
-      console.log("Update response:", updatedPlayer);
-      return updatedPlayer;
+      
+      // Ensure seasonIds is an array of numbers
+      if (player.seasonIds) {
+        player.seasonIds = player.seasonIds.map((id: any) => 
+          typeof id === 'number' ? id : parseInt(id, 10)
+        ).filter((id: number) => !isNaN(id));
+      }
+      
+      try {
+        // Make the API request with proper headers
+        const response = await fetch(`/api/players/${id}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(player)
+        });
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Failed to update player: ${response.status} - ${errorText}`);
+        }
+        
+        const updatedPlayer = await response.json();
+        console.log("Update response:", updatedPlayer);
+        return updatedPlayer;
+      } catch (err) {
+        console.error("Player update request failed:", err);
+        throw err;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/players'] });

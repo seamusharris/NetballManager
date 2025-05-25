@@ -573,69 +573,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Always handle player-season relationships, even to clear them all
       console.log(`Updating player-season relationships for player ${id} with seasons:`, seasonIds);
       
-      // Create a function to update player seasons
-      const updatePlayerSeasons = async () => {
-        // Directly access the database connection pool
-        const db = require('./db');
-        const client = await db.pool.connect();
+      // Update player-season relationships
+      try {
+        // Import pool directly from the db module
+        const { pool } = await import('./db');
+        const client = await pool.connect();
         
         try {
-          // Start a transaction for the season updates
+          // Validate and normalize seasonIds to ensure we have numbers
+          const validSeasonIds = Array.isArray(seasonIds) 
+            ? seasonIds
+                .map(id => typeof id === 'string' ? parseInt(id, 10) : id)
+                .filter(id => typeof id === 'number' && !isNaN(id))
+            : [];
+          
+          console.log(`Processing player ${id} seasons, valid IDs:`, validSeasonIds);
+          
+          // Start transaction
           await client.query('BEGIN');
-          console.log(`Starting transaction for player ${id} season updates`);
           
-          // Delete existing relationships first
-          const deleteResult = await client.query('DELETE FROM player_seasons WHERE player_id = $1', [id]);
-          console.log(`Deleted ${deleteResult.rowCount || 0} existing player-season relationships for player ${id}`);
+          // Remove all existing relationships for this player
+          await client.query('DELETE FROM player_seasons WHERE player_id = $1', [id]);
           
-          // Insert new relationships if any were provided
-          if (seasonIds && seasonIds.length > 0) {
-            for (const seasonId of seasonIds) {
-              // Skip invalid season IDs
-              if (typeof seasonId !== 'number' || isNaN(seasonId)) {
-                console.warn(`Invalid season ID: ${seasonId}, skipping`);
-                continue;
-              }
-              
-              try {
-                console.log(`Inserting player ${id} to season ${seasonId}`);
-                await client.query(
-                  'INSERT INTO player_seasons (player_id, season_id) VALUES ($1, $2)',
-                  [id, seasonId]
-                );
-              } catch (insertError) {
-                console.error(`Error inserting player-season for season ${seasonId}:`, insertError);
-                // Continue with other seasons even if one fails
-              }
-            }
-            console.log(`Added player ${id} to ${seasonIds.length} seasons`);
-          } else {
-            console.log(`No seasons provided for player ${id}, all associations cleared`);
+          // Add new relationships if provided
+          if (validSeasonIds.length > 0) {
+            // Create a parameterized query to insert all relationships at once
+            const values = validSeasonIds.map((_, index) => `($1, $${index + 2})`).join(', ');
+            const params = [id, ...validSeasonIds];
+            
+            const query = `INSERT INTO player_seasons (player_id, season_id) VALUES ${values}`;
+            console.log('Executing query:', query, 'with params:', params);
+            
+            await client.query(query, params);
           }
           
-          // Commit the transaction
+          // Commit transaction
           await client.query('COMMIT');
-          console.log("Player-season relationships transaction committed successfully");
-          return true;
+          console.log(`Successfully updated season relationships for player ${id}`);
         } catch (dbError) {
-          // If anything goes wrong, roll back the transaction
+          // Rollback on error
           await client.query('ROLLBACK');
-          console.error("Error updating player-season relationships:", dbError);
-          return false;
+          console.error(`Error updating player-season relationships:`, dbError);
+          // Don't throw - we still want to return the updated player
         } finally {
-          // Always release the client back to the pool
           client.release();
         }
-      };
-      
-      // Execute the season update function
-      try {
-        const seasonUpdateResult = await updatePlayerSeasons();
-        if (!seasonUpdateResult) {
-          console.warn("Player updated but season relationships could not be updated");
-        }
-      } catch (error) {
-        console.error("Failed to perform player-season updates:", error);
+      } catch (connectionError) {
+        console.error(`Database connection error:`, connectionError);
       }
       
       // Return the updated player
