@@ -31,7 +31,7 @@ export function useGamesScores(gameIds: number[], forceFresh: boolean = false) {
         queryKey: ['gameScores', gameId, forceFresh ? Date.now().toString() : 'cached'],
         queryFn: async () => {
           // First check if this is a forfeit game (special case)
-          const game = await apiRequest(`/api/games/${gameId}`);
+          const game = await apiRequest('GET', `/api/games/${gameId}`);
           
           // Step 1: Try to get from global memory cache first (fastest option)
           if (!forceFresh) {
