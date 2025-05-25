@@ -987,7 +987,7 @@ export default function GameDetails() {
   const [gameNotes, setGameNotes] = useState<string>("");
   const [isEditingNotes, setIsEditingNotes] = useState<boolean>(false);
   
-  const [activeTab, setActiveTab] = useState('roster');
+  const [activeTab, setActiveTab] = useState('overview');
   
   // Fetch game data
   const { 
@@ -1306,10 +1306,6 @@ export default function GameDetails() {
               <Printer className="mr-2 h-4 w-4" />
               Stats Sheet
             </TabsTrigger>
-            <TabsTrigger value="notes">
-              <FileText className="mr-2 h-4 w-4" />
-              Game Notes
-            </TabsTrigger>
           </TabsList>
           
           <TabsContent value="overview" className="mt-6">
@@ -1496,11 +1492,7 @@ export default function GameDetails() {
             />
           </TabsContent>
           
-          <TabsContent value="notes" className="mt-6">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-xl font-bold">Game Notes</CardTitle>
-                {!isEditingNotes ? (
+          {/* Notes tab removed as content is now in Overview tab */}
                   <Button 
                     variant="outline" 
                     size="sm" 
