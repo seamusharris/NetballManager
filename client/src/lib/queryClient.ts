@@ -38,7 +38,7 @@ export async function apiRequest(
   method: string,
   url: string,
   data?: any,
-): Promise<Response> {
+): Promise<any> {
   // Fix URL format for game stats endpoints to ensure correct path
   // The server now expects /api/games/stats/ (plural) instead of /api/gamestats/ or /api/game-stats/
   let correctedUrl = url;
@@ -101,7 +101,9 @@ export async function apiRequest(
 
   const res = await fetch(correctedUrl, options);
   await throwIfResNotOk(res);
-  return res;
+  
+  // Parse and return JSON data directly
+  return await res.json();
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";
