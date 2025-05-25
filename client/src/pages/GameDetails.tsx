@@ -1444,76 +1444,89 @@ export default function GameDetails() {
                     </div>
                   ) : (
                     <div className="min-h-[80px] p-2">
-                      {/* Award winner display with real stats - ID 78 is Isla Mitchell */}
-                      <div className="flex items-center space-x-4">
-                        {/* Player Avatar */}
-                        <div 
-                          className="h-16 w-16 rounded-full flex items-center justify-center text-white text-xl font-bold shadow-md"
-                          style={{ backgroundColor: "#8b5cf6" /* violet-600 */ }}
-                        >
-                          IM
-                        </div>
+                      {/* Award winner display with real stats from database */}
+                      {(() => {
+                        // Find the award winner from the players array
+                        const awardWinner = players?.find(p => p.id === game.awardWinnerId);
                         
-                        {/* Player Stats Box - With dark border, light interior styling */}
-                        <div 
-                          className="flex-1 flex items-center p-3 rounded-lg border-2"
-                          style={{ 
-                            borderColor: "#7c3aed", /* violet-700 - darker border */
-                            backgroundColor: "#f5f3ff" /* violet-50 - very light interior */
-                          }}
-                        >
-                          <div className="flex-1">
-                            <div className="text-lg font-bold text-violet-900">
-                              Isla Mitchell
+                        if (!awardWinner) {
+                          return (
+                            <div className="flex items-center justify-center h-full py-6 text-gray-500 italic">
+                              No award winner has been selected for this game.
                             </div>
-                            <div className="text-sm text-violet-600">Player of the Match</div>
-                          </div>
+                          );
+                        }
+                        
+                        // Find positions played by this player in this game
+                        const playerPositions = roster?.filter(r => r.playerId === awardWinner.id) || [];
+                        
+                        // Initialize stat counters
+                        let goals = 0;
+                        let intercepts = 0; 
+                        let rebounds = 0;
+                        
+                        // Sum up stats from all positions this player played
+                        playerPositions.forEach(rosterEntry => {
+                          const stat = gameStats?.find(s => 
+                            s.position === rosterEntry.position && 
+                            s.quarter === rosterEntry.quarter
+                          );
                           
-                          <div className="flex space-x-6">
-                            {/* Calculate real stats for the player */}
-                            {(() => {
-                              // Find positions played by this player in this game
-                              const playerPositions = roster?.filter(r => r.playerId === 78) || [];
+                          if (stat) {
+                            goals += stat.goalsFor || 0;
+                            intercepts += stat.intercepts || 0;
+                            rebounds += stat.rebounds || 0;
+                          }
+                        });
+                        
+                        // Get player initials
+                        const getInitials = (firstName: string, lastName: string) => {
+                          return `${firstName.charAt(0)}${lastName ? lastName.charAt(0) : ''}`;
+                        };
+                        
+                        return (
+                          <div className="flex items-center space-x-4">
+                            {/* Player Avatar */}
+                            <div 
+                              className="h-16 w-16 rounded-full flex items-center justify-center text-white text-xl font-bold shadow-md"
+                              style={{ backgroundColor: awardWinner.avatarColor || "#6366f1" }}
+                            >
+                              {getInitials(awardWinner.firstName, awardWinner.lastName)}
+                            </div>
+                            
+                            {/* Player Stats Box - With dark border, light interior styling */}
+                            <div 
+                              className="flex-1 flex items-center p-3 rounded-lg border-2"
+                              style={{ 
+                                borderColor: awardWinner.avatarColor?.replace('bg-', 'border-') || "#7c3aed",
+                                backgroundColor: "#f5f3ff" /* light interior */
+                              }}
+                            >
+                              <div className="flex-1">
+                                <div className="text-lg font-bold text-violet-900">
+                                  {awardWinner.displayName || `${awardWinner.firstName} ${awardWinner.lastName}`}
+                                </div>
+                                <div className="text-sm text-violet-600">Player of the Match</div>
+                              </div>
                               
-                              // Initialize stat counters
-                              let goals = 0;
-                              let intercepts = 0; 
-                              let rebounds = 0;
-                              
-                              // Sum up stats from all positions this player played
-                              playerPositions.forEach(rosterEntry => {
-                                const stat = gameStats?.find(s => 
-                                  s.position === rosterEntry.position && 
-                                  s.quarter === rosterEntry.quarter
-                                );
-                                
-                                if (stat) {
-                                  goals += stat.goalsFor || 0;
-                                  intercepts += stat.intercepts || 0;
-                                  rebounds += stat.rebounds || 0;
-                                }
-                              });
-                              
-                              return (
-                                <>
-                                  <div className="text-center">
-                                    <div className="text-2xl font-bold text-violet-800">{goals}</div>
-                                    <div className="text-xs text-violet-600">Goals</div>
-                                  </div>
-                                  <div className="text-center">
-                                    <div className="text-2xl font-bold text-violet-800">{intercepts}</div>
-                                    <div className="text-xs text-violet-600">Intercepts</div>
-                                  </div>
-                                  <div className="text-center">
-                                    <div className="text-2xl font-bold text-violet-800">{rebounds}</div>
-                                    <div className="text-xs text-violet-600">Rebounds</div>
-                                  </div>
-                                </>
-                              );
-                            })()}
+                              <div className="flex space-x-6">
+                                <div className="text-center">
+                                  <div className="text-2xl font-bold text-violet-800">{goals}</div>
+                                  <div className="text-xs text-violet-600">Goals</div>
+                                </div>
+                                <div className="text-center">
+                                  <div className="text-2xl font-bold text-violet-800">{intercepts}</div>
+                                  <div className="text-xs text-violet-600">Intercepts</div>
+                                </div>
+                                <div className="text-center">
+                                  <div className="text-2xl font-bold text-violet-800">{rebounds}</div>
+                                  <div className="text-xs text-violet-600">Rebounds</div>
+                                </div>
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                      </div>
+                        );
+                      })()}
                     </div>
                   )}
                 </CardContent>
