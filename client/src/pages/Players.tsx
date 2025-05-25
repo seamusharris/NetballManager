@@ -70,9 +70,9 @@ export default function Players() {
   
   // Update player mutation
   const updateMutation = useMutation({
-    mutationFn: async ({ id, player }: { id: number, player: any }) => {
-      console.log("Updating player:", id, player);
-      const res = await apiRequest('PATCH', `/api/players/${id}`, player);
+    mutationFn: async ({ id, ...playerData }: { id: number, [key: string]: any }) => {
+      console.log("Updating player:", id, playerData);
+      const res = await apiRequest('PATCH', `/api/players/${id}`, playerData);
       return res.json();
     },
     onSuccess: () => {
