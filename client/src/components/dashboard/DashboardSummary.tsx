@@ -120,8 +120,8 @@ export default function DashboardSummary({
               activeSeason={activeSeason} 
               selectedSeason={selectedSeasonId === 'current' ? 'current' : seasons.find(s => s.id.toString() === selectedSeasonId)} 
             />
-            <RecentGames games={pastGames} opponents={opponents} />
-            <UpcomingGames games={upcomingGames} opponents={opponents} />
+            <RecentGames games={pastGames} opponents={opponents} seasonFilter={selectedSeasonId} activeSeason={activeSeason} />
+            <UpcomingGames games={upcomingGames} opponents={opponents} seasonFilter={selectedSeasonId} activeSeason={activeSeason} />
           </>
         )}
       </div>
