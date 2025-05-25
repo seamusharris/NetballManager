@@ -628,10 +628,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`Updating player-season relationships for player ${id} with processed season IDs:`, processedSeasonIds);
       
       try {
-        // Import the updatePlayerSeasons function from our dedicated module
-        const { updatePlayerSeasons } = await import('./player-season-routes');
+        // Instead of importing from player-season-routes, use the function from db.ts directly
+        // This avoids any potential circular reference issues
+        const { updatePlayerSeasons } = await import('./db');
         
-        // Use the function to update player-season relationships
+        // Use the function to update player-season relationships with more detailed logging
+        console.log(`Updating player ${id} seasons to: ${processedSeasonIds.join(', ')}`);
+        
         const success = await updatePlayerSeasons(id, processedSeasonIds);
         
         if (success) {
