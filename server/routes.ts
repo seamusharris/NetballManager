@@ -482,9 +482,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get the update data
       const updateData = req.body;
       
-      // Extract season IDs if provided
-      const seasonIds = req.body.seasonIds;
-      delete updateData.seasonIds; // Remove from update data as it's handled separately
+      // Extract season IDs if provided and ensure it's an array
+      const seasonIds = Array.isArray(req.body.seasonIds) ? req.body.seasonIds : [];
+      console.log("Player update with seasonIds:", seasonIds);
+      
+      // Remove from update data as it's handled separately
+      delete updateData.seasonIds;
       
       // If avatar color is set to auto or empty, handle it properly
       if (updateData.avatarColor === 'auto' || updateData.avatarColor === '') {
@@ -518,14 +521,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      const updatedPlayer = await storage.updatePlayer(id, updateData, seasonIds);
-      if (!updatedPlayer) {
-        return res.status(404).json({ message: "Player not found" });
+      try {
+        // Get current player seasons before update for comparison
+        const currentSeasonIds = await storage.getPlayerSeasons(id);
+        console.log("Current player seasons:", currentSeasonIds);
+        console.log("New player seasons:", seasonIds);
+        
+        const updatedPlayer = await storage.updatePlayer(id, updateData, seasonIds);
+        if (!updatedPlayer) {
+          return res.status(404).json({ message: "Player not found" });
+        }
+        
+        // Verify player-season relationships after update
+        const verifySeasonIds = await storage.getPlayerSeasons(id);
+        console.log("Verified player seasons after update:", verifySeasonIds);
+        
+        res.json(updatedPlayer);
+      } catch (updateError) {
+        console.error("Error during player update operation:", updateError);
+        throw updateError; // Re-throw to be caught by outer catch
       }
-      res.json(updatedPlayer);
     } catch (error) {
       console.error("Failed to update player:", error);
-      res.status(500).json({ message: "Failed to update player" });
+      res.status(500).json({ 
+        message: "Failed to update player",
+        error: error.message || "Unknown error"
+      });
     }
   });
 
