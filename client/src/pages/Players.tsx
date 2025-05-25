@@ -156,14 +156,15 @@ export default function Players() {
       return;
     }
     
-    // Make sure we're sending valid player data
+    // Make sure we're sending valid player data including seasonIds
     const validPlayerData = {
       displayName: data.displayName,
       firstName: data.firstName,
       lastName: data.lastName,
       dateOfBirth: data.dateOfBirth || null,
       positionPreferences: data.positionPreferences,
-      active: data.active
+      active: data.active,
+      seasonIds: data.seasonIds || [] // Include the season IDs in the update
     };
     
     console.log("Sending update request with:", { id: editingPlayer.id, player: validPlayerData });

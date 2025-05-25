@@ -574,6 +574,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json(updatedPlayer);
     } catch (error) {
+      console.error("Error updating player:", error);
       res.status(500).json({ message: "Failed to update player" });
     }
   });
