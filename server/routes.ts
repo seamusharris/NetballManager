@@ -24,6 +24,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // ----- DIAGNOSTIC APIs -----
   
+  // Direct player update endpoint
+  app.patch('/api/direct/players/:id', async (req, res) => {
+    try {
+      const { directUpdatePlayer } = await import('./direct-player-update');
+      await directUpdatePlayer(req, res);
+    } catch (error) {
+      console.error("Error in direct player update:", error);
+      res.status(500).json({
+        success: false,
+        message: "Direct update failed",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
   // Diagnostic endpoint for player-season relationship debugging
   app.get('/api/diagnostic/player-seasons', async (req, res) => {
     try {

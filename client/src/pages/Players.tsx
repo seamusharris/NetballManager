@@ -298,145 +298,77 @@ export default function Players() {
   };
   
   const handleUpdatePlayer = (data: any) => {
-    // Super direct version with explicit logging for debugging
     if (!editingPlayer) {
       console.error("No player being edited");
+      toast({
+        title: "Error",
+        description: "No player is currently being edited",
+        variant: "destructive"
+      });
       return;
     }
     
     const playerId = editingPlayer.id;
     
-    // Log all inputs
-    console.log("DIRECT DEBUG - Player Update Start");
+    // Log data for debugging
+    console.log("Using direct player update endpoint");
     console.log("Player ID:", playerId);
     console.log("Form data:", JSON.stringify(data));
     
-    // Create a simplified update function that uses XMLHttpRequest instead of fetch
-    // This gives us more control over error handling
-    const updatePlayerBasic = () => {
-      // Create basic player data without seasons
-      const basicData = {
-        displayName: data.displayName || "",
-        firstName: data.firstName || "",
-        lastName: data.lastName || "",
-        positionPreferences: data.positionPreferences || [],
-        active: Boolean(data.active)
-      };
+    // Prepare full player data with seasons
+    const playerData = {
+      displayName: data.displayName || "",
+      firstName: data.firstName || "",
+      lastName: data.lastName || "",
+      dateOfBirth: data.dateOfBirth || null,
+      positionPreferences: Array.isArray(data.positionPreferences) ? data.positionPreferences : [],
+      active: Boolean(data.active),
+      seasonIds: Array.isArray(data.seasonIds) ? data.seasonIds : []
+    };
+    
+    console.log("Sending complete player data:", JSON.stringify(playerData));
+    
+    // Use our new direct update endpoint that handles everything in one request
+    fetch(`/api/direct/players/${playerId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(playerData)
+    })
+    .then(response => {
+      console.log("Direct update response status:", response.status);
+      return response.json().catch(() => ({ 
+        success: false, 
+        message: "Invalid JSON response" 
+      }));
+    })
+    .then(result => {
+      console.log("Direct update result:", result);
       
-      console.log("Sending basic update with data:", JSON.stringify(basicData));
-      
-      // Use XMLHttpRequest for more direct control
-      const xhr = new XMLHttpRequest();
-      xhr.open('PATCH', `/api/players/${playerId}`, true);
-      xhr.setRequestHeader('Content-Type', 'application/json');
-      
-      xhr.onload = function() {
-        console.log("Basic update response received:", xhr.status);
-        console.log("Response text:", xhr.responseText);
-        
-        if (xhr.status >= 200 && xhr.status < 300) {
-          console.log("Basic update successful, now updating seasons");
-          updatePlayerSeasons();
-        } else {
-          console.error("Basic update failed:", xhr.status, xhr.responseText);
-          toast({
-            title: "Update Failed", 
-            description: `Error: ${xhr.status} - ${xhr.responseText}`,
-            variant: "destructive"
-          });
-        }
-      };
-      
-      xhr.onerror = function(e) {
-        console.error("XHR error on basic update:", e);
-        console.error("XHR details:", xhr.status, xhr.statusText, xhr.responseText);
+      if (result.success) {
         toast({
-          title: "Network Error", 
-          description: "Connection error when updating player",
-          variant: "destructive"
+          title: "Success",
+          description: "Player updated successfully"
         });
-      };
-      
-      // Explicitly handle exceptions during send
-      try {
-        xhr.send(JSON.stringify(basicData));
-      } catch (sendError) {
-        console.error("Exception during XHR send (basic):", sendError);
+        
+        // Refresh data and close dialog
+        queryClient.invalidateQueries({queryKey: ['/api/players']});
+        setEditingPlayer(null);
+      } else {
         toast({
-          title: "Send Error", 
-          description: String(sendError),
+          title: "Update Failed",
+          description: result.message || "Failed to update player",
           variant: "destructive"
         });
       }
-    };
-    
-    // Function to update seasons separately
-    const updatePlayerSeasons = () => {
-      const seasonIds = Array.isArray(data.seasonIds) ? data.seasonIds : [];
-      console.log("Updating seasons with IDs:", seasonIds);
-      
-      const xhr = new XMLHttpRequest();
-      xhr.open('POST', `/api/players/${playerId}/seasons`, true);
-      xhr.setRequestHeader('Content-Type', 'application/json');
-      
-      xhr.onload = function() {
-        console.log("Seasons update response received:", xhr.status);
-        console.log("Response text:", xhr.responseText);
-        
-        if (xhr.status >= 200 && xhr.status < 300) {
-          console.log("Seasons update successful!");
-          toast({
-            title: "Success",
-            description: "Player and seasons updated successfully"
-          });
-          
-          // Refresh data and close dialog
-          queryClient.invalidateQueries({queryKey: ['/api/players']});
-          setEditingPlayer(null);
-        } else {
-          console.error("Seasons update failed:", xhr.status, xhr.responseText);
-          toast({
-            title: "Seasons Update Failed", 
-            description: `Error: ${xhr.status} - ${xhr.responseText}`,
-            variant: "destructive"
-          });
-        }
-      };
-      
-      xhr.onerror = function(e) {
-        console.error("XHR error on seasons update:", e);
-        console.error("XHR details:", xhr.status, xhr.statusText, xhr.responseText);
-        toast({
-          title: "Network Error", 
-          description: "Connection error when updating seasons",
-          variant: "destructive"
-        });
-      };
-      
-      // Explicitly handle exceptions during send
-      try {
-        xhr.send(JSON.stringify({seasonIds}));
-      } catch (sendError) {
-        console.error("Exception during XHR send (seasons):", sendError);
-        toast({
-          title: "Send Error", 
-          description: String(sendError),
-          variant: "destructive"
-        });
-      }
-    };
-    
-    // Start the update process
-    try {
-      updatePlayerBasic();
-    } catch (e) {
-      console.error("Critical error starting update:", e);
+    })
+    .catch(error => {
+      console.error("Error during direct player update:", error);
       toast({
-        title: "Critical Error", 
-        description: String(e),
+        title: "Update Error",
+        description: String(error),
         variant: "destructive"
       });
-    }
+    });
   };
   
   const handleDeletePlayer = (id: number) => {
