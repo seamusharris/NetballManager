@@ -586,12 +586,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Handle player-season relationships with upsert approach
-      console.log(`Updating player-season relationships for player ${id} with seasons:`, seasonIds);
+      console.log(`Updating player-season relationships for player ${id} with seasons:`, req.body.seasonIds);
       
       try {
+        // Extract seasonIds directly from the request body instead of from updateData
+        const rawSeasonIds = req.body.seasonIds || [];
+        console.log(`Raw season IDs directly from request body:`, rawSeasonIds);
+        
         // Convert seasonIds to a valid array of numbers and filter out invalid values
-        const validSeasonIds = Array.isArray(seasonIds) 
-          ? seasonIds
+        const validSeasonIds = Array.isArray(rawSeasonIds) 
+          ? rawSeasonIds
               .map(id => typeof id === 'string' ? parseInt(id, 10) : id)
               .filter(id => typeof id === 'number' && !isNaN(id))
           : [];
