@@ -637,31 +637,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         
         console.log(`Player ${id} will be associated with these valid seasons (after database verification):`, validSeasonIds);
+        console.log(`Starting database transaction for player ${id} seasons update`);
         const client = await pool.connect();
         
         try {
           // Start transaction
           await client.query('BEGIN');
+          console.log(`Started database transaction`);
           
           // Clear all existing relationships
-          await client.query('DELETE FROM player_seasons WHERE player_id = $1', [id]);
+          console.log(`Removing existing player-season relationships for player ${id}`);
+          const deleteResult = await client.query('DELETE FROM player_seasons WHERE player_id = $1', [id]);
+          console.log(`Removed ${deleteResult.rowCount} existing player-season relationships`);
           
           // If we have seasons to add, insert them with a single statement
           if (validSeasonIds.length > 0) {
             try {
               // Log exactly what we're trying to insert
-              console.log(`Attempting to insert seasons for player ${id}:`, validSeasonIds);
+              console.log(`Attempting to insert ${validSeasonIds.length} seasons for player ${id}:`, validSeasonIds);
               
               // Insert each season individually to avoid parameterization issues
               for (const seasonId of validSeasonIds) {
-                await client.query(
-                  'INSERT INTO player_seasons (player_id, season_id) VALUES ($1, $2)',
+                console.log(`Inserting relationship: player ${id} -> season ${seasonId}`);
+                const insertResult = await client.query(
+                  'INSERT INTO player_seasons (player_id, season_id) VALUES ($1, $2) RETURNING *',
                   [id, seasonId]
                 );
-                console.log(`Successfully added player ${id} to season ${seasonId}`);
+                console.log(`Insert result:`, insertResult.rows);
+                
+                if (insertResult.rowCount > 0) {
+                  console.log(`Successfully added player ${id} to season ${seasonId}`);
+                } else {
+                  console.warn(`Failed to add player ${id} to season ${seasonId} - no rows inserted`);
+                }
               }
             } catch (insertError) {
               console.error(`Error inserting player-season relationships:`, insertError);
+              console.error(`Error stack:`, insertError.stack);
               throw insertError;
             }
           } else {
@@ -681,11 +693,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
           client.release();
         }
       } catch (error) {
-        console.error(`Error handling player-season relationships:`, error);
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        const errorStack = error instanceof Error ? error.stack : 'No stack trace available';
+        
+        console.error(`Error handling player-season relationships:`);
+        console.error(`Message: ${errorMessage}`);
+        console.error(`Stack: ${errorStack}`);
+        
         // Send a proper error response to the client
         return res.status(500).json({ 
           message: "Failed to update player-season relationships", 
-          error: error.message || "Unknown error" 
+          error: errorMessage
         });
       }
       
