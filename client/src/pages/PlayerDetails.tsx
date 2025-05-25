@@ -393,7 +393,8 @@ export default function PlayerDetails() {
   // Mutation for updating the player
   const updateMutation = useMutation({
     mutationFn: async (updatedPlayer: any) => {
-      // Send the player data directly without wrapping
+      // Ensure we're using a consistent format
+      console.log("Updating player in details page:", updatedPlayer);
       return apiRequest('PATCH', `/api/players/${playerId}`, updatedPlayer);
     },
     onSuccess: () => {

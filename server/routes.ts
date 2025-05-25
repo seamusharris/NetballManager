@@ -663,19 +663,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Player ID:", id);
       console.log("Raw request body:", JSON.stringify(req.body, null, 2));
       
-      // Get the update data - use player property if it exists (client format), otherwise use direct body
-      let updateData;
-      if (req.body.player) {
-        // Client is sending { id: number, player: { ...playerData } }
-        updateData = {...req.body.player};
-        console.log("Using nested player data format");
-      } else {
-        // Direct format { ...playerData }
-        updateData = {...req.body};
-        console.log("Using direct player data format");
-      }
+      // Simplify - always use the direct format
+      const updateData = {...req.body};
       
-      console.log("Player update data after extraction:", JSON.stringify(updateData, null, 2));
+      console.log("Player update data:", JSON.stringify(updateData, null, 2));
       
       // Season management is now handled separately on the player details page
       // We don't expect seasonIds in the request anymore
