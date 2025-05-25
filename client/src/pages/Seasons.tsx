@@ -90,14 +90,9 @@ export default function Seasons() {
 
   // Add new season mutation
   const addSeasonMutation = useMutation({
-    mutationFn: (seasonData: SeasonFormValues) => {
-      return apiRequest('/api/seasons', {
-        method: 'POST',
-        body: JSON.stringify(seasonData),
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
+    mutationFn: async (seasonData: SeasonFormValues) => {
+      const res = await apiRequest('POST', '/api/seasons', seasonData);
+      return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/seasons'] });

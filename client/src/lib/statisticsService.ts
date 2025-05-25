@@ -117,14 +117,47 @@ export class StatisticsService {
       // Format the IDs for the query parameter
       const idsParam = gameIds.join(',');
       const timestamp = new Date().getTime(); // For cache busting if needed
-      const url = `/api/games/stats/batch?ids=${idsParam}&_t=${timestamp}`;
-      const res = await apiRequest('GET', url);
-      const statsMap = await res.json();
       
-      console.log(`Fetched batch stats for ${gameIds.length} games in a single request`);
-      return statsMap;
+      try {
+        const url = `/api/games/stats/batch?ids=${idsParam}&_t=${timestamp}`;
+        const res = await apiRequest('GET', url);
+        const statsMap = await res.json();
+        
+        console.log(`Fetched batch stats for ${gameIds.length} games in a single request`);
+        return statsMap;
+      } catch (fetchError) {
+        console.warn(`Batch stats fetch failed, falling back to individual fetches: ${fetchError}`);
+        
+        // Fallback to fetching each game's stats individually if batch fails
+        const statsMap: Record<number, GameStat[]> = {};
+        
+        // Use Promise.allSettled to prevent one failure from breaking everything
+        const results = await Promise.allSettled(
+          gameIds.map(async (gameId) => {
+            try {
+              const res = await apiRequest('GET', `/api/games/${gameId}/stats`);
+              const stats = await res.json();
+              return { gameId, stats };
+            } catch (individualError) {
+              console.warn(`Failed to fetch stats for game ${gameId}: ${individualError}`);
+              return { gameId, stats: [] };
+            }
+          })
+        );
+        
+        // Process successful results
+        results.forEach((result) => {
+          if (result.status === 'fulfilled') {
+            const { gameId, stats } = result.value;
+            statsMap[gameId] = stats;
+          }
+        });
+        
+        console.log(`Completed fallback fetches for ${gameIds.length} games`);
+        return statsMap;
+      }
     } catch (error) {
-      console.error(`Error fetching batch game statistics: ${error}`);
+      console.error(`Error in batch stats operation: ${error}`);
       return {};
     }
   }
