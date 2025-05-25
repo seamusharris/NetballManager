@@ -202,8 +202,8 @@ export const getQueryFn: <T>(options: {
   };
 
 /**
- * Optimized query client configuration with proper stale times
- * based on data type and frequency of updates
+ * Optimized query client configuration with aggressive caching
+ * for better performance across season switches
  */
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -211,10 +211,10 @@ export const queryClient = new QueryClient({
       queryFn: getQueryFn({ on401: "throw" }),
       refetchOnWindowFocus: false,
       retry: 1,
-      // Default stale time - we'll override this for specific queries
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      // Cache time longer than stale time allows for faster return to previously seen data
-      gcTime: 15 * 60 * 1000, // 15 minutes
+      // More aggressive stale time for faster dashboard performance
+      staleTime: 30 * 60 * 1000, // 30 minutes
+      // Much longer cache time to preserve data between season switches
+      gcTime: 60 * 60 * 1000, // 60 minutes (1 hour)
     },
     mutations: {
       retry: 1,
