@@ -81,61 +81,78 @@ export default function Players() {
   
   const updateMutation = useMutation({
     mutationFn: async ({ id, player }: { id: number, player: any }) => {
-      console.log("Sending update request for player:", id, player);
-      
-      // Detailed logging of the submitted player data
+      console.log("========== UPDATE PLAYER REQUEST ==========");
       console.log("Player ID:", id);
-      console.log("Player data:", JSON.stringify(player, null, 2));
-      console.log("Season IDs in request:", player.seasonIds);
+      console.log("Raw player data:", JSON.stringify(player, null, 2));
       
-      // Create a copy of the player data to avoid modifying the original
-      const playerData = { ...player };
+      // Create a clean copy of the player data
+      const playerData = {
+        displayName: player.displayName || '',
+        firstName: player.firstName || '',
+        lastName: player.lastName || '',
+        dateOfBirth: player.dateOfBirth || null,
+        positionPreferences: Array.isArray(player.positionPreferences) ? player.positionPreferences : [],
+        active: !!player.active, // Ensure boolean
+        seasonIds: [] // Default empty array, we'll process this next
+      };
       
-      // Simplified season ID handling to ensure reliable updates
-      if (playerData.seasonIds) {
-        // Ensure it's an array (handle both array and single value cases)
-        const seasonIdsArray = Array.isArray(playerData.seasonIds) 
-          ? playerData.seasonIds 
-          : [playerData.seasonIds];
+      // Process season IDs more carefully
+      if (player.seasonIds) {
+        // Ensure it's an array
+        const seasonIdsArray = Array.isArray(player.seasonIds) 
+          ? player.seasonIds 
+          : [player.seasonIds];
         
-        // Normalize to number values
+        // Normalize to valid number values
         const processedIds = seasonIdsArray
           .map((sid: any) => {
-            // Convert to number if it's a string
             if (typeof sid === 'string') {
               const parsed = parseInt(sid, 10);
               return isNaN(parsed) ? null : parsed;
             }
-            // Keep numbers as is
             return typeof sid === 'number' ? sid : null;
           })
           .filter((id): id is number => id !== null);
         
         playerData.seasonIds = processedIds;
         
-        console.log("Processed season IDs for update:", processedIds);
-      } else {
-        // Provide an empty array if seasonIds is undefined
-        playerData.seasonIds = [];
+        console.log("Processed season IDs:", processedIds);
       }
       
       try {
-        // Use a more reliable approach with apiRequest helper
-        console.log("Making API request to:", `/api/players/${id}`);
-        console.log("Request body:", JSON.stringify(playerData, null, 2));
+        console.log("Final request data:", JSON.stringify(playerData, null, 2));
+        console.log("Request URL:", `/api/players/${id}`);
         
-        // Use the API request utility for more consistent error handling
-        const updatedPlayer = await apiRequest(`/api/players/${id}`, {
+        // Direct fetch with specific error handling for clearer debugging
+        const response = await fetch(`/api/players/${id}`, {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify(playerData)
+          body: JSON.stringify(playerData),
+          credentials: 'include'
         });
         
+        console.log("Response status:", response.status);
+        
+        if (!response.ok) {
+          let errorMessage = `Server error: ${response.status}`;
+          try {
+            const errorData = await response.json();
+            errorMessage = errorData.message || errorMessage;
+            console.error("Error response data:", errorData);
+          } catch (e) {
+            console.error("Could not parse error response");
+          }
+          throw new Error(errorMessage);
+        }
+        
+        const updatedPlayer = await response.json();
         console.log("Update successful:", updatedPlayer);
+        console.log("========== UPDATE PLAYER COMPLETED ==========");
         return updatedPlayer;
       } catch (err) {
+        console.error("========== UPDATE PLAYER FAILED ==========");
         console.error("Player update request failed:", err);
         throw err;
       }

@@ -162,23 +162,56 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updatePlayer(id: number, updatePlayer: Partial<InsertPlayer>): Promise<Player | undefined> {
-    // Handle type-safe update to avoid TS errors
-    const updateData: Record<string, any> = {};
-    
-    if (updatePlayer.displayName !== undefined) updateData.displayName = updatePlayer.displayName;
-    if (updatePlayer.firstName !== undefined) updateData.firstName = updatePlayer.firstName;
-    if (updatePlayer.lastName !== undefined) updateData.lastName = updatePlayer.lastName;
-    if (updatePlayer.dateOfBirth !== undefined) updateData.dateOfBirth = updatePlayer.dateOfBirth;
-    if (updatePlayer.active !== undefined) updateData.active = updatePlayer.active;
-    if (updatePlayer.positionPreferences !== undefined) updateData.positionPreferences = updatePlayer.positionPreferences;
-    if (updatePlayer.avatarColor !== undefined) updateData.avatarColor = updatePlayer.avatarColor;
-    
-    const [updated] = await db
-      .update(players)
-      .set(updateData)
-      .where(eq(players.id, id))
-      .returning();
-    return updated || undefined;
+    try {
+      console.log("Storage: Updating player with ID:", id);
+      console.log("Storage: Update data received:", JSON.stringify(updatePlayer, null, 2));
+      
+      // Handle type-safe update to avoid TS errors
+      const updateData: Record<string, any> = {};
+      
+      if (updatePlayer.displayName !== undefined) updateData.displayName = updatePlayer.displayName;
+      if (updatePlayer.firstName !== undefined) updateData.firstName = updatePlayer.firstName;
+      if (updatePlayer.lastName !== undefined) updateData.lastName = updatePlayer.lastName;
+      if (updatePlayer.dateOfBirth !== undefined) updateData.dateOfBirth = updatePlayer.dateOfBirth;
+      if (updatePlayer.active !== undefined) updateData.active = updatePlayer.active === true;
+      
+      // Ensure position preferences is always an array
+      if (updatePlayer.positionPreferences !== undefined) {
+        if (Array.isArray(updatePlayer.positionPreferences)) {
+          updateData.positionPreferences = updatePlayer.positionPreferences;
+        } else if (typeof updatePlayer.positionPreferences === 'string') {
+          // Handle case where it might come as a string
+          updateData.positionPreferences = [updatePlayer.positionPreferences];
+        } else {
+          // Default to empty array if invalid
+          updateData.positionPreferences = [];
+        }
+      }
+      
+      if (updatePlayer.avatarColor !== undefined) updateData.avatarColor = updatePlayer.avatarColor;
+      
+      console.log("Storage: Processed update data:", JSON.stringify(updateData, null, 2));
+      
+      // Only perform update if there are fields to update
+      if (Object.keys(updateData).length === 0) {
+        console.log("Storage: No valid update fields provided for player", id);
+        // Return the existing player without updating
+        const existingPlayer = await this.getPlayer(id);
+        return existingPlayer;
+      }
+      
+      const [updated] = await db
+        .update(players)
+        .set(updateData)
+        .where(eq(players.id, id))
+        .returning();
+      
+      console.log("Storage: Player update successful:", updated ? "Yes" : "No");
+      return updated || undefined;
+    } catch (error) {
+      console.error("Storage: Error updating player:", error);
+      throw error;
+    }
   }
 
   async deletePlayer(id: number): Promise<boolean> {
