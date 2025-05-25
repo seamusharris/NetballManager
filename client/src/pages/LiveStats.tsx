@@ -391,23 +391,51 @@ export default function LiveStats() {
     return playerRoster ? playerRoster.position : '';
   };
   
-  // Used to define player-position pairing
+  // Used to define player-position pairing (playerId can be 0 for positions without assigned players)
   interface PlayerPosition {
     playerId: number;
     position: Position;
+    hasPlayer: boolean; // Track if this position has an actual player assigned
   }
 
-  // Get list of players on court in the current quarter, sorted by position (GS to GK)
+  // Get list of all positions for the current quarter, with or without assigned players
   const getPlayersOnCourt = (): PlayerPosition[] => {
-    if (!rosters) return [];
+    if (!rosters || !existingStats) return [];
     
-    // Get all players on court with their positions
-    const positionMap = rosters
+    // Create a set to track all positions with stats for the current quarter
+    const positionsWithStats = new Set<Position>();
+    
+    // Collect all positions that have stats for this quarter
+    existingStats.forEach((stat: GameStat) => {
+      if (stat.quarter === currentQuarter && stat.position && allPositions.includes(stat.position as Position)) {
+        positionsWithStats.add(stat.position as Position);
+      }
+    });
+    
+    // Create a map of positions to players for this quarter
+    const positionPlayerMap = new Map<Position, number>();
+    
+    // Fill the map with data from the roster
+    rosters
       .filter((r: Roster) => r.quarter === currentQuarter && allPositions.includes(r.position))
-      .map((r: Roster) => ({
-        playerId: r.playerId,
-        position: r.position as Position
-      }));
+      .forEach((r: Roster) => {
+        positionPlayerMap.set(r.position as Position, r.playerId);
+        // Also make sure this position is in our set
+        positionsWithStats.add(r.position as Position);
+      });
+    
+    // Create the final array of player positions
+    const positionMap: PlayerPosition[] = [];
+    
+    // Process all positions that either have stats or players assigned
+    positionsWithStats.forEach((position) => {
+      const playerId = positionPlayerMap.get(position) || 0;
+      positionMap.push({
+        playerId,
+        position,
+        hasPlayer: playerId > 0
+      });
+    });
     
     // Sort by position order (GS, GA, WA, C, WD, GD, GK)
     return positionMap.sort((a: PlayerPosition, b: PlayerPosition) => {
@@ -1021,16 +1049,46 @@ export default function LiveStats() {
             <p className="text-sm text-muted-foreground mt-1">Set up your roster first to track stats.</p>
           </Card>
         ) : (
-          playersOnCourt.map(({playerId, position}) => {
-            const player = getPlayer(playerId);
-            if (!player) return null;
+          playersOnCourt.map(({playerId, position, hasPlayer}) => {
+            const player = hasPlayer ? getPlayer(playerId) : null;
             
+            // Get stats for this position, whether or not a player is assigned
+            // For positions without players, we'll use a positional stat approach
             const statConfig = positionStatConfig[position];
-            const playerStats = liveStats[playerId]?.[currentQuarter] || emptyQuarterStats;
-            const avatarColor = generatePlayerAvatarColor(playerId);
+            
+            // For positions with players, use player stats; otherwise find position stats directly
+            let positionStats = emptyQuarterStats;
+            
+            if (hasPlayer && player) {
+              // If we have a player, use their stats
+              positionStats = liveStats[playerId]?.[currentQuarter] || emptyQuarterStats;
+            } else {
+              // If no player, look for position stats in existingStats
+              const positionStat = existingStats.find(
+                (stat: GameStat) => stat.position === position && stat.quarter === currentQuarter
+              );
+              
+              if (positionStat) {
+                // Convert position stat to QuarterStats format
+                positionStats = {
+                  goalsFor: positionStat.goalsFor || 0,
+                  goalsAgainst: positionStat.goalsAgainst || 0,
+                  missedGoals: positionStat.missedGoals || 0,
+                  rebounds: positionStat.rebounds || 0,
+                  intercepts: positionStat.intercepts || 0,
+                  badPass: positionStat.badPass || 0,
+                  handlingError: positionStat.handlingError || 0,
+                  pickUp: positionStat.pickUp || 0,
+                  infringement: positionStat.infringement || 0
+                };
+              }
+            }
+            
+            // Generate a unique key - for positions without players, use the position as key
+            const cardKey = hasPlayer ? `player-${playerId}` : `position-${position}-q${currentQuarter}`;
             
             return (
-              <Card key={playerId} className="mb-3 overflow-hidden">
+              <Card key={cardKey} className="mb-3 overflow-hidden">
                 <CardHeader className="py-2 pb-2">
                   {/* Use flex instead of grid for better control */}
                   <div className="flex flex-wrap items-center gap-2">
@@ -1049,7 +1107,11 @@ export default function LiveStats() {
                       </div>
                       
                       <div className="min-w-[60px]">
-                        <p className="font-semibold text-sm">{player.displayName}</p>
+                        {player ? (
+                          <p className="font-semibold text-sm">{player.displayName}</p>
+                        ) : (
+                          <p className="font-semibold text-sm text-gray-500">Unassigned</p>
+                        )}
                         <p className="text-xs text-muted-foreground">{positionLabels[position]}</p>
                       </div>
                     </div>
