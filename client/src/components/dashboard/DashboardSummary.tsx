@@ -68,9 +68,11 @@ export default function DashboardSummary({
   const currentDate = new Date().toISOString().split('T')[0];
   
   // Include games that are either from past dates OR are completed (even if they're today)
+  // These games are already filtered by the selected season in filteredGames/sortedGames
   const pastGames = sortedGames.filter(game => game.date < currentDate || game.completed);
   
   // Only include games that are from today or future AND not completed
+  // These games are already filtered by the selected season in filteredGames/sortedGames
   const upcomingGames = sortByDate(sortedGames.filter(game => 
     (game.date >= currentDate && !game.completed)
   ), true);
