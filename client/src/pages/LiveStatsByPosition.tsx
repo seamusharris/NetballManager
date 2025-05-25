@@ -278,13 +278,7 @@ export default function LiveStatsByPosition() {
     try {
       console.log(`Updating stat ID ${id}:`, data);
       
-      const response = await fetch(`/api/game-stats/${id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(data)
-      });
+      const response = await apiRequest('PATCH', `/api/game-stats/${id}`, data);
       
       if (!response.ok) {
         console.error(`API error: ${response.status} ${response.statusText}`);

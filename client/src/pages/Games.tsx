@@ -81,13 +81,8 @@ export default function Games() {
   
   const createMutation = useMutation({
     mutationFn: async (newGame: any) => {
-      return await apiRequest('/api/games', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(newGame)
-      });
+      const res = await apiRequest('POST', '/api/games', newGame);
+      return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/games'] });
