@@ -135,6 +135,10 @@ export default function Players() {
   
   const handleDeletePlayer = (id: number) => {
     if (window.confirm('Are you sure you want to delete this player? This action cannot be undone.')) {
+      // Prevent duplicate delete attempts by disabling the delete button during processing
+      if (deleteMutation.isPending) {
+        return;
+      }
       deleteMutation.mutate(id);
     }
   };
