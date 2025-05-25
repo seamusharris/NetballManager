@@ -393,7 +393,8 @@ export default function PlayerDetails() {
   // Mutation for updating the player
   const updateMutation = useMutation({
     mutationFn: async (updatedPlayer: any) => {
-      return apiRequest('PATCH', `/api/players/${playerId}`, updatedPlayer);
+      // Wrap the player data in a player object as expected by the server
+      return apiRequest('PATCH', `/api/players/${playerId}`, { player: updatedPlayer });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/players/${playerId}`] });
