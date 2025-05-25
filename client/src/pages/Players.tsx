@@ -446,7 +446,6 @@ export default function Players() {
           isLoading={isLoading}
           onEdit={setEditingPlayer}
           onDelete={handleDeletePlayer}
-          onManageSeasons={setSeasonManagementPlayer}
         />
         
         {/* Add Player Dialog */}
