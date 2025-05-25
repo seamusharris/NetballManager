@@ -420,7 +420,10 @@ export default function PlayerDetails() {
   };
   
   const handleUpdatePlayer = (data: any) => {
-    updateMutation.mutate(data);
+    // Ensure no season data is sent to the server
+    const { seasonIds, ...playerDataWithoutSeasons } = data;
+    console.log("Updating player without seasons:", playerDataWithoutSeasons);
+    updateMutation.mutate(playerDataWithoutSeasons);
   };
 
   // Get the player's avatar color
