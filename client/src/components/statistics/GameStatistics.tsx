@@ -295,32 +295,24 @@ export default function GameStatistics({
       
       if (existingStat) {
         // Update existing stats
-        return await apiRequest(`/api/gamestats/${existingStat.id}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(stats)
-        });
+        return await apiRequest('PATCH', `/api/gamestats/${existingStat.id}`, stats);
       } else {
         // Create new stats
-        return await apiRequest(`/api/gamestats`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            gameId: game.id,
-            position,
-            quarter,
-            goalsFor: 0,
-            goalsAgainst: 0,
-            missedGoals: 0,
-            rebounds: 0,
-            intercepts: 0,
-            badPass: 0,
-            handlingError: 0,
-            pickUp: 0,
-            infringement: 0,
-            rating: null,
-            ...stats // Override with actual values being updated
-          })
+        return await apiRequest('POST', `/api/gamestats`, {
+          gameId: game.id,
+          position,
+          quarter,
+          goalsFor: 0,
+          goalsAgainst: 0,
+          missedGoals: 0,
+          rebounds: 0,
+          intercepts: 0,
+          badPass: 0,
+          handlingError: 0,
+          pickUp: 0,
+          infringement: 0,
+          rating: null,
+          ...stats // Override with actual values being updated
         });
       }
     },
