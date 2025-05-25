@@ -1251,7 +1251,7 @@ export default function LiveStats() {
                         {player ? (
                           <p className="font-semibold text-sm">{player.displayName}</p>
                         ) : (
-                          <p className="font-semibold text-sm text-white" style={{ backgroundColor: '#e11d48', padding: '1px 4px', borderRadius: '2px' }}>Unassigned</p>
+                          <p className="font-semibold text-sm text-gray-500">Unassigned</p>
                         )}
                         <p className="text-xs text-muted-foreground">{positionLabels[position]}</p>
                       </div>
