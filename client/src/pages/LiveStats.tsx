@@ -823,9 +823,37 @@ export default function LiveStats() {
     return !isCommonStat(stat);
   };
   
-  // Render a stat counter button
-  const renderStatCounter = (playerId: number, stat: StatType, compact: boolean = false, important: boolean = false) => {
-    const currentValue = liveStats[playerId]?.[currentQuarter]?.[stat] || 0;
+  // Render a stat counter button - supports both players and unassigned positions
+  const renderStatCounter = (
+    playerId: number, 
+    stat: StatType, 
+    compact: boolean = false, 
+    important: boolean = false, 
+    position?: Position, // Optional position for unassigned positions
+    posStats?: QuarterStats // Optional stats for unassigned positions
+  ) => {
+    // For players, get value from liveStats
+    // For unassigned positions (playerId === 0), get value from posStats
+    let currentValue = 0;
+    
+    if (playerId === 0 && position) {
+      // This is an unassigned position - get value from position stats
+      currentValue = posStats?.[stat] || 0;
+    } else {
+      // Normal player stat
+      currentValue = liveStats[playerId]?.[currentQuarter]?.[stat] || 0;
+    }
+    
+    // Function to handle stat updates
+    const handleStatChange = (change: number) => {
+      if (playerId === 0 && position) {
+        // This is an unassigned position - update stats directly in database
+        updatePositionStat(position, stat, currentValue + change);
+      } else {
+        // Normal player stat update
+        recordStat(playerId, stat, change);
+      }
+    };
     
     return (
       <div className={`flex flex-col items-center ${compact ? 'p-1' : 'p-2'} rounded-md border`}>
@@ -835,7 +863,7 @@ export default function LiveStats() {
             variant="outline"
             size="sm"
             className={`${compact ? 'h-6 w-6' : 'h-8 w-8'} p-0`}
-            onClick={() => recordStat(playerId, stat, -1)}
+            onClick={() => handleStatChange(-1)}
             disabled={currentValue <= 0}
           >
             <Minus className={`${compact ? 'h-3 w-3' : 'h-4 w-4'}`} />
@@ -849,13 +877,85 @@ export default function LiveStats() {
             variant="outline"
             size="sm"
             className={`${compact ? 'h-6 w-6' : 'h-8 w-8'} p-0 ${statColors[stat]}`}
-            onClick={() => recordStat(playerId, stat, 1)}
+            onClick={() => handleStatChange(1)}
           >
             <Plus className={`${compact ? 'h-3 w-3' : 'h-4 w-4'}`} />
           </Button>
         </div>
       </div>
     );
+  };
+  
+  // Function to update stats for a position without a player
+  const updatePositionStat = async (position: Position, statType: StatType, newValue: number) => {
+    try {
+      // Find existing stat for this position and quarter
+      const existingStat = existingStats.find(
+        (stat: GameStat) => stat.position === position && stat.quarter === currentQuarter
+      );
+      
+      if (existingStat) {
+        // Update existing stat
+        console.log(`Updating stat for position ${position} in Q${currentQuarter}: ${statType} = ${newValue}`);
+        
+        // Create update payload
+        const updatePayload = {
+          ...existingStat,
+          [statType]: Math.max(0, newValue)
+        };
+        
+        // Save to server
+        await saveGameStat(updatePayload);
+        
+        // Refresh stats
+        await refetchStats();
+        
+        toast({
+          title: "Statistic updated",
+          description: `Updated ${statLabels[statType]} for ${positionLabels[position]} in Q${currentQuarter}`
+        });
+      } else {
+        // Create new stat
+        console.log(`Creating new stat for position ${position} in Q${currentQuarter}: ${statType} = ${newValue}`);
+        
+        // Create base stat object
+        const newStat = {
+          gameId,
+          position,
+          quarter: currentQuarter,
+          goalsFor: 0,
+          goalsAgainst: 0,
+          missedGoals: 0,
+          rebounds: 0,
+          intercepts: 0,
+          badPass: 0,
+          handlingError: 0,
+          pickUp: 0,
+          infringement: 0
+        };
+        
+        // Set the specific stat value
+        newStat[statType] = Math.max(0, newValue);
+        
+        // Save to server
+        await saveGameStat(newStat);
+        
+        // Refresh stats
+        await refetchStats();
+        
+        toast({
+          title: "Statistic recorded",
+          description: `Recorded ${statLabels[statType]} for ${positionLabels[position]} in Q${currentQuarter}`
+        });
+      }
+    } catch (error) {
+      console.error("Error updating position stat:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save statistic. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
   
   // Loading state
@@ -1121,7 +1221,10 @@ export default function LiveStats() {
                       {commonStats.map(stat => (
                         statConfig[stat] && (
                           <div key={`${playerId}-common-${stat}`} className="flex-1 min-w-[120px]">
-                            {renderStatCounter(playerId, stat, false)}
+                            {hasPlayer ? 
+                              renderStatCounter(playerId, stat, false) : 
+                              renderStatCounter(0, stat, false, false, position, positionStats)
+                            }
                           </div>
                         )
                       ))}
@@ -1144,7 +1247,10 @@ export default function LiveStats() {
                       <div className="flex justify-center gap-2 flex-wrap">
                         {posSpecificStats.map(statType => (
                           <div key={`${playerId}-${statType}`} className="w-[180px]">
-                            {renderStatCounter(playerId, statType, false, true)}
+                            {hasPlayer ? 
+                              renderStatCounter(playerId, statType, false, true) : 
+                              renderStatCounter(0, statType, false, true, position, positionStats)
+                            }
                           </div>
                         ))}
                       </div>
