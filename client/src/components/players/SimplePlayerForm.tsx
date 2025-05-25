@@ -36,12 +36,34 @@ export default function SimplePlayerForm({ onSubmit, onCancel, isSubmitting }: S
     }
   }, [seasons]);
   
+  // Function to handle season selection
+  const handleSeasonChange = (seasonId: number) => {
+    console.log("Fetched player seasons:", selectedSeasons);
+    
+    // Check if the season is already selected
+    if (selectedSeasons.includes(seasonId)) {
+      // Remove the season
+      console.log(`Removing season ${seasonId}. Updated selection:`, selectedSeasons.filter(id => id !== seasonId));
+      setSelectedSeasons(selectedSeasons.filter(id => id !== seasonId));
+    } else {
+      // Add the season
+      console.log(`Adding season ${seasonId}. Updated selection:`, [...selectedSeasons, seasonId]);
+      setSelectedSeasons([...selectedSeasons, seasonId]);
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     // Validate required fields
     if (!displayName || !firstName || !lastName || !position1) {
       alert("Please fill in all required fields");
+      return;
+    }
+    
+    // Validate at least one season is selected
+    if (selectedSeasons.length === 0) {
+      alert("Please select at least one season");
       return;
     }
     
@@ -67,7 +89,8 @@ export default function SimplePlayerForm({ onSubmit, onCancel, isSubmitting }: S
       dateOfBirth: dateOfBirth || "", // Allow empty date of birth
       active,
       positionPreferences,
-      avatarColor: "auto" // This will be replaced with a specific color once the player is created and has an ID
+      avatarColor: "auto", // This will be replaced with a specific color once the player is created and has an ID
+      seasonIds: selectedSeasons // Add the selected seasons
     });
   };
   
@@ -133,6 +156,33 @@ export default function SimplePlayerForm({ onSubmit, onCancel, isSubmitting }: S
           value={dateOfBirth}
           onChange={(e) => setDateOfBirth(e.target.value)}
         />
+      </div>
+      
+      <div>
+        <h3 className="text-sm font-medium mb-2">Seasons <span className="text-red-500">*</span></h3>
+        <div className="border rounded-md p-3 space-y-2">
+          {seasons.length === 0 ? (
+            <p className="text-sm text-gray-500">No seasons available</p>
+          ) : (
+            seasons.map(season => (
+              <div key={season.id} className="flex items-center">
+                <input
+                  type="checkbox"
+                  id={`season-${season.id}`}
+                  checked={selectedSeasons.includes(season.id)}
+                  onChange={() => handleSeasonChange(season.id)}
+                  className="mr-2"
+                />
+                <label htmlFor={`season-${season.id}`} className="text-sm">
+                  {season.name} {season.isActive && <span className="text-green-600 font-medium">(Current)</span>}
+                </label>
+              </div>
+            ))
+          )}
+          {selectedSeasons.length === 0 && (
+            <p className="text-xs text-red-500">Please select at least one season</p>
+          )}
+        </div>
       </div>
       
       <div>
