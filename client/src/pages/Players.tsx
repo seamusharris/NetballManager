@@ -7,6 +7,7 @@ import { Plus } from 'lucide-react';
 import PlayersList from '@/components/players/PlayersList';
 import PlayerForm from '@/components/players/PlayerForm';
 import SimplePlayerForm from '@/components/players/SimplePlayerForm';
+import PlayerSeasonsManager from '@/components/players/PlayerSeasonsManager';
 import { apiRequest } from '@/lib/queryClient';
 import { queryClient } from '@/lib/queryClient';
 import { Player, Season } from '@shared/schema';
@@ -15,6 +16,7 @@ import { useLocation } from 'wouter';
 export default function Players() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
+  const [seasonManagementPlayer, setSeasonManagementPlayer] = useState<Player | null>(null);
   const { toast } = useToast();
   const [location] = useLocation();
   
@@ -410,12 +412,33 @@ export default function Players() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-heading font-bold text-neutral-dark">Player Management</h2>
-          <Button
-            onClick={() => setIsAddDialogOpen(true)}
-            className="bg-primary hover:bg-primary-light text-white"
-          >
-            <Plus className="w-4 h-4 mr-1" /> Add Player
-          </Button>
+          <div className="flex space-x-2">
+            {/* Season management button */}
+            <Button
+              onClick={() => {
+                // Find the first player
+                if (players.length > 0) {
+                  setSeasonManagementPlayer(players[0]);
+                } else {
+                  toast({
+                    title: "No players available",
+                    description: "Create a player first before managing seasons",
+                    variant: "destructive"
+                  });
+                }
+              }}
+              className="bg-amber-500 hover:bg-amber-600 text-white"
+            >
+              Manage Seasons
+            </Button>
+            
+            <Button
+              onClick={() => setIsAddDialogOpen(true)}
+              className="bg-primary hover:bg-primary-light text-white"
+            >
+              <Plus className="w-4 h-4 mr-1" /> Add Player
+            </Button>
+          </div>
         </div>
         
         <PlayersList 
@@ -423,8 +446,10 @@ export default function Players() {
           isLoading={isLoading}
           onEdit={setEditingPlayer}
           onDelete={handleDeletePlayer}
+          onManageSeasons={setSeasonManagementPlayer}
         />
         
+        {/* Add Player Dialog */}
         {isAddDialogOpen && (
           <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center">
             <div className="relative bg-white dark:bg-slate-900 p-6 rounded-lg max-w-lg w-full max-h-[90vh] overflow-y-auto">
@@ -451,6 +476,7 @@ export default function Players() {
           </div>
         )}
         
+        {/* Edit Player Dialog */}
         {!!editingPlayer && (
           <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center">
             <div className="relative bg-white dark:bg-slate-900 p-6 rounded-lg max-w-lg w-full max-h-[90vh] overflow-y-auto">
@@ -474,6 +500,16 @@ export default function Players() {
               />
             </div>
           </div>
+        )}
+        
+        {/* Season Management Dialog */}
+        {!!seasonManagementPlayer && (
+          <PlayerSeasonsManager
+            player={seasonManagementPlayer}
+            seasons={seasons}
+            isOpen={!!seasonManagementPlayer}
+            onClose={() => setSeasonManagementPlayer(null)}
+          />
         )}
       </div>
     </>
