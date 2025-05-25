@@ -837,25 +837,35 @@ export default function LiveStats() {
     position?: Position, // Optional position for unassigned positions
     posStats?: QuarterStats // Optional stats for unassigned positions
   ) => {
-    // For players, get value from liveStats
-    // For unassigned positions (playerId === 0), get value directly from existingStats
     let currentValue = 0;
     
     if (playerId === 0 && position) {
-      // This is an unassigned position - get value directly from existingStats
+      // For unassigned positions, get stats directly from the database records
       const positionStat = existingStats?.find(
         (s: GameStat) => s.position === position && s.quarter === currentQuarter
       );
       
-      if (positionStat && positionStat[stat] !== undefined) {
-        currentValue = positionStat[stat] || 0;
-      } else if (posStats && posStats[stat] !== undefined) {
-        // Fallback to provided posStats if available
-        currentValue = posStats[stat] || 0;
+      if (positionStat && typeof positionStat[stat] !== 'undefined') {
+        currentValue = Number(positionStat[stat]) || 0;
       }
     } else {
-      // Normal player stat
+      // For assigned players, get their stats from liveStats
+      // If that's empty, check existingStats for their position
       currentValue = liveStats[playerId]?.[currentQuarter]?.[stat] || 0;
+      
+      // If player has no stats in liveStats, try to find their position and get stats
+      if (currentValue === 0 && rosters) {
+        const playerPosition = getPlayerPosition(playerId, currentQuarter);
+        if (playerPosition) {
+          const positionStat = existingStats?.find(
+            (s: GameStat) => s.position === playerPosition && s.quarter === currentQuarter
+          );
+          
+          if (positionStat && typeof positionStat[stat] !== 'undefined') {
+            currentValue = Number(positionStat[stat]) || 0;
+          }
+        }
+      }
     }
     
     // Function to handle stat updates
