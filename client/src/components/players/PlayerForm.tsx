@@ -57,14 +57,8 @@ export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFor
   // If editing, fetch player's current seasons - using direct API endpoint
   const { data: playerSeasons = [], isLoading: isSeasonsLoading } = useQuery<Season[]>(
     {
-      queryKey: ['/api/players', player?.id, 'seasons'],
-      enabled: isEditing && !!player?.id,
-      onSuccess: (data) => {
-        console.log("Successfully loaded player seasons:", data);
-      },
-      onError: (error) => {
-        console.error("Error loading player seasons:", error);
-      }
+      queryKey: [`/api/players/${player?.id}/seasons`],
+      enabled: isEditing && !!player?.id
     }
   );
   
