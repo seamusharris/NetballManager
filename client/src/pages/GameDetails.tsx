@@ -1493,11 +1493,12 @@ export default function GameDetails() {
                               {getInitials(awardWinner.firstName, awardWinner.lastName)}
                             </div>
                             
-                            {/* Player Stats Box - With dark border, light interior styling */}
+                            {/* Player Stats Box - With border color matching player's avatar */}
                             <div 
-                              className="flex-1 flex items-center p-3 rounded-lg border-2 bg-violet-50"
+                              className="flex-1 flex items-center p-3 rounded-lg border-2"
                               style={{ 
-                                borderColor: "#7c3aed" /* violet-700 - darker border */
+                                borderColor: "#7c3aed", // Use standard violet border
+                                backgroundColor: "rgb(245, 243, 255)" // violet-50
                               }}
                             >
                               <div className="flex-1">
