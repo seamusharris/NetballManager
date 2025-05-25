@@ -69,6 +69,7 @@ export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFor
       const seasonIds = playerSeasons.map((season: Season) => season.id);
       
       console.log("Setting player seasons from API response:", seasonIds);
+      console.log("Valid season IDs from API (for reference only):", seasons.map(s => s.id));
       setSelectedSeasons(seasonIds);
     } else if (seasons.length > 0 && !isEditing) {
       // For new players, select the active season by default
