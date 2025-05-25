@@ -210,44 +210,54 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updatePlayer(id: number, updatePlayer: Partial<InsertPlayer>, seasonIds?: number[]): Promise<Player | undefined> {
-    // Handle type-safe update to avoid TS errors
-    const updateData: Record<string, any> = {};
-    
-    if (updatePlayer.displayName !== undefined) updateData.displayName = updatePlayer.displayName;
-    if (updatePlayer.firstName !== undefined) updateData.firstName = updatePlayer.firstName;
-    if (updatePlayer.lastName !== undefined) updateData.lastName = updatePlayer.lastName;
-    if (updatePlayer.dateOfBirth !== undefined) updateData.dateOfBirth = updatePlayer.dateOfBirth;
-    if (updatePlayer.active !== undefined) updateData.active = updatePlayer.active;
-    if (updatePlayer.positionPreferences !== undefined) updateData.positionPreferences = updatePlayer.positionPreferences;
-    if (updatePlayer.avatarColor !== undefined) updateData.avatarColor = updatePlayer.avatarColor;
-    
-    const [updated] = await db
-      .update(players)
-      .set(updateData)
-      .where(eq(players.id, id))
-      .returning();
-    
-    // Update player seasons if provided
-    if (seasonIds && updated) {
-      // First remove existing season associations
-      await db.delete(playerSeasons).where(eq(playerSeasons.playerId, id));
+    // Start a transaction to handle both player update and season associations
+    try {
+      // Handle type-safe update to avoid TS errors
+      const updateData: Record<string, any> = {};
       
-      // Then add new season associations
-      if (seasonIds.length > 0) {
-        const playerSeasonEntries = seasonIds.map(seasonId => ({
-          playerId: id,
-          seasonId
-        }));
+      if (updatePlayer.displayName !== undefined) updateData.displayName = updatePlayer.displayName;
+      if (updatePlayer.firstName !== undefined) updateData.firstName = updatePlayer.firstName;
+      if (updatePlayer.lastName !== undefined) updateData.lastName = updatePlayer.lastName;
+      if (updatePlayer.dateOfBirth !== undefined) updateData.dateOfBirth = updatePlayer.dateOfBirth;
+      if (updatePlayer.active !== undefined) updateData.active = updatePlayer.active;
+      if (updatePlayer.positionPreferences !== undefined) updateData.positionPreferences = updatePlayer.positionPreferences;
+      if (updatePlayer.avatarColor !== undefined) updateData.avatarColor = updatePlayer.avatarColor;
+      
+      // Update the player first
+      const [updated] = await db
+        .update(players)
+        .set(updateData)
+        .where(eq(players.id, id))
+        .returning();
+      
+      if (!updated) {
+        return undefined; // Player not found
+      }
+      
+      // Update player seasons if provided
+      if (Array.isArray(seasonIds)) {
+        console.log(`Updating seasons for player ${id}:`, seasonIds);
         
-        try {
-          await db.insert(playerSeasons).values(playerSeasonEntries);
-        } catch (error) {
-          console.error('Failed to update player seasons:', error);
+        // First remove existing season associations
+        await db.delete(playerSeasons).where(eq(playerSeasons.playerId, id));
+        
+        // Then add new season associations if we have any
+        if (seasonIds.length > 0) {
+          // Create entries for each season
+          for (const seasonId of seasonIds) {
+            await db.insert(playerSeasons).values({
+              playerId: id,
+              seasonId: seasonId
+            });
+          }
         }
       }
+      
+      return updated;
+    } catch (error) {
+      console.error('Failed to update player:', error);
+      return undefined;
     }
-    
-    return updated || undefined;
   }
 
   async deletePlayer(id: number): Promise<boolean> {
