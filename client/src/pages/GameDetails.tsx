@@ -1493,36 +1493,23 @@ export default function GameDetails() {
                           });
                           
                           return (
-                            <div className="flex flex-col space-y-3">
-                              <div className="flex items-center space-x-3">
-                                <div 
-                                  className="w-14 h-14 rounded-full flex items-center justify-center text-white text-xl font-bold"
-                                  style={{ backgroundColor: playerColor }}
-                                >
-                                  {player.displayName?.charAt(0) || player.firstName.charAt(0)}
-                                </div>
-                                <div>
-                                  <div 
-                                    className="font-bold text-lg" 
-                                    style={{ color: playerColor }}
-                                  >
-                                    {player.displayName || `${player.firstName} ${player.lastName}`}
-                                  </div>
-                                  <div className="text-gray-500">
-                                    {roster && roster
-                                      .filter(r => r.playerId === player.id)
-                                      .map(r => r.position)
-                                      .filter((v, i, a) => a.indexOf(v) === i)
-                                      .join(', ')}
-                                  </div>
-                                </div>
+                            <div className="flex items-center space-x-4">
+                              <div 
+                                className="w-14 h-14 rounded-full flex items-center justify-center text-white text-xl font-bold"
+                                style={{ backgroundColor: playerColor }}
+                              >
+                                {player.displayName?.charAt(0) || player.firstName.charAt(0)}
                               </div>
                               
-                              {playerStats.length > 0 && (
+                              {playerStats.length > 0 ? (
                                 <div 
-                                  className="grid grid-cols-4 gap-2 p-3 rounded-lg text-white"
+                                  className="flex-1 grid grid-cols-4 gap-2 p-3 rounded-lg text-white"
                                   style={{ backgroundColor: playerColor }}
                                 >
+                                  <div className="text-center">
+                                    <div className="text-xl font-bold">{player.displayName || player.firstName}</div>
+                                    <div className="text-xs opacity-80">Player of the Match</div>
+                                  </div>
                                   {totalStats.goalsFor > 0 && (
                                     <div className="text-center">
                                       <div className="text-xl font-bold">{totalStats.goalsFor}</div>
@@ -1541,12 +1528,22 @@ export default function GameDetails() {
                                       <div className="text-xs opacity-80">Rebounds</div>
                                     </div>
                                   )}
-                                  {totalStats.pickUp > 0 && (
+                                  {!totalStats.goalsFor && !totalStats.intercepts && !totalStats.rebounds && totalStats.pickUp > 0 && (
                                     <div className="text-center">
                                       <div className="text-xl font-bold">{totalStats.pickUp}</div>
                                       <div className="text-xs opacity-80">Pick Ups</div>
                                     </div>
                                   )}
+                                </div>
+                              ) : (
+                                <div 
+                                  className="flex-1 p-3 rounded-lg text-white"
+                                  style={{ backgroundColor: playerColor }}
+                                >
+                                  <div className="text-center">
+                                    <div className="text-xl font-bold">{player.displayName || `${player.firstName} ${player.lastName}`}</div>
+                                    <div className="text-xs opacity-80">Player of the Match</div>
+                                  </div>
                                 </div>
                               )}
                             </div>
