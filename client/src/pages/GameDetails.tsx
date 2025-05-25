@@ -1419,7 +1419,7 @@ export default function GameDetails() {
                           }
                         }}
                       >
-                        <SelectTrigger className="w-full">
+                        <SelectTrigger className="w-[250px]">
                           <SelectValue placeholder="Select player..." />
                         </SelectTrigger>
                         <SelectContent>
