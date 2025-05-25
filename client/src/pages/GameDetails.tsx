@@ -1448,19 +1448,43 @@ export default function GameDetails() {
                           const player = players?.find(p => p.id === game.awardWinnerId);
                           if (!player) return <div className="text-gray-500 italic">Player not found</div>;
                           
+                          // Calculate player stats from game data
+                          let totalGoals = 0;
+                          let totalIntercepts = 0;
+                          let totalRebounds = 0;
+                          
+                          if (roster && gameStats) {
+                            // Find all positions this player played
+                            const playerRosters = roster.filter(r => r.playerId === player.id);
+                            
+                            // Calculate stats based on positions played
+                            playerRosters.forEach(r => {
+                              const stat = gameStats.find(s => 
+                                s.position === r.position && 
+                                s.quarter === r.quarter
+                              );
+                              
+                              if (stat) {
+                                totalGoals += stat.goalsFor || 0;
+                                totalIntercepts += stat.intercepts || 0;
+                                totalRebounds += stat.rebounds || 0;
+                              }
+                            });
+                          }
+                          
                           return (
-                            <div className="flex items-center gap-4">
-                              {/* Player Avatar */}
+                            <div className="flex items-center space-x-4">
+                              {/* Player Avatar Circle */}
                               <div 
-                                className="w-16 h-16 rounded-full flex items-center justify-center text-white text-xl font-bold shadow-md"
+                                className="h-16 w-16 flex-shrink-0 rounded-full flex items-center justify-center text-white text-xl font-bold"
                                 style={{ backgroundColor: player.avatarColor || "#6366f1" }}
                               >
                                 {player.displayName?.charAt(0) || player.firstName.charAt(0)}
                               </div>
                               
-                              {/* Stats Box */}
+                              {/* Colored Stats Box */}
                               <div 
-                                className="flex-1 flex items-center gap-4 p-3 rounded-lg text-white"
+                                className="flex-1 flex items-center p-3 rounded-lg text-white"
                                 style={{ backgroundColor: player.avatarColor || "#6366f1" }}
                               >
                                 <div className="flex-1">
@@ -1468,20 +1492,25 @@ export default function GameDetails() {
                                   <div className="text-sm">Player of the Match</div>
                                 </div>
                                 
-                                {/* Horizontal Stats */}
-                                <div className="flex gap-3 pr-2">
-                                  <div className="text-center">
-                                    <div className="text-xl font-bold">12</div>
-                                    <div className="text-xs">Goals</div>
-                                  </div>
-                                  <div className="text-center">
-                                    <div className="text-xl font-bold">5</div>
-                                    <div className="text-xs">Intercepts</div>
-                                  </div>
-                                  <div className="text-center">
-                                    <div className="text-xl font-bold">3</div>
-                                    <div className="text-xs">Rebounds</div>
-                                  </div>
+                                <div className="flex space-x-6">
+                                  {totalGoals > 0 && (
+                                    <div className="text-center">
+                                      <div className="text-2xl font-bold">{totalGoals}</div>
+                                      <div className="text-xs">Goals</div>
+                                    </div>
+                                  )}
+                                  {totalIntercepts > 0 && (
+                                    <div className="text-center">
+                                      <div className="text-2xl font-bold">{totalIntercepts}</div>
+                                      <div className="text-xs">Intercepts</div>
+                                    </div>
+                                  )}
+                                  {totalRebounds > 0 && (
+                                    <div className="text-center">
+                                      <div className="text-2xl font-bold">{totalRebounds}</div>
+                                      <div className="text-xs">Rebounds</div>
+                                    </div>
+                                  )}
                                 </div>
                               </div>
                             </div>
