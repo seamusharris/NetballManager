@@ -7,6 +7,11 @@
 
 import { Request, Response } from 'express';
 import { Pool } from '@neondatabase/serverless';
+import ws from "ws";
+
+// Configure Neon to use websockets
+import { neonConfig } from '@neondatabase/serverless';
+neonConfig.webSocketConstructor = ws;
 
 // Create a database connection pool
 const pool = new Pool({
