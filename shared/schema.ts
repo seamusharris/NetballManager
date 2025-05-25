@@ -77,6 +77,7 @@ export const games = pgTable("games", {
   isBye: boolean("is_bye").notNull().default(false),
   round: text("round"), // Round number in the season or special values like "SF" or "GF"
   seasonId: integer("season_id").references(() => seasons.id), // Reference to season
+  notes: text("notes"), // Game notes for recording observations, player performance, etc.
 });
 
 // Default schema without ID for normal creation
