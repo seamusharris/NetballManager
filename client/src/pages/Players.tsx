@@ -96,10 +96,17 @@ export default function Players() {
           .map((id: any) => typeof id === 'number' ? id : parseInt(id, 10))
           .filter((id: number) => !isNaN(id));
         
-        // Then filter to only include valid season IDs
-        playerData.seasonIds = normalizedIds.filter((id: number) => 
-          validSeasonIds.includes(id)
-        );
+        // Then filter to only include valid season IDs and exclude any player IDs
+        playerData.seasonIds = normalizedIds.filter((id: number) => {
+          // Check if this ID is actually a valid season ID
+          const isValidSeason = validSeasonIds.includes(id);
+          
+          if (!isValidSeason) {
+            console.warn(`Removing invalid season ID from update request: ${id}`);
+          }
+          
+          return isValidSeason;
+        });
         
         console.log("Valid season IDs from API:", validSeasonIds);
         console.log("Selected seasons before filtering:", normalizedIds);

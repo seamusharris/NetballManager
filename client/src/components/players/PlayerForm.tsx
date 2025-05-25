@@ -55,7 +55,7 @@ export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFor
   });
   
   // If editing, fetch player's current seasons
-  const { data: playerSeasonsResponse = { seasons: [] } } = useQuery<{success: boolean, seasons: Season[]}>(
+  const { data: playerSeasonsResponse = { success: false, seasons: [] } } = useQuery<{success: boolean, seasons: Season[], player?: {id: number, name: string}}>(
     {
       queryKey: ['/api/players', player?.id, 'seasons'],
       enabled: isEditing && !!player?.id,
