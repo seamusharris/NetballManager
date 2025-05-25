@@ -184,7 +184,7 @@ export default function RecentGames({ games, opponents, className, seasonFilter,
             <p className="text-gray-500 text-center py-4">No recent games to display</p>
           ) : (
             recentGames.map(game => (
-              <Link key={game.id} href={`/game/${game.id}`}>
+              <Link key={game.id} href={`/games/${game.id}`}>
                 <div 
                   className={`flex justify-between items-center p-4 mb-4 mt-2 border-l-4 rounded ${getResultClass(game)} cursor-pointer hover:bg-accent/10 transition-colors`}
                 >
