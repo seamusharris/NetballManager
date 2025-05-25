@@ -385,20 +385,108 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Emergency fix for player-seasons relationships
+  // Simple direct player-seasons relationships handler
   app.post("/api/players/:id/seasons", async (req, res) => {
     try {
-      console.log(`POST /api/players/${req.params.id}/seasons - EMERGENCY FIX`);
+      const playerId = parseInt(req.params.id, 10);
+      const seasonIds = req.body.seasonIds || [];
+      
+      console.log(`POST /api/players/${playerId}/seasons - DIRECT HANDLER`);
       console.log("Request body:", req.body);
+      console.log("Season IDs:", seasonIds);
       
-      // Import the emergency fix module
-      const { fixPlayerSeasons } = await import('./emergency-fix');
+      // Validate playerId
+      if (isNaN(playerId) || playerId <= 0) {
+        return res.status(400).json({ 
+          success: false, 
+          message: "Invalid player ID" 
+        });
+      }
       
-      // Use the emergency implementation with comprehensive logging
-      await fixPlayerSeasons(req, res);
+      // Get database client
+      const client = await pool.connect();
+      
+      try {
+        await client.query('BEGIN');
+        
+        // Check if player exists
+        const playerCheck = await client.query(
+          'SELECT id FROM players WHERE id = $1',
+          [playerId]
+        );
+        
+        if (playerCheck.rowCount === 0) {
+          await client.query('ROLLBACK');
+          return res.status(404).json({ 
+            success: false, 
+            message: "Player not found" 
+          });
+        }
+        
+        // Convert and validate seasonIds
+        const validSeasonIds = seasonIds
+          .map((id) => typeof id === 'string' ? parseInt(id, 10) : id)
+          .filter((id) => !isNaN(id) && id > 0);
+          
+        console.log("Valid season IDs:", validSeasonIds);
+        
+        // Delete existing relationships
+        await client.query(
+          'DELETE FROM player_seasons WHERE player_id = $1',
+          [playerId]
+        );
+        
+        // Insert new relationships if any
+        if (validSeasonIds.length > 0) {
+          // Create query for batch insert
+          const placeholders = validSeasonIds
+            .map((_, idx) => `($1, $${idx + 2})`)
+            .join(', ');
+            
+          const params = [playerId, ...validSeasonIds];
+          
+          // Execute insert
+          const query = `INSERT INTO player_seasons (player_id, season_id) VALUES ${placeholders}`;
+          console.log("Insert query:", query);
+          console.log("Insert params:", params);
+          
+          await client.query(query, params);
+        }
+        
+        // Commit changes
+        await client.query('COMMIT');
+        
+        // Get updated seasons for response
+        const seasonsResult = await client.query(
+          `SELECT s.* 
+           FROM seasons s
+           JOIN player_seasons ps ON s.id = ps.season_id
+           WHERE ps.player_id = $1
+           ORDER BY s.start_date DESC`,
+          [playerId]
+        );
+        
+        return res.json({
+          success: true,
+          message: `Player ${playerId} seasons updated successfully`,
+          seasons: seasonsResult.rows
+        });
+        
+      } catch (dbError) {
+        await client.query('ROLLBACK');
+        console.error("Database error in player-seasons update:", dbError);
+        return res.status(500).json({ 
+          success: false, 
+          message: "Database error in player-seasons update", 
+          error: dbError instanceof Error ? dbError.message : "Unknown database error"
+        });
+      } finally {
+        client.release();
+      }
     } catch (error) {
-      console.error("Error in emergency player-seasons update:", error);
-      res.status(500).json({ 
+      console.error("Error in player-seasons update:", error);
+      return res.status(500).json({ 
+        success: false,
         message: "Failed to update player seasons", 
         error: error instanceof Error ? error.message : "Unknown error" 
       });

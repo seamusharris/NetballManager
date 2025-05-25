@@ -159,11 +159,46 @@ export default function Players() {
           try {
             const errorData = await seasonResponse.json();
             console.error("Season update error details:", errorData);
+            
+            // Show error toast with detailed information
+            toast({
+              title: "Season Update Failed",
+              description: `Error: ${JSON.stringify(errorData)}`,
+              variant: "destructive",
+            });
           } catch (e) {
-            console.error("Could not parse season update error response");
+            console.error("Could not parse season update error response:", e);
+            console.error("Status code:", seasonResponse.status);
+            console.error("Status text:", seasonResponse.statusText);
+            
+            // Try to get text response
+            try {
+              const textResponse = await seasonResponse.text();
+              console.error("Error response text:", textResponse);
+              
+              // Show error toast with status information
+              toast({
+                title: "Season Update Failed",
+                description: `Status: ${seasonResponse.status} - ${seasonResponse.statusText}. Response: ${textResponse}`,
+                variant: "destructive",
+              });
+            } catch (textError) {
+              console.error("Could not get text response:", textError);
+              
+              // Show basic error toast
+              toast({
+                title: "Season Update Failed",
+                description: `Status: ${seasonResponse.status} - ${seasonResponse.statusText}`,
+                variant: "destructive",
+              });
+            }
           }
         } else {
           console.log("Season relationships updated successfully");
+          toast({
+            title: "Success",
+            description: "Player and season relationships updated successfully",
+          });
         }
         
         // Get the updated player with seasons
