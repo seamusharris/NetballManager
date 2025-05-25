@@ -1195,10 +1195,12 @@ export default function GameDetails() {
             <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
               <DialogContent className="sm:max-w-[550px]">
                 <DialogTitle>Edit Game Details</DialogTitle>
-                {opponents && game && (
+                {opponents && game && seasons && (
                   <GameForm
                     game={game}
                     opponents={opponents}
+                    seasons={seasons}
+                    activeSeason={activeSeason}
                     isSubmitting={false}
                     onSubmit={async (formData) => {
                       try {
