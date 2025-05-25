@@ -255,7 +255,8 @@ export default function PlayerForm({ player, onSubmit, isSubmitting, initialSeas
       lastName: values.lastName,
       dateOfBirth: values.dateOfBirth || null,
       positionPreferences,
-      active: values.active
+      active: values.active,
+      seasonIds: selectedSeasonIds // Include the selected season IDs
     };
     
     console.log("Submitting player data manually:", playerData);
