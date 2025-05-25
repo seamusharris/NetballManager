@@ -50,6 +50,16 @@ export default function DashboardSummary({
     return season.name;
   };
   
+  // Use a state variable to force refresh
+  const [refreshKey, setRefreshKey] = useState(0);
+  
+  // Update the refresh key when selected season changes
+  useEffect(() => {
+    // Force a refresh of all data
+    queryClient.invalidateQueries();
+    setRefreshKey(prev => prev + 1);
+  }, [selectedSeasonId, queryClient]);
+  
   // Filter games by selected season
   const filteredGames = games.filter(game => {
     if (selectedSeasonId === 'current' && activeSeason) {
@@ -68,11 +78,10 @@ export default function DashboardSummary({
   const currentDate = new Date().toISOString().split('T')[0];
   
   // Include games that are either from past dates OR are completed (even if they're today)
-  // These games are already filtered by the selected season in filteredGames/sortedGames
+  // Apply season filtering first, then filter by past/future date
   const pastGames = sortedGames.filter(game => game.date < currentDate || game.completed);
   
   // Only include games that are from today or future AND not completed
-  // These games are already filtered by the selected season in filteredGames/sortedGames
   const upcomingGames = sortByDate(sortedGames.filter(game => 
     (game.date >= currentDate && !game.completed)
   ), true);

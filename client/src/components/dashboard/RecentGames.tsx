@@ -9,9 +9,11 @@ interface RecentGamesProps {
   games: Game[];
   opponents: Opponent[];
   className?: string;
+  seasonFilter?: string;
+  activeSeason?: any;
 }
 
-export default function RecentGames({ games, opponents, className }: RecentGamesProps) {
+export default function RecentGames({ games, opponents, className, seasonFilter, activeSeason }: RecentGamesProps) {
   // Take the 3 most recent completed games
   const recentGames = games
     .filter(game => game.completed)
