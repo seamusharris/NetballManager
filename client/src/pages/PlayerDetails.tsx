@@ -395,7 +395,8 @@ export default function PlayerDetails() {
     mutationFn: async (updatedPlayer: any) => {
       // Ensure we're using a consistent format
       console.log("Updating player in details page:", updatedPlayer);
-      return apiRequest('PATCH', `/api/players/${playerId}`, updatedPlayer);
+      const res = await apiRequest('PATCH', `/api/players/${playerId}`, updatedPlayer);
+      return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/players/${playerId}`] });

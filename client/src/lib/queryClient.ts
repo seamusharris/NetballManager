@@ -35,9 +35,10 @@ async function throwIfResNotOk(res: Response) {
 }
 
 export async function apiRequest<T = any>(
+  method: string,
   url: string,
-  options?: RequestInit,
-): Promise<T> {
+  data?: any,
+): Promise<Response> {
   // Fix URL format for game stats endpoints to ensure correct path
   // The server expects /api/gamestats/ (no hyphen) not /api/game-stats/ (with hyphen)
   let correctedUrl = url;
@@ -46,13 +47,43 @@ export async function apiRequest<T = any>(
     console.log(`Corrected URL path from ${url} to ${correctedUrl}`);
   }
 
-  const res = await fetch(correctedUrl, {
-    credentials: "include",
-    ...options
-  });
+  // Special handling for player data to ensure position_preferences is properly formatted
+  if ((url.includes('/api/players') || url.includes('/api/players/')) && 
+      (method === 'POST' || method === 'PATCH') && 
+      data) {
+    
+    // Handle position preferences field specially
+    if (data.positionPreferences) {
+      // Ensure it's always an array
+      if (!Array.isArray(data.positionPreferences)) {
+        if (typeof data.positionPreferences === 'string') {
+          // Convert single string to array
+          data.positionPreferences = [data.positionPreferences];
+        } else {
+          // Default to empty array if invalid format
+          data.positionPreferences = [];
+        }
+      }
+      console.log("Formatted positionPreferences for API request:", data.positionPreferences);
+    }
+  }
 
+  const options: RequestInit = {
+    method,
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+    }
+  };
+
+  // Add body for non-GET requests
+  if (method !== 'GET' && data !== undefined) {
+    options.body = JSON.stringify(data);
+  }
+
+  const res = await fetch(correctedUrl, options);
   await throwIfResNotOk(res);
-  return await res.json();
+  return res;
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";
