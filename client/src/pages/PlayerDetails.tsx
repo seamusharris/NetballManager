@@ -15,13 +15,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle 
 } from "@/components/ui/alert-dialog";
-import { Player, Game, GameStat, allPositions, Position } from "@shared/schema";
+import { Player, Game, GameStat, allPositions, Position, Season } from "@shared/schema";
 import { cn, getInitials } from "@/lib/utils";
-import { ArrowLeft, Award, Target, Shield, Activity, Edit, Trash2 } from "lucide-react";
+import { ArrowLeft, Award, Target, Shield, Activity, Edit, Trash2, Calendar } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import PlayerForm from "@/components/players/PlayerForm";
+import PlayerSeasonsManager from "@/components/players/PlayerSeasonsManager";
 
 export default function PlayerDetails() {
   const { id } = useParams<{ id: string }>();
@@ -32,6 +33,7 @@ export default function PlayerDetails() {
   const [selectedTab, setSelectedTab] = useState("overview");
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isSeasonManagerOpen, setIsSeasonManagerOpen] = useState(false);
 
   // Fetch player data
   const { data: player, isLoading: isLoadingPlayer } = useQuery<Player>({
@@ -47,6 +49,11 @@ export default function PlayerDetails() {
   // Fetch all opponents
   const { data: opponents = [], isLoading: isLoadingOpponents } = useQuery<any[]>({
     queryKey: ['/api/opponents'],
+  });
+  
+  // Fetch all seasons for the seasons manager
+  const { data: seasons = [], isLoading: isLoadingSeasons } = useQuery<Season[]>({
+    queryKey: ['/api/seasons'],
   });
 
   // Define data type for player game data
