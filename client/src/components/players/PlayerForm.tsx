@@ -188,10 +188,11 @@ export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFor
       // Remove position fields from the data object
       const { position1, position2, position3, position4, ...rest } = values;
       
-      // Construct the final player data object
+      // Construct the final player data object with selected seasons
       const playerData = {
         ...rest,
         positionPreferences,
+        seasonIds: selectedSeasons,
       };
       
       console.log("Player form submitted with data:", playerData);
@@ -203,6 +204,17 @@ export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFor
     }
   };
   
+  // Function to handle season checkbox toggle
+  const handleSeasonToggle = (seasonId: number) => {
+    if (selectedSeasons.includes(seasonId)) {
+      // Remove the season if already selected
+      setSelectedSeasons(selectedSeasons.filter(id => id !== seasonId));
+    } else {
+      // Add the season if not already selected
+      setSelectedSeasons([...selectedSeasons, seasonId]);
+    }
+  };
+
   // Function to handle manual form submission
   const onFormSubmit = () => {
     // Get the current form values
@@ -225,6 +237,12 @@ export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFor
       return;
     }
     
+    // Validate at least one season is selected
+    if (selectedSeasons.length === 0 && seasons.length > 0) {
+      alert("Please select at least one season for the player");
+      return;
+    }
+    
     // Build position preferences array
     const positionPreferences: Position[] = [values.position1 as Position];
     if (values.position2 !== "none") positionPreferences.push(values.position2 as Position);
@@ -238,7 +256,8 @@ export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFor
       lastName: values.lastName,
       dateOfBirth: values.dateOfBirth || null,
       positionPreferences,
-      active: values.active
+      active: values.active,
+      seasonIds: selectedSeasons
     };
     
     console.log("Submitting player data manually:", playerData);
@@ -341,6 +360,42 @@ export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFor
             </FormItem>
           )}
         />
+        
+        {/* Season Selection */}
+        <div className="mt-6">
+          <h3 className="text-sm font-medium mb-2">Seasons</h3>
+          <div className="border rounded-md p-4">
+            {seasons.length === 0 ? (
+              <p className="text-sm text-gray-500">No seasons available</p>
+            ) : (
+              <div className="space-y-2">
+                {seasons.map((season) => (
+                  <div key={season.id} className="flex items-center space-x-2">
+                    <Checkbox 
+                      id={`season-${season.id}`}
+                      checked={selectedSeasons.includes(season.id)}
+                      onCheckedChange={() => handleSeasonToggle(season.id)}
+                    />
+                    <label
+                      htmlFor={`season-${season.id}`}
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    >
+                      {season.name}
+                      {season.isActive && (
+                        <span className="ml-2 inline-flex items-center rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800">
+                          Active
+                        </span>
+                      )}
+                    </label>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          <p className="text-sm text-gray-500 mt-1">
+            Select which seasons this player belongs to
+          </p>
+        </div>
         
         <div>
           <h3 className="text-sm font-medium mb-2">Position Preferences (Ranked)</h3>
