@@ -83,7 +83,7 @@ export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFor
       console.log("Setting active seasons for new player:", activeSeasonIds);
       setSelectedSeasons(activeSeasonIds);
     }
-  }, [playerSeasonsResponse, seasons, isEditing]);
+  }, [playerSeasons, seasons, isEditing]);
   
   // Extract position preferences for default values
   const getPositionDefaults = () => {
