@@ -522,53 +522,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       try {
-        // Get current player seasons before update for comparison
-        const currentSeasonIds = await storage.getPlayerSeasons(id);
-        console.log("Current player seasons:", currentSeasonIds);
-        console.log("New player seasons:", seasonIds);
-        
-        // Manual approach to ensure correct season association
-        try {
-          // 1. First update the player basic data
-          const updatedPlayer = await storage.updatePlayer(id, updateData, null);
-          if (!updatedPlayer) {
-            return res.status(404).json({ message: "Player not found" });
-          }
-          
-          // 2. Then handle seasons manually
-          if (Array.isArray(seasonIds) && seasonIds.length > 0) {
-            // Remove existing associations
-            console.log("Removing existing season associations for player", id);
-            await db.delete(playerSeasons).where(eq(playerSeasons.playerId, id));
-            
-            // Add new associations one by one
-            console.log("Adding new season associations:", seasonIds);
-            for (const seasonId of seasonIds) {
-              console.log(`Adding player ${id} to season ${seasonId}`);
-              await db.insert(playerSeasons).values({
-                playerId: id,
-                seasonId: seasonId
-              });
-            }
-          }
-          
-          // Verify player-season relationships after update
-          const verifySeasonIds = await storage.getPlayerSeasons(id);
-          console.log("Verified player seasons after update:", verifySeasonIds);
-          
-          res.json(updatedPlayer);
-        } catch (innerError) {
-          console.error("Detailed error during player season update:", innerError);
-          res.status(500).json({ 
-            message: "Failed to update player seasons",
-            error: innerError.message || "Unknown error in season association"
-          });
+        // First just update the basic player data (without seasons)
+        const updatedPlayer = await storage.updatePlayer(id, updateData);
+        if (!updatedPlayer) {
+          return res.status(404).json({ message: "Player not found" });
         }
-      } catch (updateError) {
-        console.error("Error during player update operation:", updateError);
+        
+        // If seasons were provided, update them with our dedicated function
+        if (Array.isArray(seasonIds)) {
+          try {
+            // Import the specialized function to update player seasons
+            const { updatePlayerSeasons } = await import('./fix-player-seasons');
+            
+            // Log the current state for debugging
+            const currentSeasonIds = await storage.getPlayerSeasons(id);
+            console.log("Current player seasons:", currentSeasonIds);
+            console.log("New player seasons:", seasonIds);
+            
+            // Update the player's season associations using our dedicated function
+            const success = await updatePlayerSeasons(id, seasonIds);
+            if (!success) {
+              console.warn(`Warning: Failed to update seasons for player ${id}`);
+            }
+          } catch (error) {
+            console.error("Error updating player seasons:", error);
+            // Continue anyway as the player data was updated successfully
+          }
+        }
+        
+        res.json(updatedPlayer);
+      } catch (error) {
+        console.error("Failed to update player:", error);
         res.status(500).json({ 
           message: "Failed to update player",
-          error: updateError.message || "Unknown error in player update"
+          error: error instanceof Error ? error.message : "Unknown error" 
         });
       }
     } catch (error) {
