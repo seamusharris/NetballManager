@@ -618,8 +618,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           if (updateData.positionPreferences) {
             // Make sure it's an array of strings, not some other format that causes JSON errors
             if (Array.isArray(updateData.positionPreferences)) {
-              positionPreferences = [...updateData.positionPreferences]; // Create a clean copy
-              console.log("Position preferences array:", JSON.stringify(positionPreferences));
+              // Create a new array from the strings to prevent reference issues
+              positionPreferences = updateData.positionPreferences.map(String);
+              console.log("Position preferences array (after conversion):", JSON.stringify(positionPreferences));
             } else {
               console.error("Invalid position preferences format:", updateData.positionPreferences);
               // Fall back to current preferences if the new ones are invalid
