@@ -143,7 +143,7 @@ export async function savePositionStat(
       console.log(`Sending clean data to update ${positionName} Q${quarter}:`, cleanData);
       
       // Use the correct endpoint
-      const updateResponse = await fetch(`/api/game/stats/${targetStat.id}`, {
+      const updateResponse = await fetch(`/api/games/stats/${targetStat.id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json'

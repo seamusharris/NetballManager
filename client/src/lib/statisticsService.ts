@@ -509,18 +509,10 @@ export class StatisticsService {
     
     if (existingStat) {
       // Update existing stat
-      return apiRequest(`/api/gamestats/${existingStat.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(statUpdate)
-      });
+      return apiRequest('PATCH', `/api/games/stats/${existingStat.id}`, statUpdate);
     } else {
       // Create new stat
-      return apiRequest('/api/gamestats', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(statUpdate)
-      });
+      return apiRequest('POST', '/api/games/stats', statUpdate);
     }
   }
   

@@ -40,11 +40,16 @@ export async function apiRequest(
   data?: any,
 ): Promise<Response> {
   // Fix URL format for game stats endpoints to ensure correct path
-  // The server expects /api/gamestats/ (no hyphen) not /api/game-stats/ (with hyphen)
+  // The server now expects /api/games/stats/ (plural) instead of /api/gamestats/ or /api/game-stats/
   let correctedUrl = url;
-  if (typeof url === 'string' && url.includes('/api/game-stats/')) {
-    correctedUrl = url.replace('/api/game-stats/', '/api/gamestats/');
-    console.log(`Corrected URL path from ${url} to ${correctedUrl}`);
+  if (typeof url === 'string') {
+    if (url.includes('/api/game-stats/')) {
+      correctedUrl = url.replace('/api/game-stats/', '/api/games/stats/');
+      console.log(`Corrected URL path from ${url} to ${correctedUrl}`);
+    } else if (url.includes('/api/gamestats/')) {
+      correctedUrl = url.replace('/api/gamestats/', '/api/games/stats/');
+      console.log(`Corrected URL path from ${url} to ${correctedUrl}`);
+    }
   }
 
   // Make a deep copy of the data to avoid mutating the original
@@ -108,7 +113,10 @@ export const getQueryFn: <T>(options: {
     // Fix URL format for game stats endpoints to ensure correct path
     let url = queryKey[0] as string;
     if (url.includes('/api/game-stats/')) {
-      url = url.replace('/api/game-stats/', '/api/gamestats/');
+      url = url.replace('/api/game-stats/', '/api/games/stats/');
+      console.log(`Corrected query URL from ${queryKey[0]} to ${url}`);
+    } else if (url.includes('/api/gamestats/')) {
+      url = url.replace('/api/gamestats/', '/api/games/stats/');
       console.log(`Corrected query URL from ${queryKey[0]} to ${url}`);
     }
     
