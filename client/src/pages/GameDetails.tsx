@@ -1568,11 +1568,15 @@ export default function GameDetails() {
                             
                             {/* Player Stats Box - With colors matching player's avatar */}
                             <div 
-                              className="flex-1 flex items-center p-3 rounded-lg border-2"
-                              style={{ 
-                                borderColor: getPlayerColorForBorder(awardWinner.avatarColor),
-                                backgroundColor: getPlayerColorForBackground(awardWinner.avatarColor)
-                              }}
+                              className={`flex-1 flex items-center p-3 rounded-lg border-2 ${
+                                awardWinner.avatarColor 
+                                  ? awardWinner.avatarColor.replace('bg-', 'border-').replace('-500', '-700').replace('-600', '-700') 
+                                  : 'border-violet-700'
+                              } ${
+                                awardWinner.avatarColor 
+                                  ? awardWinner.avatarColor.replace('bg-', 'bg-').replace('-500', '-50').replace('-600', '-50') 
+                                  : 'bg-violet-50'
+                              }`}
                             >
                               <div className="flex-1">
                                 <div 
