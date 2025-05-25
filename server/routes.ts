@@ -511,7 +511,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Extract season IDs if provided
       const seasonIds = req.body.seasonIds || [];
       
-      // Pass the enhanced data to the storage layer
+      try {
+        // Try first with the emergency direct SQL approach
+        const { createPlayerEmergency } = await import('./emergency-player-fix');
+        const result = await createPlayerEmergency(playerData, seasonIds);
+        
+        if (result.success && result.playerId) {
+          // Get the full player object to return
+          const player = await storage.getPlayer(result.playerId);
+          if (player) {
+            console.log("Successfully created player using emergency method");
+            return res.status(201).json(player);
+          }
+        }
+        
+        // If emergency method fails or doesn't return a valid player, fall back to standard method
+        console.log("Falling back to standard player creation method");
+      } catch (err) {
+        console.error("Emergency player creation failed, falling back to standard method:", err);
+      }
+      
+      // Standard method as fallback
       const player = await storage.createPlayer(playerData, seasonIds);
       res.status(201).json(player);
     } catch (error) {
@@ -567,7 +587,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       try {
-        // First just update the basic player data (without seasons)
+        // Try emergency direct SQL approach first
+        try {
+          // Get the current player to validate it exists
+          const currentPlayer = await storage.getPlayer(id);
+          if (!currentPlayer) {
+            return res.status(404).json({ message: "Player not found" });
+          }
+          
+          // Import the specialized function for direct SQL update
+          const { updatePlayerEmergency } = await import('./emergency-player-fix');
+          
+          // Ensure position preferences are properly typed
+          let positionPreferences = currentPlayer.positionPreferences;
+          if (updateData.positionPreferences) {
+            positionPreferences = updateData.positionPreferences;
+          }
+          
+          // Clean updateData for emergency update
+          const cleanUpdateData = {
+            ...(updateData.displayName !== undefined && { displayName: updateData.displayName }),
+            ...(updateData.firstName !== undefined && { firstName: updateData.firstName }),
+            ...(updateData.lastName !== undefined && { lastName: updateData.lastName }),
+            ...(updateData.dateOfBirth !== undefined && { dateOfBirth: updateData.dateOfBirth }),
+            ...(updateData.active !== undefined && { active: updateData.active }),
+            ...(updateData.avatarColor !== undefined && { avatarColor: updateData.avatarColor }),
+            ...(updateData.positionPreferences !== undefined && { positionPreferences })
+          };
+          
+          console.log(`Attempting emergency update for player ${id}`);
+          // Update using direct SQL approach
+          const result = await updatePlayerEmergency(id, cleanUpdateData, seasonIds);
+          
+          if (result.success) {
+            console.log(`Successfully updated player ${id} using emergency method`);
+            // Get the updated player to return
+            const updatedPlayer = await storage.getPlayer(id);
+            if (updatedPlayer) {
+              return res.json(updatedPlayer);
+            }
+          }
+          
+          console.log("Emergency update failed, falling back to standard method");
+        } catch (err) {
+          console.error("Emergency player update failed:", err);
+        }
+        
+        // Fall back to standard method
+        console.log("Using standard update method for player", id);
         const updatedPlayer = await storage.updatePlayer(id, updateData);
         if (!updatedPlayer) {
           return res.status(404).json({ message: "Player not found" });
