@@ -610,11 +610,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(`Season IDs from request:`, requestSeasonIds);
         
         // Convert all IDs to numbers and filter by validSeasonIds
-        // This ensures we only save valid season relationships
+        // This ensures we only save valid season relationships and not player IDs
         const processedSeasonIds = requestSeasonIds
           .map(id => typeof id === 'string' ? parseInt(id, 10) : id)
           .filter(id => typeof id === 'number' && !isNaN(id))
-          .filter(id => validSeasonIds.includes(id));
+          .filter(id => {
+            const isValidSeason = validSeasonIds.includes(id);
+            if (!isValidSeason) {
+              console.log(`Filtering out invalid season ID: ${id}`);
+            }
+            return isValidSeason;
+          });
         
         console.log(`Season IDs to be used:`, processedSeasonIds);
         
@@ -646,13 +652,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
             try {
               console.log(`Attempting to add player ${id} to season ${seasonId}`);
               await client.query(
-                'INSERT INTO player_seasons (player_id, season_id) VALUES ($1, $2)',
+                'INSERT INTO player_seasons (player_id, season_id) VALUES ($1, $2) ON CONFLICT (player_id, season_id) DO NOTHING',
                 [id, seasonId]
               );
               console.log(`Successfully added player ${id} to season ${seasonId}`);
             } catch (insertError) {
-              console.error(`Error inserting player ${id} to season ${seasonId}:`, insertError.message);
-              throw insertError; // Re-throw to trigger rollback
+              console.error(`Error inserting player ${id} to season ${seasonId}:`, insertError);
+              throw new Error(`Failed to add player ${id} to season ${seasonId}: ${insertError.message || 'Unknown error'}`);
             }
           }
           
@@ -684,7 +690,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(updatedPlayer);
     } catch (error) {
       console.error("Error updating player:", error);
-      res.status(500).json({ message: "Failed to update player", error: String(error) });
+      console.error("Failed to update player:", error);
+      res.status(500).json({ 
+        message: "Failed to update player", 
+        error: error instanceof Error ? error.message : String(error) 
+      });
     }
   });
 
