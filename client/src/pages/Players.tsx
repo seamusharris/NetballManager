@@ -223,7 +223,10 @@ export default function Players() {
   };
   
   const handleUpdatePlayer = (data: any) => {
-    console.log("Updating player with data:", data);
+    console.log("========== UPDATE PLAYER DEBUG ==========");
+    console.log("Raw data from form:", data);
+    console.log("Season IDs from form:", data.seasonIds);
+    console.log("Position preferences from form:", data.positionPreferences);
     
     if (!editingPlayer) {
       console.error("No player being edited");
@@ -241,7 +244,10 @@ export default function Players() {
       seasonIds: data.seasonIds || [] // Include the season IDs in the update
     };
     
-    console.log("Sending update request with:", { id: editingPlayer.id, player: validPlayerData });
+    console.log("Player ID being updated:", editingPlayer.id);
+    console.log("Formatted player data for update:", validPlayerData);
+    console.log("=========================================");
+    
     updateMutation.mutate({ 
       id: editingPlayer.id, 
       player: validPlayerData 
