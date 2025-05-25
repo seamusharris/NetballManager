@@ -987,7 +987,7 @@ export default function GameDetails() {
   const [gameNotes, setGameNotes] = useState<string>("");
   const [isEditingNotes, setIsEditingNotes] = useState<boolean>(false);
   
-  const [activeTab, setActiveTab] = useState('roster');
+  const [activeTab, setActiveTab] = useState('overview');
   
   // Fetch game data
   const { 
