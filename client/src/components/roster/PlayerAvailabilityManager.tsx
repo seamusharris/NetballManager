@@ -28,11 +28,17 @@ export default function PlayerAvailabilityManager({
 }: PlayerAvailabilityManagerProps) {
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Filter players by search query
-  const filteredPlayers = players.filter(player => {
-    const displayName = player.displayName || `${player.firstName} ${player.lastName}`;
-    return displayName.toLowerCase().includes(searchQuery.toLowerCase());
-  });
+  // Filter players by search query and sort by display name
+  const filteredPlayers = players
+    .filter(player => {
+      const displayName = player.displayName || `${player.firstName} ${player.lastName}`;
+      return displayName.toLowerCase().includes(searchQuery.toLowerCase());
+    })
+    .sort((a, b) => {
+      const displayNameA = a.displayName || `${a.firstName} ${a.lastName}`;
+      const displayNameB = b.displayName || `${b.firstName} ${b.lastName}`;
+      return displayNameA.localeCompare(displayNameB);
+    });
 
   // Get player color using the player's own avatarColor property from their profile
   const getPlayerColor = (player: Player) => {
