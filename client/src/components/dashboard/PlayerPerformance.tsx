@@ -46,6 +46,11 @@ export default function PlayerPerformance({ players, games, className, seasonFil
   const [statsKey, setStatsKey] = useState(0);
   const [sortConfig, setSortConfig] = useState<SortConfig>({ field: 'rating', direction: 'desc' });
   
+  // Force refresh when seasonFilter or activeSeason changes
+  useEffect(() => {
+    setStatsKey(prevKey => prevKey + 1);
+  }, [seasonFilter, activeSeason]);
+  
   // Filter games by selected season
   const filteredGames = games.filter(game => {
     if (seasonFilter === 'current' && activeSeason) {
