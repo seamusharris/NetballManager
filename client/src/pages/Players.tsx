@@ -91,44 +91,41 @@ export default function Players() {
       // Create a copy of the player data to avoid modifying the original
       const playerData = { ...player };
       
-      // Get a list of valid season IDs from our seasons data
-      const validSeasonIds = seasons.map(season => season.id);
-      
-      // Ensure seasonIds is an array of valid season IDs
+      // Simplified season ID handling to ensure reliable updates
       if (playerData.seasonIds) {
-        // First normalize to numbers
-        const normalizedIds = playerData.seasonIds
-          .map((id: any) => typeof id === 'number' ? id : parseInt(id, 10))
-          .filter((id: number) => !isNaN(id));
+        // Ensure it's an array (handle both array and single value cases)
+        const seasonIdsArray = Array.isArray(playerData.seasonIds) 
+          ? playerData.seasonIds 
+          : [playerData.seasonIds];
         
-        // Then filter to only include valid season IDs and exclude any player IDs
-        playerData.seasonIds = normalizedIds.filter((id: number) => {
-          // Check if this ID is actually a valid season ID
-          const isValidSeason = validSeasonIds.includes(id);
-          
-          if (!isValidSeason) {
-            console.warn(`Removing invalid season ID from update request: ${id}`);
-          }
-          
-          return isValidSeason;
-        });
+        // Normalize to number values
+        const processedIds = seasonIdsArray
+          .map((sid: any) => {
+            // Convert to number if it's a string
+            if (typeof sid === 'string') {
+              const parsed = parseInt(sid, 10);
+              return isNaN(parsed) ? null : parsed;
+            }
+            // Keep numbers as is
+            return typeof sid === 'number' ? sid : null;
+          })
+          .filter((id): id is number => id !== null);
         
-        console.log("Valid season IDs from API:", validSeasonIds);
-        console.log("Selected seasons before filtering:", normalizedIds);
-        console.log("Final filtered season IDs for player:", playerData.seasonIds);
+        playerData.seasonIds = processedIds;
+        
+        console.log("Processed season IDs for update:", processedIds);
       } else {
         // Provide an empty array if seasonIds is undefined
         playerData.seasonIds = [];
       }
       
       try {
-        // Log request details for debugging
+        // Use a more reliable approach with apiRequest helper
         console.log("Making API request to:", `/api/players/${id}`);
-        console.log("Request method:", "PATCH");
         console.log("Request body:", JSON.stringify(playerData, null, 2));
         
-        // Make the API request with proper headers
-        const response = await fetch(`/api/players/${id}`, {
+        // Use the API request utility for more consistent error handling
+        const updatedPlayer = await apiRequest(`/api/players/${id}`, {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json'
@@ -136,31 +133,7 @@ export default function Players() {
           body: JSON.stringify(playerData)
         });
         
-        // Log the response status
-        console.log("Response status:", response.status);
-        
-        // Get response text before checking if it was ok
-        const responseText = await response.text();
-        console.log("Response text:", responseText);
-        
-        if (!response.ok) {
-          console.error(`API error: ${response.status} - ${responseText}`);
-          console.error("Request data that caused error:", playerData);
-          console.error("Request URL:", `/api/players/${id}`);
-          console.error("Request headers:", { 'Content-Type': 'application/json' });
-          throw new Error(`Failed to update player: ${response.status} - ${responseText}`);
-        }
-        
-        // Parse the response JSON from the text we already received
-        let updatedPlayer;
-        try {
-          updatedPlayer = JSON.parse(responseText);
-        } catch (parseError) {
-          console.error("Failed to parse response JSON:", parseError);
-          throw new Error(`Failed to parse response: ${parseError.message}`);
-        }
-        
-        console.log("Update response:", updatedPlayer);
+        console.log("Update successful:", updatedPlayer);
         return updatedPlayer;
       } catch (err) {
         console.error("Player update request failed:", err);
