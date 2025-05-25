@@ -517,10 +517,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const id = Number(req.params.id);
       
       // Get the update data
-      const updateData = req.body;
+      const updateData = {...req.body};
       console.log("\n\n======= PLAYER UPDATE START ========");
       console.log("Player ID:", id);
       console.log("Player update request body:", JSON.stringify(updateData, null, 2));
+      
+      // Extract season IDs before updating player
+      let processedSeasonIds = [];
+      if (updateData.seasonIds !== undefined) {
+        // Ensure season IDs are properly converted to numbers
+        const rawSeasonIds = updateData.seasonIds;
+        console.log("Raw season IDs from request:", rawSeasonIds);
+        
+        processedSeasonIds = Array.isArray(rawSeasonIds) 
+          ? rawSeasonIds.map(id => typeof id === 'string' ? parseInt(id, 10) : id)
+                     .filter(id => typeof id === 'number' && !isNaN(id))
+          : [];
+          
+        console.log("Season IDs processed:", processedSeasonIds);
+        delete updateData.seasonIds;
+      }
       console.log("==================================");
       
       // If avatar color is set to auto or empty, handle it properly
@@ -555,27 +571,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      // Extract and validate the season IDs - log the entire request body for debugging
+      // Log complete request
       console.log("Complete update request body:", JSON.stringify(req.body));
-      
-      let seasonIds = [];
-      if (req.body.seasonIds !== undefined) {
-        // Get the raw seasonIds from the request body directly, not from updateData
-        const rawSeasonIds = req.body.seasonIds;
-        
-        console.log("Raw season IDs from request:", rawSeasonIds);
-        
-        // Ensure season IDs are properly converted to numbers
-        seasonIds = Array.isArray(rawSeasonIds) 
-          ? rawSeasonIds.map(id => typeof id === 'string' ? parseInt(id, 10) : id)
-                     .filter(id => typeof id === 'number' && !isNaN(id))
-          : [];
-          
-        console.log("Season IDs from request (converted to numbers):", seasonIds);
-        
-        // Remove from player data as it's not part of the player schema
-        delete updateData.seasonIds;
-      }
       
       // Create a sanitized version of the update data (only include valid fields)
       const validPlayerData = {
