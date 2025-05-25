@@ -294,11 +294,11 @@ export default function GameStatistics({
       );
       
       if (existingStat) {
-        // Update existing stats
-        return await apiRequest('PATCH', `/api/gamestats/${existingStat.id}`, stats);
+        // Update existing stats using standardized endpoint pattern
+        return await apiRequest('PATCH', `/api/games/${game.id}/stats/${existingStat.id}`, stats);
       } else {
-        // Create new stats
-        return await apiRequest('POST', `/api/gamestats`, {
+        // Create new stats using standardized endpoint pattern
+        return await apiRequest('POST', `/api/games/${game.id}/stats`, {
           gameId: game.id,
           position,
           quarter,

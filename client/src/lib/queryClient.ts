@@ -39,15 +39,38 @@ export async function apiRequest(
   url: string,
   data?: any,
 ): Promise<any> {
-  // Fix URL format for game stats endpoints to ensure correct path
-  // The server now expects /api/games/stats/ (plural) instead of /api/gamestats/ or /api/game-stats/
+  // Fix URL format for game stats endpoints to ensure consistent RESTful path structure
+  // We're standardizing on the /api/games/:gameId/stats pattern for better RESTful design
   let correctedUrl = url;
   if (typeof url === 'string') {
-    if (url.includes('/api/game-stats/')) {
-      correctedUrl = url.replace('/api/game-stats/', '/api/games/stats/');
+    // Handle batch endpoint (special case)
+    if (url.startsWith('/api/games/stats/batch') || url.startsWith('/api/gamestats/batch')) {
+      correctedUrl = '/api/games/stats/batch';
+      console.log(`Standardized batch URL path from ${url} to ${correctedUrl}`);
+    }
+    // Handle legacy direct game stats endpoints
+    else if (url.includes('/api/game-stats/')) {
+      // Extract potential ID
+      const match = url.match(/\/api\/game-stats\/(\d+)/);
+      if (match && match[1]) {
+        // URL with ID - convert to nested resource pattern
+        correctedUrl = `/api/games/${match[1]}/stats`;
+      } else {
+        // URL without ID - just standardize the base endpoint
+        correctedUrl = url.replace('/api/game-stats/', '/api/games/stats/');
+      }
       console.log(`Corrected URL path from ${url} to ${correctedUrl}`);
-    } else if (url.includes('/api/gamestats/')) {
-      correctedUrl = url.replace('/api/gamestats/', '/api/games/stats/');
+    } 
+    else if (url.includes('/api/gamestats/')) {
+      // Extract potential ID
+      const match = url.match(/\/api\/gamestats\/(\d+)/);
+      if (match && match[1]) {
+        // URL with ID - convert to nested resource pattern
+        correctedUrl = `/api/games/stats/${match[1]}`;
+      } else {
+        // URL without ID - just standardize the base endpoint
+        correctedUrl = url.replace('/api/gamestats/', '/api/games/stats/');
+      }
       console.log(`Corrected URL path from ${url} to ${correctedUrl}`);
     }
   }
@@ -131,14 +154,39 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    // Fix URL format for game stats endpoints to ensure correct path
+    // Fix URL format for game stats endpoints to ensure consistent RESTful path structure
     let url = queryKey[0] as string;
-    if (url.includes('/api/game-stats/')) {
-      url = url.replace('/api/game-stats/', '/api/games/stats/');
-      console.log(`Corrected query URL from ${queryKey[0]} to ${url}`);
-    } else if (url.includes('/api/gamestats/')) {
-      url = url.replace('/api/gamestats/', '/api/games/stats/');
-      console.log(`Corrected query URL from ${queryKey[0]} to ${url}`);
+    if (typeof url === 'string') {
+      // Handle batch endpoint (special case)
+      if (url.startsWith('/api/games/stats/batch') || url.startsWith('/api/gamestats/batch')) {
+        url = '/api/games/stats/batch';
+        console.log(`Standardized batch URL from ${queryKey[0]} to ${url}`);
+      }
+      // Handle legacy direct game stats endpoints
+      else if (url.includes('/api/game-stats/')) {
+        // Extract potential ID
+        const match = url.match(/\/api\/game-stats\/(\d+)/);
+        if (match && match[1]) {
+          // URL with ID - convert to nested resource pattern
+          url = `/api/games/${match[1]}/stats`;
+        } else {
+          // URL without ID - just standardize the base endpoint
+          url = url.replace('/api/game-stats/', '/api/games/stats/');
+        }
+        console.log(`Corrected query URL from ${queryKey[0]} to ${url}`);
+      } 
+      else if (url.includes('/api/gamestats/')) {
+        // Extract potential ID
+        const match = url.match(/\/api\/gamestats\/(\d+)/);
+        if (match && match[1]) {
+          // URL with ID - convert to nested resource pattern
+          url = `/api/games/stats/${match[1]}`;
+        } else {
+          // URL without ID - just standardize the base endpoint
+          url = url.replace('/api/gamestats/', '/api/games/stats/');
+        }
+        console.log(`Corrected query URL from ${queryKey[0]} to ${url}`);
+      }
     }
     
     const res = await fetch(url, {

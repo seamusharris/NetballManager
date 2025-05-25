@@ -224,10 +224,22 @@ export default function LiveStats() {
     queryFn: () => apiRequest('GET', '/api/players'),
   });
   
-  // Create or update game stats
+  // Create or update game stats using standardized API endpoint pattern
   const { mutate: saveGameStat } = useMutation({
-    mutationFn: (gameStat: Partial<GameStat>) => 
-      apiRequest('POST', `/api/gamestats`, gameStat),
+    mutationFn: (gameStat: Partial<GameStat>) => {
+      // Check if this is an existing stat that we want to update
+      const existingStat = existingStats?.find(s => 
+        s.position === gameStat.position && s.quarter === gameStat.quarter
+      );
+      
+      if (existingStat) {
+        // Update existing stat
+        return apiRequest('PATCH', `/api/games/${gameId}/stats/${existingStat.id}`, gameStat);
+      } else {
+        // Create new stat
+        return apiRequest('POST', `/api/games/${gameId}/stats`, gameStat);
+      }
+    },
     onSuccess: () => {
       // We'll handle all invalidation after saving all stats
     }
