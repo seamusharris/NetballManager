@@ -1,16 +1,23 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
+import { Plus, Filter } from 'lucide-react';
 import PlayersList from '@/components/players/PlayersList';
 import PlayerForm from '@/components/players/PlayerForm';
 import SimplePlayerForm from '@/components/players/SimplePlayerForm';
 import { apiRequest } from '@/lib/queryClient';
 import { queryClient } from '@/lib/queryClient';
-import { Player } from '@shared/schema';
+import { Player, Season } from '@shared/schema';
 import { useLocation } from 'wouter';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function Players() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -62,6 +69,22 @@ export default function Players() {
     // return allPlayers.filter(player => playerIdsInSeason.includes(player.id));
   }, [selectedSeasonId, allPlayers, playerSeasons]);
   
+  // Query to get player's seasons (would be implemented on the backend)
+  const { data: playerSeasonAssociations = [] } = useQuery<{ playerId: number, seasonId: number }[]>({
+    queryKey: ['/api/players/seasons', editingPlayer?.id],
+    enabled: !!editingPlayer,
+    // In a real implementation, this would make an API call
+  });
+  
+  // Extract the season IDs associated with the editing player
+  const editingPlayerSeasonIds = useMemo(() => {
+    if (!editingPlayer) return [];
+    // Filter to just get this player's season IDs
+    return playerSeasonAssociations
+      .filter(assoc => assoc.playerId === editingPlayer.id)
+      .map(assoc => assoc.seasonId);
+  }, [editingPlayer, playerSeasonAssociations]);
+
   // Find the player to edit if an edit ID is provided in the URL
   useEffect(() => {
     if (editId && players.length > 0) {
@@ -199,7 +222,8 @@ export default function Players() {
       lastName: data.lastName,
       dateOfBirth: data.dateOfBirth || null,
       positionPreferences: data.positionPreferences,
-      active: data.active
+      active: data.active,
+      seasonIds: data.seasonIds || [] // Include season IDs in the update
     };
     
     console.log("Sending update request with:", { id: editingPlayer.id, player: validPlayerData });
@@ -221,14 +245,42 @@ export default function Players() {
       </Helmet>
       
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
           <h2 className="text-2xl font-heading font-bold text-neutral-dark">Player Management</h2>
-          <Button
-            onClick={() => setIsAddDialogOpen(true)}
-            className="bg-primary hover:bg-primary-light text-white"
-          >
-            <Plus className="w-4 h-4 mr-1" /> Add Player
-          </Button>
+          
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Season filter */}
+            <div className="flex items-center">
+              <div className="w-[180px]">
+                <Select
+                  value={selectedSeasonId?.toString() || "all"}
+                  onValueChange={(value) => {
+                    setSelectedSeasonId(value === "all" ? null : Number(value));
+                  }}
+                >
+                  <SelectTrigger className="h-9">
+                    <SelectValue placeholder="Filter by season" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Seasons</SelectItem>
+                    {seasons.map((season) => (
+                      <SelectItem key={season.id} value={season.id.toString()}>
+                        {season.name} {season.isActive && "(Current)"}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Filter className="w-4 h-4 ml-2 text-gray-400" />
+            </div>
+            
+            <Button
+              onClick={() => setIsAddDialogOpen(true)}
+              className="bg-primary hover:bg-primary-light text-white"
+            >
+              <Plus className="w-4 h-4 mr-1" /> Add Player
+            </Button>
+          </div>
         </div>
         
         <PlayersList 
@@ -284,6 +336,7 @@ export default function Players() {
                 player={editingPlayer}
                 onSubmit={handleUpdatePlayer} 
                 isSubmitting={updateMutation.isPending} 
+                initialSeasonIds={editingPlayerSeasonIds}
               />
             </div>
           </div>
