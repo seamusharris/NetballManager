@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, json, unique, date, primaryKey } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, json, unique, date } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -147,33 +147,3 @@ export const insertUserSchema = createInsertSchema(users).pick({
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
-
-// PlayerSeasons junction table for many-to-many relationship
-export const playerSeasons = pgTable("player_seasons", {
-  playerId: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
-  seasonId: integer("season_id").notNull().references(() => seasons.id, { onDelete: "cascade" }),
-}, (table) => {
-  return {
-    pk: primaryKey({ columns: [table.playerId, table.seasonId] })
-  };
-});
-
-// Create relations
-export const playersRelations = relations(players, ({ many }) => ({
-  seasons: many(playerSeasons)
-}));
-
-export const seasonsRelations = relations(seasons, ({ many }) => ({
-  players: many(playerSeasons)
-}));
-
-export const playerSeasonsRelations = relations(playerSeasons, ({ one }) => ({
-  player: one(players, {
-    fields: [playerSeasons.playerId],
-    references: [players.id]
-  }),
-  season: one(seasons, {
-    fields: [playerSeasons.seasonId],
-    references: [seasons.id]
-  })
-}));

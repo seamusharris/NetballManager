@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { z } from "zod";
-import { sql, eq } from "drizzle-orm";
+import { sql } from "drizzle-orm";
 import { db } from "./db";
 import { 
   insertPlayerSchema, importPlayerSchema,
@@ -11,7 +11,7 @@ import {
   insertRosterSchema, importRosterSchema,
   insertGameStatSchema, importGameStatSchema,
   insertSeasonSchema,
-  players, opponents, games, rosters, gameStats, seasons, playerSeasons,
+  players, opponents, games, rosters, gameStats, seasons,
   POSITIONS
 } from "@shared/schema";
 import { fixGameStatsSchema } from "./fixDbSchema";
@@ -396,75 +396,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get players by season
-  app.get("/api/players/season/:seasonId", async (req, res) => {
-    try {
-      const seasonId = Number(req.params.seasonId);
-      const players = await storage.getPlayersBySeason(seasonId);
-      res.json(players);
-    } catch (error) {
-      console.error("Failed to fetch players by season:", error);
-      res.status(500).json({ message: "Failed to fetch players by season" });
-    }
-  });
-  
-  // Get seasons for a player
-  app.get("/api/players/:id/seasons", async (req, res) => {
-    try {
-      const playerId = Number(req.params.id);
-      const seasonIds = await storage.getPlayerSeasons(playerId);
-      res.json({ seasonIds });
-    } catch (error) {
-      console.error("Failed to fetch player seasons:", error);
-      res.status(500).json({ message: "Failed to fetch player seasons" });
-    }
-  });
-  
-  // Dedicated endpoint for managing player-season relationships
-  app.post("/api/players/:id/seasons", async (req, res) => {
-    try {
-      const playerId = Number(req.params.id);
-      
-      // Validate player exists
-      const player = await storage.getPlayer(playerId);
-      if (!player) {
-        return res.status(404).json({ message: "Player not found" });
-      }
-      
-      // Get season IDs from request body
-      const { seasonIds } = req.body;
-      if (!Array.isArray(seasonIds)) {
-        return res.status(400).json({ message: "seasonIds must be an array" });
-      }
-      
-      console.log(`Direct season update for player ${playerId}:`, seasonIds);
-      
-      // Use our specialized function
-      const { updatePlayerSeasons } = await import('./fix-player-seasons');
-      const success = await updatePlayerSeasons(playerId, seasonIds);
-      
-      if (success) {
-        // Get updated season IDs to return in response
-        const updatedSeasonIds = await storage.getPlayerSeasons(playerId);
-        return res.json({
-          message: "Player seasons updated successfully",
-          playerId,
-          seasonIds: updatedSeasonIds
-        });
-      } else {
-        return res.status(500).json({ 
-          message: "Failed to update player seasons"
-        });
-      }
-    } catch (error) {
-      console.error("Error in player-seasons endpoint:", error);
-      return res.status(500).json({ 
-        message: "Failed to update player seasons",
-        error: error instanceof Error ? error.message : "Unknown error" 
-      });
-    }
-  });
-
   app.post("/api/players", async (req, res) => {
     try {
       // Check if we're doing an import operation (with ID) or regular create
@@ -480,21 +411,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // For new players, ensure they have a unique avatar color
       const playerData = parsedData.data;
-      
-      // Ensure position preferences are properly structured as an array
-      if (playerData.positionPreferences) {
-        // Make sure it's a clean array of strings
-        if (Array.isArray(playerData.positionPreferences)) {
-          playerData.positionPreferences = [...playerData.positionPreferences]; // Create a clean copy
-          console.log("Position preferences array for new player:", JSON.stringify(playerData.positionPreferences));
-        } else {
-          console.error("Invalid position preferences format for new player:", playerData.positionPreferences);
-          // Set to empty array if invalid
-          playerData.positionPreferences = [];
-        }
-      } else {
-        playerData.positionPreferences = [];
-      }
       
       // If no specific avatar color is provided, generate one (with more inclusive check for empty strings and null)
       if (!playerData.avatarColor || playerData.avatarColor === 'auto' || playerData.avatarColor === '') {
@@ -523,31 +439,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      // Extract season IDs if provided
-      const seasonIds = req.body.seasonIds || [];
-      
-      try {
-        // Try first with the direct SQL approach
-        const { createPlayerDirect } = await import('./direct-player-operations');
-        const result = await createPlayerDirect(playerData, seasonIds);
-        
-        if (result.success && result.playerId) {
-          // Get the full player object to return
-          const player = await storage.getPlayer(result.playerId);
-          if (player) {
-            console.log("Successfully created player using direct method");
-            return res.status(201).json(player);
-          }
-        }
-        
-        // If direct method fails or doesn't return a valid player, fall back to standard method
-        console.log("Falling back to standard player creation method");
-      } catch (err) {
-        console.error("Emergency player creation failed, falling back to standard method:", err);
-      }
-      
-      // Standard method as fallback
-      const player = await storage.createPlayer(playerData, seasonIds);
+      // Pass the enhanced data to the storage layer
+      const player = await storage.createPlayer(playerData);
       res.status(201).json(player);
     } catch (error) {
       console.error("Failed to create player:", error);
@@ -561,13 +454,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Get the update data
       const updateData = req.body;
-      
-      // Extract season IDs if provided and ensure it's an array
-      const seasonIds = Array.isArray(req.body.seasonIds) ? req.body.seasonIds : [];
-      console.log("Player update with seasonIds:", seasonIds);
-      
-      // Remove from update data as it's handled separately
-      delete updateData.seasonIds;
       
       // If avatar color is set to auto or empty, handle it properly
       if (updateData.avatarColor === 'auto' || updateData.avatarColor === '') {
@@ -601,104 +487,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      try {
-        // Try emergency direct SQL approach first
-        try {
-          // Get the current player to validate it exists
-          const currentPlayer = await storage.getPlayer(id);
-          if (!currentPlayer) {
-            return res.status(404).json({ message: "Player not found" });
-          }
-          
-          // Import the specialized function for direct SQL update
-          const { updatePlayerDirect } = await import('./direct-player-operations');
-          
-          // Ensure position preferences are properly typed and structured as an array
-          let positionPreferences = currentPlayer.positionPreferences;
-          if (updateData.positionPreferences) {
-            // Make sure it's an array of strings, not some other format that causes JSON errors
-            if (Array.isArray(updateData.positionPreferences)) {
-              // Create a new array from the strings to prevent reference issues
-              positionPreferences = updateData.positionPreferences.map(String);
-              console.log("Position preferences array (after conversion):", JSON.stringify(positionPreferences));
-            } else {
-              console.error("Invalid position preferences format:", updateData.positionPreferences);
-              // Fall back to current preferences if the new ones are invalid
-            }
-          }
-          
-          // Clean updateData for direct update
-          const cleanUpdateData = {
-            ...(updateData.displayName !== undefined && { displayName: updateData.displayName }),
-            ...(updateData.firstName !== undefined && { firstName: updateData.firstName }),
-            ...(updateData.lastName !== undefined && { lastName: updateData.lastName }),
-            ...(updateData.dateOfBirth !== undefined && { dateOfBirth: updateData.dateOfBirth }),
-            ...(updateData.active !== undefined && { active: updateData.active }),
-            ...(updateData.avatarColor !== undefined && { avatarColor: updateData.avatarColor }),
-            ...(updateData.positionPreferences !== undefined && { positionPreferences })
-          };
-          
-          console.log(`Attempting direct update for player ${id}`);
-          // Update using direct SQL approach
-          const result = await updatePlayerDirect(id, cleanUpdateData, seasonIds);
-          
-          if (result.success) {
-            console.log(`Successfully updated player ${id} using direct method`);
-            // Get the updated player to return
-            const updatedPlayer = await storage.getPlayer(id);
-            if (updatedPlayer) {
-              return res.json(updatedPlayer);
-            }
-          }
-          
-          console.log("Direct update failed, falling back to standard method");
-        } catch (err) {
-          console.error("Emergency player update failed:", err);
-        }
-        
-        // Fall back to standard method
-        console.log("Using standard update method for player", id);
-        const updatedPlayer = await storage.updatePlayer(id, updateData);
-        if (!updatedPlayer) {
-          return res.status(404).json({ message: "Player not found" });
-        }
-        
-        // If seasons were provided, update them with our dedicated function
-        if (Array.isArray(seasonIds)) {
-          try {
-            // Import the specialized function to update player seasons
-            const { updatePlayerSeasons } = await import('./fix-player-seasons');
-            
-            // Log the current state for debugging
-            const currentSeasonIds = await storage.getPlayerSeasons(id);
-            console.log("Current player seasons:", currentSeasonIds);
-            console.log("New player seasons:", seasonIds);
-            
-            // Update the player's season associations using our dedicated function
-            const success = await updatePlayerSeasons(id, seasonIds);
-            if (!success) {
-              console.warn(`Warning: Failed to update seasons for player ${id}`);
-            }
-          } catch (error) {
-            console.error("Error updating player seasons:", error);
-            // Continue anyway as the player data was updated successfully
-          }
-        }
-        
-        res.json(updatedPlayer);
-      } catch (error) {
-        console.error("Failed to update player:", error);
-        res.status(500).json({ 
-          message: "Failed to update player",
-          error: error instanceof Error ? error.message : "Unknown error" 
-        });
+      const updatedPlayer = await storage.updatePlayer(id, updateData);
+      if (!updatedPlayer) {
+        return res.status(404).json({ message: "Player not found" });
       }
+      res.json(updatedPlayer);
     } catch (error) {
-      console.error("Failed to update player:", error);
-      res.status(500).json({ 
-        message: "Failed to update player",
-        error: error.message || "Unknown error"
-      });
+      res.status(500).json({ message: "Failed to update player" });
     }
   });
 

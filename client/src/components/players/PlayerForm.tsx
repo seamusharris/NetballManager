@@ -20,11 +20,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Checkbox } from "@/components/ui/checkbox";
-import { insertPlayerSchema, Position, Player, Season, allPositions } from "@shared/schema";
+import { insertPlayerSchema, Position, Player, allPositions } from "@shared/schema";
 import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { getPlayerSeasons } from "@/lib/playerSeasonManager";
 
 // Extend the schema for the form validation
 const formSchema = insertPlayerSchema.extend({
@@ -34,7 +31,6 @@ const formSchema = insertPlayerSchema.extend({
   position2: z.string().default("none"),
   position3: z.string().default("none"),
   position4: z.string().default("none"),
-  seasonIds: z.array(z.number()).optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -43,16 +39,10 @@ interface PlayerFormProps {
   player?: Player;
   onSubmit: (data: any) => void;
   isSubmitting: boolean;
-  initialSeasonIds?: number[];
 }
 
-export default function PlayerForm({ player, onSubmit, isSubmitting, initialSeasonIds = [] }: PlayerFormProps) {
+export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFormProps) {
   const isEditing = !!player;
-  
-  // Fetch all seasons for selection
-  const { data: seasons = [] } = useQuery<Season[]>({
-    queryKey: ['/api/seasons'],
-  });
   
   // Extract position preferences for default values
   const getPositionDefaults = () => {
@@ -69,30 +59,6 @@ export default function PlayerForm({ player, onSubmit, isSubmitting, initialSeas
   
   const positionDefaults = getPositionDefaults();
   
-  // Fetch player seasons if we're editing
-  const [selectedSeasonIds, setSelectedSeasonIds] = useState<number[]>(initialSeasonIds || []);
-  
-  // When in edit mode, fetch the player's seasons if initialSeasonIds wasn't provided
-  useEffect(() => {
-    if (isEditing && player) {
-      if (initialSeasonIds && initialSeasonIds.length > 0) {
-        // Use the provided initialSeasonIds
-        console.log("Using provided initialSeasonIds:", initialSeasonIds);
-        setSelectedSeasonIds(initialSeasonIds);
-      } else {
-        // Fetch the player's seasons using our dedicated utility function
-        getPlayerSeasons(player.id)
-          .then(seasonIds => {
-            console.log("Fetched player seasons:", seasonIds);
-            setSelectedSeasonIds(seasonIds);
-          })
-          .catch(error => {
-            console.error("Error fetching player seasons:", error);
-          });
-      }
-    }
-  }, [isEditing, initialSeasonIds, player]);
-  
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -105,7 +71,6 @@ export default function PlayerForm({ player, onSubmit, isSubmitting, initialSeas
       position3: positionDefaults.position3,
       position4: positionDefaults.position4,
       active: player?.active !== undefined ? player.active : true,
-      seasonIds: selectedSeasonIds,
     },
   });
   
@@ -167,22 +132,6 @@ export default function PlayerForm({ player, onSubmit, isSubmitting, initialSeas
     
   }, [position1, position2, position3, position4, form]);
   
-  // Handle season checkbox changes
-  const handleSeasonChange = (seasonId: number, checked: boolean) => {
-    // First update the state with the new selection
-    const newSelectedIds = checked 
-      ? [...selectedSeasonIds, seasonId] 
-      : selectedSeasonIds.filter(id => id !== seasonId);
-    
-    console.log(`${checked ? 'Adding' : 'Removing'} season ${seasonId}. Updated selection:`, newSelectedIds);
-    
-    // Set the local state for rendering the checkboxes
-    setSelectedSeasonIds(newSelectedIds);
-    
-    // Also update the form value to ensure it's included in submission
-    form.setValue('seasonIds', newSelectedIds);
-  };
-
   const handleSubmit = (values: FormValues) => {
     try {
       // Validate at least one position is selected
@@ -219,7 +168,6 @@ export default function PlayerForm({ player, onSubmit, isSubmitting, initialSeas
       const playerData = {
         ...rest,
         positionPreferences,
-        seasonIds: selectedSeasonIds, // Include the selected season IDs
       };
       
       console.log("Player form submitted with data:", playerData);
@@ -232,7 +180,7 @@ export default function PlayerForm({ player, onSubmit, isSubmitting, initialSeas
   };
   
   // Function to handle manual form submission
-  const onFormSubmit = async () => {
+  const onFormSubmit = () => {
     // Get the current form values
     const values = form.getValues();
     
@@ -253,79 +201,26 @@ export default function PlayerForm({ player, onSubmit, isSubmitting, initialSeas
       return;
     }
     
-    // Build position preferences array - ensuring we use a proper array
-    // that will serialize correctly to JSON
-    const positionPreferences: string[] = [];
+    // Build position preferences array
+    const positionPreferences: Position[] = [values.position1 as Position];
+    if (values.position2 !== "none") positionPreferences.push(values.position2 as Position);
+    if (values.position3 !== "none") positionPreferences.push(values.position3 as Position);
+    if (values.position4 !== "none") positionPreferences.push(values.position4 as Position);
     
-    // Add positions in order, filtering out 'none'
-    if (values.position1) {
-      positionPreferences.push(values.position1);
-    }
-    if (values.position2 && values.position2 !== "none") {
-      positionPreferences.push(values.position2);
-    }
-    if (values.position3 && values.position3 !== "none") {
-      positionPreferences.push(values.position3);
-    }
-    if (values.position4 && values.position4 !== "none") {
-      positionPreferences.push(values.position4);
-    }
-    
-    console.log("Position preferences array:", JSON.stringify(positionPreferences));
-    
-    // Build player data object with clean position preferences array
+    // Build player data object
     const playerData = {
       displayName: values.displayName,
       firstName: values.firstName,
       lastName: values.lastName,
       dateOfBirth: values.dateOfBirth || null,
-      positionPreferences: [...positionPreferences], // Create a new array to ensure clean serialization
-      active: values.active,
-      seasonIds: selectedSeasonIds // Include the selected season IDs
+      positionPreferences,
+      active: values.active
     };
-    
-    console.log("Player data for submission:", JSON.stringify(playerData));
     
     console.log("Submitting player data manually:", playerData);
     
-    // When editing, use our direct utility to update seasons
-    if (isEditing && player) {
-      try {
-        // First create the player update data (without seasons)
-        // Make sure positionPreferences is a valid array that can be serialized properly
-        const playerUpdateData = {
-          displayName: values.displayName,
-          firstName: values.firstName,
-          lastName: values.lastName,
-          dateOfBirth: values.dateOfBirth || null,
-          positionPreferences: [...positionPreferences], // Create a new array to ensure clean serialization
-          active: values.active
-        };
-        
-        console.log("Player update data:", JSON.stringify(playerUpdateData));
-        
-        // Import the updatePlayerSeasons function from our utility
-        const { updatePlayerSeasons } = await import('@/lib/playerSeasonManager');
-        
-        // Update the player's seasons first
-        const seasonsResult = await updatePlayerSeasons(player.id, selectedSeasonIds);
-        console.log("Seasons update result:", seasonsResult);
-        
-        // Pass complete data to parent handler for UI updates
-        onSubmit({
-          ...playerData,
-          id: player.id,
-          seasonsUpdated: seasonsResult.success
-        });
-      } catch (error) {
-        console.error("Error in direct player update:", error);
-        // Still call onSubmit to let the parent component know there was an attempt
-        onSubmit(playerData);
-      }
-    } else {
-      // For new player creation, just use the parent's handler
-      onSubmit(playerData);
-    }
+    // Call the onSubmit handler passed from parent
+    onSubmit(playerData);
   };
   
   return (
@@ -422,34 +317,6 @@ export default function PlayerForm({ player, onSubmit, isSubmitting, initialSeas
             </FormItem>
           )}
         />
-        
-        {/* Season selection */}
-        <div className="space-y-3">
-          <h3 className="text-sm font-medium">Assign to Seasons</h3>
-          <p className="text-xs text-gray-500">
-            Select which seasons this player participates in
-          </p>
-          <div className="space-y-2">
-            {seasons.map(season => (
-              <div key={season.id} className="flex items-center space-x-2">
-                <Checkbox 
-                  id={`season-${season.id}`} 
-                  checked={selectedSeasonIds.includes(season.id)}
-                  onCheckedChange={(checked) => handleSeasonChange(season.id, checked === true)}
-                />
-                <label 
-                  htmlFor={`season-${season.id}`}
-                  className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
-                  {season.name} {season.isActive && <span className="text-primary">(Current)</span>}
-                </label>
-              </div>
-            ))}
-            {seasons.length === 0 && (
-              <p className="text-xs text-gray-500 italic">No seasons available</p>
-            )}
-          </div>
-        </div>
         
         <div>
           <h3 className="text-sm font-medium mb-2">Position Preferences (Ranked)</h3>

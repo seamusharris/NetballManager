@@ -1,23 +1,16 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
-import { Plus, Filter } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import PlayersList from '@/components/players/PlayersList';
 import PlayerForm from '@/components/players/PlayerForm';
 import SimplePlayerForm from '@/components/players/SimplePlayerForm';
 import { apiRequest } from '@/lib/queryClient';
 import { queryClient } from '@/lib/queryClient';
-import { Player, Season } from '@shared/schema';
+import { Player } from '@shared/schema';
 import { useLocation } from 'wouter';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 export default function Players() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -29,54 +22,10 @@ export default function Players() {
   const params = new URLSearchParams(location.split('?')[1] || '');
   const editId = params.get('edit');
   
-  // Get current active season
-  const { data: activeSeason } = useQuery<Season>({
-    queryKey: ['/api/seasons/active'],
-  });
-  
-  // State to store the selected season for filtering
-  const [selectedSeasonId, setSelectedSeasonId] = useState<number | null>(null);
-  
-  // Get all seasons
-  const { data: seasons = [] } = useQuery<Season[]>({
-    queryKey: ['/api/seasons'],
-  });
-  
-  // Get players - either all players or filtered by season
   const { data: players = [], isLoading } = useQuery<Player[]>({
-    queryKey: ['/api/players', selectedSeasonId ? `season/${selectedSeasonId}` : 'all'],
-    queryFn: async () => {
-      if (selectedSeasonId) {
-        // Fetch players for the selected season
-        const response = await fetch(`/api/players/season/${selectedSeasonId}`);
-        if (!response.ok) throw new Error('Failed to fetch players by season');
-        return response.json();
-      } else {
-        // Fetch all players
-        const response = await fetch('/api/players');
-        if (!response.ok) throw new Error('Failed to fetch players');
-        return response.json();
-      }
-    }
+    queryKey: ['/api/players'],
   });
   
-  // Query to get seasons for a specific player
-  const { data: editingPlayerSeasonData, isLoading: isLoadingPlayerSeasons } = useQuery<{ seasonIds: number[] }>({
-    queryKey: ['/api/players', editingPlayer?.id, 'seasons'],
-    queryFn: async () => {
-      if (!editingPlayer) return { seasonIds: [] };
-      const response = await fetch(`/api/players/${editingPlayer.id}/seasons`);
-      if (!response.ok) throw new Error('Failed to fetch player seasons');
-      return response.json();
-    },
-    enabled: !!editingPlayer
-  });
-  
-  // Extract the season IDs associated with the editing player
-  const editingPlayerSeasonIds = useMemo(() => {
-    return editingPlayerSeasonData?.seasonIds || [];
-  }, [editingPlayerSeasonData]);
-
   // Find the player to edit if an edit ID is provided in the URL
   useEffect(() => {
     if (editId && players.length > 0) {
@@ -199,48 +148,6 @@ export default function Players() {
     createMutation.mutate(data);
   };
   
-  // Separate mutation for updating player seasons
-  const updatePlayerSeasonsMutation = useMutation({
-    mutationFn: async ({ playerId, seasonIds }: { playerId: number, seasonIds: number[] }) => {
-      console.log("Updating player seasons:", playerId, seasonIds);
-      try {
-        // Direct fetch approach for more reliable debugging
-        const response = await fetch(`/api/players/${playerId}/seasons`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ seasonIds }),
-        });
-        
-        if (!response.ok) {
-          throw new Error(`Server responded with ${response.status}: ${response.statusText}`);
-        }
-        
-        return await response.json();
-      } catch (err) {
-        console.error("Error in player seasons update:", err);
-        throw err;
-      }
-    },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['/api/players'] });
-      console.log("Player seasons updated successfully:", data);
-      toast({
-        title: "Success",
-        description: "Player and seasons updated successfully",
-      });
-    },
-    onError: (error) => {
-      console.error("Failed to update player seasons:", error);
-      toast({
-        title: "Warning",
-        description: "Player was updated but seasons could not be updated. Please try again.",
-        variant: "destructive",
-      });
-    }
-  });
-
   const handleUpdatePlayer = (data: any) => {
     console.log("Updating player with data:", data);
     
@@ -249,10 +156,7 @@ export default function Players() {
       return;
     }
     
-    // Capture the season IDs separately
-    const seasonIds = data.seasonIds || [];
-    
-    // Make sure we're sending valid player data (without seasons)
+    // Make sure we're sending valid player data
     const validPlayerData = {
       displayName: data.displayName,
       firstName: data.firstName,
@@ -260,68 +164,13 @@ export default function Players() {
       dateOfBirth: data.dateOfBirth || null,
       positionPreferences: data.positionPreferences,
       active: data.active
-      // No seasonIds here - we'll use the dedicated endpoint
     };
     
     console.log("Sending update request with:", { id: editingPlayer.id, player: validPlayerData });
-    
-    // First, directly update the seasons (most important part)
-    try {
-      console.log("Submitting player data manually:", validPlayerData);
-      console.log("Seasons to set:", seasonIds);
-      
-      // Directly call the seasons endpoint first with a direct fetch
-      fetch(`/api/players/${editingPlayer.id}/seasons`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ seasonIds }),
-      })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(`Server responded with ${response.status}: ${response.statusText}`);
-        }
-        return response.json();
-      })
-      .then(data => {
-        console.log("Season update successful:", data);
-        
-        // Now update the player details
-        updateMutation.mutate({ 
-          id: editingPlayer.id, 
-          player: validPlayerData 
-        });
-      })
-      .catch(error => {
-        console.error("Error updating seasons:", error);
-        // Still try to update the player data
-        updateMutation.mutate({ 
-          id: editingPlayer.id, 
-          player: validPlayerData 
-        });
-        
-        toast({
-          title: "Warning",
-          description: "Player was updated but there was an issue with seasons. Please try again.",
-          variant: "destructive",
-        });
-      });
-    } catch (error) {
-      console.error("Failed to send request:", error);
-      
-      // Fallback to just updating the player
-      updateMutation.mutate({ 
-        id: editingPlayer.id, 
-        player: validPlayerData 
-      });
-      
-      toast({
-        title: "Warning",
-        description: "Could not connect to server for season update. Player data was still updated.",
-        variant: "destructive",
-      });
-    }
+    updateMutation.mutate({ 
+      id: editingPlayer.id, 
+      player: validPlayerData 
+    });
   };
   
   const handleDeletePlayer = (id: number) => {
@@ -336,42 +185,14 @@ export default function Players() {
       </Helmet>
       
       <div className="space-y-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div className="flex items-center justify-between">
           <h2 className="text-2xl font-heading font-bold text-neutral-dark">Player Management</h2>
-          
-          <div className="flex flex-wrap items-center gap-2">
-            {/* Season filter */}
-            <div className="flex items-center">
-              <div className="w-[180px]">
-                <Select
-                  value={selectedSeasonId?.toString() || "all"}
-                  onValueChange={(value) => {
-                    setSelectedSeasonId(value === "all" ? null : Number(value));
-                  }}
-                >
-                  <SelectTrigger className="h-9">
-                    <SelectValue placeholder="Filter by season" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Seasons</SelectItem>
-                    {seasons.map((season) => (
-                      <SelectItem key={season.id} value={season.id.toString()}>
-                        {season.name} {season.isActive && "(Current)"}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <Filter className="w-4 h-4 ml-2 text-gray-400" />
-            </div>
-            
-            <Button
-              onClick={() => setIsAddDialogOpen(true)}
-              className="bg-primary hover:bg-primary-light text-white"
-            >
-              <Plus className="w-4 h-4 mr-1" /> Add Player
-            </Button>
-          </div>
+          <Button
+            onClick={() => setIsAddDialogOpen(true)}
+            className="bg-primary hover:bg-primary-light text-white"
+          >
+            <Plus className="w-4 h-4 mr-1" /> Add Player
+          </Button>
         </div>
         
         <PlayersList 
@@ -427,7 +248,6 @@ export default function Players() {
                 player={editingPlayer}
                 onSubmit={handleUpdatePlayer} 
                 isSubmitting={updateMutation.isPending} 
-                initialSeasonIds={editingPlayerSeasonIds}
               />
             </div>
           </div>

@@ -1,8 +1,6 @@
-import { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { Position, allPositions, Season } from '@shared/schema';
+import { useState } from 'react';
+import { Position, allPositions } from '@shared/schema';
 import { generatePlayerAvatarColor } from '@/lib/utils';
-import { Checkbox } from "@/components/ui/checkbox";
 
 interface SimplePlayerFormProps {
   onSubmit: (data: any) => void;
@@ -20,36 +18,7 @@ export default function SimplePlayerForm({ onSubmit, onCancel, isSubmitting }: S
   const [position2, setPosition2] = useState('none');
   const [position3, setPosition3] = useState('none');
   const [position4, setPosition4] = useState('none');
-  const [selectedSeasonIds, setSelectedSeasonIds] = useState<number[]>([]);
   
-  // Fetch all seasons
-  const { data: seasons = [] } = useQuery<Season[]>({
-    queryKey: ['/api/seasons'],
-  });
-  
-  // Get current active season
-  const { data: activeSeason } = useQuery<Season>({
-    queryKey: ['/api/seasons/active'],
-  });
-  
-  // Set the active season by default
-  useEffect(() => {
-    if (activeSeason && !selectedSeasonIds.includes(activeSeason.id)) {
-      setSelectedSeasonIds([activeSeason.id]);
-    }
-  }, [activeSeason]);
-  
-  // Function to handle season checkbox changes
-  const handleSeasonChange = (seasonId: number, checked: boolean) => {
-    setSelectedSeasonIds(prev => {
-      if (checked) {
-        return [...prev, seasonId];
-      } else {
-        return prev.filter(id => id !== seasonId);
-      }
-    });
-  };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -59,25 +28,18 @@ export default function SimplePlayerForm({ onSubmit, onCancel, isSubmitting }: S
       return;
     }
     
-    // Build position preferences array - ensure we're using string literals 
-    // that match the enum values exactly to prevent type issues
-    const positionPreferences: string[] = [];
+    // Build position preferences array
+    const positionPreferences: Position[] = [position1 as Position];
     
-    // Add positions in order, filtering out 'none'
-    if (position1) {
-      positionPreferences.push(position1);
+    if (position2 !== 'none') {
+      positionPreferences.push(position2 as Position);
     }
-    if (position2 && position2 !== 'none') {
-      positionPreferences.push(position2);
+    if (position3 !== 'none') {
+      positionPreferences.push(position3 as Position);
     }
-    if (position3 && position3 !== 'none') {
-      positionPreferences.push(position3);
+    if (position4 !== 'none') {
+      positionPreferences.push(position4 as Position);
     }
-    if (position4 && position4 !== 'none') {
-      positionPreferences.push(position4);
-    }
-    
-    console.log("Position preferences array in SimplePlayerForm:", JSON.stringify(positionPreferences));
     
     // For new players, we'll create their avatar color when they're created
     // The actual color assignment will happen server-side based on their ID, but we need to indicate we want one
@@ -88,8 +50,7 @@ export default function SimplePlayerForm({ onSubmit, onCancel, isSubmitting }: S
       dateOfBirth: dateOfBirth || "", // Allow empty date of birth
       active,
       positionPreferences,
-      avatarColor: "auto", // This will be replaced with a specific color once the player is created and has an ID
-      seasonIds: selectedSeasonIds // Add the selected season IDs
+      avatarColor: "auto" // This will be replaced with a specific color once the player is created and has an ID
     });
   };
   
@@ -155,34 +116,6 @@ export default function SimplePlayerForm({ onSubmit, onCancel, isSubmitting }: S
           value={dateOfBirth}
           onChange={(e) => setDateOfBirth(e.target.value)}
         />
-      </div>
-      
-      {/* Season selection */}
-      <div className="space-y-3">
-        <h3 className="text-sm font-medium">Assign to Seasons</h3>
-        <p className="text-xs text-gray-500">
-          Select which seasons this player participates in
-        </p>
-        <div className="space-y-2">
-          {seasons.map(season => (
-            <div key={season.id} className="flex items-center space-x-2">
-              <Checkbox 
-                id={`season-${season.id}`} 
-                checked={selectedSeasonIds.includes(season.id)}
-                onCheckedChange={(checked) => handleSeasonChange(season.id, checked === true)}
-              />
-              <label 
-                htmlFor={`season-${season.id}`}
-                className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-              >
-                {season.name} {season.isActive && <span className="text-blue-600">(Current)</span>}
-              </label>
-            </div>
-          ))}
-          {seasons.length === 0 && (
-            <p className="text-xs text-gray-500 italic">No seasons available</p>
-          )}
-        </div>
       </div>
       
       <div>

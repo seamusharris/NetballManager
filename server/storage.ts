@@ -6,11 +6,10 @@ import {
   rosters, type Roster, type InsertRoster,
   gameStats, type GameStat, type InsertGameStat,
   seasons, type Season, type InsertSeason,
-  playerSeasons,
   type Position
 } from "../shared/schema";
 import { db } from "./db";
-import { eq, desc, and, isNull, inArray, sql } from "drizzle-orm";
+import { eq, desc, and, isNull } from "drizzle-orm";
 
 // Storage interface
 export interface IStorage {
@@ -21,16 +20,10 @@ export interface IStorage {
 
   // Player methods
   getPlayers(): Promise<Player[]>;
-  getPlayersBySeason(seasonId: number): Promise<Player[]>;
   getPlayer(id: number): Promise<Player | undefined>;
-  createPlayer(player: InsertPlayer, seasonIds?: number[]): Promise<Player>;
-  updatePlayer(id: number, player: Partial<InsertPlayer>, seasonIds?: number[]): Promise<Player | undefined>;
+  createPlayer(player: InsertPlayer): Promise<Player>;
+  updatePlayer(id: number, player: Partial<InsertPlayer>): Promise<Player | undefined>;
   deletePlayer(id: number): Promise<boolean>;
-  
-  // Player-Season relationship methods
-  getPlayerSeasons(playerId: number): Promise<number[]>; // Returns array of season IDs
-  addPlayerToSeason(playerId: number, seasonId: number): Promise<boolean>;
-  removePlayerFromSeason(playerId: number, seasonId: number): Promise<boolean>;
   
   // Opponent methods
   getOpponents(): Promise<Opponent[]>;
@@ -101,41 +94,15 @@ export class DatabaseStorage implements IStorage {
   async getPlayers(): Promise<Player[]> {
     return await db.select().from(players);
   }
-  
-  async getPlayersBySeason(seasonId: number): Promise<Player[]> {
-    // Query players that are associated with the given season
-    const result = await db
-      .select({
-        player: players
-      })
-      .from(playerSeasons)
-      .where(eq(playerSeasons.seasonId, seasonId))
-      .innerJoin(players, eq(playerSeasons.playerId, players.id));
-    
-    // Map to return just the player objects
-    return result.map(row => row.player);
-  }
 
   async getPlayer(id: number): Promise<Player | undefined> {
     const [player] = await db.select().from(players).where(eq(players.id, id));
     return player || undefined;
   }
 
-  async createPlayer(insertPlayer: InsertPlayer, seasonIds?: number[]): Promise<Player> {
+  async createPlayer(insertPlayer: InsertPlayer): Promise<Player> {
     // Check if a specific avatar color was provided (for import/export)
     let avatarColor = insertPlayer.avatarColor;
-    
-    // Ensure position preferences are properly formatted as an array
-    let positionPreferences = [];
-    if (insertPlayer.positionPreferences) {
-      if (Array.isArray(insertPlayer.positionPreferences)) {
-        // Create a clean copy to prevent reference issues
-        positionPreferences = [...insertPlayer.positionPreferences];
-        console.log("Position preferences array in storage.ts create:", JSON.stringify(positionPreferences));
-      } else {
-        console.error("Invalid position preferences format in storage.ts create:", insertPlayer.positionPreferences);
-      }
-    }
     
     // Create the player with all properties
     const [player] = await db
@@ -145,7 +112,7 @@ export class DatabaseStorage implements IStorage {
         firstName: insertPlayer.firstName,
         lastName: insertPlayer.lastName,
         dateOfBirth: insertPlayer.dateOfBirth || null,
-        positionPreferences, // Use our clean array
+        positionPreferences: insertPlayer.positionPreferences as any, // Cast to any to bypass TS checking
         active: insertPlayer.active !== undefined ? insertPlayer.active : true,
         // Include the avatar color if provided
         ...(avatarColor ? { avatarColor } : {})
@@ -187,127 +154,39 @@ export class DatabaseStorage implements IStorage {
         .where(eq(players.id, player.id))
         .returning();
       
-      player.avatarColor = updatedPlayer.avatarColor;
+      return updatedPlayer;
     }
     
-    // Add player to selected seasons if provided
-    if (seasonIds && seasonIds.length > 0) {
-      // Create player-season entries
-      const playerSeasonEntries = seasonIds.map(seasonId => ({
-        playerId: player.id,
-        seasonId
-      }));
-      
-      try {
-        await db.insert(playerSeasons).values(playerSeasonEntries);
-      } catch (error) {
-        console.error('Failed to add player to seasons:', error);
-      }
-    } else {
-      // If no seasons provided, add to active season by default
-      const activeSeason = await this.getActiveSeason();
-      if (activeSeason) {
-        try {
-          await db.insert(playerSeasons).values({
-            playerId: player.id,
-            seasonId: activeSeason.id
-          });
-        } catch (error) {
-          console.error('Failed to add player to active season:', error);
-        }
-      }
-    }
-    
+    // If color was provided, return the player as is
     return player;
   }
 
-  async updatePlayer(id: number, updatePlayer: Partial<InsertPlayer>, seasonIds?: number[] | null): Promise<Player | undefined> {
-    // Only handle the basic player data update here - seasons are handled separately in the route handler
-    try {
-      // Handle type-safe update to avoid TS errors
-      const updateData: Record<string, any> = {};
-      
-      if (updatePlayer.displayName !== undefined) updateData.displayName = updatePlayer.displayName;
-      if (updatePlayer.firstName !== undefined) updateData.firstName = updatePlayer.firstName;
-      if (updatePlayer.lastName !== undefined) updateData.lastName = updatePlayer.lastName;
-      if (updatePlayer.dateOfBirth !== undefined) updateData.dateOfBirth = updatePlayer.dateOfBirth;
-      if (updatePlayer.active !== undefined) updateData.active = updatePlayer.active;
-      
-      // Ensure position preferences are properly formatted as an array
-      if (updatePlayer.positionPreferences !== undefined) {
-        if (Array.isArray(updatePlayer.positionPreferences)) {
-          // Create a clean copy to prevent reference issues
-          updateData.positionPreferences = [...updatePlayer.positionPreferences];
-          console.log("Position preferences array in storage.ts update:", JSON.stringify(updateData.positionPreferences));
-        } else {
-          console.error("Invalid position preferences format in storage.ts update:", updatePlayer.positionPreferences);
-          // Fall back to empty array if the format is invalid
-          updateData.positionPreferences = [];
-        }
-      }
-      
-      if (updatePlayer.avatarColor !== undefined) updateData.avatarColor = updatePlayer.avatarColor;
-      
-      // Update the player data only
-      const [updated] = await db
-        .update(players)
-        .set(updateData)
-        .where(eq(players.id, id))
-        .returning();
-      
-      return updated || undefined;
-    } catch (error) {
-      console.error('Failed to update player:', error);
-      return undefined;
-    }
+  async updatePlayer(id: number, updatePlayer: Partial<InsertPlayer>): Promise<Player | undefined> {
+    // Handle type-safe update to avoid TS errors
+    const updateData: Record<string, any> = {};
+    
+    if (updatePlayer.displayName !== undefined) updateData.displayName = updatePlayer.displayName;
+    if (updatePlayer.firstName !== undefined) updateData.firstName = updatePlayer.firstName;
+    if (updatePlayer.lastName !== undefined) updateData.lastName = updatePlayer.lastName;
+    if (updatePlayer.dateOfBirth !== undefined) updateData.dateOfBirth = updatePlayer.dateOfBirth;
+    if (updatePlayer.active !== undefined) updateData.active = updatePlayer.active;
+    if (updatePlayer.positionPreferences !== undefined) updateData.positionPreferences = updatePlayer.positionPreferences;
+    if (updatePlayer.avatarColor !== undefined) updateData.avatarColor = updatePlayer.avatarColor;
+    
+    const [updated] = await db
+      .update(players)
+      .set(updateData)
+      .where(eq(players.id, id))
+      .returning();
+    return updated || undefined;
   }
 
   async deletePlayer(id: number): Promise<boolean> {
-    // Player-season associations will be deleted automatically due to CASCADE constraint
     const result = await db
       .delete(players)
       .where(eq(players.id, id))
       .returning({ id: players.id });
     return result.length > 0;
-  }
-  
-  // Player-Season relationship methods
-  async getPlayerSeasons(playerId: number): Promise<number[]> {
-    const result = await db
-      .select({ seasonId: playerSeasons.seasonId })
-      .from(playerSeasons)
-      .where(eq(playerSeasons.playerId, playerId));
-    
-    return result.map(row => row.seasonId);
-  }
-  
-  async addPlayerToSeason(playerId: number, seasonId: number): Promise<boolean> {
-    try {
-      await db.insert(playerSeasons).values({ playerId, seasonId });
-      return true;
-    } catch (error) {
-      console.error('Failed to add player to season:', error);
-      return false;
-    }
-  }
-  
-  async removePlayerFromSeason(playerId: number, seasonId: number): Promise<boolean> {
-    try {
-      const result = await db
-        .delete(playerSeasons)
-        .where(
-          and(
-            eq(playerSeasons.playerId, playerId),
-            eq(playerSeasons.seasonId, seasonId)
-          )
-        )
-        .returning();
-      
-      return result.length > 0;
-    } catch (error) {
-      console.error('Failed to remove player from season:', error);
-      return false;
-    }
   }
 
   // Opponent methods
