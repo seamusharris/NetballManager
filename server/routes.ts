@@ -544,16 +544,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      // Extract and validate the season IDs
+      // Extract and validate the season IDs - log the entire request body for debugging
+      console.log("Complete update request body:", JSON.stringify(req.body));
+      
       let seasonIds = [];
-      if (updateData.seasonIds !== undefined) {
+      if (req.body.seasonIds !== undefined) {
+        // Get the raw seasonIds from the request body directly, not from updateData
+        const rawSeasonIds = req.body.seasonIds;
+        
+        console.log("Raw season IDs from request:", rawSeasonIds);
+        
         // Ensure season IDs are properly converted to numbers
-        seasonIds = Array.isArray(updateData.seasonIds) 
-          ? updateData.seasonIds.map(id => typeof id === 'string' ? parseInt(id, 10) : id)
-                             .filter(id => typeof id === 'number' && !isNaN(id))
+        seasonIds = Array.isArray(rawSeasonIds) 
+          ? rawSeasonIds.map(id => typeof id === 'string' ? parseInt(id, 10) : id)
+                     .filter(id => typeof id === 'number' && !isNaN(id))
           : [];
+          
         console.log("Season IDs from request (validated):", seasonIds);
-        delete updateData.seasonIds; // Remove from player data as it's not part of the player schema
+        
+        // Remove from player data as it's not part of the player schema
+        delete updateData.seasonIds;
       }
       
       // Create a sanitized version of the update data (only include valid fields)
