@@ -117,7 +117,9 @@ export class StatisticsService {
       // Format the IDs for the query parameter
       const idsParam = gameIds.join(',');
       const timestamp = new Date().getTime(); // For cache busting if needed
-      const statsMap = await apiRequest(`/api/games/stats/batch?ids=${idsParam}&_t=${timestamp}`);
+      const url = `/api/games/stats/batch?ids=${idsParam}&_t=${timestamp}`;
+      const res = await apiRequest('GET', url);
+      const statsMap = await res.json();
       
       console.log(`Fetched batch stats for ${gameIds.length} games in a single request`);
       return statsMap;

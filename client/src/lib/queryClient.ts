@@ -34,7 +34,7 @@ async function throwIfResNotOk(res: Response) {
   }
 }
 
-export async function apiRequest<T = any>(
+export async function apiRequest(
   method: string,
   url: string,
   data?: any,
@@ -42,29 +42,42 @@ export async function apiRequest<T = any>(
   // Fix URL format for game stats endpoints to ensure correct path
   // The server expects /api/gamestats/ (no hyphen) not /api/game-stats/ (with hyphen)
   let correctedUrl = url;
-  if (url.includes('/api/game-stats/')) {
+  if (typeof url === 'string' && url.includes('/api/game-stats/')) {
     correctedUrl = url.replace('/api/game-stats/', '/api/gamestats/');
     console.log(`Corrected URL path from ${url} to ${correctedUrl}`);
   }
 
+  // Make a deep copy of the data to avoid mutating the original
+  let processedData = data ? JSON.parse(JSON.stringify(data)) : undefined;
+
   // Special handling for player data to ensure position_preferences is properly formatted
-  if ((url.includes('/api/players') || url.includes('/api/players/')) && 
-      (method === 'POST' || method === 'PATCH') && 
-      data) {
-    
-    // Handle position preferences field specially
-    if (data.positionPreferences) {
-      // Ensure it's always an array
-      if (!Array.isArray(data.positionPreferences)) {
-        if (typeof data.positionPreferences === 'string') {
-          // Convert single string to array
-          data.positionPreferences = [data.positionPreferences];
-        } else {
-          // Default to empty array if invalid format
-          data.positionPreferences = [];
+  if (processedData && (method === 'POST' || method === 'PATCH')) {
+    // Handle URLs with /api/players
+    if (typeof url === 'string' && (url.includes('/api/players'))) {
+      // Handle position preferences field specially
+      if ('positionPreferences' in processedData) {
+        // Ensure it's always an array
+        if (!Array.isArray(processedData.positionPreferences)) {
+          if (typeof processedData.positionPreferences === 'string') {
+            // Convert single string to array
+            processedData.positionPreferences = [processedData.positionPreferences];
+          } else if (!processedData.positionPreferences) {
+            // Default to empty array if null or undefined
+            processedData.positionPreferences = [];
+          } else {
+            // Default to empty array for any other invalid type
+            processedData.positionPreferences = [];
+          }
+        } else if (processedData.positionPreferences.length === 0) {
+          // Ensure at least one position is present (required by schema)
+          processedData.positionPreferences = ["GS"];
         }
+        console.log("Formatted positionPreferences for API request:", processedData.positionPreferences);
+      } else if (method === 'POST') {
+        // For new players, ensure positionPreferences is set (required field)
+        processedData.positionPreferences = ["GS"];
+        console.log("Added default positionPreferences for new player:", processedData.positionPreferences);
       }
-      console.log("Formatted positionPreferences for API request:", data.positionPreferences);
     }
   }
 
@@ -77,8 +90,8 @@ export async function apiRequest<T = any>(
   };
 
   // Add body for non-GET requests
-  if (method !== 'GET' && data !== undefined) {
-    options.body = JSON.stringify(data);
+  if (method !== 'GET' && processedData !== undefined) {
+    options.body = JSON.stringify(processedData);
   }
 
   const res = await fetch(correctedUrl, options);
