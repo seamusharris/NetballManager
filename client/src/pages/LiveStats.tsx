@@ -865,18 +865,21 @@ export default function LiveStats() {
     let currentValue = 0;
     
     if (playerId === 0 && position) {
-      // This is an unassigned position - get value directly from existingStats
-      const positionStat = existingStats?.find(
-        (s: GameStat) => s.position === position && s.quarter === currentQuarter
-      );
-      
-      if (positionStat && positionStat[stat] !== undefined) {
-        currentValue = positionStat[stat] || 0;
-        console.log(`Using database value for ${position} in Q${currentQuarter}, stat ${stat} = ${currentValue}`);
-      } else if (posStats && posStats[stat] !== undefined) {
-        // Fallback to provided posStats if available
-        currentValue = posStats[stat] || 0;
-        console.log(`Using provided posStats for ${position} in Q${currentQuarter}, stat ${stat} = ${currentValue}`);
+      // This is an unassigned position - try getting the value from posStats first (pre-extracted),
+      // then fall back to direct search in existingStats if needed
+      if (posStats && typeof posStats[stat] !== 'undefined') {
+        currentValue = posStats[stat];
+        console.log(`Using pre-extracted position stats: ${position} in Q${currentQuarter}, ${stat} = ${currentValue}`);
+      } else {
+        // Direct lookup in existingStats as fallback
+        const positionStat = existingStats?.find(
+          (s: GameStat) => s.position === position && s.quarter === currentQuarter
+        );
+        
+        if (positionStat && typeof positionStat[stat] !== 'undefined') {
+          currentValue = positionStat[stat] || 0;
+          console.log(`Direct lookup in existingStats: ${position} in Q${currentQuarter}, ${stat} = ${currentValue}`);
+        }
       }
     } else {
       // Normal player stat
@@ -1213,11 +1216,11 @@ export default function LiveStats() {
             const statConfig = positionStatConfig[position];
             
             // For positions with players, use player stats; otherwise find position stats directly
-            let positionStats = emptyQuarterStats;
+            let positionStats = { ...emptyQuarterStats };
             
             if (hasPlayer && player) {
               // If we have a player, use their stats
-              positionStats = liveStats[playerId]?.[currentQuarter] || emptyQuarterStats;
+              positionStats = liveStats[playerId]?.[currentQuarter] || { ...emptyQuarterStats };
             } else {
               // If no player, look for position stats in existingStats
               const positionStat = existingStats.find(
