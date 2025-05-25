@@ -70,8 +70,8 @@ export default function RecentGames({ games, opponents, className, seasonFilter,
       return await response.json();
     },
     enabled: enableQuery,
-    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
-    gcTime: 15 * 60 * 1000,   // Keep data in cache for 15 minutes
+    staleTime: 30 * 60 * 1000, // Consider data fresh for 30 minutes
+    gcTime: 60 * 60 * 1000    // Keep data in cache for 1 hour
   });
   
   const getOpponentName = (opponentId: number | null) => {
