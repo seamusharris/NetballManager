@@ -273,16 +273,18 @@ export default function PlayerForm({ player, onSubmit, isSubmitting, initialSeas
     
     console.log("Position preferences array:", JSON.stringify(positionPreferences));
     
-    // Build player data object
+    // Build player data object with clean position preferences array
     const playerData = {
       displayName: values.displayName,
       firstName: values.firstName,
       lastName: values.lastName,
       dateOfBirth: values.dateOfBirth || null,
-      positionPreferences,
+      positionPreferences: [...positionPreferences], // Create a new array to ensure clean serialization
       active: values.active,
       seasonIds: selectedSeasonIds // Include the selected season IDs
     };
+    
+    console.log("Player data for submission:", JSON.stringify(playerData));
     
     console.log("Submitting player data manually:", playerData);
     
