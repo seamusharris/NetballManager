@@ -1443,7 +1443,7 @@ export default function GameDetails() {
                       </Select>
                     </div>
                   ) : (
-                    <div className="min-h-[80px] border border-gray-200 rounded-md p-2">
+                    <div className="min-h-[80px] p-2">
                       {/* HARD CODED AWARD WINNER DISPLAY - ID 78 is Isla Mitchell */}
                       <div className="flex items-center space-x-4">
                         {/* Player Avatar - Fixed with violet color */}
@@ -1454,30 +1454,33 @@ export default function GameDetails() {
                           IM
                         </div>
                         
-                        {/* Player Stats Box - Fixed with same color */}
+                        {/* Player Stats Box - With dark border, light interior styling */}
                         <div 
-                          className="flex-1 flex items-center p-3 rounded-lg text-white"
-                          style={{ backgroundColor: "#8b5cf6" /* violet-600 */ }}
+                          className="flex-1 flex items-center p-3 rounded-lg border-2"
+                          style={{ 
+                            borderColor: "#7c3aed", /* violet-700 - darker border */
+                            backgroundColor: "#f5f3ff" /* violet-50 - very light interior */
+                          }}
                         >
                           <div className="flex-1">
-                            <div className="text-lg font-bold">
+                            <div className="text-lg font-bold text-violet-900">
                               Isla Mitchell
                             </div>
-                            <div className="text-sm">Player of the Match</div>
+                            <div className="text-sm text-violet-600">Player of the Match</div>
                           </div>
                           
                           <div className="flex space-x-6">
                             <div className="text-center">
-                              <div className="text-2xl font-bold">10</div>
-                              <div className="text-xs">Goals</div>
+                              <div className="text-2xl font-bold text-violet-800">10</div>
+                              <div className="text-xs text-violet-600">Goals</div>
                             </div>
                             <div className="text-center">
-                              <div className="text-2xl font-bold">5</div>
-                              <div className="text-xs">Intercepts</div>
+                              <div className="text-2xl font-bold text-violet-800">5</div>
+                              <div className="text-xs text-violet-600">Intercepts</div>
                             </div>
                             <div className="text-center">
-                              <div className="text-2xl font-bold">3</div>
-                              <div className="text-xs">Rebounds</div>
+                              <div className="text-2xl font-bold text-violet-800">3</div>
+                              <div className="text-xs text-violet-600">Rebounds</div>
                             </div>
                           </div>
                         </div>
