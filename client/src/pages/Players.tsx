@@ -155,6 +155,13 @@ export default function Players() {
         
         if (!seasonResponse.ok) {
           console.warn("Season relationship update failed, but player data was updated");
+          // Try to get detailed error information
+          try {
+            const errorData = await seasonResponse.json();
+            console.error("Season update error details:", errorData);
+          } catch (e) {
+            console.error("Could not parse season update error response");
+          }
         } else {
           console.log("Season relationships updated successfully");
         }
