@@ -63,9 +63,17 @@ export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFor
   // Set selected seasons when player seasons data is loaded
   useEffect(() => {
     if (playerSeasons.length > 0) {
+      // Map seasons from player's seasons
       setSelectedSeasons(playerSeasons.map(season => season.id));
+    } else if (seasons.length > 0 && !isEditing) {
+      // For new players, select the active season by default
+      const activeSeasonIds = seasons
+        .filter(season => season.isActive)
+        .map(season => season.id);
+      
+      setSelectedSeasons(activeSeasonIds);
     }
-  }, [playerSeasons]);
+  }, [playerSeasons, seasons, isEditing]);
   
   // Extract position preferences for default values
   const getPositionDefaults = () => {
