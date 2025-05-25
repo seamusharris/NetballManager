@@ -360,10 +360,20 @@ export default function PlayerDetails() {
   // Mutation for deleting the player
   const deletePlayerMutation = useMutation({
     mutationFn: async () => {
-      return apiRequest('DELETE', `/api/players/${playerId}`);
+      try {
+        return await apiRequest('DELETE', `/api/players/${playerId}`);
+      } catch (error) {
+        // Check if the error indicates the player was not found (already deleted)
+        // This is actually a success case for us since the player no longer exists
+        if (error instanceof Error && error.message.includes('Player not found')) {
+          // This is fine - the player was already deleted or never existed
+          return { success: true, playerDeleted: true };
+        }
+        throw error; // Re-throw other errors
+      }
     },
     onSuccess: () => {
-      // First navigate to the players list to avoid trying to fetch a deleted player
+      // Always navigate to the players list first before any other operations
       navigate('/players');
       
       // Then invalidate queries and show toast
@@ -375,12 +385,18 @@ export default function PlayerDetails() {
       });
     },
     onError: (error) => {
+      // If we get here, it's a real error that isn't related to "Player not found"
+      console.error("Failed to delete player:", error);
+      
+      // Even if there was an error, navigate back to the players list anyway
+      // This ensures we don't get stuck on a deleted player's page
+      navigate('/players');
+      
       toast({
         title: "Error",
-        description: "Failed to delete player. Please try again.",
+        description: "There was a problem with the player deletion, but you've been redirected to the players list.",
         variant: "destructive",
       });
-      console.error("Failed to delete player:", error);
     }
   });
 
