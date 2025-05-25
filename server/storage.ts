@@ -280,16 +280,22 @@ export class DatabaseStorage implements IStorage {
   }
   
   async removePlayerFromSeason(playerId: number, seasonId: number): Promise<boolean> {
-    const result = await db
-      .delete(playerSeasons)
-      .where(
-        and(
-          eq(playerSeasons.playerId, playerId),
-          eq(playerSeasons.seasonId, seasonId)
+    try {
+      const result = await db
+        .delete(playerSeasons)
+        .where(
+          and(
+            eq(playerSeasons.playerId, playerId),
+            eq(playerSeasons.seasonId, seasonId)
+          )
         )
-      );
-    
-    return result.count > 0;
+        .returning();
+      
+      return result.length > 0;
+    } catch (error) {
+      console.error('Failed to remove player from season:', error);
+      return false;
+    }
   }
 
   // Opponent methods
