@@ -395,6 +395,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch player" });
     }
   });
+  
+  // Get seasons for a specific player
+  app.get("/api/players/:id/seasons", async (req, res) => {
+    try {
+      const playerId = Number(req.params.id);
+      
+      // Fetch the player's seasons from the junction table
+      const result = await db.execute(sql`
+        SELECT s.* FROM seasons s
+        JOIN player_seasons ps ON ps.season_id = s.id
+        WHERE ps.player_id = ${playerId}
+        ORDER BY s.name
+      `);
+      
+      res.json(result.rows);
+    } catch (error) {
+      console.error(`Error fetching player seasons: ${error}`);
+      res.status(500).json({ message: "Failed to fetch player seasons" });
+    }
+  });
 
   app.post("/api/players", async (req, res) => {
     try {
@@ -439,8 +459,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      // Pass the enhanced data to the storage layer
+      // Extract the season IDs if they were provided
+      const seasonIds = req.body.seasonIds || [];
+      delete playerData.seasonIds; // Remove from player data as it's not part of the player schema
+      
+      // Create the player
       const player = await storage.createPlayer(playerData);
+      
+      // If seasons were provided, create the player-season relationships
+      if (seasonIds.length > 0) {
+        console.log(`Creating player-season relationships for player ${player.id} with seasons:`, seasonIds);
+        
+        // Create player-season entries for each selected season
+        for (const seasonId of seasonIds) {
+          await db.execute(sql`
+            INSERT INTO player_seasons (player_id, season_id)
+            VALUES (${player.id}, ${seasonId})
+            ON CONFLICT (player_id, season_id) DO NOTHING
+          `);
+        }
+      } else {
+        // If no seasons were explicitly provided, add to active season if one exists
+        const activeSeasonResult = await db.execute(sql`
+          SELECT id FROM seasons WHERE is_active = true LIMIT 1
+        `);
+        
+        if (activeSeasonResult.rows.length > 0) {
+          const activeSeason = activeSeasonResult.rows[0].id;
+          console.log(`Adding new player ${player.id} to active season ${activeSeason}`);
+          
+          await db.execute(sql`
+            INSERT INTO player_seasons (player_id, season_id)
+            VALUES (${player.id}, ${activeSeason})
+            ON CONFLICT (player_id, season_id) DO NOTHING
+          `);
+        }
+      }
+      
       res.status(201).json(player);
     } catch (error) {
       console.error("Failed to create player:", error);
@@ -487,10 +542,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
+      // Extract the season IDs if they were provided
+      const seasonIds = req.body.seasonIds || [];
+      delete updateData.seasonIds; // Remove from player data as it's not part of the player schema
+      
+      // Update the player first
       const updatedPlayer = await storage.updatePlayer(id, updateData);
       if (!updatedPlayer) {
         return res.status(404).json({ message: "Player not found" });
       }
+      
+      // If seasons were provided, update the player-season relationships
+      if (seasonIds.length > 0) {
+        console.log(`Updating player-season relationships for player ${id} with seasons:`, seasonIds);
+        
+        // First, remove all existing player-season relationships
+        await db.execute(sql`
+          DELETE FROM player_seasons 
+          WHERE player_id = ${id}
+        `);
+        
+        // Then create new player-season entries for each selected season
+        for (const seasonId of seasonIds) {
+          await db.execute(sql`
+            INSERT INTO player_seasons (player_id, season_id)
+            VALUES (${id}, ${seasonId})
+            ON CONFLICT (player_id, season_id) DO NOTHING
+          `);
+        }
+      }
+      
       res.json(updatedPlayer);
     } catch (error) {
       res.status(500).json({ message: "Failed to update player" });

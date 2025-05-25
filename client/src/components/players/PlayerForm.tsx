@@ -20,8 +20,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { insertPlayerSchema, Position, Player, allPositions } from "@shared/schema";
+import { Checkbox } from "@/components/ui/checkbox";
+import { insertPlayerSchema, Position, Player, allPositions, Season } from "@shared/schema";
 import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 
 // Extend the schema for the form validation
 const formSchema = insertPlayerSchema.extend({
@@ -33,7 +35,9 @@ const formSchema = insertPlayerSchema.extend({
   position4: z.string().default("none"),
 });
 
-type FormValues = z.infer<typeof formSchema>;
+type FormValues = z.infer<typeof formSchema> & {
+  seasonIds: number[];
+};
 
 interface PlayerFormProps {
   player?: Player;
@@ -43,6 +47,25 @@ interface PlayerFormProps {
 
 export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFormProps) {
   const isEditing = !!player;
+  const [selectedSeasons, setSelectedSeasons] = useState<number[]>([]);
+  
+  // Fetch all available seasons
+  const { data: seasons = [] } = useQuery<Season[]>({
+    queryKey: ['/api/seasons'],
+  });
+  
+  // If editing, fetch player's current seasons
+  const { data: playerSeasons = [] } = useQuery<Season[]>({
+    queryKey: ['/api/players', player?.id, 'seasons'],
+    enabled: isEditing && !!player?.id,
+  });
+  
+  // Set selected seasons when player seasons data is loaded
+  useEffect(() => {
+    if (playerSeasons.length > 0) {
+      setSelectedSeasons(playerSeasons.map(season => season.id));
+    }
+  }, [playerSeasons]);
   
   // Extract position preferences for default values
   const getPositionDefaults = () => {
@@ -71,6 +94,7 @@ export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFor
       position3: positionDefaults.position3,
       position4: positionDefaults.position4,
       active: player?.active !== undefined ? player.active : true,
+      seasonIds: [],
     },
   });
   
