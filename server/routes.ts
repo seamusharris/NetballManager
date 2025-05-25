@@ -589,6 +589,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`Updating player-season relationships for player ${id} with seasons:`, req.body.seasonIds);
       
       try {
+        // Import pool at the beginning
+        const { pool } = await import('./db');
+        
         // Extract seasonIds directly from the request body instead of from updateData
         const rawSeasonIds = req.body.seasonIds || [];
         console.log(`Raw season IDs directly from request body:`, rawSeasonIds);
@@ -608,9 +611,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         validSeasonIds = validSeasonIds.filter(id => existingSeasonIds.includes(id));
         
         console.log(`Player ${id} will be associated with these valid seasons (after database verification):`, validSeasonIds);
-        
-        // Use simple SQL with one transaction to handle the upsert
-        const { pool } = await import('./db');
         const client = await pool.connect();
         
         try {
