@@ -28,7 +28,18 @@ export async function createPlayerDirect(playerData: {
   try {
     console.log("Direct player creation with data:", playerData, "seasons:", seasonIds);
     
-    // Step 1: Insert player
+    // Before inserting, let's ensure position preferences is a clean array of strings
+    let positionPrefs = [];
+    if (Array.isArray(playerData.positionPreferences)) {
+      // Make sure we only include valid strings
+      positionPrefs = playerData.positionPreferences
+        .filter(p => typeof p === 'string' && p.length > 0)
+        .map(String); // Convert each item to string to ensure proper format
+    }
+    
+    console.log("Direct player creation with clean position preferences:", JSON.stringify(positionPrefs));
+    
+    // Step 1: Insert player with clean position preferences
     const insertResult = await db.execute(
       sql`INSERT INTO players (
         display_name, 
@@ -43,7 +54,7 @@ export async function createPlayerDirect(playerData: {
         ${playerData.firstName}, 
         ${playerData.lastName}, 
         ${playerData.dateOfBirth || null}, 
-        ${JSON.stringify(playerData.positionPreferences)}::jsonb, 
+        ${JSON.stringify(positionPrefs)}::jsonb, 
         ${playerData.active !== undefined ? playerData.active : true}, 
         ${playerData.avatarColor || null}
       ) RETURNING id`
@@ -179,8 +190,18 @@ export async function updatePlayerDirect(
     }
     
     if (playerData.positionPreferences !== undefined) {
+      // Create a clean array of strings to prevent issues
+      let positionPrefs = [];
+      if (Array.isArray(playerData.positionPreferences)) {
+        positionPrefs = playerData.positionPreferences
+          .filter(p => typeof p === 'string' && p.length > 0)
+          .map(String); // Ensure proper string type
+      }
+      
+      console.log("Clean position preferences for update:", JSON.stringify(positionPrefs));
+      
       await db.execute(
-        sql`UPDATE players SET position_preferences = ${JSON.stringify(playerData.positionPreferences)}::jsonb WHERE id = ${playerId}`
+        sql`UPDATE players SET position_preferences = ${JSON.stringify(positionPrefs)}::jsonb WHERE id = ${playerId}`
       );
     }
     
