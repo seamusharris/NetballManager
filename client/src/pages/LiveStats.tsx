@@ -872,12 +872,12 @@ export default function LiveStats() {
       
       if (positionStat && positionStat[stat] !== undefined) {
         currentValue = positionStat[stat] || 0;
+        console.log(`Using database value for ${position} in Q${currentQuarter}, stat ${stat} = ${currentValue}`);
       } else if (posStats && posStats[stat] !== undefined) {
         // Fallback to provided posStats if available
         currentValue = posStats[stat] || 0;
+        console.log(`Using provided posStats for ${position} in Q${currentQuarter}, stat ${stat} = ${currentValue}`);
       }
-      
-      console.log(`Position ${position} in Q${currentQuarter}, stat ${stat} = ${currentValue}`);
     } else {
       // Normal player stat
       currentValue = liveStats[playerId]?.[currentQuarter]?.[stat] || 0;
@@ -1237,6 +1237,7 @@ export default function LiveStats() {
                   pickUp: positionStat.pickUp || 0,
                   infringement: positionStat.infringement || 0
                 };
+                console.log(`Found stats for unassigned position ${position} in Q${currentQuarter}:`, positionStats);
               }
             }
             
