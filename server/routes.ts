@@ -616,23 +616,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
               .filter(id => typeof id === 'number' && !isNaN(id))
           : [];
           
-        // Very important: Check if we're dealing with player IDs being submitted as season IDs
-        // This is a common error we've seen where game IDs (56, 57, 58) are submitted instead of season IDs (1, 2)
-        const containsHighIds = validSeasonIds.some(id => id > 10); // Season IDs are typically small numbers
+        // IMPORTANT: When examining seasonIds, we've discovered the app is sometimes submitting
+        // player/game IDs (in the range of 56-71) instead of season IDs (typically 1, 2)
+        // For safety, we'll ALWAYS filter to only use IDs that exist in the seasons table
         
-        if (containsHighIds) {
-          console.warn(`Warning: Found unusually high IDs in season list. These may be game or player IDs mistakenly submitted as seasons:`, validSeasonIds);
-          // Use only valid season IDs from the database
-          validSeasonIds = validSeasonIds.filter(id => allValidSeasonIds.includes(id));
-          
-          // If we filtered out all IDs, assign the active season as a fallback
-          if (validSeasonIds.length === 0 && allValidSeasonIds.length > 0) {
-            console.log(`All submitted season IDs were invalid. Using the first valid season as fallback:`, allValidSeasonIds[0]);
-            validSeasonIds = [allValidSeasonIds[0]];
-          }
+        console.log(`All valid season IDs in database: ${allValidSeasonIds.join(', ')}`);
+        console.log(`Raw season IDs submitted: ${validSeasonIds.join(', ')}`);
+        
+        // Get list of valid seasons only
+        const validatedSeasonIds = validSeasonIds.filter(id => allValidSeasonIds.includes(id));
+        
+        console.log(`After filtering, valid seasons: ${validatedSeasonIds.join(', ')}`);
+        
+        // Always include at least the first valid season as a fallback if no valid seasons were found
+        if (validatedSeasonIds.length === 0 && allValidSeasonIds.length > 0) {
+          console.log(`No valid seasons found in submission. Using active season as fallback.`);
+          validSeasonIds = [allValidSeasonIds[0]];
         } else {
-          // Verify season IDs exist in the database (standard validation)
-          validSeasonIds = validSeasonIds.filter(id => allValidSeasonIds.includes(id));
+          validSeasonIds = validatedSeasonIds;
         }
         
         console.log(`Player ${id} will be associated with these valid seasons (after database verification):`, validSeasonIds);
