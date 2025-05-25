@@ -66,15 +66,18 @@ export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFor
     // to avoid potential stale state from previous edits
     setSelectedSeasons([]);
     
-    if (playerSeasons.length > 0) {
-      // Map seasons from player's seasons - only include valid season IDs
-      // This fixes the root cause of the issue where player IDs (56-71) were 
+    if (playerSeasons.length > 0 && seasons.length > 0) {
+      // Create a set of valid season IDs from the actual seasons table
+      const validSeasonIdsSet = new Set(seasons.map(s => s.id));
+      
+      // Map seasons from player's seasons - only include IDs that exist in the seasons table
+      // This fixes the root cause of the issue where other IDs (like player IDs) were 
       // being incorrectly included in the seasonIds array
       const validSeasonIds = playerSeasons
-        .filter(season => typeof season.id === 'number' && season.id > 0 && season.id < 10)
+        .filter(season => typeof season.id === 'number' && validSeasonIdsSet.has(season.id))
         .map(season => season.id);
       
-      console.log("Setting player seasons from API (filtered):", validSeasonIds);
+      console.log("Setting player seasons from API (properly validated):", validSeasonIds);
       setSelectedSeasons(validSeasonIds);
     } else if (seasons.length > 0 && !isEditing) {
       // For new players, select the active season by default

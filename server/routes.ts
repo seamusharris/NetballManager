@@ -568,7 +568,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                      .filter(id => typeof id === 'number' && !isNaN(id))
           : [];
           
-        console.log("Season IDs from request (validated):", seasonIds);
+        console.log("Season IDs from request (converted to numbers):", seasonIds);
         
         // Remove from player data as it's not part of the player schema
         delete updateData.seasonIds;
