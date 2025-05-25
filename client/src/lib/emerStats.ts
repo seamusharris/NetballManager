@@ -120,14 +120,17 @@ export async function savePositionStat(
     const cleanData = validation.data;
     
     // Get all the current stats for this game to find the one we need
-    const response = await apiRequest('GET', `/api/games/${gameId}/stats`);
-    
-    if (!response.ok) {
-      console.error(`Could not get existing stats for game ${gameId}`);
+    let existingStats;
+    try {
+      existingStats = await apiRequest('GET', `/api/games/${gameId}/stats`);
+      if (!existingStats || !Array.isArray(existingStats)) {
+        console.error(`Could not get existing stats for game ${gameId} or response is not an array`);
+        return false;
+      }
+    } catch (error) {
+      console.error(`Error fetching stats for game ${gameId}:`, error);
       return false;
     }
-    
-    const existingStats = await response.json();
     
     // Find the stat for this position/quarter combination
     const targetStat = existingStats.find(
@@ -144,22 +147,13 @@ export async function savePositionStat(
       console.log(`Sending clean data to update ${positionName} Q${quarter}:`, cleanData);
       
       // Use the correct endpoint with apiRequest
-      const updateResponse = await apiRequest('PATCH', `/api/games/stats/${targetStat.id}`, cleanData);
-      
-      success = updateResponse.ok;
-      
-      if (success) {
+      try {
+        await apiRequest('PATCH', `/api/games/stats/${targetStat.id}`, cleanData);
+        success = true;
         console.log(`Successfully updated ${positionName} Q${quarter} stats`);
-      } else {
-        console.error(`Failed to update ${positionName} Q${quarter} stats: ${updateResponse.status}`);
-        
-        try {
-          // Try to get more details about the error
-          const errorText = await updateResponse.text();
-          console.error(`Error details: ${errorText}`);
-        } catch (e) {
-          // Continue if we can't get error details
-        }
+      } catch (error) {
+        console.error(`Failed to update ${positionName} Q${quarter} stats:`, error);
+        success = false;
       }
     } else {
       // Create new stat
@@ -185,22 +179,13 @@ export async function savePositionStat(
       console.log(`Sending new stat data for ${positionName} Q${quarter}:`, newStat);
       
       // Use the correct endpoint with apiRequest
-      const createResponse = await apiRequest('POST', '/api/games/stats', newStat);
-      
-      success = createResponse.ok;
-      
-      if (success) {
+      try {
+        await apiRequest('POST', '/api/games/stats', newStat);
+        success = true;
         console.log(`Successfully created new ${positionName} Q${quarter} stats`);
-      } else {
-        console.error(`Failed to create ${positionName} Q${quarter} stats: ${createResponse.status}`);
-        
-        try {
-          // Try to get more details about the error
-          const errorText = await createResponse.text();
-          console.error(`Error details: ${errorText}`);
-        } catch (e) {
-          // Continue if we can't get error details
-        }
+      } catch (error) {
+        console.error(`Failed to create ${positionName} Q${quarter} stats:`, error);
+        success = false;
       }
     }
     
