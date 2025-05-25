@@ -75,7 +75,7 @@ function Router() {
           {(params) => (
             <ErrorBoundary>
               <Suspense fallback={<LoadingSpinner message="Loading debugging tools..." />}>
-                <StatsDebug id={params.id} />
+                <StatsDebug id={parseInt(params.id, 10)} />
               </Suspense>
             </ErrorBoundary>
           )}
