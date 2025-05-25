@@ -1116,7 +1116,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Batch endpoint to get stats for multiple games at once
   app.get("/api/games/stats/batch", async (req, res) => {
     try {
-      const gameIds = req.query.ids ? String(req.query.ids).split(',').map(id => parseInt(id, 10)) : [];
+      const gameIds = req.query.gameIds ? String(req.query.gameIds).split(',').map(id => parseInt(id, 10)) : [];
       
       if (!gameIds.length) {
         return res.status(400).json({ error: "No game IDs provided" });
