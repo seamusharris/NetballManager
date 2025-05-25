@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -6,6 +6,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
+import { useQuery } from "@tanstack/react-query";
+import { Season } from "@shared/schema";
 
 interface PlayerSeasonsManagerProps {
   player: any;
@@ -21,9 +23,20 @@ export default function PlayerSeasonsManager({
   onClose 
 }: PlayerSeasonsManagerProps) {
   const { toast } = useToast();
-  const [selectedSeasons, setSelectedSeasons] = useState<number[]>(
-    player.seasons?.map((s: any) => s.id) || []
-  );
+  const [selectedSeasons, setSelectedSeasons] = useState<number[]>([]);
+  
+  // Fetch player's current seasons
+  const { data: playerSeasons = [] } = useQuery<Season[]>({
+    queryKey: [`/api/players/${player.id}/seasons`],
+    enabled: isOpen && !!player?.id,
+  });
+  
+  // Update selected seasons when player seasons are loaded
+  useEffect(() => {
+    if (playerSeasons && playerSeasons.length > 0) {
+      setSelectedSeasons(playerSeasons.map(season => season.id));
+    }
+  }, [playerSeasons]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Handler for season selection changes
@@ -51,7 +64,8 @@ export default function PlayerSeasonsManager({
       });
       
       if (!response.ok) {
-        throw new Error(`Failed to update seasons: ${response.statusText}`);
+        const errorText = await response.text();
+        throw new Error(`Failed to update seasons: ${errorText}`);
       }
       
       // Success! Show a toast and refresh the data
@@ -60,12 +74,15 @@ export default function PlayerSeasonsManager({
         description: "Player seasons updated successfully"
       });
       
-      // Refresh player data
+      // Invalidate relevant queries
       queryClient.invalidateQueries({ queryKey: ['/api/players'] });
+      queryClient.invalidateQueries({ queryKey: [`/api/players/${player.id}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/players/${player.id}/seasons`] });
       
       // Close the dialog
       onClose();
     } catch (error: any) {
+      console.error("Error updating player seasons:", error);
       toast({
         title: "Error",
         description: error.message || "Failed to update player seasons",

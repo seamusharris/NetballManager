@@ -484,6 +484,14 @@ export default function PlayerDetails() {
               variant="outline" 
               size="sm" 
               className="flex items-center" 
+              onClick={() => setIsSeasonManagerOpen(true)}
+            >
+              <Calendar className="h-4 w-4 mr-1" /> Manage Seasons
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="flex items-center" 
               onClick={handleEditPlayer}
             >
               <Edit className="h-4 w-4 mr-1" /> Edit
@@ -1062,6 +1070,32 @@ export default function PlayerDetails() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Season Manager Modal */}
+      {isSeasonManagerOpen && player && (
+        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center overflow-y-auto">
+          <div className="relative bg-white dark:bg-slate-900 p-6 rounded-lg max-w-lg w-full max-h-[90vh] overflow-y-auto">
+            <button 
+              className="absolute right-4 top-4 rounded-sm opacity-70 text-gray-600 hover:opacity-100" 
+              onClick={() => setIsSeasonManagerOpen(false)}
+            >
+              ✕
+              <span className="sr-only">Close</span>
+            </button>
+            
+            <h2 className="text-xl font-semibold mb-2">Manage Seasons</h2>
+            <p className="text-sm text-gray-500 mb-4">
+              Select which seasons {player.displayName} is participating in.
+            </p>
+            <PlayerSeasonsManager 
+              player={player}
+              seasons={seasons}
+              isOpen={isSeasonManagerOpen}
+              onClose={() => setIsSeasonManagerOpen(false)}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Edit Player Modal */}
       {isEditModalOpen && player && (
