@@ -20,10 +20,16 @@ export interface IStorage {
 
   // Player methods
   getPlayers(): Promise<Player[]>;
+  getPlayersBySeason(seasonId: number): Promise<Player[]>;
   getPlayer(id: number): Promise<Player | undefined>;
-  createPlayer(player: InsertPlayer): Promise<Player>;
-  updatePlayer(id: number, player: Partial<InsertPlayer>): Promise<Player | undefined>;
+  createPlayer(player: InsertPlayer, seasonIds?: number[]): Promise<Player>;
+  updatePlayer(id: number, player: Partial<InsertPlayer>, seasonIds?: number[]): Promise<Player | undefined>;
   deletePlayer(id: number): Promise<boolean>;
+  
+  // Player-Season relationship methods
+  getPlayerSeasons(playerId: number): Promise<number[]>; // Returns array of season IDs
+  addPlayerToSeason(playerId: number, seasonId: number): Promise<boolean>;
+  removePlayerFromSeason(playerId: number, seasonId: number): Promise<boolean>;
   
   // Opponent methods
   getOpponents(): Promise<Opponent[]>;

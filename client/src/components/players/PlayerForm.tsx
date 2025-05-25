@@ -20,8 +20,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { insertPlayerSchema, Position, Player, allPositions } from "@shared/schema";
+import { Checkbox } from "@/components/ui/checkbox";
+import { insertPlayerSchema, Position, Player, Season, allPositions } from "@shared/schema";
 import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 
 // Extend the schema for the form validation
 const formSchema = insertPlayerSchema.extend({
@@ -31,6 +33,7 @@ const formSchema = insertPlayerSchema.extend({
   position2: z.string().default("none"),
   position3: z.string().default("none"),
   position4: z.string().default("none"),
+  seasonIds: z.array(z.number()).optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
