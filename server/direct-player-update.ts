@@ -74,7 +74,7 @@ export async function directUpdatePlayer(req: Request, res: Response) {
            first_name = $2,
            last_name = $3,
            date_of_birth = $4,
-           position_preferences = $5,
+           position_preferences = $5::jsonb,
            active = $6
        WHERE id = $7
        RETURNING *`,
@@ -83,7 +83,7 @@ export async function directUpdatePlayer(req: Request, res: Response) {
         firstName,
         lastName,
         dateOfBirth,
-        positionPreferences,
+        JSON.stringify(positionPreferences),
         active,
         playerId
       ]
