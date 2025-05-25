@@ -46,10 +46,10 @@ export default function Players() {
   // Create new player mutation
   const createMutation = useMutation({
     mutationFn: async (newPlayer: any) => {
-      console.log("Creating new player:", newPlayer);
+      console.log("Creating player:", newPlayer);
       // Send the player data directly in the format expected by the server
-      const res = await apiRequest('POST', '/api/players', newPlayer);
-      return res.json();
+      // apiRequest already returns the parsed JSON response
+      return await apiRequest('POST', '/api/players', newPlayer);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/players'] });
@@ -95,8 +95,8 @@ export default function Players() {
   // Delete player mutation
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
-      const res = await apiRequest('DELETE', `/api/players/${id}`, {});
-      return res.json();
+      // DELETE requests typically don't return a response body
+      return await apiRequest('DELETE', `/api/players/${id}`, {});
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/players'] });
