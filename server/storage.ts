@@ -101,10 +101,54 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createPlayer(insertPlayer: InsertPlayer): Promise<Player> {
-    // Check if a specific avatar color was provided (for import/export)
-    let avatarColor = insertPlayer.avatarColor;
+    // Get existing player colors to avoid duplicates
+    const existingPlayers = await this.getPlayers();
+    const usedColors = existingPlayers.map(p => p.avatarColor).filter(Boolean);
     
-    // Create the player with all properties
+    // Define our color palette for players
+    const avatarColors = [
+      'bg-blue-600',    // Blue
+      'bg-purple-600',  // Purple
+      'bg-pink-600',    // Pink
+      'bg-green-600',   // Green
+      'bg-teal-600',    // Teal
+      'bg-indigo-600',  // Indigo
+      'bg-orange-500',  // Orange
+      'bg-red-500',     // Red
+      'bg-yellow-600',  // Yellow
+      'bg-cyan-600',    // Cyan
+      'bg-amber-600',   // Amber
+      'bg-lime-600',    // Lime
+      'bg-emerald-600', // Emerald
+      'bg-violet-600',  // Violet
+      'bg-fuchsia-600', // Fuchsia
+      'bg-rose-600',    // Rose
+      'bg-blue-700',    // Dark Blue
+      'bg-purple-700',  // Dark Purple
+      'bg-green-700',   // Dark Green
+      'bg-red-700',     // Dark Red
+    ];
+    
+    // Determine the avatar color
+    let avatarColor: string;
+    
+    // If specific color provided and not "auto", use it
+    if (insertPlayer.avatarColor && 
+        insertPlayer.avatarColor !== 'auto' && 
+        insertPlayer.avatarColor !== '') {
+      avatarColor = insertPlayer.avatarColor;
+    } else {
+      // Otherwise, pick an unused color or random one if all are used
+      const unusedColors = avatarColors.filter(color => !usedColors.includes(color));
+      
+      if (unusedColors.length > 0) {
+        avatarColor = unusedColors[Math.floor(Math.random() * unusedColors.length)];
+      } else {
+        avatarColor = avatarColors[Math.floor(Math.random() * avatarColors.length)];
+      }
+    }
+    
+    // Create the player with all properties including avatar color
     const [player] = await db
       .insert(players)
       .values({
@@ -114,50 +158,10 @@ export class DatabaseStorage implements IStorage {
         dateOfBirth: insertPlayer.dateOfBirth || null,
         positionPreferences: insertPlayer.positionPreferences as any, // Cast to any to bypass TS checking
         active: insertPlayer.active !== undefined ? insertPlayer.active : true,
-        // Include the avatar color if provided
-        ...(avatarColor ? { avatarColor } : {})
+        avatarColor // Always include avatar color
       })
       .returning();
     
-    // If no color was provided, generate one deterministically
-    if (!avatarColor) {
-      // This matches the original color mapping used in the application
-      // Extended with additional colors to ensure new players get distinct colors
-      const avatarColors = [
-        'bg-blue-600',    // Blue
-        'bg-purple-600',  // Purple
-        'bg-pink-600',    // Pink
-        'bg-green-600',   // Green
-        'bg-accent',      // Accent (teal)
-        'bg-secondary',   // Secondary
-        'bg-orange-500',  // Orange
-        'bg-primary',     // Primary
-        'bg-red-500',     // Red
-        'bg-yellow-600',  // Yellow
-        'bg-indigo-600',  // Indigo
-        'bg-cyan-600',    // Cyan
-        'bg-amber-600',   // Amber
-        'bg-lime-600',    // Lime
-        'bg-emerald-600', // Emerald
-        'bg-violet-600',  // Violet
-        'bg-fuchsia-600', // Fuchsia
-        'bg-rose-600',    // Rose
-      ];
-      
-      // Use the same deterministic assignment based on player ID
-      avatarColor = avatarColors[player.id % avatarColors.length];
-      
-      // Update the player with the generated avatar color
-      const [updatedPlayer] = await db
-        .update(players)
-        .set({ avatarColor })
-        .where(eq(players.id, player.id))
-        .returning();
-      
-      return updatedPlayer;
-    }
-    
-    // If color was provided, return the player as is
     return player;
   }
 

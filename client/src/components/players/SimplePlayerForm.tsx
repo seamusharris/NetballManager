@@ -40,6 +40,11 @@ export default function SimplePlayerForm({ onSubmit, onCancel, isSubmitting }: S
       positionPreferences.push(position4 as Position);
     }
     
+    // Prevent submitting the form if it's already submitting
+    if (isSubmitting) {
+      return;
+    }
+    
     // For new players, we'll create their avatar color when they're created
     // The actual color assignment will happen server-side based on their ID
     onSubmit({
