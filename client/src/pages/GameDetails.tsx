@@ -1410,14 +1410,20 @@ export default function GameDetails() {
                   {isEditingAward ? (
                     <div className="space-y-4">
                       <Select
-                        value={selectedAwardWinner?.toString() || ''}
-                        onValueChange={(value) => setSelectedAwardWinner(value ? parseInt(value, 10) : null)}
+                        value={selectedAwardWinner ? selectedAwardWinner.toString() : "none"}
+                        onValueChange={(value) => {
+                          if (value === "none") {
+                            setSelectedAwardWinner(null);
+                          } else {
+                            setSelectedAwardWinner(parseInt(value, 10));
+                          }
+                        }}
                       >
                         <SelectTrigger className="w-full">
                           <SelectValue placeholder="Select player..." />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">No award winner</SelectItem>
+                          <SelectItem value="none">No award winner</SelectItem>
                           {roster && roster.length > 0 ? (
                             // Get unique players from roster
                             Array.from(new Set(roster.map(r => r.playerId)))
@@ -1430,7 +1436,7 @@ export default function GameDetails() {
                                 ) : null;
                               })
                           ) : (
-                            <SelectItem value="" disabled>No players in roster</SelectItem>
+                            <SelectItem value="no-players" disabled>No players in roster</SelectItem>
                           )}
                         </SelectContent>
                       </Select>
@@ -1442,7 +1448,8 @@ export default function GameDetails() {
                           const player = players?.find(p => p.id === game.awardWinnerId);
                           if (!player) return <div className="text-gray-500 italic">Player not found</div>;
                           
-                          const playerColor = getPlayerColor(players || [], player.id);
+                          // Get player's color from their avatarColor property
+                          const playerColor = player.avatarColor || "#6366f1";
                           return (
                             <div className="flex items-center space-x-2">
                               <div 
