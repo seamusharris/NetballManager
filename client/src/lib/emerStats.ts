@@ -189,8 +189,8 @@ export async function savePositionStat(
       // Additional log for debugging
       console.log(`Sending new stat data for ${positionName} Q${quarter}:`, newStat);
       
-      // IMPORTANT: Use the correct endpoint with no hyphen
-      const createResponse = await fetch('/api/gamestats', {
+      // Use the correct endpoint
+      const createResponse = await fetch('/api/games/stats', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
