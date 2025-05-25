@@ -384,6 +384,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch players" });
     }
   });
+  
+  // Player-seasons relationships endpoints
+  app.post("/api/players/:id/seasons", async (req, res) => {
+    try {
+      // Import the player-season route handler function
+      const { updatePlayerSeasonRelationships } = await import('./player-season-routes');
+      
+      // Call the handler with the request and response objects
+      await updatePlayerSeasonRelationships(req, res);
+    } catch (error) {
+      console.error("Error handling player-seasons update request:", error);
+      res.status(500).json({ 
+        message: "Failed to update player seasons", 
+        error: error instanceof Error ? error.message : "Unknown error" 
+      });
+    }
+  });
+  
+  // GET endpoint to retrieve player's seasons
+  app.get("/api/players/:id/seasons", async (req, res) => {
+    try {
+      // Import the player-season route handler function
+      const { getPlayerSeasons } = await import('./player-season-routes');
+      
+      // Call the handler with the request and response objects
+      await getPlayerSeasons(req, res);
+    } catch (error) {
+      console.error("Error handling player-seasons fetch request:", error);
+      res.status(500).json({ 
+        message: "Failed to get player seasons", 
+        error: error instanceof Error ? error.message : "Unknown error" 
+      });
+    }
+  });
 
   app.get("/api/players/:id", async (req, res) => {
     try {
