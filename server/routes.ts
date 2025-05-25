@@ -396,6 +396,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get players by season
+  app.get("/api/players/season/:seasonId", async (req, res) => {
+    try {
+      const seasonId = Number(req.params.seasonId);
+      const players = await storage.getPlayersBySeason(seasonId);
+      res.json(players);
+    } catch (error) {
+      console.error("Failed to fetch players by season:", error);
+      res.status(500).json({ message: "Failed to fetch players by season" });
+    }
+  });
+  
+  // Get seasons for a player
+  app.get("/api/players/:id/seasons", async (req, res) => {
+    try {
+      const playerId = Number(req.params.id);
+      const seasonIds = await storage.getPlayerSeasons(playerId);
+      res.json({ seasonIds });
+    } catch (error) {
+      console.error("Failed to fetch player seasons:", error);
+      res.status(500).json({ message: "Failed to fetch player seasons" });
+    }
+  });
+
   app.post("/api/players", async (req, res) => {
     try {
       // Check if we're doing an import operation (with ID) or regular create
@@ -439,8 +463,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
+      // Extract season IDs if provided
+      const seasonIds = req.body.seasonIds || [];
+      
       // Pass the enhanced data to the storage layer
-      const player = await storage.createPlayer(playerData);
+      const player = await storage.createPlayer(playerData, seasonIds);
       res.status(201).json(player);
     } catch (error) {
       console.error("Failed to create player:", error);
@@ -454,6 +481,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Get the update data
       const updateData = req.body;
+      
+      // Extract season IDs if provided
+      const seasonIds = req.body.seasonIds;
+      delete updateData.seasonIds; // Remove from update data as it's handled separately
       
       // If avatar color is set to auto or empty, handle it properly
       if (updateData.avatarColor === 'auto' || updateData.avatarColor === '') {
@@ -487,12 +518,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      const updatedPlayer = await storage.updatePlayer(id, updateData);
+      const updatedPlayer = await storage.updatePlayer(id, updateData, seasonIds);
       if (!updatedPlayer) {
         return res.status(404).json({ message: "Player not found" });
       }
       res.json(updatedPlayer);
     } catch (error) {
+      console.error("Failed to update player:", error);
       res.status(500).json({ message: "Failed to update player" });
     }
   });

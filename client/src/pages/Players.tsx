@@ -42,48 +42,40 @@ export default function Players() {
     queryKey: ['/api/seasons'],
   });
   
-  // Get all players
-  const { data: allPlayers = [], isLoading } = useQuery<Player[]>({
-    queryKey: ['/api/players'],
+  // Get players - either all players or filtered by season
+  const { data: players = [], isLoading } = useQuery<Player[]>({
+    queryKey: ['/api/players', selectedSeasonId ? `season/${selectedSeasonId}` : 'all'],
+    queryFn: async () => {
+      if (selectedSeasonId) {
+        // Fetch players for the selected season
+        const response = await fetch(`/api/players/season/${selectedSeasonId}`);
+        if (!response.ok) throw new Error('Failed to fetch players by season');
+        return response.json();
+      } else {
+        // Fetch all players
+        const response = await fetch('/api/players');
+        if (!response.ok) throw new Error('Failed to fetch players');
+        return response.json();
+      }
+    }
   });
   
-  // Get player-season relationships to filter players by season
-  const { data: playerSeasons = [] } = useQuery<{playerId: number, seasonId: number}[]>({
-    queryKey: ['/api/players/seasons'],
-    // This endpoint would be implemented in the backend
-    enabled: !!selectedSeasonId, // Only fetch when a season is selected
-  });
-  
-  // Filter players by selected season if needed
-  const players = useMemo(() => {
-    if (!selectedSeasonId) return allPlayers;
-    
-    // In reality this data would come from the API
-    // For now we'll just return all players since the backend isn't implemented yet
-    return allPlayers;
-    
-    // When the API is implemented, we would filter like this:
-    // const playerIdsInSeason = playerSeasons
-    //   .filter(ps => ps.seasonId === selectedSeasonId)
-    //   .map(ps => ps.playerId);
-    // return allPlayers.filter(player => playerIdsInSeason.includes(player.id));
-  }, [selectedSeasonId, allPlayers, playerSeasons]);
-  
-  // Query to get player's seasons (would be implemented on the backend)
-  const { data: playerSeasonAssociations = [] } = useQuery<{ playerId: number, seasonId: number }[]>({
-    queryKey: ['/api/players/seasons', editingPlayer?.id],
-    enabled: !!editingPlayer,
-    // In a real implementation, this would make an API call
+  // Query to get seasons for a specific player
+  const { data: editingPlayerSeasonData, isLoading: isLoadingPlayerSeasons } = useQuery<{ seasonIds: number[] }>({
+    queryKey: ['/api/players', editingPlayer?.id, 'seasons'],
+    queryFn: async () => {
+      if (!editingPlayer) return { seasonIds: [] };
+      const response = await fetch(`/api/players/${editingPlayer.id}/seasons`);
+      if (!response.ok) throw new Error('Failed to fetch player seasons');
+      return response.json();
+    },
+    enabled: !!editingPlayer
   });
   
   // Extract the season IDs associated with the editing player
   const editingPlayerSeasonIds = useMemo(() => {
-    if (!editingPlayer) return [];
-    // Filter to just get this player's season IDs
-    return playerSeasonAssociations
-      .filter(assoc => assoc.playerId === editingPlayer.id)
-      .map(assoc => assoc.seasonId);
-  }, [editingPlayer, playerSeasonAssociations]);
+    return editingPlayerSeasonData?.seasonIds || [];
+  }, [editingPlayerSeasonData]);
 
   // Find the player to edit if an edit ID is provided in the URL
   useEffect(() => {
