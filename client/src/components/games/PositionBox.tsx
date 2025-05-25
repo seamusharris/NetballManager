@@ -15,22 +15,11 @@ export const PositionBox: React.FC<PositionBoxProps> = ({
   playerColor,
   playerStats
 }) => {
-  // Determine position color for unassigned positions
-  const getPositionColor = (pos: Position) => {
-    switch(pos) {
-      case 'GS': return '#e11d48'; // red-600
-      case 'GA': return '#ea580c'; // orange-600
-      case 'WA': return '#ca8a04'; // yellow-600
-      case 'C': return '#16a34a';  // green-600 
-      case 'WD': return '#0284c7'; // sky-600
-      case 'GD': return '#7c3aed'; // violet-600
-      case 'GK': return '#9333ea'; // purple-600
-      default: return '#64748b'; // slate-500
-    }
-  };
-
-  // Use player color if player assigned, otherwise use position color
-  const displayColor = playerName ? playerColor : getPositionColor(position);
+  // Always use red for unassigned positions
+  const unassignedColor = '#e11d48'; // red-600
+  
+  // Use player color if player assigned, otherwise use red for unassigned
+  const displayColor = playerName ? playerColor : unassignedColor;
   
   return (
     <div 
