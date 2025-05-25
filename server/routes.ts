@@ -481,6 +481,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // For new players, ensure they have a unique avatar color
       const playerData = parsedData.data;
       
+      // Ensure position preferences are properly structured as an array
+      if (playerData.positionPreferences) {
+        // Make sure it's a clean array of strings
+        if (Array.isArray(playerData.positionPreferences)) {
+          playerData.positionPreferences = [...playerData.positionPreferences]; // Create a clean copy
+          console.log("Position preferences array for new player:", JSON.stringify(playerData.positionPreferences));
+        } else {
+          console.error("Invalid position preferences format for new player:", playerData.positionPreferences);
+          // Set to empty array if invalid
+          playerData.positionPreferences = [];
+        }
+      } else {
+        playerData.positionPreferences = [];
+      }
+      
       // If no specific avatar color is provided, generate one (with more inclusive check for empty strings and null)
       if (!playerData.avatarColor || playerData.avatarColor === 'auto' || playerData.avatarColor === '') {
         // Get existing player colors to avoid duplicates
@@ -598,10 +613,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Import the specialized function for direct SQL update
           const { updatePlayerDirect } = await import('./direct-player-operations');
           
-          // Ensure position preferences are properly typed
+          // Ensure position preferences are properly typed and structured as an array
           let positionPreferences = currentPlayer.positionPreferences;
           if (updateData.positionPreferences) {
-            positionPreferences = updateData.positionPreferences;
+            // Make sure it's an array of strings, not some other format that causes JSON errors
+            if (Array.isArray(updateData.positionPreferences)) {
+              positionPreferences = [...updateData.positionPreferences]; // Create a clean copy
+              console.log("Position preferences array:", JSON.stringify(positionPreferences));
+            } else {
+              console.error("Invalid position preferences format:", updateData.positionPreferences);
+              // Fall back to current preferences if the new ones are invalid
+            }
           }
           
           // Clean updateData for direct update

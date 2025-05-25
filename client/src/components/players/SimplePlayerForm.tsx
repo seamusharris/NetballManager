@@ -77,6 +77,8 @@ export default function SimplePlayerForm({ onSubmit, onCancel, isSubmitting }: S
       positionPreferences.push(position4);
     }
     
+    console.log("Position preferences array in SimplePlayerForm:", JSON.stringify(positionPreferences));
+    
     // For new players, we'll create their avatar color when they're created
     // The actual color assignment will happen server-side based on their ID, but we need to indicate we want one
     onSubmit({
