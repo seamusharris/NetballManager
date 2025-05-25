@@ -393,8 +393,8 @@ export default function PlayerDetails() {
   // Mutation for updating the player
   const updateMutation = useMutation({
     mutationFn: async (updatedPlayer: any) => {
-      // Wrap the player data in a player object as expected by the server route
-      return apiRequest('PATCH', `/api/players/${playerId}`, { player: updatedPlayer });
+      // Send the player data directly without wrapping
+      return apiRequest('PATCH', `/api/players/${playerId}`, updatedPlayer);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/players/${playerId}`] });
@@ -421,10 +421,8 @@ export default function PlayerDetails() {
   };
   
   const handleUpdatePlayer = (data: any) => {
-    // Ensure no season data is sent to the server
-    const { seasonIds, ...playerDataWithoutSeasons } = data;
-    console.log("Updating player without seasons:", playerDataWithoutSeasons);
-    updateMutation.mutate(playerDataWithoutSeasons);
+    console.log("Updating player:", data);
+    updateMutation.mutate(data);
   };
 
   // Get the player's avatar color
