@@ -6,10 +6,11 @@ import {
   rosters, type Roster, type InsertRoster,
   gameStats, type GameStat, type InsertGameStat,
   seasons, type Season, type InsertSeason,
+  playerSeasons,
   type Position
 } from "../shared/schema";
 import { db } from "./db";
-import { eq, desc, and, isNull } from "drizzle-orm";
+import { eq, desc, and, isNull, inArray, sql } from "drizzle-orm";
 
 // Storage interface
 export interface IStorage {
@@ -100,13 +101,27 @@ export class DatabaseStorage implements IStorage {
   async getPlayers(): Promise<Player[]> {
     return await db.select().from(players);
   }
+  
+  async getPlayersBySeason(seasonId: number): Promise<Player[]> {
+    // Query players that are associated with the given season
+    const result = await db
+      .select({
+        player: players
+      })
+      .from(playerSeasons)
+      .where(eq(playerSeasons.seasonId, seasonId))
+      .innerJoin(players, eq(playerSeasons.playerId, players.id));
+    
+    // Map to return just the player objects
+    return result.map(row => row.player);
+  }
 
   async getPlayer(id: number): Promise<Player | undefined> {
     const [player] = await db.select().from(players).where(eq(players.id, id));
     return player || undefined;
   }
 
-  async createPlayer(insertPlayer: InsertPlayer): Promise<Player> {
+  async createPlayer(insertPlayer: InsertPlayer, seasonIds?: number[]): Promise<Player> {
     // Check if a specific avatar color was provided (for import/export)
     let avatarColor = insertPlayer.avatarColor;
     
@@ -160,14 +175,41 @@ export class DatabaseStorage implements IStorage {
         .where(eq(players.id, player.id))
         .returning();
       
-      return updatedPlayer;
+      player.avatarColor = updatedPlayer.avatarColor;
     }
     
-    // If color was provided, return the player as is
+    // Add player to selected seasons if provided
+    if (seasonIds && seasonIds.length > 0) {
+      // Create player-season entries
+      const playerSeasonEntries = seasonIds.map(seasonId => ({
+        playerId: player.id,
+        seasonId
+      }));
+      
+      try {
+        await db.insert(playerSeasons).values(playerSeasonEntries);
+      } catch (error) {
+        console.error('Failed to add player to seasons:', error);
+      }
+    } else {
+      // If no seasons provided, add to active season by default
+      const activeSeason = await this.getActiveSeason();
+      if (activeSeason) {
+        try {
+          await db.insert(playerSeasons).values({
+            playerId: player.id,
+            seasonId: activeSeason.id
+          });
+        } catch (error) {
+          console.error('Failed to add player to active season:', error);
+        }
+      }
+    }
+    
     return player;
   }
 
-  async updatePlayer(id: number, updatePlayer: Partial<InsertPlayer>): Promise<Player | undefined> {
+  async updatePlayer(id: number, updatePlayer: Partial<InsertPlayer>, seasonIds?: number[]): Promise<Player | undefined> {
     // Handle type-safe update to avoid TS errors
     const updateData: Record<string, any> = {};
     
@@ -184,15 +226,70 @@ export class DatabaseStorage implements IStorage {
       .set(updateData)
       .where(eq(players.id, id))
       .returning();
+    
+    // Update player seasons if provided
+    if (seasonIds && updated) {
+      // First remove existing season associations
+      await db.delete(playerSeasons).where(eq(playerSeasons.playerId, id));
+      
+      // Then add new season associations
+      if (seasonIds.length > 0) {
+        const playerSeasonEntries = seasonIds.map(seasonId => ({
+          playerId: id,
+          seasonId
+        }));
+        
+        try {
+          await db.insert(playerSeasons).values(playerSeasonEntries);
+        } catch (error) {
+          console.error('Failed to update player seasons:', error);
+        }
+      }
+    }
+    
     return updated || undefined;
   }
 
   async deletePlayer(id: number): Promise<boolean> {
+    // Player-season associations will be deleted automatically due to CASCADE constraint
     const result = await db
       .delete(players)
       .where(eq(players.id, id))
       .returning({ id: players.id });
     return result.length > 0;
+  }
+  
+  // Player-Season relationship methods
+  async getPlayerSeasons(playerId: number): Promise<number[]> {
+    const result = await db
+      .select({ seasonId: playerSeasons.seasonId })
+      .from(playerSeasons)
+      .where(eq(playerSeasons.playerId, playerId));
+    
+    return result.map(row => row.seasonId);
+  }
+  
+  async addPlayerToSeason(playerId: number, seasonId: number): Promise<boolean> {
+    try {
+      await db.insert(playerSeasons).values({ playerId, seasonId });
+      return true;
+    } catch (error) {
+      console.error('Failed to add player to season:', error);
+      return false;
+    }
+  }
+  
+  async removePlayerFromSeason(playerId: number, seasonId: number): Promise<boolean> {
+    const result = await db
+      .delete(playerSeasons)
+      .where(
+        and(
+          eq(playerSeasons.playerId, playerId),
+          eq(playerSeasons.seasonId, seasonId)
+        )
+      );
+    
+    return result.count > 0;
   }
 
   // Opponent methods
