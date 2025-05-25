@@ -9,6 +9,7 @@ import { apiRequest } from '@/lib/queryClient';
 interface TeamPerformanceProps {
   games: Game[];
   className?: string;
+  activeSeason?: any; // Accept active season
 }
 
 export default function TeamPerformance({ games, className }: TeamPerformanceProps) {
