@@ -120,16 +120,14 @@ export async function savePositionStat(
     const cleanData = validation.data;
     
     // Get all the current stats for this game to find the one we need
-    try {
-      const response = await apiRequest('GET', `/api/games/${gameId}/stats`);
-      
-      if (!response.ok) {
-        console.error(`Could not get existing stats for game ${gameId}`);
-        return false;
-      }
-      
-      const existingStats = await response.json();
+    const response = await apiRequest('GET', `/api/games/${gameId}/stats`);
     
+    if (!response.ok) {
+      console.error(`Could not get existing stats for game ${gameId}`);
+      return false;
+    }
+    
+    const existingStats = await response.json();
     
     // Find the stat for this position/quarter combination
     const targetStat = existingStats.find(
@@ -145,14 +143,8 @@ export async function savePositionStat(
       // Additional log for debugging
       console.log(`Sending clean data to update ${positionName} Q${quarter}:`, cleanData);
       
-      // Use the correct endpoint
-      const updateResponse = await fetch(`/api/games/stats/${targetStat.id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(cleanData) // Use validated data
-      });
+      // Use the correct endpoint with apiRequest
+      const updateResponse = await apiRequest('PATCH', `/api/games/stats/${targetStat.id}`, cleanData);
       
       success = updateResponse.ok;
       
@@ -192,14 +184,8 @@ export async function savePositionStat(
       // Additional log for debugging
       console.log(`Sending new stat data for ${positionName} Q${quarter}:`, newStat);
       
-      // Use the correct endpoint
-      const createResponse = await fetch('/api/games/stats', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(newStat)
-      });
+      // Use the correct endpoint with apiRequest
+      const createResponse = await apiRequest('POST', '/api/games/stats', newStat);
       
       success = createResponse.ok;
       
