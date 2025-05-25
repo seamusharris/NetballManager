@@ -36,7 +36,7 @@ export const PositionBox: React.FC<PositionBoxProps> = ({
         <div className="font-semibold text-sm rounded bg-gray-100 px-1.5 py-0.5">{position}</div>
         <div 
           className="font-medium text-xs truncate ml-1 max-w-[70%]" 
-          style={{ color: isAssigned ? displayColor : 'white' }}
+          style={{ color: isAssigned ? displayColor : '#a5183d' }} /* Darker red for unassigned */
           title={playerName || 'Unassigned'}
         >
           {playerName || 'Unassigned'}
