@@ -993,6 +993,16 @@ export default function GameDetails() {
     enabled: !isNaN(gameId)
   });
   
+  // Fetch seasons data
+  const { data: seasons = [], isLoading: isLoadingSeasons } = useQuery<any[]>({
+    queryKey: ['/api/seasons'],
+  });
+  
+  // Fetch active season
+  const { data: activeSeason, isLoading: isLoadingActiveSeason } = useQuery<any>({
+    queryKey: ['/api/seasons/active'],
+  });
+  
   // Force refetch when component mounts or route changes
   useEffect(() => {
     if (gameId && !isNaN(gameId)) {

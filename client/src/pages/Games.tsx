@@ -37,6 +37,16 @@ export default function Games() {
     queryKey: ['/api/opponents'],
   });
   
+  // Fetch seasons data
+  const { data: seasons = [], isLoading: isLoadingSeasons } = useQuery<any[]>({
+    queryKey: ['/api/seasons'],
+  });
+  
+  // Fetch active season
+  const { data: activeSeason, isLoading: isLoadingActiveSeason } = useQuery<any>({
+    queryKey: ['/api/seasons/active'],
+  });
+  
   // Check for edit parameter in the URL and handle edit game loading
   useEffect(() => {
     if (games.length > 0) {
@@ -67,7 +77,7 @@ export default function Games() {
     }
   }, [games]);
   
-  const isLoading = isLoadingGames || isLoadingOpponents;
+  const isLoading = isLoadingGames || isLoadingOpponents || isLoadingSeasons || isLoadingActiveSeason;
   
   const createMutation = useMutation({
     mutationFn: async (newGame: any) => {
@@ -206,6 +216,8 @@ export default function Games() {
             <DialogTitle className="sr-only">Schedule New Game</DialogTitle>
             <GameForm 
               opponents={opponents as any[]}
+              seasons={seasons as any[]}
+              activeSeason={activeSeason}
               onSubmit={handleCreateGame} 
               isSubmitting={createMutation.isPending} 
             />
@@ -231,6 +243,8 @@ export default function Games() {
             <GameForm 
               game={editingGame || undefined}
               opponents={opponents as any[]}
+              seasons={seasons as any[]}
+              activeSeason={activeSeason}
               onSubmit={handleUpdateGame} 
               isSubmitting={updateMutation.isPending} 
             />

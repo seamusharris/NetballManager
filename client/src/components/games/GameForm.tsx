@@ -254,6 +254,37 @@ export default function GameForm({ game, opponents, seasons, activeSeason, onSub
           )}
         />
         
+        <FormField
+          control={form.control}
+          name="seasonId"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Season</FormLabel>
+              <Select 
+                onValueChange={field.onChange} 
+                defaultValue={field.value}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select season" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {seasons && seasons.map(season => (
+                    <SelectItem key={season.id} value={season.id.toString()}>
+                      {season.name} {season.isActive && '(Active)'}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormDescription>
+                Select which season this game belongs to
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
         <div className="flex justify-end space-x-2">
           <Button type="button" variant="outline" onClick={() => form.reset()}>
             Reset
