@@ -297,6 +297,67 @@ export default function Players() {
     createMutation.mutate(data);
   };
   
+  // Function to directly update just the player's seasons
+  const updatePlayerSeasons = (playerId: number, seasonIds: number[]) => {
+    console.log(`Directly updating seasons for player ${playerId}:`, seasonIds);
+    
+    return fetch(`/api/players/${playerId}/seasons`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ seasonIds })
+    })
+    .then(response => {
+      if (!response.ok) throw new Error("Failed to update seasons");
+      return response.json();
+    })
+    .then(() => {
+      toast({
+        title: "Success", 
+        description: "Player seasons updated successfully"
+      });
+      queryClient.invalidateQueries({queryKey: ['/api/players']});
+    })
+    .catch(error => {
+      toast({
+        title: "Error",
+        description: `Failed to update seasons: ${error.message}`,
+        variant: "destructive"
+      });
+      throw error;
+    });
+  };
+  
+  // Function to update just the basic player info
+  const updatePlayerInfo = (playerId: number, playerData: any) => {
+    console.log(`Directly updating info for player ${playerId}:`, playerData);
+    
+    return fetch(`/api/players/${playerId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(playerData)
+    })
+    .then(response => {
+      if (!response.ok) throw new Error("Failed to update player information");
+      return response.json();
+    })
+    .then(() => {
+      toast({
+        title: "Success", 
+        description: "Player information updated successfully"
+      });
+      queryClient.invalidateQueries({queryKey: ['/api/players']});
+    })
+    .catch(error => {
+      toast({
+        title: "Error",
+        description: `Failed to update player: ${error.message}`,
+        variant: "destructive"
+      });
+      throw error;
+    });
+  };
+  
+  // Main update handler
   const handleUpdatePlayer = (data: any) => {
     if (!editingPlayer) {
       console.error("No player being edited");
@@ -308,80 +369,31 @@ export default function Players() {
       return;
     }
     
-    // Simplify to just do a direct fetch call
-    console.log("Submitting player data manually:", {
+    // First handle the basic player info update
+    const playerInfo = {
       displayName: data.displayName || "",
       firstName: data.firstName || "",
       lastName: data.lastName || "",
       positionPreferences: Array.isArray(data.positionPreferences) ? data.positionPreferences : [],
-      active: Boolean(data.active),
-      seasonIds: Array.isArray(data.seasonIds) ? data.seasonIds : []
-    });
+      active: Boolean(data.active)
+    };
     
-    // First update basic player info
-    fetch(`/api/players/${editingPlayer.id}`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        displayName: data.displayName || "",
-        firstName: data.firstName || "",
-        lastName: data.lastName || "",
-        positionPreferences: Array.isArray(data.positionPreferences) ? data.positionPreferences : [],
-        active: Boolean(data.active)
+    // Two-step approach to isolate issues
+    updatePlayerInfo(editingPlayer.id, playerInfo)
+      .then(() => {
+        // Now that player info is updated, proceed with updating seasons
+        if (Array.isArray(data.seasonIds)) {
+          return updatePlayerSeasons(editingPlayer.id, data.seasonIds);
+        }
       })
-    })
-    .then(response => {
-      if (!response.ok) {
-        throw new Error('Failed to update player');
-      }
-      return response.json();
-    })
-    .then(() => {
-      // Now update seasons separately
-      console.log("Valid season IDs from API (for reference only):", Array.isArray(data.seasonIds) ? data.seasonIds : []);
-      console.log("Selected seasons for submission:", data.seasonIds);
-      
-      // Filter season IDs to ensure they are valid numbers
-      const validSeasonIds = Array.isArray(data.seasonIds) 
-        ? data.seasonIds.filter(id => !isNaN(parseInt(String(id))))
-        : [];
-        
-      console.log("Valid filtered season IDs for submission:", validSeasonIds);
-      
-      return fetch(`/api/players/${editingPlayer.id}/seasons`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          seasonIds: validSeasonIds
-        })
+      .then(() => {
+        // Final success - close the dialog
+        setEditingPlayer(null);
+      })
+      .catch(error => {
+        console.error("Update failed:", error);
+        // Error handling already done in the individual functions
       });
-    })
-    .then(response => {
-      if (!response.ok) {
-        throw new Error('Failed to update player seasons');
-      }
-      
-      // Success! Show success message and refresh data
-      toast({
-        title: "Success",
-        description: "Player updated successfully"
-      });
-      
-      queryClient.invalidateQueries({queryKey: ['/api/players']});
-      setEditingPlayer(null);
-    })
-    .catch(error => {
-      console.error("Error updating player:", error);
-      toast({
-        title: "Update Failed",
-        description: error.message || "An unknown error occurred",
-        variant: "destructive"
-      });
-    });
   };
   
   const handleDeletePlayer = (id: number) => {
