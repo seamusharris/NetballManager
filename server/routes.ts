@@ -645,9 +645,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      // Extract the season IDs if they were provided
-      const seasonIds = req.body.seasonIds || [];
-      delete playerData.seasonIds; // Remove from player data as it's not part of the player schema
+      // Season management is now handled separately, so we don't expect seasonIds here
+      const seasonIds = [];
+      // Remove seasonIds if it somehow exists in the request
+      delete playerData.seasonIds;
       
       // Create the player
       const player = await storage.createPlayer(playerData);
@@ -711,37 +712,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log("Player update data after extraction:", JSON.stringify(updateData, null, 2));
       
-      // Extract season IDs before updating player - simplified
+      // Season management is now handled separately on the player details page
+      // We don't expect seasonIds in the request anymore
       let processedSeasonIds = [];
-      if (updateData.seasonIds !== undefined) {
-        // Ensure season IDs are properly converted to numbers
-        const rawSeasonIds = updateData.seasonIds;
-        console.log("Raw season IDs from request:", rawSeasonIds);
-        
-        // Handle different formats of input with better error tolerance
-        if (Array.isArray(rawSeasonIds)) {
-          processedSeasonIds = rawSeasonIds
-            .map(sid => typeof sid === 'string' ? parseInt(sid, 10) : sid)
-            .filter(sid => typeof sid === 'number' && !isNaN(sid));
-        } else if (typeof rawSeasonIds === 'number') {
-          // Handle single number
-          processedSeasonIds = [rawSeasonIds];
-        } else if (typeof rawSeasonIds === 'string' && rawSeasonIds.trim() !== '') {
-          // Handle single string number
-          try {
-            const parsed = parseInt(rawSeasonIds, 10);
-            if (!isNaN(parsed)) {
-              processedSeasonIds = [parsed];
-            }
-          } catch (e) {
-            console.warn("Failed to parse season ID string:", rawSeasonIds);
-          }
-        }
-          
-        console.log("Season IDs processed:", processedSeasonIds);
-        // Remove seasonIds from updateData since we'll handle it separately
-        delete updateData.seasonIds;
-      }
+      
+      // Remove season IDs from player update data if it exists
+      delete updateData.seasonIds;
       console.log("==================================");
       
       // If avatar color is set to auto or empty, handle it properly
@@ -795,28 +771,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Player not found" });
       }
       
-      // Handle player-season relationships using our dedicated function from player-season-routes.ts
-      console.log(`Updating player-season relationships for player ${id} with processed season IDs:`, processedSeasonIds);
-      
-      try {
-        // Instead of importing from player-season-routes, use the function from db.ts directly
-        // This avoids any potential circular reference issues
-        const { updatePlayerSeasons } = await import('./db');
-        
-        // Use the function to update player-season relationships with more detailed logging
-        console.log(`Updating player ${id} seasons to: ${processedSeasonIds.join(', ')}`);
-        
-        const success = await updatePlayerSeasons(id, processedSeasonIds);
-        
-        if (success) {
-          console.log(`Successfully updated seasons for player ${id}`);
-        } else {
-          console.warn(`Failed to update seasons for player ${id}, but continuing with player update`);
-        }
-      } catch (seasonError) {
-        console.error(`Error updating player-season relationships:`, seasonError);
-        // Don't let this error prevent the player update from succeeding
-      }
+      // Season management is now handled separately on the player details page
+      // We don't need to update player-season relationships here anymore
+      console.log(`Player ${id} updated successfully. Season management is handled separately now.`);
 
       // Fetch the updated player with season info before returning
       try {
