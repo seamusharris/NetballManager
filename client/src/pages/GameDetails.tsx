@@ -1570,41 +1570,65 @@ export default function GameDetails() {
                             <div 
                               className="flex-1 flex items-center p-3 rounded-lg border-2"
                               style={{ 
-                                backgroundColor: '#f5f3ff',
+                                backgroundColor: awardWinner.avatarColor ? `${tailwindToHex(awardWinner.avatarColor)}10` : '#f5f3ff',
                                 borderColor: awardWinner.avatarColor ? tailwindToHex(awardWinner.avatarColor) : '#7c3aed'
                               }}
                             >
                               <div className="flex-1">
-                                <div className="text-lg font-bold text-violet-900">
+                                <div 
+                                  className="text-lg font-bold"
+                                  style={{ color: awardWinner.avatarColor ? tailwindToHex(awardWinner.avatarColor) : '#7c3aed' }}
+                                >
                                   {awardWinner.displayName || `${awardWinner.firstName} ${awardWinner.lastName}`}
                                 </div>
-                                <div className="text-sm text-violet-600">
+                                <div 
+                                  className="text-sm"
+                                  style={{ color: awardWinner.avatarColor ? tailwindToHex(awardWinner.avatarColor) : '#7c3aed' }}
+                                >
                                   Player of the Match
                                 </div>
                               </div>
                               
                               <div className="flex space-x-6">
                                 <div className="text-center">
-                                  <div className="text-2xl font-bold text-violet-800">
+                                  <div 
+                                    className="text-2xl font-bold"
+                                    style={{ color: awardWinner.avatarColor ? tailwindToHex(awardWinner.avatarColor) : '#7c3aed' }}
+                                  >
                                     {goals}
                                   </div>
-                                  <div className="text-xs text-violet-600">
+                                  <div 
+                                    className="text-xs"
+                                    style={{ color: awardWinner.avatarColor ? tailwindToHex(awardWinner.avatarColor) : '#7c3aed' }}
+                                  >
                                     Goals
                                   </div>
                                 </div>
                                 <div className="text-center">
-                                  <div className="text-2xl font-bold text-violet-800">
+                                  <div 
+                                    className="text-2xl font-bold"
+                                    style={{ color: awardWinner.avatarColor ? tailwindToHex(awardWinner.avatarColor) : '#7c3aed' }}
+                                  >
                                     {intercepts}
                                   </div>
-                                  <div className="text-xs text-violet-600">
+                                  <div 
+                                    className="text-xs"
+                                    style={{ color: awardWinner.avatarColor ? tailwindToHex(awardWinner.avatarColor) : '#7c3aed' }}
+                                  >
                                     Intercepts
                                   </div>
                                 </div>
                                 <div className="text-center">
-                                  <div className="text-2xl font-bold text-violet-800">
+                                  <div 
+                                    className="text-2xl font-bold"
+                                    style={{ color: awardWinner.avatarColor ? tailwindToHex(awardWinner.avatarColor) : '#7c3aed' }}
+                                  >
                                     {rebounds}
                                   </div>
-                                  <div className="text-xs text-violet-600">
+                                  <div 
+                                    className="text-xs"
+                                    style={{ color: awardWinner.avatarColor ? tailwindToHex(awardWinner.avatarColor) : '#7c3aed' }}
+                                  >
                                     Rebounds
                                   </div>
                                 </div>
