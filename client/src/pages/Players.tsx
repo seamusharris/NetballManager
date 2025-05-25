@@ -203,12 +203,33 @@ export default function Players() {
   const updatePlayerSeasonsMutation = useMutation({
     mutationFn: async ({ playerId, seasonIds }: { playerId: number, seasonIds: number[] }) => {
       console.log("Updating player seasons:", playerId, seasonIds);
-      const res = await apiRequest('POST', `/api/players/${playerId}/seasons`, { seasonIds });
-      return res.json();
+      try {
+        // Direct fetch approach for more reliable debugging
+        const response = await fetch(`/api/players/${playerId}/seasons`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ seasonIds }),
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Server responded with ${response.status}: ${response.statusText}`);
+        }
+        
+        return await response.json();
+      } catch (err) {
+        console.error("Error in player seasons update:", err);
+        throw err;
+      }
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/players'] });
-      console.log("Player seasons updated successfully");
+      console.log("Player seasons updated successfully:", data);
+      toast({
+        title: "Success",
+        description: "Player and seasons updated successfully",
+      });
     },
     onError: (error) => {
       console.error("Failed to update player seasons:", error);
@@ -244,19 +265,63 @@ export default function Players() {
     
     console.log("Sending update request with:", { id: editingPlayer.id, player: validPlayerData });
     
-    // Update the player first
-    updateMutation.mutate({ 
-      id: editingPlayer.id, 
-      player: validPlayerData 
-    }, {
-      onSuccess: () => {
-        // Then update the seasons using our dedicated endpoint
-        updatePlayerSeasonsMutation.mutate({
-          playerId: editingPlayer.id,
-          seasonIds
+    // First, directly update the seasons (most important part)
+    try {
+      console.log("Submitting player data manually:", validPlayerData);
+      console.log("Seasons to set:", seasonIds);
+      
+      // Directly call the seasons endpoint first with a direct fetch
+      fetch(`/api/players/${editingPlayer.id}/seasons`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ seasonIds }),
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`Server responded with ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+      })
+      .then(data => {
+        console.log("Season update successful:", data);
+        
+        // Now update the player details
+        updateMutation.mutate({ 
+          id: editingPlayer.id, 
+          player: validPlayerData 
         });
-      }
-    });
+      })
+      .catch(error => {
+        console.error("Error updating seasons:", error);
+        // Still try to update the player data
+        updateMutation.mutate({ 
+          id: editingPlayer.id, 
+          player: validPlayerData 
+        });
+        
+        toast({
+          title: "Warning",
+          description: "Player was updated but there was an issue with seasons. Please try again.",
+          variant: "destructive",
+        });
+      });
+    } catch (error) {
+      console.error("Failed to send request:", error);
+      
+      // Fallback to just updating the player
+      updateMutation.mutate({ 
+        id: editingPlayer.id, 
+        player: validPlayerData 
+      });
+      
+      toast({
+        title: "Warning",
+        description: "Could not connect to server for season update. Player data was still updated.",
+        variant: "destructive",
+      });
+    }
   };
   
   const handleDeletePlayer = (id: number) => {
