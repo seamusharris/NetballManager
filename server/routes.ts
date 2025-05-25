@@ -22,6 +22,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // put application routes here
   // prefix all routes with /api
   
+  // ----- DIAGNOSTIC APIs -----
+  
+  // Diagnostic endpoint for player-season relationship debugging
+  app.get('/api/diagnostic/player-seasons', async (req, res) => {
+    try {
+      const { diagnosePlayerSeasons } = await import('./diagnose-player-seasons');
+      await diagnosePlayerSeasons(req, res);
+    } catch (error) {
+      console.error("Error in player-seasons diagnostic endpoint:", error);
+      res.status(500).json({
+        success: false,
+        message: "Diagnostic failed",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
   // ----- DATA MANAGEMENT APIs -----
   
   // Clear all data for fresh import
