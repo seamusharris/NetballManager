@@ -649,7 +649,31 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
             const entry = rosterByQuarter[quarter]?.[position];
             const playerName = getPlayerName(entry?.playerId);
             const playerColor = getPlayerColor(entry?.playerId);
-            const playerStats = getPlayerPerformanceStats(position);
+            
+            // Find position stats directly, regardless of whether a player is assigned
+            const positionStat = gameStats?.find(stat => 
+              stat.position === position && stat.quarter === quarter
+            );
+            
+            // Get performance stats (for players) or create stats object (for unassigned positions)
+            let playerStats = getPlayerPerformanceStats(position);
+            
+            // If no player stats but we have position stats, create a stats object
+            if (!playerStats && positionStat) {
+              playerStats = {
+                stats: {
+                  goalsFor: positionStat.goalsFor || 0,
+                  goalsAgainst: positionStat.goalsAgainst || 0,
+                  missedGoals: positionStat.missedGoals || 0,
+                  rebounds: positionStat.rebounds || 0,
+                  intercepts: positionStat.intercepts || 0,
+                  badPass: positionStat.badPass || 0,
+                  handlingError: positionStat.handlingError || 0,
+                  pickUp: positionStat.pickUp || 0,
+                  infringement: positionStat.infringement || 0
+                }
+              };
+            }
             
             return (
               <div key={position} className="col-span-1">
