@@ -7,7 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { GameStatusBadge } from '@/components/games/GameStatusBadge';
 import { Badge } from '@/components/ui/badge';
 import { useLocation } from 'wouter';
-import { BatchGameScoreDisplay } from './BatchGameScoreDisplay';
+import { GameScoreDisplay } from '../statistics/GameScoreDisplay';
 import { ArrowDown, ArrowUp, ArrowUpDown, FilterIcon } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -283,8 +283,8 @@ export default function GamesList({ games, opponents, className }: GamesListProp
                     <TableCell className="px-2 py-2 whitespace-nowrap text-center">
                       {game.completed ? (
                         <div className="text-center">
-                          {/* Use our optimized component that uses caching */}
-                          <BatchGameScoreDisplay gameId={game.id} />
+                          {/* Use the same component as the game management page */}
+                          <GameScoreDisplay gameId={game.id} compact={true} />
                         </div>
                       ) : (
                         <span className="text-gray-400">—</span>
