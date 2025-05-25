@@ -401,6 +401,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/players/:id/seasons", async (req, res) => {
     try {
       const playerId = Number(req.params.id);
+      
+      // Import our specialized player-season function
+      const { getPlayerSeasons } = await import('./player-season-routes');
+      
+      // Use our function to get player seasons
+      getPlayerSeasons(req, res);
+    } catch (error) {
+      console.error(`Error fetching seasons for player ${req.params.id}:`, error);
+      res.status(500).json({ 
+        message: "Failed to fetch player seasons",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  
+  // DEPRECATED - Test endpoint for direct SQL player seasons
+  app.get("/api/players/:id/seasons/debug", async (req, res) => {
+    try {
+      const playerId = Number(req.params.id);
       console.log(`Fetching seasons for player ID: ${playerId}`);
       
       // Fetch the player's seasons from the junction table

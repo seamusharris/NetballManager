@@ -54,8 +54,8 @@ export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFor
     queryKey: ['/api/seasons'],
   });
   
-  // If editing, fetch player's current seasons
-  const { data: playerSeasonsResponse = { success: false, seasons: [] } } = useQuery<{success: boolean, seasons: Season[], player?: {id: number, name: string}}>(
+  // If editing, fetch player's current seasons - using direct API endpoint
+  const { data: playerSeasons = [] } = useQuery<Season[]>(
     {
       queryKey: ['/api/players', player?.id, 'seasons'],
       enabled: isEditing && !!player?.id,
@@ -68,9 +68,9 @@ export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFor
     // to avoid potential stale state from previous edits
     setSelectedSeasons([]);
     
-    if (playerSeasonsResponse.seasons && playerSeasonsResponse.seasons.length > 0) {
+    if (playerSeasons && playerSeasons.length > 0) {
       // Get just the season IDs from the seasons array
-      const seasonIds = playerSeasonsResponse.seasons.map((season: Season) => season.id);
+      const seasonIds = playerSeasons.map((season: Season) => season.id);
       
       console.log("Setting player seasons from API response:", seasonIds);
       setSelectedSeasons(seasonIds);
