@@ -1488,18 +1488,16 @@ export default function GameDetails() {
                           <div className="flex items-center space-x-4">
                             {/* Player Avatar */}
                             <div 
-                              className="h-16 w-16 rounded-full flex items-center justify-center text-white text-xl font-bold shadow-md"
-                              style={{ backgroundColor: awardWinner.avatarColor || "#6366f1" }}
+                              className={`h-16 w-16 rounded-full flex items-center justify-center text-white text-xl font-bold shadow-md ${awardWinner.avatarColor || 'bg-indigo-500'}`}
                             >
                               {getInitials(awardWinner.firstName, awardWinner.lastName)}
                             </div>
                             
                             {/* Player Stats Box - With dark border, light interior styling */}
                             <div 
-                              className="flex-1 flex items-center p-3 rounded-lg border-2"
+                              className="flex-1 flex items-center p-3 rounded-lg border-2 bg-violet-50"
                               style={{ 
-                                borderColor: awardWinner.avatarColor?.replace('bg-', 'border-') || "#7c3aed",
-                                backgroundColor: "#f5f3ff" /* light interior */
+                                borderColor: "#7c3aed" /* violet-700 - darker border */
                               }}
                             >
                               <div className="flex-1">
