@@ -55,9 +55,14 @@ export default function DashboardSummary({
   
   // Update the refresh key when selected season changes
   useEffect(() => {
-    // Force a refresh of all data
+    // Force a refresh of all query data by invalidating everything
     queryClient.invalidateQueries();
-    setRefreshKey(prev => prev + 1);
+    
+    // Create a small delay to ensure invalidation completes
+    setTimeout(() => {
+      // Then update the refresh key to trigger component updates
+      setRefreshKey(prev => prev + 1);
+    }, 100);
   }, [selectedSeasonId, queryClient]);
   
   // Filter games by selected season
