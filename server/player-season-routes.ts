@@ -136,29 +136,28 @@ export async function getPlayerSeasons(req: Request, res: Response) {
  * @param seasonIds Array of season IDs to associate with the player
  */
 export async function updatePlayerSeasons(playerId: number, seasonIds: number[]): Promise<boolean> {
-  // Import pool directly for raw SQL operations
-  const { pool } = await import('./db');
-  const client = await pool.connect();
-
   try {
     console.log("\n==== UPDATE PLAYER SEASONS ====");
     console.log(`Player ID: ${playerId}`);
     console.log(`Season IDs: ${seasonIds.join(', ')}`);
     
-    // First, let's check if the player exists
-    const playerCheckResult = await client.query(
-      'SELECT id FROM players WHERE id = $1',
-      [playerId]
-    );
+    // Use db for Drizzle ORM operations whenever possible
+    // Check if player exists
+    const player = await db.query.players.findFirst({
+      where: eq(players.id, playerId)
+    });
     
-    if (playerCheckResult.rows.length === 0) {
+    if (!player) {
       console.error(`Player with ID ${playerId} does not exist`);
       return false;
     }
     
     // Let's also validate the season IDs
+    let validSeasonIds = seasonIds;
     if (seasonIds.length > 0) {
-      const seasonCheckResult = await client.query(
+      // Get pool for raw SQL which is more efficient for this operation
+      const { pool } = await import('./db');
+      const seasonCheckResult = await pool.query(
         'SELECT id FROM seasons WHERE id = ANY($1::int[])',
         [seasonIds]
       );
@@ -166,59 +165,59 @@ export async function updatePlayerSeasons(playerId: number, seasonIds: number[])
       console.log(`Found ${seasonCheckResult.rows.length} valid seasons out of ${seasonIds.length} requested`);
       
       // If we didn't find all the seasons, filter to only valid ones
-      if (seasonCheckResult.rows.length < seasonIds.length) {
-        const validSeasonIds = seasonCheckResult.rows.map(row => row.id);
-        console.log(`Filtering to valid season IDs: ${validSeasonIds.join(', ')}`);
-        seasonIds = validSeasonIds;
-      }
+      validSeasonIds = seasonCheckResult.rows.map(row => row.id);
+      console.log(`Valid season IDs: ${validSeasonIds.join(', ')}`);
     }
     
-    // Only proceed if we have valid season IDs
-    if (seasonIds.length === 0) {
-      console.warn(`No valid season IDs provided for player ${playerId}`);
-      // Still going to delete existing relationships but not add new ones
-    }
+    // Get a client from the pool for transaction
+    const { pool } = await import('./db');
+    const client = await pool.connect();
     
-    // Simplified approach: do everything in individual statements without a transaction
-    // This is more reliable but less atomic
-    
-    // 1. Delete existing relationships
-    console.log(`Deleting existing player-season relationships for player ${playerId}`);
-    const deleteResult = await client.query(
-      'DELETE FROM player_seasons WHERE player_id = $1', 
-      [playerId]
-    );
-    console.log(`Deleted ${deleteResult.rowCount} existing player-season relationships`);
-    
-    // 2. Insert new relationships one by one
-    let successCount = 0;
-    
-    for (const seasonId of seasonIds) {
-      try {
-        console.log(`Inserting player ${playerId} to season ${seasonId}`);
+    try {
+      // Start transaction
+      await client.query('BEGIN');
+      
+      // 1. Delete existing relationships
+      console.log(`Deleting existing player-season relationships for player ${playerId}`);
+      await client.query(
+        'DELETE FROM player_seasons WHERE player_id = $1', 
+        [playerId]
+      );
+      
+      // 2. Insert new relationships as a batch if we have any
+      if (validSeasonIds.length > 0) {
+        // Create values string for bulk insert
+        const values = validSeasonIds.map((_, index) => 
+          `($1, $${index + 2})`
+        ).join(', ');
+        
+        // Create parameters array with player ID as first param
+        const params = [playerId, ...validSeasonIds];
+        
+        console.log(`Inserting ${validSeasonIds.length} player-season relationships`);
         await client.query(
-          'INSERT INTO player_seasons (player_id, season_id) VALUES ($1, $2)',
-          [playerId, seasonId]
+          `INSERT INTO player_seasons (player_id, season_id) 
+           VALUES ${values} 
+           ON CONFLICT (player_id, season_id) DO NOTHING`,
+          params
         );
-        successCount++;
-        console.log(`Successfully inserted player ${playerId} to season ${seasonId}`);
-      } catch (insertError) {
-        console.error(`Error inserting player ${playerId} to season ${seasonId}:`, insertError);
-        // Continue with other seasons even if one fails
       }
+      
+      // Commit transaction
+      await client.query('COMMIT');
+      console.log(`Successfully updated player-season relationships for player ${playerId}`);
+      return true;
+    } catch (txError) {
+      // Rollback transaction on error
+      await client.query('ROLLBACK');
+      console.error("Transaction error:", txError);
+      return false;
+    } finally {
+      // Always release client
+      client.release();
     }
-    
-    console.log(`Successfully inserted ${successCount} out of ${seasonIds.length} player-season relationships`);
-    console.log("==== END UPDATE PLAYER SEASONS ====\n");
-    
-    // Return true if we succeeded with all or at least some of the seasons
-    return successCount > 0 || seasonIds.length === 0;
   } catch (error) {
     console.error("Error in updatePlayerSeasons:", error);
     return false;
-  } finally {
-    // Always release the client
-    client.release();
-    console.log("Database client released");
   }
 }
