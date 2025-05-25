@@ -1444,9 +1444,9 @@ export default function GameDetails() {
                     </div>
                   ) : (
                     <div className="min-h-[80px] p-2">
-                      {/* HARD CODED AWARD WINNER DISPLAY - ID 78 is Isla Mitchell */}
+                      {/* Award winner display with real stats - ID 78 is Isla Mitchell */}
                       <div className="flex items-center space-x-4">
-                        {/* Player Avatar - Fixed with violet color */}
+                        {/* Player Avatar */}
                         <div 
                           className="h-16 w-16 rounded-full flex items-center justify-center text-white text-xl font-bold shadow-md"
                           style={{ backgroundColor: "#8b5cf6" /* violet-600 */ }}
@@ -1470,18 +1470,47 @@ export default function GameDetails() {
                           </div>
                           
                           <div className="flex space-x-6">
-                            <div className="text-center">
-                              <div className="text-2xl font-bold text-violet-800">10</div>
-                              <div className="text-xs text-violet-600">Goals</div>
-                            </div>
-                            <div className="text-center">
-                              <div className="text-2xl font-bold text-violet-800">5</div>
-                              <div className="text-xs text-violet-600">Intercepts</div>
-                            </div>
-                            <div className="text-center">
-                              <div className="text-2xl font-bold text-violet-800">3</div>
-                              <div className="text-xs text-violet-600">Rebounds</div>
-                            </div>
+                            {/* Calculate real stats for the player */}
+                            {(() => {
+                              // Find positions played by this player in this game
+                              const playerPositions = roster?.filter(r => r.playerId === 78) || [];
+                              
+                              // Initialize stat counters
+                              let goals = 0;
+                              let intercepts = 0; 
+                              let rebounds = 0;
+                              
+                              // Sum up stats from all positions this player played
+                              playerPositions.forEach(rosterEntry => {
+                                const stat = gameStats?.find(s => 
+                                  s.position === rosterEntry.position && 
+                                  s.quarter === rosterEntry.quarter
+                                );
+                                
+                                if (stat) {
+                                  goals += stat.goalsFor || 0;
+                                  intercepts += stat.intercepts || 0;
+                                  rebounds += stat.rebounds || 0;
+                                }
+                              });
+                              
+                              return (
+                                <>
+                                  <div className="text-center">
+                                    <div className="text-2xl font-bold text-violet-800">{goals}</div>
+                                    <div className="text-xs text-violet-600">Goals</div>
+                                  </div>
+                                  <div className="text-center">
+                                    <div className="text-2xl font-bold text-violet-800">{intercepts}</div>
+                                    <div className="text-xs text-violet-600">Intercepts</div>
+                                  </div>
+                                  <div className="text-center">
+                                    <div className="text-2xl font-bold text-violet-800">{rebounds}</div>
+                                    <div className="text-xs text-violet-600">Rebounds</div>
+                                  </div>
+                                </>
+                              );
+                            })()}
                           </div>
                         </div>
                       </div>
