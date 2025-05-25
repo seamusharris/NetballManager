@@ -1554,7 +1554,7 @@ export default function GameDetails() {
                         
                         // Get player initials
                         const getInitials = (firstName: string, lastName: string) => {
-                          return `${firstName.charAt(0)}${lastName ? lastName.charAt(0) : ''}`;
+                          return `${firstName.charAt(0)}${lastName ? lastName.charAt(0) : ''}`.toUpperCase();
                         };
                         
                         return (
