@@ -16,8 +16,18 @@ export default function Dashboard() {
   const { data: opponents = [], isLoading: isLoadingOpponents } = useQuery<any[]>({
     queryKey: ['/api/opponents'],
   });
+  
+  // Fetch all seasons
+  const { data: seasons = [], isLoading: isLoadingSeasons } = useQuery<any[]>({
+    queryKey: ['/api/seasons'],
+  });
+  
+  // Fetch active season
+  const { data: activeSeason, isLoading: isLoadingActiveSeason } = useQuery<any>({
+    queryKey: ['/api/seasons/active'],
+  });
 
-  const isLoading = isLoadingPlayers || isLoadingGames || isLoadingOpponents;
+  const isLoading = isLoadingPlayers || isLoadingGames || isLoadingOpponents || isLoadingSeasons || isLoadingActiveSeason;
 
   return (
     <>
@@ -33,6 +43,8 @@ export default function Dashboard() {
         players={players || []} 
         games={games || []} 
         opponents={opponents || []} 
+        seasons={seasons || []}
+        activeSeason={activeSeason}
         isLoading={isLoading} 
       />
     </>

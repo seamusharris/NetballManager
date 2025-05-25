@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'wouter';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
@@ -11,21 +11,60 @@ import PlayerPerformance from './PlayerPerformance';
 import GamesList from './GamesList';
 
 import PerformanceCharts from './PerformanceCharts';
-import { Player, Game, Opponent } from '@shared/schema';
+import { Player, Game, Opponent, Season } from '@shared/schema';
 import { sortByDate } from '@/lib/utils';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface DashboardSummaryProps {
   players: Player[];
   games: Game[];
   opponents: Opponent[];
+  seasons: Season[];
+  activeSeason: Season | null;
   isLoading: boolean;
 }
 
-export default function DashboardSummary({ players, games, opponents, isLoading }: DashboardSummaryProps) {
-  const [timeFrame, setTimeFrame] = useState('current');
+export default function DashboardSummary({ 
+  players, 
+  games, 
+  opponents, 
+  seasons, 
+  activeSeason, 
+  isLoading 
+}: DashboardSummaryProps) {
+  const [selectedSeasonId, setSelectedSeasonId] = useState<string>('current');
+  const queryClient = useQueryClient();
+  
+  // Set active season as selected by default
+  useEffect(() => {
+    if (activeSeason && selectedSeasonId === 'current') {
+      setSelectedSeasonId('current');
+    }
+  }, [activeSeason]);
+  
+  // Function to get season display name
+  const getSeasonDisplayName = (season: Season) => {
+    if (season.id === activeSeason?.id) {
+      return `${season.name} (Current Season)`;
+    }
+    return season.name;
+  };
+  
+  // Filter games by selected season
+  const filteredGames = games.filter(game => {
+    if (selectedSeasonId === 'current' && activeSeason) {
+      return game.seasonId === activeSeason.id;
+    } else if (selectedSeasonId === 'all') {
+      return true;
+    } else if (selectedSeasonId !== 'current') {
+      const seasonId = parseInt(selectedSeasonId);
+      return game.seasonId === seasonId;
+    }
+    return true;
+  });
   
   // Sort games by date (most recent first)
-  const sortedGames = sortByDate(games);
+  const sortedGames = sortByDate(filteredGames);
   
   // Split into past and upcoming games based on date and completion status
   const currentDate = new Date().toISOString().split('T')[0];
@@ -38,23 +77,40 @@ export default function DashboardSummary({ players, games, opponents, isLoading 
     (game.date >= currentDate && !game.completed)
   ), true);
   
+  // Handle refresh button click
+  const handleRefresh = () => {
+    queryClient.invalidateQueries({ queryKey: ['/api/games'] });
+    queryClient.invalidateQueries({ queryKey: ['/api/players'] });
+    queryClient.invalidateQueries({ queryKey: ['/api/opponents'] });
+    queryClient.invalidateQueries({ queryKey: ['/api/seasons'] });
+  };
+  
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-heading font-bold text-neutral-dark">Dashboard</h2>
         <div className="flex space-x-3">
-          <Select value={timeFrame} onValueChange={setTimeFrame}>
-            <SelectTrigger className="bg-white border rounded-md w-[150px]">
-              <SelectValue placeholder="Current Season" />
+          <Select value={selectedSeasonId} onValueChange={setSelectedSeasonId}>
+            <SelectTrigger className="bg-white border rounded-md w-[200px]">
+              <SelectValue placeholder={activeSeason ? `${activeSeason.name} (Current Season)` : "Select Season"} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="current">Current Season</SelectItem>
-              <SelectItem value="last">Last Season</SelectItem>
-              <SelectItem value="all">All Time</SelectItem>
+              {activeSeason && (
+                <SelectItem value="current">{activeSeason.name} (Current Season)</SelectItem>
+              )}
+              {seasons.map((season) => (
+                <SelectItem key={season.id} value={season.id.toString()}>
+                  {getSeasonDisplayName(season)}
+                </SelectItem>
+              ))}
+              <SelectItem value="all">All Seasons</SelectItem>
             </SelectContent>
           </Select>
           
-          <Button className="bg-primary hover:bg-primary-light text-white">
+          <Button 
+            className="bg-primary hover:bg-primary-light text-white"
+            onClick={handleRefresh}
+          >
             <RefreshCw className="w-4 h-4 mr-1" /> Refresh
           </Button>
         </div>
