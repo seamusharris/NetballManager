@@ -118,31 +118,31 @@ export default function LiveStatsByPosition() {
   // Queries - must declare all queries after state
   const { data: game, isLoading: isLoadingGame } = useQuery<Game>({
     queryKey: ['/api/games', gameId],
-    queryFn: () => apiRequest(`/api/games/${gameId}`),
+    queryFn: () => apiRequest('GET', `/api/games/${gameId}`),
     enabled: !!gameId && !isNaN(gameId)
   });
   
   const { data: opponent, isLoading: isLoadingOpponent } = useQuery<Opponent>({
     queryKey: ['/api/opponents', game?.opponentId],
-    queryFn: () => apiRequest(`/api/opponents/${game?.opponentId}`),
+    queryFn: () => apiRequest('GET', `/api/opponents/${game?.opponentId}`),
     enabled: !!game?.opponentId
   });
   
   const { data: rosters = [], isLoading: isLoadingRoster } = useQuery<Roster[]>({
     queryKey: ['/api/games', gameId, 'rosters'],
-    queryFn: () => apiRequest(`/api/games/${gameId}/rosters`),
+    queryFn: () => apiRequest('GET', `/api/games/${gameId}/rosters`),
     enabled: !!gameId && !isNaN(gameId)
   });
   
   const { data: players = [], isLoading: isLoadingPlayers } = useQuery<Player[]>({
     queryKey: ['/api/players'],
-    queryFn: () => apiRequest('/api/players'),
+    queryFn: () => apiRequest('GET', '/api/players'),
     enabled: true
   });
   
   const { data: existingStats = [], isLoading: isLoadingStats } = useQuery<GameStat[]>({
     queryKey: ['/api/games', gameId, 'stats'],
-    queryFn: () => apiRequest(`/api/games/${gameId}/stats`),
+    queryFn: () => apiRequest('GET', `/api/games/${gameId}/stats`),
     enabled: !!gameId && !isNaN(gameId)
   });
   
