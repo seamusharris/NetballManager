@@ -217,9 +217,12 @@ export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFor
     if (selectedSeasons.includes(seasonId)) {
       // Remove the season if already selected
       setSelectedSeasons(selectedSeasons.filter(id => id !== seasonId));
+      console.log(`Removed season ${seasonId}, new selection:`, selectedSeasons.filter(id => id !== seasonId));
     } else {
       // Add the season if not already selected
-      setSelectedSeasons([...selectedSeasons, seasonId]);
+      const newSelection = [...selectedSeasons, seasonId];
+      console.log(`Added season ${seasonId}, new selection:`, newSelection);
+      setSelectedSeasons(newSelection);
     }
   };
 
@@ -257,7 +260,25 @@ export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFor
     if (values.position3 !== "none") positionPreferences.push(values.position3 as Position);
     if (values.position4 !== "none") positionPreferences.push(values.position4 as Position);
     
-    // Build player data object with season IDs explicitly converted to numbers
+    // CRITICAL FIX: Ensure we're only using valid season IDs
+    // Get the actual season IDs from our seasons data
+    const validSeasonIds = seasons.map(season => season.id);
+    
+    // Filter the selectedSeasons to only include valid season IDs
+    const filteredSeasonIds = selectedSeasons.filter(id => 
+      validSeasonIds.includes(id)
+    );
+    
+    // If we have no valid season IDs but we have seasons, use the active season
+    const finalSeasonIds = filteredSeasonIds.length > 0 
+      ? filteredSeasonIds 
+      : (seasons.filter(s => s.isActive).map(s => s.id));
+    
+    console.log("Valid season IDs from API:", validSeasonIds);
+    console.log("Selected seasons before filtering:", selectedSeasons);
+    console.log("Final filtered season IDs for submission:", finalSeasonIds);
+    
+    // Build player data object with properly filtered season IDs
     const playerData = {
       displayName: values.displayName,
       firstName: values.firstName,
@@ -265,7 +286,7 @@ export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFor
       dateOfBirth: values.dateOfBirth || null,
       positionPreferences,
       active: values.active,
-      seasonIds: selectedSeasons.map(id => typeof id === 'string' ? parseInt(id, 10) : id)
+      seasonIds: finalSeasonIds
     };
     
     console.log("Submitting player data manually:", playerData);
