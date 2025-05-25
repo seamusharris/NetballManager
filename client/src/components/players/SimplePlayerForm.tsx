@@ -59,17 +59,22 @@ export default function SimplePlayerForm({ onSubmit, onCancel, isSubmitting }: S
       return;
     }
     
-    // Build position preferences array
-    const positionPreferences: Position[] = [position1 as Position];
+    // Build position preferences array - ensure we're using string literals 
+    // that match the enum values exactly to prevent type issues
+    const positionPreferences: string[] = [];
     
-    if (position2 !== 'none') {
-      positionPreferences.push(position2 as Position);
+    // Add positions in order, filtering out 'none'
+    if (position1) {
+      positionPreferences.push(position1);
     }
-    if (position3 !== 'none') {
-      positionPreferences.push(position3 as Position);
+    if (position2 && position2 !== 'none') {
+      positionPreferences.push(position2);
     }
-    if (position4 !== 'none') {
-      positionPreferences.push(position4 as Position);
+    if (position3 && position3 !== 'none') {
+      positionPreferences.push(position3);
+    }
+    if (position4 && position4 !== 'none') {
+      positionPreferences.push(position4);
     }
     
     // For new players, we'll create their avatar color when they're created

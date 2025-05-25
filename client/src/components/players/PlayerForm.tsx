@@ -249,11 +249,23 @@ export default function PlayerForm({ player, onSubmit, isSubmitting, initialSeas
       return;
     }
     
-    // Build position preferences array
-    const positionPreferences: Position[] = [values.position1 as Position];
-    if (values.position2 !== "none") positionPreferences.push(values.position2 as Position);
-    if (values.position3 !== "none") positionPreferences.push(values.position3 as Position);
-    if (values.position4 !== "none") positionPreferences.push(values.position4 as Position);
+    // Build position preferences array - using string literals
+    // to ensure proper JSON serialization
+    const positionPreferences: string[] = [];
+    
+    // Add positions in order, filtering out 'none'
+    if (values.position1) {
+      positionPreferences.push(values.position1);
+    }
+    if (values.position2 && values.position2 !== "none") {
+      positionPreferences.push(values.position2);
+    }
+    if (values.position3 && values.position3 !== "none") {
+      positionPreferences.push(values.position3);
+    }
+    if (values.position4 && values.position4 !== "none") {
+      positionPreferences.push(values.position4);
+    }
     
     // Build player data object
     const playerData = {

@@ -16,7 +16,7 @@ export async function createPlayerDirect(playerData: {
   firstName: string;
   lastName: string;
   dateOfBirth?: string | null;
-  positionPreferences: Position[];
+  positionPreferences: string[] | Position[];
   active?: boolean;
   avatarColor?: string;
 }, seasonIds: number[] = []): Promise<{
@@ -116,7 +116,7 @@ export async function updatePlayerDirect(
     firstName?: string;
     lastName?: string;
     dateOfBirth?: string | null;
-    positionPreferences?: Position[];
+    positionPreferences?: string[] | Position[];
     active?: boolean;
     avatarColor?: string;
   },
