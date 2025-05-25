@@ -1568,63 +1568,39 @@ export default function GameDetails() {
                             
                             {/* Player Stats Box - With colors matching player's avatar */}
                             <div 
-                              className={`flex-1 flex items-center p-3 rounded-lg border-2 ${
-                                awardWinner.avatarColor 
-                                  ? awardWinner.avatarColor.replace('bg-', 'border-').replace('-500', '-700').replace('-600', '-700') 
-                                  : 'border-violet-700'
-                              } ${
-                                awardWinner.avatarColor 
-                                  ? awardWinner.avatarColor.replace('bg-', 'bg-').replace('-500', '-50').replace('-600', '-50') 
-                                  : 'bg-violet-50'
-                              }`}
+                              className={`flex-1 flex items-center p-3 rounded-lg border-2 border-violet-700 bg-violet-50`}
                             >
                               <div className="flex-1">
-                                <div 
-                                  className={`text-lg font-bold ${awardWinner.avatarColor?.replace('bg-', 'text-').replace('-500', '-900').replace('-600', '-900') || 'text-violet-900'}`}
-                                >
+                                <div className="text-lg font-bold text-violet-900">
                                   {awardWinner.displayName || `${awardWinner.firstName} ${awardWinner.lastName}`}
                                 </div>
-                                <div 
-                                  className={`text-sm ${awardWinner.avatarColor?.replace('bg-', 'text-').replace('-500', '-600').replace('-600', '-600') || 'text-violet-600'}`}
-                                >
+                                <div className="text-sm text-violet-600">
                                   Player of the Match
                                 </div>
                               </div>
                               
                               <div className="flex space-x-6">
                                 <div className="text-center">
-                                  <div 
-                                    className={`text-2xl font-bold ${awardWinner.avatarColor?.replace('bg-', 'text-').replace('-500', '-800').replace('-600', '-800') || 'text-violet-800'}`}
-                                  >
+                                  <div className="text-2xl font-bold text-violet-800">
                                     {goals}
                                   </div>
-                                  <div 
-                                    className={`text-xs ${awardWinner.avatarColor?.replace('bg-', 'text-').replace('-500', '-600').replace('-600', '-600') || 'text-violet-600'}`}
-                                  >
+                                  <div className="text-xs text-violet-600">
                                     Goals
                                   </div>
                                 </div>
                                 <div className="text-center">
-                                  <div 
-                                    className={`text-2xl font-bold ${awardWinner.avatarColor?.replace('bg-', 'text-').replace('-500', '-800').replace('-600', '-800') || 'text-violet-800'}`}
-                                  >
+                                  <div className="text-2xl font-bold text-violet-800">
                                     {intercepts}
                                   </div>
-                                  <div 
-                                    className={`text-xs ${awardWinner.avatarColor?.replace('bg-', 'text-').replace('-500', '-600').replace('-600', '-600') || 'text-violet-600'}`}
-                                  >
+                                  <div className="text-xs text-violet-600">
                                     Intercepts
                                   </div>
                                 </div>
                                 <div className="text-center">
-                                  <div 
-                                    className={`text-2xl font-bold ${awardWinner.avatarColor?.replace('bg-', 'text-').replace('-500', '-800').replace('-600', '-800') || 'text-violet-800'}`}
-                                  >
+                                  <div className="text-2xl font-bold text-violet-800">
                                     {rebounds}
                                   </div>
-                                  <div 
-                                    className={`text-xs ${awardWinner.avatarColor?.replace('bg-', 'text-').replace('-500', '-600').replace('-600', '-600') || 'text-violet-600'}`}
-                                  >
+                                  <div className="text-xs text-violet-600">
                                     Rebounds
                                   </div>
                                 </div>
