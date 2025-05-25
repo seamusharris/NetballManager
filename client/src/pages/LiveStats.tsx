@@ -400,41 +400,18 @@ export default function LiveStats() {
 
   // Get list of all positions for the current quarter, with or without assigned players
   const getPlayersOnCourt = (): PlayerPosition[] => {
-    if (!rosters || !existingStats) return [];
-    
-    // Create a set to track all positions with stats for the current quarter
-    const positionsWithStats = new Set<Position>();
-    
-    // Collect all positions that have stats for this quarter
-    existingStats.forEach((stat: GameStat) => {
-      if (stat.quarter === currentQuarter && stat.position && allPositions.includes(stat.position as Position)) {
-        positionsWithStats.add(stat.position as Position);
-      }
-    });
-    
-    // Create a map of positions to players for this quarter
-    const positionPlayerMap = new Map<Position, number>();
-    
-    // Fill the map with data from the roster
-    rosters
-      .filter((r: Roster) => r.quarter === currentQuarter && allPositions.includes(r.position))
-      .forEach((r: Roster) => {
-        positionPlayerMap.set(r.position as Position, r.playerId);
-        // Also make sure this position is in our set
-        positionsWithStats.add(r.position as Position);
-      });
-    
-    // Create the final array of player positions
-    const positionMap: PlayerPosition[] = [];
-    
-    // Process all positions that either have stats or players assigned
-    positionsWithStats.forEach((position) => {
-      const playerId = positionPlayerMap.get(position) || 0;
-      positionMap.push({
-        playerId,
+    // Always include all 7 positions
+    const positionMap: PlayerPosition[] = allPositions.map(position => {
+      // Look for a roster entry for this position in this quarter
+      const rosterEntry = rosters?.find(r => 
+        r.quarter === currentQuarter && r.position === position
+      );
+      
+      return {
+        playerId: rosterEntry?.playerId || 0, // Use 0 for unassigned positions
         position,
-        hasPlayer: playerId > 0
-      });
+        hasPlayer: !!rosterEntry // Boolean: true if there's a roster entry
+      };
     });
     
     // Sort by position order (GS, GA, WA, C, WD, GD, GK)
