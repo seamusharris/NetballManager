@@ -776,10 +776,11 @@ export default function LiveStats() {
     }
   };
   
-  // Get quarter total for a specific stat
+  // Get quarter total for a specific stat - includes both player and position stats
   const getQuarterTotal = (stat: StatType): number => {
     let total = 0;
     
+    // First, count player stats from liveStats
     Object.keys(liveStats).forEach(playerIdStr => {
       const playerId = parseInt(playerIdStr);
       const playerStats = liveStats[playerId]?.[currentQuarter];
@@ -788,13 +789,37 @@ export default function LiveStats() {
       }
     });
     
+    // Then, check for position stats that aren't mapped to players (unassigned positions)
+    if (existingStats) {
+      // Get all positions from the roster for this quarter
+      const assignedPositions = new Set<string>();
+      
+      if (rosters) {
+        rosters.filter(r => r.quarter === currentQuarter).forEach(r => {
+          assignedPositions.add(r.position);
+        });
+      }
+      
+      // Look for position stats that don't have players assigned
+      existingStats.filter(s => s.quarter === currentQuarter).forEach(statEntry => {
+        // Skip if the position has a player assigned (we've already counted these)
+        const hasPlayerAssigned = Array.from(assignedPositions).includes(statEntry.position);
+        
+        if (!hasPlayerAssigned && statEntry[stat] !== undefined) {
+          console.log(`Adding unassigned position ${statEntry.position} stats: ${stat} = ${statEntry[stat]}`);
+          total += statEntry[stat] || 0;
+        }
+      });
+    }
+    
     return total;
   };
   
-  // Get game total for a specific stat
+  // Get game total for a specific stat - includes both player and position stats
   const getGameTotal = (stat: StatType): number => {
     let total = 0;
     
+    // First, count player stats from liveStats
     Object.keys(liveStats).forEach(playerIdStr => {
       const playerId = parseInt(playerIdStr);
       
@@ -805,6 +830,35 @@ export default function LiveStats() {
         }
       });
     });
+    
+    // Then, check for position stats that aren't mapped to players (unassigned positions)
+    if (existingStats) {
+      // Get all positions from the roster by quarter
+      const assignedPositionsByQuarter: Record<number, Set<string>> = {
+        1: new Set<string>(),
+        2: new Set<string>(),
+        3: new Set<string>(),
+        4: new Set<string>()
+      };
+      
+      if (rosters) {
+        rosters.forEach(r => {
+          assignedPositionsByQuarter[r.quarter].add(r.position);
+        });
+      }
+      
+      // Look for position stats that don't have players assigned
+      existingStats.forEach(statEntry => {
+        const quarter = statEntry.quarter;
+        // Skip if the position has a player assigned (we've already counted these)
+        const hasPlayerAssigned = Array.from(assignedPositionsByQuarter[quarter]).includes(statEntry.position);
+        
+        if (!hasPlayerAssigned && statEntry[stat] !== undefined) {
+          console.log(`Adding unassigned position ${statEntry.position} in Q${quarter} stats to game total: ${stat} = ${statEntry[stat]}`);
+          total += statEntry[stat] || 0;
+        }
+      });
+    }
     
     return total;
   };
