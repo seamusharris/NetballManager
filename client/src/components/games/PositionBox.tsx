@@ -21,6 +21,9 @@ export const PositionBox: React.FC<PositionBoxProps> = ({
   // Use player color if player assigned, otherwise use red for unassigned
   const displayColor = playerName ? playerColor : unassignedColor;
   
+  // Determine if this is an assigned or unassigned position
+  const isAssigned = !!playerName;
+
   return (
     <div 
       className="p-2 border rounded-md shadow-sm flex-1 flex flex-col"
@@ -33,7 +36,7 @@ export const PositionBox: React.FC<PositionBoxProps> = ({
         <div className="font-semibold text-sm rounded bg-gray-100 px-1.5 py-0.5">{position}</div>
         <div 
           className="font-medium text-xs truncate ml-1 max-w-[70%]" 
-          style={{ color: displayColor }}
+          style={{ color: isAssigned ? displayColor : 'white' }}
           title={playerName || 'Unassigned'}
         >
           {playerName || 'Unassigned'}
