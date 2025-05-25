@@ -123,7 +123,7 @@ export default function Players() {
   const handleUpdatePlayer = (playerData: any) => {
     if (editingPlayer) {
       console.log("Updating player:", playerData);
-      updateMutation.mutate({ id: editingPlayer.id, player: playerData });
+      updateMutation.mutate({ id: editingPlayer.id, ...playerData });
     }
   };
   
