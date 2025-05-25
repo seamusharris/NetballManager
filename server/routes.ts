@@ -597,51 +597,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`Updating player-season relationships for player ${id} with seasons:`, req.body.seasonIds);
       
       try {
-        // Import the updatePlayerSeasons function from db.ts
-        const { updatePlayerSeasons } = await import('./db');
-        
-        // First, get all valid seasons from the database
+        // Get direct database connection for a simple approach
         const { pool } = await import('./db');
+        
+        // Get valid seasons from the database
         const { rows: allSeasons } = await pool.query('SELECT id FROM seasons');
-        const allValidSeasonIds = allSeasons.map(s => s.id);
-        console.log(`All valid season IDs in database:`, allValidSeasonIds);
+        const validSeasonIds = allSeasons.map(s => s.id);
+        console.log(`All valid season IDs in database:`, validSeasonIds);
         
-        // Extract seasonIds directly from the request body
-        const rawSeasonIds = req.body.seasonIds || [];
-        console.log(`Raw season IDs directly from request body:`, rawSeasonIds);
+        // Extract and validate season IDs from request
+        const requestSeasonIds = Array.isArray(req.body.seasonIds) ? req.body.seasonIds : [];
+        console.log(`Season IDs from request:`, requestSeasonIds);
         
-        // Convert seasonIds to a valid array of numbers and filter out invalid values
-        let validSeasonIds = Array.isArray(rawSeasonIds) 
-          ? rawSeasonIds
-              .map(id => typeof id === 'string' ? parseInt(id, 10) : id)
-              .filter(id => typeof id === 'number' && !isNaN(id))
-          : [];
-          
-        // IMPORTANT: When examining seasonIds, we've discovered the app is sometimes submitting
-        // player/game IDs (in the range of 56-71) instead of season IDs (typically 1, 2)
-        // For safety, we'll ALWAYS filter to only use IDs that exist in the seasons table
+        // Filter to only include valid season IDs
+        const filteredSeasonIds = requestSeasonIds.filter(id => validSeasonIds.includes(Number(id)));
+        console.log(`Filtered valid season IDs:`, filteredSeasonIds);
         
-        console.log(`All valid season IDs in database: ${allValidSeasonIds.join(', ')}`);
-        console.log(`Raw season IDs submitted: ${validSeasonIds.join(', ')}`);
-        
-        // Get list of valid seasons only
-        const validatedSeasonIds = validSeasonIds.filter(id => allValidSeasonIds.includes(id));
-        
-        console.log(`After filtering, valid seasons: ${validatedSeasonIds.join(', ')}`);
-        
-        // Always include at least the first valid season as a fallback if no valid seasons were found
-        if (validatedSeasonIds.length === 0 && allValidSeasonIds.length > 0) {
-          console.log(`No valid seasons found in submission. Using active season as fallback.`);
-          validSeasonIds = [allValidSeasonIds[0]];
-        } else {
-          validSeasonIds = validatedSeasonIds;
+        // Default to active season if no valid seasons provided
+        let finalSeasonIds = filteredSeasonIds;
+        if (finalSeasonIds.length === 0) {
+          const { rows: activeSeasons } = await pool.query('SELECT id FROM seasons WHERE "isActive" = true');
+          if (activeSeasons.length > 0) {
+            finalSeasonIds = [activeSeasons[0].id];
+            console.log(`Using default active season:`, finalSeasonIds);
+          }
         }
         
-        console.log(`Player ${id} will be associated with these valid seasons (after database verification):`, validSeasonIds);
-        
-        // Use the dedicated function to update player-season relationships
-        await updatePlayerSeasons(id, validSeasonIds);
-        console.log(`Successfully updated season relationships for player ${id} using dedicated function`);
+        // Simple direct SQL approach - using transaction for safety
+        const client = await pool.connect();
+        try {
+          await client.query('BEGIN');
+          console.log(`Starting transaction for player ${id} season update`);
+          
+          // Clear existing relationships
+          await client.query('DELETE FROM player_seasons WHERE player_id = $1', [id]);
+          console.log(`Cleared existing seasons for player ${id}`);
+          
+          // Add new relationships one by one
+          for (const seasonId of finalSeasonIds) {
+            await client.query(
+              'INSERT INTO player_seasons (player_id, season_id) VALUES ($1, $2)',
+              [id, seasonId]
+            );
+            console.log(`Added player ${id} to season ${seasonId}`);
+          }
+          
+          await client.query('COMMIT');
+          console.log(`Successfully updated seasons for player ${id}`);
+        } catch (txError) {
+          await client.query('ROLLBACK');
+          console.error(`Transaction error:`, txError);
+          throw new Error(`Database error: ${txError.message}`);
+        } finally {
+          client.release();
+        }
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
         const errorStack = error instanceof Error ? error.stack : 'No stack trace available';

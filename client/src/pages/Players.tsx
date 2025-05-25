@@ -133,6 +133,9 @@ export default function Players() {
         
         if (!response.ok) {
           console.error(`API error: ${response.status} - ${responseText}`);
+          console.error("Request data that caused error:", playerData);
+          console.error("Request URL:", `/api/players/${id}`);
+          console.error("Request headers:", { 'Content-Type': 'application/json' });
           throw new Error(`Failed to update player: ${response.status} - ${responseText}`);
         }
         
