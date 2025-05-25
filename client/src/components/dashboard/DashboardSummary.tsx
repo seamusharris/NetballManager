@@ -102,13 +102,6 @@ export default function DashboardSummary({
               ))}
             </SelectContent>
           </Select>
-          
-          <Button 
-            className="bg-primary hover:bg-primary-light text-white"
-            onClick={handleRefresh}
-          >
-            <RefreshCw className="w-4 h-4 mr-1" /> Refresh
-          </Button>
         </div>
       </div>
 

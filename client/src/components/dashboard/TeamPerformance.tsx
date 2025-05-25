@@ -35,13 +35,21 @@ export default function TeamPerformance({ games, className, activeSeason, select
   const completedGamesArray = games.filter(game => game.completed);
   const completedGamesCount = completedGamesArray.length;
   
+  // Add a key to force refresh when seasons change
+  const [statsKey, setStatsKey] = useState(0);
+  
+  // Force refresh when selectedSeason or activeSeason changes
+  useEffect(() => {
+    setStatsKey(prevKey => prevKey + 1);
+  }, [selectedSeason, activeSeason]);
+  
   // Get game IDs for completed games to fetch their stats
   const completedGameIds = completedGamesArray.map(game => game.id);
   const enableQuery = completedGameIds.length > 0;
   
   // Fetch stats for all completed games individually since batch endpoint is unreliable
   const { data: gameStatsMap, isLoading } = useQuery({
-    queryKey: ['batchTeamPerformanceStats', completedGameIds.join(',')],
+    queryKey: ['batchTeamPerformanceStats', completedGameIds.join(','), statsKey],
     queryFn: async () => {
       if (completedGameIds.length === 0) {
         return {};
