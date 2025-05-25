@@ -530,8 +530,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log("Raw season IDs from request:", rawSeasonIds);
         
         processedSeasonIds = Array.isArray(rawSeasonIds) 
-          ? rawSeasonIds.map(id => typeof id === 'string' ? parseInt(id, 10) : id)
-                     .filter(id => typeof id === 'number' && !isNaN(id))
+          ? rawSeasonIds.map(sid => typeof sid === 'string' ? parseInt(sid, 10) : sid)
+                     .filter(sid => typeof sid === 'number' && !isNaN(sid))
           : [];
           
         console.log("Season IDs processed:", processedSeasonIds);
@@ -571,9 +571,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      // Log complete request
-      console.log("Complete update request body:", JSON.stringify(req.body));
-      
       // Create a sanitized version of the update data (only include valid fields)
       const validPlayerData = {
         displayName: updateData.displayName,
@@ -593,202 +590,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Player not found" });
       }
       
-      // Handle player-season relationships using dedicated function from db.ts
-      console.log(`Updating player-season relationships for player ${id} with seasons:`, req.body.seasonIds);
+      // Handle player-season relationships using our dedicated function from player-season-routes.ts
+      console.log(`Updating player-season relationships for player ${id} with processed season IDs:`, processedSeasonIds);
       
       try {
-        // Get direct database connection for a simple approach
-        const { pool } = await import('./db');
+        // Import the updatePlayerSeasons function from our dedicated module
+        const { updatePlayerSeasons } = await import('./player-season-routes');
         
-        // Get valid seasons from the database
-        const { rows: allSeasons } = await pool.query('SELECT id FROM seasons');
-        const validSeasonIds = allSeasons.map(s => s.id);
-        console.log(`All valid season IDs in database:`, validSeasonIds);
+        // Use the function to update player-season relationships
+        const success = await updatePlayerSeasons(id, processedSeasonIds);
         
-        // Extract and validate season IDs from request
-        const requestSeasonIds = Array.isArray(req.body.seasonIds) ? req.body.seasonIds : [];
-        console.log(`Season IDs from request:`, requestSeasonIds);
-        
-        // Convert all IDs to numbers and filter by validSeasonIds
-        // This ensures we only save valid season relationships and not player IDs
-        const processedSeasonIds = requestSeasonIds
-          .map(id => typeof id === 'string' ? parseInt(id, 10) : id)
-          .filter(id => typeof id === 'number' && !isNaN(id))
-          .filter(id => {
-            const isValidSeason = validSeasonIds.includes(id);
-            if (!isValidSeason) {
-              console.log(`Filtering out invalid season ID: ${id}`);
-            }
-            return isValidSeason;
-          });
-        
-        console.log(`Season IDs to be used:`, processedSeasonIds);
-        
-        // Default to active season if no valid seasons provided
-        let finalSeasonIds = processedSeasonIds;
-        if (finalSeasonIds.length === 0) {
-          const { rows: activeSeasons } = await pool.query('SELECT id FROM seasons WHERE "isActive" = true');
-          if (activeSeasons.length > 0) {
-            finalSeasonIds = [activeSeasons[0].id];
-            console.log(`Using default active season:`, finalSeasonIds);
-          }
-        }
-        
-        // Simple direct SQL approach - using transaction for safety
-        const client = await pool.connect();
-        try {
-          console.log(`DEBUG: Transaction starting for player ${id} season update with client:`, !!client);
-          await client.query('BEGIN');
-          console.log(`DEBUG: BEGIN transaction successful for player ${id} season update`);
-          
-          // Clear existing relationships
-          const deleteResult = await client.query('DELETE FROM player_seasons WHERE player_id = $1', [id]);
-          console.log(`DEBUG: Cleared existing seasons for player ${id}, result:`, deleteResult.rowCount);
-          
-          console.log(`About to insert player-season relationships for player ${id}`);
-          console.log(`Season IDs to add: ${JSON.stringify(finalSeasonIds)}`);
-          
-          // If we have season IDs to add, create batch insert
-          if (finalSeasonIds.length > 0) {
-            try {
-              // Validate the database connection
-              const checkConnection = await client.query('SELECT 1 as connection_test');
-              console.log(`Database connection validated:`, checkConnection.rows[0]);
-              
-              // Validate the player exists
-              const playerCheck = await client.query('SELECT id FROM players WHERE id = $1', [id]);
-              console.log(`Player check result:`, playerCheck.rows);
-              
-              // Validate season IDs exist
-              const seasonValues = finalSeasonIds.join(',');
-              const seasonCheck = await client.query(`SELECT id FROM seasons WHERE id IN (${seasonValues})`);
-              console.log(`Found ${seasonCheck.rowCount} valid seasons out of ${finalSeasonIds.length} requested`);
-              
-              let successCount = 0;
-              
-              // Try an alternative direct approach with individual inserts that avoids parameterized queries
-              // First check if the player-seasons table exists
-              try {
-                const tableCheck = await client.query(`
-                  SELECT EXISTS (
-                    SELECT FROM information_schema.tables 
-                    WHERE table_name = 'player_seasons'
-                  );
-                `);
-                console.log(`player_seasons table exists:`, tableCheck.rows[0].exists);
-                
-                // Get the table schema to confirm columns
-                const schemaCheck = await client.query(`
-                  SELECT column_name, data_type 
-                  FROM information_schema.columns 
-                  WHERE table_name = 'player_seasons';
-                `);
-                console.log(`player_seasons schema:`, schemaCheck.rows);
-              } catch (tableCheckError) {
-                console.error(`Error checking player_seasons table:`, tableCheckError);
-              }
-              
-              // Now try to insert each season relationship individually
-              for (const seasonId of finalSeasonIds) {
-                try {
-                  console.log(`\n>> DIRECT INSERT: player ${id} to season ${seasonId}`);
-                  const directInsertResult = await client.query(
-                    `INSERT INTO player_seasons (player_id, season_id) VALUES (${id}, ${seasonId}) 
-                     ON CONFLICT (player_id, season_id) DO NOTHING`
-                  );
-                  console.log(`>> DIRECT INSERT RESULT:`, JSON.stringify(directInsertResult));
-                  successCount++;
-                } catch (directInsertError) {
-                  console.error(`>> ERROR WITH DIRECT INSERT: player ${id}, season ${seasonId}:`);
-                  console.error(directInsertError);
-                  
-                  // Try even more basic approach with explicit values
-                  try {
-                    console.log(`>> FALLBACK INSERT: Using explicit values`);
-                    await client.query(`
-                      INSERT INTO player_seasons (player_id, season_id) 
-                      SELECT ${id}, ${seasonId}
-                      WHERE NOT EXISTS (
-                        SELECT 1 FROM player_seasons 
-                        WHERE player_id = ${id} AND season_id = ${seasonId}
-                      )
-                    `);
-                    console.log(`>> FALLBACK INSERT SUCCESS`);
-                    successCount++;
-                  } catch (fallbackError) {
-                    console.error(`>> FALLBACK INSERT FAILED:`, fallbackError);
-                  }
-                }
-              }
-              
-              console.log(`Successfully added player ${id} to ${successCount} out of ${finalSeasonIds.length} seasons`);
-              console.log(`Seasons: ${finalSeasonIds.join(', ')}`);
-            } catch (insertError) {
-              console.error(`Error inserting player ${id} to seasons:`, insertError);
-              // Fall back to one-by-one insert if batch fails
-              console.log(`Falling back to individual inserts`);
-              for (const seasonId of finalSeasonIds) {
-                try {
-                  await client.query(
-                    'INSERT INTO player_seasons (player_id, season_id) VALUES ($1, $2) ON CONFLICT (player_id, season_id) DO NOTHING',
-                    [id, seasonId]
-                  );
-                  console.log(`Successfully added player ${id} to season ${seasonId}`);
-                } catch (singleInsertError) {
-                  console.error(`Error adding player ${id} to season ${seasonId}:`, singleInsertError);
-                  // Continue with other seasons even if one fails
-                }
-              }
-            }
-          }
-          
-          await client.query('COMMIT');
+        if (success) {
           console.log(`Successfully updated seasons for player ${id}`);
-        } catch (txError) {
-          try {
-            await client.query('ROLLBACK');
-            console.error(`Transaction rolled back due to error:`, txError);
-          } catch (rollbackError) {
-            console.error(`Rollback failed:`, rollbackError);
-          }
-          throw new Error(`Database error updating player-season relationships: ${txError.message || 'Unknown error'}`);
-        } finally {
-          client.release();
+        } else {
+          console.warn(`Failed to update seasons for player ${id}, but continuing with player update`);
         }
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        const errorStack = error instanceof Error ? error.stack : 'No stack trace available';
-        const errorObject = JSON.stringify(error, Object.getOwnPropertyNames(error), 2);
-        
-        console.error(`Error handling player-season relationships:`);
-        console.error(`Message: ${errorMessage}`);
-        console.error(`Stack: ${errorStack}`);
-        console.error(`Full error object: ${errorObject}`);
-        console.error(`Error type: ${Object.prototype.toString.call(error)}`);
-        
-        if (error instanceof Error) {
-          console.error(`Error name: ${error.name}`);
-          console.error(`Error cause:`, error.cause);
-          
-          for (const key in error) {
-            console.error(`Error property ${key}:`, error[key]);
-          }
-        }
-        
-        // Send a proper error response to the client with detailed information
-        return res.status(500).json({ 
-          message: "Failed to update player-season relationships", 
-          error: errorMessage,
-          details: errorObject,
-          type: Object.prototype.toString.call(error)
-        });
+      } catch (seasonError) {
+        console.error(`Error updating player-season relationships:`, seasonError);
+        // Don't let this error prevent the player update from succeeding
       }
-      
-      // Return the updated player only if everything was successful
-      res.json(updatedPlayer);
+
+      // Return the updated player
+      return res.json(updatedPlayer);
     } catch (error) {
       console.error("Error updating player:", error);
-      console.error("Failed to update player:", error);
       res.status(500).json({ 
         message: "Failed to update player", 
         error: error instanceof Error ? error.message : String(error) 
