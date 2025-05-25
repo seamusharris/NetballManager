@@ -614,23 +614,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           // 2. Add new relationships if there are any
           if (validSeasonIds.length > 0) {
-            // Create value placeholders for the multi-row insert
-            const placeholders = validSeasonIds.map((_, index) => 
-              `($1, $${index + 2})`
-            ).join(', ');
-            
-            // Prepare all parameter values with player ID first
-            const parameters = [id, ...validSeasonIds];
-            
-            // Create and execute the multi-row insert query
-            const insertQuery = `
-              INSERT INTO player_seasons (player_id, season_id) 
-              VALUES ${placeholders}
-              ON CONFLICT (player_id, season_id) DO NOTHING
-            `;
-            
-            await client.query(insertQuery, parameters);
-            console.log(`Added player ${id} to ${validSeasonIds.length} seasons`);
+            // Use individual inserts with proper error handling
+            for (const seasonId of validSeasonIds) {
+              try {
+                await client.query(
+                  'INSERT INTO player_seasons (player_id, season_id) VALUES ($1, $2) ON CONFLICT (player_id, season_id) DO NOTHING',
+                  [id, seasonId]
+                );
+                console.log(`Added player ${id} to season ${seasonId}`);
+              } catch (insertError) {
+                console.error(`Error adding player ${id} to season ${seasonId}:`, insertError);
+                // Continue with next season instead of failing completely
+              }
+            }
+            console.log(`Processed ${validSeasonIds.length} seasons for player ${id}`);
           } else {
             console.log(`No valid seasons provided for player ${id}, all associations cleared`);
           }
@@ -642,6 +639,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Rollback on error
           await client.query('ROLLBACK');
           console.error(`Database error updating player-season relationships:`, dbError);
+          throw dbError; // Re-throw to properly handle error in the route
         } finally {
           // Always release the client
           client.release();
@@ -649,9 +647,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       } catch (error) {
         console.error(`Error handling player-season relationships:`, error);
+        // Send a proper error response to the client
+        return res.status(500).json({ 
+          message: "Failed to update player-season relationships", 
+          error: error.message || "Unknown error" 
+        });
       }
       
-      // Return the updated player
+      // Return the updated player only if everything was successful
       res.json(updatedPlayer);
     } catch (error) {
       console.error("Error updating player:", error);

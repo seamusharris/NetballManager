@@ -1,13 +1,9 @@
 import { Pool, neonConfig } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-serverless';
 import ws from "ws";
-import * as schema from "../shared/schema";
-import { log } from "./vite";
+import * as schema from "@shared/schema";
 
 neonConfig.webSocketConstructor = ws;
-
-// Configure Neon for better error handling
-// (fetchConnectionCache is now always true by default)
 
 if (!process.env.DATABASE_URL) {
   throw new Error(
@@ -15,52 +11,77 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-// Improved pool configuration with connection limits and timeouts
-export const pool = new Pool({ 
-  connectionString: process.env.DATABASE_URL,
-  max: 15, // Maximum number of clients in the pool
-  idleTimeoutMillis: 30000, // Close idle clients after 30 seconds
-  connectionTimeoutMillis: 5000, // Return an error after 5 seconds if connection not established
-  allowExitOnIdle: false, // Don't allow the pool to exit while the server is running
-});
-
-// Add event handlers for better diagnostics and error tracking
-pool.on('connect', (client) => {
-  log('New database connection established', 'db-pool');
-});
-
-pool.on('error', (err) => {
-  log(`Database pool error: ${err.message}`, 'db-pool-error');
-});
-
-pool.on('remove', () => {
-  log('Database connection removed from pool', 'db-pool');
-});
-
-// Export the drizzle instance with the schema
+export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 export const db = drizzle(pool, { schema });
 
-// Function to check pool health
-export async function checkPoolHealth() {
+// Helper function to update player-season relationships
+export async function updatePlayerSeasons(playerId: number, seasonIds: number[]) {
+  const client = await pool.connect();
   try {
-    const client = await pool.connect();
-    const result = await client.query('SELECT NOW()');
-    client.release();
-    return { 
-      healthy: true, 
-      timestamp: result.rows[0].now,
-      totalCount: pool.totalCount,
-      idleCount: pool.idleCount,
-      waitingCount: pool.waitingCount
-    };
+    // Start transaction
+    await client.query('BEGIN');
+    
+    // Delete existing relationships
+    await client.query('DELETE FROM player_seasons WHERE player_id = $1', [playerId]);
+    console.log(`Deleted existing season relationships for player ${playerId}`);
+    
+    // Insert new relationships if any exist
+    if (seasonIds && seasonIds.length > 0) {
+      // Process each seasonId individually with error handling
+      for (const seasonId of seasonIds) {
+        try {
+          await client.query(
+            'INSERT INTO player_seasons (player_id, season_id) VALUES ($1, $2) ON CONFLICT (player_id, season_id) DO NOTHING',
+            [playerId, seasonId]
+          );
+          console.log(`Added player ${playerId} to season ${seasonId}`);
+        } catch (insertError) {
+          console.error(`Error adding player ${playerId} to season ${seasonId}:`, insertError);
+          // Continue with next season instead of failing completely
+        }
+      }
+    } else {
+      console.log(`No seasons provided for player ${playerId}, all associations removed`);
+    }
+    
+    // Commit transaction
+    await client.query('COMMIT');
+    console.log(`Successfully committed player-season relationships for player ${playerId}`);
+    return true;
   } catch (error) {
-    log(`Database health check failed: ${error}`, 'db-error');
-    return { 
-      healthy: false, 
-      error: error instanceof Error ? error.message : String(error),
-      totalCount: pool.totalCount,
-      idleCount: pool.idleCount,
-      waitingCount: pool.waitingCount
-    };
+    // Rollback on error
+    await client.query('ROLLBACK');
+    console.error('Error updating player seasons:', error);
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+// Function to get all seasons for a player
+export async function getPlayerSeasons(playerId: number) {
+  try {
+    const result = await pool.query(
+      'SELECT s.* FROM seasons s JOIN player_seasons ps ON s.id = ps.season_id WHERE ps.player_id = $1',
+      [playerId]
+    );
+    return result.rows;
+  } catch (error) {
+    console.error(`Error fetching seasons for player ${playerId}:`, error);
+    throw error;
+  }
+}
+
+export async function checkPoolHealth() {
+  let client;
+  try {
+    client = await pool.connect();
+    await client.query('SELECT 1');
+    return true;
+  } catch (error) {
+    console.error('Database connection check failed:', error);
+    return false;
+  } finally {
+    if (client) client.release();
   }
 }
