@@ -535,12 +535,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = Number(req.params.id);
       
-      // Get the update data
-      const updateData = {...req.body};
+      // Get the update data - use player property if it exists (client format), otherwise use direct body
+      let updateData;
+      if (req.body.player) {
+        // Client is sending { id: number, player: { ...playerData } }
+        updateData = {...req.body.player};
+        console.log("Using nested player data format");
+      } else {
+        // Direct format { ...playerData }
+        updateData = {...req.body};
+        console.log("Using direct player data format");
+      }
+      
       console.log("\n\n======= PLAYER UPDATE START ========");
       console.log("Player ID:", id);
-      console.log("Player update request body:", JSON.stringify(updateData, null, 2));
-      console.log("Raw request body:", req.body);
+      console.log("Player update data after extraction:", JSON.stringify(updateData, null, 2));
+      console.log("Original request body:", JSON.stringify(req.body, null, 2));
       
       // Extract season IDs before updating player - simplified
       let processedSeasonIds = [];
@@ -570,6 +580,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
           
         console.log("Season IDs processed:", processedSeasonIds);
+        // Remove seasonIds from updateData since we'll handle it separately
         delete updateData.seasonIds;
       }
       console.log("==================================");
@@ -648,8 +659,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Don't let this error prevent the player update from succeeding
       }
 
-      // Return the updated player
-      return res.json(updatedPlayer);
+      // Fetch the updated player with season info before returning
+      try {
+        // Get the player's seasons to include in the response
+        const { getPlayerSeasons } = await import('./db');
+        const playerSeasons = await getPlayerSeasons(id);
+        
+        // Create a more complete response that includes the seasons
+        const enhancedResponse = {
+          ...updatedPlayer,
+          seasons: playerSeasons || []
+        };
+        
+        console.log(`Player ${id} successfully updated with seasons:`, playerSeasons);
+        console.log("======= PLAYER UPDATE COMPLETE ========\n\n");
+        
+        // Return the enhanced player object with seasons
+        return res.json(enhancedResponse);
+      } catch (error) {
+        console.error("Error getting player seasons for response:", error);
+        // Still return the player data even if we couldn't get the seasons
+        return res.json(updatedPlayer);
+      }
     } catch (error) {
       console.error("Error updating player:", error);
       res.status(500).json({ 
