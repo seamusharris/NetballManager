@@ -119,38 +119,54 @@ export default function Players() {
         console.log("Processed season IDs:", processedIds);
       }
       
+      // FIRST - Update the basic player information
       try {
-        console.log("Final request data:", JSON.stringify(playerData, null, 2));
+        console.log("1. Updating player base information...");
         console.log("Request URL:", `/api/players/${id}`);
         
-        // Direct fetch with specific error handling for clearer debugging
-        const response = await fetch(`/api/players/${id}`, {
+        // Create a copy without seasonIds for the first update
+        const playerBasicData = {...playerData};
+        delete playerBasicData.seasonIds;
+        
+        console.log("Basic player data for update:", JSON.stringify(playerBasicData, null, 2));
+        
+        // First update just the player record
+        const playerResponse = await fetch(`/api/players/${id}`, {
           method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(playerData),
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(playerBasicData),
           credentials: 'include'
         });
         
-        console.log("Response status:", response.status);
-        
-        if (!response.ok) {
-          let errorMessage = `Server error: ${response.status}`;
-          try {
-            const errorData = await response.json();
-            errorMessage = errorData.message || errorMessage;
-            console.error("Error response data:", errorData);
-          } catch (e) {
-            console.error("Could not parse error response");
-          }
-          throw new Error(errorMessage);
+        if (!playerResponse.ok) {
+          throw new Error(`Player update failed: ${playerResponse.status}`);
         }
         
-        const updatedPlayer = await response.json();
-        console.log("Update successful:", updatedPlayer);
+        // SECOND - Update the player-season relationships separately
+        console.log("2. Updating player-season relationships...");
+        console.log("Season IDs to update:", playerData.seasonIds);
+        
+        const seasonResponse = await fetch(`/api/players/${id}/seasons`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ seasonIds: playerData.seasonIds }),
+          credentials: 'include'
+        });
+        
+        if (!seasonResponse.ok) {
+          console.warn("Season relationship update failed, but player data was updated");
+        } else {
+          console.log("Season relationships updated successfully");
+        }
+        
+        // Get the updated player with seasons
+        const playerWithSeasons = await fetch(`/api/players/${id}`, {
+          credentials: 'include'
+        }).then(res => res.json());
+        
+        console.log("Update successful:", playerWithSeasons);
         console.log("========== UPDATE PLAYER COMPLETED ==========");
-        return updatedPlayer;
+        return playerWithSeasons;
       } catch (err) {
         console.error("========== UPDATE PLAYER FAILED ==========");
         console.error("Player update request failed:", err);

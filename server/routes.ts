@@ -535,6 +535,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = Number(req.params.id);
       
+      console.log("\n\n======= PLAYER UPDATE START ========");
+      console.log("Player ID:", id);
+      console.log("Raw request body:", JSON.stringify(req.body, null, 2));
+      
       // Get the update data - use player property if it exists (client format), otherwise use direct body
       let updateData;
       if (req.body.player) {
@@ -547,10 +551,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log("Using direct player data format");
       }
       
-      console.log("\n\n======= PLAYER UPDATE START ========");
-      console.log("Player ID:", id);
       console.log("Player update data after extraction:", JSON.stringify(updateData, null, 2));
-      console.log("Original request body:", JSON.stringify(req.body, null, 2));
       
       // Extract season IDs before updating player - simplified
       let processedSeasonIds = [];
