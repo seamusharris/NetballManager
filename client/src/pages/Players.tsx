@@ -62,11 +62,18 @@ export default function Players() {
     mutationFn: async ({ id, player }: { id: number, player: any }) => {
       console.log("Sending update request for player:", id, player);
       
-      // Ensure seasonIds is an array of numbers
-      if (player.seasonIds) {
-        player.seasonIds = player.seasonIds.map((id: any) => 
-          typeof id === 'number' ? id : parseInt(id, 10)
-        ).filter((id: number) => !isNaN(id));
+      // Create a copy of the player data to avoid modifying the original
+      const playerData = { ...player };
+      
+      // Ensure seasonIds is an array of numbers and properly formatted
+      if (playerData.seasonIds) {
+        playerData.seasonIds = playerData.seasonIds
+          .map((id: any) => typeof id === 'number' ? id : parseInt(id, 10))
+          .filter((id: number) => !isNaN(id));
+        console.log("Normalized season IDs:", playerData.seasonIds);
+      } else {
+        // Provide an empty array if seasonIds is undefined
+        playerData.seasonIds = [];
       }
       
       try {
@@ -76,11 +83,12 @@ export default function Players() {
           headers: {
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify(player)
+          body: JSON.stringify(playerData)
         });
         
         if (!response.ok) {
           const errorText = await response.text();
+          console.error(`API error: ${response.status} - ${errorText}`);
           throw new Error(`Failed to update player: ${response.status} - ${errorText}`);
         }
         
