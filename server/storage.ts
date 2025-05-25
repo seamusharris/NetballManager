@@ -5,10 +5,11 @@ import {
   games, type Game, type InsertGame,
   rosters, type Roster, type InsertRoster,
   gameStats, type GameStat, type InsertGameStat,
+  seasons, type Season, type InsertSeason,
   type Position
 } from "../shared/schema";
 import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { eq, desc, and, isNull } from "drizzle-orm";
 
 // Storage interface
 export interface IStorage {
@@ -33,6 +34,7 @@ export interface IStorage {
   
   // Game methods
   getGames(): Promise<Game[]>;
+  getGamesBySeason(seasonId: number): Promise<Game[]>;
   getGame(id: number): Promise<Game | undefined>;
   createGame(game: InsertGame): Promise<Game>;
   updateGame(id: number, game: Partial<InsertGame>): Promise<Game | undefined>;
@@ -53,6 +55,15 @@ export interface IStorage {
   updateGameStat(id: number, gameStat: Partial<InsertGameStat>): Promise<GameStat | undefined>;
   deleteGameStat(id: number): Promise<boolean>;
   deleteGameStatsByGame(gameId: number): Promise<boolean>;
+  
+  // Season methods
+  getSeasons(): Promise<Season[]>;
+  getSeason(id: number): Promise<Season | undefined>;
+  getActiveSeason(): Promise<Season | undefined>;
+  createSeason(season: InsertSeason): Promise<Season>;
+  updateSeason(id: number, season: Partial<InsertSeason>): Promise<Season | undefined>;
+  setActiveSeason(id: number): Promise<Season | undefined>;
+  deleteSeason(id: number): Promise<boolean>;
 }
 
 // Database storage implementation

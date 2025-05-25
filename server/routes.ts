@@ -10,7 +10,8 @@ import {
   insertGameSchema, importGameSchema,
   insertRosterSchema, importRosterSchema,
   insertGameStatSchema, importGameStatSchema,
-  players, opponents, games, rosters, gameStats,
+  insertSeasonSchema,
+  players, opponents, games, rosters, gameStats, seasons,
   POSITIONS
 } from "@shared/schema";
 import { fixGameStatsSchema } from "./fixDbSchema";

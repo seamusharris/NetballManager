@@ -2,6 +2,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { runAddGameStatusMigration } from "./migrations/addGameStatus";
+import { addSeasonsSupport } from "./migrations/addSeasonsSupport";
 
 const app = express();
 app.use(express.json());
@@ -42,6 +43,7 @@ app.use((req, res, next) => {
   try {
     log("Running database migrations...", "migration");
     await runAddGameStatusMigration();
+    await addSeasonsSupport();
     log("Database migrations completed successfully!", "migration");
   } catch (error) {
     log(`Error running migrations: ${error}`, "migration-error");
