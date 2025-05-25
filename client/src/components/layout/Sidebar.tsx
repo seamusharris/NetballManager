@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'wouter';
 import { cn } from '@/lib/utils';
 import { 
-  X, Menu, Home, Users, ClipboardList, Calendar, Flag, 
+  X, Menu, Home, Users, ClipboardList, Calendar, CalendarRange, Flag, 
   BarChart, Database, Settings as SettingsIcon, Zap 
 } from 'lucide-react';
 import { TEAM_NAME } from '@/lib/settings';
@@ -27,6 +27,7 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen, isTablet }: Sid
     { path: '/players', label: 'Players', icon: <Users className="w-5 h-5" /> },
     { path: '/roster', label: 'Roster', icon: <ClipboardList className="w-5 h-5" /> },
     { path: '/games', label: 'Games', icon: <Calendar className="w-5 h-5" /> },
+    { path: '/seasons', label: 'Seasons', icon: <Calendar className="w-5 h-5" /> },
     { path: '/opponents', label: 'Opponents', icon: <Flag className="w-5 h-5" /> },
     { path: '/statistics', label: 'Statistics', icon: <BarChart className="w-5 h-5" /> },
     { path: '/data-management', label: 'Data Management', icon: <Database className="w-5 h-5" /> },
