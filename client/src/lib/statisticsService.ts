@@ -120,13 +120,9 @@ export class StatisticsService {
       const timestamp = new Date().getTime(); // For cache busting if needed
       
       try {
-        const url = `/api/games/stats/batch?ids=${idsParam}&_t=${timestamp}`;
-        const response = await fetch(url, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        });
+        // Use the correct query parameter format - the backend expects 'gameIds' not 'ids'
+        const url = `/api/games/stats/batch?gameIds=${idsParam}&_t=${timestamp}`;
+        const response = await apiRequest('GET', url);
         const statsMap = await response.json();
         
         console.log(`Fetched batch stats for ${gameIds.length} games in a single request`);
