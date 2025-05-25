@@ -401,6 +401,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/players/:id/seasons", async (req, res) => {
     try {
       const playerId = Number(req.params.id);
+      console.log(`Fetching seasons for player ID: ${playerId}`);
       
       // Fetch the player's seasons from the junction table
       const result = await db.execute(sql`
@@ -409,6 +410,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         WHERE ps.player_id = ${playerId}
         ORDER BY s.name
       `);
+      
+      console.log(`Found ${result.rows.length} seasons for player ${playerId}`);
+      
+      // Debugging output
+      if (result.rows.length > 0) {
+        console.log(`Season IDs for player ${playerId}: ${result.rows.map(s => s.id).join(', ')}`);
+      }
       
       res.json(result.rows);
     } catch (error) {
@@ -592,6 +600,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Import pool at the beginning
         const { pool } = await import('./db');
         
+        // First, get all valid seasons from the database
+        const { rows: allSeasons } = await pool.query('SELECT id FROM seasons');
+        const allValidSeasonIds = allSeasons.map(s => s.id);
+        console.log(`All valid season IDs in database:`, allValidSeasonIds);
+        
         // Extract seasonIds directly from the request body instead of from updateData
         const rawSeasonIds = req.body.seasonIds || [];
         console.log(`Raw season IDs directly from request body:`, rawSeasonIds);
@@ -603,12 +616,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
               .filter(id => typeof id === 'number' && !isNaN(id))
           : [];
           
-        // Verify season IDs exist in the database
-        const { rows: existingSeasons } = await pool.query('SELECT id FROM seasons WHERE id = ANY($1::int[])', [validSeasonIds]);
-        const existingSeasonIds = existingSeasons.map(s => s.id);
+        // Very important: Check if we're dealing with player IDs being submitted as season IDs
+        // This is a common error we've seen where game IDs (56, 57, 58) are submitted instead of season IDs (1, 2)
+        const containsHighIds = validSeasonIds.some(id => id > 10); // Season IDs are typically small numbers
         
-        // Filter out season IDs that don't exist in the database
-        validSeasonIds = validSeasonIds.filter(id => existingSeasonIds.includes(id));
+        if (containsHighIds) {
+          console.warn(`Warning: Found unusually high IDs in season list. These may be game or player IDs mistakenly submitted as seasons:`, validSeasonIds);
+          // Use only valid season IDs from the database
+          validSeasonIds = validSeasonIds.filter(id => allValidSeasonIds.includes(id));
+          
+          // If we filtered out all IDs, assign the active season as a fallback
+          if (validSeasonIds.length === 0 && allValidSeasonIds.length > 0) {
+            console.log(`All submitted season IDs were invalid. Using the first valid season as fallback:`, allValidSeasonIds[0]);
+            validSeasonIds = [allValidSeasonIds[0]];
+          }
+        } else {
+          // Verify season IDs exist in the database (standard validation)
+          validSeasonIds = validSeasonIds.filter(id => allValidSeasonIds.includes(id));
+        }
         
         console.log(`Player ${id} will be associated with these valid seasons (after database verification):`, validSeasonIds);
         const client = await pool.connect();
