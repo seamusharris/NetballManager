@@ -45,7 +45,7 @@ export default function DashboardSummary({
   // Function to get season display name
   const getSeasonDisplayName = (season: Season) => {
     if (season.id === activeSeason?.id) {
-      return `${season.name} (Current Season)`;
+      return `${season.name} (Current)`;
     }
     return season.name;
   };
@@ -54,8 +54,6 @@ export default function DashboardSummary({
   const filteredGames = games.filter(game => {
     if (selectedSeasonId === 'current' && activeSeason) {
       return game.seasonId === activeSeason.id;
-    } else if (selectedSeasonId === 'all') {
-      return true;
     } else if (selectedSeasonId !== 'current') {
       const seasonId = parseInt(selectedSeasonId);
       return game.seasonId === seasonId;
@@ -92,18 +90,14 @@ export default function DashboardSummary({
         <div className="flex space-x-3">
           <Select value={selectedSeasonId} onValueChange={setSelectedSeasonId}>
             <SelectTrigger className="bg-white border rounded-md w-[200px]">
-              <SelectValue placeholder={activeSeason ? `${activeSeason.name} (Current Season)` : "Select Season"} />
+              <SelectValue placeholder={activeSeason ? `${activeSeason.name} (Current)` : "Select Season"} />
             </SelectTrigger>
             <SelectContent>
-              {activeSeason && (
-                <SelectItem value="current">{activeSeason.name} (Current Season)</SelectItem>
-              )}
               {seasons.map((season) => (
-                <SelectItem key={season.id} value={season.id.toString()}>
+                <SelectItem key={season.id} value={season.id === activeSeason?.id ? "current" : season.id.toString()}>
                   {getSeasonDisplayName(season)}
                 </SelectItem>
               ))}
-              <SelectItem value="all">All Seasons</SelectItem>
             </SelectContent>
           </Select>
           
