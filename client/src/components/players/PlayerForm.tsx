@@ -249,7 +249,7 @@ export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFor
     if (values.position3 !== "none") positionPreferences.push(values.position3 as Position);
     if (values.position4 !== "none") positionPreferences.push(values.position4 as Position);
     
-    // Build player data object
+    // Build player data object with season IDs explicitly converted to numbers
     const playerData = {
       displayName: values.displayName,
       firstName: values.firstName,
@@ -257,7 +257,7 @@ export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFor
       dateOfBirth: values.dateOfBirth || null,
       positionPreferences,
       active: values.active,
-      seasonIds: selectedSeasons
+      seasonIds: selectedSeasons.map(id => typeof id === 'string' ? parseInt(id, 10) : id)
     };
     
     console.log("Submitting player data manually:", playerData);
