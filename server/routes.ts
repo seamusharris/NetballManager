@@ -645,43 +645,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      // Season management is now handled separately, so we don't expect seasonIds here
-      const seasonIds = [];
-      // Remove seasonIds if it somehow exists in the request
-      delete playerData.seasonIds;
-      
       // Create the player
       const player = await storage.createPlayer(playerData);
-      
-      // If seasons were provided, create the player-season relationships
-      if (seasonIds.length > 0) {
-        console.log(`Creating player-season relationships for player ${player.id} with seasons:`, seasonIds);
-        
-        // Create player-season entries for each selected season
-        for (const seasonId of seasonIds) {
-          await db.execute(sql`
-            INSERT INTO player_seasons (player_id, season_id)
-            VALUES (${player.id}, ${seasonId})
-            ON CONFLICT (player_id, season_id) DO NOTHING
-          `);
-        }
-      } else {
-        // If no seasons were explicitly provided, add to active season if one exists
-        const activeSeasonResult = await db.execute(sql`
-          SELECT id FROM seasons WHERE is_active = true LIMIT 1
-        `);
-        
-        if (activeSeasonResult.rows.length > 0) {
-          const activeSeason = activeSeasonResult.rows[0].id;
-          console.log(`Adding new player ${player.id} to active season ${activeSeason}`);
-          
-          await db.execute(sql`
-            INSERT INTO player_seasons (player_id, season_id)
-            VALUES (${player.id}, ${activeSeason})
-            ON CONFLICT (player_id, season_id) DO NOTHING
-          `);
-        }
-      }
       
       res.status(201).json(player);
     } catch (error) {
