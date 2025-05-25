@@ -95,10 +95,25 @@ export default function Players() {
   // Delete player mutation
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
+      console.log("Making DELETE request to /api/players/" + id);
       try {
-        // DELETE requests typically don't return a response body
-        await apiRequest('DELETE', `/api/players/${id}`, {});
-        return true; // Return success indicator
+        // Use raw fetch for DELETE requests which may return 204 No Content
+        const response = await fetch(`/api/players/${id}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        // Check if response is successful (including 204 No Content)
+        if (response.ok) {
+          return true; // Return success indicator
+        }
+        
+        // If not successful, try to parse error message
+        const errorText = await response.text();
+        console.error("Delete error response:", response.status, errorText);
+        throw new Error(errorText || `Failed to delete player (${response.status})`);
       } catch (error) {
         console.error("Error in delete mutation:", error);
         throw error;
