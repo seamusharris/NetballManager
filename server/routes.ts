@@ -658,14 +658,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const params = [id, ...finalSeasonIds];
             
             try {
+              // Validate the database connection
+              const checkConnection = await client.query('SELECT 1 as connection_test');
+              console.log(`Database connection validated:`, checkConnection.rows[0]);
+              
+              // Validate the player exists
+              const playerCheck = await client.query('SELECT id FROM players WHERE id = $1', [id]);
+              console.log(`Player check result:`, playerCheck.rows);
+              
+              // Validate season IDs exist
+              const seasonValues = finalSeasonIds.join(',');
+              const seasonCheck = await client.query(`SELECT id FROM seasons WHERE id IN (${seasonValues})`);
+              console.log(`Found ${seasonCheck.rowCount} valid seasons out of ${finalSeasonIds.length} requested`);
+              
               console.log(`Attempting to add player ${id} to seasons with query:`, 
                 `INSERT INTO player_seasons (player_id, season_id) VALUES ${values} ON CONFLICT (player_id, season_id) DO NOTHING`);
               console.log(`With parameters:`, params);
               
-              await client.query(
+              const insertResult = await client.query(
                 `INSERT INTO player_seasons (player_id, season_id) VALUES ${values} ON CONFLICT (player_id, season_id) DO NOTHING`,
                 params
               );
+              console.log(`Insert result:`, insertResult);
               console.log(`Successfully added player ${id} to seasons: ${finalSeasonIds.join(', ')}`);
             } catch (insertError) {
               console.error(`Error inserting player ${id} to seasons:`, insertError);
