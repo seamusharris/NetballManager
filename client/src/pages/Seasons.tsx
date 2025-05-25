@@ -113,14 +113,9 @@ export default function Seasons() {
 
   // Update season mutation
   const updateSeasonMutation = useMutation({
-    mutationFn: (data: { id: number; seasonData: Partial<SeasonFormValues> }) => {
-      return apiRequest(`/api/seasons/${data.id}`, {
-        method: 'PATCH',
-        body: JSON.stringify(data.seasonData),
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
+    mutationFn: async (data: { id: number; seasonData: Partial<SeasonFormValues> }) => {
+      const res = await apiRequest('PATCH', `/api/seasons/${data.id}`, data.seasonData);
+      return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/seasons'] });
