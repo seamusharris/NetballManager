@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Link } from 'wouter';
 import { Game, Opponent, GameStat } from '@shared/schema';
@@ -23,9 +23,17 @@ export default function RecentGames({ games, opponents, className, seasonFilter,
   const gameIds = recentGames.map(game => game.id);
   const enableQuery = gameIds.length > 0;
   
+  // Add a state for caching the data that forces component refresh
+  const [refreshToken, setRefreshToken] = useState(Date.now());
+  
+  // Force refresh when props change
+  useEffect(() => {
+    setRefreshToken(Date.now());
+  }, [games]);
+  
   // Cache game stats using React Query with batch endpoint
   const { data: allGameStats, isLoading } = useQuery({
-    queryKey: ['batchGameStats', gameIds.join(',')],
+    queryKey: ['batchGameStats', gameIds.join(','), refreshToken],
     queryFn: async () => {
       if (gameIds.length === 0) {
         return {};

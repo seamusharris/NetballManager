@@ -49,7 +49,7 @@ export default function TeamPerformance({ games, className, activeSeason, select
   
   // Fetch stats for all completed games individually since batch endpoint is unreliable
   const { data: gameStatsMap, isLoading } = useQuery({
-    queryKey: ['batchTeamPerformanceStats', completedGameIds.join(','), statsKey],
+    queryKey: ['batchTeamPerformanceStats', completedGameIds.join(','), statsKey, selectedSeason],
     queryFn: async () => {
       if (completedGameIds.length === 0) {
         return {};

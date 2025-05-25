@@ -91,12 +91,13 @@ export default function DashboardSummary({
     (game.date >= currentDate && !game.completed)
   ), true);
   
-  // Handle refresh button click
+  // Handle refresh button click - with added logging for debugging
   const handleRefresh = () => {
-    queryClient.invalidateQueries({ queryKey: ['/api/games'] });
-    queryClient.invalidateQueries({ queryKey: ['/api/players'] });
-    queryClient.invalidateQueries({ queryKey: ['/api/opponents'] });
-    queryClient.invalidateQueries({ queryKey: ['/api/seasons'] });
+    console.log("Manual refresh triggered - invalidating all queries");
+    // Invalidate all queries instead of specific ones for a complete refresh
+    queryClient.invalidateQueries();
+    // Update refresh key
+    setRefreshKey(prev => prev + 1);
   };
   
   return (
