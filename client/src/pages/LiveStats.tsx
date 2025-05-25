@@ -227,11 +227,7 @@ export default function LiveStats() {
   // Create or update game stats
   const { mutate: saveGameStat } = useMutation({
     mutationFn: (gameStat: Partial<GameStat>) => 
-      apiRequest(`/api/gamestats`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(gameStat)
-      }),
+      apiRequest('POST', `/api/gamestats`, gameStat),
     onSuccess: () => {
       // We'll handle all invalidation after saving all stats
     }
