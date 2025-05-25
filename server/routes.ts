@@ -572,29 +572,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(`Updating player-season relationships for player ${id} with seasons:`, seasonIds);
         
         try {
-          // First, remove all existing player-season relationships
-          const deleteResult = await db.execute(sql`
-            DELETE FROM player_seasons 
-            WHERE player_id = ${id}
-          `);
-          console.log("Deleted existing player-season relationships:", deleteResult);
+          // Use a client from the pool directly for a transaction
+          const client = await pool.connect();
           
-          // Then create new player-season entries for each selected season
-          for (const seasonId of seasonIds) {
-            try {
-              const insertResult = await db.execute(sql`
-                INSERT INTO player_seasons (player_id, season_id)
-                VALUES (${id}, ${seasonId})
-                ON CONFLICT (player_id, season_id) DO NOTHING
-              `);
-              console.log(`Added player ${id} to season ${seasonId}:`, insertResult);
-            } catch (insertError) {
-              console.error(`Error inserting player-season for season ${seasonId}:`, insertError);
+          try {
+            // Start a transaction
+            await client.query('BEGIN');
+            
+            // Delete existing relationships
+            await client.query('DELETE FROM player_seasons WHERE player_id = $1', [id]);
+            console.log(`Deleted existing player-season relationships for player ${id}`);
+            
+            // Insert new relationships
+            for (const seasonId of seasonIds) {
+              await client.query(
+                'INSERT INTO player_seasons (player_id, season_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
+                [id, seasonId]
+              );
+              console.log(`Added player ${id} to season ${seasonId}`);
             }
+            
+            // Commit the transaction
+            await client.query('COMMIT');
+            console.log("Player-season relationships updated successfully");
+          } catch (error) {
+            // If anything goes wrong, roll back the transaction
+            await client.query('ROLLBACK');
+            console.error("Error updating player-season relationships, rolled back transaction:", error);
+          } finally {
+            // Always release the client back to the pool
+            client.release();
           }
-        } catch (relationshipError) {
-          console.error("Error updating player-season relationships:", relationshipError);
-          // Continue execution - we still want to return the updated player even if season assignments fail
+        } catch (poolError) {
+          console.error("Error getting database client from pool:", poolError);
         }
       } else {
         console.log("No season IDs provided, skipping player-season relationship updates");
