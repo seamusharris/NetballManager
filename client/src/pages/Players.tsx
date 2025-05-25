@@ -199,6 +199,27 @@ export default function Players() {
     createMutation.mutate(data);
   };
   
+  // Separate mutation for updating player seasons
+  const updatePlayerSeasonsMutation = useMutation({
+    mutationFn: async ({ playerId, seasonIds }: { playerId: number, seasonIds: number[] }) => {
+      console.log("Updating player seasons:", playerId, seasonIds);
+      const res = await apiRequest('POST', `/api/players/${playerId}/seasons`, { seasonIds });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/players'] });
+      console.log("Player seasons updated successfully");
+    },
+    onError: (error) => {
+      console.error("Failed to update player seasons:", error);
+      toast({
+        title: "Warning",
+        description: "Player was updated but seasons could not be updated. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
   const handleUpdatePlayer = (data: any) => {
     console.log("Updating player with data:", data);
     
@@ -207,21 +228,34 @@ export default function Players() {
       return;
     }
     
-    // Make sure we're sending valid player data
+    // Capture the season IDs separately
+    const seasonIds = data.seasonIds || [];
+    
+    // Make sure we're sending valid player data (without seasons)
     const validPlayerData = {
       displayName: data.displayName,
       firstName: data.firstName,
       lastName: data.lastName,
       dateOfBirth: data.dateOfBirth || null,
       positionPreferences: data.positionPreferences,
-      active: data.active,
-      seasonIds: data.seasonIds || [] // Include season IDs in the update
+      active: data.active
+      // No seasonIds here - we'll use the dedicated endpoint
     };
     
     console.log("Sending update request with:", { id: editingPlayer.id, player: validPlayerData });
+    
+    // Update the player first
     updateMutation.mutate({ 
       id: editingPlayer.id, 
       player: validPlayerData 
+    }, {
+      onSuccess: () => {
+        // Then update the seasons using our dedicated endpoint
+        updatePlayerSeasonsMutation.mutate({
+          playerId: editingPlayer.id,
+          seasonIds
+        });
+      }
     });
   };
   

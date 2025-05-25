@@ -419,6 +419,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch player seasons" });
     }
   });
+  
+  // Dedicated endpoint for managing player-season relationships
+  app.post("/api/players/:id/seasons", async (req, res) => {
+    try {
+      const playerId = Number(req.params.id);
+      
+      // Validate player exists
+      const player = await storage.getPlayer(playerId);
+      if (!player) {
+        return res.status(404).json({ message: "Player not found" });
+      }
+      
+      // Get season IDs from request body
+      const { seasonIds } = req.body;
+      if (!Array.isArray(seasonIds)) {
+        return res.status(400).json({ message: "seasonIds must be an array" });
+      }
+      
+      console.log(`Direct season update for player ${playerId}:`, seasonIds);
+      
+      // Use our specialized function
+      const { updatePlayerSeasons } = await import('./fix-player-seasons');
+      const success = await updatePlayerSeasons(playerId, seasonIds);
+      
+      if (success) {
+        // Get updated season IDs to return in response
+        const updatedSeasonIds = await storage.getPlayerSeasons(playerId);
+        return res.json({
+          message: "Player seasons updated successfully",
+          playerId,
+          seasonIds: updatedSeasonIds
+        });
+      } else {
+        return res.status(500).json({ 
+          message: "Failed to update player seasons"
+        });
+      }
+    } catch (error) {
+      console.error("Error in player-seasons endpoint:", error);
+      return res.status(500).json({ 
+        message: "Failed to update player seasons",
+        error: error instanceof Error ? error.message : "Unknown error" 
+      });
+    }
+  });
 
   app.post("/api/players", async (req, res) => {
     try {
