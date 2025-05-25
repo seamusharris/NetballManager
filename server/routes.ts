@@ -609,8 +609,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const requestSeasonIds = Array.isArray(req.body.seasonIds) ? req.body.seasonIds : [];
         console.log(`Season IDs from request:`, requestSeasonIds);
         
-        // Filter to only include valid season IDs
-        const filteredSeasonIds = requestSeasonIds.filter(id => validSeasonIds.includes(Number(id)));
+        // Convert all IDs to numbers and filter to only include valid season IDs
+        const filteredSeasonIds = requestSeasonIds
+          .map(id => typeof id === 'string' ? parseInt(id, 10) : id)
+          .filter(id => typeof id === 'number' && !isNaN(id) && validSeasonIds.includes(id));
+        
         console.log(`Filtered valid season IDs:`, filteredSeasonIds);
         
         // Default to active season if no valid seasons provided
