@@ -512,20 +512,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const seasonIds = req.body.seasonIds || [];
       
       try {
-        // Try first with the emergency direct SQL approach
-        const { createPlayerEmergency } = await import('./emergency-player-fix');
-        const result = await createPlayerEmergency(playerData, seasonIds);
+        // Try first with the direct SQL approach
+        const { createPlayerDirect } = await import('./direct-player-operations');
+        const result = await createPlayerDirect(playerData, seasonIds);
         
         if (result.success && result.playerId) {
           // Get the full player object to return
           const player = await storage.getPlayer(result.playerId);
           if (player) {
-            console.log("Successfully created player using emergency method");
+            console.log("Successfully created player using direct method");
             return res.status(201).json(player);
           }
         }
         
-        // If emergency method fails or doesn't return a valid player, fall back to standard method
+        // If direct method fails or doesn't return a valid player, fall back to standard method
         console.log("Falling back to standard player creation method");
       } catch (err) {
         console.error("Emergency player creation failed, falling back to standard method:", err);
@@ -596,7 +596,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
           
           // Import the specialized function for direct SQL update
-          const { updatePlayerEmergency } = await import('./emergency-player-fix');
+          const { updatePlayerDirect } = await import('./direct-player-operations');
           
           // Ensure position preferences are properly typed
           let positionPreferences = currentPlayer.positionPreferences;
@@ -604,7 +604,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             positionPreferences = updateData.positionPreferences;
           }
           
-          // Clean updateData for emergency update
+          // Clean updateData for direct update
           const cleanUpdateData = {
             ...(updateData.displayName !== undefined && { displayName: updateData.displayName }),
             ...(updateData.firstName !== undefined && { firstName: updateData.firstName }),
@@ -615,12 +615,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
             ...(updateData.positionPreferences !== undefined && { positionPreferences })
           };
           
-          console.log(`Attempting emergency update for player ${id}`);
+          console.log(`Attempting direct update for player ${id}`);
           // Update using direct SQL approach
-          const result = await updatePlayerEmergency(id, cleanUpdateData, seasonIds);
+          const result = await updatePlayerDirect(id, cleanUpdateData, seasonIds);
           
           if (result.success) {
-            console.log(`Successfully updated player ${id} using emergency method`);
+            console.log(`Successfully updated player ${id} using direct method`);
             // Get the updated player to return
             const updatedPlayer = await storage.getPlayer(id);
             if (updatedPlayer) {
@@ -628,7 +628,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
           }
           
-          console.log("Emergency update failed, falling back to standard method");
+          console.log("Direct update failed, falling back to standard method");
         } catch (err) {
           console.error("Emergency player update failed:", err);
         }
