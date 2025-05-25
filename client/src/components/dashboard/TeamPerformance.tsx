@@ -193,7 +193,7 @@ export default function TeamPerformance({ games, className }: TeamPerformancePro
             <p className="text-3xl font-bold text-primary">{quarterPerformance.goalsPercentage}%</p>
           </div>
           <div className="text-center bg-gray-50 p-3 rounded-lg">
-            <p className="text-gray-500 text-sm mb-1">Games Played</p>
+            <p className="text-gray-500 text-sm mb-1">Played</p>
             <p className="text-3xl font-bold text-primary">{completedGamesCount}</p>
           </div>
           
@@ -206,7 +206,7 @@ export default function TeamPerformance({ games, className }: TeamPerformancePro
             <p className="text-3xl font-bold text-primary">{quarterPerformance.avgOpponentScore}</p>
           </div>
           <div className="text-center bg-gray-50 p-3 rounded-lg">
-            <p className="text-gray-500 text-sm mb-1">Upcoming Games</p>
+            <p className="text-gray-500 text-sm mb-1">Upcoming</p>
             <p className="text-3xl font-bold text-primary">{games.filter(game => !game.completed && !game.isBye).length}</p>
           </div>
         </div>
