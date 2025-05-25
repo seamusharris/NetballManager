@@ -334,12 +334,17 @@ export default function Players() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(playerData)
     })
-    .then(response => {
+    .then(async response => {
       console.log("Direct update response status:", response.status);
-      return response.json().catch(() => ({ 
-        success: false, 
-        message: "Invalid JSON response" 
-      }));
+      const text = await response.text();
+      console.log("Raw response text:", text);
+      
+      try {
+        return text ? JSON.parse(text) : { success: false, message: "Empty response" };
+      } catch (e) {
+        console.error("JSON parse error:", e);
+        return { success: false, message: `Invalid JSON: ${text.substring(0, 100)}` };
+      }
     })
     .then(result => {
       console.log("Direct update result:", result);
@@ -354,6 +359,7 @@ export default function Players() {
         queryClient.invalidateQueries({queryKey: ['/api/players']});
         setEditingPlayer(null);
       } else {
+        console.error("Detailed error from server:", result.error || "No error details");
         toast({
           title: "Update Failed",
           description: result.message || "Failed to update player",
