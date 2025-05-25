@@ -26,14 +26,15 @@ export default function PlayerSeasonsManager({
   const [selectedSeasons, setSelectedSeasons] = useState<number[]>([]);
   
   // Fetch player's current seasons
-  const { data: playerSeasons = [] } = useQuery<Season[]>({
+  const { data: playerSeasons = [], isLoading: isSeasonsLoading } = useQuery<Season[]>({
     queryKey: [`/api/players/${player.id}/seasons`],
-    enabled: isOpen && !!player?.id,
+    enabled: !!player?.id, // Always fetch when player ID is available
   });
   
   // Update selected seasons when player seasons are loaded
   useEffect(() => {
     if (playerSeasons && playerSeasons.length > 0) {
+      console.log(`Setting selected seasons for player ${player.id}:`, playerSeasons.map(s => s.id));
       setSelectedSeasons(playerSeasons.map(season => season.id));
     }
   }, [playerSeasons]);
