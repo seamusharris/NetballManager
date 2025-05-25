@@ -1290,9 +1290,9 @@ export default function GameDetails() {
       <div className="mt-8">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="roster">
+            <TabsTrigger value="overview">
               <ClipboardList className="mr-2 h-4 w-4" />
-              Court Positions
+              Overview
             </TabsTrigger>
             <TabsTrigger value="players">
               <ActivitySquare className="mr-2 h-4 w-4" />
@@ -1312,25 +1312,120 @@ export default function GameDetails() {
             </TabsTrigger>
           </TabsList>
           
-          <TabsContent value="roster" className="mt-6">
-            {roster && roster.length > 0 ? (
-              <CourtPositionRoster 
-                roster={roster} 
-                players={players || []}
-                gameStats={gameStats || []}
-              />
-            ) : (
-              <div className="text-center py-10 border rounded-lg bg-gray-50">
-                <h3 className="text-lg font-medium mb-2">No roster assigned</h3>
-                <p className="text-gray-500 mb-4">There are no positions assigned for this game yet.</p>
-                <Button asChild>
-                  <Link to={`/game/${gameId}/roster`}>
-                    <Edit className="mr-2 h-4 w-4" />
-                    Set Up Roster
-                  </Link>
-                </Button>
-              </div>
-            )}
+          <TabsContent value="overview" className="mt-6">
+            <div className="space-y-6">
+              {/* Court Positions */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Court Positions</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {roster && roster.length > 0 ? (
+                    <CourtPositionRoster 
+                      roster={roster} 
+                      players={players || []}
+                      gameStats={gameStats || []}
+                    />
+                  ) : (
+                    <div className="text-center py-10 border rounded-lg bg-gray-50">
+                      <h3 className="text-lg font-medium mb-2">No roster assigned</h3>
+                      <p className="text-gray-500 mb-4">There are no positions assigned for this game yet.</p>
+                      <Button asChild>
+                        <Link to={`/game/${gameId}/roster`}>
+                          <Edit className="mr-2 h-4 w-4" />
+                          Set Up Roster
+                        </Link>
+                      </Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Game Notes Card */}
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-xl font-bold">Game Notes</CardTitle>
+                  {!isEditingNotes ? (
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => {
+                        setIsEditingNotes(true);
+                        setGameNotes(game.notes || '');
+                      }}
+                    >
+                      <Edit className="mr-2 h-4 w-4" />
+                      Edit Notes
+                    </Button>
+                  ) : (
+                    <div className="flex space-x-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => {
+                          setIsEditingNotes(false);
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                      <Button 
+                        variant="default" 
+                        size="sm" 
+                        onClick={async () => {
+                          try {
+                            const response = await fetch(`/api/games/${gameId}`, {
+                              method: 'PATCH',
+                              headers: {
+                                'Content-Type': 'application/json',
+                              },
+                              body: JSON.stringify({ notes: gameNotes }),
+                            });
+                            
+                            if (response.ok) {
+                              // Invalidate the game query to refresh the data
+                              queryClient.invalidateQueries({ queryKey: ['/api/games', gameId] });
+                              setIsEditingNotes(false);
+                              toast({
+                                title: "Notes saved",
+                                description: "Game notes have been updated successfully.",
+                              });
+                            } else {
+                              throw new Error('Failed to save notes');
+                            }
+                          } catch (error) {
+                            toast({
+                              variant: "destructive",
+                              title: "Error",
+                              description: "Failed to save game notes. Please try again.",
+                            });
+                          }
+                        }}
+                      >
+                        Save Notes
+                      </Button>
+                    </div>
+                  )}
+                </CardHeader>
+                <CardContent>
+                  {isEditingNotes ? (
+                    <textarea
+                      className="w-full h-64 p-3 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      value={gameNotes}
+                      onChange={(e) => setGameNotes(e.target.value)}
+                      placeholder="Enter game notes here... (observations, player performances, areas for improvement, etc.)"
+                    />
+                  ) : (
+                    <div className="min-h-[200px] p-4 bg-gray-50 rounded-md">
+                      {game.notes ? (
+                        <div className="whitespace-pre-wrap">{game.notes}</div>
+                      ) : (
+                        <div className="text-gray-500 italic">No notes have been added for this game yet.</div>
+                      )}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
           
 
