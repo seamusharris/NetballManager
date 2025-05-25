@@ -1554,7 +1554,16 @@ export default function GameDetails() {
                         
                         // Get player initials
                         const getInitials = (firstName: string, lastName: string) => {
-                          return `${firstName.charAt(0)}${lastName ? lastName.charAt(0) : ''}`.toUpperCase();
+                          // Handle first name (considering first part of compound names)
+                          const firstInitial = firstName.trim().charAt(0).toUpperCase();
+                          
+                          // Handle last name (including hyphenated or multi-part names)
+                          let lastInitial = '';
+                          if (lastName && lastName.trim()) {
+                            lastInitial = lastName.trim().charAt(0).toUpperCase();
+                          }
+                          
+                          return `${firstInitial}${lastInitial}`;
                         };
                         
                         return (
