@@ -9,10 +9,11 @@ import { apiRequest } from '@/lib/queryClient';
 interface TeamPerformanceProps {
   games: Game[];
   className?: string;
-  activeSeason?: any; // Accept active season
+  activeSeason?: any; // The current active season
+  selectedSeason?: any; // The season selected in the dropdown
 }
 
-export default function TeamPerformance({ games, className, activeSeason }: TeamPerformanceProps) {
+export default function TeamPerformance({ games, className, activeSeason, selectedSeason }: TeamPerformanceProps) {
   const [quarterPerformance, setQuarterPerformance] = useState<{
     avgTeamScoreByQuarter: Record<number, number>;
     avgOpponentScoreByQuarter: Record<number, number>;
@@ -187,7 +188,12 @@ export default function TeamPerformance({ games, className, activeSeason }: Team
         <div className="flex justify-between items-center mb-4">
           <h3 className="font-heading font-semibold text-neutral-dark">Team Performance</h3>
           <Badge variant="outline" className="bg-accent/10 text-accent px-2 py-1 rounded-full text-xs font-semibold">
-            {activeSeason ? activeSeason.name : "Current Season"}
+            {selectedSeason ? 
+              (typeof selectedSeason === 'string' && selectedSeason === 'current' && activeSeason ? 
+                `${activeSeason.name} (Current)` : 
+                (selectedSeason.name || "Selected Season")
+              ) : 
+              (activeSeason ? activeSeason.name : "Current Season")}
           </Badge>
         </div>
         

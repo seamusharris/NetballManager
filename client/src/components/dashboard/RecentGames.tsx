@@ -31,10 +31,30 @@ export default function RecentGames({ games, opponents, className }: RecentGames
       
       // Use the batch endpoint to fetch all stats in a single request
       const idsParam = gameIds.join(',');
-      const response = await fetch(`/api/games/stats/batch?ids=${idsParam}`);
+      const response = await fetch(`/api/games/stats/batch?gameIds=${idsParam}`);
       
       if (!response.ok) {
-        throw new Error(`Failed to fetch batch statistics for games ${idsParam}`);
+        console.error(`Failed to fetch batch statistics for games ${idsParam}. Using individual fetches as fallback.`);
+        
+        // Fallback to individual fetches if the batch endpoint fails
+        const statsMap: Record<number, any[]> = {};
+        
+        for (const gameId of gameIds) {
+          try {
+            const response = await fetch(`/api/games/${gameId}/stats`);
+            if (response.ok) {
+              const stats = await response.json();
+              statsMap[gameId] = stats;
+            } else {
+              statsMap[gameId] = []; // Empty array for failed fetches
+            }
+          } catch (error) {
+            console.error(`Error fetching stats for game ${gameId}:`, error);
+            statsMap[gameId] = []; // Empty array for failed fetches
+          }
+        }
+        
+        return statsMap;
       }
       
       return await response.json();

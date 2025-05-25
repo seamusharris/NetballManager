@@ -120,7 +120,11 @@ export default function DashboardSummary({
           </>
         ) : (
           <>
-            <TeamPerformance games={filteredGames} activeSeason={activeSeason} />
+            <TeamPerformance 
+              games={filteredGames} 
+              activeSeason={activeSeason} 
+              selectedSeason={selectedSeasonId === 'current' ? 'current' : seasons.find(s => s.id.toString() === selectedSeasonId)} 
+            />
             <RecentGames games={pastGames} opponents={opponents} />
             <UpcomingGames games={upcomingGames} opponents={opponents} />
           </>
