@@ -16,6 +16,7 @@ import {
 } from "@shared/schema";
 import { fixGameStatsSchema } from "./fixDbSchema";
 import { setPositionsForStats } from "./migrations/setPositionsForStats";
+import { addPlayerSeasonUniqueConstraint } from "./migrations/addPlayerSeasonUniqueConstraint";
 import { updatePlayerSeasonRelationships, getPlayerSeasons } from "./player-season-routes";
 
 export async function registerRoutes(app: Express): Promise<Server> {
