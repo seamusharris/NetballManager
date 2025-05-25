@@ -94,7 +94,8 @@ export class StatisticsService {
     try {
       // Add timestamp to force a fresh network request every time
       const timestamp = new Date().getTime();
-      const stats = await apiRequest(`/api/games/${gameId}/stats?_t=${timestamp}`);
+      const res = await fetch(`/api/games/${gameId}/stats?_t=${timestamp}`);
+      const stats = await res.json();
       console.log(`Fetched ${stats.length} fresh stats for game ${gameId}`);
       return stats;
     } catch (error) {
@@ -120,8 +121,13 @@ export class StatisticsService {
       
       try {
         const url = `/api/games/stats/batch?ids=${idsParam}&_t=${timestamp}`;
-        const res = await apiRequest('GET', url);
-        const statsMap = await res.json();
+        const response = await fetch(url, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        const statsMap = await response.json();
         
         console.log(`Fetched batch stats for ${gameIds.length} games in a single request`);
         return statsMap;

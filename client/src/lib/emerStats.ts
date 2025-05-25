@@ -142,8 +142,8 @@ export async function savePositionStat(
       // Additional log for debugging
       console.log(`Sending clean data to update ${positionName} Q${quarter}:`, cleanData);
       
-      // IMPORTANT: Use the correct endpoint with no hyphen
-      const updateResponse = await fetch(`/api/gamestats/${targetStat.id}`, {
+      // Use the correct endpoint
+      const updateResponse = await fetch(`/api/game/stats/${targetStat.id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json'
