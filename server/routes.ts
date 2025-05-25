@@ -507,8 +507,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = Number(req.params.id);
       
-      // Get the update data
+      // Get the update data and log it for debugging
       const updateData = req.body;
+      console.log("Player update request body:", JSON.stringify(updateData, null, 2));
       
       // If avatar color is set to auto or empty, handle it properly
       if (updateData.avatarColor === 'auto' || updateData.avatarColor === '') {
@@ -543,39 +544,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Extract the season IDs if they were provided
-      const seasonIds = req.body.seasonIds || [];
+      const seasonIds = updateData.seasonIds || [];
+      console.log("Season IDs from request:", seasonIds);
       delete updateData.seasonIds; // Remove from player data as it's not part of the player schema
       
+      // Create a sanitized version of the update data (only include valid fields)
+      const validPlayerData = {
+        displayName: updateData.displayName,
+        firstName: updateData.firstName,
+        lastName: updateData.lastName,
+        dateOfBirth: updateData.dateOfBirth,
+        positionPreferences: updateData.positionPreferences,
+        active: updateData.active,
+        avatarColor: updateData.avatarColor
+      };
+      
+      console.log("Sanitized player data for update:", validPlayerData);
+      
       // Update the player first
-      const updatedPlayer = await storage.updatePlayer(id, updateData);
+      const updatedPlayer = await storage.updatePlayer(id, validPlayerData);
       if (!updatedPlayer) {
         return res.status(404).json({ message: "Player not found" });
       }
       
       // If seasons were provided, update the player-season relationships
-      if (seasonIds.length > 0) {
+      if (seasonIds && seasonIds.length > 0) {
         console.log(`Updating player-season relationships for player ${id} with seasons:`, seasonIds);
         
-        // First, remove all existing player-season relationships
-        await db.execute(sql`
-          DELETE FROM player_seasons 
-          WHERE player_id = ${id}
-        `);
-        
-        // Then create new player-season entries for each selected season
-        for (const seasonId of seasonIds) {
-          await db.execute(sql`
-            INSERT INTO player_seasons (player_id, season_id)
-            VALUES (${id}, ${seasonId})
-            ON CONFLICT (player_id, season_id) DO NOTHING
+        try {
+          // First, remove all existing player-season relationships
+          const deleteResult = await db.execute(sql`
+            DELETE FROM player_seasons 
+            WHERE player_id = ${id}
           `);
+          console.log("Deleted existing player-season relationships:", deleteResult);
+          
+          // Then create new player-season entries for each selected season
+          for (const seasonId of seasonIds) {
+            try {
+              const insertResult = await db.execute(sql`
+                INSERT INTO player_seasons (player_id, season_id)
+                VALUES (${id}, ${seasonId})
+                ON CONFLICT (player_id, season_id) DO NOTHING
+              `);
+              console.log(`Added player ${id} to season ${seasonId}:`, insertResult);
+            } catch (insertError) {
+              console.error(`Error inserting player-season for season ${seasonId}:`, insertError);
+            }
+          }
+        } catch (relationshipError) {
+          console.error("Error updating player-season relationships:", relationshipError);
+          // Continue execution - we still want to return the updated player even if season assignments fail
         }
+      } else {
+        console.log("No season IDs provided, skipping player-season relationship updates");
       }
       
       res.json(updatedPlayer);
     } catch (error) {
       console.error("Error updating player:", error);
-      res.status(500).json({ message: "Failed to update player" });
+      res.status(500).json({ message: "Failed to update player", error: String(error) });
     }
   });
 
