@@ -172,7 +172,7 @@ export class StatisticsService {
    * Fetch game rosters from the API
    */
   async getGameRosters(gameId: number): Promise<Roster[]> {
-    return apiRequest(`/api/games/${gameId}/rosters`);
+    return apiRequest('GET', `/api/games/${gameId}/rosters`);
   }
   
   /**
@@ -349,7 +349,7 @@ export class StatisticsService {
    */
   async mapStatsToPlayers(gameId: number, forceRefresh: boolean = false): Promise<Record<number, GameStat[]>> {
     // First check if this is a forfeit game
-    const game = await apiRequest(`/api/games/${gameId}`);
+    const game = await apiRequest('GET', `/api/games/${gameId}`);
     
     // Return empty stats map for forfeit games
     if (isForfeitGame(game)) {
@@ -361,12 +361,12 @@ export class StatisticsService {
     let stats, rosters;
     if (forceRefresh) {
       const timestamp = new Date().getTime();
-      stats = await apiRequest(`/api/games/${gameId}/stats?_t=${timestamp}`);
-      rosters = await apiRequest(`/api/games/${gameId}/rosters?_t=${timestamp}`);
+      stats = await apiRequest('GET', `/api/games/${gameId}/stats?_t=${timestamp}`);
+      rosters = await apiRequest('GET', `/api/games/${gameId}/rosters?_t=${timestamp}`);
       console.log(`Mapping ${stats.length} fresh stats to players for game ${gameId}`);
     } else {
-      stats = await apiRequest(`/api/games/${gameId}/stats`);
-      rosters = await apiRequest(`/api/games/${gameId}/rosters`);
+      stats = await apiRequest('GET', `/api/games/${gameId}/stats`);
+      rosters = await apiRequest('GET', `/api/games/${gameId}/rosters`);
       console.log(`Mapping ${stats.length} cached stats to players for game ${gameId}`);
     }
     
@@ -406,8 +406,8 @@ export class StatisticsService {
   async calculatePlayerPerformance(playerId: number, gameIds?: number[]): Promise<PlayerPerformance> {
     // Get all games if not specified
     const allGames = gameIds 
-      ? await Promise.all(gameIds.map(id => apiRequest(`/api/games/${id}`)))
-      : await apiRequest('/api/games');
+      ? await Promise.all(gameIds.map(id => apiRequest('GET', `/api/games/${id}`)))
+      : await apiRequest('GET', '/api/games');
     
     // Filter out forfeit games (they don't count for player statistics)
     const validGames = allGames.filter((g: Game) => !isForfeitGame(g));
