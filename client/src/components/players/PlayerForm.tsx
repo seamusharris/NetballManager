@@ -64,16 +64,20 @@ export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFor
   
   // Set selected seasons when player seasons data is loaded
   useEffect(() => {
-    // Important: Reset the selected seasons array when entering the component
-    // to avoid potential stale state from previous edits
+    // Clear any previously selected seasons to start fresh
     setSelectedSeasons([]);
     
     if (playerSeasons && playerSeasons.length > 0) {
       // Get just the season IDs from the seasons array
       const seasonIds = playerSeasons.map((season: Season) => season.id);
       
-      console.log("Setting player seasons from API response:", seasonIds);
-      setSelectedSeasons(seasonIds);
+      // Only use season IDs that actually exist in the seasons array
+      const validSeasonIds = seasonIds.filter(id => 
+        seasons.some(season => season.id === id)
+      );
+      
+      console.log("Setting player seasons from API response:", validSeasonIds);
+      setSelectedSeasons(validSeasonIds);
     } else if (seasons.length > 0 && !isEditing) {
       // For new players, select the active season by default
       const activeSeasonIds = seasons
@@ -259,17 +263,26 @@ export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFor
       return; // Exit early if not a valid season
     }
     
+    // Create a new array to avoid state mutation issues
+    let newSelection: number[];
+    
     if (selectedSeasons.includes(seasonId)) {
       // Remove the season if already selected
-      const newSelection = selectedSeasons.filter(id => id !== seasonId);
+      newSelection = selectedSeasons.filter(id => id !== seasonId);
       console.log(`Removed season ${seasonId}, new selection:`, newSelection);
-      setSelectedSeasons(newSelection);
     } else {
       // Add the season if not already selected
-      const newSelection = [...selectedSeasons, seasonId];
+      newSelection = [...selectedSeasons, seasonId];
       console.log(`Added season ${seasonId}, new selection:`, newSelection);
-      setSelectedSeasons(newSelection);
     }
+    
+    // Filter out any invalid season IDs before saving
+    const validSeasonIds = newSelection.filter(id => 
+      seasons.some(season => season.id === id)
+    );
+    
+    // Set the validated selection
+    setSelectedSeasons(validSeasonIds);
   };
 
   // Function to handle manual form submission
