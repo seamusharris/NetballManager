@@ -9,7 +9,7 @@ import PlayerForm from '@/components/players/PlayerForm';
 import SimplePlayerForm from '@/components/players/SimplePlayerForm';
 import { apiRequest } from '@/lib/queryClient';
 import { queryClient } from '@/lib/queryClient';
-import { Player } from '@shared/schema';
+import { Player, Season } from '@shared/schema';
 import { useLocation } from 'wouter';
 
 export default function Players() {
@@ -38,7 +38,23 @@ export default function Players() {
   
   const createMutation = useMutation({
     mutationFn: async (newPlayer: any) => {
-      const res = await apiRequest('POST', '/api/players', newPlayer);
+      // Create a copy of the player data to avoid modifying the original
+      const playerData = { ...newPlayer };
+      
+      // Validate season IDs when creating a player too
+      if (playerData.seasonIds) {
+        // Get a list of valid season IDs
+        const validSeasonIds = seasons.map(season => season.id);
+        
+        // Filter to only include valid season IDs
+        playerData.seasonIds = playerData.seasonIds
+          .map((id: any) => typeof id === 'number' ? id : parseInt(id, 10))
+          .filter((id: number) => !isNaN(id) && validSeasonIds.includes(id));
+        
+        console.log("Creating player with valid season IDs:", playerData.seasonIds);
+      }
+      
+      const res = await apiRequest('POST', '/api/players', playerData);
       return res.json();
     },
     onSuccess: () => {
@@ -58,6 +74,11 @@ export default function Players() {
     }
   });
   
+  // Query to get valid season IDs for validation
+  const { data: seasons = [] } = useQuery<Season[]>({
+    queryKey: ['/api/seasons'],
+  });
+  
   const updateMutation = useMutation({
     mutationFn: async ({ id, player }: { id: number, player: any }) => {
       console.log("Sending update request for player:", id, player);
@@ -65,12 +86,24 @@ export default function Players() {
       // Create a copy of the player data to avoid modifying the original
       const playerData = { ...player };
       
-      // Ensure seasonIds is an array of numbers and properly formatted
+      // Get a list of valid season IDs from our seasons data
+      const validSeasonIds = seasons.map(season => season.id);
+      
+      // Ensure seasonIds is an array of valid season IDs
       if (playerData.seasonIds) {
-        playerData.seasonIds = playerData.seasonIds
+        // First normalize to numbers
+        const normalizedIds = playerData.seasonIds
           .map((id: any) => typeof id === 'number' ? id : parseInt(id, 10))
           .filter((id: number) => !isNaN(id));
-        console.log("Normalized season IDs:", playerData.seasonIds);
+        
+        // Then filter to only include valid season IDs
+        playerData.seasonIds = normalizedIds.filter((id: number) => 
+          validSeasonIds.includes(id)
+        );
+        
+        console.log("Valid season IDs from API:", validSeasonIds);
+        console.log("Selected seasons before filtering:", normalizedIds);
+        console.log("Final filtered season IDs for player:", playerData.seasonIds);
       } else {
         // Provide an empty array if seasonIds is undefined
         playerData.seasonIds = [];
