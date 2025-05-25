@@ -8,9 +8,11 @@ interface UpcomingGamesProps {
   games: Game[];
   opponents: Opponent[];
   className?: string;
+  seasonFilter?: string;
+  activeSeason?: any;
 }
 
-export default function UpcomingGames({ games, opponents, className }: UpcomingGamesProps) {
+export default function UpcomingGames({ games, opponents, className, seasonFilter, activeSeason }: UpcomingGamesProps) {
   // Filter out completed games and take the 3 most immediate upcoming games
   const upcomingGames = games
     .filter(game => !game.completed)
