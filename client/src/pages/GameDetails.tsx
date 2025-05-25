@@ -1570,65 +1570,41 @@ export default function GameDetails() {
                             <div 
                               className="flex-1 flex items-center p-3 rounded-lg border-2"
                               style={{ 
-                                backgroundColor: `${convertTailwindToHex(awardWinner.avatarColor || 'bg-violet-600')}10`,
-                                borderColor: convertTailwindToHex(awardWinner.avatarColor || 'bg-violet-600')
+                                backgroundColor: '#f5f3ff',
+                                borderColor: awardWinner.avatarColor ? tailwindToHex(awardWinner.avatarColor) : '#7c3aed'
                               }}
                             >
                               <div className="flex-1">
-                                <div 
-                                  className="text-lg font-bold"
-                                  style={{ color: convertTailwindToHex(awardWinner.avatarColor || 'bg-violet-600') }}
-                                >
+                                <div className="text-lg font-bold text-violet-900">
                                   {awardWinner.displayName || `${awardWinner.firstName} ${awardWinner.lastName}`}
                                 </div>
-                                <div 
-                                  className="text-sm"
-                                  style={{ color: convertTailwindToHex(awardWinner.avatarColor || 'bg-violet-600') }}
-                                >
+                                <div className="text-sm text-violet-600">
                                   Player of the Match
                                 </div>
                               </div>
                               
                               <div className="flex space-x-6">
                                 <div className="text-center">
-                                  <div 
-                                    className="text-2xl font-bold"
-                                    style={{ color: convertTailwindToHex(awardWinner.avatarColor || 'bg-violet-600') }}
-                                  >
+                                  <div className="text-2xl font-bold text-violet-800">
                                     {goals}
                                   </div>
-                                  <div 
-                                    className="text-xs"
-                                    style={{ color: convertTailwindToHex(awardWinner.avatarColor || 'bg-violet-600') }}
-                                  >
+                                  <div className="text-xs text-violet-600">
                                     Goals
                                   </div>
                                 </div>
                                 <div className="text-center">
-                                  <div 
-                                    className="text-2xl font-bold"
-                                    style={{ color: convertTailwindToHex(awardWinner.avatarColor || 'bg-violet-600') }}
-                                  >
+                                  <div className="text-2xl font-bold text-violet-800">
                                     {intercepts}
                                   </div>
-                                  <div 
-                                    className="text-xs"
-                                    style={{ color: convertTailwindToHex(awardWinner.avatarColor || 'bg-violet-600') }}
-                                  >
+                                  <div className="text-xs text-violet-600">
                                     Intercepts
                                   </div>
                                 </div>
                                 <div className="text-center">
-                                  <div 
-                                    className="text-2xl font-bold"
-                                    style={{ color: convertTailwindToHex(awardWinner.avatarColor || 'bg-violet-600') }}
-                                  >
+                                  <div className="text-2xl font-bold text-violet-800">
                                     {rebounds}
                                   </div>
-                                  <div 
-                                    className="text-xs"
-                                    style={{ color: convertTailwindToHex(awardWinner.avatarColor || 'bg-violet-600') }}
-                                  >
+                                  <div className="text-xs text-violet-600">
                                     Rebounds
                                   </div>
                                 </div>
