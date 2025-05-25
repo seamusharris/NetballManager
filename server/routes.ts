@@ -518,7 +518,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Get the update data
       const updateData = req.body;
+      console.log("======= PLAYER UPDATE ========");
+      console.log("Player ID:", id);
       console.log("Player update request body:", JSON.stringify(updateData, null, 2));
+      console.log("==============================");
       
       // If avatar color is set to auto or empty, handle it properly
       if (updateData.avatarColor === 'auto' || updateData.avatarColor === '') {
@@ -637,12 +640,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Simple direct SQL approach - using transaction for safety
         const client = await pool.connect();
         try {
+          console.log(`DEBUG: Transaction starting for player ${id} season update with client:`, !!client);
           await client.query('BEGIN');
-          console.log(`Starting transaction for player ${id} season update`);
+          console.log(`DEBUG: BEGIN transaction successful for player ${id} season update`);
           
           // Clear existing relationships
-          await client.query('DELETE FROM player_seasons WHERE player_id = $1', [id]);
-          console.log(`Cleared existing seasons for player ${id}`);
+          const deleteResult = await client.query('DELETE FROM player_seasons WHERE player_id = $1', [id]);
+          console.log(`DEBUG: Cleared existing seasons for player ${id}, result:`, deleteResult.rowCount);
           
           console.log(`About to insert player-season relationships for player ${id}`);
           console.log(`Season IDs to add: ${JSON.stringify(finalSeasonIds)}`);
