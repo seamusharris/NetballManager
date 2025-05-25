@@ -4,6 +4,7 @@ import { Game, GameStat } from '@shared/schema';
 import { useEffect, useState } from 'react';
 import { getWinLoseLabel } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
+import { apiRequest } from '@/lib/queryClient';
 
 interface TeamPerformanceProps {
   games: Game[];
@@ -46,13 +47,7 @@ export default function TeamPerformance({ games, className }: TeamPerformancePro
       
       // Use the batch endpoint to fetch all stats in a single request
       const idsParam = completedGameIds.join(',');
-      const response = await fetch(`/api/games/stats/batch?ids=${idsParam}`);
-      
-      if (!response.ok) {
-        throw new Error(`Failed to fetch batch statistics for games ${idsParam}`);
-      }
-      
-      return await response.json();
+      return await apiRequest('GET', `/api/games/stats/batch?gameIds=${idsParam}`);
     },
     enabled: enableQuery,
     staleTime: 5 * 60 * 1000, // 5 minutes
