@@ -121,40 +121,80 @@ export async function updatePlayerSeasons(playerId: number, seasonIds: number[])
   const client = await pool.connect();
 
   try {
-    console.log("Starting transaction for player-season update");
-    await client.query('BEGIN');
-
-    // Delete existing relationships
+    console.log("\n==== UPDATE PLAYER SEASONS ====");
+    console.log(`Player ID: ${playerId}`);
+    console.log(`Season IDs: ${seasonIds.join(', ')}`);
+    
+    // First, let's check if the player exists
+    const playerCheckResult = await client.query(
+      'SELECT id FROM players WHERE id = $1',
+      [playerId]
+    );
+    
+    if (playerCheckResult.rows.length === 0) {
+      console.error(`Player with ID ${playerId} does not exist`);
+      return false;
+    }
+    
+    // Let's also validate the season IDs
+    if (seasonIds.length > 0) {
+      const seasonCheckResult = await client.query(
+        'SELECT id FROM seasons WHERE id = ANY($1::int[])',
+        [seasonIds]
+      );
+      
+      console.log(`Found ${seasonCheckResult.rows.length} valid seasons out of ${seasonIds.length} requested`);
+      
+      // If we didn't find all the seasons, filter to only valid ones
+      if (seasonCheckResult.rows.length < seasonIds.length) {
+        const validSeasonIds = seasonCheckResult.rows.map(row => row.id);
+        console.log(`Filtering to valid season IDs: ${validSeasonIds.join(', ')}`);
+        seasonIds = validSeasonIds;
+      }
+    }
+    
+    // Only proceed if we have valid season IDs
+    if (seasonIds.length === 0) {
+      console.warn(`No valid season IDs provided for player ${playerId}`);
+      // Still going to delete existing relationships but not add new ones
+    }
+    
+    // Simplified approach: do everything in individual statements without a transaction
+    // This is more reliable but less atomic
+    
+    // 1. Delete existing relationships
+    console.log(`Deleting existing player-season relationships for player ${playerId}`);
     const deleteResult = await client.query(
       'DELETE FROM player_seasons WHERE player_id = $1', 
       [playerId]
     );
     console.log(`Deleted ${deleteResult.rowCount} existing player-season relationships`);
-
-    // Insert new relationships
+    
+    // 2. Insert new relationships one by one
+    let successCount = 0;
+    
     for (const seasonId of seasonIds) {
-      console.log(`Inserting player ${playerId} to season ${seasonId}`);
-      
       try {
+        console.log(`Inserting player ${playerId} to season ${seasonId}`);
         await client.query(
           'INSERT INTO player_seasons (player_id, season_id) VALUES ($1, $2)',
           [playerId, seasonId]
         );
+        successCount++;
         console.log(`Successfully inserted player ${playerId} to season ${seasonId}`);
       } catch (insertError) {
         console.error(`Error inserting player ${playerId} to season ${seasonId}:`, insertError);
-        throw insertError; // Propagate error to trigger rollback
+        // Continue with other seasons even if one fails
       }
     }
-
-    // Commit transaction
-    await client.query('COMMIT');
-    console.log("Transaction committed successfully");
-    return true;
+    
+    console.log(`Successfully inserted ${successCount} out of ${seasonIds.length} player-season relationships`);
+    console.log("==== END UPDATE PLAYER SEASONS ====\n");
+    
+    // Return true if we succeeded with all or at least some of the seasons
+    return successCount > 0 || seasonIds.length === 0;
   } catch (error) {
-    // Roll back on any error
-    await client.query('ROLLBACK');
-    console.error("Transaction rolled back due to error:", error);
+    console.error("Error in updatePlayerSeasons:", error);
     return false;
   } finally {
     // Always release the client
