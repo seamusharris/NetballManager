@@ -861,7 +861,7 @@ export default function LiveStats() {
     posStats?: QuarterStats // Optional stats for unassigned positions
   ) => {
     // For players, get value from liveStats
-    // For unassigned positions (playerId === 0), get value from posStats
+    // For unassigned positions (playerId === 0), get value directly from existingStats
     let currentValue = 0;
     
     if (playerId === 0 && position) {
