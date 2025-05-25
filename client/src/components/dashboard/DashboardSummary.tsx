@@ -120,7 +120,7 @@ export default function DashboardSummary({
           </>
         ) : (
           <>
-            <TeamPerformance games={games} />
+            <TeamPerformance games={filteredGames} />
             <RecentGames games={pastGames} opponents={opponents} />
             <UpcomingGames games={upcomingGames} opponents={opponents} />
           </>
@@ -132,7 +132,7 @@ export default function DashboardSummary({
         {isLoading ? (
           <Skeleton className="h-[300px] w-full rounded-lg" />
         ) : (
-          <GamesList games={games} opponents={opponents} className="w-full" />
+          <GamesList games={filteredGames} opponents={opponents} className="w-full" />
         )}
       </div>
 
@@ -141,7 +141,7 @@ export default function DashboardSummary({
         {isLoading ? (
           <Skeleton className="h-[300px] w-full rounded-lg" />
         ) : (
-          <PlayerPerformance players={players} games={pastGames} className="w-full" />
+          <PlayerPerformance players={players} games={pastGames} className="w-full" seasonFilter={selectedSeasonId} activeSeason={activeSeason} />
         )}
       </div>
 
@@ -149,7 +149,7 @@ export default function DashboardSummary({
       {isLoading ? (
         <Skeleton className="h-[400px] w-full rounded-lg" />
       ) : (
-        <PerformanceCharts games={pastGames} />
+        <PerformanceCharts games={pastGames} seasonFilter={selectedSeasonId} activeSeason={activeSeason} />
       )}
     </div>
   );

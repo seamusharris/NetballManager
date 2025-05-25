@@ -1,7 +1,7 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Game, Player, GameStat } from '@shared/schema';
+import { Game, Player, GameStat, Season } from '@shared/schema';
 import { cn, getInitials } from '@/lib/utils';
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -11,6 +11,8 @@ interface PlayerPerformanceProps {
   players: Player[];
   games: Game[];
   className?: string;
+  seasonFilter?: string;
+  activeSeason?: Season | null;
 }
 
 interface PlayerStats {
@@ -37,15 +39,26 @@ interface SortConfig {
   direction: SortDirection;
 }
 
-export default function PlayerPerformance({ players, games, className }: PlayerPerformanceProps): JSX.Element {
+export default function PlayerPerformance({ players, games, className, seasonFilter, activeSeason }: PlayerPerformanceProps): JSX.Element {
   const [timeRange, setTimeRange] = useState('season');
   const [playerStatsMap, setPlayerStatsMap] = useState<Record<number, PlayerStats>>({});
-  // Add this key to force re-calculation when time range changes
+  // Add this key to force re-calculation when time range changes or season filter changes
   const [statsKey, setStatsKey] = useState(0);
   const [sortConfig, setSortConfig] = useState<SortConfig>({ field: 'rating', direction: 'desc' });
   
+  // Filter games by selected season
+  const filteredGames = games.filter(game => {
+    if (seasonFilter === 'current' && activeSeason) {
+      return game.seasonId === activeSeason.id;
+    } else if (seasonFilter && seasonFilter !== 'current') {
+      const seasonId = parseInt(seasonFilter);
+      return game.seasonId === seasonId;
+    }
+    return true;
+  });
+  
   // Get only completed games
-  const completedGames = games.filter(game => game.completed);
+  const completedGames = filteredGames.filter(game => game.completed);
   const gameIds = completedGames.map(game => game.id);
   const enableQuery = gameIds.length > 0;
   

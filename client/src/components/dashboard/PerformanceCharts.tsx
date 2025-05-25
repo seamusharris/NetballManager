@@ -11,7 +11,7 @@ import {
   Legend, 
   ResponsiveContainer 
 } from 'recharts';
-import { Game, GameStat } from '@shared/schema';
+import { Game, GameStat, Season } from '@shared/schema';
 import { ArrowDown, ArrowUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
@@ -19,6 +19,8 @@ import { useQuery } from '@tanstack/react-query';
 interface PerformanceChartsProps {
   games: Game[];
   className?: string;
+  seasonFilter?: string;
+  activeSeason?: Season | null;
 }
 
 interface ChartDataPoint {
