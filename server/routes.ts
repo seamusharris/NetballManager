@@ -385,19 +385,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // DIRECT player-seasons relationship endpoint for emergency use
+  // Emergency fix for player-seasons relationships
   app.post("/api/players/:id/seasons", async (req, res) => {
     try {
-      console.log(`POST /api/players/${req.params.id}/seasons - DIRECT HANDLER`);
+      console.log(`POST /api/players/${req.params.id}/seasons - EMERGENCY FIX`);
       console.log("Request body:", req.body);
       
-      // Import the direct handler
-      const { directUpdatePlayerSeasons } = await import('./direct-player-seasons');
+      // Import the emergency fix module
+      const { fixPlayerSeasons } = await import('./emergency-fix');
       
-      // Use the direct handler that bypasses ORM and other abstractions
-      await directUpdatePlayerSeasons(req, res);
+      // Use the emergency implementation with comprehensive logging
+      await fixPlayerSeasons(req, res);
     } catch (error) {
-      console.error("Error in direct player-seasons update:", error);
+      console.error("Error in emergency player-seasons update:", error);
       res.status(500).json({ 
         message: "Failed to update player seasons", 
         error: error instanceof Error ? error.message : "Unknown error" 
