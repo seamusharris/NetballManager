@@ -1,4 +1,5 @@
-import { pgTable, text, serial, integer, boolean, timestamp, json, unique } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, json, unique, date } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -6,6 +7,25 @@ import { z } from "zod";
 export const POSITIONS = ["GS", "GA", "WA", "C", "WD", "GD", "GK"] as const;
 export type Position = typeof POSITIONS[number];
 export const allPositions = [...POSITIONS];
+
+// Season model
+export const seasons = pgTable("seasons", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  startDate: date("start_date").notNull(),
+  endDate: date("end_date").notNull(),
+  isActive: boolean("is_active").default(false).notNull(),
+  type: text("type"), // Spring, Autumn, etc.
+  year: integer("year").notNull(),
+  displayOrder: integer("display_order").default(0).notNull()
+});
+
+// Default schema without ID for normal creation
+export const insertSeasonSchema = createInsertSchema(seasons).omit({ id: true });
+// Schema with ID for import operations
+export const importSeasonSchema = createInsertSchema(seasons);
+export type InsertSeason = z.infer<typeof insertSeasonSchema>;
+export type Season = typeof seasons.$inferSelect;
 
 // Game status types
 export const GAME_STATUSES = ["upcoming", "in-progress", "completed", "forfeit-win", "forfeit-loss"] as const;
@@ -56,6 +76,7 @@ export const games = pgTable("games", {
   status: text("status").$type<GameStatus>().default("upcoming"), // New field for more detailed game status
   isBye: boolean("is_bye").notNull().default(false),
   round: text("round"), // Round number in the season or special values like "SF" or "GF"
+  seasonId: integer("season_id").references(() => seasons.id), // Reference to season
 });
 
 // Default schema without ID for normal creation
