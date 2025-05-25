@@ -136,10 +136,9 @@ export default function Seasons() {
 
   // Delete season mutation
   const deleteSeasonMutation = useMutation({
-    mutationFn: (id: number) => {
-      return apiRequest(`/api/seasons/${id}`, {
-        method: 'DELETE'
-      });
+    mutationFn: async (id: number) => {
+      const res = await apiRequest('DELETE', `/api/seasons/${id}`);
+      return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/seasons'] });
@@ -160,10 +159,9 @@ export default function Seasons() {
 
   // Set active season mutation
   const setActiveSeasonMutation = useMutation({
-    mutationFn: (id: number) => {
-      return apiRequest(`/api/seasons/${id}/activate`, {
-        method: 'POST'
-      });
+    mutationFn: async (id: number) => {
+      const res = await apiRequest('POST', `/api/seasons/${id}/activate`);
+      return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/seasons'] });
