@@ -35,9 +35,7 @@ const formSchema = insertPlayerSchema.extend({
   position4: z.string().default("none"),
 });
 
-type FormValues = z.infer<typeof formSchema> & {
-  seasonIds: number[];
-};
+type FormValues = z.infer<typeof formSchema>;
 
 interface PlayerFormProps {
   player?: Player;
@@ -47,40 +45,6 @@ interface PlayerFormProps {
 
 export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFormProps) {
   const isEditing = !!player;
-  const [selectedSeasons, setSelectedSeasons] = useState<number[]>([]);
-  
-  // Fetch all available seasons
-  const { data: seasons = [] } = useQuery<Season[]>({
-    queryKey: ['/api/seasons'],
-  });
-  
-  // If editing, fetch player's current seasons - using direct API endpoint
-  const { data: playerSeasons = [], isLoading: isSeasonsLoading } = useQuery<Season[]>(
-    {
-      queryKey: [`/api/players/${player?.id}/seasons`],
-      enabled: isEditing && !!player?.id
-    }
-  );
-  
-  // Set selected seasons when player seasons data is loaded
-  useEffect(() => {
-    if (playerSeasons && playerSeasons.length > 0) {
-      // Get just the season IDs from the seasons array
-      const seasonIds = playerSeasons.map((season: Season) => season.id);
-      
-      console.log("Setting player seasons from API response:", seasonIds);
-      console.log("Valid season IDs from API (for reference only):", seasons.map(s => s.id));
-      setSelectedSeasons(seasonIds);
-    } else if (seasons.length > 0 && !isEditing) {
-      // For new players, select the active season by default
-      const activeSeasonIds = seasons
-        .filter(season => season.isActive)
-        .map(season => season.id);
-      
-      console.log("Setting active seasons for new player:", activeSeasonIds);
-      setSelectedSeasons(activeSeasonIds);
-    }
-  }, [playerSeasons, isEditing, seasons]);
   
   // Extract position preferences for default values
   const getPositionDefaults = () => {
@@ -109,7 +73,6 @@ export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFor
       position3: positionDefaults.position3,
       position4: positionDefaults.position4,
       active: player?.active !== undefined ? player.active : true,
-      seasonIds: [],
     },
   });
   
@@ -203,20 +166,13 @@ export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFor
       // Remove position fields from the data object
       const { position1, position2, position3, position4, ...rest } = values;
       
-      // No excessive filtering - just use the selectedSeasons as is
-      console.log("Selected seasons for submission:", selectedSeasons);
-      console.log("Valid filtered season IDs for submission:", selectedSeasons);
-      
-      // Create the player data with the selected seasons
+      // Create the player data without seasons
       const playerData = {
         ...rest,
         positionPreferences,
-        seasonIds: selectedSeasons.length > 0 
-          ? selectedSeasons 
-          : seasons.filter(s => s.isActive).map(s => s.id),
       };
       
-      console.log("Submitting player data manually:", playerData);
+      console.log("Submitting player data:", playerData);
       
       // Submit the data
       onSubmit(playerData);
@@ -409,41 +365,7 @@ export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFor
           )}
         />
         
-        {/* Season Selection */}
-        <div className="mt-6">
-          <h3 className="text-sm font-medium mb-2">Seasons</h3>
-          <div className="border rounded-md p-4">
-            {seasons.length === 0 ? (
-              <p className="text-sm text-gray-500">No seasons available</p>
-            ) : (
-              <div className="space-y-2">
-                {seasons.map((season) => (
-                  <div key={season.id} className="flex items-center space-x-2">
-                    <Checkbox 
-                      id={`season-${season.id}`}
-                      checked={selectedSeasons.includes(season.id)}
-                      onCheckedChange={() => handleSeasonToggle(season.id)}
-                    />
-                    <label
-                      htmlFor={`season-${season.id}`}
-                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                    >
-                      {season.name}
-                      {season.isActive && (
-                        <span className="ml-2 inline-flex items-center rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800">
-                          Active
-                        </span>
-                      )}
-                    </label>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-          <p className="text-sm text-gray-500 mt-1">
-            Select which seasons this player belongs to
-          </p>
-        </div>
+        {/* Seasons are now managed on the player details page */}
         
         <div>
           <h3 className="text-sm font-medium mb-2">Position Preferences (Ranked)</h3>
