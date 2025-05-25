@@ -465,15 +465,14 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
   // Get player performance stats for display from the actual game statistics
   const getPlayerPerformanceStats = (position) => {
     const entry = rosterByQuarter[quarter]?.[position];
-    if (!entry || !entry.playerId) return null;
-    
-    const playerName = getPlayerName(entry.playerId);
-    if (!playerName) return null;
     
     // Find the statistics for this position in this quarter
     const positionStat = gameStats?.find?.(
       stat => stat.position === position && stat.quarter === quarter
     );
+    
+    // If we have no entry in the roster (player) and no stats, return null
+    if (!entry && !positionStat) return null;
     
     // Return position-specific relevant statistics
     const stats = {
@@ -483,11 +482,14 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
       handlingError: positionStat?.handlingError || 0
     };
     
+    // Get player name if we have a player assigned
+    const playerName = entry?.playerId ? getPlayerName(entry.playerId) : "Unassigned";
+    
     // Add position-specific stats
     if (position === 'GS' || position === 'GA') {
       // Attacking positions
       return {
-        playerId: entry.playerId,
+        playerId: entry?.playerId || 0,
         name: playerName,
         stats: {
           ...stats,
@@ -499,7 +501,7 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
     } else if (position === 'GD' || position === 'GK') {
       // Defending positions
       return {
-        playerId: entry.playerId,
+        playerId: entry?.playerId || 0,
         name: playerName,
         stats: {
           ...stats,
@@ -511,7 +513,7 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
     } else {
       // Mid-court positions (WA, C, WD)
       return {
-        playerId: entry.playerId,
+        playerId: entry?.playerId || 0,
         name: playerName,
         stats: {
           ...stats,
