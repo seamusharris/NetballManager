@@ -57,11 +57,7 @@ export function GameStatusDialog({
                   selectedStatus === 'forfeit-loss'
       };
       
-      return apiRequest(`/api/games/${game.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updateData)
-      });
+      return apiRequest('PATCH', `/api/games/${game.id}`, updateData);
     },
     onSuccess: () => {
       // Invalidate relevant queries to refresh the data

@@ -378,11 +378,7 @@ export default function SimpleRosterManager({
                 playerId: playerId
               };
               
-              savePromises.push(apiRequest('POST', `/api/rosters`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(rosterEntry)
-              }));
+              savePromises.push(apiRequest('POST', `/api/rosters`, rosterEntry));
             }
           }
         }

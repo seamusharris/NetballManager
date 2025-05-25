@@ -127,7 +127,7 @@ export function GameStatusButton({
     setIsSubmitting(true);
     try {
       // Send the update request
-      await apiRequest(`/api/games/${game.id}`, 'PATCH', {
+      await apiRequest('PATCH', `/api/games/${game.id}`, {
         status: selectedStatus
       });
       
