@@ -62,15 +62,22 @@ export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFor
   
   // Set selected seasons when player seasons data is loaded
   useEffect(() => {
+    // Important: Reset the selected seasons array when entering the component
+    // to avoid potential stale state from previous edits
+    setSelectedSeasons([]);
+    
     if (playerSeasons.length > 0) {
       // Map seasons from player's seasons
-      setSelectedSeasons(playerSeasons.map(season => season.id));
+      const validSeasonIds = playerSeasons.map(season => season.id);
+      console.log("Setting player seasons from API:", validSeasonIds);
+      setSelectedSeasons(validSeasonIds);
     } else if (seasons.length > 0 && !isEditing) {
       // For new players, select the active season by default
       const activeSeasonIds = seasons
         .filter(season => season.isActive)
         .map(season => season.id);
       
+      console.log("Setting active seasons for new player:", activeSeasonIds);
       setSelectedSeasons(activeSeasonIds);
     }
   }, [playerSeasons, seasons, isEditing]);
@@ -196,11 +203,24 @@ export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFor
       // Remove position fields from the data object
       const { position1, position2, position3, position4, ...rest } = values;
       
-      // Construct the final player data object with selected seasons
+      // Double-check we only have valid season IDs
+      // Get the actual season IDs from our seasons data
+      const validSeasonIds = seasons.map(season => season.id);
+      
+      // Filter the selectedSeasons to only include valid season IDs
+      const filteredSeasonIds = selectedSeasons.filter(id => 
+        validSeasonIds.includes(id)
+      );
+      
+      console.log("Selected seasons:", selectedSeasons);
+      console.log("Valid season IDs:", validSeasonIds);
+      console.log("Filtered season IDs:", filteredSeasonIds);
+      
+      // Construct the final player data object with properly filtered seasons
       const playerData = {
         ...rest,
         positionPreferences,
-        seasonIds: selectedSeasons,
+        seasonIds: filteredSeasonIds.length > 0 ? filteredSeasonIds : validSeasonIds.filter(id => seasons.find(s => s.id === id)?.isActive),
       };
       
       console.log("Player form submitted with data:", playerData);
@@ -214,10 +234,19 @@ export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFor
   
   // Function to handle season checkbox toggle
   const handleSeasonToggle = (seasonId: number) => {
+    // First verify this is a valid season ID
+    const isValidSeason = seasons.some(season => season.id === seasonId);
+    
+    if (!isValidSeason) {
+      console.error(`Attempted to toggle invalid season ID: ${seasonId}`);
+      return; // Exit early if not a valid season
+    }
+    
     if (selectedSeasons.includes(seasonId)) {
       // Remove the season if already selected
-      setSelectedSeasons(selectedSeasons.filter(id => id !== seasonId));
-      console.log(`Removed season ${seasonId}, new selection:`, selectedSeasons.filter(id => id !== seasonId));
+      const newSelection = selectedSeasons.filter(id => id !== seasonId);
+      console.log(`Removed season ${seasonId}, new selection:`, newSelection);
+      setSelectedSeasons(newSelection);
     } else {
       // Add the season if not already selected
       const newSelection = [...selectedSeasons, seasonId];
