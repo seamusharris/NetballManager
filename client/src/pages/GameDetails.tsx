@@ -1494,58 +1494,52 @@ export default function GameDetails() {
                           
                           return (
                             <div className="flex items-center space-x-4">
+                              {/* Player Avatar */}
                               <div 
-                                className="w-14 h-14 rounded-full flex items-center justify-center text-white text-xl font-bold"
+                                className="min-w-[60px] w-16 h-16 rounded-full flex items-center justify-center text-white text-xl font-bold shadow-md"
                                 style={{ backgroundColor: playerColor }}
                               >
                                 {player.displayName?.charAt(0) || player.firstName.charAt(0)}
                               </div>
                               
-                              {playerStats.length > 0 ? (
-                                <div 
-                                  className="flex-1 grid grid-cols-4 gap-2 p-3 rounded-lg text-white"
-                                  style={{ backgroundColor: playerColor }}
-                                >
-                                  <div className="text-center">
-                                    <div className="text-xl font-bold">{player.displayName || player.firstName}</div>
-                                    <div className="text-xs opacity-80">Player of the Match</div>
-                                  </div>
+                              {/* Stats Box */}
+                              <div 
+                                className="flex-1 flex items-center p-4 rounded-lg text-white"
+                                style={{ backgroundColor: playerColor }}
+                              >
+                                <div className="flex-1">
+                                  <div className="text-lg font-bold">{player.displayName || player.firstName}</div>
+                                  <div className="text-sm font-medium">Player of the Match</div>
+                                </div>
+                                
+                                {/* Stats Section */}
+                                <div className="flex space-x-6">
                                   {totalStats.goalsFor > 0 && (
-                                    <div className="text-center">
-                                      <div className="text-xl font-bold">{totalStats.goalsFor}</div>
-                                      <div className="text-xs opacity-80">Goals</div>
+                                    <div className="text-center px-2">
+                                      <div className="text-2xl font-bold">{totalStats.goalsFor}</div>
+                                      <div className="text-xs font-medium">Goals</div>
                                     </div>
                                   )}
                                   {totalStats.intercepts > 0 && (
-                                    <div className="text-center">
-                                      <div className="text-xl font-bold">{totalStats.intercepts}</div>
-                                      <div className="text-xs opacity-80">Intercepts</div>
+                                    <div className="text-center px-2">
+                                      <div className="text-2xl font-bold">{totalStats.intercepts}</div>
+                                      <div className="text-xs font-medium">Intercepts</div>
                                     </div>
                                   )}
                                   {totalStats.rebounds > 0 && (
-                                    <div className="text-center">
-                                      <div className="text-xl font-bold">{totalStats.rebounds}</div>
-                                      <div className="text-xs opacity-80">Rebounds</div>
+                                    <div className="text-center px-2">
+                                      <div className="text-2xl font-bold">{totalStats.rebounds}</div>
+                                      <div className="text-xs font-medium">Rebounds</div>
                                     </div>
                                   )}
-                                  {!totalStats.goalsFor && !totalStats.intercepts && !totalStats.rebounds && totalStats.pickUp > 0 && (
-                                    <div className="text-center">
-                                      <div className="text-xl font-bold">{totalStats.pickUp}</div>
-                                      <div className="text-xs opacity-80">Pick Ups</div>
+                                  {totalStats.pickUp > 0 && !(totalStats.goalsFor || totalStats.intercepts || totalStats.rebounds) && (
+                                    <div className="text-center px-2">
+                                      <div className="text-2xl font-bold">{totalStats.pickUp}</div>
+                                      <div className="text-xs font-medium">Pick Ups</div>
                                     </div>
                                   )}
                                 </div>
-                              ) : (
-                                <div 
-                                  className="flex-1 p-3 rounded-lg text-white"
-                                  style={{ backgroundColor: playerColor }}
-                                >
-                                  <div className="text-center">
-                                    <div className="text-xl font-bold">{player.displayName || `${player.firstName} ${player.lastName}`}</div>
-                                    <div className="text-xs opacity-80">Player of the Match</div>
-                                  </div>
-                                </div>
-                              )}
+                              </div>
                             </div>
                           );
                         })()
