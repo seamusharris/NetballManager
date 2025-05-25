@@ -681,7 +681,7 @@ export default function LiveStats() {
           await new Promise(resolve => setTimeout(resolve, 500));
           
           // Manually refetch the latest data
-          const freshStats = await apiRequest(`/api/games/${gameId}/stats`);
+          const freshStats = await apiRequest('GET', `/api/games/${gameId}/stats`);
           console.log(`Manually fetched ${freshStats.length} fresh stats after saving`);
           
           // Force refresh UI state
