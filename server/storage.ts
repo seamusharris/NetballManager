@@ -125,6 +125,18 @@ export class DatabaseStorage implements IStorage {
     // Check if a specific avatar color was provided (for import/export)
     let avatarColor = insertPlayer.avatarColor;
     
+    // Ensure position preferences are properly formatted as an array
+    let positionPreferences = [];
+    if (insertPlayer.positionPreferences) {
+      if (Array.isArray(insertPlayer.positionPreferences)) {
+        // Create a clean copy to prevent reference issues
+        positionPreferences = [...insertPlayer.positionPreferences];
+        console.log("Position preferences array in storage.ts create:", JSON.stringify(positionPreferences));
+      } else {
+        console.error("Invalid position preferences format in storage.ts create:", insertPlayer.positionPreferences);
+      }
+    }
+    
     // Create the player with all properties
     const [player] = await db
       .insert(players)
@@ -133,7 +145,7 @@ export class DatabaseStorage implements IStorage {
         firstName: insertPlayer.firstName,
         lastName: insertPlayer.lastName,
         dateOfBirth: insertPlayer.dateOfBirth || null,
-        positionPreferences: insertPlayer.positionPreferences as any, // Cast to any to bypass TS checking
+        positionPreferences, // Use our clean array
         active: insertPlayer.active !== undefined ? insertPlayer.active : true,
         // Include the avatar color if provided
         ...(avatarColor ? { avatarColor } : {})
@@ -220,7 +232,20 @@ export class DatabaseStorage implements IStorage {
       if (updatePlayer.lastName !== undefined) updateData.lastName = updatePlayer.lastName;
       if (updatePlayer.dateOfBirth !== undefined) updateData.dateOfBirth = updatePlayer.dateOfBirth;
       if (updatePlayer.active !== undefined) updateData.active = updatePlayer.active;
-      if (updatePlayer.positionPreferences !== undefined) updateData.positionPreferences = updatePlayer.positionPreferences;
+      
+      // Ensure position preferences are properly formatted as an array
+      if (updatePlayer.positionPreferences !== undefined) {
+        if (Array.isArray(updatePlayer.positionPreferences)) {
+          // Create a clean copy to prevent reference issues
+          updateData.positionPreferences = [...updatePlayer.positionPreferences];
+          console.log("Position preferences array in storage.ts update:", JSON.stringify(updateData.positionPreferences));
+        } else {
+          console.error("Invalid position preferences format in storage.ts update:", updatePlayer.positionPreferences);
+          // Fall back to empty array if the format is invalid
+          updateData.positionPreferences = [];
+        }
+      }
+      
       if (updatePlayer.avatarColor !== undefined) updateData.avatarColor = updatePlayer.avatarColor;
       
       // Update the player data only
