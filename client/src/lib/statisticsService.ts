@@ -122,8 +122,7 @@ export class StatisticsService {
       try {
         // Use the correct query parameter format - the backend expects 'gameIds' not 'ids'
         const url = `/api/games/stats/batch?gameIds=${idsParam}&_t=${timestamp}`;
-        const response = await apiRequest('GET', url);
-        const statsMap = await response.json();
+        const statsMap = await apiRequest('GET', url);
         
         console.log(`Fetched batch stats for ${gameIds.length} games in a single request`);
         return statsMap;
@@ -137,8 +136,7 @@ export class StatisticsService {
         const results = await Promise.allSettled(
           gameIds.map(async (gameId) => {
             try {
-              const res = await apiRequest('GET', `/api/games/${gameId}/stats`);
-              const stats = await res.json();
+              const stats = await apiRequest('GET', `/api/games/${gameId}/stats`);
               return { gameId, stats };
             } catch (individualError) {
               console.warn(`Failed to fetch stats for game ${gameId}: ${individualError}`);
@@ -187,7 +185,7 @@ export class StatisticsService {
     }
     
     // First check if this is a forfeit game
-    const game = await apiRequest(`/api/games/${gameId}`);
+    const game = await apiRequest('GET', `/api/games/${gameId}`);
     
     // Special handling for forfeit games - return scores based on forfeit type
     if (isForfeitGame(game)) {
@@ -205,10 +203,10 @@ export class StatisticsService {
     let stats;
     if (forceRefresh) {
       const timestamp = new Date().getTime();
-      stats = await apiRequest(`/api/games/${gameId}/stats?_t=${timestamp}`);
+      stats = await apiRequest('GET', `/api/games/${gameId}/stats?_t=${timestamp}`);
       console.log(`Calculating scores with ${stats.length} fresh stats for game ${gameId}`);
     } else {
-      stats = await apiRequest(`/api/games/${gameId}/stats`);
+      stats = await apiRequest('GET', `/api/games/${gameId}/stats`);
       console.log(`Calculating scores with ${stats.length} cached stats for game ${gameId}`);
     }
     
@@ -280,7 +278,7 @@ export class StatisticsService {
    */
   async getPositionStats(gameId: number, forceRefresh: boolean = false): Promise<Record<string, PositionStats>> {
     // First check if this is a forfeit game
-    const game = await apiRequest(`/api/games/${gameId}`);
+    const game = await apiRequest('GET', `/api/games/${gameId}`);
     
     // Return empty stats for forfeit games
     if (isForfeitGame(game)) {
@@ -292,10 +290,10 @@ export class StatisticsService {
     let stats;
     if (forceRefresh) {
       const timestamp = new Date().getTime();
-      stats = await apiRequest(`/api/games/${gameId}/stats?_t=${timestamp}`);
+      stats = await apiRequest('GET', `/api/games/${gameId}/stats?_t=${timestamp}`);
       console.log(`Calculating position stats with ${stats.length} fresh stats for game ${gameId}`);
     } else {
-      stats = await apiRequest(`/api/games/${gameId}/stats`);
+      stats = await apiRequest('GET', `/api/games/${gameId}/stats`);
       console.log(`Calculating position stats with ${stats.length} cached stats for game ${gameId}`);
     }
     

@@ -147,8 +147,7 @@ export default function GamesList({
           console.log(`Batch fetching stats for ${completedGameIds.length} games via React Query`);
           // Get all stats for completed games in a single batch request
           // Use apiRequest instead of direct fetch for consistent error handling
-          const res = await fetch(`/api/games/stats/batch?ids=${completedGameIds.join(',')}`);
-          const allStats = await res.json();
+          const allStats = await apiRequest('GET', `/api/games/stats/batch?gameIds=${completedGameIds.join(',')}`);
           
           console.log(`Received ${allStats.length} stats from batch request`);
           
