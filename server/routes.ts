@@ -541,17 +541,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Player ID:", id);
       console.log("Player update request body:", JSON.stringify(updateData, null, 2));
       
-      // Extract season IDs before updating player
+      // Extract season IDs before updating player - simplified
       let processedSeasonIds = [];
       if (updateData.seasonIds !== undefined) {
         // Ensure season IDs are properly converted to numbers
         const rawSeasonIds = updateData.seasonIds;
         console.log("Raw season IDs from request:", rawSeasonIds);
         
-        processedSeasonIds = Array.isArray(rawSeasonIds) 
-          ? rawSeasonIds.map(sid => typeof sid === 'string' ? parseInt(sid, 10) : sid)
-                     .filter(sid => typeof sid === 'number' && !isNaN(sid))
-          : [];
+        // Handle different formats of input with better error tolerance
+        if (Array.isArray(rawSeasonIds)) {
+          processedSeasonIds = rawSeasonIds
+            .map(sid => typeof sid === 'string' ? parseInt(sid, 10) : sid)
+            .filter(sid => typeof sid === 'number' && !isNaN(sid));
+        } else if (typeof rawSeasonIds === 'number') {
+          // Handle single number
+          processedSeasonIds = [rawSeasonIds];
+        } else if (typeof rawSeasonIds === 'string' && rawSeasonIds.trim() !== '') {
+          // Handle single string number
+          try {
+            const parsed = parseInt(rawSeasonIds, 10);
+            if (!isNaN(parsed)) {
+              processedSeasonIds = [parsed];
+            }
+          } catch (e) {
+            console.warn("Failed to parse season ID string:", rawSeasonIds);
+          }
+        }
           
         console.log("Season IDs processed:", processedSeasonIds);
         delete updateData.seasonIds;

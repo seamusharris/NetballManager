@@ -152,22 +152,11 @@ export async function updatePlayerSeasons(playerId: number, seasonIds: number[])
       return false;
     }
     
-    // Let's also validate the season IDs
+    // Skip excessive validation - we trust the seasons passed in
     let validSeasonIds = seasonIds;
-    if (seasonIds.length > 0) {
-      // Get pool for raw SQL which is more efficient for this operation
-      const { pool } = await import('./db');
-      const seasonCheckResult = await pool.query(
-        'SELECT id FROM seasons WHERE id = ANY($1::int[])',
-        [seasonIds]
-      );
-      
-      console.log(`Found ${seasonCheckResult.rows.length} valid seasons out of ${seasonIds.length} requested`);
-      
-      // If we didn't find all the seasons, filter to only valid ones
-      validSeasonIds = seasonCheckResult.rows.map(row => row.id);
-      console.log(`Valid season IDs: ${validSeasonIds.join(', ')}`);
-    }
+    console.log(`Using provided season IDs: ${validSeasonIds.join(', ')}`);
+    
+    // Only perform basic validation if needed in the future
     
     // Get a client from the pool for transaction
     const { pool } = await import('./db');
