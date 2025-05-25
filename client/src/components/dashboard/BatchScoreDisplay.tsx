@@ -56,8 +56,12 @@ export default function BatchScoreDisplay({ games, className }: BatchScoreDispla
           const stats = batchStats[game.id];
           if (!stats || !stats.length) return;
           
-          // Calculate scores using the statisticsService to ensure consistency
-          statisticsService.calculateGameScores(game.id, true);
+          try {
+            // Calculate scores using the statisticsService to ensure consistency
+            statisticsService.calculateGameScores(game.id, true);
+          } catch (calcError) {
+            console.warn(`Error calculating scores for game ${game.id}:`, calcError);
+          }
         });
         
         console.log(`Successfully cached scores for ${completedGames.length} games using batch endpoint`);
