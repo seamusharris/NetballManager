@@ -27,6 +27,79 @@ import {
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { formatDate, cn, tailwindToHex } from '@/lib/utils';
+
+// Helper functions for player colors
+const getPlayerColorForBorder = (avatarColor?: string): string => {
+  if (!avatarColor) return "#7c3aed"; // Default violet-700
+  
+  // Map of background colors to border colors
+  const colorMap: Record<string, string> = {
+    'bg-red-500': '#b91c1c', // red-700
+    'bg-orange-500': '#c2410c', // orange-700
+    'bg-amber-500': '#b45309', // amber-700
+    'bg-yellow-500': '#a16207', // yellow-700
+    'bg-lime-500': '#4d7c0f', // lime-700
+    'bg-green-500': '#15803d', // green-700
+    'bg-emerald-500': '#047857', // emerald-700
+    'bg-teal-500': '#0f766e', // teal-700
+    'bg-cyan-500': '#0e7490', // cyan-700
+    'bg-sky-500': '#0369a1', // sky-700
+    'bg-blue-500': '#1d4ed8', // blue-700
+    'bg-indigo-500': '#4338ca', // indigo-700
+    'bg-violet-500': '#6d28d9', // violet-700
+    'bg-purple-500': '#7e22ce', // purple-700
+    'bg-fuchsia-500': '#a21caf', // fuchsia-700
+    'bg-pink-500': '#be185d', // pink-700
+    'bg-rose-500': '#be123c', // rose-700
+    'bg-yellow-600': '#a16207', // yellow-700
+    'bg-blue-600': '#1d4ed8', // blue-700
+    'bg-violet-600': '#6d28d9', // violet-700
+    'bg-orange-600': '#c2410c', // orange-700
+    'bg-green-600': '#15803d', // green-700
+    'bg-rose-600': '#be123c', // rose-700
+    'bg-indigo-600': '#4338ca', // indigo-700
+    'bg-pink-600': '#be185d', // pink-700
+    'bg-purple-600': '#7e22ce' // purple-700
+  };
+  
+  return colorMap[avatarColor] || "#7c3aed";
+};
+
+const getPlayerColorForBackground = (avatarColor?: string): string => {
+  if (!avatarColor) return "rgb(245, 243, 255)"; // Default violet-50
+  
+  // Map of background colors to light background colors
+  const colorMap: Record<string, string> = {
+    'bg-red-500': '#fef2f2', // red-50
+    'bg-orange-500': '#fff7ed', // orange-50
+    'bg-amber-500': '#fffbeb', // amber-50
+    'bg-yellow-500': '#fefce8', // yellow-50
+    'bg-lime-500': '#f7fee7', // lime-50
+    'bg-green-500': '#f0fdf4', // green-50
+    'bg-emerald-500': '#ecfdf5', // emerald-50
+    'bg-teal-500': '#f0fdfa', // teal-50
+    'bg-cyan-500': '#ecfeff', // cyan-50
+    'bg-sky-500': '#f0f9ff', // sky-50
+    'bg-blue-500': '#eff6ff', // blue-50
+    'bg-indigo-500': '#eef2ff', // indigo-50
+    'bg-violet-500': '#f5f3ff', // violet-50
+    'bg-purple-500': '#faf5ff', // purple-50
+    'bg-fuchsia-500': '#fdf4ff', // fuchsia-50
+    'bg-pink-500': '#fdf2f8', // pink-50
+    'bg-rose-500': '#fff1f2', // rose-50
+    'bg-yellow-600': '#fefce8', // yellow-50
+    'bg-blue-600': '#eff6ff', // blue-50
+    'bg-violet-600': '#f5f3ff', // violet-50
+    'bg-orange-600': '#fff7ed', // orange-50
+    'bg-green-600': '#f0fdf4', // green-50
+    'bg-rose-600': '#fff1f2', // rose-50
+    'bg-indigo-600': '#eef2ff', // indigo-50
+    'bg-pink-600': '#fdf2f8', // pink-50
+    'bg-purple-600': '#faf5ff' // purple-50
+  };
+  
+  return colorMap[avatarColor] || "rgb(245, 243, 255)";
+};
 import { GameStatus, Position, POSITIONS, allGameStatuses } from '@shared/schema';
 import { primaryPositionStats, secondaryPositionStats, statLabels } from '@/lib/positionStats';
 import { useToast } from '@/hooks/use-toast';
@@ -1493,77 +1566,45 @@ export default function GameDetails() {
                               {getInitials(awardWinner.firstName, awardWinner.lastName)}
                             </div>
                             
-                            {/* Player Stats Box - With border color matching player's avatar */}
+                            {/* Player Stats Box - With colors matching player's avatar */}
                             <div 
                               className="flex-1 flex items-center p-3 rounded-lg border-2"
                               style={{ 
-                                borderColor: "#7c3aed", // Use standard violet border
-                                backgroundColor: "rgb(245, 243, 255)" // violet-50
+                                borderColor: getPlayerColorForBorder(awardWinner.avatarColor),
+                                backgroundColor: getPlayerColorForBackground(awardWinner.avatarColor)
                               }}
                             >
                               <div className="flex-1">
-                                <div className="text-lg font-bold" 
-                                  style={{ color: awardWinner.avatarColor ? 
-                                    awardWinner.avatarColor.replace('bg-', 'text-').replace('-500', '-900').replace('-600', '-900') : 
-                                    'text-violet-900' 
-                                  }}>
+                                <div className="text-lg font-bold text-violet-900">
                                   {awardWinner.displayName || `${awardWinner.firstName} ${awardWinner.lastName}`}
                                 </div>
-                                <div className="text-sm" 
-                                  style={{ color: awardWinner.avatarColor ? 
-                                    awardWinner.avatarColor.replace('bg-', 'text-').replace('-500', '-600').replace('-600', '-600') : 
-                                    'text-violet-600' 
-                                  }}>
+                                <div className="text-sm text-violet-600">
                                   Player of the Match
                                 </div>
                               </div>
                               
                               <div className="flex space-x-6">
                                 <div className="text-center">
-                                  <div className="text-2xl font-bold"
-                                    style={{ color: awardWinner.avatarColor ? 
-                                      awardWinner.avatarColor.replace('bg-', 'text-').replace('-500', '-800').replace('-600', '-800') : 
-                                      'text-violet-800' 
-                                    }}>
+                                  <div className="text-2xl font-bold text-violet-800">
                                     {goals}
                                   </div>
-                                  <div className="text-xs"
-                                    style={{ color: awardWinner.avatarColor ? 
-                                      awardWinner.avatarColor.replace('bg-', 'text-').replace('-500', '-600').replace('-600', '-600') : 
-                                      'text-violet-600' 
-                                    }}>
+                                  <div className="text-xs text-violet-600">
                                     Goals
                                   </div>
                                 </div>
                                 <div className="text-center">
-                                  <div className="text-2xl font-bold"
-                                    style={{ color: awardWinner.avatarColor ? 
-                                      awardWinner.avatarColor.replace('bg-', 'text-').replace('-500', '-800').replace('-600', '-800') : 
-                                      'text-violet-800' 
-                                    }}>
+                                  <div className="text-2xl font-bold text-violet-800">
                                     {intercepts}
                                   </div>
-                                  <div className="text-xs"
-                                    style={{ color: awardWinner.avatarColor ? 
-                                      awardWinner.avatarColor.replace('bg-', 'text-').replace('-500', '-600').replace('-600', '-600') : 
-                                      'text-violet-600' 
-                                    }}>
+                                  <div className="text-xs text-violet-600">
                                     Intercepts
                                   </div>
                                 </div>
                                 <div className="text-center">
-                                  <div className="text-2xl font-bold"
-                                    style={{ color: awardWinner.avatarColor ? 
-                                      awardWinner.avatarColor.replace('bg-', 'text-').replace('-500', '-800').replace('-600', '-800') : 
-                                      'text-violet-800' 
-                                    }}>
+                                  <div className="text-2xl font-bold text-violet-800">
                                     {rebounds}
                                   </div>
-                                  <div className="text-xs"
-                                    style={{ color: awardWinner.avatarColor ? 
-                                      awardWinner.avatarColor.replace('bg-', 'text-').replace('-500', '-600').replace('-600', '-600') : 
-                                      'text-violet-600' 
-                                    }}>
+                                  <div className="text-xs text-violet-600">
                                     Rebounds
                                   </div>
                                 </div>
