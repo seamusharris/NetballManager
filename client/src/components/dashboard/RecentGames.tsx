@@ -29,118 +29,143 @@ export default function RecentGames({ games, opponents, className, seasonFilter,
   // Force refresh when props change
   useEffect(() => {
     setRefreshToken(Date.now());
-  }, [games, seasonFilter, activeSeason]);
+  }, [games]);
   
-  // Query hook to fetch game stats for recent games
-  const { 
-    data: allGameStats,
-    isLoading
-  } = useQuery({
-    queryKey: ['recentGamesStats', refreshToken, gameIds.join(',')],
+  // Create a static cache key that doesn't depend on refreshToken
+  // This ensures we use the same cached data across season changes
+  const seasonId = seasonFilter || 'current';
+  
+  // Cache game stats using React Query with aggressive caching
+  const { data: allGameStats, isLoading } = useQuery({
+    // Static key that won't change with refreshToken
+    queryKey: ['recentGamesStats', gameIds.join(','), seasonId],
     queryFn: async () => {
-      if (gameIds.length === 0) return {};
-      
-      console.log("Recent Games loading scores for season:", seasonFilter || "current", "games:", gameIds.join(','));
-      
-      // Create a batch request to get stats for all games in one go
-      let batchStats = {};
-      
-      try {
-        // First try to use the batch endpoint if available
-        const batchEndpoint = `/api/games/stats/batch?gameIds=${gameIds.join(',')}`;
-        const batchRes = await fetch(batchEndpoint);
-        
-        if (batchRes.ok) {
-          batchStats = await batchRes.json();
-        } else {
-          // Fallback to individual requests if batch fails
-          const statsPromises = gameIds.map(async gameId => {
-            const res = await fetch(`/api/games/${gameId}/stats`);
-            const stats = await res.json();
-            return { gameId, stats };
-          });
-          
-          const results = await Promise.all(statsPromises);
-          
-          // Convert to same format as batch endpoint
-          results.forEach(({ gameId, stats }) => {
-            batchStats[gameId] = stats;
-          });
-        }
-        
-        console.log("Recent Games successfully loaded scores for", Object.keys(batchStats).length, "games");
-      } catch (error) {
-        console.error("Error loading game scores:", error);
+      if (gameIds.length === 0) {
+        return {};
       }
       
-      return batchStats;
+      console.log(`Recent Games loading scores for season: ${seasonId}, games: ${gameIds.join(',')}`);
+      
+      // Use the batch endpoint to fetch all stats in a single request
+      const idsParam = gameIds.join(',');
+      const response = await fetch(`/api/games/stats/batch?gameIds=${idsParam}`);
+      
+      if (!response.ok) {
+        console.error(`Failed to fetch batch statistics for games ${idsParam}. Using individual fetches as fallback.`);
+        
+        // Fallback to individual fetches if the batch endpoint fails
+        const statsMap: Record<number, any[]> = {};
+        
+        for (const gameId of gameIds) {
+          try {
+            const response = await fetch(`/api/games/${gameId}/stats`);
+            if (response.ok) {
+              const stats = await response.json();
+              statsMap[gameId] = stats;
+            } else {
+              statsMap[gameId] = []; // Empty array for failed fetches
+            }
+          } catch (error) {
+            console.error(`Error fetching stats for game ${gameId}:`, error);
+            statsMap[gameId] = []; // Empty array for failed fetches
+          }
+        }
+        
+        return statsMap;
+      }
+      
+      const data = await response.json();
+      console.log(`Recent Games successfully loaded scores for ${Object.keys(data).length} games`);
+      return data;
     },
     enabled: enableQuery,
-    staleTime: 30000,
+    staleTime: 60 * 60 * 1000, // Consider data fresh for 60 minutes
+    gcTime: 24 * 60 * 60 * 1000 // Keep data in cache for 24 hours
   });
   
-  // Get opponent name
   const getOpponentName = (opponentId: number | null) => {
-    if (!opponentId) return 'BYE Round';
+    if (!opponentId) return 'Unknown Opponent';
     const opponent = opponents.find(o => o.id === opponentId);
     return opponent ? opponent.teamName : 'Unknown Opponent';
   };
   
-  // Determine game result class for styling
+  // Calculate scores from game stats
+  const getScores = (game: Game): [number, number] => {
+    const gameStatsList = allGameStats?.[game.id] || [];
+    
+    // If no stats found, return 0-0
+    if (gameStatsList.length === 0) {
+      return [0, 0];
+    }
+    
+    // Use the same calculation method as in GamesList.tsx
+    // First, calculate goals by quarter
+    const quarterGoals: Record<number, { for: number, against: number }> = {
+      1: { for: 0, against: 0 },
+      2: { for: 0, against: 0 },
+      3: { for: 0, against: 0 },
+      4: { for: 0, against: 0 }
+    };
+    
+    // Create a map of the latest stats for each position/quarter combination (or legacy stats)
+    const latestPositionStats: Record<string, GameStat> = {};
+    
+    // Find the latest stat for each position/quarter combination
+    gameStatsList.forEach(stat => {
+      if (!stat || !stat.quarter) return;
+      
+      // For position-based stats (with valid position)
+      if (stat.position) {
+        const key = `${stat.position}-${stat.quarter}`;
+        
+        // Keep only the newest stat entry for each position/quarter
+        if (!latestPositionStats[key] || stat.id > latestPositionStats[key].id) {
+          latestPositionStats[key] = stat;
+        }
+      }
+      // For legacy stats (with null position but valid data)
+      else {
+        // Only include legacy stats if they have valid goal data
+        if (typeof stat.goalsFor === 'number' || typeof stat.goalsAgainst === 'number') {
+          // Use a special key format for legacy stats
+          const key = `legacy-${stat.id}-${stat.quarter}`;
+          latestPositionStats[key] = stat;
+        }
+      }
+    });
+    
+    // Use only the latest stats for calculating quarter goals
+    Object.values(latestPositionStats).forEach(stat => {
+      if (stat && stat.quarter >= 1 && stat.quarter <= 4) {
+        quarterGoals[stat.quarter].for += (stat.goalsFor || 0);
+        quarterGoals[stat.quarter].against += (stat.goalsAgainst || 0);
+      }
+    });
+    
+    // Calculate total goals
+    const teamScore = Object.values(quarterGoals).reduce((sum, q) => sum + q.for, 0);
+    const opponentScore = Object.values(quarterGoals).reduce((sum, q) => sum + q.against, 0);
+    
+    return [teamScore, opponentScore];
+  };
+  
   const getResultClass = (game: Game) => {
-    if (!allGameStats || !allGameStats[game.id]) return '';
-    
-    if (game.status === 'forfeit-win') return 'border-success';
-    if (game.status === 'forfeit-loss') return 'border-error';
-    
-    const stats = allGameStats[game.id];
-    if (!stats || stats.length === 0) return '';
-    
-    // Calculate total score
-    const teamScore = stats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
-    const opponentScore = stats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
-    
-    if (teamScore > opponentScore) return 'border-success';
-    if (teamScore < opponentScore) return 'border-error';
-    return 'border-secondary';
+    // Always use blue accent styling to match upcoming games
+    return 'border-accent bg-accent/5';
   };
   
-  // Get result text (Win, Loss, Draw)
   const getResultText = (game: Game) => {
-    if (!allGameStats || !allGameStats[game.id]) return '';
-    
-    if (game.status === 'forfeit-win') return 'Forfeit Win';
-    if (game.status === 'forfeit-loss') return 'Forfeit Loss';
-    
-    const stats = allGameStats[game.id];
-    if (!stats || stats.length === 0) return '';
-    
-    // Calculate total score
-    const teamScore = stats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
-    const opponentScore = stats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
-    
-    if (teamScore > opponentScore) return `${teamScore}-${opponentScore} Win`;
-    if (teamScore < opponentScore) return `${teamScore}-${opponentScore} Loss`;
-    return `${teamScore}-${opponentScore} Draw`;
+    const [teamScore, opponentScore] = getScores(game);
+    if (teamScore > opponentScore) return `W ${teamScore}-${opponentScore}`;
+    if (teamScore < opponentScore) return `L ${teamScore}-${opponentScore}`;
+    return `D ${teamScore}-${opponentScore}`;
   };
   
-  // Get result text color class
   const getResultTextClass = (game: Game) => {
-    if (!allGameStats || !allGameStats[game.id]) return '';
-    
-    if (game.status === 'forfeit-win') return 'text-success';
-    if (game.status === 'forfeit-loss') return 'text-error';
-    
-    const stats = allGameStats[game.id];
-    if (!stats || stats.length === 0) return '';
-    
-    // Calculate total score
-    const teamScore = stats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
-    const opponentScore = stats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
-    
+    const [teamScore, opponentScore] = getScores(game);
     if (teamScore > opponentScore) return 'text-success';
     if (teamScore < opponentScore) return 'text-error';
-    return 'text-secondary';
+    return 'text-warning';
   };
   
   return (
