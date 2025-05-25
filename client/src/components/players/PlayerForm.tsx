@@ -74,16 +74,22 @@ export default function PlayerForm({ player, onSubmit, isSubmitting, initialSeas
   
   // When in edit mode, fetch the player's seasons if initialSeasonIds wasn't provided
   useEffect(() => {
-    if (isEditing && initialSeasonIds?.length === 0 && player) {
-      // Fetch the player's seasons using our dedicated utility function
-      getPlayerSeasons(player.id)
-        .then(seasonIds => {
-          console.log("Fetched player seasons:", seasonIds);
-          setSelectedSeasonIds(seasonIds);
-        })
-        .catch(error => {
-          console.error("Error fetching player seasons:", error);
-        });
+    if (isEditing && player) {
+      if (initialSeasonIds && initialSeasonIds.length > 0) {
+        // Use the provided initialSeasonIds
+        console.log("Using provided initialSeasonIds:", initialSeasonIds);
+        setSelectedSeasonIds(initialSeasonIds);
+      } else {
+        // Fetch the player's seasons using our dedicated utility function
+        getPlayerSeasons(player.id)
+          .then(seasonIds => {
+            console.log("Fetched player seasons:", seasonIds);
+            setSelectedSeasonIds(seasonIds);
+          })
+          .catch(error => {
+            console.error("Error fetching player seasons:", error);
+          });
+      }
     }
   }, [isEditing, initialSeasonIds, player]);
   
@@ -163,20 +169,18 @@ export default function PlayerForm({ player, onSubmit, isSubmitting, initialSeas
   
   // Handle season checkbox changes
   const handleSeasonChange = (seasonId: number, checked: boolean) => {
-    setSelectedSeasonIds(prev => {
-      if (checked) {
-        return [...prev, seasonId];
-      } else {
-        return prev.filter(id => id !== seasonId);
-      }
-    });
-    
-    // Update the form value
-    const newSeasonIds = checked 
+    // First update the state with the new selection
+    const newSelectedIds = checked 
       ? [...selectedSeasonIds, seasonId] 
       : selectedSeasonIds.filter(id => id !== seasonId);
     
-    form.setValue('seasonIds', newSeasonIds);
+    console.log(`${checked ? 'Adding' : 'Removing'} season ${seasonId}. Updated selection:`, newSelectedIds);
+    
+    // Set the local state for rendering the checkboxes
+    setSelectedSeasonIds(newSelectedIds);
+    
+    // Also update the form value to ensure it's included in submission
+    form.setValue('seasonIds', newSelectedIds);
   };
 
   const handleSubmit = (values: FormValues) => {
@@ -249,8 +253,8 @@ export default function PlayerForm({ player, onSubmit, isSubmitting, initialSeas
       return;
     }
     
-    // Build position preferences array - using string literals
-    // to ensure proper JSON serialization
+    // Build position preferences array - ensuring we use a proper array
+    // that will serialize correctly to JSON
     const positionPreferences: string[] = [];
     
     // Add positions in order, filtering out 'none'
@@ -266,6 +270,8 @@ export default function PlayerForm({ player, onSubmit, isSubmitting, initialSeas
     if (values.position4 && values.position4 !== "none") {
       positionPreferences.push(values.position4);
     }
+    
+    console.log("Position preferences array:", JSON.stringify(positionPreferences));
     
     // Build player data object
     const playerData = {
@@ -284,14 +290,17 @@ export default function PlayerForm({ player, onSubmit, isSubmitting, initialSeas
     if (isEditing && player) {
       try {
         // First create the player update data (without seasons)
+        // Make sure positionPreferences is a valid array that can be serialized properly
         const playerUpdateData = {
           displayName: values.displayName,
           firstName: values.firstName,
           lastName: values.lastName,
           dateOfBirth: values.dateOfBirth || null,
-          positionPreferences,
+          positionPreferences: [...positionPreferences], // Create a new array to ensure clean serialization
           active: values.active
         };
+        
+        console.log("Player update data:", JSON.stringify(playerUpdateData));
         
         // Import the updatePlayerSeasons function from our utility
         const { updatePlayerSeasons } = await import('@/lib/playerSeasonManager');
