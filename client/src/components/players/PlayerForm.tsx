@@ -24,6 +24,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { insertPlayerSchema, Position, Player, Season, allPositions } from "@shared/schema";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { getPlayerSeasons } from "@/lib/playerSeasonManager";
 
 // Extend the schema for the form validation
 const formSchema = insertPlayerSchema.extend({
@@ -74,9 +75,15 @@ export default function PlayerForm({ player, onSubmit, isSubmitting, initialSeas
   // When in edit mode, fetch the player's seasons if initialSeasonIds wasn't provided
   useEffect(() => {
     if (isEditing && initialSeasonIds?.length === 0 && player) {
-      // In a real implementation, you would fetch the player's seasons from the API
-      // For now, we're just using the initialSeasonIds prop
-      console.log("Would fetch player seasons for player ID:", player.id);
+      // Fetch the player's seasons using our dedicated utility function
+      getPlayerSeasons(player.id)
+        .then(seasonIds => {
+          console.log("Fetched player seasons:", seasonIds);
+          setSelectedSeasonIds(seasonIds);
+        })
+        .catch(error => {
+          console.error("Error fetching player seasons:", error);
+        });
     }
   }, [isEditing, initialSeasonIds, player]);
   
@@ -221,7 +228,7 @@ export default function PlayerForm({ player, onSubmit, isSubmitting, initialSeas
   };
   
   // Function to handle manual form submission
-  const onFormSubmit = () => {
+  const onFormSubmit = async () => {
     // Get the current form values
     const values = form.getValues();
     
@@ -261,8 +268,41 @@ export default function PlayerForm({ player, onSubmit, isSubmitting, initialSeas
     
     console.log("Submitting player data manually:", playerData);
     
-    // Call the onSubmit handler passed from parent
-    onSubmit(playerData);
+    // When editing, use our direct utility to update seasons
+    if (isEditing && player) {
+      try {
+        // First create the player update data (without seasons)
+        const playerUpdateData = {
+          displayName: values.displayName,
+          firstName: values.firstName,
+          lastName: values.lastName,
+          dateOfBirth: values.dateOfBirth || null,
+          positionPreferences,
+          active: values.active
+        };
+        
+        // Import the updatePlayerSeasons function from our utility
+        const { updatePlayerSeasons } = await import('@/lib/playerSeasonManager');
+        
+        // Update the player's seasons first
+        const seasonsResult = await updatePlayerSeasons(player.id, selectedSeasonIds);
+        console.log("Seasons update result:", seasonsResult);
+        
+        // Pass complete data to parent handler for UI updates
+        onSubmit({
+          ...playerData,
+          id: player.id,
+          seasonsUpdated: seasonsResult.success
+        });
+      } catch (error) {
+        console.error("Error in direct player update:", error);
+        // Still call onSubmit to let the parent component know there was an attempt
+        onSubmit(playerData);
+      }
+    } else {
+      // For new player creation, just use the parent's handler
+      onSubmit(playerData);
+    }
   };
   
   return (
