@@ -297,89 +297,121 @@ export default function Players() {
     createMutation.mutate(data);
   };
   
-  const handleUpdatePlayer = async (data: any) => {
-    console.log("========== UPDATE PLAYER DEBUG ==========");
-    console.log("Raw data from form:", data);
-    console.log("Season IDs from form:", data.seasonIds);
-    console.log("Position preferences from form:", data.positionPreferences);
-    
-    if (!editingPlayer) {
-      console.error("No player being edited");
-      return;
-    }
-    
-    // Make sure we're sending valid player data including seasonIds
-    const validPlayerData = {
-      displayName: data.displayName,
-      firstName: data.firstName,
-      lastName: data.lastName,
-      dateOfBirth: data.dateOfBirth || null,
-      positionPreferences: data.positionPreferences,
-      active: data.active,
-      seasonIds: data.seasonIds || [] // Include the season IDs in the update
-    };
-    
-    console.log("Player ID being updated:", editingPlayer.id);
-    console.log("Formatted player data for update:", validPlayerData);
-    console.log("=========================================");
-    
-    // Use direct fetch call for better error handling
+  const handleUpdatePlayer = (data: any) => {
     try {
-      // STEP 1: Update basic player data
-      console.log("Updating basic player data for ID:", editingPlayer.id);
-      const playerBasicData = {...validPlayerData};
-      delete playerBasicData.seasonIds;
-      
-      const playerResponse = await fetch(`/api/players/${editingPlayer.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(playerBasicData)
-      });
-      
-      if (!playerResponse.ok) {
-        const errorText = await playerResponse.text();
-        throw new Error(`Player update failed (${playerResponse.status}): ${errorText}`);
+      console.log("===== MANUAL PLAYER UPDATE START =====");
+      if (!editingPlayer) {
+        throw new Error("No player is currently being edited");
       }
       
-      const updatedPlayer = await playerResponse.json();
-      console.log("Basic player update successful:", updatedPlayer);
+      const playerId = editingPlayer.id;
+      console.log("Player ID:", playerId);
+      console.log("Form data:", data);
       
-      // STEP 2: Update player-season relationships
-      console.log("Updating player-season relationships for ID:", editingPlayer.id);
-      console.log("Season IDs to update:", validPlayerData.seasonIds);
+      // Create the update data with clean seasonIds
+      const playerData = {
+        displayName: data.displayName || "",
+        firstName: data.firstName || "",
+        lastName: data.lastName || "",
+        dateOfBirth: data.dateOfBirth || null,
+        positionPreferences: Array.isArray(data.positionPreferences) ? data.positionPreferences : [],
+        active: Boolean(data.active),
+        seasonIds: Array.isArray(data.seasonIds) ? data.seasonIds : []
+      };
       
-      const seasonResponse = await fetch(`/api/players/${editingPlayer.id}/seasons`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ seasonIds: validPlayerData.seasonIds })
+      console.log("Clean player data:", playerData);
+      
+      // Use a more primitive approach - directly modify global error handler
+      window.onerror = function(message, source, lineno, colno, error) {
+        console.error("Global error handler caught:", message);
+        console.error("Error details:", {message, source, lineno, colno, error});
+        return false; // Don't prevent default error handling
+      };
+      
+      // SUPER SIMPLE UPDATE - just one step at a time
+      console.log("Updating basic player info first - no seasons");
+      
+      // Clone data without seasonIds for first update
+      const basicData = {...playerData};
+      delete basicData.seasonIds;
+      
+      // Create a function to handle the update steps
+      const updatePlayer = async () => {
+        try {
+          // Step 1: Update basic player data
+          const response1 = await fetch(`/api/players/${playerId}`, {
+            method: 'PATCH',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(basicData)
+          });
+          
+          const responseText1 = await response1.text();
+          console.log("Basic update response:", response1.status, responseText1);
+          
+          if (!response1.ok) {
+            toast({
+              title: "Basic Data Update Failed",
+              description: `Status: ${response1.status}, Response: ${responseText1}`,
+              variant: "destructive"
+            });
+            return;
+          }
+          
+          // Step 2: Update seasons separately
+          console.log("Now updating seasons:", playerData.seasonIds);
+          const response2 = await fetch(`/api/players/${playerId}/seasons`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({seasonIds: playerData.seasonIds})
+          });
+          
+          const responseText2 = await response2.text();
+          console.log("Seasons update response:", response2.status, responseText2);
+          
+          if (!response2.ok) {
+            toast({
+              title: "Seasons Update Failed",
+              description: `Status: ${response2.status}, Response: ${responseText2}`,
+              variant: "destructive"
+            });
+            return;
+          }
+          
+          // Success path
+          console.log("Complete update successful!");
+          toast({
+            title: "Success",
+            description: "Player information updated successfully"
+          });
+          
+          // Refresh data and close dialog
+          queryClient.invalidateQueries({queryKey: ['/api/players']});
+          setEditingPlayer(null);
+        } catch (err) {
+          console.error("Caught update error:", err);
+          toast({
+            title: "Update Error",
+            description: String(err),
+            variant: "destructive"
+          });
+        }
+      };
+      
+      // Execute the update
+      updatePlayer().catch(err => {
+        console.error("Update function error:", err);
+        toast({
+          title: "Fatal Error",
+          description: String(err),
+          variant: "destructive"
+        });
       });
       
-      const seasonResponseText = await seasonResponse.text();
-      console.log("Season update response status:", seasonResponse.status);
-      console.log("Season update response text:", seasonResponseText);
-      
-      if (!seasonResponse.ok) {
-        throw new Error(`Season update failed (${seasonResponse.status}): ${seasonResponseText}`);
-      }
-      
-      console.log("Player and seasons updated successfully");
-      
-      // Invalidate queries to refresh data
-      queryClient.invalidateQueries({ queryKey: ['/api/players'] });
-      queryClient.removeQueries({ queryKey: [`/api/players/${editingPlayer.id}/seasons`] });
-      
-      toast({
-        title: "Success",
-        description: "Player updated successfully"
-      });
-      
-      // Close the edit dialog
-      setEditingPlayer(null);
     } catch (error) {
-      console.error("Failed to update player:", error);
+      console.error("General player update error:", error);
       toast({
         title: "Update Failed",
-        description: error instanceof Error ? error.message : "An unexpected error occurred",
+        description: String(error),
         variant: "destructive"
       });
     }
