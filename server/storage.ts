@@ -64,6 +64,9 @@ export interface IStorage {
   updateSeason(id: number, season: Partial<InsertSeason>): Promise<Season | undefined>;
   setActiveSeason(id: number): Promise<Season | undefined>;
   deleteSeason(id: number): Promise<boolean>;
+  
+  // Games by season
+  getGamesBySeason(seasonId: number): Promise<Game[]>;
 }
 
 // Database storage implementation
@@ -370,6 +373,59 @@ export class DatabaseStorage implements IStorage {
       .where(eq(gameStats.gameId, gameId))
       .returning({ id: gameStats.id });
     return result.length > 0;
+  }
+  
+  // Season methods
+  async getSeasons(): Promise<Season[]> {
+    return await db.select().from(seasons).orderBy(desc(seasons.year), seasons.displayOrder);
+  }
+
+  async getSeason(id: number): Promise<Season | undefined> {
+    const [season] = await db.select().from(seasons).where(eq(seasons.id, id));
+    return season || undefined;
+  }
+
+  async getActiveSeason(): Promise<Season | undefined> {
+    const [season] = await db.select().from(seasons).where(eq(seasons.isActive, true));
+    return season || undefined;
+  }
+
+  async createSeason(insertSeason: InsertSeason): Promise<Season> {
+    const [season] = await db.insert(seasons).values(insertSeason).returning();
+    return season;
+  }
+
+  async updateSeason(id: number, updateSeason: Partial<InsertSeason>): Promise<Season | undefined> {
+    const [season] = await db
+      .update(seasons)
+      .set(updateSeason)
+      .where(eq(seasons.id, id))
+      .returning();
+    return season || undefined;
+  }
+
+  async setActiveSeason(id: number): Promise<Season | undefined> {
+    // First deactivate all seasons
+    await db.update(seasons).set({ isActive: false });
+    
+    // Then activate the specified season
+    const [season] = await db
+      .update(seasons)
+      .set({ isActive: true })
+      .where(eq(seasons.id, id))
+      .returning();
+      
+    return season || undefined;
+  }
+
+  async deleteSeason(id: number): Promise<boolean> {
+    const result = await db.delete(seasons).where(eq(seasons.id, id));
+    return result.rowCount > 0;
+  }
+  
+  // Games by season
+  async getGamesBySeason(seasonId: number): Promise<Game[]> {
+    return await db.select().from(games).where(eq(games.seasonId, seasonId));
   }
 }
 

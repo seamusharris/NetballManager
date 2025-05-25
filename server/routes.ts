@@ -1087,6 +1087,128 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to delete game stat" });
     }
   });
+  
+  // ----- SEASONS API -----
+  
+  // Get all seasons
+  app.get('/api/seasons', async (req, res) => {
+    try {
+      const allSeasons = await storage.getSeasons();
+      res.json(allSeasons);
+    } catch (error) {
+      console.error('Error fetching seasons:', error);
+      res.status(500).json({ message: 'Failed to fetch seasons' });
+    }
+  });
+
+  // Get active season
+  app.get('/api/seasons/active', async (req, res) => {
+    try {
+      const activeSeason = await storage.getActiveSeason();
+      if (!activeSeason) {
+        return res.status(404).json({ message: 'No active season found' });
+      }
+      res.json(activeSeason);
+    } catch (error) {
+      console.error('Error fetching active season:', error);
+      res.status(500).json({ message: 'Failed to fetch active season' });
+    }
+  });
+  
+  // Get season by ID
+  app.get('/api/seasons/:id', async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const season = await storage.getSeason(id);
+      if (!season) {
+        return res.status(404).json({ message: 'Season not found' });
+      }
+      res.json(season);
+    } catch (error) {
+      console.error(`Error fetching season ${req.params.id}:`, error);
+      res.status(500).json({ message: 'Failed to fetch season' });
+    }
+  });
+  
+  // Create season
+  app.post('/api/seasons', async (req, res) => {
+    try {
+      const seasonData = insertSeasonSchema.parse(req.body);
+      const season = await storage.createSeason(seasonData);
+      res.status(201).json(season);
+    } catch (error) {
+      console.error('Error creating season:', error);
+      res.status(400).json({ message: 'Invalid season data' });
+    }
+  });
+  
+  // Update season
+  app.patch('/api/seasons/:id', async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      // Allow partial updates
+      const seasonData = req.body;
+      const updatedSeason = await storage.updateSeason(id, seasonData);
+      if (!updatedSeason) {
+        return res.status(404).json({ message: 'Season not found' });
+      }
+      res.json(updatedSeason);
+    } catch (error) {
+      console.error(`Error updating season ${req.params.id}:`, error);
+      res.status(400).json({ message: 'Invalid season data' });
+    }
+  });
+  
+  // Set active season
+  app.post('/api/seasons/:id/activate', async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const season = await storage.setActiveSeason(id);
+      if (!season) {
+        return res.status(404).json({ message: 'Season not found' });
+      }
+      res.json(season);
+    } catch (error) {
+      console.error(`Error activating season ${req.params.id}:`, error);
+      res.status(500).json({ message: 'Failed to activate season' });
+    }
+  });
+  
+  // Delete season
+  app.delete('/api/seasons/:id', async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const activeSeason = await storage.getActiveSeason();
+      
+      // Prevent deleting the active season
+      if (activeSeason && activeSeason.id === id) {
+        return res.status(400).json({ 
+          message: 'Cannot delete the active season. Activate another season first.' 
+        });
+      }
+      
+      const deleted = await storage.deleteSeason(id);
+      if (!deleted) {
+        return res.status(404).json({ message: 'Season not found' });
+      }
+      res.status(204).end();
+    } catch (error) {
+      console.error(`Error deleting season ${req.params.id}:`, error);
+      res.status(500).json({ message: 'Failed to delete season' });
+    }
+  });
+  
+  // Get games for a specific season
+  app.get('/api/seasons/:id/games', async (req, res) => {
+    try {
+      const seasonId = parseInt(req.params.id);
+      const games = await storage.getGamesBySeason(seasonId);
+      res.json(games);
+    } catch (error) {
+      console.error(`Error fetching games for season ${req.params.id}:`, error);
+      res.status(500).json({ message: 'Failed to fetch games for season' });
+    }
+  });
 
   // Create HTTP server
   const httpServer = createServer(app);
