@@ -616,9 +616,9 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
               <div key={position} className={`absolute ${positionClass}`}>
                 <div 
                   style={{ 
-                    backgroundColor: bgColor,
+                    backgroundColor: playerName ? bgColor : '#e11d48', // Red for unassigned
                     boxShadow: '0 4px 8px rgba(0, 0, 0, 0.5)',
-                    border: playerName ? '3px solid white' : '2px solid red',
+                    border: '3px solid white',
                     width: '5rem',
                     height: '5rem',
                     borderRadius: '100%',
@@ -629,12 +629,17 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
                     padding: '0.25rem'
                   }}
                 >
-                  <div className="font-bold text-center text-lg" style={{ color: textColor }}>{position}</div>
+                  <div 
+                    className="font-bold text-center text-lg" 
+                    style={{ color: playerName ? textColor : 'white' }}
+                  >
+                    {position}
+                  </div>
                   {playerName && (
                     <div className="text-sm text-center font-medium leading-tight" style={{ color: textColor }}>{playerName}</div>
                   )}
                   {!playerName && (
-                    <div className="text-sm text-red-500 text-center">Unassigned</div>
+                    <div className="text-sm text-center font-medium leading-tight text-white">Unassigned</div>
                   )}
                 </div>
               </div>

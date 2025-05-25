@@ -1238,7 +1238,7 @@ export default function LiveStats() {
                       <div 
                         className="h-10 w-10 rounded-full flex items-center justify-center text-white font-bold text-base flex-shrink-0"
                         style={{
-                          backgroundColor: getPositionColor(position), 
+                          backgroundColor: player ? getPositionColor(position) : '#e11d48', // Red for unassigned
                           border: '2px solid white',
                           boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
                         }}
@@ -1251,7 +1251,7 @@ export default function LiveStats() {
                         {player ? (
                           <p className="font-semibold text-sm">{player.displayName}</p>
                         ) : (
-                          <p className="font-semibold text-sm text-gray-500">Unassigned</p>
+                          <p className="font-semibold text-sm text-white" style={{ backgroundColor: '#e11d48', padding: '1px 4px', borderRadius: '2px' }}>Unassigned</p>
                         )}
                         <p className="text-xs text-muted-foreground">{positionLabels[position]}</p>
                       </div>
