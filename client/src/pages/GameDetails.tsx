@@ -1442,7 +1442,7 @@ export default function GameDetails() {
                       </Select>
                     </div>
                   ) : (
-                    <div className="min-h-[60px] flex items-center">
+                    <div className="min-h-[80px]">
                       {game.awardWinnerId ? (
                         (() => {
                           const player = players?.find(p => p.id === game.awardWinnerId);
@@ -1450,25 +1450,112 @@ export default function GameDetails() {
                           
                           // Get player's color from their avatarColor property
                           const playerColor = player.avatarColor || "#6366f1";
+                          
+                          // Find player's stats for this game
+                          const playerStats = [];
+                          if (roster && gameStats) {
+                            const playerPositions = roster
+                              .filter(r => r.playerId === player.id)
+                              .map(r => ({ quarter: r.quarter, position: r.position }));
+                              
+                            playerPositions.forEach(pos => {
+                              const stats = gameStats.find(s => 
+                                s.position === pos.position && 
+                                s.quarter === pos.quarter
+                              );
+                              if (stats) {
+                                playerStats.push(stats);
+                              }
+                            });
+                          }
+                          
+                          // Calculate total stats
+                          const totalStats = playerStats.reduce((acc, stat) => {
+                            return {
+                              goalsFor: (acc.goalsFor || 0) + (stat.goalsFor || 0),
+                              goalsAgainst: (acc.goalsAgainst || 0) + (stat.goalsAgainst || 0),
+                              rebounds: (acc.rebounds || 0) + (stat.rebounds || 0),
+                              intercepts: (acc.intercepts || 0) + (stat.intercepts || 0),
+                              badPass: (acc.badPass || 0) + (stat.badPass || 0),
+                              handlingError: (acc.handlingError || 0) + (stat.handlingError || 0),
+                              pickUp: (acc.pickUp || 0) + (stat.pickUp || 0),
+                              infringement: (acc.infringement || 0) + (stat.infringement || 0),
+                            };
+                          }, {
+                            goalsFor: 0,
+                            goalsAgainst: 0,
+                            rebounds: 0,
+                            intercepts: 0, 
+                            badPass: 0,
+                            handlingError: 0,
+                            pickUp: 0,
+                            infringement: 0,
+                          });
+                          
                           return (
-                            <div className="flex items-center space-x-2">
-                              <div 
-                                className="w-8 h-8 rounded-full flex items-center justify-center text-white"
-                                style={{ backgroundColor: playerColor }}
-                              >
-                                {player.displayName?.charAt(0) || player.firstName.charAt(0)}
+                            <div className="flex flex-col space-y-3">
+                              <div className="flex items-center space-x-3">
+                                <div 
+                                  className="w-14 h-14 rounded-full flex items-center justify-center text-white text-xl font-bold"
+                                  style={{ backgroundColor: playerColor }}
+                                >
+                                  {player.displayName?.charAt(0) || player.firstName.charAt(0)}
+                                </div>
+                                <div>
+                                  <div 
+                                    className="font-bold text-lg" 
+                                    style={{ color: playerColor }}
+                                  >
+                                    {player.displayName || `${player.firstName} ${player.lastName}`}
+                                  </div>
+                                  <div className="text-gray-500">
+                                    {roster && roster
+                                      .filter(r => r.playerId === player.id)
+                                      .map(r => r.position)
+                                      .filter((v, i, a) => a.indexOf(v) === i)
+                                      .join(', ')}
+                                  </div>
+                                </div>
                               </div>
-                              <div 
-                                className="font-semibold" 
-                                style={{ color: playerColor }}
-                              >
-                                {player.displayName || `${player.firstName} ${player.lastName}`}
-                              </div>
+                              
+                              {playerStats.length > 0 && (
+                                <div 
+                                  className="grid grid-cols-4 gap-2 p-3 rounded-lg text-white"
+                                  style={{ backgroundColor: playerColor }}
+                                >
+                                  {totalStats.goalsFor > 0 && (
+                                    <div className="text-center">
+                                      <div className="text-xl font-bold">{totalStats.goalsFor}</div>
+                                      <div className="text-xs opacity-80">Goals</div>
+                                    </div>
+                                  )}
+                                  {totalStats.intercepts > 0 && (
+                                    <div className="text-center">
+                                      <div className="text-xl font-bold">{totalStats.intercepts}</div>
+                                      <div className="text-xs opacity-80">Intercepts</div>
+                                    </div>
+                                  )}
+                                  {totalStats.rebounds > 0 && (
+                                    <div className="text-center">
+                                      <div className="text-xl font-bold">{totalStats.rebounds}</div>
+                                      <div className="text-xs opacity-80">Rebounds</div>
+                                    </div>
+                                  )}
+                                  {totalStats.pickUp > 0 && (
+                                    <div className="text-center">
+                                      <div className="text-xl font-bold">{totalStats.pickUp}</div>
+                                      <div className="text-xs opacity-80">Pick Ups</div>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
                             </div>
                           );
                         })()
                       ) : (
-                        <div className="text-gray-500 italic">No award winner has been selected for this game.</div>
+                        <div className="flex items-center justify-center h-full py-6 text-gray-500 italic">
+                          No award winner has been selected for this game.
+                        </div>
                       )}
                     </div>
                   )}
