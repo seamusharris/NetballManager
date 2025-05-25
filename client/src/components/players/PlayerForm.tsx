@@ -21,9 +21,8 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
-import { insertPlayerSchema, Position, Player, allPositions, Season } from "@shared/schema";
+import { insertPlayerSchema, Position, Player, allPositions } from "@shared/schema";
 import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 
 // Extend the schema for the form validation
 const formSchema = insertPlayerSchema.extend({
@@ -181,24 +180,7 @@ export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFor
     }
   };
   
-  // Function to handle season checkbox toggle - simplified
-  const handleSeasonToggle = (seasonId: number) => {
-    // Create a new array to avoid state mutation issues
-    let newSelection: number[];
-    
-    if (selectedSeasons.includes(seasonId)) {
-      // Remove the season if already selected
-      newSelection = selectedSeasons.filter(id => id !== seasonId);
-      console.log(`Removed season ${seasonId}, new selection:`, newSelection);
-    } else {
-      // Add the season if not already selected
-      newSelection = [...selectedSeasons, seasonId];
-      console.log(`Added season ${seasonId}, new selection:`, newSelection);
-    }
-    
-    // Set the selection without unnecessary filtering
-    setSelectedSeasons(newSelection);
-  };
+  // Season management is now handled on the player details page
 
   // Function to handle manual form submission
   const onFormSubmit = () => {
@@ -222,35 +204,13 @@ export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFor
       return;
     }
     
-    // Validate at least one season is selected
-    if (selectedSeasons.length === 0 && seasons.length > 0) {
-      alert("Please select at least one season for the player");
-      return;
-    }
-    
     // Build position preferences array
     const positionPreferences: Position[] = [values.position1 as Position];
     if (values.position2 !== "none") positionPreferences.push(values.position2 as Position);
     if (values.position3 !== "none") positionPreferences.push(values.position3 as Position);
     if (values.position4 !== "none") positionPreferences.push(values.position4 as Position);
     
-    // For logging purposes only
-    const allValidSeasonIds = seasons.map(season => season.id);
-    
-    // For logging only
-    console.log("Valid season IDs from API (for reference only):", allValidSeasonIds);
-    console.log("Selected seasons for submission:", selectedSeasons);
-    
-    // Filter selected seasons to ensure only valid season IDs are submitted
-    // This is essential to prevent any accidental player IDs from being included
-    const filteredSeasonIds = selectedSeasons.filter(id => 
-      // Only allow numbers that exist in our seasons data
-      seasons.some(season => season.id === id)
-    );
-    
-    console.log("Valid filtered season IDs for submission:", filteredSeasonIds);
-    
-    // Build player data object with valid season IDs only
+    // Build player data object without seasons
     const playerData = {
       displayName: values.displayName,
       firstName: values.firstName,
@@ -258,13 +218,9 @@ export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFor
       dateOfBirth: values.dateOfBirth || null,
       positionPreferences,
       active: values.active,
-      // Only include active seasons if nothing is selected
-      seasonIds: filteredSeasonIds.length > 0 
-        ? filteredSeasonIds 
-        : (seasons.filter(s => s.isActive).map(s => s.id))
     };
     
-    console.log("Submitting player data manually:", playerData);
+    console.log("Submitting player data:", playerData);
     
     // Call the onSubmit handler passed from parent
     onSubmit(playerData);
