@@ -639,7 +639,7 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
                     <div className="text-sm text-center font-medium leading-tight" style={{ color: textColor }}>{playerName}</div>
                   )}
                   {!playerName && (
-                    <div className="text-sm text-center font-medium leading-tight text-white">Unassigned</div>
+                    <div className="text-sm text-center font-medium leading-tight text-white">—</div>
                   )}
                 </div>
               </div>
