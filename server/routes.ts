@@ -540,6 +540,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("\n\n======= PLAYER UPDATE START ========");
       console.log("Player ID:", id);
       console.log("Player update request body:", JSON.stringify(updateData, null, 2));
+      console.log("Raw request body:", req.body);
       
       // Extract season IDs before updating player - simplified
       let processedSeasonIds = [];

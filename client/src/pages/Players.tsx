@@ -248,9 +248,12 @@ export default function Players() {
     console.log("Formatted player data for update:", validPlayerData);
     console.log("=========================================");
     
+    // Send the update in the format the server expects
+    console.log("Player ID to update:", editingPlayer.id);
+    // Pass the player data directly instead of wrapping it
     updateMutation.mutate({ 
       id: editingPlayer.id, 
-      player: validPlayerData 
+      player: validPlayerData
     });
   };
   
