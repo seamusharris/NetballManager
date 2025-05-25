@@ -77,6 +77,11 @@ export default function Players() {
       }
       
       try {
+        // Log request details for debugging
+        console.log("Making API request to:", `/api/players/${id}`);
+        console.log("Request method:", "PATCH");
+        console.log("Request body:", JSON.stringify(playerData, null, 2));
+        
         // Make the API request with proper headers
         const response = await fetch(`/api/players/${id}`, {
           method: 'PATCH',
@@ -86,13 +91,27 @@ export default function Players() {
           body: JSON.stringify(playerData)
         });
         
+        // Log the response status
+        console.log("Response status:", response.status);
+        
+        // Get response text before checking if it was ok
+        const responseText = await response.text();
+        console.log("Response text:", responseText);
+        
         if (!response.ok) {
-          const errorText = await response.text();
-          console.error(`API error: ${response.status} - ${errorText}`);
-          throw new Error(`Failed to update player: ${response.status} - ${errorText}`);
+          console.error(`API error: ${response.status} - ${responseText}`);
+          throw new Error(`Failed to update player: ${response.status} - ${responseText}`);
         }
         
-        const updatedPlayer = await response.json();
+        // Parse the response JSON from the text we already received
+        let updatedPlayer;
+        try {
+          updatedPlayer = JSON.parse(responseText);
+        } catch (parseError) {
+          console.error("Failed to parse response JSON:", parseError);
+          throw new Error(`Failed to parse response: ${parseError.message}`);
+        }
+        
         console.log("Update response:", updatedPlayer);
         return updatedPlayer;
       } catch (err) {
