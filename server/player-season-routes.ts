@@ -92,15 +92,35 @@ export async function getPlayerSeasons(req: Request, res: Response) {
     // Get player's seasons using raw SQL for greater flexibility
     const { pool } = await import('./db');
     const { rows } = await pool.query(
-      `SELECT s.* 
+      `SELECT 
+        s.id,
+        s.name,
+        s.start_date,
+        s.end_date,
+        s.is_active,
+        s.type,
+        s.year,
+        s.display_order
        FROM seasons s
        JOIN player_seasons ps ON s.id = ps.season_id
        WHERE ps.player_id = $1
        ORDER BY s.start_date DESC`,
       [playerId]
     );
+    
+    // Convert snake_case from database to camelCase for frontend
+    const formattedSeasons = rows.map(row => ({
+      id: row.id,
+      name: row.name,
+      startDate: row.start_date,
+      endDate: row.end_date,
+      isActive: row.is_active,
+      type: row.type,
+      year: row.year,
+      displayOrder: row.display_order
+    }));
 
-    return res.json(rows);
+    return res.json(formattedSeasons);
   } catch (error) {
     console.error(`Error getting seasons for player ${playerId}:`, error);
     return res.status(500).json({ 
