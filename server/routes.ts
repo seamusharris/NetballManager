@@ -609,11 +609,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const requestSeasonIds = Array.isArray(req.body.seasonIds) ? req.body.seasonIds : [];
         console.log(`Season IDs from request:`, requestSeasonIds);
         
-        // Convert all IDs to numbers but don't filter by validSeasonIds
-        // The API should return correct data in the first place
+        // Convert all IDs to numbers and filter by validSeasonIds
+        // This ensures we only save valid season relationships
         const processedSeasonIds = requestSeasonIds
           .map(id => typeof id === 'string' ? parseInt(id, 10) : id)
-          .filter(id => typeof id === 'number' && !isNaN(id));
+          .filter(id => typeof id === 'number' && !isNaN(id))
+          .filter(id => validSeasonIds.includes(id));
         
         console.log(`Season IDs to be used:`, processedSeasonIds);
         

@@ -220,10 +220,24 @@ export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFor
       console.log("Filtered season IDs:", filteredSeasonIds);
       
       // Construct the final player data object with properly filtered seasons
+      // Make sure we're only passing valid season IDs (numbers that exist in our seasons data)
+      const validatedSeasonIds = filteredSeasonIds
+        .filter(id => {
+          const isValidId = validSeasonIds.includes(id);
+          if (!isValidId) {
+            console.warn(`Removing invalid season ID: ${id}`);
+          }
+          return isValidId;
+        });
+        
+      console.log("Final validated season IDs:", validatedSeasonIds);
+        
       const playerData = {
         ...rest,
         positionPreferences,
-        seasonIds: filteredSeasonIds.length > 0 ? filteredSeasonIds : validSeasonIds.filter(id => seasons.find(s => s.id === id)?.isActive),
+        seasonIds: validatedSeasonIds.length > 0 
+          ? validatedSeasonIds 
+          : validSeasonIds.filter(id => seasons.find(s => s.id === id)?.isActive),
       };
       
       console.log("Player form submitted with data:", playerData);
