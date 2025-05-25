@@ -648,16 +648,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           // If we have seasons to add, insert them with a single statement
           if (validSeasonIds.length > 0) {
-            // Create a parameterized query for multiple values
-            const valuePlaceholders = validSeasonIds.map((_, idx) => `($1, $${idx + 2})`).join(', ');
-            const query = `
-              INSERT INTO player_seasons (player_id, season_id) 
-              VALUES ${valuePlaceholders}
-            `;
-            
-            // Execute the multi-value insert
-            await client.query(query, [id, ...validSeasonIds]);
-            console.log(`Added player ${id} to ${validSeasonIds.length} seasons`);
+            try {
+              // Log exactly what we're trying to insert
+              console.log(`Attempting to insert seasons for player ${id}:`, validSeasonIds);
+              
+              // Insert each season individually to avoid parameterization issues
+              for (const seasonId of validSeasonIds) {
+                await client.query(
+                  'INSERT INTO player_seasons (player_id, season_id) VALUES ($1, $2)',
+                  [id, seasonId]
+                );
+                console.log(`Successfully added player ${id} to season ${seasonId}`);
+              }
+            } catch (insertError) {
+              console.error(`Error inserting player-season relationships:`, insertError);
+              throw insertError;
+            }
           } else {
             console.log(`No seasons specified for player ${id}, all associations cleared`);
           }
