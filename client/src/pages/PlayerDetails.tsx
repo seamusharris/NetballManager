@@ -393,7 +393,7 @@ export default function PlayerDetails() {
   // Mutation for updating the player
   const updateMutation = useMutation({
     mutationFn: async (updatedPlayer: any) => {
-      // Wrap the player data in a player object as expected by the server
+      // Wrap the player data in a player object as expected by the server route
       return apiRequest('PATCH', `/api/players/${playerId}`, { player: updatedPlayer });
     },
     onSuccess: () => {

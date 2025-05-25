@@ -47,6 +47,7 @@ export default function Players() {
   const createMutation = useMutation({
     mutationFn: async (newPlayer: any) => {
       console.log("Creating new player:", newPlayer);
+      // Send the player data directly in the format expected by the server
       const res = await apiRequest('POST', '/api/players', newPlayer);
       return res.json();
     },
