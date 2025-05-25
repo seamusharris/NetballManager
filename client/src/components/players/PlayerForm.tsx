@@ -291,23 +291,17 @@ export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFor
     if (values.position3 !== "none") positionPreferences.push(values.position3 as Position);
     if (values.position4 !== "none") positionPreferences.push(values.position4 as Position);
     
-    // CRITICAL FIX: Ensure we're only using valid season IDs
-    // Get the actual season IDs from our seasons data
+    // For logging purposes only
     const validSeasonIds = seasons.map(season => season.id);
     
-    // Filter the selectedSeasons to only include valid season IDs
-    const filteredSeasonIds = selectedSeasons.filter(id => 
-      validSeasonIds.includes(id)
-    );
-    
-    // If we have no valid season IDs but we have seasons, use the active season
-    const finalSeasonIds = filteredSeasonIds.length > 0 
-      ? filteredSeasonIds 
+    // Use the selected seasons directly without filtering
+    // Only default to active season if no seasons were selected
+    const finalSeasonIds = selectedSeasons.length > 0 
+      ? selectedSeasons 
       : (seasons.filter(s => s.isActive).map(s => s.id));
     
-    console.log("Valid season IDs from API:", validSeasonIds);
-    console.log("Selected seasons before filtering:", selectedSeasons);
-    console.log("Final filtered season IDs for submission:", finalSeasonIds);
+    console.log("Valid season IDs from API (for reference only):", validSeasonIds);
+    console.log("Selected seasons for submission:", selectedSeasons);
     
     // Build player data object with properly filtered season IDs
     const playerData = {
