@@ -111,12 +111,25 @@ export default function Players() {
         description: "Player deleted successfully",
       });
     },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: `Failed to delete player: ${error}`,
-        variant: "destructive",
-      });
+    onError: (error: any) => {
+      // Check if it's a "not found" error, which can happen when trying to delete a 
+      // player that was already deleted (due to double-clicks or network issues)
+      if (error?.message?.includes("not found") || 
+          (typeof error === 'object' && error.status === 404)) {
+        // The player was already deleted, so consider this a success
+        queryClient.invalidateQueries({ queryKey: ['/api/players'] });
+        toast({
+          title: "Success",
+          description: "Player was already deleted",
+        });
+      } else {
+        // It's a real error
+        toast({
+          title: "Error",
+          description: `Failed to delete player: ${error}`,
+          variant: "destructive",
+        });
+      }
     }
   });
   
