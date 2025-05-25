@@ -1306,10 +1306,6 @@ export default function GameDetails() {
               <Printer className="mr-2 h-4 w-4" />
               Stats Sheet
             </TabsTrigger>
-            <TabsTrigger value="notes">
-              <FileText className="mr-2 h-4 w-4" />
-              Game Notes
-            </TabsTrigger>
           </TabsList>
           
           <TabsContent value="overview" className="mt-6">
