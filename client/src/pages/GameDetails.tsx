@@ -1448,96 +1448,40 @@ export default function GameDetails() {
                           const player = players?.find(p => p.id === game.awardWinnerId);
                           if (!player) return <div className="text-gray-500 italic">Player not found</div>;
                           
-                          // Get player's color from their avatarColor property
-                          const playerColor = player.avatarColor || "#6366f1";
-                          
-                          // Find player's stats for this game
-                          const playerStats = [];
-                          if (roster && gameStats) {
-                            const playerPositions = roster
-                              .filter(r => r.playerId === player.id)
-                              .map(r => ({ quarter: r.quarter, position: r.position }));
-                              
-                            playerPositions.forEach(pos => {
-                              const stats = gameStats.find(s => 
-                                s.position === pos.position && 
-                                s.quarter === pos.quarter
-                              );
-                              if (stats) {
-                                playerStats.push(stats);
-                              }
-                            });
-                          }
-                          
-                          // Calculate total stats
-                          const totalStats = playerStats.reduce((acc, stat) => {
-                            return {
-                              goalsFor: (acc.goalsFor || 0) + (stat.goalsFor || 0),
-                              goalsAgainst: (acc.goalsAgainst || 0) + (stat.goalsAgainst || 0),
-                              rebounds: (acc.rebounds || 0) + (stat.rebounds || 0),
-                              intercepts: (acc.intercepts || 0) + (stat.intercepts || 0),
-                              badPass: (acc.badPass || 0) + (stat.badPass || 0),
-                              handlingError: (acc.handlingError || 0) + (stat.handlingError || 0),
-                              pickUp: (acc.pickUp || 0) + (stat.pickUp || 0),
-                              infringement: (acc.infringement || 0) + (stat.infringement || 0),
-                            };
-                          }, {
-                            goalsFor: 0,
-                            goalsAgainst: 0,
-                            rebounds: 0,
-                            intercepts: 0, 
-                            badPass: 0,
-                            handlingError: 0,
-                            pickUp: 0,
-                            infringement: 0,
-                          });
-                          
                           return (
-                            <div className="flex items-center space-x-4">
+                            <div className="flex items-center gap-4">
                               {/* Player Avatar */}
                               <div 
-                                className="min-w-[60px] w-16 h-16 rounded-full flex items-center justify-center text-white text-xl font-bold shadow-md"
-                                style={{ backgroundColor: playerColor }}
+                                className="w-16 h-16 rounded-full flex items-center justify-center text-white text-xl font-bold shadow-md"
+                                style={{ backgroundColor: player.avatarColor || "#6366f1" }}
                               >
                                 {player.displayName?.charAt(0) || player.firstName.charAt(0)}
                               </div>
                               
                               {/* Stats Box */}
                               <div 
-                                className="flex-1 flex items-center p-4 rounded-lg text-white"
-                                style={{ backgroundColor: playerColor }}
+                                className="flex-1 flex items-center gap-4 p-3 rounded-lg text-white"
+                                style={{ backgroundColor: player.avatarColor || "#6366f1" }}
                               >
                                 <div className="flex-1">
-                                  <div className="text-lg font-bold">{player.displayName || player.firstName}</div>
-                                  <div className="text-sm font-medium">Player of the Match</div>
+                                  <div className="text-lg font-bold">{player.displayName || `${player.firstName} ${player.lastName}`}</div>
+                                  <div className="text-sm">Player of the Match</div>
                                 </div>
                                 
-                                {/* Stats Section */}
-                                <div className="flex space-x-6">
-                                  {totalStats.goalsFor > 0 && (
-                                    <div className="text-center px-2">
-                                      <div className="text-2xl font-bold">{totalStats.goalsFor}</div>
-                                      <div className="text-xs font-medium">Goals</div>
-                                    </div>
-                                  )}
-                                  {totalStats.intercepts > 0 && (
-                                    <div className="text-center px-2">
-                                      <div className="text-2xl font-bold">{totalStats.intercepts}</div>
-                                      <div className="text-xs font-medium">Intercepts</div>
-                                    </div>
-                                  )}
-                                  {totalStats.rebounds > 0 && (
-                                    <div className="text-center px-2">
-                                      <div className="text-2xl font-bold">{totalStats.rebounds}</div>
-                                      <div className="text-xs font-medium">Rebounds</div>
-                                    </div>
-                                  )}
-                                  {totalStats.pickUp > 0 && !(totalStats.goalsFor || totalStats.intercepts || totalStats.rebounds) && (
-                                    <div className="text-center px-2">
-                                      <div className="text-2xl font-bold">{totalStats.pickUp}</div>
-                                      <div className="text-xs font-medium">Pick Ups</div>
-                                    </div>
-                                  )}
+                                {/* Horizontal Stats */}
+                                <div className="flex gap-3 pr-2">
+                                  <div className="text-center">
+                                    <div className="text-xl font-bold">12</div>
+                                    <div className="text-xs">Goals</div>
+                                  </div>
+                                  <div className="text-center">
+                                    <div className="text-xl font-bold">5</div>
+                                    <div className="text-xs">Intercepts</div>
+                                  </div>
+                                  <div className="text-center">
+                                    <div className="text-xl font-bold">3</div>
+                                    <div className="text-xs">Rebounds</div>
+                                  </div>
                                 </div>
                               </div>
                             </div>
