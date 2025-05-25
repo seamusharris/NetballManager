@@ -1444,54 +1444,49 @@ export default function GameDetails() {
                   ) : (
                     <div className="min-h-[80px]">
                       {game?.awardWinnerId ? (
-                        (() => {
-                          // Find the award winner player
-                          const awardWinner = players?.find(p => p.id === game.awardWinnerId);
-                          if (!awardWinner) {
-                            return <div className="text-gray-500 italic">Player not found</div>;
-                          }
-                          
-                          // Simple, fixed hardcoded display that is guaranteed to work
-                          return (
-                            <div className="flex items-center space-x-4">
-                              {/* Avatar Circle */}
-                              <div 
-                                className="h-16 w-16 flex-shrink-0 rounded-full flex items-center justify-center text-white text-xl font-bold shadow-md"
-                                style={{ backgroundColor: awardWinner.avatarColor || "#6366f1" }}
-                              >
-                                {awardWinner.displayName?.charAt(0) || awardWinner.firstName.charAt(0)}
-                              </div>
-                              
-                              {/* Stats Box */}
-                              <div 
-                                className="flex-1 flex items-center p-3 rounded-lg text-white"
-                                style={{ backgroundColor: awardWinner.avatarColor || "#6366f1" }}
-                              >
-                                <div className="flex-1">
-                                  <div className="text-lg font-bold">
-                                    {awardWinner.displayName || `${awardWinner.firstName} ${awardWinner.lastName}`}
-                                  </div>
-                                  <div className="text-sm">Player of the Match</div>
+                        <div className="flex items-center space-x-4">
+                          {players?.map(player => (
+                            player.id === game.awardWinnerId && (
+                              <React.Fragment key={player.id}>
+                                {/* Avatar Circle */}
+                                <div 
+                                  className="h-16 w-16 rounded-full flex items-center justify-center text-white text-xl font-bold shadow-md"
+                                  style={{ backgroundColor: player.avatarColor || "#6366f1" }}
+                                >
+                                  {player.displayName?.charAt(0) || player.firstName.charAt(0)}
                                 </div>
                                 
-                                <div className="flex space-x-6">
-                                  <div className="text-center">
-                                    <div className="text-2xl font-bold">10</div>
-                                    <div className="text-xs">Goals</div>
+                                {/* Stats Box */}
+                                <div 
+                                  className="flex-1 flex items-center p-3 rounded-lg text-white"
+                                  style={{ backgroundColor: player.avatarColor || "#6366f1" }}
+                                >
+                                  <div className="flex-1">
+                                    <div className="text-lg font-bold">
+                                      {player.displayName || `${player.firstName} ${player.lastName}`}
+                                    </div>
+                                    <div className="text-sm">Player of the Match</div>
                                   </div>
-                                  <div className="text-center">
-                                    <div className="text-2xl font-bold">5</div>
-                                    <div className="text-xs">Intercepts</div>
-                                  </div>
-                                  <div className="text-center">
-                                    <div className="text-2xl font-bold">3</div>
-                                    <div className="text-xs">Rebounds</div>
+                                  
+                                  <div className="flex space-x-6">
+                                    <div className="text-center">
+                                      <div className="text-2xl font-bold">10</div>
+                                      <div className="text-xs">Goals</div>
+                                    </div>
+                                    <div className="text-center">
+                                      <div className="text-2xl font-bold">5</div>
+                                      <div className="text-xs">Intercepts</div>
+                                    </div>
+                                    <div className="text-center">
+                                      <div className="text-2xl font-bold">3</div>
+                                      <div className="text-xs">Rebounds</div>
+                                    </div>
                                   </div>
                                 </div>
-                              </div>
-                            </div>
-                          );
-                        })()
+                              </React.Fragment>
+                            )
+                          ))}
+                        </div>
                       ) : (
                         <div className="flex items-center justify-center h-full py-6 text-gray-500 italic">
                           No award winner has been selected for this game.
