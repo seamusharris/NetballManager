@@ -31,13 +31,20 @@ export default function RecentGames({ games, opponents, className, seasonFilter,
     setRefreshToken(Date.now());
   }, [games]);
   
-  // Cache game stats using React Query with batch endpoint
+  // Create a static cache key that doesn't depend on refreshToken
+  // This ensures we use the same cached data across season changes
+  const seasonId = seasonFilter || 'current';
+  
+  // Cache game stats using React Query with aggressive caching
   const { data: allGameStats, isLoading } = useQuery({
-    queryKey: ['batchGameStats', gameIds.join(','), refreshToken],
+    // Static key that won't change with refreshToken
+    queryKey: ['recentGamesStats', gameIds.join(','), seasonId],
     queryFn: async () => {
       if (gameIds.length === 0) {
         return {};
       }
+      
+      console.log(`Recent Games loading scores for season: ${seasonId}, games: ${gameIds.join(',')}`);
       
       // Use the batch endpoint to fetch all stats in a single request
       const idsParam = gameIds.join(',');
@@ -67,11 +74,13 @@ export default function RecentGames({ games, opponents, className, seasonFilter,
         return statsMap;
       }
       
-      return await response.json();
+      const data = await response.json();
+      console.log(`Recent Games successfully loaded scores for ${Object.keys(data).length} games`);
+      return data;
     },
     enabled: enableQuery,
-    staleTime: 30 * 60 * 1000, // Consider data fresh for 30 minutes
-    gcTime: 60 * 60 * 1000    // Keep data in cache for 1 hour
+    staleTime: 60 * 60 * 1000, // Consider data fresh for 60 minutes
+    gcTime: 24 * 60 * 60 * 1000 // Keep data in cache for 24 hours
   });
   
   const getOpponentName = (opponentId: number | null) => {

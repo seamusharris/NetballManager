@@ -60,20 +60,38 @@ export default function TeamPerformance({ games, className, activeSeason, select
   const completedGameIds = completedGamesArray.map(game => game.id);
   const enableQuery = completedGameIds.length > 0;
   
+  // Create a static cache key that doesn't change with the statsKey
+  // This ensures we use the same cached data across season changes
+  const seasonId = selectedSeason?.id || 'current';
+  const gameIdsKey = completedGameIds.join(',');
+  
   // Fetch stats for all completed games individually since batch endpoint is unreliable
   const { data: gameStatsMap, isLoading } = useQuery({
-    queryKey: ['batchTeamPerformanceStats', completedGameIds.join(','), statsKey, selectedSeason],
+    queryKey: ['teamPerformanceStats', gameIdsKey, seasonId],
     queryFn: async () => {
       if (completedGameIds.length === 0) {
         return {};
       }
       
-      // Instead of using the batch endpoint, fetch each game's stats individually
+      console.log(`Team Performance loading stats for season: ${seasonId}, games: ${gameIdsKey}`);
+      
+      // Try to use the batch endpoint first for better performance
+      try {
+        const batchStats = await apiRequest('GET', `/api/games/stats/batch`, { gameIds: gameIdsKey });
+        if (batchStats && Object.keys(batchStats).length > 0) {
+          console.log(`Successfully loaded batch stats for ${Object.keys(batchStats).length} games`);
+          return batchStats;
+        }
+      } catch (error) {
+        console.warn("Batch endpoint failed, falling back to individual requests:", error);
+      }
+      
+      // Fallback: fetch each game's stats individually if batch fails
       const statsMap: Record<number, any[]> = {};
       
-      // Process each game ID sequentially
       for (const gameId of completedGameIds) {
         try {
+          // Use the most efficient approach with 304 NOT MODIFIED responses
           const stats = await apiRequest('GET', `/api/games/${gameId}/stats`);
           statsMap[gameId] = stats;
         } catch (error) {
@@ -86,8 +104,8 @@ export default function TeamPerformance({ games, className, activeSeason, select
       return statsMap;
     },
     enabled: enableQuery,
-    staleTime: 30 * 60 * 1000, // 30 minutes - longer stale time to improve caching
-    gcTime: 60 * 60 * 1000   // 1 hour cache time
+    staleTime: 60 * 60 * 1000, // 60 minutes - very aggressive caching
+    gcTime: 24 * 60 * 60 * 1000   // 24 hours cache time for better performance
   });
   
   // Calculate team performance metrics from game stats
