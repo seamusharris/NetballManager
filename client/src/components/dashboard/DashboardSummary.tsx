@@ -120,7 +120,7 @@ export default function DashboardSummary({
           </>
         ) : (
           <>
-            <TeamPerformance games={filteredGames} />
+            <TeamPerformance games={filteredGames} activeSeason={activeSeason} />
             <RecentGames games={pastGames} opponents={opponents} />
             <UpcomingGames games={upcomingGames} opponents={opponents} />
           </>

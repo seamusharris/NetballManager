@@ -12,7 +12,7 @@ interface TeamPerformanceProps {
   activeSeason?: any; // Accept active season
 }
 
-export default function TeamPerformance({ games, className }: TeamPerformanceProps) {
+export default function TeamPerformance({ games, className, activeSeason }: TeamPerformanceProps) {
   const [quarterPerformance, setQuarterPerformance] = useState<{
     avgTeamScoreByQuarter: Record<number, number>;
     avgOpponentScoreByQuarter: Record<number, number>;
@@ -187,7 +187,7 @@ export default function TeamPerformance({ games, className }: TeamPerformancePro
         <div className="flex justify-between items-center mb-4">
           <h3 className="font-heading font-semibold text-neutral-dark">Team Performance</h3>
           <Badge variant="outline" className="bg-accent/10 text-accent px-2 py-1 rounded-full text-xs font-semibold">
-            Season 2025
+            {activeSeason ? activeSeason.name : "Current Season"}
           </Badge>
         </div>
         
