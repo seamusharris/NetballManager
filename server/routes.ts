@@ -647,42 +647,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.log(`About to insert player-season relationships for player ${id}`);
           console.log(`Season IDs to add: ${JSON.stringify(finalSeasonIds)}`);
           
-          // Add new relationships one by one
-          for (const seasonId of finalSeasonIds) {
+          // If we have season IDs to add, create batch insert
+          if (finalSeasonIds.length > 0) {
+            // Build a multi-value insert to do it all at once
+            const values = finalSeasonIds.map((_, i) => `($1, $${i + 2})`).join(', ');
+            const params = [id, ...finalSeasonIds];
+            
             try {
-              console.log(`Attempting to add player ${id} to season ${seasonId}`);
+              console.log(`Attempting to add player ${id} to seasons with query:`, 
+                `INSERT INTO player_seasons (player_id, season_id) VALUES ${values} ON CONFLICT (player_id, season_id) DO NOTHING`);
+              console.log(`With parameters:`, params);
+              
               await client.query(
-                'INSERT INTO player_seasons (player_id, season_id) VALUES ($1, $2) ON CONFLICT (player_id, season_id) DO NOTHING',
-                [id, seasonId]
+                `INSERT INTO player_seasons (player_id, season_id) VALUES ${values} ON CONFLICT (player_id, season_id) DO NOTHING`,
+                params
               );
-              console.log(`Successfully added player ${id} to season ${seasonId}`);
+              console.log(`Successfully added player ${id} to seasons: ${finalSeasonIds.join(', ')}`);
             } catch (insertError) {
-              console.error(`Error inserting player ${id} to season ${seasonId}:`, insertError);
-              throw new Error(`Failed to add player ${id} to season ${seasonId}: ${insertError.message || 'Unknown error'}`);
+              console.error(`Error inserting player ${id} to seasons:`, insertError);
+              // Fall back to one-by-one insert if batch fails
+              console.log(`Falling back to individual inserts`);
+              for (const seasonId of finalSeasonIds) {
+                try {
+                  await client.query(
+                    'INSERT INTO player_seasons (player_id, season_id) VALUES ($1, $2) ON CONFLICT (player_id, season_id) DO NOTHING',
+                    [id, seasonId]
+                  );
+                  console.log(`Successfully added player ${id} to season ${seasonId}`);
+                } catch (singleInsertError) {
+                  console.error(`Error adding player ${id} to season ${seasonId}:`, singleInsertError);
+                  // Continue with other seasons even if one fails
+                }
+              }
             }
           }
           
           await client.query('COMMIT');
           console.log(`Successfully updated seasons for player ${id}`);
         } catch (txError) {
-          await client.query('ROLLBACK');
-          console.error(`Transaction error:`, txError);
-          throw new Error(`Database error: ${txError.message}`);
+          try {
+            await client.query('ROLLBACK');
+            console.error(`Transaction rolled back due to error:`, txError);
+          } catch (rollbackError) {
+            console.error(`Rollback failed:`, rollbackError);
+          }
+          throw new Error(`Database error updating player-season relationships: ${txError.message || 'Unknown error'}`);
         } finally {
           client.release();
         }
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
         const errorStack = error instanceof Error ? error.stack : 'No stack trace available';
+        const errorObject = JSON.stringify(error, Object.getOwnPropertyNames(error), 2);
         
         console.error(`Error handling player-season relationships:`);
         console.error(`Message: ${errorMessage}`);
         console.error(`Stack: ${errorStack}`);
+        console.error(`Full error object: ${errorObject}`);
+        console.error(`Error type: ${Object.prototype.toString.call(error)}`);
         
-        // Send a proper error response to the client
+        if (error instanceof Error) {
+          console.error(`Error name: ${error.name}`);
+          console.error(`Error cause:`, error.cause);
+          
+          for (const key in error) {
+            console.error(`Error property ${key}:`, error[key]);
+          }
+        }
+        
+        // Send a proper error response to the client with detailed information
         return res.status(500).json({ 
           message: "Failed to update player-season relationships", 
-          error: errorMessage
+          error: errorMessage,
+          details: errorObject,
+          type: Object.prototype.toString.call(error)
         });
       }
       

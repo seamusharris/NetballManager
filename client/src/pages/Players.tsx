@@ -83,6 +83,11 @@ export default function Players() {
     mutationFn: async ({ id, player }: { id: number, player: any }) => {
       console.log("Sending update request for player:", id, player);
       
+      // Detailed logging of the submitted player data
+      console.log("Player ID:", id);
+      console.log("Player data:", JSON.stringify(player, null, 2));
+      console.log("Season IDs in request:", player.seasonIds);
+      
       // Create a copy of the player data to avoid modifying the original
       const playerData = { ...player };
       
