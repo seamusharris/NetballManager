@@ -85,15 +85,9 @@ export function GameDetailsStatusButton({
       const isCompleted = completedStatuses.includes(selectedStatus);
       
       // Send the update request with both status and completed field
-      const response = await fetch(`/api/games/${game.id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          status: selectedStatus,
-          completed: isCompleted
-        })
+      const response = await apiRequest('PATCH', `/api/games/${game.id}`, {
+        status: selectedStatus,
+        completed: isCompleted
       });
       
       // Force refresh all data

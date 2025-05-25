@@ -4,6 +4,7 @@
  * This is a specialized module for saving position-based statistics directly to the database
  * without relying on complex React Query or other abstractions that might be failing.
  */
+import { apiRequest } from '@/lib/queryClient';
 
 /**
  * Validates and normalizes stats data
@@ -119,14 +120,16 @@ export async function savePositionStat(
     const cleanData = validation.data;
     
     // Get all the current stats for this game to find the one we need
-    const response = await fetch(`/api/games/${gameId}/stats`);
+    try {
+      const response = await apiRequest('GET', `/api/games/${gameId}/stats`);
+      
+      if (!response.ok) {
+        console.error(`Could not get existing stats for game ${gameId}`);
+        return false;
+      }
+      
+      const existingStats = await response.json();
     
-    if (!response.ok) {
-      console.error(`Could not get existing stats for game ${gameId}`);
-      return false;
-    }
-    
-    const existingStats = await response.json();
     
     // Find the stat for this position/quarter combination
     const targetStat = existingStats.find(
