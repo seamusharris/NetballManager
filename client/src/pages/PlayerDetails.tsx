@@ -363,13 +363,16 @@ export default function PlayerDetails() {
       return apiRequest('DELETE', `/api/players/${playerId}`);
     },
     onSuccess: () => {
+      // First navigate to the players list to avoid trying to fetch a deleted player
+      navigate('/players');
+      
+      // Then invalidate queries and show toast
       queryClient.invalidateQueries({ queryKey: ['/api/players'] });
       toast({
         title: "Player deleted",
         description: "The player has been successfully deleted.",
         variant: "default",
       });
-      navigate('/players');
     },
     onError: (error) => {
       toast({
