@@ -609,15 +609,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const requestSeasonIds = Array.isArray(req.body.seasonIds) ? req.body.seasonIds : [];
         console.log(`Season IDs from request:`, requestSeasonIds);
         
-        // Convert all IDs to numbers and filter to only include valid season IDs
-        const filteredSeasonIds = requestSeasonIds
+        // Convert all IDs to numbers but don't filter by validSeasonIds
+        // The API should return correct data in the first place
+        const processedSeasonIds = requestSeasonIds
           .map(id => typeof id === 'string' ? parseInt(id, 10) : id)
-          .filter(id => typeof id === 'number' && !isNaN(id) && validSeasonIds.includes(id));
+          .filter(id => typeof id === 'number' && !isNaN(id));
         
-        console.log(`Filtered valid season IDs:`, filteredSeasonIds);
+        console.log(`Season IDs to be used:`, processedSeasonIds);
         
         // Default to active season if no valid seasons provided
-        let finalSeasonIds = filteredSeasonIds;
+        let finalSeasonIds = processedSeasonIds;
         if (finalSeasonIds.length === 0) {
           const { rows: activeSeasons } = await pool.query('SELECT id FROM seasons WHERE "isActive" = true');
           if (activeSeasons.length > 0) {
