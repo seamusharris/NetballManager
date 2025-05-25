@@ -198,11 +198,11 @@ export default function TeamPerformance({ games, className }: TeamPerformancePro
           </div>
           
           <div className="text-center bg-gray-50 p-3 rounded-lg">
-            <p className="text-gray-500 text-sm mb-1">Goals For</p>
+            <p className="text-gray-500 text-sm mb-1">For</p>
             <p className="text-3xl font-bold text-primary">{quarterPerformance.avgTeamScore}</p>
           </div>
           <div className="text-center bg-gray-50 p-3 rounded-lg">
-            <p className="text-gray-500 text-sm mb-1">Goals Against</p>
+            <p className="text-gray-500 text-sm mb-1">Against</p>
             <p className="text-3xl font-bold text-primary">{quarterPerformance.avgOpponentScore}</p>
           </div>
           <div className="text-center bg-gray-50 p-3 rounded-lg">
