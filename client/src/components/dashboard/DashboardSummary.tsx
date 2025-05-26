@@ -188,19 +188,26 @@ export default function DashboardSummary({
         </Card>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {isLoading ? (
-          <>
-            <Skeleton className="h-[200px] w-full rounded-lg" />
-            <Skeleton className="h-[200px] w-full rounded-lg" />
-            <Skeleton className="h-[200px] w-full rounded-lg" />
-          </>
+      {/* Performance Metrics */}
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-6 mb-6">
+        {isLoading || statsLoading ? (
+          Array.from({ length: 5 }).map((_, i) => (
+            <Skeleton key={i} className="h-32 rounded-lg" />
+          ))
         ) : (
           <>
             <TeamPerformance 
               games={filteredGames} 
               activeSeason={activeSeason} 
               selectedSeason={selectedSeasonId === 'current' ? 'current' : seasons.find(s => s.id.toString() === selectedSeasonId)} 
+              centralizedStats={centralizedStats}
+            />
+            <PlayerPerformance 
+              players={players} 
+              games={pastGames} 
+              className="w-full" 
+              seasonFilter={selectedSeasonId} 
+              activeSeason={activeSeason}
               centralizedStats={centralizedStats}
             />
             <RecentGames 
@@ -216,6 +223,12 @@ export default function DashboardSummary({
               seasonFilter={selectedSeasonId} 
               activeSeason={activeSeason}
               centralizedStats={centralizedStats}
+            />
+            <OpponentMatchups 
+              games={filteredGames} 
+              opponents={opponents}
+              centralizedStats={centralizedStats}
+              className="h-32"
             />
           </>
         )}
@@ -235,22 +248,6 @@ export default function DashboardSummary({
         )}
       </div>
 
-      {/* Player Performance Row */}
-      <div className="grid grid-cols-1 gap-6">
-        {isLoading || statsLoading ? (
-          <Skeleton className="h-[300px] w-full rounded-lg" />
-        ) : (
-          <PlayerPerformance 
-            players={players} 
-            games={pastGames} 
-            className="w-full" 
-            seasonFilter={selectedSeasonId} 
-            activeSeason={activeSeason}
-            centralizedStats={centralizedStats}
-          />
-        )}
-      </div>
-
       {/* Performance Charts */}
       {isLoading || statsLoading ? (
         <Skeleton className="h-[400px] w-full rounded-lg" />
@@ -260,18 +257,6 @@ export default function DashboardSummary({
           seasonFilter={selectedSeasonId} 
           activeSeason={activeSeason}
           centralizedStats={centralizedStats}
-        />
-      )}
-
-      {/* Opponent Matchups */}
-      {isLoading || statsLoading ? (
-        <Skeleton className="h-[400px] w-full rounded-lg" />
-      ) : (
-        <OpponentMatchups 
-          games={filteredGames} 
-          opponents={opponents}
-          centralizedStats={centralizedStats}
-          className="w-full"
         />
       )}
     </div>
