@@ -18,8 +18,11 @@ export function useGameStats(gameId: number | undefined) {
 export function useBatchGameStats(gameIds: number[]) {
   // Filter and sort game IDs for consistency - be more strict
   const validGameIds = useMemo(() => {
-    if (!gameIds || !Array.isArray(gameIds)) return [];
-    return gameIds.filter(id => id && typeof id === 'number' && id > 0 && !isNaN(id));
+    if (!gameIds || !Array.isArray(gameIds) || gameIds.length === 0) {
+      return [];
+    }
+    const filtered = gameIds.filter(id => id && typeof id === 'number' && id > 0 && !isNaN(id));
+    return filtered.length > 0 ? filtered : [];
   }, [gameIds]);
   
   // Fetch stats for multiple games efficiently

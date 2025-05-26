@@ -13,9 +13,22 @@ import { useMemo } from 'react';
  */
 export function useBatchGameStatistics(gameIds: number[], forceFresh: boolean = false) {
   // Filter and sort gameIds for query key stability
-  const validGameIds = gameIds.filter(id => id && id > 0);
-  const sortedGameIds = [...validGameIds].sort((a, b) => a - b);
-  const gameIdsKey = sortedGameIds.join(',');
+  const validGameIds = useMemo(() => {
+    if (!gameIds || !Array.isArray(gameIds) || gameIds.length === 0) {
+      return [];
+    }
+    return gameIds.filter(id => id && typeof id === 'number' && id > 0 && !isNaN(id));
+  }, [gameIds]);
+  
+  const sortedGameIds = useMemo(() => 
+    [...validGameIds].sort((a, b) => a - b), 
+    [validGameIds]
+  );
+  
+  const gameIdsKey = useMemo(() => 
+    sortedGameIds.join(','), 
+    [sortedGameIds]
+  );
 
   // Include timestamp in key to force refresh when needed
   const freshKey = forceFresh ? `fresh-${Date.now()}` : 'cached';
@@ -45,7 +58,7 @@ export function useBatchGameStatistics(gameIds: number[], forceFresh: boolean = 
         throw error;
       }
     },
-    enabled: sortedGameIds.length > 0 && gameIdsKey.length > 0 && sortedGameIds.every(id => id && id > 0 && !isNaN(id)),
+    enabled: validGameIds.length > 0 && sortedGameIds.length > 0 && gameIdsKey.length > 0 && sortedGameIds.every(id => id && id > 0 && !isNaN(id)),
     staleTime: forceFresh ? 0 : CACHE_SETTINGS.BATCH_QUERY_STALE_TIME,
     gcTime: CACHE_SETTINGS.QUERY_CACHE_TIME,
     retry: CACHE_SETTINGS.MAX_RETRIES,
