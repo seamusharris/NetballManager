@@ -45,7 +45,7 @@ export function useBatchGameStatistics(gameIds: number[], forceFresh: boolean = 
         throw error;
       }
     },
-    enabled: sortedGameIds.length > 0,
+    enabled: sortedGameIds.length > 0 && gameIdsKey.length > 0,
     staleTime: forceFresh ? 0 : CACHE_SETTINGS.BATCH_QUERY_STALE_TIME,
     gcTime: CACHE_SETTINGS.QUERY_CACHE_TIME,
     retry: CACHE_SETTINGS.MAX_RETRIES,

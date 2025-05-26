@@ -36,7 +36,10 @@ export function useBatchGameStats(gameIds: number[]) {
       }
 
       try {
-        const url = `/api/games/stats/batch?gameIds=${encodeURIComponent(gameIdsParam)}`;
+        // Construct URL with proper query parameter handling
+        const baseUrl = '/api/games/stats/batch';
+        const queryParams = new URLSearchParams({ gameIds: gameIdsParam });
+        const url = `${baseUrl}?${queryParams.toString()}`;
         console.log(`Making fetch request to: ${url}`);
         const response = await fetch(url, {
           method: 'GET',
