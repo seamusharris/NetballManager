@@ -71,15 +71,15 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen, isTablet }: Sid
             >
               <div 
                 className={cn(
-                  "flex items-center px-3 py-2.5 rounded-lg transition-all duration-200 group",
+                  "flex items-center px-3 py-2.5 rounded-lg transition-all duration-200 group border-l-4",
                   isActive(link.path) 
-                    ? "bg-blue-600 text-white shadow-md" 
-                    : "text-blue-600 hover:bg-blue-600 hover:text-white"
+                    ? "border-blue-600 bg-blue-50 text-blue-700 font-semibold" 
+                    : "border-transparent text-blue-600 hover:bg-blue-600 hover:text-white"
                 )}
               >
                 <span className={cn(
                   "w-5 h-5 mr-3 transition-colors",
-                  isActive(link.path) ? "text-white" : "text-blue-600 group-hover:text-white"
+                  isActive(link.path) ? "text-blue-700" : "text-blue-600 group-hover:text-white"
                 )}>
                   {link.icon}
                 </span>
