@@ -9,6 +9,8 @@ import RecentGames from './RecentGames';
 import UpcomingGames from './UpcomingGames';
 import PlayerPerformance from './PlayerPerformance';
 import GamesList from './GamesList';
+import { Card, CardContent } from "@/components/ui/card"
+import { Users } from "lucide-react"
 
 import PerformanceCharts from './PerformanceCharts';
 import { Player, Game, Opponent, Season } from '@shared/schema';
@@ -34,14 +36,14 @@ export default function DashboardSummary({
 }: DashboardSummaryProps) {
   const [selectedSeasonId, setSelectedSeasonId] = useState<string>('current');
   const queryClient = useQueryClient();
-  
+
   // Set active season as selected by default
   useEffect(() => {
     if (activeSeason && selectedSeasonId === 'current') {
       setSelectedSeasonId('current');
     }
   }, [activeSeason]);
-  
+
   // Function to get season display name
   const getSeasonDisplayName = (season: Season) => {
     if (season.id === activeSeason?.id) {
@@ -49,22 +51,22 @@ export default function DashboardSummary({
     }
     return season.name;
   };
-  
+
   // Use a state variable to force refresh
   const [refreshKey, setRefreshKey] = useState(0);
-  
+
   // Update the refresh key when selected season changes
   useEffect(() => {
     // Force a refresh of all query data by invalidating everything
     queryClient.invalidateQueries();
-    
+
     // Create a small delay to ensure invalidation completes
     setTimeout(() => {
       // Then update the refresh key to trigger component updates
       setRefreshKey(prev => prev + 1);
     }, 100);
   }, [selectedSeasonId, queryClient]);
-  
+
   // Filter games by selected season
   const filteredGames = games.filter(game => {
     if (selectedSeasonId === 'current' && activeSeason) {
@@ -75,17 +77,17 @@ export default function DashboardSummary({
     }
     return true;
   });
-  
+
   // Sort games by date (most recent first)
   const sortedGames = sortByDate(filteredGames);
-  
+
   // Split into past and upcoming games based on date and completion status
   const currentDate = new Date().toISOString().split('T')[0];
-  
+
   // Include games that are either from past dates OR are completed (even if they're today)
   // Apply season filtering first, then filter by past/future date
   const pastGames = sortedGames.filter(game => game.date < currentDate || game.completed);
-  
+
   // Only include games that are from today or future AND not completed
   const upcomingGames = sortByDate(sortedGames.filter(game => 
     (game.date >= currentDate && !game.completed)
@@ -93,13 +95,13 @@ export default function DashboardSummary({
 
   // Centralized stats fetching for all games to prevent redundant API calls
   const allGameIds = filteredGames.map(game => game.id);
-  
+
   const { data: centralizedStats, isLoading: statsLoading } = useQuery({
     queryKey: ['dashboardStats', selectedSeasonId, allGameIds.join(',')],
     queryFn: async () => {
       console.log(`Dashboard centralizing stats fetch for ${allGameIds.length} games`);
       const statsMap: Record<number, any[]> = {};
-      
+
       // Fetch stats for all games
       for (const gameId of allGameIds) {
         try {
@@ -115,7 +117,7 @@ export default function DashboardSummary({
           statsMap[gameId] = [];
         }
       }
-      
+
       console.log(`Dashboard centralized fetch completed for ${Object.keys(statsMap).length} games`);
       return statsMap;
     },
@@ -123,7 +125,7 @@ export default function DashboardSummary({
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 15 * 60 * 1000 // 15 minutes
   });
-  
+
   // Handle refresh button click - with added logging for debugging
   const handleRefresh = () => {
     console.log("Manual refresh triggered - invalidating all queries");
@@ -132,7 +134,22 @@ export default function DashboardSummary({
     // Update refresh key
     setRefreshKey(prev => prev + 1);
   };
-  
+
+  if (isLoading || (allGameIds.length > 0 && statsLoading)) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <h3 className="text-lg font-medium mb-2">Loading Dashboard...</h3>
+          <p className="text-gray-500">Please wait while we load your team data.</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Ensure we have the necessary data
+  const statsMap = centralizedStats || {};
+  console.log(`Dashboard rendering with ${Object.keys(statsMap).length} games stats loaded`);
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -153,7 +170,23 @@ export default function DashboardSummary({
         </div>
       </div>
 
-      {/* Team Summary Cards */}
+      {/* Show a message if no data is available */}
+      {filteredGames.length === 0 && (
+        <Card className="p-6 shadow-md mb-6">
+          <CardContent className="text-center">
+            <h3 className="text-lg font-medium mb-2">No Games Available</h3>
+            <p className="text-gray-500 mb-4">
+              {selectedSeasonId === 'current' 
+                ? 'There are no games in the current season yet.' 
+                : 'There are no games in the selected season.'}
+            </p>
+            <p className="text-sm text-gray-400">
+              Add some games to see your team's performance metrics.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {isLoading ? (
           <>
