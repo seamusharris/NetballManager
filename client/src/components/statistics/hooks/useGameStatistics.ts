@@ -2,20 +2,25 @@ import { useQuery } from '@tanstack/react-query';
 import { statisticsService, GameScores } from '@/lib/statisticsService';
 import { GameStat } from '@shared/schema';
 import { getCachedScores } from '@/lib/scoresCache';
+import { apiRequest } from '@/lib/apiClient';
 
 /**
  * Custom hook to fetch game statistics with enhanced caching
  * @param gameId - The ID of the game to fetch statistics for
  * @param forceFresh - Whether to force fresh data every time (bypassing cache)
+ * @param preloadedStats - Optional preloaded stats to avoid API calls
  */
-export function useGameStatistics(gameId: number, forceFresh: boolean = false) {
+export function useGameStatistics(gameId: number, forceFresh: boolean = false, preloadedStats?: GameStat[]) {
   // Create a unique key for freshness tracking (only when forcing fresh data)
   const freshQueryKey = forceFresh ? `fresh-${Date.now()}` : 'cached';
 
-  // For detail view, we can skip the raw stats fetch when using the scores cache
+  // Check if we have preloaded stats
+  const hasPreloadedStats = preloadedStats && Array.isArray(preloadedStats);
+
+  // For detail view, we can skip the raw stats fetch when using the scores cache or preloaded data
   const hasCachedScores = !forceFresh && getCachedScores(gameId) !== undefined;
 
-  // Optimized fetch of raw stats (skip when using cached scores)
+  // Optimized fetch of raw stats (skip when using cached scores or preloaded stats)
   const { 
     data: rawStats, 
     isLoading: isLoadingRawStats,
@@ -23,19 +28,25 @@ export function useGameStatistics(gameId: number, forceFresh: boolean = false) {
   } = useQuery({
     queryKey: [`/api/games/${gameId}/stats`],
     queryFn: () => apiRequest('GET', `/api/games/${gameId}/stats`),
-    enabled: !!gameId && (!hasCachedScores || forceFresh),
+    enabled: !!gameId && !hasPreloadedStats && (!hasCachedScores || forceFresh),
     staleTime: forceFresh ? 0 : 15 * 60 * 1000, // 0 for fresh, 15 minutes otherwise
     gcTime: 30 * 60 * 1000, // Keep in cache for 30 minutes
   });
 
-  // Enhanced calculation of game scores with global caching
+  // Enhanced calculation of game scores with global caching and preloaded stats
   const { 
     data: scores, 
     isLoading: isLoadingScores,
     error: scoresError
   } = useQuery({
-    queryKey: ['gameScores', gameId, freshQueryKey],
+    queryKey: ['gameScores', gameId, freshQueryKey, hasPreloadedStats ? 'preloaded' : 'api'],
     queryFn: () => {
+      // Fast path: use preloaded stats if available
+      if (hasPreloadedStats) {
+        console.log(`useGameStatistics: Using preloaded stats for game ${gameId} (${preloadedStats.length} stats)`);
+        return Promise.resolve(statisticsService.calculateScoresFromStats(preloadedStats, gameId));
+      }
+      
       // Fast path: check global cache first if we're not forcing fresh data
       if (!forceFresh) {
         const cached = getCachedScores(gameId);
@@ -52,27 +63,39 @@ export function useGameStatistics(gameId: number, forceFresh: boolean = false) {
     gcTime: 30 * 60 * 1000, // Keep in cache for 30 minutes
   });
 
-  // Optimized position stats calculation
+  // Optimized position stats calculation with preloaded data
   const { 
     data: positionStats, 
     isLoading: isLoadingPositionStats,
     error: positionStatsError
   } = useQuery({
-    queryKey: ['positionStats', gameId, freshQueryKey],
-    queryFn: () => statisticsService.getPositionStats(gameId, forceFresh),
+    queryKey: ['positionStats', gameId, freshQueryKey, hasPreloadedStats ? 'preloaded' : 'api'],
+    queryFn: () => {
+      if (hasPreloadedStats) {
+        console.log(`useGameStatistics: Using preloaded stats for position stats game ${gameId}`);
+        return Promise.resolve(statisticsService.calculatePositionStatsFromStats(preloadedStats, gameId));
+      }
+      return statisticsService.getPositionStats(gameId, forceFresh);
+    },
     enabled: !!gameId,
     staleTime: forceFresh ? 0 : 15 * 60 * 1000, // 0 for fresh, 15 minutes otherwise
     gcTime: 30 * 60 * 1000, // Keep in cache for 30 minutes
   });
 
-  // Optimized player stats mapping
+  // Optimized player stats mapping with preloaded data
   const { 
     data: playerStats, 
     isLoading: isLoadingPlayerStats,
     error: playerStatsError
   } = useQuery({
-    queryKey: ['playerStats', gameId, freshQueryKey],
-    queryFn: () => statisticsService.mapStatsToPlayers(gameId, forceFresh),
+    queryKey: ['playerStats', gameId, freshQueryKey, hasPreloadedStats ? 'preloaded' : 'api'],
+    queryFn: () => {
+      if (hasPreloadedStats) {
+        console.log(`useGameStatistics: Using preloaded stats for player mapping game ${gameId}`);
+        return Promise.resolve(statisticsService.mapStatsToPlayersFromStats(preloadedStats, gameId));
+      }
+      return statisticsService.mapStatsToPlayers(gameId, forceFresh);
+    },
     enabled: !!gameId,
     staleTime: forceFresh ? 0 : 15 * 60 * 1000, // 0 for fresh, 15 minutes otherwise
     gcTime: 30 * 60 * 1000, // Keep in cache for 30 minutes
@@ -80,11 +103,11 @@ export function useGameStatistics(gameId: number, forceFresh: boolean = false) {
 
   // Combine loading and error states
   const isLoading = isLoadingScores || isLoadingPositionStats || isLoadingPlayerStats || 
-                   (isLoadingRawStats && !hasCachedScores);
+                   (isLoadingRawStats && !hasCachedScores && !hasPreloadedStats);
   const error = rawStatsError || scoresError || positionStatsError || playerStatsError;
 
   return {
-    rawStats,
+    rawStats: hasPreloadedStats ? preloadedStats : rawStats,
     scores,
     positionStats,
     playerStats,
