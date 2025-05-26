@@ -35,9 +35,6 @@ export default function Roster() {
     }
   }, [navigate]);
 
-  // Local storage key for available players
-  const getAvailabilityStorageKey = (gameId: number) => `netball_available_players_${gameId}`;
-
   // Load available players from database when game changes
   useEffect(() => {
     if (selectedGameId && players && players.length > 0) {
@@ -118,10 +115,25 @@ export default function Roster() {
 
     setAvailablePlayers(newAvailablePlayers);
 
-    // Save to local storage if we have a game selected
+    // Save to database if we have a game selected
     if (selectedGameId) {
-      const storageKey = getAvailabilityStorageKey(selectedGameId);
-      localStorage.setItem(storageKey, JSON.stringify(newAvailablePlayers));
+      fetch(`/api/games/${selectedGameId}/availability`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          availablePlayerIds: newAvailablePlayers
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        console.log('Player availability saved to database:', data);
+      })
+      .catch(error => {
+        console.error('Failed to save player availability to database:', error);
+        // Could add user notification here
+      });
     }
   };
 
