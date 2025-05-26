@@ -109,9 +109,7 @@ export default function OpponentDetailed() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <BackButton fallbackPath="/opponent-analysis">
-            Back to Analysis
-          </BackButton>
+          <BackButton fallbackPath="/opponent-analysis" />
           <h1 className="text-3xl font-heading font-bold text-neutral-dark">
             {selectedOpponentData.teamName} - Detailed Analysis
           </h1>

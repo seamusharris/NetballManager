@@ -21,7 +21,7 @@ export const BackButton: React.FC<BackButtonProps> = ({
   size = "sm"
 }) => {
   const [, navigate] = useLocation();
-  const { getPreviousPath, canGoBack } = useNavigationStack();
+  const { getPreviousPath, getPreviousTitle, canGoBack } = useNavigationStack();
 
   const handleBack = () => {
     if (canGoBack()) {
@@ -37,6 +37,9 @@ export const BackButton: React.FC<BackButtonProps> = ({
     }
   };
 
+  // Use the tracked title if available, otherwise fall back to children or default
+  const buttonText = children || (canGoBack() ? `Back to ${getPreviousTitle()}` : 'Back');
+
   return (
     <Button
       variant={variant}
@@ -45,7 +48,7 @@ export const BackButton: React.FC<BackButtonProps> = ({
       className={className}
     >
       <ChevronLeft className="mr-1 h-4 w-4" />
-      {children || 'Back'}
+      {buttonText}
     </Button>
   );
 };
