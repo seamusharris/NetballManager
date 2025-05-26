@@ -3,6 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Link } from 'wouter';
 import { Game, Opponent } from '@shared/schema';
 import { formatShortDate } from '@/lib/utils';
+import { useQuery } from '@tanstack/react-query';
+import { GameScoreDisplay } from '@/components/statistics/GameScoreDisplay';
 
 interface UpcomingGamesProps {
   games: Game[];
@@ -54,7 +56,11 @@ export default function UpcomingGames({ games, opponents, className, seasonFilte
                     </div>
                   </div>
                   <div className="text-right">
-                    <span className="text-sm text-gray-400">—</span>
+                    {game.completed ? (
+                      <GameScoreDisplay gameId={game.id} compact={true} fallback="—" />
+                    ) : (
+                      <span className="text-sm text-gray-500">—</span>
+                    )}
                   </div>
                 </div>
               </Link>

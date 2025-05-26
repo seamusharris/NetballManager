@@ -53,12 +53,6 @@ interface GamesListProps {
   onViewStats: (id: number) => void;
 }
 
-// Interface for game scores
-interface GameScore {
-  team: number;
-  opponent: number;
-}
-
 export default function GamesList({ 
   games, 
   opponents, 
@@ -69,31 +63,29 @@ export default function GamesList({
 }: GamesListProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  // Set to null since we removed date filter
   const [itemToDelete, setItemToDelete] = useState<number | null>(null);
   const [_, navigate] = useLocation();
-  const [gameScores, setGameScores] = useState<Record<number, GameScore>>({});
   // Use an enum-like type for roster status
   type RosterStatus = 'not-started' | 'partial' | 'complete';
   const [gameRosterStatus, setGameRosterStatus] = useState<Record<number, RosterStatus>>({});
   // Track if each game has stats (none/partial/complete)
   type StatsStatus = 'none' | 'partial' | 'complete';
   const [gameStatsStatus, setGameStatsStatus] = useState<Record<number, StatsStatus>>({});
-  
+
   // Status dialog state
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
   const [selectedGame, setSelectedGame] = useState<Game | null>(null);
-  
+
   // Fetch game stats for all completed games
   const completedGameIds = games
     .filter(game => game.completed)
     .map(game => game.id);
-  
+
   // Get all non-BYE game IDs for checking roster status
   const nonByeGameIds = games
     .filter(game => !game.isBye)
     .map(game => game.id);
-    
+
   // Use React Query to fetch roster data for all games to check if they're complete
   const { data: allRosterData, isLoading: isLoadingRosters } = useQuery({
     queryKey: ['allRosters', ...nonByeGameIds],
@@ -101,30 +93,30 @@ export default function GamesList({
       if (nonByeGameIds.length === 0) {
         return {};
       }
-      
+
       // Create a map to store rosters by game ID
       const rostersMap: Record<number, any[]> = {};
-      
+
       // Fetch rosters for each game
       const rosterPromises = nonByeGameIds.map(async (gameId) => {
         const response = await fetch(`/api/games/${gameId}/rosters`);
         const rosters = await response.json();
         return { gameId, rosters };
       });
-      
+
       const results = await Promise.all(rosterPromises);
-      
+
       // Organize rosters by game ID
       results.forEach(result => {
         rostersMap[result.gameId] = result.rosters;
       });
-      
+
       return rostersMap;
     },
     enabled: nonByeGameIds.length > 0,
     staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
   });
-  
+
   // Use React Query to fetch and cache statistics for all games in a single request
   const { data: allGameStats, isLoading: isLoadingStats } = useQuery({
     queryKey: ['batchGameStats', ...completedGameIds],
@@ -132,15 +124,15 @@ export default function GamesList({
       if (completedGameIds.length === 0) {
         return {};
       }
-      
+
       // Create a map to store stats by game ID
       const statsMap: Record<number, any[]> = {};
-      
+
       // Initialize stats map with empty arrays for all games
       games.forEach(game => {
         statsMap[game.id] = [];
       });
-      
+
       // Only perform API request if we have completed games
       if (completedGameIds.length > 0) {
         try {
@@ -148,9 +140,9 @@ export default function GamesList({
           // Get all stats for completed games in a single batch request
           // Use apiRequest instead of direct fetch for consistent error handling
           const allStats = await apiRequest('GET', `/api/games/stats/batch?gameIds=${completedGameIds.join(',')}`);
-          
+
           console.log(`Received ${allStats.length} stats from batch request`);
-          
+
           // Group stats by gameId
           allStats.forEach((stat: any) => {
             if (!statsMap[stat.gameId]) {
@@ -162,7 +154,7 @@ export default function GamesList({
           console.error("Error fetching game stats in batch:", error);
         }
       }
-      
+
       return statsMap;
     },
     enabled: completedGameIds.length > 0,
@@ -174,48 +166,48 @@ export default function GamesList({
   // Determine game stats status
   useEffect(() => {
     if (!allGameStats) return;
-    
+
     const statsStatuses: Record<number, StatsStatus> = {};
-    
+
     // Check each game's stats status
     Object.entries(allGameStats).forEach(([gameIdStr, stats]) => {
       const gameId = parseInt(gameIdStr);
-      
+
       // If there are no stats at all, mark as none
       if (!stats || stats.length === 0) {
         statsStatuses[gameId] = 'none';
         return;
       }
-      
+
       // Find the game to check if it's completed
       const game = games.find(g => g.id === gameId);
-      
+
       if (game?.completed) {
         statsStatuses[gameId] = 'complete';
       } else {
         statsStatuses[gameId] = 'partial';
       }
     });
-    
+
     setGameStatsStatus(statsStatuses);
   }, [allGameStats, games]);
-  
+
   // Calculate roster statuses
   useEffect(() => {
     if (!allRosterData) return;
-    
+
     const rosterStatuses: Record<number, RosterStatus> = {};
-    
+
     // Check each game's roster status (not started / partial / complete)
     Object.entries(allRosterData).forEach(([gameIdStr, rosters]) => {
       const gameId = parseInt(gameIdStr);
-      
+
       // If there are no rosters at all, mark as not started
       if (rosters.length === 0) {
         rosterStatuses[gameId] = 'not-started';
         return;
       }
-      
+
       // Track filled positions by quarter
       const quarterPositions: Record<number, Set<string>> = {
         1: new Set(),
@@ -223,85 +215,85 @@ export default function GamesList({
         3: new Set(),
         4: new Set()
       };
-      
+
       // Count which positions are filled for each quarter
       rosters.forEach((roster: any) => {
         if (roster.quarter >= 1 && roster.quarter <= 4 && roster.position && roster.playerId) {
           quarterPositions[roster.quarter].add(roster.position);
         }
       });
-      
+
       // All 7 positions (GS, GA, WA, C, WD, GD, GK) should be filled for all 4 quarters
       const allPositionsFilled = Object.values(quarterPositions).every(
         (positions) => positions.size === 7
       );
-      
+
       // If all positions are filled, mark as complete, otherwise mark as partial
       rosterStatuses[gameId] = allPositionsFilled ? 'complete' : 'partial';
     });
-    
+
     setGameRosterStatus(rosterStatuses);
   }, [allRosterData]);
-  
 
-  
+
+
   // Get opponent name by ID
   const getOpponentName = (opponentId: number | null) => {
     if (opponentId === null) return '';
     const opponent = opponents.find(o => o.id === opponentId);
     return opponent ? opponent.teamName : 'Unknown Opponent';
   };
-  
+
   // Filter games based on search and status filters
   const filteredGames = games.filter(game => {
     const opponentName = getOpponentName(game.opponentId);
-    
+
     const matchesSearch = 
       searchQuery === '' || 
       opponentName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       game.date.includes(searchQuery) ||
       game.time.includes(searchQuery);
-    
+
     const matchesStatus = 
       statusFilter === 'all' || 
       (statusFilter === game.status);
-    
+
     return matchesSearch && matchesStatus;
   });
-  
+
   // Sort games strictly by date (future games first)
   const sortedGames = [...filteredGames].sort((a, b) => {
     // Convert date strings to timestamps for comparison
     const dateA = new Date(a.date).getTime();
     const dateB = new Date(b.date).getTime();
-    
+
     // If dates are different, sort by date (future dates first)
     if (dateA !== dateB) {
       return dateB - dateA; // Future games first (descending order)
     }
-    
+
     // If dates are the same, sort by time
     // Convert time strings (HH:MM) to comparable values
     const [hoursA, minutesA] = a.time.split(':').map(Number);
     const [hoursB, minutesB] = b.time.split(':').map(Number);
     const timeA = hoursA * 60 + minutesA;
     const timeB = hoursB * 60 + minutesB;
-    
+
     // Earlier time of day first for same date
     return timeA - timeB;
   });
-  
+
   const confirmDelete = (id: number) => {
     setItemToDelete(id);
   };
-  
+
   const handleDeleteConfirmed = () => {
     if (itemToDelete !== null) {
       onDelete(itemToDelete);
       setItemToDelete(null);
     }
   };
-  
+
   return (
     <div className="space-y-6">
       {/* Filters */}
@@ -320,7 +312,7 @@ export default function GamesList({
                 />
               </div>
             </div>
-            
+
             <div className="flex gap-3 items-center">
               <div className="w-[140px]">
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -336,7 +328,7 @@ export default function GamesList({
                   </SelectContent>
                 </Select>
               </div>
-              
+
               <Button 
                 className="bg-accent hover:bg-accent-light text-white"
                 onClick={() => {
@@ -351,7 +343,7 @@ export default function GamesList({
           </div>
         </CardContent>
       </Card>
-      
+
       {/* Games Table */}
       <Card className="overflow-hidden">
         <div className="overflow-x-auto">
@@ -425,24 +417,6 @@ export default function GamesList({
                             <GameStatusBadge 
                               status={game.status || (game.completed ? 'completed' : 'upcoming')}
                             />
-                            
-                            {game.completed && gameScores[game.id] && (
-                              <div className={`p-1 rounded-full ${
-                                gameScores[game.id].team > gameScores[game.id].opponent
-                                  ? "bg-success/20" 
-                                  : gameScores[game.id].team < gameScores[game.id].opponent
-                                    ? "bg-error/20"
-                                    : "bg-warning/20"
-                              }`}>
-                                {gameScores[game.id].team > gameScores[game.id].opponent ? (
-                                  <Trophy className="h-4 w-4 text-success" />
-                                ) : gameScores[game.id].team < gameScores[game.id].opponent ? (
-                                  <ThumbsDown className="h-4 w-4 text-error" />
-                                ) : (
-                                  <Minus className="h-4 w-4 text-warning" />
-                                )}
-                              </div>
-                            )}
                           </>
                         )}
                       </div>
@@ -463,7 +437,7 @@ export default function GamesList({
           </Table>
         </div>
       </Card>
-    
+
       {/* Game Status Dialog */}
       <GameStatusDialog
         game={selectedGame}
