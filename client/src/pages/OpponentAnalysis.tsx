@@ -1,25 +1,40 @@
 
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useSearch } from 'wouter';
+import { useSearch, useLocation } from 'wouter';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Game, Opponent, Player } from '@shared/schema';
-import OpponentMatchups from '@/components/dashboard/OpponentMatchups';
 import { apiRequest } from '@/lib/apiClient';
+import { getWinLoseLabel, getWinLoseClass } from '@/lib/utils';
+import { Trophy, TrendingUp, TrendingDown, Target, Eye } from 'lucide-react';
+
+interface OpponentMatchup {
+  opponent: Opponent;
+  games: Game[];
+  wins: number;
+  losses: number;
+  draws: number;
+  totalGamesPlayed: number;
+  winRate: number;
+  avgScoreFor: number;
+  avgScoreAgainst: number;
+  scoreDifferential: number;
+  goalsPercentage: number;
+  recentForm: string[];
+  trend: 'improving' | 'declining' | 'stable';
+  lastGameDate?: string;
+  nextGameDate?: string;
+}
 
 export default function OpponentAnalysis() {
-  const [selectedOpponent, setSelectedOpponent] = useState<string>('all');
+  const [selectedSeason, setSelectedSeason] = useState<string>('current');
+  const [matchups, setMatchups] = useState<OpponentMatchup[]>([]);
   const search = useSearch();
-
-  // Initialize selected opponent from URL parameter
-  useEffect(() => {
-    const searchParams = new URLSearchParams(search);
-    const opponentParam = searchParams.get('opponent');
-    if (opponentParam) {
-      setSelectedOpponent(opponentParam);
-    }
-  }, [search]);
+  const [, navigate] = useLocation();
 
   const { data: games = [], isLoading: gamesLoading } = useQuery({
     queryKey: ['games'],
@@ -31,9 +46,14 @@ export default function OpponentAnalysis() {
     queryFn: () => apiRequest('GET', '/api/opponents')
   });
 
-  const { data: players = [], isLoading: playersLoading } = useQuery({
-    queryKey: ['players'],
-    queryFn: () => apiRequest('GET', '/api/players')
+  const { data: seasons = [], isLoading: seasonsLoading } = useQuery({
+    queryKey: ['seasons'],
+    queryFn: () => apiRequest('GET', '/api/seasons')
+  });
+
+  const { data: activeSeason } = useQuery({
+    queryKey: ['activeSeason'],
+    queryFn: () => apiRequest('GET', '/api/seasons/active')
   });
 
   // Fetch centralized stats for all completed games
@@ -56,56 +76,164 @@ export default function OpponentAnalysis() {
     staleTime: 5 * 60 * 1000,
   });
 
-  const filteredGames = selectedOpponent === 'all' 
-    ? games 
-    : games.filter((game: Game) => game.opponentId === parseInt(selectedOpponent));
+  // Filter games by season
+  const filteredGames = selectedSeason === 'current' 
+    ? games.filter((game: Game) => game.seasonId === activeSeason?.id)
+    : selectedSeason === 'all'
+    ? games
+    : games.filter((game: Game) => game.seasonId === parseInt(selectedSeason));
 
-  const selectedOpponentData = selectedOpponent !== 'all' 
-    ? opponents.find((opp: Opponent) => opp.id === parseInt(selectedOpponent))
-    : null;
+  useEffect(() => {
+    const calculateMatchups = () => {
+      const opponentMatchups: OpponentMatchup[] = [];
 
-  // Calculate detailed stats for selected opponent
-  const calculateDetailedStats = () => {
-    if (!selectedOpponentData) return null;
+      opponents.forEach((opponent: Opponent) => {
+        const opponentGames = filteredGames.filter((game: Game) => 
+          game.opponentId === opponent.id
+        );
 
-    const opponentGames = games.filter((game: Game) => 
-      game.opponentId === selectedOpponentData.id && game.completed
-    );
+        if (opponentGames.length === 0) {
+          // Still show opponents with no games
+          opponentMatchups.push({
+            opponent,
+            games: [],
+            wins: 0,
+            losses: 0,
+            draws: 0,
+            totalGamesPlayed: 0,
+            winRate: 0,
+            avgScoreFor: 0,
+            avgScoreAgainst: 0,
+            scoreDifferential: 0,
+            goalsPercentage: 0,
+            recentForm: [],
+            trend: 'stable',
+            lastGameDate: undefined,
+            nextGameDate: opponentGames.find(g => !g.completed)?.date
+          });
+          return;
+        }
 
-    const gameResults = opponentGames.map((game: Game) => {
-      const gameStats = centralizedStats[game.id] || [];
-      const teamScore = gameStats.reduce((sum: number, stat: any) => sum + (stat.goalsFor || 0), 0);
-      const opponentScore = gameStats.reduce((sum: number, stat: any) => sum + (stat.goalsAgainst || 0), 0);
-      
-      return {
-        game,
-        teamScore,
-        opponentScore,
-        result: getWinLoseLabel(teamScore, opponentScore),
-        margin: teamScore - opponentScore
-      };
-    });
+        const completedGames = opponentGames.filter((game: Game) => game.completed);
+        const upcomingGames = opponentGames.filter((game: Game) => !game.completed);
 
-    const wins = gameResults.filter(r => r.result === 'Win').length;
-    const losses = gameResults.filter(r => r.result === 'Loss').length;
-    const draws = gameResults.filter(r => r.result === 'Draw').length;
+        let wins = 0;
+        let losses = 0;
+        let draws = 0;
+        let totalScoreFor = 0;
+        let totalScoreAgainst = 0;
+        const recentResults: string[] = [];
 
-    return {
-      totalGames: opponentGames.length,
-      wins,
-      losses,
-      draws,
-      winRate: opponentGames.length > 0 ? Math.round((wins / opponentGames.length) * 100) : 0,
-      avgMargin: gameResults.length > 0 ? Math.round(gameResults.reduce((sum, r) => sum + r.margin, 0) / gameResults.length) : 0,
-      biggestWin: gameResults.filter(r => r.result === 'Win').reduce((max, r) => r.margin > max ? r.margin : max, 0),
-      biggestLoss: Math.abs(gameResults.filter(r => r.result === 'Loss').reduce((min, r) => r.margin < min ? r.margin : min, 0)),
-      gameResults: gameResults.sort((a, b) => new Date(b.game.date).getTime() - new Date(a.game.date).getTime())
+        // Sort completed games by date for recent form calculation
+        const sortedCompletedGames = [...completedGames].sort((a, b) => 
+          new Date(b.date).getTime() - new Date(a.date).getTime()
+        );
+
+        sortedCompletedGames.forEach((game, index) => {
+          const gameStats = centralizedStats[game.id] || [];
+          
+          // Calculate team and opponent scores from stats
+          const teamScore = gameStats.reduce((sum: any, stat: any) => sum + (stat.goalsFor || 0), 0);
+          const opponentScore = gameStats.reduce((sum: any, stat: any) => sum + (stat.goalsAgainst || 0), 0);
+
+          totalScoreFor += teamScore;
+          totalScoreAgainst += opponentScore;
+
+          const result = getWinLoseLabel(teamScore, opponentScore);
+          
+          if (result === 'Win') wins++;
+          else if (result === 'Loss') losses++;
+          else draws++;
+
+          // Track recent form (last 3 games)
+          if (index < 3) {
+            recentResults.push(result === 'Win' ? 'W' : result === 'Loss' ? 'L' : 'D');
+          }
+        });
+
+        const totalCompletedGames = completedGames.length;
+        const winRate = totalCompletedGames > 0 ? Math.round((wins / totalCompletedGames) * 100) : 0;
+        const avgScoreFor = totalCompletedGames > 0 ? Math.round((totalScoreFor / totalCompletedGames) * 10) / 10 : 0;
+        const avgScoreAgainst = totalCompletedGames > 0 ? Math.round((totalScoreAgainst / totalCompletedGames) * 10) / 10 : 0;
+        const scoreDifferential = Math.round((avgScoreFor - avgScoreAgainst) * 10) / 10;
+
+        // Determine trend based on recent form vs overall performance
+        let trend: 'improving' | 'declining' | 'stable' = 'stable';
+        if (recentResults.length >= 2) {
+          const recentWins = recentResults.filter(r => r === 'W').length;
+          const recentWinRate = (recentWins / recentResults.length) * 100;
+          
+          if (recentWinRate > winRate + 20) trend = 'improving';
+          else if (recentWinRate < winRate - 20) trend = 'declining';
+        }
+
+        opponentMatchups.push({
+          opponent,
+          games: opponentGames,
+          wins,
+          losses,
+          draws,
+          totalGamesPlayed: totalCompletedGames,
+          winRate,
+          avgScoreFor,
+          avgScoreAgainst,
+          scoreDifferential,
+          goalsPercentage: totalScoreAgainst > 0 ? Math.round((totalScoreFor / totalScoreAgainst) * 100) : 0,
+          recentForm: recentResults,
+          trend,
+          lastGameDate: sortedCompletedGames[0]?.date,
+          nextGameDate: upcomingGames.sort((a, b) => 
+            new Date(a.date).getTime() - new Date(b.date).getTime()
+          )[0]?.date
+        });
+      });
+
+      // Sort by total games played, then by win rate
+      opponentMatchups.sort((a, b) => {
+        if (a.totalGamesPlayed !== b.totalGamesPlayed) {
+          return b.totalGamesPlayed - a.totalGamesPlayed;
+        }
+        return b.winRate - a.winRate;
+      });
+
+      setMatchups(opponentMatchups);
     };
+
+    if (opponents.length > 0) {
+      calculateMatchups();
+    }
+  }, [filteredGames, opponents, centralizedStats]);
+
+  const getFormDisplay = (form: string[]) => {
+    return form.slice(0, 5).map((result, index) => (
+      <span 
+        key={index}
+        className={`inline-block w-5 h-5 rounded-full text-xs font-bold text-white text-center leading-5 mx-0.5 ${
+          result === 'W' ? 'bg-green-500' : 
+          result === 'L' ? 'bg-red-500' : 'bg-yellow-500'
+        }`}
+      >
+        {result}
+      </span>
+    ));
   };
 
-  const detailedStats = calculateDetailedStats();
+  const getTrendIcon = (trend: string) => {
+    switch (trend) {
+      case 'improving':
+        return <TrendingUp className="h-4 w-4 text-green-600" />;
+      case 'declining':
+        return <TrendingDown className="h-4 w-4 text-red-600" />;
+      default:
+        return <Target className="h-4 w-4 text-gray-500" />;
+    }
+  };
 
-  if (gamesLoading || opponentsLoading || playersLoading) {
+  const handleRowClick = (opponentId: number) => {
+    navigate(`/opponent-analysis/detailed/${opponentId}`);
+  };
+
+  if (gamesLoading || opponentsLoading || seasonsLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <p>Loading opponent analysis...</p>
@@ -118,27 +246,141 @@ export default function OpponentAnalysis() {
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-heading font-bold text-neutral-dark">Opponent Analysis</h1>
         
-        <Select value={selectedOpponent} onValueChange={setSelectedOpponent}>
+        <Select value={selectedSeason} onValueChange={setSelectedSeason}>
           <SelectTrigger className="w-[250px]">
-            <SelectValue placeholder="Select opponent" />
+            <SelectValue placeholder="Select season" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Opponents</SelectItem>
-            {opponents.map((opponent: Opponent) => (
-              <SelectItem key={opponent.id} value={opponent.id.toString()}>
-                {opponent.teamName}
+            <SelectItem value="current">Current Season</SelectItem>
+            <SelectItem value="all">All Seasons</SelectItem>
+            {seasons.map((season: any) => (
+              <SelectItem key={season.id} value={season.id.toString()}>
+                {season.name}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
       </div>
 
-      <OpponentMatchups 
-        games={filteredGames}
-        opponents={selectedOpponent === 'all' ? opponents : [selectedOpponentData].filter(Boolean)}
-        centralizedStats={centralizedStats}
-        className="w-full"
-      />
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Trophy className="h-5 w-5" />
+            Opponent Performance Summary
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Opponent</TableHead>
+                  <TableHead className="text-center">Games Played</TableHead>
+                  <TableHead className="text-center">Win Rate</TableHead>
+                  <TableHead className="text-center">Record (W-L-D)</TableHead>
+                  <TableHead className="text-center">Avg Score For</TableHead>
+                  <TableHead className="text-center">Avg Score Against</TableHead>
+                  <TableHead className="text-center">Score Diff</TableHead>
+                  <TableHead className="text-center">Recent Form</TableHead>
+                  <TableHead className="text-center">Trend</TableHead>
+                  <TableHead className="text-center">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {matchups.map((matchup) => (
+                  <TableRow 
+                    key={matchup.opponent.id}
+                    className="cursor-pointer hover:bg-gray-50"
+                    onClick={() => handleRowClick(matchup.opponent.id)}
+                  >
+                    <TableCell className="font-medium">
+                      <div>
+                        <div className="font-semibold">{matchup.opponent.teamName}</div>
+                        <div className="text-sm text-gray-500">
+                          {matchup.opponent.playerName && `vs ${matchup.opponent.playerName}`}
+                        </div>
+                        {matchup.lastGameDate && (
+                          <div className="text-xs text-gray-400">
+                            Last: {new Date(matchup.lastGameDate).toLocaleDateString()}
+                          </div>
+                        )}
+                        {matchup.nextGameDate && (
+                          <div className="text-xs text-blue-600">
+                            Next: {new Date(matchup.nextGameDate).toLocaleDateString()}
+                          </div>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <Badge variant="outline">{matchup.totalGamesPlayed}</Badge>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <Badge 
+                        variant={matchup.winRate >= 60 ? "default" : matchup.winRate >= 40 ? "secondary" : "destructive"}
+                      >
+                        {matchup.winRate}%
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <div className="text-sm">
+                        <span className="text-green-600 font-semibold">{matchup.wins}</span>
+                        <span className="mx-1">-</span>
+                        <span className="text-red-600 font-semibold">{matchup.losses}</span>
+                        <span className="mx-1">-</span>
+                        <span className="text-yellow-600 font-semibold">{matchup.draws}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {matchup.totalGamesPlayed > 0 ? matchup.avgScoreFor : '-'}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {matchup.totalGamesPlayed > 0 ? matchup.avgScoreAgainst : '-'}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {matchup.totalGamesPlayed > 0 ? (
+                        <Badge 
+                          variant={matchup.scoreDifferential > 0 ? "default" : matchup.scoreDifferential < 0 ? "destructive" : "secondary"}
+                        >
+                          {matchup.scoreDifferential > 0 ? '+' : ''}{matchup.scoreDifferential}
+                        </Badge>
+                      ) : '-'}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <div className="flex justify-center">
+                        {matchup.recentForm.length > 0 ? getFormDisplay(matchup.recentForm) : '-'}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <div className="flex justify-center">
+                        {getTrendIcon(matchup.trend)}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRowClick(matchup.opponent.id);
+                        }}
+                      >
+                        <Eye className="h-3 w-3 mr-1" />
+                        View
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+          
+          {matchups.length === 0 && (
+            <div className="text-center py-8 text-gray-500">
+              No opponents found for the selected season.
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
