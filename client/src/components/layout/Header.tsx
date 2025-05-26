@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useLocation } from 'wouter';
 import { Bell, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,19 +12,30 @@ interface HeaderProps {
 }
 
 export default function Header({ setIsMobileOpen, isTablet }: HeaderProps) {
+  const [location] = useLocation();
+  
+  const getPageTitle = () => {
+    const path = location.split('/')[1] || 'dashboard';
+    return path.charAt(0).toUpperCase() + path.slice(1).replace('-', ' ');
+  };
 
   return (
-    <header className="bg-white shadow-sm z-20">
+    <header className="bg-white border-b border-gray-200 shadow-sm z-20">
       <div className="flex items-center justify-between h-16 px-4 md:px-6">
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          className="text-gray-600 focus:outline-none"
-          style={{ display: isTablet ? 'flex' : 'none' }}
-          onClick={() => setIsMobileOpen(true)}
-        >
-          <Menu className="h-5 w-5" />
-        </Button>
+        <div className="flex items-center space-x-4">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="text-gray-600 hover:bg-gray-100 focus:outline-none lg:hidden"
+            onClick={() => setIsMobileOpen(true)}
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
+          
+          <div className="hidden lg:block">
+            <h2 className="text-xl font-semibold text-gray-800">{getPageTitle()}</h2>
+          </div>
+        </div>
         
         <div className="flex items-center space-x-4">
           {/* Show search only on larger screens to save space on tablet */}

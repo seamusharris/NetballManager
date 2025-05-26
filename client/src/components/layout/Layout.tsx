@@ -40,11 +40,11 @@ export default function Layout({ children }: LayoutProps) {
         <Header setIsMobileOpen={setIsMobileOpen} isTablet={isTablet} />
         
         <main className={cn(
-          "flex-1 overflow-y-auto bg-background",
-          // Adjust padding for different screen sizes
-          "p-3 sm:p-4 md:p-5 lg:p-6",
-          // Add more horizontal space on tablet by reducing padding
-          isTablet ? "px-2" : ""
+          "flex-1 overflow-y-auto bg-gray-50",
+          // Better responsive padding with consistent spacing
+          "p-4 sm:p-6 lg:p-8",
+          // Consistent padding on tablet
+          isTablet ? "px-4" : ""
         )}>
           {children}
         </main>

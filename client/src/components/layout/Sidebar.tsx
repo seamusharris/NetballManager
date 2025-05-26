@@ -27,7 +27,7 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen, isTablet }: Sid
     { path: '/players', label: 'Players', icon: <Users className="w-5 h-5" /> },
     { path: '/roster', label: 'Roster', icon: <ClipboardList className="w-5 h-5" /> },
     { path: '/games', label: 'Games', icon: <Calendar className="w-5 h-5" /> },
-    { path: '/seasons', label: 'Seasons', icon: <Calendar className="w-5 h-5" /> },
+    { path: '/seasons', label: 'Seasons', icon: <CalendarRange className="w-5 h-5" /> },
     { path: '/opponents', label: 'Opponents', icon: <Flag className="w-5 h-5" /> },
     { path: '/statistics', label: 'Statistics', icon: <BarChart className="w-5 h-5" /> },
     { path: '/data-management', label: 'Data Management', icon: <Database className="w-5 h-5" /> },
@@ -60,26 +60,32 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen, isTablet }: Sid
           <X className="w-5 h-5" />
         </button>
       </div>
-      <div className="px-4 py-2">
-        <p className="text-sidebar-foreground text-xs uppercase font-bold tracking-wider mb-3">Main Menu</p>
-        <nav>
+      <div className="px-4 py-6">
+        <p className="text-blue-200 text-xs uppercase font-bold tracking-wider mb-4 px-2">Navigation</p>
+        <nav className="space-y-1">
           {navLinks.map((link) => (
-            <div key={link.path} className="mb-1">
-              <Link 
-                href={link.path}
-                onClick={() => isTablet && setIsMobileOpen(false)}
+            <Link 
+              key={link.path}
+              href={link.path}
+              onClick={() => isTablet && setIsMobileOpen(false)}
+            >
+              <div 
+                className={cn(
+                  "flex items-center px-3 py-2.5 rounded-lg transition-all duration-200 group",
+                  isActive(link.path) 
+                    ? "bg-blue-700 text-white shadow-md" 
+                    : "text-blue-100 hover:bg-blue-600/50 hover:text-white"
+                )}
               >
-                <div 
-                  className={cn(
-                    "sidebar-link flex items-center p-2 rounded-md hover:bg-sidebar-accent transition-colors",
-                    isActive(link.path) ? "bg-sidebar-accent text-white font-semibold" : "text-sidebar-foreground"
-                  )}
-                >
-                  <span className="w-6">{link.icon}</span>
-                  <span className="ml-2">{link.label}</span>
-                </div>
-              </Link>
-            </div>
+                <span className={cn(
+                  "w-5 h-5 mr-3 transition-colors",
+                  isActive(link.path) ? "text-white" : "text-blue-200 group-hover:text-white"
+                )}>
+                  {link.icon}
+                </span>
+                <span className="font-medium">{link.label}</span>
+              </div>
+            </Link>
           ))}
         </nav>
       </div>

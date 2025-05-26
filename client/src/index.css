@@ -34,23 +34,23 @@ input[type=number] {
 
 @layer base {
   :root {
-    /* Main color scheme - Blue */
-    --primary: 213 64% 45%;            /* #2563eb Blue-600 */
-    --primary-light: 213 70% 55%;      /* #3b82f6 Blue-500 */
-    --primary-dark: 217 91% 30%;       /* #1e40af Blue-800 */
-    --secondary: 355 75% 56%;          /* #e63946 */
-    --secondary-light: 353 78% 64%;    /* #eb5d68 */
-    --secondary-dark: 355 69% 47%;     /* #c02331 */
-    --accent: 203 38% 45%;             /* #457b9d */
-    --accent-light: 203 32% 52%;       /* #5a8eb0 */
-    --accent-dark: 206 40% 35%;        /* #35607b */
+    /* Modern color scheme - Blue with better contrast */
+    --primary: 217 91% 60%;            /* #3b82f6 Blue-500 */
+    --primary-light: 213 93% 68%;      /* #60a5fa Blue-400 */
+    --primary-dark: 224 76% 48%;       /* #1d4ed8 Blue-700 */
+    --secondary: 142 76% 36%;          /* #10b981 Emerald-500 */
+    --secondary-light: 142 77% 44%;    /* #34d399 Emerald-400 */
+    --secondary-dark: 142 72% 29%;     /* #059669 Emerald-600 */
+    --accent: 262 83% 58%;             /* #8b5cf6 Violet-500 */
+    --accent-light: 262 90% 67%;       /* #a78bfa Violet-400 */
+    --accent-dark: 262 76% 50%;        /* #7c3aed Violet-600 */
     --success: 142 70% 49%;            /* #2ecc71 */
     --error: 6 78% 57%;                /* #e74c3c */
     --warning: 37 90% 51%;             /* #f39c12 */
     
     /* Shadcn variables */
-    --background: 100 14% 97%;         /* #f1faee */
-    --foreground: 220 38% 23%;         /* #1d3557 */
+    --background: 220 14% 96%;         /* #f8fafc Slate-50 */
+    --foreground: 215 25% 27%;         /* #334155 Slate-700 */
     
     --card: 0 0% 100%;
     --card-foreground: 220 38% 23%;
@@ -83,13 +83,13 @@ input[type=number] {
     --chart-4: 142 70% 49%;            /* Success */
     --chart-5: 37 90% 51%;             /* Warning */
     
-    --sidebar-background: 213 64% 45%; /* Blue primary */
+    --sidebar-background: 224 76% 48%; /* Blue-700 */
     --sidebar-foreground: 0 0% 100%;
-    --sidebar-primary: 213 70% 55%;    /* Blue primary-light */
+    --sidebar-primary: 217 91% 60%;    /* Blue-500 */
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 217 91% 30%;     /* Blue primary-dark */
+    --sidebar-accent: 224 84% 40%;     /* Blue-800 */
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 217 91% 30%;     /* Blue primary-dark */
+    --sidebar-border: 224 84% 40%;     /* Blue-800 */
     --sidebar-ring: 0 0% 100%;
     
     --radius: 0.5rem;
@@ -166,6 +166,34 @@ input[type=number] {
   
   .stats-input {
     @apply w-12 text-center border rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-primary;
+  }
+  
+  .page-card {
+    @apply bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200;
+  }
+  
+  .section-header {
+    @apply flex items-center justify-between mb-6 pb-4 border-b border-gray-200;
+  }
+  
+  .page-title {
+    @apply text-2xl font-bold text-gray-900;
+  }
+  
+  .page-subtitle {
+    @apply text-gray-600 mt-1;
+  }
+  
+  .btn-primary {
+    @apply bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium px-4 py-2 rounded-lg shadow-sm transition-all duration-200 hover:shadow-md;
+  }
+  
+  .btn-secondary {
+    @apply bg-white hover:bg-gray-50 text-gray-700 font-medium px-4 py-2 rounded-lg border border-gray-300 shadow-sm transition-all duration-200 hover:shadow-md;
+  }
+  
+  .form-input {
+    @apply block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 transition-colors duration-200;
   }
 }
 
