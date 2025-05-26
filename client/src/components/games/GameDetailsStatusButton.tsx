@@ -90,6 +90,11 @@ export function GameDetailsStatusButton({
         completed: isCompleted
       });
       
+      // Clear game-specific caches
+      import('../../lib/scoresCache').then(({ clearGameCache }) => {
+        clearGameCache(game.id);
+      });
+      
       // Force refresh all data
       queryClient.invalidateQueries();
       

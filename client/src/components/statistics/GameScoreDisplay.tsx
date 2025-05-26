@@ -45,9 +45,14 @@ export function GameScoreDisplay({ gameId, compact = false, preloadedStats, fall
   }
 
   if (error) {
-    return (
+    console.error('Error loading game stats:', error);
+    return compact ? (
       <div className="text-destructive">
-        {compact ? 'Error loading score' : 'Unable to load game scores. Please try again.'}
+        Score Error
+      </div>
+    ) : (
+      <div className="text-destructive">
+        Unable to load game scores. Please try again.
       </div>
     );
   }
