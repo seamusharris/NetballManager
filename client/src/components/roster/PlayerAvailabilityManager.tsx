@@ -123,7 +123,7 @@ export default function PlayerAvailabilityManager({
           Player Availability 
           {game && opponent && (
             <span className="font-normal text-gray-600 ml-2">
-              for {formatShortDate(game.date)} vs {opponent.teamName}
+              for Round {game.round} vs {opponent.teamName}
             </span>
           )}
         </CardTitle>
@@ -192,7 +192,7 @@ export default function PlayerAvailabilityManager({
                         <div className="font-medium">{displayName}</div>
                         {player.positionPreferences && player.positionPreferences.length > 0 && (
                           <div className="text-xs text-gray-500">
-                            Preferred: {player.positionPreferences.join(', ')}
+                            {player.positionPreferences.join(', ')}
                           </div>
                         )}
                       </div>
