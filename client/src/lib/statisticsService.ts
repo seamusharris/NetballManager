@@ -163,45 +163,44 @@ class UnifiedStatisticsService {
    * Get stats for multiple games efficiently using batch endpoint
    */
   async getBatchGameStats(gameIds: number[]): Promise<Record<number, GameStat[]>> {
-    if (!gameIds || !gameIds.length) {
-      console.log('No game IDs provided to getBatchGameStats, returning empty object');
+    if (!gameIds || gameIds.length === 0) {
+      console.log('getBatchGameStats: No game IDs provided, returning empty object');
       return {};
     }
 
     // Filter out invalid IDs
-    const validIds = gameIds.filter(id => id && id > 0);
-    if (!validIds.length) {
-      console.log('No valid game IDs provided to getBatchGameStats, returning empty object');
+    const validIds = gameIds.filter(id => id && typeof id === 'number' && id > 0 && !isNaN(id));
+    if (validIds.length === 0) {
+      console.log('getBatchGameStats: No valid game IDs after filtering, returning empty object');
       return {};
     }
 
-    const sortedIds = validIds.sort((a, b) => a - b);
-    const cacheKey = `batch-${sortedIds.join(',')}`;
-    
-    // Check frequent cache first
-    const cachedResult = this.getFrequentCache<Record<number, GameStat[]>>(cacheKey);
-    if (cachedResult) {
-      console.log(`Using frequent cache for batch stats: ${sortedIds.length} games`);
-      return cachedResult;
+    // Use the same direct approach that works for GamesList
+    const gameIdsParam = validIds.join(',');
+    const url = `/api/games/stats/batch?gameIds=${encodeURIComponent(gameIdsParam)}`;
+
+    console.log(`getBatchGameStats: Making direct request to ${url} for ${validIds.length} games`);
+
+    try {
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch batch game stats: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      console.log(`getBatchGameStats: Successfully received stats for ${Object.keys(result).length} games`);
+      return result;
+    } catch (error) {
+      console.error('getBatchGameStats: Error fetching batch stats:', error);
+      // Fallback to individual requests
+      return this.fallbackIndividualFetch(validIds);
     }
-
-    // Check if we already have a pending request for this batch
-    if (this.batchCache.has(cacheKey)) {
-      console.log(`Deduplicating batch request for ${sortedIds.length} games`);
-      return this.batchCache.get(cacheKey);
-    }
-
-    const batchPromise = this.executeBatchRequest(sortedIds);
-    this.batchCache.set(cacheKey, batchPromise);
-
-    // Cache the result and clean up
-    batchPromise.then(result => {
-      this.setFrequentCache(cacheKey, result);
-    }).finally(() => {
-      this.batchCache.delete(cacheKey);
-    });
-
-    return batchPromise;
   }
 
   private async executeBatchRequest(gameIds: number[]): Promise<Record<number, GameStat[]>> {
