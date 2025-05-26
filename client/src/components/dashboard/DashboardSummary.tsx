@@ -189,9 +189,9 @@ export default function DashboardSummary({
       )}
 
       {/* Performance Metrics */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-6 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
         {isLoading || statsLoading ? (
-          Array.from({ length: 5 }).map((_, i) => (
+          Array.from({ length: 3 }).map((_, i) => (
             <Skeleton key={i} className="h-32 rounded-lg" />
           ))
         ) : (
@@ -200,14 +200,6 @@ export default function DashboardSummary({
               games={filteredGames} 
               activeSeason={activeSeason} 
               selectedSeason={selectedSeasonId === 'current' ? 'current' : seasons.find(s => s.id.toString() === selectedSeasonId)} 
-              centralizedStats={centralizedStats}
-            />
-            <PlayerPerformance 
-              players={players} 
-              games={pastGames} 
-              className="w-full" 
-              seasonFilter={selectedSeasonId} 
-              activeSeason={activeSeason}
               centralizedStats={centralizedStats}
             />
             <RecentGames 
@@ -224,13 +216,23 @@ export default function DashboardSummary({
               activeSeason={activeSeason}
               centralizedStats={centralizedStats}
             />
-            <OpponentMatchups 
-              games={filteredGames} 
-              opponents={opponents}
-              centralizedStats={centralizedStats}
-              className="h-32"
-            />
           </>
+        )}
+      </div>
+
+      {/* Player Performance */}
+      <div className="grid grid-cols-1 gap-6">
+        {isLoading || statsLoading ? (
+          <Skeleton className="h-[300px] w-full rounded-lg" />
+        ) : (
+          <PlayerPerformance 
+            players={players} 
+            games={pastGames} 
+            className="w-full" 
+            seasonFilter={selectedSeasonId} 
+            activeSeason={activeSeason}
+            centralizedStats={centralizedStats}
+          />
         )}
       </div>
 
