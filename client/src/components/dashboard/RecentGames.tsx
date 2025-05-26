@@ -142,7 +142,9 @@ export default function RecentGames({ games, opponents, className, seasonFilter,
                     </div>
                   </div>
                   <div className="text-right">
-                    <GameScoreDisplay gameId={game.id} variant="compact" fallback="—" />
+                    <span className={`font-semibold ${getResultTextClass(game)}`}>
+                      {getResultText(game)}
+                    </span>
                   </div>
                 </div>
               </Link>
