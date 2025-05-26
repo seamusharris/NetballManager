@@ -76,9 +76,10 @@ export function useGamesScores(gameIds: number[], forceFresh = false) {
         let scores: GameScores;
 
         if (game.status === 'forfeit-win' || game.status === 'forfeit-loss') {
-          // Handle forfeit games
+          // Handle forfeit games with 10-0 or 0-10 scores
+          const isWin = game.status === 'forfeit-win';
           const quarterScores = {
-            '1': { for: 0, against: 0 },
+            '1': { for: isWin ? 10 : 0, against: isWin ? 0 : 10 },
             '2': { for: 0, against: 0 },
             '3': { for: 0, against: 0 },
             '4': { for: 0, against: 0 }
@@ -87,8 +88,8 @@ export function useGamesScores(gameIds: number[], forceFresh = false) {
           scores = {
             quarterScores,
             finalScore: {
-              for: game.status === 'forfeit-win' ? 1 : 0,
-              against: game.status === 'forfeit-win' ? 0 : 1
+              for: isWin ? 10 : 0,
+              against: isWin ? 0 : 10
             }
           };
         } else {

@@ -56,14 +56,14 @@ class GameScoreService {
   private createForfeitScores(isWin: boolean): GameScores {
     const quarterScores = Array.from({ length: 4 }, (_, i) => ({
       quarter: i + 1,
-      teamScore: 0,
-      opponentScore: 0
+      teamScore: i === 0 ? (isWin ? 10 : 0) : 0,
+      opponentScore: i === 0 ? (isWin ? 0 : 10) : 0
     }));
 
     return {
       quarterScores,
-      totalTeamScore: isWin ? 1 : 0,
-      totalOpponentScore: isWin ? 0 : 1,
+      totalTeamScore: isWin ? 10 : 0,
+      totalOpponentScore: isWin ? 0 : 10,
       result: isWin ? 'win' : 'loss'
     };
   }
