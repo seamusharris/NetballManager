@@ -1,15 +1,14 @@
 import { useState, useEffect } from 'react';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet';
-import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import PlayersList from '@/components/players/PlayersList';
 import PlayerForm from '@/components/players/PlayerForm';
 import SimplePlayerForm from '@/components/players/SimplePlayerForm';
 import PlayerSeasonsManager from '@/components/players/PlayerSeasonsManager';
-import { apiRequest } from '@/lib/queryClient';
-import { queryClient } from '@/lib/queryClient';
+import { CrudDialog, FormDialog } from '@/components/ui/crud-dialog';
+import { useCrudMutations } from '@/hooks/use-crud-mutations';
 import { Player, Season } from '@shared/schema';
 import { useLocation } from 'wouter';
 
@@ -17,7 +16,6 @@ export default function Players() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
   const [seasonManagementPlayer, setSeasonManagementPlayer] = useState<Player | null>(null);
-  const { toast } = useToast();
   const [location] = useLocation();
   
   // Parse URL params to check for edit parameter
@@ -43,131 +41,37 @@ export default function Players() {
     queryKey: ['/api/seasons'],
   });
   
-  // Create new player mutation
-  const createMutation = useMutation({
-    mutationFn: async (newPlayer: any) => {
-      console.log("Creating player:", newPlayer);
-      // Send the player data directly in the format expected by the server
-      // apiRequest already returns the parsed JSON response
-      return await apiRequest('POST', '/api/players', newPlayer);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/players'] });
-      toast({
-        title: "Success",
-        description: "Player created successfully",
-      });
-      setIsAddDialogOpen(false);
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: `Failed to create player: ${error}`,
-        variant: "destructive",
-      });
-    }
-  });
-  
-  // Update player mutation
-  const updateMutation = useMutation({
-    mutationFn: async ({ id, ...playerData }: { id: number, [key: string]: any }) => {
-      console.log("Updating player:", id, playerData);
-      const res = await apiRequest('PATCH', `/api/players/${id}`, playerData);
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/players'] });
-      toast({
-        title: "Success",
-        description: "Player updated successfully",
-      });
-      setEditingPlayer(null);
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: `Failed to update player: ${error}`,
-        variant: "destructive",
-      });
-    }
-  });
-  
-  // Delete player mutation
-  const deleteMutation = useMutation({
-    mutationFn: async (id: number) => {
-      console.log("Making DELETE request to /api/players/" + id);
-      try {
-        // Use raw fetch for DELETE requests which may return 204 No Content
-        const response = await fetch(`/api/players/${id}`, {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        });
-        
-        // Check if response is successful (including 204 No Content)
-        if (response.ok) {
-          return true; // Return success indicator
-        }
-        
-        // If not successful, try to parse error message
-        const errorText = await response.text();
-        console.error("Delete error response:", response.status, errorText);
-        throw new Error(errorText || `Failed to delete player (${response.status})`);
-      } catch (error) {
-        console.error("Error in delete mutation:", error);
-        throw error;
+  // Use standardized CRUD mutations
+  const { createMutation, updateMutation, deleteMutation } = useCrudMutations<Player>({
+    entityName: 'Player',
+    baseEndpoint: '/api/players',
+    invalidatePatterns: ['/api/players'],
+    onSuccess: (data) => {
+      if (createMutation.isSuccess) {
+        setIsAddDialogOpen(false);
       }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/players'] });
-      toast({
-        title: "Success",
-        description: "Player deleted successfully",
-      });
-    },
-    onError: (error: any) => {
-      // Check if it's a "not found" error, which can happen when trying to delete a 
-      // player that was already deleted (due to double-clicks or network issues)
-      if (error?.message?.includes("not found") || 
-          (typeof error === 'object' && error.status === 404)) {
-        // The player was already deleted, so consider this a success
-        queryClient.invalidateQueries({ queryKey: ['/api/players'] });
-        toast({
-          title: "Success",
-          description: "Player was already deleted",
-        });
-      } else {
-        // It's a real error
-        toast({
-          title: "Error",
-          description: `Failed to delete player: ${error}`,
-          variant: "destructive",
-        });
+      if (updateMutation.isSuccess) {
+        setEditingPlayer(null);
       }
     }
   });
   
   // Handlers
   const handleCreatePlayer = (playerData: any) => {
-    console.log("Creating player:", playerData);
     createMutation.mutate(playerData);
   };
   
   const handleUpdatePlayer = (playerData: any) => {
     if (editingPlayer) {
-      console.log("Updating player:", playerData);
       updateMutation.mutate({ id: editingPlayer.id, ...playerData });
     }
   };
   
   const handleDeletePlayer = (id: number) => {
     if (window.confirm('Are you sure you want to delete this player? This action cannot be undone.')) {
-      // Prevent duplicate delete attempts by disabling the delete button during processing
-      if (deleteMutation.isPending) {
-        return;
+      if (!deleteMutation.isPending) {
+        deleteMutation.mutate(id);
       }
-      deleteMutation.mutate(id);
     }
   };
   
@@ -198,57 +102,35 @@ export default function Players() {
         />
         
         {/* Add Player Dialog */}
-        {isAddDialogOpen && (
-          <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center">
-            <div className="relative bg-white dark:bg-slate-900 p-6 rounded-lg max-w-lg w-full">
-              <button 
-                className="absolute right-4 top-4 rounded-sm opacity-70 text-gray-600 hover:opacity-100" 
-                onClick={() => setIsAddDialogOpen(false)}
-              >
-                ✕
-                <span className="sr-only">Close</span>
-              </button>
-              
-              <h2 className="text-xl font-semibold mb-2">Add New Player</h2>
-              <p className="text-sm text-gray-500 mb-4">
-                Enter the details for the new player.
-              </p>
-              
-              {/* Using SimplePlayerForm instead of PlayerForm */}
-              <SimplePlayerForm 
-                onSubmit={handleCreatePlayer} 
-                onCancel={() => setIsAddDialogOpen(false)}
-                isSubmitting={createMutation.isPending} 
-              />
-            </div>
-          </div>
-        )}
+        <CrudDialog
+          isOpen={isAddDialogOpen}
+          onClose={() => setIsAddDialogOpen(false)}
+          title="Add New Player"
+          description="Enter the details for the new player."
+        >
+          <SimplePlayerForm 
+            onSubmit={handleCreatePlayer} 
+            onCancel={() => setIsAddDialogOpen(false)}
+            isSubmitting={createMutation.isPending} 
+          />
+        </CrudDialog>
         
         {/* Edit Player Dialog */}
-        {!!editingPlayer && (
-          <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center">
-            <div className="relative bg-white dark:bg-slate-900 p-6 rounded-lg max-w-lg w-full max-h-[90vh] overflow-y-auto">
-              <button 
-                className="absolute right-4 top-4 rounded-sm opacity-70 text-gray-600 hover:opacity-100" 
-                onClick={() => setEditingPlayer(null)}
-              >
-                ✕
-                <span className="sr-only">Close</span>
-              </button>
-              
-              <h2 className="text-xl font-semibold mb-2">Edit Player</h2>
-              <p className="text-sm text-gray-500 mb-4">
-                Make changes to the player details below.
-              </p>
-              
-              <PlayerForm 
-                player={editingPlayer}
-                onSubmit={handleUpdatePlayer} 
-                isSubmitting={updateMutation.isPending} 
-              />
-            </div>
-          </div>
-        )}
+        <CrudDialog
+          isOpen={!!editingPlayer}
+          onClose={() => setEditingPlayer(null)}
+          title="Edit Player"
+          description="Make changes to the player details below."
+          maxWidth="max-w-lg"
+        >
+          {editingPlayer && (
+            <PlayerForm 
+              player={editingPlayer}
+              onSubmit={handleUpdatePlayer} 
+              isSubmitting={updateMutation.isPending} 
+            />
+          )}
+        </CrudDialog>
         
         {/* Season Management Dialog */}
         {!!seasonManagementPlayer && (
