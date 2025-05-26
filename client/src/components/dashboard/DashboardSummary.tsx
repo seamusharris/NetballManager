@@ -5,14 +5,15 @@ import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import TeamPerformance from './TeamPerformance';
-import RecentGames from './RecentGames';
-import UpcomingGames from './UpcomingGames';
 import PlayerPerformance from './PlayerPerformance';
+import RecentGames from './RecentGames';
 import GamesList from './GamesList';
+import UpcomingGames from './UpcomingGames';
+import PerformanceCharts from './PerformanceCharts';
+import QuarterPerformanceWidget from './QuarterPerformanceWidget';
 import { Card, CardContent } from "@/components/ui/card"
 import { Users } from "lucide-react"
 
-import PerformanceCharts from './PerformanceCharts';
 import OpponentMatchups from './OpponentMatchups';
 import { Player, Game, Opponent, Season } from '@shared/schema';
 import { sortByDate } from '@/lib/utils';
