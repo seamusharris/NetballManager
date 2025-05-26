@@ -202,7 +202,8 @@ export default function OpponentDetailed() {
                 {detailedStats.gameResults.map((result) => (
                   <div 
                     key={result.game.id} 
-                    className="flex items-center justify-between p-3 border rounded-lg"
+                    className="flex items-center justify-between p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
+                    onClick={() => navigate(`/game/${result.game.id}`)}
                   >
                     <div>
                       <p className="font-medium">{formatDate(result.game.date)}</p>
