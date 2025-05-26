@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useSearchParams } from 'react-router-dom';
+import { useSearch } from 'wouter';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
@@ -14,15 +14,16 @@ import { apiRequest } from '@/lib/apiClient';
 
 export default function OpponentAnalysis() {
   const [selectedOpponent, setSelectedOpponent] = useState<string>('all');
-  const [searchParams] = useSearchParams();
+  const search = useSearch();
 
   // Initialize selected opponent from URL parameter
   useEffect(() => {
+    const searchParams = new URLSearchParams(search);
     const opponentParam = searchParams.get('opponent');
     if (opponentParam) {
       setSelectedOpponent(opponentParam);
     }
-  }, [searchParams]);
+  }, [search]);
 
   const { data: games = [], isLoading: gamesLoading } = useQuery({
     queryKey: ['games'],
