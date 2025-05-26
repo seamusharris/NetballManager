@@ -1,7 +1,7 @@
 import React from 'react';
 import { Position } from '@shared/schema';
 import { StatItemBox } from './StatItemBox';
-import { positionStats, statLabels, StatCategory } from '@/lib/positionStats';
+import { POSITION_STATS, STAT_LABELS, StatCategory } from '@/lib/constants';
 
 interface PositionStatsBoxProps {
   position: Position;
@@ -17,7 +17,7 @@ export const PositionStatsBox: React.FC<PositionStatsBoxProps> = ({
   noWrapper = false
 }) => {
   // Get the stats for this position
-  const statsToShow = positionStats[position] || [];
+  const statsToShow = POSITION_STATS[position] || [];
   
   // Create a more compact grid layout by splitting stats into columns
   const content = (
@@ -26,7 +26,7 @@ export const PositionStatsBox: React.FC<PositionStatsBoxProps> = ({
         {statsToShow.map((statKey) => (
           <StatItemBox 
             key={statKey}
-            label={statLabels[statKey as StatCategory]} 
+            label={STAT_LABELS[statKey as StatCategory]} 
             value={stats[statKey] || 0}
             compact={true}
           />
