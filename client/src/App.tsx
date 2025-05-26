@@ -23,6 +23,7 @@ import NotFound from "@/pages/not-found";
 
 // Import GameDetails directly for now
 import GameDetails from "./pages/GameDetails";
+import OpponentDetailed from "./pages/OpponentDetailed";
 
 // Lazy load components
 const StatsDebug = lazy(() => import("./pages/StatsDebug"));
@@ -66,7 +67,7 @@ function Router() {
         <Route path="/game/:id" component={withErrorBoundary(GameDetails, 'GameDetails')} />
         <Route path="/opponents" component={withErrorBoundary(Opponents, 'Opponents')} />
         <Route path="/opponent-analysis" component={OpponentAnalysis} />
-        <Route path="/opponent-detailed/:opponentId" component={lazy(() => import('./pages/OpponentDetailed'))} />
+        <Route path="/opponent-detailed/:opponentId" component={withErrorBoundary(OpponentDetailed, 'OpponentDetailed')} />
         <Route path="/statistics" component={withErrorBoundary(Statistics, 'Statistics')} />
         <Route path="/data-management" component={withErrorBoundary(DataManagement, 'DataManagement')} />
         <Route path="/settings" component={withErrorBoundary(Settings, 'Settings')} />
