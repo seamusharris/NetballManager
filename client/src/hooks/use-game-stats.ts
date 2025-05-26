@@ -85,7 +85,14 @@ export function useBatchGameStats(gameIds: number[]) {
         return statsMap;
       }
     },
-    enabled: validGameIds.length > 0 && validGameIds.every(id => id && id > 0 && !isNaN(id)),
+    enabled: validGameIds.length > 0 && 
+             validGameIds.every(id => id && id > 0 && !isNaN(id)) &&
+             // Prevent empty requests during component initialization
+             gameIds !== undefined && 
+             gameIds !== null &&
+             Array.isArray(gameIds) && 
+             gameIds.length > 0 &&
+             validGameIds.join(',').length > 0,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
   });

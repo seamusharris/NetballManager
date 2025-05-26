@@ -58,7 +58,16 @@ export function useBatchGameStatistics(gameIds: number[], forceFresh: boolean = 
         throw error;
       }
     },
-    enabled: validGameIds.length > 0 && sortedGameIds.length > 0 && gameIdsKey.length > 0 && sortedGameIds.every(id => id && id > 0 && !isNaN(id)),
+    enabled: validGameIds.length > 0 && 
+             sortedGameIds.length > 0 && 
+             gameIdsKey.length > 0 && 
+             gameIdsKey !== '' &&
+             sortedGameIds.every(id => id && id > 0 && !isNaN(id)) &&
+             // Prevent empty requests during component initialization
+             gameIds !== undefined && 
+             gameIds !== null &&
+             Array.isArray(gameIds) && 
+             gameIds.length > 0,
     staleTime: forceFresh ? 0 : CACHE_SETTINGS.BATCH_QUERY_STALE_TIME,
     gcTime: CACHE_SETTINGS.QUERY_CACHE_TIME,
     retry: CACHE_SETTINGS.MAX_RETRIES,
