@@ -325,9 +325,10 @@ process.on('unhandledRejection', (reason, promise) => {
   process.exit(1);
 });
 
-// Run tests if this file is executed directly
-if (import.meta.url === `file://${process.argv[1]}`) {
-  main();
+// Check if fetch is available
+if (typeof fetch === 'undefined') {
+  console.error('❌ fetch is not available. Please run with Node.js 18+ or install node-fetch');
+  process.exit(1);
 }
 
-export { ScoreTestSuite, PerformanceTest, CacheStressTest };
+main();

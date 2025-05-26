@@ -226,6 +226,10 @@ async function main() {
   }
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
-  main();
+// Check if fetch is available
+if (typeof fetch === 'undefined') {
+  console.error('❌ fetch is not available. Please run with Node.js 18+ or install node-fetch');
+  process.exit(1);
 }
+
+main();
