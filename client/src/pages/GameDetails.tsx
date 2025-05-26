@@ -1104,11 +1104,15 @@ export default function GameDetails() {
   // Fetch game stats
   const { 
     data: gameStats,
-    isLoading: isLoadingStats
+    isLoading: isLoadingStats,
+    refetch: refetchGameStats
   } = useQuery({
     queryKey: ['/api/games', gameId, 'stats'],
     queryFn: () => fetch(`/api/games/${gameId}/stats`).then(res => res.json()),
-    enabled: !isNaN(gameId)
+    enabled: !isNaN(gameId),
+    staleTime: 0, // Always consider stale to get fresh data
+    refetchOnWindowFocus: true, // Refetch when window gains focus
+    refetchOnMount: 'always' // Always refetch when component mounts
   });
   
   // Calculate quarter scores

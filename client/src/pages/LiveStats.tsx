@@ -176,38 +176,38 @@ export default function LiveStats() {
   const { id } = useParams<{ id: string }>();
   const gameId = parseInt(id);
   const [, navigate] = useLocation();
-  
+
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  
+
   // State for tracking the game
   const [currentQuarter, setCurrentQuarter] = useState<number>(1);
   const [liveStats, setLiveStats] = useState<GameStats>({});
   const [undoStack, setUndoStack] = useState<GameStats[]>([]);
   const [redoStack, setRedoStack] = useState<GameStats[]>([]);
   const [saveInProgress, setSaveInProgress] = useState<boolean>(false);
-  
+
   // Fetch game details
   const { data: game, isLoading: gameLoading } = useQuery({
     queryKey: ['/api/games', gameId],
     queryFn: () => apiRequest('GET', `/api/games/${gameId}`),
     enabled: !!gameId && !isNaN(gameId)
   });
-  
+
   // Fetch opponent details if we have a game
   const { data: opponent, isLoading: opponentLoading } = useQuery({
     queryKey: ['/api/opponents', game?.opponentId],
     queryFn: () => apiRequest('GET', `/api/opponents/${game?.opponentId}`),
     enabled: !!game?.opponentId
   });
-  
+
   // Fetch player roster for this game
   const { data: rosters, isLoading: rostersLoading } = useQuery({
     queryKey: ['/api/games', gameId, 'rosters'],
     queryFn: () => apiRequest('GET', `/api/games/${gameId}/rosters`),
     enabled: !!gameId && !isNaN(gameId)
   });
-  
+
   // Fetch existing stats for this game with forced refresh when needed
   const { data: existingStats, isLoading: statsLoading, refetch: refetchStats } = useQuery({
     queryKey: ['/api/games', gameId, 'stats'],
@@ -217,13 +217,13 @@ export default function LiveStats() {
     refetchOnMount: 'always', // Always refetch when component mounts
     refetchOnWindowFocus: true // Refetch when window regains focus
   });
-  
+
   // Fetch all players
   const { data: players, isLoading: playersLoading } = useQuery({
     queryKey: ['/api/players'],
     queryFn: () => apiRequest('GET', '/api/players'),
   });
-  
+
   // Create or update game stats using standardized API endpoint pattern
   const { mutate: saveGameStat } = useMutation({
     mutationFn: (gameStat: Partial<GameStat>) => {
@@ -231,7 +231,7 @@ export default function LiveStats() {
       const existingStat = existingStats?.find(s => 
         s.position === gameStat.position && s.quarter === gameStat.quarter
       );
-      
+
       if (existingStat) {
         // Update existing stat
         return apiRequest('PATCH', `/api/games/${gameId}/stats/${existingStat.id}`, gameStat);
@@ -244,7 +244,7 @@ export default function LiveStats() {
       // We'll handle all invalidation after saving all stats
     }
   });
-  
+
   // Check if game is forfeit and redirect if needed
   useEffect(() => {
     if (game && game.status === 'forfeit') {
@@ -261,9 +261,9 @@ export default function LiveStats() {
   useEffect(() => {
     if (existingStats && players && rosters) {
       console.log(`Initializing live stats with ${existingStats.length} existing stats and ${rosters.length} roster entries`);
-      
+
       const initialStats: GameStats = {};
-      
+
       // Initialize stats structure by player
       players.forEach((player: Player) => {
         initialStats[player.id] = {
@@ -273,80 +273,80 @@ export default function LiveStats() {
           4: { ...emptyQuarterStats }
         };
       });
-      
+
       // Important: For simplicity, we want to map each position to a player and then
       // map stats to that player. This is the correct approach for our position-based stats system.
-      
+
       // Create a mapping from positions to players for each quarter
       const positionToPlayer: Record<number, Record<string, number>> = {};
-      
+
       // Initialize quarters in the position-to-player mapping
       for (let q = 1; q <= 4; q++) {
         positionToPlayer[q] = {};
       }
-      
+
       // First, log all roster entries to help with debugging
       if (rosters && rosters.length > 0) {
         rosters.forEach((roster: Roster) => {
           console.log(`Roster entry: Player ${roster.playerId} played ${roster.position} in Q${roster.quarter}`);
         });
       }
-      
+
       // Populate the position-to-player mapping from roster data
       if (rosters && rosters.length > 0) {
         rosters.forEach((roster: Roster) => {
           if (!positionToPlayer[roster.quarter]) {
             positionToPlayer[roster.quarter] = {};
           }
-          
+
           // Map this position to the player who played it
           positionToPlayer[roster.quarter][roster.position] = roster.playerId;
         });
       }
-      
+
       console.log(`Created position map:`, positionToPlayer);
-      
+
       // First, log all existing stats to help with debugging
       if (existingStats && existingStats.length > 0) {
         existingStats.forEach((stat: GameStat) => {
           console.log(`Existing stat: ${stat.position} in Q${stat.quarter} has goals: ${stat.goalsFor}, against: ${stat.goalsAgainst}`);
         });
       }
-      
+
       // Process the existing stats and map them to players via roster
       if (existingStats && existingStats.length > 0) {
         // Group stats by position and quarter to handle duplicates - take the latest one per position/quarter
         const statsByPositionAndQuarter: Record<string, GameStat> = {};
-        
+
         // Get the latest stat for each position/quarter combination
         existingStats.forEach((stat: GameStat) => {
           if (!stat.position || !stat.quarter) {
             console.warn("Found invalid stat without position or quarter:", stat);
             return;
           }
-          
+
           const key = `${stat.position}-${stat.quarter}`;
-          
+
           // If this is the first stat for this position/quarter or has a higher ID (newer)
           if (!statsByPositionAndQuarter[key] || stat.id > statsByPositionAndQuarter[key].id) {
             statsByPositionAndQuarter[key] = stat;
           }
         });
-        
+
         // Process each unique position/quarter stat
         Object.values(statsByPositionAndQuarter).forEach((stat: GameStat) => {
           if (stat.position && stat.quarter >= 1 && stat.quarter <= 4) {
             // Find the player who played this position in this quarter
             const playerId = positionToPlayer[stat.quarter]?.[stat.position];
-            
+
             if (playerId && initialStats[playerId]) {
               console.log(`Mapping stat for ${stat.position} in Q${stat.quarter} to player ${playerId}: Goals: ${stat.goalsFor}, Against: ${stat.goalsAgainst}`);
-              
+
               // Ensure quarter stats are initialized
               if (!initialStats[playerId][stat.quarter]) {
                 initialStats[playerId][stat.quarter] = { ...emptyQuarterStats };
               }
-              
+
               // Populate individual stat values from position-based stats
               Object.keys(emptyQuarterStats).forEach(key => {
                 const statKey = key as StatType;
@@ -354,7 +354,7 @@ export default function LiveStats() {
                   // Ensure we convert to number to avoid type issues
                   const value = Number(stat[statKey]) || 0;
                   initialStats[playerId][stat.quarter][statKey] = value;
-                  
+
                   // Log non-zero values to help with debugging
                   if (value > 0) {
                     console.log(`Setting ${statKey} = ${value} for player ${playerId} in Q${stat.quarter}`);
@@ -367,30 +367,30 @@ export default function LiveStats() {
           }
         });
       }
-      
+
       setLiveStats(initialStats);
       // Clear undo/redo stacks when loading fresh data
       setUndoStack([]);
       setRedoStack([]);
     }
   }, [existingStats, players]);
-  
+
   // Get player details by ID
   const getPlayer = (playerId: number): Player | undefined => {
     return players?.find((p: Player) => p.id === playerId);
   };
-  
+
   // Get current position for a player in the specified quarter
   const getPlayerPosition = (playerId: number, quarter: number): Position | '' => {
     if (!rosters) return '';
-    
+
     const playerRoster = rosters.find((r: Roster) => 
       r.playerId === playerId && r.quarter === quarter
     );
-    
+
     return playerRoster ? playerRoster.position : '';
   };
-  
+
   // Used to define player-position pairing (playerId can be 0 for positions without assigned players)
   interface PlayerPosition {
     playerId: number;
@@ -406,130 +406,130 @@ export default function LiveStats() {
       const rosterEntry = rosters?.find(r => 
         r.quarter === currentQuarter && r.position === position
       );
-      
+
       return {
         playerId: rosterEntry?.playerId || 0, // Use 0 for unassigned positions
         position,
         hasPlayer: !!rosterEntry // Boolean: true if there's a roster entry
       };
     });
-    
+
     // Sort by position order (GS, GA, WA, C, WD, GD, GK)
     return positionMap.sort((a: PlayerPosition, b: PlayerPosition) => {
       return allPositions.indexOf(a.position) - allPositions.indexOf(b.position);
     });
   };
-  
+
   // Record a new stat
   const recordStat = (playerId: number, stat: StatType, value: number = 1) => {
     // Save current state for undo
     setUndoStack([...undoStack, JSON.parse(JSON.stringify(liveStats))]);
     setRedoStack([]);
-    
+
     // Get player's position in this quarter
     const position = getPlayerPosition(playerId, currentQuarter);
-    
+
     setLiveStats(prev => {
       const newStats = JSON.parse(JSON.stringify(prev));
-      
+
       // Initialize if needed
       if (!newStats[playerId]) {
         newStats[playerId] = {};
       }
-      
+
       if (!newStats[playerId][currentQuarter]) {
         newStats[playerId][currentQuarter] = { ...emptyQuarterStats };
       }
-      
+
       // Update the stat
       const currentValue = newStats[playerId][currentQuarter][stat] || 0;
       newStats[playerId][currentQuarter][stat] = Math.max(0, currentValue + value);
-      
+
       // Store position with the stats
       if (position) {
         newStats[playerId][currentQuarter].position = position;
       }
-      
+
       return newStats;
     });
   };
-  
+
   // Undo last action
   const handleUndo = () => {
     if (undoStack.length > 0) {
       const lastState = undoStack[undoStack.length - 1];
       const newUndoStack = undoStack.slice(0, -1);
-      
+
       // Save current state to redo stack
       setRedoStack([...redoStack, JSON.parse(JSON.stringify(liveStats))]);
-      
+
       // Restore previous state
       setLiveStats(lastState);
       setUndoStack(newUndoStack);
     }
   };
-  
+
   // Redo last undone action
   const handleRedo = () => {
     if (redoStack.length > 0) {
       const nextState = redoStack[redoStack.length - 1];
       const newRedoStack = redoStack.slice(0, -1);
-      
+
       // Save current state to undo stack
       setUndoStack([...undoStack, JSON.parse(JSON.stringify(liveStats))]);
-      
+
       // Restore next state
       setLiveStats(nextState);
       setRedoStack(newRedoStack);
     }
   };
-  
+
   // Reset stats for the current quarter only
   const resetCurrentQuarter = () => {
     // Save current state for undo
     setUndoStack([...undoStack, JSON.parse(JSON.stringify(liveStats))]);
     setRedoStack([]);
-    
+
     setLiveStats(prev => {
       const newStats = JSON.parse(JSON.stringify(prev));
-      
+
       // For each player, reset only the current quarter's stats
       Object.keys(newStats).forEach(playerId => {
         if (newStats[playerId][currentQuarter]) {
           // Preserve the position information but reset all stat values
           const position = newStats[playerId][currentQuarter].position;
           newStats[playerId][currentQuarter] = { ...emptyQuarterStats };
-          
+
           // Add back the position information
           if (position) {
             newStats[playerId][currentQuarter].position = position;
           }
         }
       });
-      
+
       return newStats;
     });
-    
+
     // Clear the game cache when stats are reset to ensure scores are recalculated properly
     clearGameCache(gameId);
     console.log(`Cleared score cache for game ${gameId} after resetting quarter ${currentQuarter}`);
-    
+
     toast({
       title: "Quarter Reset",
       description: `All stats for Quarter ${currentQuarter} have been reset to zero.`,
       variant: "default"
     });
   };
-  
+
   // Reset all stats for all quarters
   const resetAllStats = () => {
     // Save current state for undo
     setUndoStack([...undoStack, JSON.parse(JSON.stringify(liveStats))]);
     setRedoStack([]);
-    
+
     setLiveStats(prev => {
       const newStats = JSON.parse(JSON.stringify(prev));
-      
+
       // For each player, reset all quarters
       Object.keys(newStats).forEach(playerId => {
         for (let quarter = 1; quarter <= 4; quarter++) {
@@ -537,7 +537,7 @@ export default function LiveStats() {
             // Preserve the position information
             const position = newStats[playerId][quarter].position;
             newStats[playerId][quarter] = { ...emptyQuarterStats };
-            
+
             // Add back the position information
             if (position) {
               newStats[playerId][quarter].position = position;
@@ -545,21 +545,21 @@ export default function LiveStats() {
           }
         }
       });
-      
+
       return newStats;
     });
-    
+
     // Clear the game cache when all stats are reset to ensure scores are recalculated properly
     clearGameCache(gameId);
     console.log(`Cleared score cache for game ${gameId} after resetting all stats`);
-    
+
     toast({
       title: "All Stats Reset",
       description: "All statistics have been reset to zero for all quarters.",
       variant: "default"
     });
   };
-  
+
   // Save all stats to the database using pure position-based approach
   const saveAllStats = async () => {
     if (!liveStats || Object.keys(liveStats).length === 0) {
@@ -570,19 +570,19 @@ export default function LiveStats() {
       });
       return;
     }
-    
+
     setSaveInProgress(true);
-    
+
     try {
       console.log("Statistics roster data:", {
         hasValidRosterEntries: rosters && rosters.length > 0,
         entries: rosters ? rosters.length : 0,
         sample: rosters && rosters.length > 0 ? rosters[0] : null
       });
-      
+
       // Create mapping from player to position by quarter
       const playerToPositionMap: Record<number, Record<number, Position>> = {};
-      
+
       // Build the player-to-position mapping from roster data
       if (rosters && rosters.length > 0) {
         rosters.forEach((roster: Roster) => {
@@ -599,23 +599,23 @@ export default function LiveStats() {
         });
         return;
       }
-      
+
       const statsToSave = [];
-      
+
       // For each player and quarter with stats
       for (const playerId in liveStats) {
         const playerIdNum = parseInt(playerId);
-        
+
         for (const quarter in liveStats[playerIdNum]) {
           const quarterNum = parseInt(quarter);
           const playerQuarterStats = liveStats[playerIdNum][quarterNum];
-          
+
           // Skip empty quarters
           if (!playerQuarterStats) continue;
-          
+
           // Get the position for this player in this quarter from the mapping
           const position = playerToPositionMap[playerIdNum]?.[quarterNum];
-          
+
           if (position) {
             // Always save complete stats for this position, even if they're zeros
             // This ensures we overwrite any previous values
@@ -633,13 +633,13 @@ export default function LiveStats() {
               pickUp: playerQuarterStats.pickUp || 0,
               infringement: playerQuarterStats.infringement || 0
             };
-            
+
             // Always save statistics for every position on the court
             // This ensures we don't have gaps in the data and that scores are accurate
             console.log(`Saving stats for position ${position} in quarter ${quarterNum}: ` + 
               `Goals: ${playerQuarterStats.goalsFor || 0}, ` + 
               `Against: ${playerQuarterStats.goalsAgainst || 0}`);
-            
+
             // Create a complete stat object with explicit values for all fields
             const completeStatObject = {
               gameId,
@@ -655,7 +655,7 @@ export default function LiveStats() {
               pickUp: Number(playerQuarterStats.pickUp || 0),
               infringement: Number(playerQuarterStats.infringement || 0)
             };
-            
+
             console.log("Complete stat object:", completeStatObject);
             statsToSave.push(completeStatObject);
           } else {
@@ -663,11 +663,11 @@ export default function LiveStats() {
           }
         }
       }
-      
+
       // Save all stats one by one
       let savedCount = 0;
       let errorCount = 0;
-      
+
       // Just use the original stats array - we'll let the server handle duplicates
       for (const stat of statsToSave) {
         try {
@@ -678,70 +678,64 @@ export default function LiveStats() {
           errorCount++;
         }
       }
-      
+
       if (savedCount > 0) {
-        // Directly fetch the latest data to ensure we have fresh stats
+        // Comprehensive cache invalidation to ensure updates are visible everywhere
         try {
-          // First invalidate all caches to ensure everything is up to date
-          queryClient.invalidateQueries({ queryKey: ['/api/games', gameId, 'stats'] });
-          queryClient.invalidateQueries({ queryKey: ['gameStats', gameId] });
-          queryClient.invalidateQueries({ queryKey: ['gameScores', gameId] });
-          queryClient.invalidateQueries({ queryKey: ['positionStats', gameId] });
-          queryClient.invalidateQueries({ queryKey: ['playerStats', gameId] });
-          queryClient.invalidateQueries({ queryKey: ['allGameStats'] });
-          
-          // Invalidate any batch stats queries
-          queryClient.invalidateQueries({ 
+          console.log(`Starting comprehensive cache invalidation for game ${gameId}`);
+
+          // Clear all local caches first
+          clearGameCache(gameId);
+
+          // Clear statistics service caches
+          const { clearAllStatisticsCaches } = await import('../lib/statisticsService');
+          clearAllStatisticsCaches();
+
+          // Invalidate all React Query caches related to this game
+          await queryClient.invalidateQueries({ 
             predicate: (query) => {
               const key = query.queryKey;
               return key.some(k => 
-                typeof k === 'string' && k.includes('/api/games/stats/batch')
+                (typeof k === 'string' && (
+                  k.includes(`/api/games/${gameId}`) ||
+                  k.includes('/api/games/stats/batch') ||
+                  k.includes('allGameStats') ||
+                  k.includes('gameStats') ||
+                  k.includes('gameScores') ||
+                  k.includes('positionStats') ||
+                  k.includes('playerStats')
+                )) ||
+                (typeof k === 'number' && k === gameId)
               );
             }
           });
-          
-          // Also clear the scores cache to ensure immediate UI updates
-          clearGameCache(gameId);
-          
-          // Clear the statistics service batch cache
-          import('../lib/statisticsService').then(({ clearAllStatisticsCaches }) => {
-            clearAllStatisticsCaches();
-          });
-          
-          console.log(`Cleared all caches for game ${gameId} after saving stats`);
-          
-          // Wait to ensure everything is refreshed
-          await new Promise(resolve => setTimeout(resolve, 500));
-          
-          // Manually refetch the latest data
-          const freshStats = await apiRequest('GET', `/api/games/${gameId}/stats`);
-          console.log(`Manually fetched ${freshStats.length} fresh stats after saving`);
-          
-          // Force refresh UI state
+
+          // Also invalidate general game queries
+          queryClient.invalidateQueries({ queryKey: ['/api/games'] });
+          queryClient.invalidateQueries({ queryKey: ['/api/games', gameId] });
+          queryClient.invalidateQueries({ queryKey: ['/api/games', gameId, 'stats'] });
+          queryClient.invalidateQueries({ queryKey: ['/api/games', gameId, 'rosters'] });
+
+          console.log(`Invalidated all caches for game ${gameId}`);
+
+          // Force refetch the stats to ensure UI updates
           await refetchStats();
-          console.log("Stats refreshed after saving");
-          
-          // Instead of reloading the page, we'll preserve the current stats in memory
-          // and let React Query handle the refresh behind the scenes
-          if (freshStats && freshStats.length > 0 && players && rosters) {
-            console.log("Keeping current state - statistical data saved successfully");
-            
-            // No need to reset the stats - they're already saved in the database
-            // This prevents the visual "reset to zero" effect after saving
-            
-            // Just mark the save as complete and continue
-          }
+
+          // Small delay to allow cache invalidation to propagate
+          await new Promise(resolve => setTimeout(resolve, 200));
+
+          console.log(`Cache invalidation complete for game ${gameId}`);
         } catch (err) {
-          console.error("Error refreshing stats:", err);
+          console.error("Error during cache invalidation:", err);
         }
-        
+
         toast({
           title: "Statistics saved",
           description: `Successfully saved statistics for ${savedCount} positions.${
             errorCount > 0 ? ` (${errorCount} errors occurred)` : ''
           }`
         });
-        
+
         // We don't automatically mark the game as completed anymore
         // This allows users to save stats throughout the game
       } else if (errorCount > 0) {
@@ -768,11 +762,11 @@ export default function LiveStats() {
       setSaveInProgress(false);
     }
   };
-  
+
   // Get quarter total for a specific stat - includes both player and position stats
   const getQuarterTotal = (stat: StatType): number => {
     let total = 0;
-    
+
     // For position-based stats, the most accurate way is to get stats directly from existingStats
     if (existingStats) {
       existingStats.filter(s => s.quarter === currentQuarter).forEach(statEntry => {
@@ -781,11 +775,11 @@ export default function LiveStats() {
           total += statEntry[stat] || 0;
         }
       });
-      
+
       console.log(`Total for ${stat} in Q${currentQuarter}: ${total}`);
       return total;
     }
-    
+
     // Fallback to liveStats if existingStats is unavailable
     Object.keys(liveStats).forEach(playerIdStr => {
       const playerId = parseInt(playerIdStr);
@@ -794,14 +788,14 @@ export default function LiveStats() {
         total += playerStats[stat] || 0;
       }
     });
-    
+
     return total;
   };
-  
+
   // Get game total for a specific stat - includes both player and position stats
   const getGameTotal = (stat: StatType): number => {
     let total = 0;
-    
+
     // For position-based stats, the most accurate way is to get stats directly from existingStats
     if (existingStats) {
       // Add up all stats across all quarters directly from the position stats in the database
@@ -810,15 +804,15 @@ export default function LiveStats() {
           total += statEntry[stat] || 0;
         }
       });
-      
+
       console.log(`Game total for ${stat}: ${total}`);
       return total;
     }
-    
+
     // Fallback to liveStats if existingStats is unavailable
     Object.keys(liveStats).forEach(playerIdStr => {
       const playerId = parseInt(playerIdStr);
-      
+
       [1, 2, 3, 4].forEach(quarter => {
         const playerStats = liveStats[playerId]?.[quarter];
         if (playerStats && playerStats[stat] !== undefined) {
@@ -826,24 +820,24 @@ export default function LiveStats() {
         }
       });
     });
-    
+
     return total;
   };
-  
+
   // Common stats to show in the top row
   const commonStats: StatType[] = ['intercepts', 'badPass', 'handlingError', 'infringement', 'pickUp'];
-  
+
   // Check if a stat is common across positions
   const isCommonStat = (stat: StatType): boolean => {
     // These stats are common across most positions
     return commonStats.includes(stat);
   };
-  
+
   // Check if a stat is position-specific
   const isPositionSpecificStat = (stat: StatType): boolean => {
     return !isCommonStat(stat);
   };
-  
+
   // Render a stat counter button - supports both players and unassigned positions
   const renderStatCounter = (
     playerId: number, 
@@ -854,13 +848,13 @@ export default function LiveStats() {
     posStats?: QuarterStats // Optional stats for unassigned positions
   ) => {
     let currentValue = 0;
-    
+
     if (playerId === 0 && position) {
       // For unassigned positions, get stats directly from the database records
       const positionStat = existingStats?.find(
         (s: GameStat) => s.position === position && s.quarter === currentQuarter
       );
-      
+
       if (positionStat && typeof positionStat[stat] !== 'undefined') {
         currentValue = Number(positionStat[stat]) || 0;
       }
@@ -868,7 +862,7 @@ export default function LiveStats() {
       // For assigned players, get their stats from liveStats
       // If that's empty, check existingStats for their position
       currentValue = liveStats[playerId]?.[currentQuarter]?.[stat] || 0;
-      
+
       // If player has no stats in liveStats, try to find their position and get stats
       if (currentValue === 0 && rosters) {
         const playerPosition = getPlayerPosition(playerId, currentQuarter);
@@ -876,14 +870,14 @@ export default function LiveStats() {
           const positionStat = existingStats?.find(
             (s: GameStat) => s.position === playerPosition && s.quarter === currentQuarter
           );
-          
+
           if (positionStat && typeof positionStat[stat] !== 'undefined') {
             currentValue = Number(positionStat[stat]) || 0;
           }
         }
       }
     }
-    
+
     // Function to handle stat updates
     const handleStatChange = (change: number) => {
       if (playerId === 0 && position) {
@@ -894,7 +888,7 @@ export default function LiveStats() {
         recordStat(playerId, stat, change);
       }
     };
-    
+
     return (
       <div className={`flex flex-col items-center ${compact ? 'p-1' : 'p-2'} rounded-md border`}>
         <p className={`${important ? 'text-sm font-semibold' : 'text-xs font-medium'} mb-1`}>{statLabels[stat]}</p>
@@ -908,11 +902,11 @@ export default function LiveStats() {
           >
             <Minus className={`${compact ? 'h-3 w-3' : 'h-4 w-4'}`} />
           </Button>
-          
+
           <span className={`${compact ? 'w-6' : 'w-8'} text-center font-semibold ${important ? 'text-base' : ''}`}>
             {currentValue}
           </span>
-          
+
           <Button
             variant="outline"
             size="sm"
@@ -925,22 +919,22 @@ export default function LiveStats() {
       </div>
     );
   };
-  
+
   // Function to update stats for a position without a player
   const updatePositionStat = async (position: Position, statType: StatType, newValue: number) => {
     try {
       // Ensure newValue is at least 0
       const sanitizedValue = Math.max(0, newValue);
-      
+
       // Find existing stat for this position and quarter
       const existingStat = existingStats?.find(
         (stat: GameStat) => stat.position === position && stat.quarter === currentQuarter
       );
-      
+
       if (existingStat) {
         // Update existing stat
         console.log(`Updating stat for position ${position} in Q${currentQuarter}: ${statType} = ${sanitizedValue}`);
-        
+
         // Create update payload - create a new object to avoid mutation issues
         const updatePayload = {
           id: existingStat.id,
@@ -957,16 +951,16 @@ export default function LiveStats() {
           pickUp: existingStat.pickUp || 0,
           infringement: existingStat.infringement || 0
         };
-        
+
         // Update the specific stat
         updatePayload[statType] = sanitizedValue;
-        
+
         // Save to server
         await saveGameStat(updatePayload);
-        
+
         // Refresh stats to update UI
         await refetchStats();
-        
+
         toast({
           title: "Statistic updated",
           description: `Updated ${statLabels[statType]} for ${positionLabels[position]} in Q${currentQuarter}`
@@ -974,7 +968,7 @@ export default function LiveStats() {
       } else {
         // Create new stat
         console.log(`Creating new stat for position ${position} in Q${currentQuarter}: ${statType} = ${sanitizedValue}`);
-        
+
         // Create base stat object with all stats initialized to 0
         const newStat = {
           gameId,
@@ -990,16 +984,16 @@ export default function LiveStats() {
           pickUp: 0,
           infringement: 0
         };
-        
+
         // Set the specific stat value
         newStat[statType] = sanitizedValue;
-        
+
         // Save to server
         await saveGameStat(newStat);
-        
+
         // Refresh stats to update UI
         await refetchStats();
-        
+
         toast({
           title: "Statistic recorded",
           description: `Recorded ${statLabels[statType]} for ${positionLabels[position]} in Q${currentQuarter}`
@@ -1014,7 +1008,7 @@ export default function LiveStats() {
       });
     }
   };
-  
+
   // Loading state
   if (gameLoading || rostersLoading || statsLoading || playersLoading) {
     return (
@@ -1024,7 +1018,7 @@ export default function LiveStats() {
       </div>
     );
   }
-  
+
   // Error state - game not found
   if (!game) {
     return (
@@ -1037,7 +1031,7 @@ export default function LiveStats() {
       </div>
     );
   }
-  
+
   // Error state - game is a bye
   if (game.isBye) {
     return (
@@ -1050,7 +1044,7 @@ export default function LiveStats() {
       </div>
     );
   }
-  
+
   // Error state - game is a forfeit
   if (game.status === 'forfeit') {
     return (
@@ -1063,9 +1057,9 @@ export default function LiveStats() {
       </div>
     );
   }
-  
+
   const playersOnCourt = getPlayersOnCourt();
-  
+
   return (
     <div className="container py-3 px-2 md:py-4 md:px-4">
       <Helmet>
@@ -1078,7 +1072,7 @@ export default function LiveStats() {
             Round {game.round} | {formatShortDate(game.date)} vs {opponent ? opponent.teamName : game.opponentName || "Opponent"}
           </p>
         </div>
-        
+
         <div className="flex justify-between items-center gap-2 w-full">
           <Button
             variant="outline"
@@ -1089,7 +1083,7 @@ export default function LiveStats() {
             <ChevronLeft className="mr-1 h-4 w-4" />
             Back to Game
           </Button>
-          
+
           <div className="flex space-x-2">
             <Button
               variant="outline"
@@ -1110,7 +1104,7 @@ export default function LiveStats() {
               <RefreshCw className="h-4 w-4 mr-1" />
               Reset All Stats
             </Button>
-            
+
             <Button
               variant="default"
               size="sm"
@@ -1124,7 +1118,7 @@ export default function LiveStats() {
           </div>
         </div>
       </div>
-      
+
       {/* Game scoreboard - optimized for all tablet sizes */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
         <Card className="overflow-hidden">
@@ -1145,7 +1139,7 @@ export default function LiveStats() {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card className="overflow-hidden">
           <CardHeader className="py-2">
             <div className="flex justify-between items-center">
@@ -1195,11 +1189,11 @@ export default function LiveStats() {
           </CardContent>
         </Card>
       </div>
-      
+
       {/* Players stat cards - tablet optimized */}
       <div className="mb-4 md:mb-5">
         <h2 className="text-base md:text-lg font-semibold mb-2 md:mb-3">Players on Court - Quarter {currentQuarter}</h2>
-        
+
         {playersOnCourt.length === 0 ? (
           <Card className="p-4 text-center">
             <p>No players have been assigned to positions for this quarter yet.</p>
@@ -1208,14 +1202,14 @@ export default function LiveStats() {
         ) : (
           playersOnCourt.map(({playerId, position, hasPlayer}) => {
             const player = hasPlayer ? getPlayer(playerId) : null;
-            
+
             // Get stats for this position, whether or not a player is assigned
             // For positions without players, we'll use a positional stat approach
             const statConfig = positionStatConfig[position];
-            
+
             // For positions with players, use player stats; otherwise find position stats directly
             let positionStats = { ...emptyQuarterStats };
-            
+
             if (hasPlayer && player) {
               // If we have a player, use their stats
               positionStats = liveStats[playerId]?.[currentQuarter] || { ...emptyQuarterStats };
@@ -1224,7 +1218,7 @@ export default function LiveStats() {
               const positionStat = existingStats.find(
                 (stat: GameStat) => stat.position === position && stat.quarter === currentQuarter
               );
-              
+
               if (positionStat) {
                 // Convert position stat to QuarterStats format
                 positionStats = {
@@ -1240,10 +1234,10 @@ export default function LiveStats() {
                 };
               }
             }
-            
+
             // Generate a unique key - for positions without players, use the position as key
             const cardKey = hasPlayer ? `player-${playerId}` : `position-${position}-q${currentQuarter}`;
-            
+
             return (
               <Card key={cardKey} className="mb-3 overflow-hidden">
                 <CardHeader className="py-2 pb-2">
@@ -1262,7 +1256,7 @@ export default function LiveStats() {
                       >
                         {position}
                       </div>
-                      
+
                       <div className="min-w-[60px]">
                         {player ? (
                           <p className="font-semibold text-sm">{player.displayName}</p>
@@ -1272,7 +1266,7 @@ export default function LiveStats() {
                         <p className="text-xs text-muted-foreground">{positionLabels[position]}</p>
                       </div>
                     </div>
-                    
+
                     {/* Second section - common stats, filling remaining space */}
                     <div className="flex-1 flex flex-wrap gap-2">
                       {commonStats.map(stat => (
@@ -1295,11 +1289,11 @@ export default function LiveStats() {
                     const posSpecificStats = Object.entries(statConfig)
                       .filter(([stat, isAvailable]) => isAvailable && !commonStats.includes(stat as StatType))
                       .map(([stat]) => stat as StatType);
-                    
+
                     if (posSpecificStats.length === 0) {
                       return null; // No second row needed
                     }
-                      
+
                     return (
                       <div className="flex justify-center gap-2 flex-wrap">
                         {posSpecificStats.map(statType => (
