@@ -152,6 +152,25 @@ export const importPlayerSeasonSchema = createInsertSchema(playerSeasons);
 export type InsertPlayerSeason = z.infer<typeof insertPlayerSeasonSchema>;
 export type PlayerSeason = typeof playerSeasons.$inferSelect;
 
+// Player availability table for storing which players are available for each game
+export const playerAvailability = pgTable("player_availability", {
+  id: serial("id").primaryKey(),
+  gameId: integer("game_id").notNull().references(() => games.id, { onDelete: "cascade" }),
+  playerId: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
+  isAvailable: boolean("is_available").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => {
+  return {
+    gamePlayerUnique: unique().on(table.gameId, table.playerId)
+  };
+});
+
+export const insertPlayerAvailabilitySchema = createInsertSchema(playerAvailability).omit({ id: true });
+export const importPlayerAvailabilitySchema = createInsertSchema(playerAvailability);
+export type InsertPlayerAvailability = z.infer<typeof insertPlayerAvailabilitySchema>;
+export type PlayerAvailability = typeof playerAvailability.$inferSelect;
+
 // Define relations
 export const seasonsRelations = relations(seasons, ({ many }) => ({
   games: many(games),

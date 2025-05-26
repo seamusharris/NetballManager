@@ -15,18 +15,18 @@ export default function Roster() {
   const [availablePlayers, setAvailablePlayers] = useState<number[]>([]);
   const [_, navigate] = useLocation();
   const queryClient = useQueryClient();
-  
+
   // Load players data
   const { data: players = [], isLoading: isLoadingPlayers } = useQuery({
     queryKey: ['/api/players'],
   });
-  
+
   // Parse URL query parameters to get game ID
   useEffect(() => {
     // Get the game ID from the URL query parameter if it exists
     const queryParams = new URLSearchParams(window.location.search);
     const gameId = queryParams.get('game');
-    
+
     if (gameId && !isNaN(Number(gameId))) {
       // Set the selected game ID and update the URL to remove the query parameter
       setSelectedGameId(Number(gameId));
@@ -38,95 +38,72 @@ export default function Roster() {
   // Local storage key for available players
   const getAvailabilityStorageKey = (gameId: number) => `netball_available_players_${gameId}`;
 
-  // Load available players from local storage when game changes
+  // Load available players from database when game changes
   useEffect(() => {
     if (selectedGameId && players && players.length > 0) {
-      const storageKey = getAvailabilityStorageKey(selectedGameId);
-      const storedAvailability = localStorage.getItem(storageKey);
-      
-      if (storedAvailability) {
-        try {
-          // Parse the stored availability data
-          const parsedAvailability = JSON.parse(storedAvailability);
-          
-          // Check if the parsed data is an array
-          if (Array.isArray(parsedAvailability)) {
-            // Validate player IDs against the current active players to ensure they exist
-            const activePlayerIds = players.filter(p => p.active).map(p => p.id);
-            const validPlayerIds = parsedAvailability.filter(id => 
-              // Ensure the ID is a number and exists in active players
+      const activePlayerIds = players.filter(p => p.active).map(p => p.id);
+
+      // Fetch availability from database
+      fetch(`/api/games/${selectedGameId}/availability`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.availablePlayerIds && Array.isArray(data.availablePlayerIds)) {
+            // Validate that stored player IDs still exist in active players
+            const validPlayerIds = data.availablePlayerIds.filter(id => 
               typeof id === 'number' && activePlayerIds.includes(id)
             );
-            
-            // Remove any duplicates that might exist
-            const uniquePlayerIds = [...new Set(validPlayerIds)];
-            
-            // Debug log for round 11 (gameId 71)
-            if (selectedGameId === 71) {
-              console.log('Round 11 availability data:', {
-                original: parsedAvailability,
-                filtered: uniquePlayerIds,
-                activePlayerCount: activePlayerIds.length
-              });
-            }
-            
-            setAvailablePlayers(uniquePlayerIds);
+
+            // If we have valid stored data, use it; otherwise default to all active
+            const finalPlayerIds = validPlayerIds.length > 0 ? [...new Set(validPlayerIds)] : activePlayerIds;
+            setAvailablePlayers(finalPlayerIds);
           } else {
-            // If not an array, reset to defaults
-            console.error('Stored availability is not an array:', parsedAvailability);
-            const activePlayerIds = players.filter(p => p.active).map(p => p.id);
+            // No stored data, default to all active players
             setAvailablePlayers(activePlayerIds);
           }
-        } catch (error) {
-          console.error('Error parsing stored player availability:', error);
-          // Default to all active players being available if there was an error
-          const activePlayerIds = players.filter(p => p.active).map(p => p.id);
+        })
+        .catch(error => {
+          console.warn('Failed to fetch player availability, using all active players:', error);
           setAvailablePlayers(activePlayerIds);
-        }
-      } else {
-        // Default to all active players being available if no previous selection
-        const activePlayerIds = players.filter(p => p.active).map(p => p.id);
-        setAvailablePlayers(activePlayerIds);
-      }
+        });
     }
   }, [selectedGameId, players]);
-  
+
   // Load games data
   const { data: games = [], isLoading: isLoadingGames } = useQuery({
     queryKey: ['/api/games'],
   });
-  
+
   // Load opponents data
   const { data: opponents = [], isLoading: isLoadingOpponents } = useQuery({
     queryKey: ['/api/opponents'],
   });
-  
+
   // Get roster data for selected game
   const { data: rosters = [], isLoading: isLoadingRosters } = useQuery({
     queryKey: ['/api/games', selectedGameId, 'rosters'],
     enabled: !!selectedGameId,
   });
-  
+
   // Check if any data is still loading
   const isLoading = isLoadingPlayers || isLoadingGames || isLoadingOpponents || 
     (selectedGameId ? isLoadingRosters : false);
-  
+
   // Filter to only active players
   const activePlayers = players.filter(player => player.active);
-  
+
   // Get the selected game
   const selectedGame = selectedGameId ? games.find(game => game.id === selectedGameId) : undefined;
-  
+
   // Get the opponent for the selected game
   const selectedOpponent = selectedGame?.opponentId 
     ? opponents.find(opponent => opponent.id === selectedGame.opponentId) 
     : undefined;
-  
+
   // Handle player availability change
   const handleAvailabilityChange = (playerId: number, isAvailable: boolean) => {
     // Create a new array to ensure we don't have duplicate IDs
     let newAvailablePlayers;
-    
+
     if (isAvailable) {
       // Only add the player if they're not already in the list
       if (!availablePlayers.includes(playerId)) {
@@ -138,7 +115,7 @@ export default function Roster() {
       // Remove the player from the list
       newAvailablePlayers = availablePlayers.filter(id => id !== playerId);
     }
-    
+
     setAvailablePlayers(newAvailablePlayers);
 
     // Save to local storage if we have a game selected
@@ -152,12 +129,12 @@ export default function Roster() {
   const handleAvailabilityComplete = () => {
     setShowAvailability(false);
   };
-  
+
   // Function to go back to availability selection
   const handleBackToAvailability = () => {
     setShowAvailability(true);
   };
-  
+
   // Callback for when roster is saved to database
   const handleRosterSaved = () => {
     // Invalidate the roster query to refresh data
@@ -165,19 +142,19 @@ export default function Roster() {
       // Invalidate both the roster data and the game data to ensure proper re-fetching
       queryClient.invalidateQueries({ queryKey: ['/api/games', selectedGameId, 'rosters'] });
       queryClient.invalidateQueries({ queryKey: ['/api/games', selectedGameId] });
-      
+
       // Also invalidate the general games list to ensure consistency
       queryClient.invalidateQueries({ queryKey: ['/api/games'] });
     }
   };
-  
+
   return (
     <div className="container py-6">
       <Helmet>
         <title>Roster | NetballManager</title>
         <meta name="description" content="Manage your netball team roster, assign players to positions for each quarter" />
       </Helmet>
-      
+
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Team Roster</h1>
         {selectedGameId && (
@@ -192,7 +169,7 @@ export default function Roster() {
           </Button>
         )}
       </div>
-      
+
       {!selectedGameId && (
         <Card className="mb-6">
           <CardHeader>
@@ -208,7 +185,7 @@ export default function Roster() {
           </CardContent>
         </Card>
       )}
-      
+
       {selectedGameId && showAvailability && (
         <PlayerAvailabilityManager
           players={activePlayers}
@@ -219,7 +196,7 @@ export default function Roster() {
           onComplete={handleAvailabilityComplete}
         />
       )}
-      
+
       {selectedGameId && !showAvailability && (
         <>
           <Button 
@@ -230,7 +207,7 @@ export default function Roster() {
             <ChevronLeft className="mr-1 h-4 w-4" />
             Back to Player Availability
           </Button>
-          
+
           <SimpleRosterManager 
             players={activePlayers.filter(player => availablePlayers.includes(player.id))}
             games={games}
@@ -242,7 +219,7 @@ export default function Roster() {
           />
         </>
       )}
-      
+
       {!selectedGameId && (
         <SimpleRosterManager 
           players={activePlayers}

@@ -1098,6 +1098,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ----- PLAYER AVAILABILITY API -----
+  
+  // Get player availability for a specific game
+  app.get("/api/games/:gameId/availability", async (req, res) => {
+    try {
+      const gameId = Number(req.params.gameId);
+      const { playerAvailabilityStorage } = await import('./player-availability-storage');
+      
+      const availablePlayerIds = await playerAvailabilityStorage.getPlayerAvailabilityForGame(gameId);
+      res.json({ availablePlayerIds });
+    } catch (error) {
+      console.error('Error fetching player availability:', error);
+      res.status(500).json({ message: "Failed to fetch player availability" });
+    }
+  });
+  
+  // Set player availability for a specific game
+  app.post("/api/games/:gameId/availability", async (req, res) => {
+    try {
+      const gameId = Number(req.params.gameId);
+      const { availablePlayerIds } = req.body;
+      
+      if (!Array.isArray(availablePlayerIds)) {
+        return res.status(400).json({ message: "availablePlayerIds must be an array" });
+      }
+      
+      const { playerAvailabilityStorage } = await import('./player-availability-storage');
+      const success = await playerAvailabilityStorage.setPlayerAvailabilityForGame(gameId, availablePlayerIds);
+      
+      if (success) {
+        res.json({ message: "Player availability updated successfully" });
+      } else {
+        res.status(500).json({ message: "Failed to update player availability" });
+      }
+    } catch (error) {
+      console.error('Error setting player availability:', error);
+      res.status(500).json({ message: "Failed to set player availability" });
+    }
+  });
+  
+  // Update individual player availability
+  app.patch("/api/games/:gameId/availability/:playerId", async (req, res) => {
+    try {
+      const gameId = Number(req.params.gameId);
+      const playerId = Number(req.params.playerId);
+      const { isAvailable } = req.body;
+      
+      if (typeof isAvailable !== 'boolean') {
+        return res.status(400).json({ message: "isAvailable must be a boolean" });
+      }
+      
+      const { playerAvailabilityStorage } = await import('./player-availability-storage');
+      const success = await playerAvailabilityStorage.updatePlayerAvailability(gameId, playerId, isAvailable);
+      
+      if (success) {
+        res.json({ message: "Player availability updated successfully" });
+      } else {
+        res.status(500).json({ message: "Failed to update player availability" });
+      }
+    } catch (error) {
+      console.error('Error updating individual player availability:', error);
+      res.status(500).json({ message: "Failed to update player availability" });
+    }
+  });
+
   // ----- GAME STATS API -----
   // Batch endpoint to get stats for multiple games at once
   app.get("/api/games/stats/batch", async (req, res) => {
