@@ -127,30 +127,20 @@ export default function GamesList({ games, opponents, className }: GamesListProp
     return games?.filter(game => game.completed) || [];
   }, [games]);
 
-  // Clear cache for any games that might have stale data when component mounts
+  // Use the games scores hook to get scores for all completed games
+  // Force fresh data to ensure we get updated scores after navigation
+  const { scoresMap, isLoading: isLoadingScores, invalidateAll: invalidateAllScores } = useGamesScores(
+    completedGames.map(g => g.id),
+    true // Force fresh data to handle navigation from game status updates
+  );
+
+  // Clear local cache when component mounts to ensure fresh data
   useEffect(() => {
-    // When navigating back to games list, clear cache for any recently updated games
-    // This ensures we get fresh scores if a game status was just changed
+    // Clear cache for completed games to force fresh calculation
     completedGames.forEach(game => {
-      // Clear the cache to force fresh calculation
       clearGameCache(game.id);
     });
-  }, [completedGames]);
-
-  // Force fresh scores when component mounts to handle navigation from game status updates
-  useEffect(() => {
-    // When navigating to games list, we want to ensure fresh scores
-    // especially if coming from a game status change
-    if (completedGames.length > 0) {
-      // Force refresh of scores to ensure we get updated data
-      invalidateAllScores();
-    }
   }, []); // Only run on mount
-
-  // Use the games scores hook to get scores for all completed games
-  const { scoresMap, isLoading: isLoadingScores, invalidateAll: invalidateAllScores } = useGamesScores(
-    completedGames.map(g => g.id)
-  );
 
   return (
     <Card className={className}>
