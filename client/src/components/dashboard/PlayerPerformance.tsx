@@ -7,6 +7,7 @@ import { cn, getInitials } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
+import { useBatchGameStatistics } from '@/components/statistics/hooks/useBatchGameStatistics';
 
 interface PlayerPerformanceProps {
   players: Player[];
@@ -74,38 +75,8 @@ export default function PlayerPerformance({ players, games, className, seasonFil
   const gameIds = completedGames.map(game => game.id);
   const enableQuery = gameIds.length > 0;
 
-  // Use React Query to fetch and cache game statistics and rosters
-  const { data: gameStatsMap, isLoading: isLoadingStats } = useQuery<Record<number, GameStat[]>>({
-    queryKey: ['playerPerformanceGameStats', ...gameIds, statsKey],
-    queryFn: async () => {
-      if (gameIds.length === 0) {
-        return {};
-      }
-
-      console.log(`PlayerPerformance loading stats for ${gameIds.length} games individually`);
-
-      // Fetch stats for each completed game individually
-      const statsPromises = gameIds.map(async (gameId: number) => {
-        try {
-          const response = await fetch(`/api/games/${gameId}/stats`);
-          if (!response.ok) {
-            console.warn(`Failed to fetch stats for game ${gameId}: ${response.status}`);
-            return { gameId, stats: [] };
-          }
-          const stats = await response.json();
-          return { gameId, stats };
-        } catch (error) {
-          console.warn(`Error fetching stats for game ${gameId}:`, error);
-          return { gameId, stats: [] };
-        }
-      });
-      return {};
-    },
-    enabled: enableQuery,
-    staleTime: 60000, // 1 minute
-    gcTime: 15 * 60 * 1000,
-    refetchOnWindowFocus: false
-  });
+  // Use the batch stats hook instead of individual requests
+  const { statsMap: gameStatsMap, isLoading: isLoadingStats } = useBatchGameStatistics(gameIds, false);
 
   // Fetch roster data for tracking games played
   const { data: gameRostersMap, isLoading: isLoadingRosters } = useQuery({
