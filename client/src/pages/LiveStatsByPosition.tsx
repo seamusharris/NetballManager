@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { GameStat, Position, allPositions, Opponent, Game, Player, Roster } from '@shared/schema';
-import { POSITION_NAMES, STAT_LABELS, STAT_COLORS } from '@/lib/constants';
+import { POSITION_NAMES, STAT_LABELS, STAT_COLORS, EMPTY_POSITION_STATS, COMMON_STATS } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
 import { 
   Card, 
@@ -21,24 +21,8 @@ import { Plus, Minus, ArrowLeft, Save, Undo, Redo } from 'lucide-react';
 type StatType = 'goalsFor' | 'goalsAgainst' | 'missedGoals' | 'rebounds' | 
                 'intercepts' | 'badPass' | 'handlingError' | 'pickUp' | 'infringement';
 
-// Default empty stats for a position
-const emptyPositionStats = {
-  goalsFor: 0,
-  goalsAgainst: 0,
-  missedGoals: 0,
-  rebounds: 0,
-  intercepts: 0,
-  badPass: 0,
-  handlingError: 0,
-  pickUp: 0,
-  infringement: 0
-};
-
-
-
-
-
-
+// Use constants from centralized location
+const emptyPositionStats = EMPTY_POSITION_STATS;
 
 // Common stats that should appear in the top row for every position
 const commonStats: StatType[] = [
@@ -77,52 +61,52 @@ export default function LiveStatsByPosition() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  
+
   // State variables - must declare all state first
   const [currentQuarter, setCurrentQuarter] = useState<number>(1);
   const [stats, setStats] = useState<PositionStats>({});
   const [undoStack, setUndoStack] = useState<HistoryRecord[]>([]);
   const [redoStack, setRedoStack] = useState<HistoryRecord[]>([]);
   const [saveInProgress, setSaveInProgress] = useState<boolean>(false);
-  
+
   // Queries - must declare all queries after state
   const { data: game, isLoading: isLoadingGame } = useQuery<Game>({
     queryKey: ['/api/games', gameId],
     queryFn: () => apiRequest('GET', `/api/games/${gameId}`),
     enabled: !!gameId && !isNaN(gameId)
   });
-  
+
   const { data: opponent, isLoading: isLoadingOpponent } = useQuery<Opponent>({
     queryKey: ['/api/opponents', game?.opponentId],
     queryFn: () => apiRequest('GET', `/api/opponents/${game?.opponentId}`),
     enabled: !!game?.opponentId
   });
-  
+
   const { data: rosters = [], isLoading: isLoadingRoster } = useQuery<Roster[]>({
     queryKey: ['/api/games', gameId, 'rosters'],
     queryFn: () => apiRequest('GET', `/api/games/${gameId}/rosters`),
     enabled: !!gameId && !isNaN(gameId)
   });
-  
+
   const { data: players = [], isLoading: isLoadingPlayers } = useQuery<Player[]>({
     queryKey: ['/api/players'],
     queryFn: () => apiRequest('GET', '/api/players'),
     enabled: true
   });
-  
+
   const { data: existingStats = [], isLoading: isLoadingStats } = useQuery<GameStat[]>({
     queryKey: ['/api/games', gameId, 'stats'],
     queryFn: () => apiRequest('GET', `/api/games/${gameId}/stats`),
     enabled: !!gameId && !isNaN(gameId)
   });
-  
+
   // Initialize stats from existing data
   useEffect(() => {
     if (existingStats && existingStats.length > 0) {
       console.log(`Initializing LiveStatsByPosition with ${existingStats.length} existing stats`);
-      
+
       const initialStats: PositionStats = {};
-      
+
       // Initialize positions and quarters
       allPositions.forEach(position => {
         initialStats[position] = {};
@@ -130,15 +114,15 @@ export default function LiveStatsByPosition() {
           initialStats[position][q.toString()] = { ...emptyPositionStats };
         }
       });
-      
+
       // Apply existing stats
       existingStats.forEach((stat: GameStat) => {
         if (stat.position && stat.quarter >= 1 && stat.quarter <= 4) {
           const position = stat.position;
           const quarter = stat.quarter.toString();
-          
+
           console.log(`Found stat for ${position} in Q${quarter}: Goals: ${stat.goalsFor}, Against: ${stat.goalsAgainst}`);
-          
+
           // Make sure the position and quarter exist
           if (!initialStats[position]) {
             initialStats[position] = {};
@@ -146,14 +130,14 @@ export default function LiveStatsByPosition() {
           if (!initialStats[position][quarter]) {
             initialStats[position][quarter] = { ...emptyPositionStats };
           }
-          
+
           // Copy all stat values to our structure
           Object.keys(emptyPositionStats).forEach(key => {
             const statKey = key as StatType;
             if (stat[statKey] !== undefined && stat[statKey] !== null) {
               const value = typeof stat[statKey] === 'number' ? stat[statKey] as number : 0;
               initialStats[position][quarter][statKey] = value;
-              
+
               // Log non-zero values
               if (value > 0) {
                 console.log(`Setting ${statKey} = ${value} for ${position} in Q${quarter}`);
@@ -162,71 +146,71 @@ export default function LiveStatsByPosition() {
           });
         }
       });
-      
+
       setStats(initialStats);
     }
   }, [existingStats]);
-  
+
   // Get player name for a position in the current quarter
   const getPlayerForPosition = (position: Position): string => {
     if (!rosters || rosters.length === 0) {
       return position; 
     }
-    
+
     // Find roster entry for this position and quarter
     const rosterEntry = rosters.find(r => 
       r.position === position && r.quarter === currentQuarter
     );
-    
+
     if (!rosterEntry) {
       return position;
     }
-    
+
     // Find the player from the players array
     const player = players.find(p => p.id === rosterEntry.playerId);
     if (!player) {
       return position;
     }
-    
+
     return player.displayName;
   };
-  
+
   // Save current state to undo stack
   const addToUndoStack = () => {
     setUndoStack(prev => [...prev, JSON.parse(JSON.stringify(stats))]);
     setRedoStack([]);
   };
-  
+
   // Undo the last action
   const handleUndo = () => {
     if (undoStack.length === 0) return;
-    
+
     const prevState = undoStack[undoStack.length - 1];
     setRedoStack(prev => [JSON.parse(JSON.stringify(stats)), ...prev]);
     setStats(prevState);
     setUndoStack(prev => prev.slice(0, -1));
   };
-  
+
   // Redo the last undone action
   const handleRedo = () => {
     if (redoStack.length === 0) return;
-    
+
     const nextState = redoStack[0];
     setUndoStack(prev => [...prev, JSON.parse(JSON.stringify(stats))]);
     setStats(nextState);
     setRedoStack(prev => prev.slice(1));
   };
-  
+
   // Update a stat value
   const updateStat = (position: Position, stat: StatType, increment: number = 1) => {
     // Save current state for undo
     addToUndoStack();
-    
+
     // Update the stat
     setStats(prevStats => {
       const newStats = JSON.parse(JSON.stringify(prevStats));
       const quarter = currentQuarter.toString();
-      
+
       // Ensure position and quarter exist
       if (!newStats[position]) {
         newStats[position] = {};
@@ -234,38 +218,38 @@ export default function LiveStatsByPosition() {
       if (!newStats[position][quarter]) {
         newStats[position][quarter] = { ...emptyPositionStats };
       }
-      
+
       // Calculate new value (prevent negative values)
       const currentValue = newStats[position][quarter][stat] || 0;
       newStats[position][quarter][stat] = Math.max(0, currentValue + increment);
-      
+
       return newStats;
     });
   };
-  
+
   // Simple direct update function that doesn't use React Query
   const updateGameStat = async (id: number, data: any): Promise<boolean> => {
     try {
       console.log(`Updating stat ID ${id}:`, data);
-      
+
       const response = await apiRequest('PATCH', `/api/game-stats/${id}`, data);
-      
+
       if (!response.ok) {
         console.error(`API error: ${response.status} ${response.statusText}`);
         return false;
       }
-      
+
       return true;
     } catch (error) {
       console.error(`Error updating stat ${id}:`, error);
       return false;
     }
   };
-  
+
   // Updated function to save all stats using our corrected utility
   const saveAllStats = async () => {
     if (saveInProgress) return;
-    
+
     try {
       setSaveInProgress(true);
       toast({
@@ -275,30 +259,30 @@ export default function LiveStatsByPosition() {
 
       // Import our new fixed utility
       const { savePositionStat } = await import('@/lib/emerStats');
-      
+
       console.log('Starting stat save with fixed endpoint URLs');
-      
+
       // Track our success/failure count
       let successCount = 0;
       let failureCount = 0;
       let totalChanges = 0;
-      
+
       // Process each position and quarter
       for (const position of allPositions) {
         for (let quarter = 1; quarter <= 4; quarter++) {
           const currentStat = stats[position]?.[quarter.toString()];
           if (!currentStat) continue;
-          
+
           // Check if any value is non-zero (counts as a change)
           const hasNonZeroValue = Object.values(currentStat).some(val => 
             typeof val === 'number' && val > 0
           );
-          
+
           if (!hasNonZeroValue) continue; // Skip empty stats
-          
+
           console.log(`Processing ${position} Q${quarter} stats`);
           totalChanges++;
-          
+
           // Build the update payload - include all fields
           const payload = {
             goalsFor: currentStat.goalsFor || 0,
@@ -311,10 +295,10 @@ export default function LiveStatsByPosition() {
             pickUp: currentStat.pickUp || 0,
             infringement: currentStat.infringement || 0
           };
-          
+
           // Use our new utility that handles both create and update
           const success = await savePositionStat(gameId, position, quarter, payload);
-          
+
           if (success) {
             successCount++;
           } else {
@@ -322,7 +306,7 @@ export default function LiveStatsByPosition() {
           }
         }
       }
-      
+
       // Show result toast
       if (totalChanges === 0) {
         toast({
@@ -335,7 +319,7 @@ export default function LiveStatsByPosition() {
           description: `Successfully saved ${successCount} of ${totalChanges} stat updates.`,
           variant: "default"
         });
-        
+
         // Refresh data to show the latest stats
         await queryClient.invalidateQueries({ queryKey: ['/api/games', gameId, 'stats'] });
       } else {
@@ -345,7 +329,7 @@ export default function LiveStatsByPosition() {
           variant: "destructive"
         });
       }
-      
+
     } catch (error) {
       console.error("Error saving stats:", error);
       toast({
@@ -357,20 +341,20 @@ export default function LiveStatsByPosition() {
       setSaveInProgress(false);
     }
   };
-  
+
   // Render a stat counter with +/- buttons
   const renderStatCounter = (position: Position, stat: StatType, hideButtons: boolean = false, isBold: boolean = false) => {
     // Get current value for this stat
     const quarterKey = currentQuarter.toString();
     const currentValue = stats[position]?.[quarterKey]?.[stat] || 0;
-    
+
     return (
       <div className="flex flex-col items-center">
         <div className={`text-center p-2 rounded-lg w-full ${STAT_COLORS[stat]}`}>
           <p className={`text-xs ${isBold ? 'font-bold' : ''}`}>{STAT_LABELS[stat]}</p>
           <p className={`text-xl ${isBold ? 'font-bold' : ''}`}>{currentValue}</p>
         </div>
-        
+
         {!hideButtons && (
           <div className="flex justify-between w-full mt-1">
             <Button 
@@ -395,7 +379,7 @@ export default function LiveStatsByPosition() {
       </div>
     );
   };
-  
+
   // Loading state
   const isLoading = isLoadingGame || isLoadingOpponent || isLoadingStats || isLoadingRoster || isLoadingPlayers;
   if (isLoading) {
@@ -410,7 +394,7 @@ export default function LiveStatsByPosition() {
       </div>
     );
   }
-  
+
   // Game not found state
   if (!game) {
     return (
@@ -421,7 +405,7 @@ export default function LiveStatsByPosition() {
       </div>
     );
   }
-  
+
   return (
     <div className="container py-3 px-2 md:py-4 md:px-4">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-3 gap-1">
@@ -431,7 +415,7 @@ export default function LiveStatsByPosition() {
             {game.date} - {opponent?.teamName || 'Unknown Opponent'}
           </p>
         </div>
-        
+
         <div className="flex gap-2 mt-2 md:mt-0">
           <Button 
             variant="outline" 
@@ -441,7 +425,7 @@ export default function LiveStatsByPosition() {
             <ArrowLeft className="mr-1 h-4 w-4" />
             Back to Games
           </Button>
-          
+
           <Button 
             variant="outline" 
             size="sm"
@@ -451,7 +435,7 @@ export default function LiveStatsByPosition() {
             <Undo className="mr-1 h-4 w-4" />
             Undo
           </Button>
-          
+
           <Button 
             variant="outline" 
             size="sm"
@@ -461,7 +445,7 @@ export default function LiveStatsByPosition() {
             <Redo className="mr-1 h-4 w-4" />
             Redo
           </Button>
-          
+
           <Button 
             variant="default" 
             size="sm"
@@ -473,7 +457,7 @@ export default function LiveStatsByPosition() {
           </Button>
         </div>
       </div>
-      
+
       {/* Live Score Tracking */}
       <div className="bg-white rounded-lg shadow-md p-3 mb-4">
         <div className="grid grid-cols-5 gap-2">
@@ -482,7 +466,7 @@ export default function LiveStatsByPosition() {
           <div className="text-center font-semibold">Q2</div>
           <div className="text-center font-semibold">Q3</div>
           <div className="text-center font-semibold">Q4</div>
-          
+
           {/* Our team score */}
           <div className="text-left font-bold">Our Team</div>
           <div className="text-center font-bold bg-blue-50 rounded py-1">
@@ -505,7 +489,7 @@ export default function LiveStatsByPosition() {
               return sum + (pos['4']?.goalsFor || 0);
             }, 0)}
           </div>
-          
+
           {/* Opponent team score */}
           <div className="text-left font-bold">{opponent?.teamName || 'Opponent'}</div>
           <div className="text-center font-bold bg-red-50 rounded py-1">
@@ -529,7 +513,7 @@ export default function LiveStatsByPosition() {
             }, 0)}
           </div>
         </div>
-        
+
         {/* Total Score */}
         <div className="mt-3 flex justify-center items-center gap-3">
           <div className="text-center">
@@ -556,7 +540,7 @@ export default function LiveStatsByPosition() {
           </div>
         </div>
       </div>
-      
+
       <Tabs value={currentQuarter.toString()} onValueChange={(v) => setCurrentQuarter(parseInt(v))}>
         <TabsList className="grid grid-cols-4 mb-4">
           <TabsTrigger value="1">Quarter 1</TabsTrigger>
@@ -565,7 +549,7 @@ export default function LiveStatsByPosition() {
           <TabsTrigger value="4">Quarter 4</TabsTrigger>
         </TabsList>
       </Tabs>
-      
+
       {/* Position cards - each in its own full-width row */}
       <div className="grid grid-cols-1 gap-4">
         {/* GS Position Card */}
@@ -576,12 +560,12 @@ export default function LiveStatsByPosition() {
                 <div className="bg-blue-500 text-white font-bold h-8 w-8 rounded-full flex items-center justify-center">
                   GS
                 </div>
-                
+
                 <div className="min-w-[60px]">
                   <p className="font-semibold text-sm">{getPlayerForPosition("GS")}</p>
                 </div>
               </div>
-              
+
               {/* Common stats - show all for every position */}
               <div className="flex-1 flex flex-wrap gap-2">
                 {commonStats.map(stat => (
@@ -592,7 +576,7 @@ export default function LiveStatsByPosition() {
               </div>
             </div>
           </CardHeader>
-          
+
           {/* Position-specific stats for GS */}
           <CardContent className="py-2 pt-1">
             <div className="flex justify-center gap-3 flex-wrap">
@@ -608,7 +592,7 @@ export default function LiveStatsByPosition() {
             </div>
           </CardContent>
         </Card>
-        
+
         {/* GA Position Card */}
         <Card className="flex flex-col">
           <CardHeader className="py-3 px-3">
@@ -617,12 +601,12 @@ export default function LiveStatsByPosition() {
                 <div className="bg-blue-500 text-white font-bold h-8 w-8 rounded-full flex items-center justify-center">
                   GA
                 </div>
-                
+
                 <div className="min-w-[60px]">
                   <p className="font-semibold text-sm">{getPlayerForPosition("GA")}</p>
                 </div>
               </div>
-              
+
               {/* Common stats - show all for every position */}
               <div className="flex-1 flex flex-wrap gap-2">
                 {commonStats.map(stat => (
@@ -633,7 +617,7 @@ export default function LiveStatsByPosition() {
               </div>
             </div>
           </CardHeader>
-          
+
           {/* Position-specific stats for GA */}
           <CardContent className="py-2 pt-1">
             <div className="flex justify-center gap-3 flex-wrap">
@@ -649,7 +633,7 @@ export default function LiveStatsByPosition() {
             </div>
           </CardContent>
         </Card>
-        
+
         {/* WA Position Card */}
         <Card className="flex flex-col">
           <CardHeader className="py-3 px-3">
@@ -658,12 +642,12 @@ export default function LiveStatsByPosition() {
                 <div className="bg-blue-500 text-white font-bold h-8 w-8 rounded-full flex items-center justify-center">
                   WA
                 </div>
-                
+
                 <div className="min-w-[60px]">
                   <p className="font-semibold text-sm">{getPlayerForPosition("WA")}</p>
                 </div>
               </div>
-              
+
               {/* Common stats - show all for every position */}
               <div className="flex-1 flex flex-wrap gap-2">
                 {commonStats.map(stat => (
@@ -675,7 +659,7 @@ export default function LiveStatsByPosition() {
             </div>
           </CardHeader>
         </Card>
-        
+
         {/* C Position Card */}
         <Card className="flex flex-col">
           <CardHeader className="py-3 px-3">
@@ -684,12 +668,12 @@ export default function LiveStatsByPosition() {
                 <div className="bg-blue-500 text-white font-bold h-8 w-8 rounded-full flex items-center justify-center">
                   C
                 </div>
-                
+
                 <div className="min-w-[60px]">
                   <p className="font-semibold text-sm">{getPlayerForPosition("C")}</p>
                 </div>
               </div>
-              
+
               {/* Common stats - show all for every position */}
               <div className="flex-1 flex flex-wrap gap-2">
                 {commonStats.map(stat => (
@@ -701,7 +685,7 @@ export default function LiveStatsByPosition() {
             </div>
           </CardHeader>
         </Card>
-        
+
         {/* WD Position Card */}
         <Card className="flex flex-col">
           <CardHeader className="py-3 px-3">
@@ -710,12 +694,12 @@ export default function LiveStatsByPosition() {
                 <div className="bg-blue-500 text-white font-bold h-8 w-8 rounded-full flex items-center justify-center">
                   WD
                 </div>
-                
+
                 <div className="min-w-[60px]">
                   <p className="font-semibold text-sm">{getPlayerForPosition("WD")}</p>
                 </div>
               </div>
-              
+
               {/* Common stats - show all for every position */}
               <div className="flex-1 flex flex-wrap gap-2">
                 {commonStats.map(stat => (
@@ -727,7 +711,7 @@ export default function LiveStatsByPosition() {
             </div>
           </CardHeader>
         </Card>
-        
+
         {/* GD Position Card */}
         <Card className="flex flex-col">
           <CardHeader className="py-3 px-3">
@@ -736,12 +720,12 @@ export default function LiveStatsByPosition() {
                 <div className="bg-blue-500 text-white font-bold h-8 w-8 rounded-full flex items-center justify-center">
                   GD
                 </div>
-                
+
                 <div className="min-w-[60px]">
                   <p className="font-semibold text-sm">{getPlayerForPosition("GD")}</p>
                 </div>
               </div>
-              
+
               {/* Common stats - show all for every position */}
               <div className="flex-1 flex flex-wrap gap-2">
                 {commonStats.map(stat => (
@@ -752,7 +736,7 @@ export default function LiveStatsByPosition() {
               </div>
             </div>
           </CardHeader>
-          
+
           {/* Position-specific stats for GD */}
           <CardContent className="py-2 pt-1">
             <div className="flex justify-center gap-3 flex-wrap">
@@ -765,7 +749,7 @@ export default function LiveStatsByPosition() {
             </div>
           </CardContent>
         </Card>
-        
+
         {/* GK Position Card */}
         <Card className="flex flex-col">
           <CardHeader className="py-3 px-3">
@@ -774,12 +758,12 @@ export default function LiveStatsByPosition() {
                 <div className="bg-blue-500 text-white font-bold h-8 w-8 rounded-full flex items-center justify-center">
                   GK
                 </div>
-                
+
                 <div className="min-w-[60px]">
                   <p className="font-semibold text-sm">{getPlayerForPosition("GK")}</p>
                 </div>
               </div>
-              
+
               {/* Common stats - show all for every position */}
               <div className="flex-1 flex flex-wrap gap-2">
                 {commonStats.map(stat => (
@@ -790,7 +774,7 @@ export default function LiveStatsByPosition() {
               </div>
             </div>
           </CardHeader>
-          
+
           {/* Position-specific stats for GK */}
           <CardContent className="py-2 pt-1">
             <div className="flex justify-center gap-3 flex-wrap">

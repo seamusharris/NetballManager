@@ -76,6 +76,7 @@ export const STAT_LABELS: Record<string, string> = {
 
 // Stat colors for UI components
 export const STAT_COLORS: Record<string, string> = {
+  goals: 'bg-green-100 hover:bg-green-200 text-green-700',
   goalsFor: 'bg-green-100 hover:bg-green-200 text-green-700',
   missedGoals: 'bg-orange-100 hover:bg-orange-200 text-orange-700',
   goalsAgainst: 'bg-red-100 hover:bg-red-200 text-red-700',
@@ -85,6 +86,78 @@ export const STAT_COLORS: Record<string, string> = {
   badPass: 'bg-amber-100 hover:bg-amber-200 text-amber-700',
   handlingError: 'bg-pink-100 hover:bg-pink-200 text-pink-700',
   infringement: 'bg-rose-100 hover:bg-rose-200 text-rose-700'
+};
+
+// Stat category types
+export type StatCategory = 
+  | 'goals'           // Goals scored
+  | 'missedGoals'     // Missed shot attempts 
+  | 'goalsAgainst'    // Goals conceded
+  | 'rebounds'        // Ball rebounds
+  | 'intercepts'      // Intercepting passes
+  | 'pickUp'          // Picking up loose balls
+  | 'badPass'         // Passes that miss target
+  | 'handlingError'   // Fumbles, drops, stepping
+  | 'infringement';   // Rules violations/penalties
+
+// Common stats that appear for all positions
+export const COMMON_STATS: StatCategory[] = [
+  'intercepts',
+  'pickUp', 
+  'badPass',
+  'handlingError',
+  'infringement'
+];
+
+// Default empty stats structure
+export const EMPTY_POSITION_STATS = {
+  goalsFor: 0,
+  goalsAgainst: 0,
+  missedGoals: 0,
+  rebounds: 0,
+  intercepts: 0,
+  badPass: 0,
+  handlingError: 0,
+  pickUp: 0,
+  infringement: 0
+};
+
+// Full mapping of which stats are available for each position
+export const POSITION_STATS: Record<Position, StatCategory[]> = {
+  // Attack positions
+  'GS': ['goals', 'missedGoals', 'rebounds', 'intercepts', 'pickUp', 'badPass', 'handlingError', 'infringement'],
+  'GA': ['goals', 'missedGoals', 'rebounds', 'intercepts', 'pickUp', 'badPass', 'handlingError', 'infringement'],
+  
+  // Mid-court positions
+  'WA': ['intercepts', 'pickUp', 'badPass', 'handlingError', 'infringement'],
+  'C': ['intercepts', 'pickUp', 'badPass', 'handlingError', 'infringement'],
+  'WD': ['intercepts', 'pickUp', 'badPass', 'handlingError', 'infringement'],
+  
+  // Defense positions
+  'GD': ['goalsAgainst', 'rebounds', 'intercepts', 'pickUp', 'badPass', 'handlingError', 'infringement'],
+  'GK': ['goalsAgainst', 'rebounds', 'intercepts', 'pickUp', 'badPass', 'handlingError', 'infringement'],
+};
+
+// Primary stats to emphasize for each position (what they're most responsible for)
+export const PRIMARY_POSITION_STATS: Record<Position, StatCategory[]> = {
+  'GS': ['goals', 'missedGoals', 'rebounds'],
+  'GA': ['goals', 'missedGoals', 'rebounds'],
+  'WA': ['intercepts', 'pickUp', 'badPass'],
+  'C': ['intercepts', 'pickUp', 'badPass'],
+  'WD': ['intercepts', 'pickUp', 'badPass'],
+  'GD': ['goalsAgainst', 'rebounds', 'intercepts'],
+  'GK': ['goalsAgainst', 'rebounds', 'intercepts'],
+};
+
+// Secondary stats that are still tracked but less emphasized
+export const SECONDARY_POSITION_STATS: Record<Position, StatCategory[]> = {
+  'GS': ['intercepts', 'pickUp', 'badPass', 'handlingError', 'infringement'],
+  'GA': ['intercepts', 'pickUp', 'badPass', 'handlingError', 'infringement'],
+  'WA': ['handlingError', 'infringement'],
+  'C': ['handlingError', 'infringement'],
+  'WD': ['handlingError', 'infringement'],
+  'GD': ['pickUp', 'badPass', 'handlingError', 'infringement'],
+  'GK': ['pickUp', 'badPass', 'handlingError', 'infringement'],
 };
 
 // Export/Import constants

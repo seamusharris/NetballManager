@@ -48,8 +48,10 @@ interface CachedScoreEntry {
 // In-memory cache that persists across component renders and page navigation
 const globalScoresCache: Record<number, CachedScoreEntry> = {};
 
-// Cache expiration time (30 minutes)
-const CACHE_EXPIRATION = 30 * 60 * 1000;
+import { CACHE_SETTINGS } from './constants';
+
+// Cache expiration time from constants
+const CACHE_EXPIRATION = CACHE_SETTINGS.SCORE_CACHE_EXPIRATION;
 
 /**
  * Generate a simple hash from stats to detect changes

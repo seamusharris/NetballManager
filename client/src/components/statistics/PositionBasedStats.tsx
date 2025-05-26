@@ -31,87 +31,25 @@ const emptyPositionStats = {
 
 
 
-import { STAT_LABELS, STAT_COLORS } from '@/lib/constants';
+import { STAT_LABELS, STAT_COLORS, POSITION_STATS, StatCategory } from '@/lib/constants';
 
-// Which stats should be shown for each position
-const positionStats: Record<Position, Record<StatType, boolean>> = {
-  "GS": {
-    goalsFor: true,
-    goalsAgainst: false,
-    missedGoals: true,
-    rebounds: true,
-    intercepts: false,
-    badPass: true,
-    handlingError: true,
-    pickUp: false,
-    infringement: true
-  },
-  "GA": {
-    goalsFor: true,
-    goalsAgainst: false,
-    missedGoals: true,
-    rebounds: true,
-    intercepts: true,
-    badPass: true,
-    handlingError: true,
-    pickUp: false,
-    infringement: true
-  },
-  "WA": {
-    goalsFor: false,
-    goalsAgainst: false,
-    missedGoals: false,
-    rebounds: false,
-    intercepts: true,
-    badPass: true,
-    handlingError: true,
-    pickUp: true,
-    infringement: true
-  },
-  "C": {
-    goalsFor: false,
-    goalsAgainst: false,
-    missedGoals: false,
-    rebounds: false,
-    intercepts: true,
-    badPass: true,
-    handlingError: true,
-    pickUp: true,
-    infringement: true
-  },
-  "WD": {
-    goalsFor: false,
-    goalsAgainst: false,
-    missedGoals: false,
-    rebounds: false,
-    intercepts: true,
-    badPass: true,
-    handlingError: true,
-    pickUp: true,
-    infringement: true
-  },
-  "GD": {
-    goalsFor: false,
-    goalsAgainst: false,
-    missedGoals: false,
-    rebounds: true,
-    intercepts: true,
-    badPass: true,
-    handlingError: true,
-    pickUp: true,
-    infringement: true
-  },
-  "GK": {
-    goalsFor: false,
-    goalsAgainst: true,
-    missedGoals: false,
-    rebounds: true,
-    intercepts: true,
-    badPass: true,
-    handlingError: true,
-    pickUp: true,
-    infringement: true
-  }
+// Helper function to check if a position has a specific stat
+const positionHasStat = (position: Position, stat: StatType): boolean => {
+  // Map StatType to StatCategory for consistency
+  const statMap: Record<StatType, StatCategory> = {
+    goalsFor: 'goals',
+    goalsAgainst: 'goalsAgainst',
+    missedGoals: 'missedGoals',
+    rebounds: 'rebounds',
+    intercepts: 'intercepts',
+    badPass: 'badPass',
+    handlingError: 'handlingError',
+    pickUp: 'pickUp',
+    infringement: 'infringement'
+  };
+  
+  const mappedStat = statMap[stat];
+  return POSITION_STATS[position]?.includes(mappedStat) || false;
 };
 
 interface PositionBasedStatsProps {
@@ -421,7 +359,7 @@ const PositionBasedStats: React.FC<PositionBasedStatsProps> = ({
   // Render a button for adjusting a stat
   const renderStatAdjuster = (position: Position, statType: StatType) => {
     // Skip stats that don't apply to this position
-    if (!positionStats[position][statType]) {
+    if (!positionHasStat(position, statType)) {
       return null;
     }
     
@@ -461,36 +399,10 @@ const PositionBasedStats: React.FC<PositionBasedStatsProps> = ({
         <CardContent className="p-4">
           <h3 className="text-lg font-bold mb-2">{position}</h3>
           <div className="grid grid-cols-1">
-            {/* Shooting stats */}
-            {positionStats[position].goalsFor && (
-              renderStatAdjuster(position, 'goalsFor')
-            )}
-            {positionStats[position].missedGoals && (
-              renderStatAdjuster(position, 'missedGoals')
-            )}
-            {positionStats[position].goalsAgainst && (
-              renderStatAdjuster(position, 'goalsAgainst')
-            )}
-            {positionStats[position].rebounds && (
-              renderStatAdjuster(position, 'rebounds')
-            )}
-            
-            {/* Common stats */}
-            {positionStats[position].intercepts && (
-              renderStatAdjuster(position, 'intercepts')
-            )}
-            {positionStats[position].badPass && (
-              renderStatAdjuster(position, 'badPass')
-            )}
-            {positionStats[position].handlingError && (
-              renderStatAdjuster(position, 'handlingError')
-            )}
-            {positionStats[position].pickUp && (
-              renderStatAdjuster(position, 'pickUp')
-            )}
-            {positionStats[position].infringement && (
-              renderStatAdjuster(position, 'infringement')
-            )}
+            {/* All stats for this position */}
+            {(['goalsFor', 'missedGoals', 'goalsAgainst', 'rebounds', 'intercepts', 'badPass', 'handlingError', 'pickUp', 'infringement'] as StatType[]).map(statType => 
+              renderStatAdjuster(position, statType)
+            ).filter(Boolean)}
           </div>
         </CardContent>
       </Card>
