@@ -65,6 +65,8 @@ function Router() {
         <Route path="/games/edit/:id" component={withErrorBoundary(Games, 'GameEdit')} />
         <Route path="/game/:id" component={withErrorBoundary(GameDetails, 'GameDetails')} />
         <Route path="/opponents" component={withErrorBoundary(Opponents, 'Opponents')} />
+        <Route path="/opponent-analysis" component={OpponentAnalysis} />
+        <Route path="/opponent-detailed/:opponentId" component={lazy(() => import('./pages/OpponentDetailed'))} />
         <Route path="/statistics" component={withErrorBoundary(Statistics, 'Statistics')} />
         <Route path="/data-management" component={withErrorBoundary(DataManagement, 'DataManagement')} />
         <Route path="/settings" component={withErrorBoundary(Settings, 'Settings')} />
@@ -88,7 +90,6 @@ function Router() {
             </Suspense>
           </ErrorBoundary>
         </Route>
-        <Route path="/opponent-analysis" component={OpponentAnalysis} />
         <Route component={withErrorBoundary(NotFound, 'NotFound')} />
       </Switch>
     </Layout>

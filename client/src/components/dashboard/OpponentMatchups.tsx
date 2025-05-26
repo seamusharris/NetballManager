@@ -153,7 +153,7 @@ export default function OpponentMatchups({
   };
 
   const handleOpponentClick = (opponentId: number) => {
-    navigate(`/opponent-analysis?opponent=${opponentId}`);
+    navigate(`/opponent-detailed/${opponentId}`);
   };
 
   return (
@@ -212,7 +212,7 @@ export default function OpponentMatchups({
                   onClick={() => handleOpponentClick(matchup.opponent.id)}
                 >
                   <div className="flex items-center justify-between mb-3">
-                    <h4 className="font-medium group-hover:text-blue-600 transition-colors">
+                    <h4 className="font-medium">
                       {matchup.opponent.teamName}
                     </h4>
                     <div className="flex items-center gap-2">
@@ -220,7 +220,7 @@ export default function OpponentMatchups({
                       <Badge variant="outline" className="text-xs">
                         {matchup.totalGamesPlayed} games
                       </Badge>
-                      <ChevronRight className="h-4 w-4 text-gray-400 group-hover:text-blue-600 transition-colors" />
+                      <ChevronRight className="h-4 w-4 text-gray-400" />
                     </div>
                   </div>
                   

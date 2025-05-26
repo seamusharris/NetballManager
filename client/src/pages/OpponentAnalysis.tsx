@@ -4,11 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useSearch } from 'wouter';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { TrendingUp, TrendingDown, Target, Trophy, Calendar, BarChart3 } from 'lucide-react';
 import { Game, Opponent, Player } from '@shared/schema';
-import { formatDate, getWinLoseLabel } from '@/lib/utils';
 import OpponentMatchups from '@/components/dashboard/OpponentMatchups';
 import { apiRequest } from '@/lib/apiClient';
 
@@ -137,135 +133,12 @@ export default function OpponentAnalysis() {
         </Select>
       </div>
 
-      <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="detailed" disabled={!selectedOpponentData}>
-            Detailed Analysis
-          </TabsTrigger>
-          <TabsTrigger value="history" disabled={!selectedOpponentData}>
-            Game History
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="overview">
-          <OpponentMatchups 
-            games={filteredGames}
-            opponents={selectedOpponent === 'all' ? opponents : [selectedOpponentData].filter(Boolean)}
-            centralizedStats={centralizedStats}
-            className="w-full"
-          />
-        </TabsContent>
-
-        <TabsContent value="detailed">
-          {detailedStats && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <BarChart3 className="h-5 w-5" />
-                    Head-to-Head Summary
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="text-center">
-                      <p className="text-3xl font-bold text-blue-600">{detailedStats.wins}</p>
-                      <p className="text-sm text-gray-600">Wins</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-3xl font-bold text-red-600">{detailedStats.losses}</p>
-                      <p className="text-sm text-gray-600">Losses</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-3xl font-bold text-yellow-600">{detailedStats.draws}</p>
-                      <p className="text-sm text-gray-600">Draws</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-3xl font-bold text-green-600">{detailedStats.winRate}%</p>
-                      <p className="text-sm text-gray-600">Win Rate</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Performance Metrics</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-600">Average Margin</span>
-                      <span className={`font-semibold ${
-                        detailedStats.avgMargin > 0 ? 'text-green-600' : 
-                        detailedStats.avgMargin < 0 ? 'text-red-600' : 'text-gray-600'
-                      }`}>
-                        {detailedStats.avgMargin > 0 ? '+' : ''}{detailedStats.avgMargin}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-600">Biggest Win</span>
-                      <span className="font-semibold text-green-600">+{detailedStats.biggestWin}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-600">Biggest Loss</span>
-                      <span className="font-semibold text-red-600">-{detailedStats.biggestLoss}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-600">Total Games</span>
-                      <span className="font-semibold">{detailedStats.totalGames}</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-        </TabsContent>
-
-        <TabsContent value="history">
-          {detailedStats && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Calendar className="h-5 w-5" />
-                  Game History vs {selectedOpponentData?.teamName}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3 max-h-96 overflow-y-auto">
-                  {detailedStats.gameResults.map((result) => (
-                    <div key={result.game.id} className="flex items-center justify-between p-3 border rounded-lg">
-                      <div>
-                        <p className="font-medium">{formatDate(result.game.date)}</p>
-                        <p className="text-sm text-gray-600">{result.game.time}</p>
-                      </div>
-                      <div className="text-center">
-                        <p className="font-semibold">
-                          {result.teamScore} - {result.opponentScore}
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          {result.result === 'Win' ? '+' : result.result === 'Loss' ? '' : ''}{result.margin}
-                        </p>
-                      </div>
-                      <Badge 
-                        variant="outline" 
-                        className={
-                          result.result === 'Win' ? 'bg-green-50 text-green-700 border-green-200' :
-                          result.result === 'Loss' ? 'bg-red-50 text-red-700 border-red-200' :
-                          'bg-yellow-50 text-yellow-700 border-yellow-200'
-                        }
-                      >
-                        {result.result}
-                      </Badge>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
-      </Tabs>
+      <OpponentMatchups 
+        games={filteredGames}
+        opponents={selectedOpponent === 'all' ? opponents : [selectedOpponentData].filter(Boolean)}
+        centralizedStats={centralizedStats}
+        className="w-full"
+      />
     </div>
   );
 }
