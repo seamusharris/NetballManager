@@ -12,66 +12,18 @@ interface RecentGamesProps {
   className?: string;
   seasonFilter?: string;
   activeSeason?: any;
+  centralizedStats?: Record<number, any[]>;
 }
 
-export default function RecentGames({ games, opponents, className, seasonFilter, activeSeason }: RecentGamesProps) {
+export default function RecentGames({ games, opponents, className, seasonFilter, activeSeason, centralizedStats }: RecentGamesProps) {
   // Take the 3 most recent completed games
   const recentGames = games
     .filter(game => game.completed)
     .slice(0, 3);
 
-  // Use a single query to fetch stats for all games if there are any
-  const gameIds = recentGames.map(game => game.id);
-  const enableQuery = gameIds.length > 0;
-
-  // Add a state for caching the data that forces component refresh
-  const [refreshToken, setRefreshToken] = useState(Date.now());
-
-  // Force refresh when props change
-  useEffect(() => {
-    setRefreshToken(Date.now());
-  }, [games]);
-
-  // Create a static cache key that doesn't depend on refreshToken
-  // This ensures we use the same cached data across season changes
-  const seasonId = seasonFilter || 'current';
-
-  // Cache game stats using React Query with aggressive caching
-  const { data: allGameStats, isLoading } = useQuery({
-    // Static key that won't change with refreshToken
-    queryKey: ['recentGamesStats', gameIds.join(','), seasonId],
-    queryFn: async () => {
-      if (gameIds.length === 0) {
-        return {};
-      }
-
-      console.log(`Recent Games loading scores for season: ${seasonId}, games: ${gameIds.join(',')}`);
-
-      // Use individual fetches since batch endpoint has issues
-      const statsMap: Record<number, any[]> = {};
-
-      for (const gameId of gameIds) {
-        try {
-          const response = await fetch(`/api/games/${gameId}/stats`);
-          if (response.ok) {
-            const stats = await response.json();
-            statsMap[gameId] = stats;
-          } else {
-            statsMap[gameId] = []; // Empty array for failed fetches
-          }
-        } catch (error) {
-          console.error(`Error fetching stats for game ${gameId}:`, error);
-          statsMap[gameId] = []; // Empty array for failed fetches
-        }
-      }
-
-      console.log(`Recent Games successfully loaded scores for ${Object.keys(statsMap).length} games`);
-      return statsMap;
-    },
-    enabled: enableQuery,
-    staleTime: 60 * 60 * 1000, // Consider data fresh for 60 minutes
-    gcTime: 24 * 60 * 60 * 1000 // Keep data in cache for 24 hours
-  });
+  // Use centralized stats if available, otherwise empty object
+  const allGameStats = centralizedStats || {};
+  const isLoading = !centralizedStats;
 
   const getOpponentName = (opponentId: number | null) => {
     if (!opponentId) return 'Unknown Opponent';

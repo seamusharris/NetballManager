@@ -13,7 +13,7 @@ import GamesList from './GamesList';
 import PerformanceCharts from './PerformanceCharts';
 import { Player, Game, Opponent, Season } from '@shared/schema';
 import { sortByDate } from '@/lib/utils';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, useQuery } from '@tanstack/react-query';
 
 interface DashboardSummaryProps {
   players: Player[];
@@ -90,6 +90,39 @@ export default function DashboardSummary({
   const upcomingGames = sortByDate(sortedGames.filter(game => 
     (game.date >= currentDate && !game.completed)
   ), true);
+
+  // Centralized stats fetching for all games to prevent redundant API calls
+  const allGameIds = filteredGames.map(game => game.id);
+  
+  const { data: centralizedStats, isLoading: statsLoading } = useQuery({
+    queryKey: ['dashboardStats', selectedSeasonId, allGameIds.join(',')],
+    queryFn: async () => {
+      console.log(`Dashboard centralizing stats fetch for ${allGameIds.length} games`);
+      const statsMap: Record<number, any[]> = {};
+      
+      // Fetch stats for all games
+      for (const gameId of allGameIds) {
+        try {
+          const response = await fetch(`/api/games/${gameId}/stats`);
+          if (response.ok) {
+            const stats = await response.json();
+            statsMap[gameId] = stats;
+          } else {
+            statsMap[gameId] = [];
+          }
+        } catch (error) {
+          console.error(`Error fetching stats for game ${gameId}:`, error);
+          statsMap[gameId] = [];
+        }
+      }
+      
+      console.log(`Dashboard centralized fetch completed for ${Object.keys(statsMap).length} games`);
+      return statsMap;
+    },
+    enabled: allGameIds.length > 0,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 15 * 60 * 1000 // 15 minutes
+  });
   
   // Handle refresh button click - with added logging for debugging
   const handleRefresh = () => {
@@ -134,36 +167,66 @@ export default function DashboardSummary({
               games={filteredGames} 
               activeSeason={activeSeason} 
               selectedSeason={selectedSeasonId === 'current' ? 'current' : seasons.find(s => s.id.toString() === selectedSeasonId)} 
+              centralizedStats={centralizedStats}
             />
-            <RecentGames games={pastGames} opponents={opponents} seasonFilter={selectedSeasonId} activeSeason={activeSeason} />
-            <UpcomingGames games={upcomingGames} opponents={opponents} seasonFilter={selectedSeasonId} activeSeason={activeSeason} />
+            <RecentGames 
+              games={pastGames} 
+              opponents={opponents} 
+              seasonFilter={selectedSeasonId} 
+              activeSeason={activeSeason}
+              centralizedStats={centralizedStats}
+            />
+            <UpcomingGames 
+              games={upcomingGames} 
+              opponents={opponents} 
+              seasonFilter={selectedSeasonId} 
+              activeSeason={activeSeason}
+              centralizedStats={centralizedStats}
+            />
           </>
         )}
       </div>
 
       {/* Games List */}
       <div className="grid grid-cols-1 gap-6">
-        {isLoading ? (
+        {isLoading || statsLoading ? (
           <Skeleton className="h-[300px] w-full rounded-lg" />
         ) : (
-          <GamesList games={filteredGames} opponents={opponents} className="w-full" />
+          <GamesList 
+            games={filteredGames} 
+            opponents={opponents} 
+            className="w-full" 
+            centralizedStats={centralizedStats}
+          />
         )}
       </div>
 
       {/* Player Performance Row */}
       <div className="grid grid-cols-1 gap-6">
-        {isLoading ? (
+        {isLoading || statsLoading ? (
           <Skeleton className="h-[300px] w-full rounded-lg" />
         ) : (
-          <PlayerPerformance players={players} games={pastGames} className="w-full" seasonFilter={selectedSeasonId} activeSeason={activeSeason} />
+          <PlayerPerformance 
+            players={players} 
+            games={pastGames} 
+            className="w-full" 
+            seasonFilter={selectedSeasonId} 
+            activeSeason={activeSeason}
+            centralizedStats={centralizedStats}
+          />
         )}
       </div>
 
       {/* Performance Charts */}
-      {isLoading ? (
+      {isLoading || statsLoading ? (
         <Skeleton className="h-[400px] w-full rounded-lg" />
       ) : (
-        <PerformanceCharts games={pastGames} seasonFilter={selectedSeasonId} activeSeason={activeSeason} />
+        <PerformanceCharts 
+          games={pastGames} 
+          seasonFilter={selectedSeasonId} 
+          activeSeason={activeSeason}
+          centralizedStats={centralizedStats}
+        />
       )}
     </div>
   );
