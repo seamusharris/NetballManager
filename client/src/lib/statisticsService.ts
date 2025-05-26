@@ -360,15 +360,15 @@ export interface PlayerPerformance {
 // Export singleton instance
 export const unifiedStatsService = new UnifiedStatisticsService();
 
-// Export the service instance
-export const statisticsService = new UnifiedStatisticsService();
+// Export the service instance (single export)
+export const statisticsService = unifiedStatsService;
 
 /**
  * Utility function to invalidate all caches related to a game
  * Call this after creating, updating, or deleting game stats
  */
 export function invalidateGameCaches(gameId: number): void {
-  statisticsService.invalidateGameStats(gameId);
+  clearGameCache(gameId);
 
   // Also invalidate React Query caches
   import('./queryClient').then(({ queryClient }) => {
@@ -392,14 +392,12 @@ export function invalidateGameCaches(gameId: number): void {
  * Utility to clear all statistics caches
  */
 export function clearAllStatisticsCaches(): void {
-  statisticsService.clearAllCaches();
+  unifiedStatsService.batchCache.clear();
 
   import('./queryClient').then(({ queryClient }) => {
     queryClient.clear();
   });
 }
-// Legacy exports for backward compatibility
-export const statisticsService = unifiedStatsService;
 
 // Calculate game scores from statistics
 export function calculateGameScores(stats: GameStat[]) {
