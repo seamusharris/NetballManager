@@ -23,12 +23,13 @@ import NotFound from "@/pages/not-found";
 
 // Import GameDetails directly for now
 import GameDetails from "./pages/GameDetails";
-import OpponentDetailed from "./pages/OpponentDetailed";
+import OpponentAnalysis from './pages/OpponentAnalysis';
+import OpponentDetailed from '@/pages/OpponentDetailed';
+import Opponents from '@/pages/Opponents';
 
 // Lazy load components
 const StatsDebug = lazy(() => import("./pages/StatsDebug"));
 const PerformanceDemo = lazy(() => import("./pages/PerformanceDemo"));
-import OpponentAnalysis from './pages/OpponentAnalysis';
 
 /**
  * Loading spinner component for suspense fallbacks
@@ -65,9 +66,9 @@ function Router() {
         <Route path="/games" component={withErrorBoundary(Games, 'Games')} />
         <Route path="/games/edit/:id" component={withErrorBoundary(Games, 'GameEdit')} />
         <Route path="/game/:id" component={withErrorBoundary(GameDetails, 'GameDetails')} />
-        <Route path="/opponents" component={withErrorBoundary(Opponents, 'Opponents')} />
         <Route path="/opponent-analysis" component={OpponentAnalysis} />
-        <Route path="/opponent-detailed/:opponentId" component={withErrorBoundary(OpponentDetailed, 'OpponentDetailed')} />
+        <Route path="/opponent-analysis/detailed/:opponentId" component={OpponentDetailed} />
+        <Route path="/opponents" component={Opponents} />
         <Route path="/statistics" component={withErrorBoundary(Statistics, 'Statistics')} />
         <Route path="/data-management" component={withErrorBoundary(DataManagement, 'DataManagement')} />
         <Route path="/settings" component={withErrorBoundary(Settings, 'Settings')} />
