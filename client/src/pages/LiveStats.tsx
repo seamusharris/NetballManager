@@ -750,63 +750,61 @@ export default function LiveStats() {
     }
   };
 
-  // Get quarter total for a specific stat - includes both player and position stats
+  // Get quarter total for a specific stat - prioritizes live stats for immediate updates
   const getQuarterTotal = (stat: StatType): number => {
     let total = 0;
 
-    // For position-based stats, the most accurate way is to get stats directly from existingStats
-    if (existingStats) {
-      existingStats.filter(s => s.quarter === currentQuarter).forEach(statEntry => {
-        if (statEntry[stat] !== undefined) {
-          // Add up stats from all positions for this quarter
-          total += statEntry[stat] || 0;
+    // Always use liveStats first for immediate updates
+    if (Object.keys(liveStats).length > 0) {
+      Object.keys(liveStats).forEach(playerIdStr => {
+        const playerId = parseInt(playerIdStr);
+        const playerStats = liveStats[playerId]?.[currentQuarter];
+        if (playerStats && playerStats[stat] !== undefined) {
+          total += playerStats[stat] || 0;
         }
       });
-
-      console.log(`Total for ${stat} in Q${currentQuarter}: ${total}`);
       return total;
     }
 
-    // Fallback to liveStats if existingStats is unavailable
-    Object.keys(liveStats).forEach(playerIdStr => {
-      const playerId = parseInt(playerIdStr);
-      const playerStats = liveStats[playerId]?.[currentQuarter];
-      if (playerStats && playerStats[stat] !== undefined) {
-        total += playerStats[stat] || 0;
-      }
-    });
+    // Fallback to existingStats only if liveStats is empty
+    if (existingStats) {
+      existingStats.filter(s => s.quarter === currentQuarter).forEach(statEntry => {
+        if (statEntry[stat] !== undefined) {
+          total += statEntry[stat] || 0;
+        }
+      });
+    }
 
     return total;
   };
 
-  // Get game total for a specific stat - includes both player and position stats
+  // Get game total for a specific stat - prioritizes live stats for immediate updates
   const getGameTotal = (stat: StatType): number => {
     let total = 0;
 
-    // For position-based stats, the most accurate way is to get stats directly from existingStats
+    // Always use liveStats first for immediate updates
+    if (Object.keys(liveStats).length > 0) {
+      Object.keys(liveStats).forEach(playerIdStr => {
+        const playerId = parseInt(playerIdStr);
+
+        [1, 2, 3, 4].forEach(quarter => {
+          const playerStats = liveStats[playerId]?.[quarter];
+          if (playerStats && playerStats[stat] !== undefined) {
+            total += playerStats[stat] || 0;
+          }
+        });
+      });
+      return total;
+    }
+
+    // Fallback to existingStats only if liveStats is empty
     if (existingStats) {
-      // Add up all stats across all quarters directly from the position stats in the database
       existingStats.forEach(statEntry => {
         if (statEntry[stat] !== undefined) {
           total += statEntry[stat] || 0;
         }
       });
-
-      console.log(`Game total for ${stat}: ${total}`);
-      return total;
     }
-
-    // Fallback to liveStats if existingStats is unavailable
-    Object.keys(liveStats).forEach(playerIdStr => {
-      const playerId = parseInt(playerIdStr);
-
-      [1, 2, 3, 4].forEach(quarter => {
-        const playerStats = liveStats[playerId]?.[quarter];
-        if (playerStats && playerStats[stat] !== undefined) {
-          total += playerStats[stat] || 0;
-        }
-      });
-    });
 
     return total;
   };
