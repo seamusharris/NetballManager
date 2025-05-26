@@ -45,6 +45,8 @@ export default function BatchScoreDisplay({ games, className }: BatchScoreDispla
       }
       
       try {
+        console.log(`Dashboard batch loading scores for games: ${gameIds.join(',')}`);
+        
         // Use the service to fetch stats in a batch
         const batchStats = await statisticsService.getBatchGameStats(gameIds);
         
@@ -62,8 +64,9 @@ export default function BatchScoreDisplay({ games, className }: BatchScoreDispla
           if (!stats || !stats.length) return;
           
           try {
-            // Calculate scores using the statisticsService to ensure consistency
-            statisticsService.calculateGameScores(game.id, true);
+            // Calculate and cache scores directly instead of calling the service again
+            const scores = statisticsService['calculateScoresFromStats'](stats, game.id);
+            cacheScores(game.id, scores, stats);
           } catch (calcError) {
             console.warn(`Error calculating scores for game ${game.id}:`, calcError);
           }

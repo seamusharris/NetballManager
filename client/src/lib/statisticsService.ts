@@ -42,11 +42,12 @@ class UnifiedStatisticsService {
   private async executeBatchRequest(gameIds: number[]): Promise<Record<number, GameStat[]>> {
     try {
       const idsParam = gameIds.join(',');
+      console.log(`Making batch request for game IDs: ${idsParam}`);
       const statsMap = await apiRequest('GET', `/api/games/stats/batch?gameIds=${idsParam}`);
       console.log(`Batch fetched stats for ${gameIds.length} games`);
       return statsMap;
     } catch (error) {
-      console.warn('Batch fetch failed, falling back to individual requests');
+      console.warn('Batch fetch failed, falling back to individual requests:', error);
       return this.fallbackIndividualFetch(gameIds);
     }
   }
@@ -103,7 +104,7 @@ class UnifiedStatisticsService {
     return scores;
   }
 
-  private calculateScoresFromStats(stats: GameStat[], gameId: number): GameScores {
+  calculateScoresFromStats(stats: GameStat[], gameId: number): GameScores {
     const quarterScores = {
       '1': { for: 0, against: 0 },
       '2': { for: 0, against: 0 },
