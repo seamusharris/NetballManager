@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
@@ -7,8 +6,10 @@ import PlayersList from '@/components/players/PlayersList';
 import PlayerForm from '@/components/players/PlayerForm';
 import SimplePlayerForm from '@/components/players/SimplePlayerForm';
 import PlayerSeasonsManager from '@/components/players/PlayerSeasonsManager';
-import { CrudDialog, FormDialog } from '@/components/ui/crud-dialog';
+import { CrudDialog } from '@/components/ui/crud-dialog';
+import { LoadingState } from '@/components/ui/loading-state';
 import { useCrudMutations } from '@/hooks/use-crud-mutations';
+import { usePlayersQuery, useStandardQuery } from '@/hooks/use-standard-query';
 import { Player, Season } from '@shared/schema';
 import { useLocation } from 'wouter';
 
@@ -22,8 +23,9 @@ export default function Players() {
   const params = new URLSearchParams(location.split('?')[1] || '');
   const editId = params.get('edit');
   
-  const { data: players = [], isLoading } = useQuery<Player[]>({
-    queryKey: ['/api/players'],
+  const { data: players = [], isLoading, error } = usePlayersQuery();
+  const { data: seasons = [] } = useStandardQuery<Season[]>({
+    endpoint: '/api/seasons'
   });
   
   // Find the player to edit if an edit ID is provided in the URL
@@ -35,11 +37,6 @@ export default function Players() {
       }
     }
   }, [editId, players]);
-  
-  // Query to get seasons
-  const { data: seasons = [] } = useQuery<Season[]>({
-    queryKey: ['/api/seasons'],
-  });
   
   // Use standardized CRUD mutations
   const { createMutation, updateMutation, deleteMutation } = useCrudMutations<Player>({
@@ -92,14 +89,16 @@ export default function Players() {
           </Button>
         </div>
         
-        <PlayersList 
-          players={players} 
-          isLoading={isLoading} 
-          onEdit={(player) => setEditingPlayer(player)}
-          onDelete={handleDeletePlayer}
-          onManageSeasons={(player) => setSeasonManagementPlayer(player)}
-          seasons={seasons}
-        />
+        <LoadingState isLoading={isLoading} error={error}>
+          <PlayersList 
+            players={players} 
+            isLoading={isLoading} 
+            onEdit={(player) => setEditingPlayer(player)}
+            onDelete={handleDeletePlayer}
+            onManageSeasons={(player) => setSeasonManagementPlayer(player)}
+            seasons={seasons}
+          />
+        </LoadingState>
         
         {/* Add Player Dialog */}
         <CrudDialog

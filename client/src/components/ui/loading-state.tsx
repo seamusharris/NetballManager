@@ -1,41 +1,53 @@
 
-import { Loader2 } from 'lucide-react';
+import { Loader2, AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription } from './alert';
 
 interface LoadingStateProps {
-  message?: string;
-  size?: 'sm' | 'md' | 'lg';
+  isLoading?: boolean;
+  error?: string | Error | null;
+  children?: React.ReactNode;
+  loadingText?: string;
+  showSpinner?: boolean;
+  className?: string;
 }
 
-export function LoadingState({ message = "Loading...", size = 'md' }: LoadingStateProps) {
+export function LoadingState({
+  isLoading = false,
+  error,
+  children,
+  loadingText = "Loading...",
+  showSpinner = true,
+  className = ""
+}: LoadingStateProps) {
+  if (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    return (
+      <Alert variant="destructive" className={className}>
+        <AlertCircle className="h-4 w-4" />
+        <AlertDescription>{errorMessage}</AlertDescription>
+      </Alert>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className={`flex items-center justify-center p-4 ${className}`}>
+        {showSpinner && <Loader2 className="h-6 w-6 animate-spin mr-2" />}
+        <span className="text-muted-foreground">{loadingText}</span>
+      </div>
+    );
+  }
+
+  return <>{children}</>;
+}
+
+// Simplified version for inline use
+export function LoadingSpinner({ size = 'sm', className = '' }: { size?: 'sm' | 'md' | 'lg', className?: string }) {
   const sizeClasses = {
     sm: 'h-4 w-4',
-    md: 'h-6 w-6',
+    md: 'h-6 w-6', 
     lg: 'h-8 w-8'
   };
 
-  return (
-    <div className="flex items-center justify-center p-4">
-      <Loader2 className={`${sizeClasses[size]} animate-spin mr-2`} />
-      <span className="text-gray-600">{message}</span>
-    </div>
-  );
-}
-
-interface LoadingTableProps {
-  columns: number;
-  rows?: number;
-}
-
-export function LoadingTable({ columns, rows = 5 }: LoadingTableProps) {
-  return (
-    <div className="space-y-2">
-      {Array.from({ length: rows }).map((_, i) => (
-        <div key={i} className="grid gap-4" style={{ gridTemplateColumns: `repeat(${columns}, 1fr)` }}>
-          {Array.from({ length: columns }).map((_, j) => (
-            <div key={j} className="h-8 bg-gray-200 rounded animate-pulse" />
-          ))}
-        </div>
-      ))}
-    </div>
-  );
+  return <Loader2 className={`animate-spin ${sizeClasses[size]} ${className}`} />;
 }
