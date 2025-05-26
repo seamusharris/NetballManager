@@ -1,10 +1,8 @@
-Updating the component to use the new standardized batch endpoint for game statistics.
-```
-```replit_final_file
 import { useQuery } from '@tanstack/react-query';
 import { statisticsService } from '@/lib/statisticsService';
 import { GameStat } from '@shared/schema';
 import { CACHE_SETTINGS } from '@/lib/constants';
+import { useMemo } from 'react';
 
 /**
  * React Hook to efficiently fetch statistics for multiple games at once
@@ -36,7 +34,7 @@ export function useBatchGameStatistics(gameIds: number[], forceFresh: boolean = 
         console.log('No valid game IDs for batch fetch, returning empty object');
         return {};
       }
-      
+
       console.log(`Batch fetching stats for ${sortedGameIds.length} games via React Query`);
       try {
         const result = await statisticsService.getBatchGameStats(sortedGameIds);
@@ -61,4 +59,50 @@ export function useBatchGameStatistics(gameIds: number[], forceFresh: boolean = 
     refetch,
     isStale
   };
+}
+
+// Assume this is a component using the hook
+function GameScoreComponent({ gameIds }: { gameIds: number[] }) {
+  // Filter out invalid game IDs before making the batch request
+  const validGameIds = useMemo(() => {
+    return gameIds.filter(id => id && id > 0 && !isNaN(id));
+  }, [gameIds]);
+
+  // Use the batch hook to get stats for all games
+  const { data: gameStatsMap = {}, isLoading, error } = useBatchGameStatistics(validGameIds);
+
+  // Calculate scores for all games using the fetched stats
+  const scoresData = useMemo(() => {
+    if (!gameStatsMap || Object.keys(gameStatsMap).length === 0) {
+      return {};
+    }
+
+    const scores: Record<number, any> = {};
+
+    validGameIds.forEach(gameId => {
+      const stats = gameStatsMap[gameId] || [];
+      // Use the statistics service to calculate scores
+      scores[gameId] = statisticsService.calculateScoresFromStats(stats, gameId);
+    });
+
+    return scores;
+  }, [gameStatsMap, validGameIds]);
+
+  return (
+    <div>
+      {isLoading && <p>Loading scores...</p>}
+      {error && <p>Error: {error.message}</p>}
+      {Object.keys(scoresData).length > 0 ? (
+        <ul>
+          {Object.entries(scoresData).map(([gameId, score]) => (
+            <li key={gameId}>
+              Game {gameId}: Score - {score}
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p>No scores available.</p>
+      )}
+    </div>
+  );
 }

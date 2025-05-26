@@ -211,16 +211,17 @@ class UnifiedStatisticsService {
     }
 
     try {
-      const idsParam = gameIds.join(',');
-      console.log(`Making batch request for game IDs: ${idsParam}`);
-      
-      if (!idsParam || idsParam === '') {
-        console.warn('Empty game IDs parameter, skipping batch request');
+      const validIds = gameIds.filter(id => id && id > 0);
+      if (!validIds.length) {
+        console.warn('No valid game IDs found, skipping batch request');
         return {};
       }
+
+      const idsParam = validIds.join(',');
+      console.log(`Making batch request for game IDs: ${idsParam}`);
       
       const statsMap = await apiRequest('GET', `/api/games/stats/batch?gameIds=${idsParam}`);
-      console.log(`Batch fetched stats for ${gameIds.length} games`);
+      console.log(`Batch fetched stats for ${validIds.length} games`);
       return statsMap || {};
     } catch (error) {
       console.warn('Batch fetch failed, falling back to individual requests:', error);

@@ -36,30 +36,29 @@ export function useBatchGameStats(gameIds: number[]) {
       }
 
       try {
-        // Assuming apiRequest is defined elsewhere and handles the actual API call
-        // e.g., const apiRequest = async (method, url) => { ... }
-        const apiRequest = async (method: string, url: string) => {
-          const response = await fetch(url, { method });
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-          return response.json();
-        };
-        return await apiRequest('GET', `/api/games/stats/batch?gameIds=${gameIdsParam}`);
+        const response = await fetch(`/api/games/stats/batch?gameIds=${gameIdsParam}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        return await response.json();
       } catch (error) {
         console.error('Batch fetch failed:', error);
         // Fallback to individual requests
         const statsMap: Record<number, GameStat[]> = {};
         const results = await Promise.allSettled(
-          validGameIds.map(id => {
-            const apiRequest = async (method: string, url: string) => {
-              const response = await fetch(url, { method });
-              if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-              }
-              return response.json();
-            };
-            return apiRequest('GET', `/api/games/${id}/stats`);
+          validGameIds.map(async (id) => {
+            const response = await fetch(`/api/games/${id}/stats`);
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
           })
         );
 
