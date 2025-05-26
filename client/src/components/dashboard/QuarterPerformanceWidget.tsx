@@ -149,14 +149,6 @@ export default function QuarterPerformanceWidget({
       <CardContent className="p-6">
         <div className="flex justify-between items-center mb-4">
           <h3 className="font-heading font-semibold text-neutral-dark">Quarter Performance</h3>
-          <Badge variant="outline" className="bg-accent/10 text-accent px-2 py-1 rounded-full text-xs font-semibold">
-            {selectedSeason ? 
-              (typeof selectedSeason === 'string' && selectedSeason === 'current' && activeSeason ? 
-                activeSeason.name : 
-                (selectedSeason.name || "Selected Season")
-              ) : 
-              (activeSeason ? activeSeason.name : "Current Season")}
-          </Badge>
         </div>
 
         {/* Quarter breakdown grid */}
@@ -183,9 +175,9 @@ export default function QuarterPerformanceWidget({
                   {isWeakest && <Badge variant="outline" className="text-xs px-1 py-0 bg-red-100 text-red-700">Weak</Badge>}
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-lg font-bold text-primary">{teamScore}</span>
+                  <span className="text-lg font-bold text-primary">{teamScore.toFixed(1)}</span>
                   <span className="text-sm text-gray-500">vs</span>
-                  <span className="text-lg font-bold text-gray-600">{opponentScore}</span>
+                  <span className="text-lg font-bold text-gray-600">{opponentScore.toFixed(1)}</span>
                 </div>
                 <div className="text-center mt-1">
                   <span className={`text-xs font-medium ${

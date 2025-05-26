@@ -224,14 +224,6 @@ export default function TeamPerformance({ games, className, activeSeason, select
       <CardContent className="p-6">
         <div className="flex justify-between items-center mb-4">
           <h3 className="font-heading font-semibold text-neutral-dark">Team Performance</h3>
-          <Badge variant="outline" className="bg-accent/10 text-accent px-2 py-1 rounded-full text-xs font-semibold">
-            {selectedSeason ? 
-              (typeof selectedSeason === 'string' && selectedSeason === 'current' && activeSeason ? 
-                activeSeason.name : 
-                (selectedSeason.name || "Selected Season")
-              ) : 
-              (activeSeason ? activeSeason.name : "Current Season")}
-          </Badge>
         </div>
 
         {/* Key performance indicators - 3x2 grid for more statistics */}
