@@ -25,7 +25,6 @@ import NotFound from "@/pages/not-found";
 import GameDetails from "./pages/GameDetails";
 import OpponentAnalysis from './pages/OpponentAnalysis';
 import OpponentDetailed from '@/pages/OpponentDetailed';
-import Opponents from '@/pages/Opponents';
 
 // Lazy load components
 const StatsDebug = lazy(() => import("./pages/StatsDebug"));
