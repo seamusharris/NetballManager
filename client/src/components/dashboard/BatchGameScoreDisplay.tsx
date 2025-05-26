@@ -28,10 +28,18 @@ export function BatchGameScoreDisplay({ gameId }: BatchGameScoreDisplayProps) {
     );
   }
   
-  if (hasError || !scores) {
+  if (hasError) {
     return (
       <div className="text-destructive text-sm">
         Error loading score
+      </div>
+    );
+  }
+  
+  if (!scores) {
+    return (
+      <div className="text-muted-foreground text-sm">
+        —
       </div>
     );
   }

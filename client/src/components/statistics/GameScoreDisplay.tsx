@@ -7,9 +7,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 interface GameScoreDisplayProps {
   gameId: number;
   compact?: boolean;
+  fallback?: string;
 }
 
-export function GameScoreDisplay({ gameId, compact = false }: GameScoreDisplayProps) {
+export function GameScoreDisplay({ gameId, compact = false, fallback = "—" }: GameScoreDisplayProps) {
   // Only force a fresh fetch when not in compact mode (detailed view)
   // Compact mode is used in lists and should be more cache-friendly
   const { scores, isLoading, error } = useGameStatistics(gameId, !compact);
@@ -35,10 +36,18 @@ export function GameScoreDisplay({ gameId, compact = false }: GameScoreDisplayPr
     );
   }
 
-  if (error || !scores) {
+  if (error) {
     return (
       <div className="text-destructive">
         {compact ? 'Error loading score' : 'Unable to load game scores. Please try again.'}
+      </div>
+    );
+  }
+
+  if (!scores) {
+    return (
+      <div className="text-muted-foreground">
+        {fallback}
       </div>
     );
   }
@@ -49,14 +58,14 @@ export function GameScoreDisplay({ gameId, compact = false }: GameScoreDisplayPr
     const isWin = scores.finalScore.for > scores.finalScore.against;
     const isLoss = scores.finalScore.for < scores.finalScore.against;
     const isDraw = scores.finalScore.for === scores.finalScore.against;
-    
+
     // Set background color based on game result
     const bgColor = isWin 
       ? "bg-green-100 border-green-200" 
       : isLoss 
         ? "bg-red-100 border-red-200" 
         : "bg-amber-100 border-amber-200";
-    
+
     return (
       <div className="font-semibold text-left">
         <div className={`inline-flex items-center px-3 py-1 rounded border text-gray-900 ${bgColor}`}>

@@ -18,7 +18,7 @@ export default function BatchScoreDisplay({ games, className }: BatchScoreDispla
   // Filter to only get completed games and ensure we have valid data
   const completedGames = useMemo(() => {
     if (!games || !Array.isArray(games)) return [];
-    return games.filter(g => g && g.completed && typeof g.id === 'number');
+    return games.filter(g => g && g.completed && g.status !== 'upcoming' && typeof g.id === 'number');
   }, [games]);
   
   // Get all game IDs for batch fetching
