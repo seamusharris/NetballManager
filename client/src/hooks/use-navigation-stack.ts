@@ -40,6 +40,17 @@ export const useNavigationStack = () => {
   const [location] = useLocation();
   const [navigationStack, setNavigationStack] = useState<NavigationStackItem[]>([]);
 
+  // Initialize with current location if stack is empty
+  useEffect(() => {
+    if (navigationStack.length === 0 && location) {
+      setNavigationStack([{
+        path: location,
+        title: getPageTitle(location),
+        timestamp: Date.now()
+      }]);
+    }
+  }, [location, navigationStack.length]);
+
   useEffect(() => {
     setNavigationStack(prev => {
       // Don't add the same path consecutively

@@ -47,12 +47,12 @@ export default function PlayerDetails() {
   const { data: games = [], isLoading: isLoadingGames } = useQuery<Game[]>({
     queryKey: ['/api/games'],
   });
-  
+
   // Fetch all opponents
   const { data: opponents = [], isLoading: isLoadingOpponents } = useQuery<any[]>({
     queryKey: ['/api/opponents'],
   });
-  
+
   // Fetch all seasons for the seasons manager
   const { data: seasons = [], isLoading: isLoadingSeasons } = useQuery<Season[]>({
     queryKey: ['/api/seasons'],
@@ -69,24 +69,24 @@ export default function PlayerDetails() {
     queryKey: ['playerAllGameData', playerId],
     queryFn: async () => {
       if (isNaN(playerId)) return { stats: {}, rosters: {} };
-      
+
       const completedGames = (games as Game[]).filter(game => game.completed);
       const gameIds = completedGames.map(game => game.id);
-      
+
       if (gameIds.length === 0) {
         return { stats: {}, rosters: {} };
       }
-      
+
       // Fetch stats for each completed game
       const statsPromises = gameIds.map(async (gameId) => {
         const response = await fetch(`/api/games/${gameId}/stats?_t=${Date.now()}`);
         const allStats = await response.json() as GameStat[];
-        
+
         // With position-based stats, we need to get player's positions from roster
         // and then find stats for those positions
         return { gameId, stats: allStats };
       });
-      
+
       // Fetch roster data for each completed game to check participation
       const rosterPromises = gameIds.map(async (gameId) => {
         const response = await fetch(`/api/games/${gameId}/rosters?_t=${Date.now()}`);
@@ -96,10 +96,10 @@ export default function PlayerDetails() {
         // Remove debug log once we've identified the issue
         return { gameId, rosters: playerRosters };
       });
-      
+
       const statsResults = await Promise.all(statsPromises);
       const rosterResults = await Promise.all(rosterPromises);
-      
+
       // Create a map of game ID to stats array
       const statsMap: Record<number, GameStat[]> = {};
       statsResults.forEach(result => {
@@ -107,7 +107,7 @@ export default function PlayerDetails() {
           statsMap[result.gameId] = result.stats;
         }
       });
-      
+
       // Create a map of game ID to roster array
       const rostersMap: Record<number, any[]> = {};
       rosterResults.forEach(result => {
@@ -115,12 +115,12 @@ export default function PlayerDetails() {
           rostersMap[result.gameId] = result.rosters;
         }
       });
-      
+
       return { stats: statsMap, rosters: rostersMap };
     },
     enabled: !isNaN(playerId) && (games as Game[]).length > 0,
   });
-  
+
   // Extract the individual data pieces with proper types
   const allGameStats: Record<number, GameStat[]> = playerGameData.stats;
   const allGameRosters: Record<number, any[]> = playerGameData.rosters;
@@ -134,7 +134,7 @@ export default function PlayerDetails() {
     const allParticipatedGameIds = new Set(
       Object.keys(allGameRosters).map(id => parseInt(id))
     );
-    
+
     if (allParticipatedGameIds.size === 0) {
       return {
         totalGames: 0,
@@ -166,7 +166,7 @@ export default function PlayerDetails() {
     let totalInfringements = 0;
     let ratingSum = 0;
     let ratingCount = 0;
-    
+
     const gameStatSummaries: {
       gameId: number,
       date: string,
@@ -181,31 +181,31 @@ export default function PlayerDetails() {
     // Initialize position counts
     const positionCounts: Record<string, number> = {};
     let totalQuartersPlayed = 0;
-    
+
     // Process each game this player participated in
     allParticipatedGameIds.forEach(gameId => {
       const game = games.find(g => g.id === gameId);
       if (!game) return;
-      
+
       // First check if player played in an actual position in this game
       const gameRosters = allGameRosters[gameId] || [];
       const playedOnCourt = gameRosters.some((roster: any) => 
         roster.playerId === playerId && allPositions.includes(roster.position)
       );
-      
+
       // Only process games where player was actually on court
       if (!playedOnCourt) return;
-      
+
       // Increment games count since player was actually on court
       totalGames++;
-      
+
       // Get stats for this game if available
       const stats: GameStat[] = allGameStats[gameId] || [];
-      
+
       // Find opponent name from opponent ID
       const opponent = opponents.find(o => o.id === game.opponentId);
       const opponentName = opponent ? opponent.teamName : `Team #${game.opponentId}`;
-      
+
       // Count positions played in this game (only count actual playing positions, not "off")
       gameRosters.forEach((roster: any) => {
         if (roster.playerId === playerId) {
@@ -216,7 +216,7 @@ export default function PlayerDetails() {
           }
         }
       });
-      
+
       // Sum stats for this game - but only for quarters the player actually played on court
       let gameGoals = 0;
       let gameGoalsAgainst = 0;
@@ -228,7 +228,7 @@ export default function PlayerDetails() {
       let gamePickUps = 0;
       let gameInfringements = 0;
       let gameRating = 0;
-      
+
       // Create a map of positions played by quarter
       const positionsByQuarter = gameRosters.reduce((map, roster) => {
         if (roster.playerId === playerId && allPositions.includes(roster.position)) {
@@ -236,7 +236,7 @@ export default function PlayerDetails() {
         }
         return map;
       }, {} as Record<number, Position>);
-      
+
       // Create maps for tracking stats by position
       const statsByPosition: Record<Position, {
         quarters: number;
@@ -250,7 +250,7 @@ export default function PlayerDetails() {
         pickUp: number;
         infringement: number;
       }> = {} as any;
-      
+
       // Initialize stats by position counters
       allPositions.forEach(pos => {
         statsByPosition[pos] = {
@@ -266,16 +266,16 @@ export default function PlayerDetails() {
           infringement: 0
         };
       });
-      
+
       stats.forEach((stat: GameStat) => {
         // In position-based model, we need to match stats to the positions the player played
         // Only process stats for positions the player actually played in this quarter
         const positionPlayed = positionsByQuarter[stat.quarter];
-        
+
         // Match stat positions with positions player actually played
         if (positionPlayed && stat.position === positionPlayed) {
           const position = stat.position;
-          
+
           // Increment stats for this position
           if (position && statsByPosition[position]) {
             statsByPosition[position].quarters++;
@@ -289,19 +289,19 @@ export default function PlayerDetails() {
             statsByPosition[position].pickUp += stat.pickUp || 0;
             statsByPosition[position].infringement += stat.infringement || 0;
           }
-          
+
           // Also increment game totals
           gameGoals += stat.goalsFor || 0;
           gameGoalsAgainst += stat.goalsAgainst || 0;
           gameMissedGoals += stat.missedGoals || 0;
           gameRebounds += stat.rebounds || 0;
           gameIntercepts += stat.intercepts || 0;
-          gameBadPasses += stat.badPass || 0;
-          gameHandlingErrors += stat.handlingError || 0;
-          gamePickUps += stat.pickUp || 0;
-          gameInfringements += stat.infringement || 0;
+          gameBadPasses += gameBadPasses || 0;
+          gameHandlingErrors += gameHandlingErrors || 0;
+          gamePickUps += gamePickUps || 0;
+          gameInfringements += gameInfringements || 0;
         }
-        
+
         // Only use rating from quarter 1 if player was on court
         if (stat.quarter === 1 && typeof stat.rating === 'number' && positionsByQuarter[1]) {
           gameRating = stat.rating;
@@ -309,7 +309,7 @@ export default function PlayerDetails() {
           ratingCount++;
         }
       });
-      
+
       // Add to totals
       totalGoals += gameGoals;
       totalGoalsAgainst += gameGoalsAgainst;
@@ -320,7 +320,7 @@ export default function PlayerDetails() {
       totalHandlingErrors += gameHandlingErrors;
       totalPickUps += gamePickUps;
       totalInfringements += gameInfringements;
-      
+
       // Add game summary
       gameStatSummaries.push({
         gameId,
@@ -333,12 +333,12 @@ export default function PlayerDetails() {
         rating: gameRating
       });
     });
-    
+
     // Sort game summaries by date (most recent first)
     gameStatSummaries.sort((a, b) => {
       return new Date(b.date).getTime() - new Date(a.date).getTime();
     });
-    
+
     return {
       totalGames,
       totalGoals,
@@ -377,7 +377,7 @@ export default function PlayerDetails() {
     onSuccess: () => {
       // Always navigate to the players list first before any other operations
       navigate('/players');
-      
+
       // Then invalidate queries and show toast
       queryClient.invalidateQueries({ queryKey: ['/api/players'] });
       toast({
@@ -389,11 +389,11 @@ export default function PlayerDetails() {
     onError: (error) => {
       // If we get here, it's a real error that isn't related to "Player not found"
       console.error("Failed to delete player:", error);
-      
+
       // Even if there was an error, navigate back to the players list anyway
       // This ensures we don't get stuck on a deleted player's page
       navigate('/players');
-      
+
       toast({
         title: "Error",
         description: "There was a problem with the player deletion, but you've been redirected to the players list.",
@@ -442,7 +442,7 @@ export default function PlayerDetails() {
   const handleEditPlayer = () => {
     setIsEditModalOpen(true);
   };
-  
+
   const handleUpdatePlayer = (data: any) => {
     console.log("Updating player:", data);
     updateMutation.mutate(data);
@@ -462,11 +462,7 @@ export default function PlayerDetails() {
     return (
       <div className="container mx-auto p-4">
         <div className="flex items-center mb-4">
-          <Link href="/dashboard">
-            <Button variant="ghost" size="sm" className="mr-2">
-              <ArrowLeft className="mr-1 h-4 w-4" /> Back
-            </Button>
-          </Link>
+          
           <h1 className="text-2xl font-bold">Loading player data...</h1>
         </div>
       </div>
@@ -477,11 +473,7 @@ export default function PlayerDetails() {
     return (
       <div className="container mx-auto p-4">
         <div className="flex items-center mb-4">
-          <Link href="/dashboard">
-            <Button variant="ghost" size="sm" className="mr-2">
-              <ArrowLeft className="mr-1 h-4 w-4" /> Back
-            </Button>
-          </Link>
+          
           <h1 className="text-2xl font-bold">Player not found</h1>
         </div>
       </div>
@@ -494,12 +486,12 @@ export default function PlayerDetails() {
         <title>{player.displayName} - Player Details | Netball Team Manager</title>
         <meta name="description" content={`Performance statistics and details for ${player.displayName}`} />
       </Helmet>
-      
+
       <div className="container mx-auto p-4">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center">
             <BackButton fallbackPath="/dashboard" variant="ghost" className="mr-2">
-              Back to Dashboard
+              
             </BackButton>
           </div>
           <div className="flex gap-2">
@@ -529,7 +521,7 @@ export default function PlayerDetails() {
             </Button>
           </div>
         </div>
-        
+
         <div className="flex flex-col md:flex-row gap-6 mb-6">
           {/* Player Info Card */}
           <Card className="flex-grow md:w-1/3 md:max-w-md">
@@ -553,7 +545,7 @@ export default function PlayerDetails() {
                   )}
                 </div>
               </div>
-              
+
               <div className="mt-6">
                 <h3 className="text-sm font-medium mb-2">Position Preferences</h3>
                 <div className="flex flex-wrap gap-2">
@@ -567,7 +559,7 @@ export default function PlayerDetails() {
                   ))}
                 </div>
               </div>
-              
+
               <div className="mt-6 flex items-center">
                 <span className="mr-2">Status:</span>
                 <span className={cn(
@@ -579,7 +571,7 @@ export default function PlayerDetails() {
               </div>
             </CardContent>
           </Card>
-          
+
           {/* Performance Summary Card */}
           <Card className="flex-grow">
             <CardHeader className="pb-2">
@@ -594,19 +586,19 @@ export default function PlayerDetails() {
                     {stats.averageRating.toFixed(1)}
                   </span>
                 </div>
-                
+
                 <div className="bg-gray-50 rounded-lg p-4 flex flex-col items-center">
                   <Target className="h-6 w-6 text-primary mb-2" />
                   <span className="text-sm text-gray-600">Goals Scored</span>
                   <span className="mt-1 text-lg font-semibold">{stats.totalGoals}</span>
                 </div>
-                
+
                 <div className="bg-gray-50 rounded-lg p-4 flex flex-col items-center">
                   <Shield className="h-6 w-6 text-primary mb-2" />
                   <span className="text-sm text-gray-600">Intercepts</span>
                   <span className="mt-1 text-lg font-semibold">{stats.totalIntercepts}</span>
                 </div>
-                
+
                 <div className="bg-gray-50 rounded-lg p-4 flex flex-col items-center">
                   <Activity className="h-6 w-6 text-primary mb-2" />
                   <span className="text-sm text-gray-600">Rebounds</span>
@@ -616,14 +608,14 @@ export default function PlayerDetails() {
             </CardContent>
           </Card>
         </div>
-        
+
         <Tabs defaultValue="overview" value={selectedTab} onValueChange={setSelectedTab} className="mb-6">
           <TabsList>
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="games">Games</TabsTrigger>
             <TabsTrigger value="stats">Detailed Stats</TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value="overview">
             <Card>
               <CardHeader>
@@ -646,7 +638,7 @@ export default function PlayerDetails() {
                         </div>
                       ))}
                     </div>
-                    
+
                     <h3 className="text-lg font-medium mb-3">Season Statistics</h3>
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                       <div className="bg-gray-50 p-3 rounded-lg">
@@ -691,7 +683,7 @@ export default function PlayerDetails() {
                       </div>
                     </div>
                   </div>
-                  
+
                   <div>
                     <h3 className="text-lg font-medium mb-3">Game Performance</h3>
                     {stats.gameStats.length === 0 ? (
@@ -704,34 +696,34 @@ export default function PlayerDetails() {
                               <TableHead className="min-w-[100px] border-b">Date</TableHead>
                               <TableHead className="min-w-[120px] border-b">Opponent</TableHead>
                               <TableHead className="text-center w-10 border-r border-b"></TableHead>
-                              
+
                               {/* Game Info Category */}
                               <TableHead colSpan={2} className="text-center bg-blue-50 border-r border-b">
                                 Game
                               </TableHead>
-                              
+
                               {/* Shooting Category */}
                               <TableHead colSpan={3} className="text-center bg-blue-50 border-r border-b">
                                 Shooting
                               </TableHead>
-                              
+
                               {/* Defense Category */}
                               <TableHead colSpan={3} className="text-center bg-blue-50 border-r border-b">
                                 Defense
                               </TableHead>
-                              
+
                               {/* Errors Category */}
                               <TableHead colSpan={3} className="text-center bg-blue-50 border-r border-b">
                                 Errors
                               </TableHead>
                             </TableRow>
-                            
+
                             {/* Stat field headers */}
                             <TableRow>
                               <TableHead className="border-b"></TableHead>
                               <TableHead className="border-b"></TableHead>
                               <TableHead className="border-r border-b"></TableHead>
-                              
+
                               {/* Game Info Fields */}
                               <TableHead className="text-center px-1 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
                                 Round
@@ -739,7 +731,7 @@ export default function PlayerDetails() {
                               <TableHead className="text-center px-1 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-r">
                                 Rating
                               </TableHead>
-                              
+
                               {/* Shooting Fields */}
                               <TableHead className="text-center px-1 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
                                 For
@@ -750,7 +742,7 @@ export default function PlayerDetails() {
                               <TableHead className="text-center px-1 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-r">
                                 Miss
                               </TableHead>
-                              
+
                               {/* Defense Fields */}
                               <TableHead className="text-center px-1 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
                                 Int
@@ -761,7 +753,7 @@ export default function PlayerDetails() {
                               <TableHead className="text-center px-1 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-r">
                                 Pick
                               </TableHead>
-                              
+
                               {/* Errors Fields */}
                               <TableHead className="text-center px-1 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
                                 Pass
@@ -774,21 +766,21 @@ export default function PlayerDetails() {
                               </TableHead>
                             </TableRow>
                           </TableHeader>
-                          
+
                           <TableBody className="bg-white divide-y divide-gray-200">
                             {stats.gameStats.map((game, index) => {
                               // Find the game to get the round number
                               const gameData = games.find(g => g.id === game.gameId);
                               const roundNumber = gameData?.round || '-';
-                              
+
                               // Double check player is on roster for this game and has an actual position (not "off")
                               const gameRosters = allGameRosters[game.gameId] || [];
                               const isOnRoster = gameRosters.some((roster: any) => 
                                 roster.playerId === playerId && allPositions.includes(roster.position)
                               );
-                              
-                              if (!isOnRoster) return null; // Skip if not on roster or only "off" position
-                              
+
+                                                            if (!isOnRoster) return null; // Skip if not on roster or only "off" position
+
                               return (
                                 <TableRow 
                                   key={game.gameId} 
@@ -798,28 +790,28 @@ export default function PlayerDetails() {
                                   <TableCell className="px-3 py-2 whitespace-nowrap">
                                     {new Date(game.date).toLocaleDateString()}
                                   </TableCell>
-                                  
+
                                   {/* Opponent column */}
                                   <TableCell className="px-3 py-2 whitespace-nowrap">
                                     <span className="text-sm font-medium text-blue-600">
                                       {game.opponent}
                                     </span>
                                   </TableCell>
-                                  
+
                                   <TableCell className="border-r"></TableCell>
-                                  
+
                                   {/* Round */}
                                   <TableCell className="px-2 py-2 whitespace-nowrap text-sm text-center font-mono">
                                     {roundNumber}
                                   </TableCell>
-                                  
+
                                   {/* Rating */}
                                   <TableCell className="px-2 py-2 whitespace-nowrap text-center border-r">
                                     <span className={cn("text-sm font-mono", getRatingClass(game.rating))}>
                                       {game.rating.toFixed(1)}
                                     </span>
                                   </TableCell>
-                                  
+
                                   {/* Shooting stats */}
                                   <TableCell className="px-2 py-2 whitespace-nowrap text-sm text-center font-mono">
                                     {game.goals}
@@ -831,7 +823,7 @@ export default function PlayerDetails() {
                                     {/* Using missedGoals from extra data we can extract */}
                                     {allGameStats[game.gameId]?.reduce((sum, stat) => sum + (stat.missedGoals || 0), 0) || 0}
                                   </TableCell>
-                                  
+
                                   {/* Defense stats */}
                                   <TableCell className="px-2 py-2 whitespace-nowrap text-sm text-center font-mono">
                                     {game.intercepts}
@@ -843,7 +835,7 @@ export default function PlayerDetails() {
                                     {/* Using pickUp from extra data we can extract */}
                                     {allGameStats[game.gameId]?.reduce((sum, stat) => sum + (stat.pickUp || 0), 0) || 0}
                                   </TableCell>
-                                  
+
                                   {/* Errors stats */}
                                   <TableCell className="px-2 py-2 whitespace-nowrap text-sm text-center font-mono">
                                     {/* Using badPass from extra data we can extract */}
@@ -869,7 +861,7 @@ export default function PlayerDetails() {
               </CardContent>
             </Card>
           </TabsContent>
-          
+
           <TabsContent value="games">
             <Card>
               <CardHeader>
@@ -895,20 +887,20 @@ export default function PlayerDetails() {
                           // Find the game to get the round number
                           const gameData = games.find(g => g.id === game.gameId);
                           const roundNumber = gameData?.round || '-';
-                          
+
                           // Find the player's positions for this game
                           const gameRosters = allGameRosters[game.gameId] || [];
                           const positionRosters = gameRosters.filter((roster: any) => 
                             roster.playerId === playerId && allPositions.includes(roster.position)
                           );
-                          
+
                           // Skip if player is not on roster for this game or only has "off" positions
                           if (positionRosters.length === 0) return null;
-                          
+
                           const positions = positionRosters
                             .map((roster: any) => `Q${roster.quarter}: ${roster.position}`)
                             .join(', ');
-                          
+
                           return (
                             <tr key={game.gameId} className="border-b hover:bg-gray-50">
                               <td className="py-2 px-2">{new Date(game.date).toLocaleDateString()}</td>
@@ -930,7 +922,7 @@ export default function PlayerDetails() {
               </CardContent>
             </Card>
           </TabsContent>
-          
+
           <TabsContent value="stats">
             <Card>
               <CardHeader>
@@ -963,7 +955,7 @@ export default function PlayerDetails() {
                           </div>
                         </div>
                       </div>
-                      
+
                       <div className="bg-gray-50 p-4 rounded-lg">
                         <h4 className="font-medium">Ball Control</h4>
                         <div className="mt-2 space-y-1">
@@ -983,7 +975,7 @@ export default function PlayerDetails() {
                       </div>
                     </div>
                   </div>
-                  
+
                   {/* Defensive Stats */}
                   <div>
                     <h3 className="text-lg font-semibold mb-3">Defensive Stats</h3>
@@ -1005,7 +997,7 @@ export default function PlayerDetails() {
                           </div>
                         </div>
                       </div>
-                      
+
                       <div className="bg-gray-50 p-4 rounded-lg">
                         <h4 className="font-medium">Discipline</h4>
                         <div className="mt-2 space-y-1">
@@ -1025,7 +1017,7 @@ export default function PlayerDetails() {
                       </div>
                     </div>
                   </div>
-                  
+
                   {/* Per Game Averages */}
                   <div>
                     <h3 className="text-lg font-semibold mb-3">Per Game Averages</h3>
@@ -1108,7 +1100,7 @@ export default function PlayerDetails() {
               ✕
               <span className="sr-only">Close</span>
             </button>
-            
+
             <h2 className="text-xl font-semibold mb-2">Manage Seasons</h2>
             <p className="text-sm text-gray-500 mb-4">
               Select which seasons {player.displayName} is participating in.
@@ -1134,12 +1126,12 @@ export default function PlayerDetails() {
               ✕
               <span className="sr-only">Close</span>
             </button>
-            
+
             <h2 className="text-xl font-semibold mb-2">Edit Player</h2>
             <p className="text-sm text-gray-500 mb-4">
               Make changes to {player.displayName}'s details below.
             </p>
-            
+
             <PlayerForm 
               player={player}
               onSubmit={handleUpdatePlayer} 

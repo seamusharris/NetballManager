@@ -1165,9 +1165,7 @@ export default function GameDetails() {
               variant="outline" 
               size="sm"
               className="border-gray-200 text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-            >
-              Back to Games List
-            </BackButton>
+            />
           </div>
           
           <h1 className="text-2xl font-bold">

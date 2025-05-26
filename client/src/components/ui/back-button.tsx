@@ -37,8 +37,10 @@ export const BackButton: React.FC<BackButtonProps> = ({
     }
   };
 
-  // Use the tracked title if available, otherwise fall back to children or default
-  const buttonText = children || (canGoBack() ? `Back to ${getPreviousTitle()}` : 'Back');
+  // If children are provided, use them. Otherwise use smart navigation or fallback.
+  const buttonText = children 
+    ? children 
+    : (canGoBack() ? `Back to ${getPreviousTitle()}` : 'Back');
 
   return (
     <Button
