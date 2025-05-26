@@ -224,9 +224,9 @@ class UnifiedStatisticsService {
     const existingStat = stats.find(s => s.position === position && s.quarter === quarter);
 
     if (existingStat) {
-      return apiRequest('PATCH', `/api/gamestats/${existingStat.id}`, updates);
+      return apiRequest('PATCH', `/api/games/${gameId}/stats/${existingStat.id}`, updates);
     } else {
-      return apiRequest('POST', '/api/gamestats', {
+      return apiRequest('POST', `/api/games/${gameId}/stats`, {
         gameId,
         position,
         quarter,

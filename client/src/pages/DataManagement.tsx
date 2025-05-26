@@ -205,7 +205,7 @@ export default function DataManagement() {
         
         const stats = await (await fetch(`/api/games/${game.id}/stats`)).json();
         for (const stat of stats) {
-          await fetch(`/api/gamestats/${stat.id}`, { method: 'DELETE' });
+          await fetch(`/api/games/${stat.gameId}/stats/${stat.id}`, { method: 'DELETE' });
         }
         
         // Now delete the game

@@ -226,7 +226,7 @@ export default function StatisticsForm({ gameId, players, rosters, gameStats }: 
   // Delete stats mutation
   const deleteStatsMutation = useMutation({
     mutationFn: async (statId: number) => {
-      return apiRequest('DELETE', `/api/gamestats/${statId}`);
+      return apiRequest('DELETE', `/api/games/${gameId}/stats/${statId}`);
     },
     onSuccess: () => {
       // Invalidate queries to refresh the data after deletion
@@ -268,10 +268,10 @@ export default function StatisticsForm({ gameId, players, rosters, gameStats }: 
         
         if (existingStat) {
           // Update existing
-          promises.push(apiRequest('PATCH', `/api/gamestats/${existingStat.id}`, statsData));
+          promises.push(apiRequest('PATCH', `/api/games/${gameId}/stats/${existingStat.id}`, statsData));
         } else {
           // Create new
-          promises.push(apiRequest('POST', '/api/gamestats', statsData));
+          promises.push(apiRequest('POST', `/api/games/${gameId}/stats`, statsData));
         }
       }
       

@@ -167,7 +167,7 @@ const PositionBasedStats: React.FC<PositionBasedStatsProps> = ({
   // Mutation for saving game statistics
   const { mutate: saveGameStat } = useMutation({
     mutationFn: (gameStat: Partial<GameStat>) => 
-      apiRequest(`/api/gamestats`, {
+      apiRequest(`/api/games/${gameId}/stats`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(gameStat)
@@ -306,7 +306,7 @@ const PositionBasedStats: React.FC<PositionBasedStatsProps> = ({
       
       // Invalidate queries but with lower priority (happens in background)
       setTimeout(() => {
-        queryClient.invalidateQueries({ queryKey: ['/api/gamestats', gameId] });
+        queryClient.invalidateQueries({ queryKey: [`/api/games/${gameId}/stats`] });
         queryClient.invalidateQueries({ queryKey: ['/api/games', gameId, 'stats'] });
         queryClient.invalidateQueries({ queryKey: ['/api/games', gameId] });
         queryClient.invalidateQueries({ queryKey: ['/api/games'] });

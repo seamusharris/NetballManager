@@ -6,7 +6,7 @@ async function throwIfResNotOk(res: Response) {
       // Try to get a JSON error response first
       const contentType = res.headers.get('content-type');
       let errorText;
-      
+
       if (contentType && contentType.includes('application/json')) {
         // Clone the response so we can read it as JSON
         const clonedRes = res.clone();
@@ -24,7 +24,7 @@ async function throwIfResNotOk(res: Response) {
         errorText = await res.text() || res.statusText;
         console.error('API Error Response (Text):', errorText);
       }
-      
+
       throw new Error(`${res.status}: ${errorText}`);
     } catch (parseError) {
       // If all else fails, just use the status text
@@ -44,7 +44,7 @@ export async function apiRequest(
   let correctedUrl = url;
   if (typeof url === 'string') {
     // Handle batch endpoint (special case)
-    if (url.startsWith('/api/games/stats/batch') || url.startsWith('/api/gamestats/batch')) {
+    if (url.startsWith('/api/games/stats/batch')) {
       correctedUrl = '/api/games/stats/batch';
       console.log(`Standardized batch URL path from ${url} to ${correctedUrl}`);
     }
@@ -62,15 +62,12 @@ export async function apiRequest(
       console.log(`Corrected URL path from ${url} to ${correctedUrl}`);
     } 
     else if (url.includes('/api/gamestats/')) {
-      // Extract potential ID
-      const match = url.match(/\/api\/gamestats\/(\d+)/);
-      if (match && match[1]) {
-        // URL with ID - convert to nested resource pattern
-        correctedUrl = `/api/games/stats/${match[1]}`;
-      } else {
-        // URL without ID - just standardize the base endpoint
-        correctedUrl = url.replace('/api/gamestats/', '/api/games/stats/');
-      }
+        const match = url.match(/\/api\/gamestats\/(\d+)/);
+        if (match && match[1]) {
+          correctedUrl = `/api/games/stats/${match[1]}`;
+        } else {
+          correctedUrl = url.replace('/api/gamestats/', '/api/games/stats/');
+        }
       console.log(`Corrected URL path from ${url} to ${correctedUrl}`);
     }
   }
@@ -118,7 +115,7 @@ export async function apiRequest(
         params.append(key, processedData[key].toString());
       }
     }
-    
+
     // Add params to URL
     const queryString = params.toString();
     if (queryString) {
@@ -143,7 +140,7 @@ export async function apiRequest(
   console.log(`Making ${method} request to ${correctedUrl}`);
   const res = await fetch(correctedUrl, options);
   await throwIfResNotOk(res);
-  
+
   // Parse and return JSON data directly
   return await res.json();
 }
@@ -158,7 +155,7 @@ export const getQueryFn: <T>(options: {
     let url = queryKey[0] as string;
     if (typeof url === 'string') {
       // Handle batch endpoint (special case)
-      if (url.startsWith('/api/games/stats/batch') || url.startsWith('/api/gamestats/batch')) {
+      if (url.startsWith('/api/games/stats/batch')) {
         url = '/api/games/stats/batch';
         console.log(`Standardized batch URL from ${queryKey[0]} to ${url}`);
       }
@@ -176,19 +173,16 @@ export const getQueryFn: <T>(options: {
         console.log(`Corrected query URL from ${queryKey[0]} to ${url}`);
       } 
       else if (url.includes('/api/gamestats/')) {
-        // Extract potential ID
-        const match = url.match(/\/api\/gamestats\/(\d+)/);
-        if (match && match[1]) {
-          // URL with ID - convert to nested resource pattern
-          url = `/api/games/stats/${match[1]}`;
-        } else {
-          // URL without ID - just standardize the base endpoint
-          url = url.replace('/api/gamestats/', '/api/games/stats/');
-        }
+          const match = url.match(/\/api\/gamestats\/(\d+)/);
+          if (match && match[1]) {
+            url = `/api/games/stats/${match[1]}`;
+          } else {
+            url = url.replace('/api/gamestats/', '/api/games/stats/');
+          }
         console.log(`Corrected query URL from ${queryKey[0]} to ${url}`);
       }
     }
-    
+
     const res = await fetch(url, {
       credentials: "include",
     });

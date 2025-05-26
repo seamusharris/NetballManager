@@ -4,6 +4,7 @@ Updating the component to use the new standardized batch endpoint for game stati
 import { useQuery } from '@tanstack/react-query';
 import { statisticsService } from '@/lib/statisticsService';
 import { GameStat } from '@shared/schema';
+import { CACHE_SETTINGS } from '@/lib/constants';
 
 /**
  * React Hook to efficiently fetch statistics for multiple games at once

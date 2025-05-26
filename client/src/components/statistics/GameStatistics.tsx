@@ -440,7 +440,7 @@ export default function GameStatistics({
           if (existingStat) {
             // Update existing stats - position-based
             savePromises.push(
-              apiRequest(`/api/gamestats/${existingStat.id}`, {
+              apiRequest(`/api/games/${gameId}/stats/${existingStat.id}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(quarterChanges)
@@ -449,7 +449,7 @@ export default function GameStatistics({
           } else {
             // Create new stats with defaults - position-based
             savePromises.push(
-              apiRequest(`/api/gamestats`, {
+              apiRequest(`/api/games/${gameId}/stats`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

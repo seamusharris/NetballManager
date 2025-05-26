@@ -518,7 +518,7 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
           
           // Delete older duplicates - handle possible 404 errors if records were already deleted
           for (let i = 1; i < existingQuarter1Stats.length; i++) {
-            const deletePromise = apiRequest(`/api/gamestats/${existingQuarter1Stats[i].id}`, {
+            const deletePromise = apiRequest(`/api/games/${gameId}/stats/${existingQuarter1Stats[i].id}`, {
               method: 'DELETE'
             })
               .catch(err => {
@@ -530,7 +530,7 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
           
           // Update the newest stat with the new rating
           console.log(`UPDATING RATING: Player ${playerId} - changing from ${newestStat.rating} to ${rating} (and deleting ${existingQuarter1Stats.length - 1} duplicates)`);
-          const ratingUpdatePromise = apiRequest(`/api/gamestats/${newestStat.id}`, {
+          const ratingUpdatePromise = apiRequest(`/api/games/${gameId}/stats/${newestStat.id}`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -542,7 +542,7 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
         // Just one existing stat, update it
         else if (existingQuarter1Stats.length === 1) {
           console.log(`UPDATING RATING: Player ${playerId} - changing from ${existingQuarter1Stats[0].rating} to ${rating}`);
-          const ratingUpdatePromise = apiRequest(`/api/gamestats/${existingQuarter1Stats[0].id}`, {
+          const ratingUpdatePromise = apiRequest(`/api/games/${gameId}/stats/${existingQuarter1Stats[0].id}`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -564,7 +564,7 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
           
           if (playerPositionInQ1?.position) {
             // Create a new stat record for quarter 1 with the rating
-            const createRatingPromise = apiRequest('/api/gamestats', {
+            const createRatingPromise = apiRequest(`/api/games/${gameId}/stats`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
@@ -651,7 +651,7 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
             
             // Delete older duplicates
             for (let i = 1; i < existingStats.length; i++) {
-              const deletePromise = apiRequest(`/api/gamestats/${existingStats[i].id}`, {
+              const deletePromise = apiRequest(`/api/games/${gameId}/stats/${existingStats[i].id}`, {
                 method: 'DELETE'
               })
                 .catch(err => {
@@ -662,7 +662,7 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
             }
             
             // Update the newest stat with new values
-            const updatePromise = apiRequest(`/api/gamestats/${newestStat.id}`, {
+            const updatePromise = apiRequest(`/api/games/${gameId}/stats/${newestStat.id}`, {
               method: 'PATCH',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify(statData)
@@ -671,7 +671,7 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
           }
           // Just one existing stat, update it
           else if (existingStats.length === 1) {
-            const updatePromise = apiRequest(`/api/gamestats/${existingStats[0].id}`, {
+            const updatePromise = apiRequest(`/api/games/${gameId}/stats/${existingStats[0].id}`, {
               method: 'PATCH',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify(statData)
@@ -682,7 +682,7 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
           else {
             // We already have the position from earlier in the code
             // Create a new stat record with the stat data (which already includes position)
-            const newStatPromise = apiRequest('/api/gamestats', {
+            const newStatPromise = apiRequest(`/api/games/${gameId}/stats`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
@@ -735,7 +735,7 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
       // Invalidate queries but with lower priority (happens in background)
       setTimeout(() => {
         // Invalidate all queries that depend on game stats or player performance
-        queryClient.invalidateQueries({ queryKey: ['/api/gamestats', gameId] });
+        queryClient.invalidateQueries({ queryKey: [`/api/games/${gameId}/stats`] });
         queryClient.invalidateQueries({ queryKey: ['/api/games', gameId, 'stats'] });
         queryClient.invalidateQueries({ queryKey: ['/api/games', gameId] });
         queryClient.invalidateQueries({ queryKey: ['playerGameStats'] });
