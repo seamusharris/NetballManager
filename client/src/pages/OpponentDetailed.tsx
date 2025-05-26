@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useParams, useLocation } from 'wouter';
@@ -26,12 +25,12 @@ export default function OpponentDetailed() {
 
   // Fetch centralized stats for all completed games
   const completedGameIds = games.filter((game: Game) => game.completed).map((game: Game) => game.id);
-  
+
   const { data: centralizedStats = {} } = useQuery({
     queryKey: ['dashboardStats', completedGameIds.join(',')],
     queryFn: async () => {
       if (completedGameIds.length === 0) return {};
-      
+
       try {
         const response = await apiRequest('GET', `/api/games/stats/batch?gameIds=${completedGameIds.join(',')}`);
         return response;
@@ -58,7 +57,7 @@ export default function OpponentDetailed() {
       const gameStats = centralizedStats[game.id] || [];
       const teamScore = gameStats.reduce((sum: number, stat: any) => sum + (stat.goalsFor || 0), 0);
       const opponentScore = gameStats.reduce((sum: number, stat: any) => sum + (stat.goalsAgainst || 0), 0);
-      
+
       return {
         game,
         teamScore,
@@ -203,12 +202,13 @@ export default function OpponentDetailed() {
                 {detailedStats.gameResults.map((result) => (
                   <div 
                     key={result.game.id} 
-                    className="flex items-center justify-between p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
-                    onClick={() => navigate(`/game/${result.game.id}`)}
+                    className="flex items-center justify-between p-3 border rounded-lg"
                   >
                     <div>
                       <p className="font-medium">{formatDate(result.game.date)}</p>
-                      <p className="text-sm text-gray-600">{result.game.time}</p>
+                      <p className="text-sm text-gray-600">
+                        {result.game.time} {result.game.round ? `• Round ${result.game.round}` : ''}
+                      </p>
                     </div>
                     <div className="text-center">
                       <p className="font-semibold">
