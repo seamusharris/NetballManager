@@ -1,8 +1,9 @@
 
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { TrendingUp, TrendingDown, Target, Trophy, AlertTriangle } from 'lucide-react';
+import { TrendingUp, TrendingDown, Target, Trophy, AlertTriangle, ChevronRight } from 'lucide-react';
 import { Game, Opponent } from '@shared/schema';
 import { getWinLoseLabel, getWinLoseClass } from '@/lib/utils';
 
@@ -36,7 +37,7 @@ export default function OpponentMatchups({
   className 
 }: OpponentMatchupsProps) {
   const [matchups, setMatchups] = useState<OpponentMatchup[]>([]);
-  const [sortBy, setSortBy] = useState<'winRate' | 'games' | 'differential'>('winRate');
+  const navigate = useNavigate();
 
   useEffect(() => {
     const calculateMatchups = () => {
@@ -117,25 +118,14 @@ export default function OpponentMatchups({
         });
       });
 
-      // Sort matchups
-      opponentMatchups.sort((a, b) => {
-        switch (sortBy) {
-          case 'winRate':
-            return b.winRate - a.winRate;
-          case 'games':
-            return b.totalGamesPlayed - a.totalGamesPlayed;
-          case 'differential':
-            return b.scoreDifferential - a.scoreDifferential;
-          default:
-            return b.winRate - a.winRate;
-        }
-      });
+      // Sort by win rate by default
+      opponentMatchups.sort((a, b) => b.winRate - a.winRate);
 
       setMatchups(opponentMatchups);
     };
 
     calculateMatchups();
-  }, [games, opponents, centralizedStats, sortBy]);
+  }, [games, opponents, centralizedStats]);
 
   const bestMatchup = matchups.length > 0 ? matchups[0] : null;
   const worstMatchup = matchups.length > 0 ? matchups[matchups.length - 1] : null;
@@ -162,6 +152,10 @@ export default function OpponentMatchups({
     ));
   };
 
+  const handleOpponentClick = (opponentId: number) => {
+    navigate(`/opponent-analysis?opponent=${opponentId}`);
+  };
+
   return (
     <Card className={className}>
       <CardHeader>
@@ -169,26 +163,9 @@ export default function OpponentMatchups({
           <Trophy className="h-5 w-5" />
           Opponent Matchups
         </CardTitle>
-        <div className="flex gap-2 text-sm">
-          <button 
-            onClick={() => setSortBy('winRate')}
-            className={`px-2 py-1 rounded ${sortBy === 'winRate' ? 'bg-blue-100 text-blue-700' : 'text-gray-600'}`}
-          >
-            Win Rate
-          </button>
-          <button 
-            onClick={() => setSortBy('games')}
-            className={`px-2 py-1 rounded ${sortBy === 'games' ? 'bg-blue-100 text-blue-700' : 'text-gray-600'}`}
-          >
-            Games Played
-          </button>
-          <button 
-            onClick={() => setSortBy('differential')}
-            className={`px-2 py-1 rounded ${sortBy === 'differential' ? 'bg-blue-100 text-blue-700' : 'text-gray-600'}`}
-          >
-            Score Diff
-          </button>
-        </div>
+        <p className="text-sm text-gray-600">
+          Click on any opponent to view detailed analysis
+        </p>
       </CardHeader>
       <CardContent>
         {matchups.length === 0 ? (
@@ -226,27 +203,34 @@ export default function OpponentMatchups({
               )}
             </div>
 
-            {/* Detailed Matchups */}
+            {/* Clickable Opponent Matchups */}
             <div className="space-y-3 max-h-96 overflow-y-auto">
               {matchups.map((matchup) => (
-                <div key={matchup.opponent.id} className="border rounded-lg p-3 hover:bg-gray-50">
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="font-medium">{matchup.opponent.teamName}</h4>
+                <div 
+                  key={matchup.opponent.id} 
+                  className="border rounded-lg p-3 hover:bg-gray-50 cursor-pointer transition-colors group"
+                  onClick={() => handleOpponentClick(matchup.opponent.id)}
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="font-medium group-hover:text-blue-600 transition-colors">
+                      {matchup.opponent.teamName}
+                    </h4>
                     <div className="flex items-center gap-2">
                       {getTrendIcon(matchup.trend)}
                       <Badge variant="outline" className="text-xs">
                         {matchup.totalGamesPlayed} games
                       </Badge>
+                      <ChevronRight className="h-4 w-4 text-gray-400 group-hover:text-blue-600 transition-colors" />
                     </div>
                   </div>
                   
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-sm">
                     <div>
-                      <p className="text-gray-500">Record</p>
+                      <p className="text-gray-500 text-xs">Record</p>
                       <p className="font-medium">{matchup.wins}-{matchup.losses}-{matchup.draws}</p>
                     </div>
                     <div>
-                      <p className="text-gray-500">Win Rate</p>
+                      <p className="text-gray-500 text-xs">Win Rate</p>
                       <p className={`font-medium ${
                         matchup.winRate >= 70 ? 'text-green-600' : 
                         matchup.winRate >= 50 ? 'text-yellow-600' : 'text-red-600'
@@ -255,22 +239,22 @@ export default function OpponentMatchups({
                       </p>
                     </div>
                     <div>
-                      <p className="text-gray-500">Avg Score</p>
+                      <p className="text-gray-500 text-xs">Avg Score</p>
                       <p className="font-medium">{matchup.avgScoreFor}-{matchup.avgScoreAgainst}</p>
                     </div>
                     <div>
-                      <p className="text-gray-500">Recent Form</p>
-                      <div className="flex">{getFormDisplay(matchup.recentForm)}</div>
+                      <p className="text-gray-500 text-xs">Score Diff</p>
+                      <p className={`font-medium ${
+                        matchup.scoreDifferential > 0 ? 'text-green-600' : 
+                        matchup.scoreDifferential < 0 ? 'text-red-600' : 'text-gray-600'
+                      }`}>
+                        {matchup.scoreDifferential > 0 ? '+' : ''}{matchup.scoreDifferential}
+                      </p>
                     </div>
-                  </div>
-                  
-                  <div className="mt-2 flex items-center justify-between text-xs text-gray-600">
-                    <span>
-                      Score Diff: {matchup.scoreDifferential > 0 ? '+' : ''}{matchup.scoreDifferential}
-                    </span>
-                    <span>
-                      Goals %: {matchup.goalsPercentage}%
-                    </span>
+                    <div>
+                      <p className="text-gray-500 text-xs">Recent Form</p>
+                      <div className="flex justify-start">{getFormDisplay(matchup.recentForm)}</div>
+                    </div>
                   </div>
                 </div>
               ))}
