@@ -864,8 +864,7 @@ export default function LiveStats() {
 
   // Check if a stat is position-specific
   const isPositionSpecificStat = (stat: StatType): boolean => {
-    return !isCommonStat```typescript
-(stat);
+    return !isCommonStat(stat);
   };
 
   // Render a stat counter button - supports both players and unassigned positions
