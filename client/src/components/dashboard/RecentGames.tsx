@@ -4,7 +4,7 @@ import { Link } from 'wouter';
 import { Game, Opponent, GameStat } from '@shared/schema';
 import { formatShortDate } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
-import GameScoreDisplay from '@/components/GameScoreDisplay';
+import { GameScoreDisplay } from '@/components/statistics/GameScoreDisplay';
 
 interface RecentGamesProps {
   games: Game[];
