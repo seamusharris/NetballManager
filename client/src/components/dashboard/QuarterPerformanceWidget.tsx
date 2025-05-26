@@ -191,19 +191,7 @@ export default function QuarterPerformanceWidget({
           })}
         </div>
 
-        {/* Summary stats */}
-        <div className="grid grid-cols-2 gap-3">
-          <div className="text-center bg-primary/5 p-2 rounded-lg">
-            <p className="text-xs text-gray-500 mb-1">Strongest</p>
-            <p className="text-sm font-bold text-primary">Q{strongestQuarter.quarter}</p>
-            <p className="text-xs text-gray-600">+{strongestQuarter.diff.toFixed(1)}</p>
-          </div>
-          <div className="text-center bg-primary/5 p-2 rounded-lg">
-            <p className="text-xs text-gray-500 mb-1">Games</p>
-            <p className="text-sm font-bold text-primary">{completedGamesArray.length}</p>
-            <p className="text-xs text-gray-600">Completed</p>
-          </div>
-        </div>
+        
       </CardContent>
     </Card>
   );
