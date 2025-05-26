@@ -64,6 +64,12 @@ export function GameStatusDialog({
       queryClient.invalidateQueries({ queryKey: ['/api/games'] });
       queryClient.invalidateQueries({ queryKey: ['/api/games', game?.id?.toString()] });
       
+      // Invalidate batch stats queries for any status change to ensure
+      // scores and caching behavior are properly updated
+      queryClient.invalidateQueries({ queryKey: ['batchGameStats'] });
+      // Also clear any individual game stats cache
+      queryClient.invalidateQueries({ queryKey: ['/api/games', game?.id, 'stats'] });
+      
       // Show success toast
       toast({
         title: 'Game status updated',
