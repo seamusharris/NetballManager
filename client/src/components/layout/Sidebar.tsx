@@ -38,7 +38,7 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen, isTablet }: Sid
   return (
     <aside 
       className={cn(
-        "bg-sidebar-background w-64 h-full fixed inset-y-0 left-0 z-30 shadow-lg transform transition-transform duration-300",
+        "bg-white w-64 h-full fixed inset-y-0 left-0 z-30 shadow-lg transform transition-transform duration-300",
         // Only show by default on large screens
         isTablet ? "" : "translate-x-0 static inset-0",
         // Slide in/out on tablet
