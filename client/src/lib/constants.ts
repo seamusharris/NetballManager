@@ -1,4 +1,3 @@
-
 import { Position, GameStatus } from '@shared/schema';
 
 // Position constants
@@ -88,17 +87,50 @@ export const STAT_COLORS: Record<string, string> = {
   infringement: 'bg-rose-100 hover:bg-rose-200 text-rose-700'
 };
 
-// Stat category types
+// Statistics Types and Categories
+export type StatType = 
+  | 'goalsFor' 
+  | 'goalsAgainst' 
+  | 'missedGoals' 
+  | 'rebounds' 
+  | 'intercepts' 
+  | 'badPass' 
+  | 'handlingError' 
+  | 'pickUp' 
+  | 'infringement';
+
 export type StatCategory = 
-  | 'goals'           // Goals scored
-  | 'missedGoals'     // Missed shot attempts 
-  | 'goalsAgainst'    // Goals conceded
-  | 'rebounds'        // Ball rebounds
-  | 'intercepts'      // Intercepting passes
-  | 'pickUp'          // Picking up loose balls
-  | 'badPass'         // Passes that miss target
-  | 'handlingError'   // Fumbles, drops, stepping
-  | 'infringement';   // Rules violations/penalties
+  | 'goals' 
+  | 'missedGoals' 
+  | 'rebounds' 
+  | 'intercepts' 
+  | 'pickUp' 
+  | 'badPass' 
+  | 'handlingError' 
+  | 'infringement';
+
+// Unified Statistics Configuration
+export const STATISTICS_CONFIG = {
+  // Cache settings
+  CACHE_DURATIONS: {
+    GAME_STATS: 5 * 60 * 1000,      // 5 minutes
+    PLAYER_PERFORMANCE: 10 * 60 * 1000, // 10 minutes
+    BATCH_OPERATIONS: 5 * 60 * 1000,    // 5 minutes
+  },
+
+  // Batch operation limits
+  BATCH_LIMITS: {
+    MAX_GAMES_PER_BATCH: 50,
+    MAX_CONCURRENT_REQUESTS: 10,
+  },
+
+  // Statistical thresholds
+  PERFORMANCE_THRESHOLDS: {
+    EXCELLENT_RATING: 8,
+    GOOD_RATING: 6,
+    AVERAGE_RATING: 4,
+  }
+} as const;
 
 // Common stats that appear for all positions
 export const COMMON_STATS: StatCategory[] = [
@@ -127,12 +159,12 @@ export const POSITION_STATS: Record<Position, StatCategory[]> = {
   // Attack positions
   'GS': ['goals', 'missedGoals', 'rebounds', 'intercepts', 'pickUp', 'badPass', 'handlingError', 'infringement'],
   'GA': ['goals', 'missedGoals', 'rebounds', 'intercepts', 'pickUp', 'badPass', 'handlingError', 'infringement'],
-  
+
   // Mid-court positions
   'WA': ['intercepts', 'pickUp', 'badPass', 'handlingError', 'infringement'],
   'C': ['intercepts', 'pickUp', 'badPass', 'handlingError', 'infringement'],
   'WD': ['intercepts', 'pickUp', 'badPass', 'handlingError', 'infringement'],
-  
+
   // Defense positions
   'GD': ['goalsAgainst', 'rebounds', 'intercepts', 'pickUp', 'badPass', 'handlingError', 'infringement'],
   'GK': ['goalsAgainst', 'rebounds', 'intercepts', 'pickUp', 'badPass', 'handlingError', 'infringement'],

@@ -9,315 +9,149 @@ import {
 } from './scoresCache';
 
 /**
- * Interface for game score information
+ * Unified Statistics Service - handles all game statistics operations
  */
-export interface GameScores {
-  quarterScores: {
-    '1': { for: number, against: number },
-    '2': { for: number, against: number },
-    '3': { for: number, against: number },
-    '4': { for: number, against: number }
-  };
-  finalScore: {
-    for: number,
-    against: number
-  };
-}
+class UnifiedStatisticsService {
+  // Cache for batch operations to avoid duplicate requests
+  private batchCache = new Map<string, Promise<any>>();
 
-/**
- * Interface for position-based statistics
- */
-export interface PositionStats {
-  gameId: number;
-  quarter: number;
-  position: Position;
-  goalsFor: number;
-  goalsAgainst: number;
-  missedGoals: number;
-  rebounds: number;
-  intercepts: number;
-  badPass: number;
-  handlingError: number;
-  pickUp: number;
-  infringement: number;
-  rating: number | null;
-}
-
-/**
- * Interface for player performance statistics
- */
-export interface PlayerPerformance {
-  playerId: number;
-  gamesPlayed: number;
-  goals: number;
-  goalsAgainst: number;
-  missedGoals: number;
-  rebounds: number;
-  intercepts: number;
-  badPass: number;
-  handlingError: number;
-  pickUp: number;
-  infringement: number;
-  rating: number;
-  quartersByPosition: Record<Position, number>;
-}
-
-/**
- * Interface for game statistics update
- */
-export interface StatUpdate {
-  id?: number;
-  gameId: number;
-  position: Position;
-  quarter: number;
-  goalsFor?: number;
-  goalsAgainst?: number;
-  missedGoals?: number;
-  rebounds?: number;
-  intercepts?: number;
-  badPass?: number;
-  handlingError?: number;
-  pickUp?: number;
-  infringement?: number;
-  rating?: number | null;
-}
-
-/**
- * Centralized service for all statistics calculations and operations
- */
-export class StatisticsService {
-  
   /**
-   * Fetch game statistics from the API - with mandatory cache bypass
-   */
-  async getGameStats(gameId: number): Promise<GameStat[]> {
-    try {
-      // Add timestamp to force a fresh network request every time
-      const timestamp = new Date().getTime();
-      const stats = await apiRequest('GET', `/api/games/${gameId}/stats?_t=${timestamp}`);
-      console.log(`Fetched ${stats.length} fresh stats for game ${gameId}`);
-      return stats;
-    } catch (error) {
-      console.error(`Error fetching stats for game ${gameId}:`, error);
-      return [];
-    }
-  }
-  
-  /**
-   * Fetch statistics for multiple games at once using the batch endpoint
-   * This significantly reduces the number of network requests when loading multiple games
+   * Get stats for multiple games efficiently using batch endpoint
    */
   async getBatchGameStats(gameIds: number[]): Promise<Record<number, GameStat[]>> {
+    if (!gameIds.length) return {};
+
+    const cacheKey = `batch-${gameIds.sort().join(',')}`;
+
+    // Check if we already have a pending request for this batch
+    if (this.batchCache.has(cacheKey)) {
+      return this.batchCache.get(cacheKey);
+    }
+
+    const batchPromise = this.executeBatchRequest(gameIds);
+    this.batchCache.set(cacheKey, batchPromise);
+
+    // Clean up cache after request completes
+    batchPromise.finally(() => {
+      this.batchCache.delete(cacheKey);
+    });
+
+    return batchPromise;
+  }
+
+  private async executeBatchRequest(gameIds: number[]): Promise<Record<number, GameStat[]>> {
     try {
-      // If no game IDs are provided, return an empty object
-      if (!gameIds.length) {
-        return {};
-      }
-      
-      // Format the IDs for the query parameter
       const idsParam = gameIds.join(',');
-      const timestamp = new Date().getTime(); // For cache busting if needed
-      
-      try {
-        // Use the correct query parameter format - try using a simpler approach
-        const url = `/api/games/stats/batch`;
-        // Pass gameIds directly in the options object as a searchParam
-        const statsMap = await apiRequest('GET', url, { gameIds: idsParam });
-        
-        console.log(`Fetched batch stats for ${gameIds.length} games in a single request`);
-        return statsMap;
-      } catch (fetchError) {
-        console.warn(`Batch stats fetch failed, falling back to individual fetches: ${fetchError}`);
-        
-        // Fallback to fetching each game's stats individually if batch fails
-        const statsMap: Record<number, GameStat[]> = {};
-        
-        // Use Promise.allSettled to prevent one failure from breaking everything
-        const results = await Promise.allSettled(
-          gameIds.map(async (gameId) => {
-            try {
-              const stats = await apiRequest('GET', `/api/games/${gameId}/stats`);
-              return { gameId, stats };
-            } catch (individualError) {
-              console.warn(`Failed to fetch stats for game ${gameId}: ${individualError}`);
-              return { gameId, stats: [] };
-            }
-          })
-        );
-        
-        // Process successful results
-        results.forEach((result) => {
-          if (result.status === 'fulfilled') {
-            const { gameId, stats } = result.value;
-            statsMap[gameId] = stats;
-          }
-        });
-        
-        console.log(`Completed fallback fetches for ${gameIds.length} games`);
-        return statsMap;
-      }
+      const statsMap = await apiRequest('GET', `/api/games/stats/batch?gameIds=${idsParam}`);
+      console.log(`Batch fetched stats for ${gameIds.length} games`);
+      return statsMap;
     } catch (error) {
-      console.error(`Error in batch stats operation: ${error}`);
-      return {};
+      console.warn('Batch fetch failed, falling back to individual requests');
+      return this.fallbackIndividualFetch(gameIds);
     }
   }
-  
-  /**
-   * Fetch game rosters from the API
-   */
-  async getGameRosters(gameId: number): Promise<Roster[]> {
-    return apiRequest('GET', `/api/games/${gameId}/rosters`);
+
+  private async fallbackIndividualFetch(gameIds: number[]): Promise<Record<number, GameStat[]>> {
+    const statsMap: Record<number, GameStat[]> = {};
+    const results = await Promise.allSettled(
+      gameIds.map(id => apiRequest('GET', `/api/games/${id}/stats`))
+    );
+
+    results.forEach((result, index) => {
+      if (result.status === 'fulfilled') {
+        statsMap[gameIds[index]] = result.value;
+      } else {
+        statsMap[gameIds[index]] = [];
+      }
+    });
+
+    return statsMap;
   }
-  
+
   /**
-   * Calculate game scores (for and against) by quarter and final
-   * This is the critical function that updates scores everywhere
-   * Now with enhanced global caching support
+   * Calculate scores for multiple games efficiently
    */
-  async calculateGameScores(gameId: number, forceRefresh: boolean = false): Promise<GameScores> {
-    // Try to get from global cache first if not forcing refresh
-    if (!forceRefresh) {
-      const cachedScores = getCachedScores(gameId);
-      if (cachedScores) {
-        console.log(`Using cached scores for game ${gameId} from global cache`);
-        return cachedScores;
+  async calculateBatchGameScores(gameIds: number[]): Promise<Record<number, GameScores>> {
+    const scores: Record<number, GameScores> = {};
+
+    // Check cache first for all games
+    const uncachedGameIds: number[] = [];
+    for (const gameId of gameIds) {
+      const cached = getCachedScores(gameId);
+      if (cached) {
+        scores[gameId] = cached;
+      } else {
+        uncachedGameIds.push(gameId);
       }
     }
-    
-    // First check if this is a forfeit game
-    const game = await apiRequest('GET', `/api/games/${gameId}`);
-    
-    // Special handling for forfeit games - return scores based on forfeit type
-    if (isForfeitGame(game)) {
-      console.log(`Forfeit game detected (ID: ${gameId}, status: ${game.status}), returning appropriate forfeit score`);
-      const forfeitScore = getForfeitGameScore(game);
-      
-      // Cache the forfeit score with game status for future use
-      cacheScores(gameId, forfeitScore, undefined, game.status);
-      
-      return forfeitScore;
+
+    if (uncachedGameIds.length === 0) {
+      return scores;
     }
-    
-    // For non-forfeit games, proceed with normal calculation
-    // Only force a fresh data fetch if explicitly requested
-    let stats;
-    if (forceRefresh) {
-      const timestamp = new Date().getTime();
-      stats = await apiRequest('GET', `/api/games/${gameId}/stats?_t=${timestamp}`);
-      console.log(`Calculating scores with ${stats.length} fresh stats for game ${gameId}`);
-    } else {
-      stats = await apiRequest('GET', `/api/games/${gameId}/stats`);
-      console.log(`Calculating scores with ${stats.length} cached stats for game ${gameId}`);
+
+    // Get stats for uncached games
+    const statsMap = await this.getBatchGameStats(uncachedGameIds);
+
+    // Calculate scores for each uncached game
+    for (const gameId of uncachedGameIds) {
+      const stats = statsMap[gameId] || [];
+      const gameScores = this.calculateScoresFromStats(stats, gameId);
+      scores[gameId] = gameScores;
+      cacheScores(gameId, gameScores, stats);
     }
-    
-    // Initialize score structure
+
+    return scores;
+  }
+
+  private calculateScoresFromStats(stats: GameStat[], gameId: number): GameScores {
     const quarterScores = {
       '1': { for: 0, against: 0 },
       '2': { for: 0, against: 0 },
       '3': { for: 0, against: 0 },
       '4': { for: 0, against: 0 }
     };
-    
-    // Create a map of the latest stats for each position/quarter combination
-    const latestPositionStats: Record<string, GameStat> = {};
-    
-    // Find the latest stat for each position/quarter combination
-    stats.forEach((stat: GameStat) => {
-      if (!stat || !stat.quarter) return;
-      
-      // For position-based stats (with valid position)
-      if (stat.position) {
-        const key = `${stat.position}-${stat.quarter}`;
-        
-        // Always use the data with the highest ID value for each position/quarter
-        if (!latestPositionStats[key] || stat.id > latestPositionStats[key].id) {
-          latestPositionStats[key] = stat;
-        }
-      }
-      // For legacy stats (with null position but valid data)
-      else {
-        // Only include legacy stats if they have valid goal data
-        if (typeof stat.goalsFor === 'number' || typeof stat.goalsAgainst === 'number') {
-          // Use a special key format for legacy stats
-          const key = `legacy-${stat.id}-${stat.quarter}`;
-          latestPositionStats[key] = stat;
-        }
+
+    // Group by position/quarter and take latest
+    const latestStats: Record<string, GameStat> = {};
+    stats.forEach(stat => {
+      if (!stat.quarter || !stat.position) return;
+
+      const key = `${stat.position}-${stat.quarter}`;
+      if (!latestStats[key] || stat.id > latestStats[key].id) {
+        latestStats[key] = stat;
       }
     });
-    
-    // Sum up goals from all positions for each quarter
-    Object.values(latestPositionStats).forEach((stat: GameStat) => {
-      if (stat && stat.quarter >= 1 && stat.quarter <= 4) {
-        const quarterKey = stat.quarter.toString() as '1' | '2' | '3' | '4';
-        quarterScores[quarterKey].for += (stat.goalsFor || 0);
-        quarterScores[quarterKey].against += (stat.goalsAgainst || 0);
+
+    // Sum goals by quarter
+    Object.values(latestStats).forEach(stat => {
+      if (stat.quarter >= 1 && stat.quarter <= 4) {
+        const quarter = stat.quarter.toString() as '1' | '2' | '3' | '4';
+        quarterScores[quarter].for += stat.goalsFor || 0;
+        quarterScores[quarter].against += stat.goalsAgainst || 0;
       }
     });
-    
-    // Calculate final score
+
     const finalScore = {
-      for: quarterScores['1'].for + quarterScores['2'].for + 
-           quarterScores['3'].for + quarterScores['4'].for,
-      against: quarterScores['1'].against + quarterScores['2'].against +
-               quarterScores['3'].against + quarterScores['4'].against
+      for: quarterScores['1'].for + quarterScores['2'].for + quarterScores['3'].for + quarterScores['4'].for,
+      against: quarterScores['1'].against + quarterScores['2'].against + quarterScores['3'].against + quarterScores['4'].against
     };
-    
-    const scores = {
-      quarterScores,
-      finalScore
-    };
-    
-    // Cache the newly calculated scores for future use
-    cacheScores(gameId, scores, stats);
-    
-    return scores;
+
+    return { quarterScores, finalScore };
   }
-  
+
   /**
    * Get position-based statistics for a game
    */
-  async getPositionStats(gameId: number, forceRefresh: boolean = false): Promise<Record<string, PositionStats>> {
-    // First check if this is a forfeit game
-    const game = await apiRequest('GET', `/api/games/${gameId}`);
-    
-    // Return empty stats for forfeit games
-    if (isForfeitGame(game)) {
-      console.log(`Forfeit game detected (ID: ${gameId}), returning empty position stats`);
-      return {};
-    }
-    
-    // Only force a fresh data fetch if explicitly requested
-    let stats;
-    if (forceRefresh) {
-      const timestamp = new Date().getTime();
-      stats = await apiRequest('GET', `/api/games/${gameId}/stats?_t=${timestamp}`);
-      console.log(`Calculating position stats with ${stats.length} fresh stats for game ${gameId}`);
-    } else {
-      stats = await apiRequest('GET', `/api/games/${gameId}/stats`);
-      console.log(`Calculating position stats with ${stats.length} cached stats for game ${gameId}`);
-    }
-    
-    // Create a map of the latest stats for each position/quarter combination
-    const positionStats: Record<string, PositionStats> = {};
-    
-    // Find the latest stat for each position/quarter combination
-    stats.forEach((stat: GameStat) => {
-      if (!stat || !stat.quarter || !stat.position) return;
-      
+  async getPositionStats(gameId: number): Promise<Record<string, PositionStat>> {
+    const statsMap = await this.getBatchGameStats([gameId]);
+    const stats = statsMap[gameId] || [];
+
+    const positionStats: Record<string, PositionStat> = {};
+
+    stats.forEach(stat => {
+      if (!stat.position || !stat.quarter) return;
+
       const key = `${stat.position}-${stat.quarter}`;
-      
-      // Skip if we already have a newer stat for this position/quarter
-      if (positionStats[key] && stat.id) {
-        // Skip this stat if we already have a newer one
-        const existingStat = stats.find((s: GameStat) => 
-          s.position === stat.position && 
-          s.quarter === stat.quarter && 
-          s.id > stat.id
-        );
-        if (existingStat) return;
-      }
-      
-      // Convert to PositionStats interface
       positionStats[key] = {
         gameId: stat.gameId,
         quarter: stat.quarter,
@@ -334,82 +168,83 @@ export class StatisticsService {
         rating: stat.rating
       };
     });
-    
+
     return positionStats;
   }
-  
+
   /**
-   * Map position-based statistics to player statistics using roster information
+   * Map stats to players using roster information
    */
-  async mapStatsToPlayers(gameId: number, forceRefresh: boolean = false): Promise<Record<number, GameStat[]>> {
-    // First check if this is a forfeit game
-    const game = await apiRequest('GET', `/api/games/${gameId}`);
-    
-    // Return empty stats map for forfeit games
-    if (isForfeitGame(game)) {
-      console.log(`Forfeit game detected (ID: ${gameId}), returning empty player stats mapping`);
-      return {};
-    }
-    
-    // Only force a fresh data fetch if explicitly requested
-    let stats, rosters;
-    if (forceRefresh) {
-      const timestamp = new Date().getTime();
-      stats = await apiRequest('GET', `/api/games/${gameId}/stats?_t=${timestamp}`);
-      rosters = await apiRequest('GET', `/api/games/${gameId}/rosters?_t=${timestamp}`);
-      console.log(`Mapping ${stats.length} fresh stats to players for game ${gameId}`);
-    } else {
-      stats = await apiRequest('GET', `/api/games/${gameId}/stats`);
-      rosters = await apiRequest('GET', `/api/games/${gameId}/rosters`);
-      console.log(`Mapping ${stats.length} cached stats to players for game ${gameId}`);
-    }
-    
-    // Group stats by player
-    const statsByPlayer: Record<number, GameStat[]> = {};
-    
-    // Process each stat and map to the player who played that position
-    stats.forEach((stat: GameStat) => {
-      // Only process stats with valid position
+  async mapStatsToPlayers(gameId: number): Promise<Record<number, GameStat[]>> {
+    const [statsMap, rosters] = await Promise.all([
+      this.getBatchGameStats([gameId]),
+      apiRequest('GET', `/api/games/${gameId}/rosters`)
+    ]);
+
+    const stats = statsMap[gameId] || [];
+    const playerStats: Record<number, GameStat[]> = {};
+
+    stats.forEach(stat => {
       if (!stat.position) return;
-      
-      // Find which player was in this position for this quarter
-      const playerInPosition = rosters.find((r: Roster) => 
+
+      const playerRoster = rosters.find((r: Roster) => 
         r.quarter === stat.quarter && 
-        r.position === stat.position &&
-        r.gameId === gameId
+        r.position === stat.position
       );
-      
-      // If we found the player, add this stat to their collection
-      if (playerInPosition) {
-        const playerId = playerInPosition.playerId;
-        
-        if (!statsByPlayer[playerId]) {
-          statsByPlayer[playerId] = [];
+
+      if (playerRoster) {
+        if (!playerStats[playerRoster.playerId]) {
+          playerStats[playerRoster.playerId] = [];
         }
-        
-        statsByPlayer[playerId].push(stat);
+        playerStats[playerRoster.playerId].push(stat);
       }
     });
-    
-    return statsByPlayer;
+
+    return playerStats;
   }
-  
+
   /**
-   * Calculate player performance statistics across all games
+   * Update game statistics
+   */
+  async updateGameStat(gameId: number, position: Position, quarter: number, updates: Partial<GameStat>): Promise<GameStat> {
+    // Clear cache for this game
+    invalidateGameCache(gameId);
+
+    // Find existing stat
+    const statsMap = await this.getBatchGameStats([gameId]);
+    const stats = statsMap[gameId] || [];
+    const existingStat = stats.find(s => s.position === position && s.quarter === quarter);
+
+    if (existingStat) {
+      return apiRequest('PATCH', `/api/gamestats/${existingStat.id}`, updates);
+    } else {
+      return apiRequest('POST', '/api/gamestats', {
+        gameId,
+        position,
+        quarter,
+        ...updates
+      });
+    }
+  }
+
+  /**
+   * Calculate player performance across games
    */
   async calculatePlayerPerformance(playerId: number, gameIds?: number[]): Promise<PlayerPerformance> {
-    // Get all games if not specified
+    // Get all games if not specified, filter out forfeits
     const allGames = gameIds 
       ? await Promise.all(gameIds.map(id => apiRequest('GET', `/api/games/${id}`)))
       : await apiRequest('GET', '/api/games');
-    
-    // Filter out forfeit games (they don't count for player statistics)
+
     const validGames = allGames.filter((g: Game) => !isForfeitGame(g));
-    
-    // Get IDs of non-forfeit games only
-    const games = validGames.map((g: Game) => g.id);
-    
-    // Initialize player performance
+    const validGameIds = validGames.map((g: Game) => g.id);
+
+    // Get all stats and rosters in batch
+    const [statsMap, ...rosterArrays] = await Promise.all([
+      this.getBatchGameStats(validGameIds),
+      ...validGameIds.map(id => apiRequest('GET', `/api/games/${id}/rosters`))
+    ]);
+
     const performance: PlayerPerformance = {
       playerId,
       gamesPlayed: 0,
@@ -427,103 +262,105 @@ export class StatisticsService {
         'GS': 0, 'GA': 0, 'WA': 0, 'C': 0, 'WD': 0, 'GD': 0, 'GK': 0
       }
     };
-    
-    // Track games this player participated in
+
     const gamesPlayed = new Set<number>();
     let totalRating = 0;
     let ratingCount = 0;
-    
-    // Process each game
-    for (const gameId of games) {
-      // Get rosters for this game to determine positions played
-      const rosters = await this.getGameRosters(gameId);
-      
-      // Find the positions this player played in this game
-      const playerPositions = rosters.filter(r => r.playerId === playerId);
-      
-      // If player didn't play in this game, skip it
-      if (playerPositions.length === 0) continue;
-      
-      // Mark this game as played
+
+    validGameIds.forEach((gameId, index) => {
+      const stats = statsMap[gameId] || [];
+      const rosters = rosterArrays[index] || [];
+
+      const playerRosters = rosters.filter((r: Roster) => r.playerId === playerId);
+
+      if (playerRosters.length === 0) return;
+
       gamesPlayed.add(gameId);
-      
-      // Count quarters by position
-      playerPositions.forEach(roster => {
+
+      playerRosters.forEach((roster: Roster) => {
         performance.quartersByPosition[roster.position]++;
-      });
-      
-      // Get stats for this game
-      const gameStats = await this.getGameStats(gameId);
-      
-      // Find the stats for positions this player played
-      playerPositions.forEach(roster => {
-        const playerStat = gameStats.find(s => 
-          s.position === roster.position && 
-          s.quarter === roster.quarter
+
+        const stat = stats.find((s: GameStat) => 
+          s.position === roster.position && s.quarter === roster.quarter
         );
-        
-        if (playerStat) {
-          // Add to performance totals
-          performance.goals += playerStat.goalsFor || 0;
-          performance.goalsAgainst += playerStat.goalsAgainst || 0;
-          performance.missedGoals += playerStat.missedGoals || 0;
-          performance.rebounds += playerStat.rebounds || 0;
-          performance.intercepts += playerStat.intercepts || 0;
-          performance.badPass += playerStat.badPass || 0;
-          performance.handlingError += playerStat.handlingError || 0;
-          performance.pickUp += playerStat.pickUp || 0;
-          performance.infringement += playerStat.infringement || 0;
-          
-          // Only include ratings from quarter 1
-          if (playerStat.quarter === 1 && playerStat.rating !== null) {
-            totalRating += playerStat.rating;
+
+        if (stat) {
+          performance.goals += stat.goalsFor || 0;
+          performance.goalsAgainst += stat.goalsAgainst || 0;
+          performance.missedGoals += stat.missedGoals || 0;
+          performance.rebounds += stat.rebounds || 0;
+          performance.intercepts += stat.intercepts || 0;
+          performance.badPass += stat.badPass || 0;
+          performance.handlingError += stat.handlingError || 0;
+          performance.pickUp += stat.pickUp || 0;
+          performance.infringement += stat.infringement || 0;
+
+          if (stat.quarter === 1 && stat.rating !== null) {
+            totalRating += stat.rating;
             ratingCount++;
           }
         }
       });
-    }
-    
-    // Calculate final values
+    });
+
     performance.gamesPlayed = gamesPlayed.size;
     performance.rating = ratingCount > 0 ? Math.round(totalRating / ratingCount) : 5;
-    
+
     return performance;
   }
-  
-  /**
-   * Create or update game statistics
-   */
-  async updateGameStats(statUpdate: StatUpdate): Promise<GameStat> {
-    // Check if we have an existing stat
-    const existingStats = await this.getGameStats(statUpdate.gameId);
-    const existingStat = existingStats.find(s => 
-      s.position === statUpdate.position && 
-      s.quarter === statUpdate.quarter
-    );
-    
-    if (existingStat) {
-      // Update existing stat
-      return apiRequest('PATCH', `/api/games/stats/${existingStat.id}`, statUpdate);
-    } else {
-      // Create new stat
-      return apiRequest('POST', '/api/games/stats', statUpdate);
-    }
-  }
-  
-  /**
-   * Batch update multiple game statistics
-   */
-  async batchUpdateGameStats(statUpdates: StatUpdate[]): Promise<GameStat[]> {
-    const results: GameStat[] = [];
-    
-    for (const update of statUpdates) {
-      const result = await this.updateGameStats(update);
-      results.push(result);
-    }
-    
-    return results;
-  }
 }
+
+// Interfaces
+export interface GameScores {
+  quarterScores: {
+    '1': { for: number, against: number },
+    '2': { for: number, against: number },
+    '3': { for: number, against: number },
+    '4': { for: number, against: number }
+  };
+  finalScore: {
+    for: number,
+    against: number
+  };
+}
+
+export interface PositionStat {
+  gameId: number;
+  quarter: number;
+  position: Position;
+  goalsFor: number;
+  goalsAgainst: number;
+  missedGoals: number;
+  rebounds: number;
+  intercepts: number;
+  badPass: number;
+  handlingError: number;
+  pickUp: number;
+  infringement: number;
+  rating: number | null;
+}
+
+export interface PlayerPerformance {
+  playerId: number;
+  gamesPlayed: number;
+  goals: number;
+  goalsAgainst: number;
+  missedGoals: number;
+  rebounds: number;
+  intercepts: number;
+  badPass: number;
+  handlingError: number;
+  pickUp: number;
+  infringement: number;
+  rating: number;
+  quartersByPosition: Record<Position, number>;
+}
+
+// Export singleton instance
+export const unifiedStatsService = new UnifiedStatisticsService();
+
+// Legacy exports for backward compatibility
+export const statisticsService = unifiedStatsService;
 
 // Calculate game scores from statistics
 export function calculateGameScores(stats: GameStat[]) {
@@ -558,6 +395,4 @@ export function getGameStatusColor(status: GameStatus): string {
   
   return colorMap[status] || 'gray';
 }
-
-// Create a singleton instance for use throughout the app
-export const statisticsService = new StatisticsService();
+export { unifiedStatsService as StatisticsService };
