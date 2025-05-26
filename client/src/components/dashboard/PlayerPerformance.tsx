@@ -75,16 +75,7 @@ export default function PlayerPerformance({ players, games, className, seasonFil
   const gameIds = completedGames.map(game => game.id);
   const enableQuery = gameIds.length > 0;
 
-  // DEBUG: Log the exact data being passed to the batch hook
-  console.log('PlayerPerformance DEBUG:', {
-    totalGames: games.length,
-    filteredGames: filteredGames.length,
-    completedGames: completedGames.length,
-    gameIds: gameIds,
-    gameIdsType: typeof gameIds,
-    gameIdsArray: Array.isArray(gameIds),
-    enableQuery
-  });
+  
 
   // Use the batch stats hook instead of individual requests
   const { statsMap: gameStatsMap, isLoading: isLoadingStats } = useBatchGameStatistics(gameIds, false);

@@ -122,7 +122,6 @@ export function getCachedScores(
   gameStatus?: string | null
 ): GameScores | null {
   if (isCacheValid(gameId, stats, gameStatus)) {
-    console.log(`Using cached scores for game ${gameId}`);
     return globalScoresCache[gameId].scores;
   }
   return null;
@@ -145,8 +144,6 @@ export function cacheScores(
     statsHash,
     lastModified: Date.now()
   };
-  
-  console.log(`Cached scores for game ${gameId} with hash ${statsHash.substring(0, 20)}...`);
 }
 
 /**
@@ -156,7 +153,6 @@ export function invalidateGameCache(gameId: number): void {
   if (globalScoresCache[gameId]) {
     // Keep the cached scores but mark for refresh
     globalScoresCache[gameId].timestamp = 0;
-    console.log(`Invalidated cache for game ${gameId}`);
   }
 }
 
@@ -165,7 +161,6 @@ export function invalidateGameCache(gameId: number): void {
  */
 export function clearGameCache(gameId: number): void {
   delete globalScoresCache[gameId];
-  console.log(`Cleared cache for game ${gameId}`);
 }
 
 /**
@@ -175,7 +170,6 @@ export function clearAllCache(): void {
   Object.keys(globalScoresCache).forEach(key => {
     delete globalScoresCache[parseInt(key)];
   });
-  console.log('Cleared all game score caches');
 }
 
 // Export the cache for advanced use cases and debugging

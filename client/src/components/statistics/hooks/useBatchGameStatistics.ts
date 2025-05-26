@@ -12,24 +12,12 @@ import { useMemo } from 'react';
  * @param forceFresh - Whether to force fresh data (bypass cache)
  */
 export function useBatchGameStatistics(gameIds: number[], forceFresh: boolean = false) {
-  // DEBUG: Log exactly what we receive
-  console.log('useBatchGameStatistics called with:', {
-    gameIds,
-    gameIdsType: typeof gameIds,
-    gameIdsIsArray: Array.isArray(gameIds),
-    gameIdsLength: gameIds?.length,
-    forceFresh
-  });
-
   // Filter and sort gameIds for query key stability
   const validGameIds = useMemo(() => {
     if (!gameIds || !Array.isArray(gameIds) || gameIds.length === 0) {
-      console.log('useBatchGameStatistics: Invalid gameIds, returning empty array');
       return [];
     }
-    const filtered = gameIds.filter(id => id && typeof id === 'number' && id > 0 && !isNaN(id));
-    console.log('useBatchGameStatistics: Filtered gameIds:', filtered);
-    return filtered;
+    return gameIds.filter(id => id && typeof id === 'number' && id > 0 && !isNaN(id));
   }, [gameIds]);
   
   const sortedGameIds = useMemo(() => 
@@ -56,15 +44,10 @@ export function useBatchGameStatistics(gameIds: number[], forceFresh: boolean = 
     queryKey: ['batchGameStats', gameIdsKey, freshKey],
     queryFn: async () => {
       if (!sortedGameIds || sortedGameIds.length === 0) {
-        console.log('useBatchGameStatistics: No valid game IDs for batch fetch, returning empty object');
         return {};
       }
 
-      console.log(`useBatchGameStatistics: Batch fetching stats for ${sortedGameIds.length} games: [${sortedGameIds.join(', ')}]`);
-      
-      const result = await statisticsService.getBatchGameStats(sortedGameIds);
-      console.log(`useBatchGameStatistics: Successfully fetched stats for ${Object.keys(result).length} games`);
-      return result;
+      return await statisticsService.getBatchGameStats(sortedGameIds);
     },
     enabled: sortedGameIds.length > 0,
     staleTime: forceFresh ? 0 : CACHE_SETTINGS.BATCH_QUERY_STALE_TIME,

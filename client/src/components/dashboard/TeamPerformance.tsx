@@ -79,7 +79,6 @@ export default function TeamPerformance({ games, className, activeSeason, select
       try {
         const batchStats = await apiRequest('GET', `/api/games/stats/batch`, { gameIds: gameIdsKey });
         if (batchStats && Object.keys(batchStats).length > 0) {
-          console.log(`Successfully loaded batch stats for ${Object.keys(batchStats).length} games`);
           return batchStats;
         }
       } catch (error) {
@@ -100,7 +99,6 @@ export default function TeamPerformance({ games, className, activeSeason, select
         }
       }
 
-      console.log(`Fetched stats for ${Object.keys(statsMap).length} games individually`);
       return statsMap;
     },
     enabled: enableQuery,

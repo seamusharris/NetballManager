@@ -164,22 +164,18 @@ class UnifiedStatisticsService {
    */
   async getBatchGameStats(gameIds: number[]): Promise<Record<number, GameStat[]>> {
     if (!gameIds || gameIds.length === 0) {
-      console.log('getBatchGameStats: No game IDs provided, returning empty object');
       return {};
     }
 
     // Filter out invalid IDs
     const validIds = gameIds.filter(id => id && typeof id === 'number' && id > 0 && !isNaN(id));
     if (validIds.length === 0) {
-      console.log('getBatchGameStats: No valid game IDs after filtering, returning empty object');
       return {};
     }
 
     // Use the same direct approach that works for GamesList
     const gameIdsParam = validIds.join(',');
     const url = `/api/games/stats/batch?gameIds=${encodeURIComponent(gameIdsParam)}`;
-
-    console.log(`getBatchGameStats: Making direct request to ${url} for ${validIds.length} games`);
 
     try {
       const response = await fetch(url, {
@@ -194,7 +190,6 @@ class UnifiedStatisticsService {
       }
 
       const result = await response.json();
-      console.log(`getBatchGameStats: Successfully received stats for ${Object.keys(result).length} games`);
       return result;
     } catch (error) {
       console.error('getBatchGameStats: Error fetching batch stats:', error);
@@ -205,27 +200,22 @@ class UnifiedStatisticsService {
 
   private async executeBatchRequest(gameIds: number[]): Promise<Record<number, GameStat[]>> {
     if (!gameIds || !gameIds.length) {
-      console.warn('executeBatchRequest called with no game IDs');
       return {};
     }
 
     try {
       const validIds = gameIds.filter(id => id && id > 0);
       if (!validIds.length) {
-        console.warn('No valid game IDs found, skipping batch request');
         return {};
       }
 
       const idsParam = validIds.join(',');
-      console.log(`Making batch request for game IDs: ${idsParam}`);
       
       // Construct URL with proper query parameter handling
       const baseUrl = '/api/games/stats/batch';
       const queryParams = new URLSearchParams({ gameIds: idsParam });
       const url = `${baseUrl}?${queryParams.toString()}`;
-      console.log(`Full batch request URL: ${url}`);
       const statsMap = await apiRequest('GET', url);
-      console.log(`Batch fetched stats for ${validIds.length} games`);
       return statsMap || {};
     } catch (error) {
       console.warn('Batch fetch failed, falling back to individual requests:', error);
