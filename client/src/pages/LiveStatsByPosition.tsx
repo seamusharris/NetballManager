@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { GameStat, Position, allPositions, Opponent, Game, Player, Roster } from '@shared/schema';
+import { POSITION_NAMES, STAT_LABELS, STAT_COLORS } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
 import { 
   Card, 
@@ -33,42 +34,11 @@ const emptyPositionStats = {
   infringement: 0
 };
 
-// Stat colors for visual indication
-const statColors: Record<StatType, string> = {
-  goalsFor: 'bg-green-100 hover:bg-green-200 text-green-700',
-  missedGoals: 'bg-orange-100 hover:bg-orange-200 text-orange-700',
-  goalsAgainst: 'bg-red-100 hover:bg-red-200 text-red-700',
-  rebounds: 'bg-blue-100 hover:bg-blue-200 text-blue-700',
-  intercepts: 'bg-indigo-100 hover:bg-indigo-200 text-indigo-700',
-  pickUp: 'bg-purple-100 hover:bg-purple-200 text-purple-700',
-  badPass: 'bg-amber-100 hover:bg-amber-200 text-amber-700',
-  handlingError: 'bg-pink-100 hover:bg-pink-200 text-pink-700',
-  infringement: 'bg-rose-100 hover:bg-rose-200 text-rose-700'
-};
 
-// Human-readable labels for stats
-const statLabels: Record<StatType, string> = {
-  goalsFor: 'Goal',
-  missedGoals: 'Miss',
-  goalsAgainst: 'Goal Against',
-  rebounds: 'Rebound',
-  intercepts: 'Intercept',
-  pickUp: 'Pick Up',
-  badPass: 'Bad Pass',
-  handlingError: 'Handling Error',
-  infringement: 'Infringement'
-};
 
-// Position labels for display
-const positionLabels: Record<Position, string> = {
-  "GS": "Goal Shooter",
-  "GA": "Goal Attack",
-  "WA": "Wing Attack",
-  "C": "Center",
-  "WD": "Wing Defense",
-  "GD": "Goal Defense",
-  "GK": "Goal Keeper"
-};
+
+
+
 
 // Common stats that should appear in the top row for every position
 const commonStats: StatType[] = [
@@ -396,8 +366,8 @@ export default function LiveStatsByPosition() {
     
     return (
       <div className="flex flex-col items-center">
-        <div className={`text-center p-2 rounded-lg w-full ${statColors[stat]}`}>
-          <p className={`text-xs ${isBold ? 'font-bold' : ''}`}>{statLabels[stat]}</p>
+        <div className={`text-center p-2 rounded-lg w-full ${STAT_COLORS[stat]}`}>
+          <p className={`text-xs ${isBold ? 'font-bold' : ''}`}>{STAT_LABELS[stat]}</p>
           <p className={`text-xl ${isBold ? 'font-bold' : ''}`}>{currentValue}</p>
         </div>
         

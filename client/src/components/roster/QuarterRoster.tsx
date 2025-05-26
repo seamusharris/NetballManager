@@ -8,12 +8,12 @@ import {
 import { Avatar } from '@/components/ui/avatar';
 import { getInitials } from '@/lib/utils';
 import { Player, Position } from '@shared/schema';
+import { POSITION_NAMES } from '@/lib/constants';
 
 interface QuarterRosterProps {
   quarter: string;
   players: Player[];
   positions: Position[];
-  positionLabels: Record<Position, string>;
   assignments: Record<Position, number | null>;
   availablePlayersForPosition: (position: Position, currentPlayerId: number | null) => Player[];
   onAssignPlayer: (position: Position, playerId: number) => void;
@@ -24,7 +24,6 @@ export default function QuarterRoster({
   quarter,
   players,
   positions,
-  positionLabels,
   assignments,
   availablePlayersForPosition,
   onAssignPlayer,
@@ -81,7 +80,7 @@ export default function QuarterRoster({
         return (
           <div key={position} className="bg-gray-50 p-4 rounded-lg">
             <h4 className="font-semibold mb-2 text-neutral-dark">
-              {positionLabels[position]} ({position})
+              {POSITION_NAMES[position]} ({position})
             </h4>
             
             <Select 

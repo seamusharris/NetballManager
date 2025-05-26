@@ -29,31 +29,9 @@ const emptyPositionStats = {
   infringement: 0
 };
 
-// Stat colors for visual indication
-const statColors: Record<StatType, string> = {
-  goalsFor: 'bg-green-100 hover:bg-green-200 text-green-700',
-  missedGoals: 'bg-orange-100 hover:bg-orange-200 text-orange-700',
-  goalsAgainst: 'bg-red-100 hover:bg-red-200 text-red-700',
-  rebounds: 'bg-blue-100 hover:bg-blue-200 text-blue-700',
-  intercepts: 'bg-indigo-100 hover:bg-indigo-200 text-indigo-700',
-  pickUp: 'bg-purple-100 hover:bg-purple-200 text-purple-700',
-  badPass: 'bg-amber-100 hover:bg-amber-200 text-amber-700',
-  handlingError: 'bg-pink-100 hover:bg-pink-200 text-pink-700',
-  infringement: 'bg-rose-100 hover:bg-rose-200 text-rose-700'
-};
 
-// Human-readable labels for stats
-const statLabels: Record<StatType, string> = {
-  goalsFor: 'Goal',
-  missedGoals: 'Miss',
-  goalsAgainst: 'Goal Against',
-  rebounds: 'Rebound',
-  intercepts: 'Intercept',
-  pickUp: 'Pick Up',
-  badPass: 'Bad Pass',
-  handlingError: 'Handling Error',
-  infringement: 'Infringement'
-};
+
+import { STAT_LABELS, STAT_COLORS } from '@/lib/constants';
 
 // Which stats should be shown for each position
 const positionStats: Record<Position, Record<StatType, boolean>> = {
@@ -451,7 +429,7 @@ const PositionBasedStats: React.FC<PositionBasedStatsProps> = ({
     
     return (
       <div className="flex items-center gap-1 mb-1">
-        <span className="text-xs font-medium w-24">{statLabels[statType]}</span>
+        <span className="text-xs font-medium w-24">{STAT_LABELS[statType]}</span>
         <Button
           variant="outline"
           size="sm"
@@ -467,7 +445,7 @@ const PositionBasedStats: React.FC<PositionBasedStatsProps> = ({
         <Button
           variant="outline"
           size="sm"
-          className={`h-6 w-6 p-0 ${statColors[statType]}`}
+          className={`h-6 w-6 p-0 ${STAT_COLORS[statType]}`}
           onClick={() => adjustStat(position, statType, 1)}
         >
           +
