@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft } from 'lucide-react';
@@ -37,10 +36,8 @@ export const BackButton: React.FC<BackButtonProps> = ({
     }
   };
 
-  // If children are provided, use them. Otherwise use smart navigation or fallback.
-  const buttonText = children 
-    ? children 
-    : (canGoBack() ? `Back to ${getPreviousTitle()}` : 'Back');
+  // Use children if provided, otherwise just "Back"
+  const buttonText = children || 'Back';
 
   return (
     <Button
