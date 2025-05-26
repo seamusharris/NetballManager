@@ -62,7 +62,7 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen, isTablet }: Sid
       </div>
       <div className="px-4 py-6">
         <p className="text-gray-500 text-xs uppercase font-bold tracking-wider mb-4 px-2">Navigation</p>
-        <nav className="space-y-1">
+        <nav className="space-y-2">
           {navLinks.map((link) => (
             <Link 
               key={link.path}
