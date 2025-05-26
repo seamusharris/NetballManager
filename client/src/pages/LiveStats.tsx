@@ -274,9 +274,6 @@ export default function LiveStats() {
         };
       });
 
-      // Important: For simplicity, we want to map each position to a player and then
-      // map stats to that player. This is the correct approach for our position-based stats system.
-
       // Create a mapping from positions to players for each quarter
       const positionToPlayer: Record<number, Record<string, number>> = {};
 
@@ -285,31 +282,14 @@ export default function LiveStats() {
         positionToPlayer[q] = {};
       }
 
-      // First, log all roster entries to help with debugging
-      if (rosters && rosters.length > 0) {
-        rosters.forEach((roster: Roster) => {
-          console.log(`Roster entry: Player ${roster.playerId} played ${roster.position} in Q${roster.quarter}`);
-        });
-      }
-
       // Populate the position-to-player mapping from roster data
       if (rosters && rosters.length > 0) {
         rosters.forEach((roster: Roster) => {
           if (!positionToPlayer[roster.quarter]) {
             positionToPlayer[roster.quarter] = {};
           }
-
-          // Map this position to the player who played it
           positionToPlayer[roster.quarter][roster.position] = roster.playerId;
-        });
-      }
-
-      console.log(`Created position map:`, positionToPlayer);
-
-      // First, log all existing stats to help with debugging
-      if (existingStats && existingStats.length > 0) {
-        existingStats.forEach((stat: GameStat) => {
-          console.log(`Existing stat: ${stat.position} in Q${stat.quarter} has goals: ${stat.goalsFor}, against: ${stat.goalsAgainst}`);
+          console.log(`Roster entry: Player ${roster.playerId} (${players.find(p => p.id === roster.playerId)?.displayName}) played ${roster.position} in Q${roster.quarter}`);
         });
       }
 
@@ -333,6 +313,8 @@ export default function LiveStats() {
           }
         });
 
+        console.log(`Processing ${Object.keys(statsByPositionAndQuarter).length} unique position/quarter combinations`);
+
         // Process each unique position/quarter stat
         Object.values(statsByPositionAndQuarter).forEach((stat: GameStat) => {
           if (stat.position && stat.quarter >= 1 && stat.quarter <= 4) {
@@ -340,7 +322,8 @@ export default function LiveStats() {
             const playerId = positionToPlayer[stat.quarter]?.[stat.position];
 
             if (playerId && initialStats[playerId]) {
-              console.log(`Mapping stat for ${stat.position} in Q${stat.quarter} to player ${playerId}: Goals: ${stat.goalsFor}, Against: ${stat.goalsAgainst}`);
+              const playerName = players.find(p => p.id === playerId)?.displayName || `Player ${playerId}`;
+              console.log(`Mapping stat for ${stat.position} in Q${stat.quarter} to ${playerName}: Goals: ${stat.goalsFor || 0}, Missed: ${stat.missedGoals || 0}, Against: ${stat.goalsAgainst || 0}`);
 
               // Ensure quarter stats are initialized
               if (!initialStats[playerId][stat.quarter]) {
@@ -348,32 +331,36 @@ export default function LiveStats() {
               }
 
               // Populate individual stat values from position-based stats
-              Object.keys(emptyQuarterStats).forEach(key => {
-                const statKey = key as StatType;
-                if (stat[statKey] !== undefined) {
-                  // Ensure we convert to number to avoid type issues
+              const statKeys: StatType[] = ['goalsFor', 'goalsAgainst', 'missedGoals', 'rebounds', 'intercepts', 'badPass', 'handlingError', 'pickUp', 'infringement'];
+              
+              statKeys.forEach(statKey => {
+                if (stat[statKey] !== undefined && stat[statKey] !== null) {
                   const value = Number(stat[statKey]) || 0;
                   initialStats[playerId][stat.quarter][statKey] = value;
 
                   // Log non-zero values to help with debugging
                   if (value > 0) {
-                    console.log(`Setting ${statKey} = ${value} for player ${playerId} in Q${stat.quarter}`);
+                    console.log(`Setting ${statKey} = ${value} for ${playerName} in Q${stat.quarter}`);
                   }
                 }
               });
+
+              // Store position with the stats
+              initialStats[playerId][stat.quarter].position = stat.position;
             } else {
-              console.warn(`No player found in roster for position ${stat.position} in quarter ${stat.quarter}`);
+              console.warn(`No player found in roster for position ${stat.position} in quarter ${stat.quarter}. Available players in Q${stat.quarter}:`, Object.entries(positionToPlayer[stat.quarter] || {}).map(([pos, pid]) => `${pos}: ${players.find(p => p.id === pid)?.displayName || pid}`));
             }
           }
         });
       }
 
+      console.log('Final initialized stats:', initialStats);
       setLiveStats(initialStats);
       // Clear undo/redo stacks when loading fresh data
       setUndoStack([]);
       setRedoStack([]);
     }
-  }, [existingStats, players]);
+  }, [existingStats, players, rosters]);
 
   // Get player details by ID
   const getPlayer = (playerId: number): Player | undefined => {
