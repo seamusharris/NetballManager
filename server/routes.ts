@@ -1226,6 +1226,109 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Create a new stat for a specific game (standardized endpoint)
+  app.post("/api/games/:gameId/stats", async (req, res) => {
+    try {
+      const gameId = Number(req.params.gameId);
+      
+      // Ensure gameId matches the URL parameter
+      const statData = { ...req.body, gameId };
+      
+      // Log the request body to diagnose issues
+      console.log("Creating game stat with data:", statData);
+
+      // Ensure the rating is properly handled
+      if (statData.rating === undefined || statData.rating === '') {
+        statData.rating = null;
+      }
+
+      const parsedData = insertGameStatSchema.safeParse(statData);
+      if (!parsedData.success) {
+        console.error("Game stat validation error:", parsedData.error.errors);
+        return res.status(400).json({ message: "Invalid game stat data", errors: parsedData.error.errors });
+      }
+
+      // Validate quarter (1-4)
+      if (parsedData.data.quarter < 1 || parsedData.data.quarter > 4) {
+        return res.status(400).json({ message: "Quarter must be between 1 and 4" });
+      }
+
+      // Validate position is from allowed set
+      if (!POSITIONS.includes(parsedData.data.position as any)) {
+        console.error("Invalid position:", parsedData.data.position);
+        return res.status(400).json({ message: "Invalid position value" });
+      }
+
+      try {
+        // Check for existing stat
+        const existingStats = await storage.getGameStatsByGame(parsedData.data.gameId);
+        const duplicate = existingStats.find(s => 
+          s.gameId === parsedData.data.gameId && 
+          s.position === parsedData.data.position && 
+          s.quarter === parsedData.data.quarter
+        );
+
+        let stat;
+        if (duplicate) {
+          // Update existing stat instead of creating duplicate
+          console.log(`Updating existing stat ID ${duplicate.id} instead of creating duplicate`);
+          stat = await storage.updateGameStat(duplicate.id, {
+            goalsFor: parsedData.data.goalsFor,
+            goalsAgainst: parsedData.data.goalsAgainst,
+            missedGoals: parsedData.data.missedGoals,
+            rebounds: parsedData.data.rebounds,
+            intercepts: parsedData.data.intercepts,
+            badPass: parsedData.data.badPass,
+            handlingError: parsedData.data.handlingError,
+            pickUp: parsedData.data.pickUp,
+            infringement: parsedData.data.infringement,
+            rating: parsedData.data.rating
+          });
+        } else {
+          // Create new stat
+          stat = await storage.createGameStat(parsedData.data);
+        }
+
+        console.log("Game stat created/updated successfully:", stat);
+        res.set('Cache-Control', 'no-cache');
+        res.status(201).json(stat);
+      } catch (innerError) {
+        console.error("Inner error handling game stats:", innerError);
+        throw innerError;
+      }
+    } catch (error) {
+      console.error("Failed to create game stat:", error);
+      res.status(500).json({ message: "Failed to create game stat" });
+    }
+  });
+
+  // Update a specific stat for a specific game (standardized endpoint)
+  app.patch("/api/games/:gameId/stats/:id", async (req, res) => {
+    try {
+      const gameId = Number(req.params.gameId);
+      const id = Number(req.params.id);
+      
+      const updatedStat = await storage.updateGameStat(id, req.body);
+      if (!updatedStat) {
+        return res.status(404).json({ message: "Game stat not found" });
+      }
+      
+      // Verify the stat belongs to the correct game
+      if (updatedStat.gameId !== gameId) {
+        return res.status(400).json({ message: "Stat does not belong to the specified game" });
+      }
+      
+      // Invalidate cache for this game
+      res.set('Cache-Control', 'no-cache');
+      console.log(`Updated game stat for game ${updatedStat.gameId}, cache invalidated`);
+      
+      res.json(updatedStat);
+    } catch (error) {
+      console.error("Failed to update game stat:", error);
+      res.status(500).json({ message: "Failed to update game stat" });
+    }
+  });
+
   // Add a standard route without hyphens for game stats (for consistency)
   app.get("/api/gamestats", async (req, res) => {
     try {

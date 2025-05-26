@@ -332,7 +332,7 @@ export default function LiveStats() {
 
               // Populate individual stat values from position-based stats
               const statKeys: StatType[] = ['goalsFor', 'goalsAgainst', 'missedGoals', 'rebounds', 'intercepts', 'badPass', 'handlingError', 'pickUp', 'infringement'];
-              
+
               statKeys.forEach(statKey => {
                 if (stat[statKey] !== undefined && stat[statKey] !== null) {
                   const value = Number(stat[statKey]) || 0;
@@ -704,6 +704,96 @@ export default function LiveStats() {
     }
   };
 
+  // Save all stats to the database
+  const saveAllStatsMutation = useMutation({
+    mutationFn: async () => {
+      console.log('=== SAVING ALL STATS ===');
+      console.log('Live stats to save:', liveStats);
+
+      const updates = [];
+
+      // Convert liveStats to API calls
+      Object.keys(liveStats).forEach(playerIdStr => {
+        const playerId = parseInt(playerIdStr);
+
+        [1, 2, 3, 4].forEach(quarter => {
+          const quarterStats = liveStats[playerId]?.[quarter];
+          if (quarterStats) {
+            // Find the position for this player in this quarter
+            const rosterEntry = rosters.find(r => 
+              r.playerId === playerId && r.quarter === quarter
+            );
+
+            if (rosterEntry) {
+              const position = rosterEntry.position;
+
+              // Check if a stat already exists for this position/quarter
+              const existingStat = existingStats?.find(s => 
+                s.position === position && s.quarter === quarter
+              );
+
+              if (existingStat) {
+                // Update existing stat using the standardized endpoint
+                const updatePromise = apiClient.patch(`/api/games/${gameId}/stats/${existingStat.id}`, {
+                  goalsFor: quarterStats.goalsFor || 0,
+                  goalsAgainst: quarterStats.goalsAgainst || 0,
+                  missedGoals: quarterStats.missedGoals || 0,
+                  rebounds: quarterStats.rebounds || 0,
+                  intercepts: quarterStats.intercepts || 0,
+                  badPass: quarterStats.badPass || 0,
+                  handlingError: quarterStats.handlingError || 0,
+                  pickUp: quarterStats.pickUp || 0,
+                  infringement: quarterStats.infringement || 0,
+                  rating: quarterStats.rating
+                });
+                updates.push(updatePromise);
+              } else {
+                // Create new stat using the standardized endpoint
+                const createPromise = apiClient.post(`/api/games/${gameId}/stats`, {
+                  gameId: parseInt(gameId),
+                  position: position,
+                  quarter: quarter,
+                  goalsFor: quarterStats.goalsFor || 0,
+                  goalsAgainst: quarterStats.goalsAgainst || 0,
+                  missedGoals: quarterStats.missedGoals || 0,
+                  rebounds: quarterStats.rebounds || 0,
+                  intercepts: quarterStats.intercepts || 0,
+                  badPass: quarterStats.badPass || 0,
+                  handlingError: quarterStats.handlingError || 0,
+                  pickUp: quarterStats.pickUp || 0,
+                  infringement: quarterStats.infringement || 0,
+                  rating: quarterStats.rating
+                });
+                updates.push(createPromise);
+              }
+            }
+          }
+        });
+      });
+
+      console.log(`Executing ${updates.length} stat updates/creates`);
+      await Promise.all(updates);
+      console.log('All stats saved successfully');
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "All statistics have been saved successfully",
+      });
+
+      // Invalidate queries to refresh data
+      queryClient.invalidateQueries({ queryKey: [`/api/games/${gameId}/stats`] });
+    },
+    onError: (error) => {
+      console.error('Error saving stats:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save statistics. Please try again.",
+        variant: "destructive"
+      });
+    }
+  });
+
   // Get quarter total for a specific stat - prioritizes live stats for immediate updates
   const getQuarterTotal = (stat: StatType): number => {
     let total = 0;
@@ -774,7 +864,8 @@ export default function LiveStats() {
 
   // Check if a stat is position-specific
   const isPositionSpecificStat = (stat: StatType): boolean => {
-    return !isCommonStat(stat);
+    return !isCommonStat```typescript
+(stat);
   };
 
   // Render a stat counter button - supports both players and unassigned positions
