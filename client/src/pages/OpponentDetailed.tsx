@@ -3,8 +3,8 @@ import { useQuery } from '@tanstack/react-query';
 import { useParams, useLocation } from 'wouter';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { BarChart3, Calendar, ChevronLeft, Trophy, TrendingUp, TrendingDown, Target } from 'lucide-react';
+import { BackButton } from '@/components/ui/back-button';
+import { BarChart3, Calendar, Trophy, TrendingUp, TrendingDown, Target } from 'lucide-react';
 import { Game, Opponent } from '@shared/schema';
 import { formatDate, getWinLoseLabel } from '@/lib/utils';
 import { apiRequest } from '@/lib/apiClient';
@@ -109,15 +109,9 @@ export default function OpponentDetailed() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => navigate('/opponent-analysis')}
-            className="mb-4"
-          >
-            <ChevronLeft className="mr-1 h-4 w-4" />
+          <BackButton fallbackPath="/opponent-analysis">
             Back to Analysis
-          </Button>
+          </BackButton>
           <h1 className="text-3xl font-heading font-bold text-neutral-dark">
             {selectedOpponentData.teamName} - Detailed Analysis
           </h1>
