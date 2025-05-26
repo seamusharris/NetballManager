@@ -13,6 +13,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Users } from "lucide-react"
 
 import PerformanceCharts from './PerformanceCharts';
+import OpponentMatchups from './OpponentMatchups';
 import { Player, Game, Opponent, Season } from '@shared/schema';
 import { sortByDate } from '@/lib/utils';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
@@ -259,6 +260,18 @@ export default function DashboardSummary({
           seasonFilter={selectedSeasonId} 
           activeSeason={activeSeason}
           centralizedStats={centralizedStats}
+        />
+      )}
+
+      {/* Opponent Matchups */}
+      {isLoading || statsLoading ? (
+        <Skeleton className="h-[400px] w-full rounded-lg" />
+      ) : (
+        <OpponentMatchups 
+          games={filteredGames} 
+          opponents={opponents}
+          centralizedStats={centralizedStats}
+          className="w-full"
         />
       )}
     </div>

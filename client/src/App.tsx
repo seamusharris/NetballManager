@@ -27,6 +27,7 @@ import GameDetails from "./pages/GameDetails";
 // Lazy load components
 const StatsDebug = lazy(() => import("./pages/StatsDebug"));
 const PerformanceDemo = lazy(() => import("./pages/PerformanceDemo"));
+import OpponentAnalysis from './pages/OpponentAnalysis';
 
 /**
  * Loading spinner component for suspense fallbacks
@@ -87,6 +88,7 @@ function Router() {
             </Suspense>
           </ErrorBoundary>
         </Route>
+        <Route path="/opponent-analysis" component={OpponentAnalysis} />
         <Route component={withErrorBoundary(NotFound, 'NotFound')} />
       </Switch>
     </Layout>

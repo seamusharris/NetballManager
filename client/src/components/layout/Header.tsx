@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Link } from 'wouter';
 import { cn } from '@/lib/utils';
+import { Trophy } from 'lucide-react';
 
 interface HeaderProps {
   setIsMobileOpen: (open: boolean) => void;
@@ -21,7 +22,7 @@ interface HeaderProps {
 
 export default function Header({ setIsMobileOpen, isTablet }: HeaderProps) {
   const [location] = useLocation();
-  
+
   const getPageTitle = () => {
     const path = location.split('/')[1] || 'dashboard';
     return path.charAt(0).toUpperCase() + path.slice(1).replace('-', ' ');
@@ -33,7 +34,8 @@ export default function Header({ setIsMobileOpen, isTablet }: HeaderProps) {
     { path: '/roster', label: 'Roster', icon: <ClipboardList className="w-4 h-4" /> },
     { path: '/games', label: 'Games', icon: <Calendar className="w-4 h-4" /> },
     { path: '/seasons', label: 'Seasons', icon: <CalendarRange className="w-4 h-4" /> },
-    { path: '/opponents', label: 'Opponents', icon: <Flag className="w-4 h-4" /> },
+    { path: '/opponents', label: 'Opponents', icon: <Users className="w-4 h-4" /> },
+    { path: '/opponent-analysis', label: 'Matchup Analysis', icon: <Trophy className="w-4 h-4" /> },
     { path: '/statistics', label: 'Statistics', icon: <BarChart className="w-4 h-4" /> },
     { path: '/data-management', label: 'Data Management', icon: <Database className="w-4 h-4" /> },
     { path: '/performance', label: 'Performance', icon: <Zap className="w-4 h-4" /> },
@@ -53,7 +55,7 @@ export default function Header({ setIsMobileOpen, isTablet }: HeaderProps) {
           >
             <Menu className="h-5 w-5" />
           </Button>
-          
+
           {/* Desktop navigation dropdown */}
           <div className="hidden lg:flex items-center space-x-4">
             <DropdownMenu>
@@ -91,11 +93,11 @@ export default function Header({ setIsMobileOpen, isTablet }: HeaderProps) {
                 })}
               </DropdownMenuContent>
             </DropdownMenu>
-            
+
             <h2 className="text-xl font-semibold text-gray-800">{getPageTitle()}</h2>
           </div>
         </div>
-        
+
         <div className="flex items-center space-x-4">
           {/* Show search only on larger screens to save space on tablet */}
           <div className={`relative ${isTablet ? 'hidden md:block' : ''}`}>
@@ -107,13 +109,13 @@ export default function Header({ setIsMobileOpen, isTablet }: HeaderProps) {
             />
           </div>
         </div>
-        
+
         <div className="flex items-center space-x-4">
           <Button variant="ghost" size="icon" className="text-gray-600 focus:outline-none relative">
             <Bell className="h-5 w-5" />
             <span className="absolute top-1 right-1 block h-2 w-2 rounded-full bg-secondary"></span>
           </Button>
-          
+
           <div className="flex items-center space-x-2">
             {/* Hide coach name on tablet to save space */}
             <span className={`text-sm font-semibold ${isTablet ? 'hidden md:inline' : ''}`}>Coach Smith</span>
