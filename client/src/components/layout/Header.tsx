@@ -1,10 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
-import { Bell, Search } from 'lucide-react';
+import { Bell, Search, ChevronDown, Home, Users, ClipboardList, Calendar, CalendarRange, Flag, BarChart, Database, Zap, Settings as SettingsIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar } from '@/components/ui/avatar';
 import { Menu } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Link } from 'wouter';
 
 interface HeaderProps {
   setIsMobileOpen: (open: boolean) => void;
@@ -19,10 +26,24 @@ export default function Header({ setIsMobileOpen, isTablet }: HeaderProps) {
     return path.charAt(0).toUpperCase() + path.slice(1).replace('-', ' ');
   };
 
+  const navLinks = [
+    { path: '/', label: 'Dashboard', icon: <Home className="w-4 h-4" /> },
+    { path: '/players', label: 'Players', icon: <Users className="w-4 h-4" /> },
+    { path: '/roster', label: 'Roster', icon: <ClipboardList className="w-4 h-4" /> },
+    { path: '/games', label: 'Games', icon: <Calendar className="w-4 h-4" /> },
+    { path: '/seasons', label: 'Seasons', icon: <CalendarRange className="w-4 h-4" /> },
+    { path: '/opponents', label: 'Opponents', icon: <Flag className="w-4 h-4" /> },
+    { path: '/statistics', label: 'Statistics', icon: <BarChart className="w-4 h-4" /> },
+    { path: '/data-management', label: 'Data Management', icon: <Database className="w-4 h-4" /> },
+    { path: '/performance', label: 'Performance', icon: <Zap className="w-4 h-4" /> },
+    { path: '/settings', label: 'Settings', icon: <SettingsIcon className="w-4 h-4" /> },
+  ];
+
   return (
     <header className="bg-white border-b border-gray-200 shadow-sm z-20">
       <div className="flex items-center justify-between h-16 px-4 md:px-6">
         <div className="flex items-center space-x-4">
+          {/* Mobile hamburger button */}
           <Button 
             variant="ghost" 
             size="icon" 
@@ -32,7 +53,28 @@ export default function Header({ setIsMobileOpen, isTablet }: HeaderProps) {
             <Menu className="h-5 w-5" />
           </Button>
           
-          <div className="hidden lg:block">
+          {/* Desktop navigation dropdown */}
+          <div className="hidden lg:flex items-center space-x-4">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="text-gray-600 hover:bg-gray-100 focus:outline-none">
+                  <Menu className="h-5 w-5 mr-2" />
+                  Navigation
+                  <ChevronDown className="h-4 w-4 ml-2" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-56">
+                {navLinks.map((link) => (
+                  <DropdownMenuItem key={link.path} asChild>
+                    <Link href={link.path} className="flex items-center w-full">
+                      {link.icon}
+                      <span className="ml-2">{link.label}</span>
+                    </Link>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+            
             <h2 className="text-xl font-semibold text-gray-800">{getPageTitle()}</h2>
           </div>
         </div>
