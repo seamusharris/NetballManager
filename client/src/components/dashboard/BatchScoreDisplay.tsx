@@ -20,13 +20,13 @@ export default function BatchScoreDisplay({ games, className }: BatchScoreDispla
     if (!games || !Array.isArray(games)) return [];
     return games.filter(g => g && g.completed && g.status !== 'upcoming' && typeof g.id === 'number');
   }, [games]);
-  
+
   // Get all game IDs for batch fetching
   const gameIds = useMemo(() => 
     completedGames.map(g => g.id).filter(id => id && !isNaN(id)),
     [completedGames]
   );
-  
+
   // Log batch request for debugging
   useEffect(() => {
     if (gameIds.length > 0) {
@@ -35,7 +35,7 @@ export default function BatchScoreDisplay({ games, className }: BatchScoreDispla
       console.log(`No completed games found to batch load scores for`);
     }
   }, [gameIds, games]);
-  
+
   // Use the statisticsService directly for consistent behavior
   useEffect(() => {
     async function loadAndCacheBatchStats() {
@@ -43,13 +43,13 @@ export default function BatchScoreDisplay({ games, className }: BatchScoreDispla
         console.log('No valid game IDs to batch load stats for');
         return;
       }
-      
+
       try {
         console.log(`Dashboard batch loading scores for games: ${gameIds.join(',')}`);
-        
+
         // Use the service to fetch stats in a batch
         const batchStats = await statisticsService.getBatchGameStats(gameIds);
-        
+
         // Process results in the same way as the individual calls
         completedGames.forEach(game => {
           // Process forfeit games specially
@@ -58,11 +58,11 @@ export default function BatchScoreDisplay({ games, className }: BatchScoreDispla
             cacheScores(game.id, forfeitScore, undefined, game.status);
             return;
           }
-          
+
           // Skip if we don't have stats for this game
           const stats = batchStats[game.id];
           if (!stats || !stats.length) return;
-          
+
           try {
             // Calculate and cache scores directly instead of calling the service again
             const scores = statisticsService['calculateScoresFromStats'](stats, game.id);
@@ -71,16 +71,16 @@ export default function BatchScoreDisplay({ games, className }: BatchScoreDispla
             console.warn(`Error calculating scores for game ${game.id}:`, calcError);
           }
         });
-        
+
         console.log(`Successfully cached scores for ${completedGames.length} games using batch endpoint`);
       } catch (error) {
         console.error("Error loading batch game statistics:", error);
       }
     }
-    
+
     loadAndCacheBatchStats();
   }, [gameIds, completedGames]);
-  
+
   // This component doesn't render anything directly
   // It just efficiently loads and caches scores for other components to use
   return null;

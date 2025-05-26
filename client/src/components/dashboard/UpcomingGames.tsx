@@ -53,6 +53,9 @@ export default function UpcomingGames({ games, opponents, className, seasonFilte
                       )}
                     </div>
                   </div>
+                  <div className="text-right">
+                    <span className="text-sm text-gray-400">—</span>
+                  </div>
                 </div>
               </Link>
             ))}
