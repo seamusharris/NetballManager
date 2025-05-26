@@ -37,7 +37,7 @@ export default function OpponentMatchups({
   className 
 }: OpponentMatchupsProps) {
   const [matchups, setMatchups] = useState<OpponentMatchup[]>([]);
-  const navigate = useNavigate();
+  const [, navigate] = useLocation();
 
   useEffect(() => {
     const calculateMatchups = () => {
