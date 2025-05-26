@@ -220,7 +220,6 @@ export default function DashboardSummary({
               games={filteredGames} 
               opponents={opponents}
               centralizedStats={centralizedStats}
-              className="h-32"
             />
           </>
         )}
