@@ -119,9 +119,10 @@ export default function GamesList({
 
   // Use React Query to fetch and cache statistics for all games in a single request
   const { data: allGameStats, isLoading: isLoadingStats } = useQuery({
-    queryKey: ['batchGameStats', ...completedGameIds],
+    queryKey: ['batchGameStats', completedGameIds.sort().join(',')],
     queryFn: async () => {
       if (completedGameIds.length === 0) {
+        console.log('No completed games to fetch stats for');
         return {};
       }
 
@@ -133,34 +134,35 @@ export default function GamesList({
         statsMap[game.id] = [];
       });
 
-      // Only perform API request if we have completed games
-      if (completedGameIds.length > 0) {
-        try {
-          console.log(`Batch fetching stats for ${completedGameIds.length} games via React Query`);
-          // Get all stats for completed games in a single batch request
-          // Use apiRequest instead of direct fetch for consistent error handling
-          const allStats = await apiRequest('GET', `/api/games/stats/batch?gameIds=${completedGameIds.join(',')}`);
+      try {
+        console.log(`Games List: Batch fetching stats for ${completedGameIds.length} games`);
+        // Get all stats for completed games in a single batch request
+        const response = await apiRequest('GET', `/api/games/stats/batch?gameIds=${completedGameIds.join(',')}`);
 
-          console.log(`Received ${allStats.length} stats from batch request`);
-
-          // Group stats by gameId
-          allStats.forEach((stat: any) => {
-            if (!statsMap[stat.gameId]) {
-              statsMap[stat.gameId] = [];
+        // The batch endpoint returns an object with gameId as keys
+        if (response && typeof response === 'object') {
+          Object.entries(response).forEach(([gameIdStr, stats]) => {
+            const gameId = parseInt(gameIdStr);
+            if (Array.isArray(stats)) {
+              statsMap[gameId] = stats;
             }
-            statsMap[stat.gameId].push(stat);
           });
-        } catch (error) {
-          console.error("Error fetching game stats in batch:", error);
+          console.log(`Games List: Successfully loaded batch stats for ${Object.keys(response).length} games`);
+        } else {
+          console.warn('Unexpected batch response format:', response);
         }
+      } catch (error) {
+        console.error("Games List: Error fetching game stats in batch:", error);
+        // Don't fallback to individual requests here to avoid the spam
+        // The dashboard and other components handle individual requests
       }
 
       return statsMap;
     },
     enabled: completedGameIds.length > 0,
-    staleTime: 60000, // Consider data fresh for 60 seconds
-    refetchOnMount: 'always', // Always refetch when component mounts
-    refetchOnWindowFocus: true
+    staleTime: 2 * 60 * 1000, // Consider data fresh for 2 minutes
+    refetchOnMount: false, // Don't always refetch on mount
+    refetchOnWindowFocus: false // Don't refetch on window focus
   });
 
   // Determine game stats status
