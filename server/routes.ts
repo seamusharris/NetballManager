@@ -22,9 +22,9 @@ import { updatePlayerSeasonRelationships, getPlayerSeasons } from "./player-seas
 export async function registerRoutes(app: Express): Promise<Server> {
   // put application routes here
   // prefix all routes with /api
-  
+
   // ----- DIAGNOSTIC APIs -----
-  
+
   // Direct player update endpoint
   app.patch('/api/direct/players/:id', async (req, res) => {
     try {
@@ -39,7 +39,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
-  
+
   // Diagnostic endpoint for player-season relationship debugging
   app.get('/api/diagnostic/player-seasons', async (req, res) => {
     try {
@@ -54,9 +54,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
-  
+
   // ----- DATA MANAGEMENT APIs -----
-  
+
   // Clear all data for fresh import
   app.post("/api/clear-data", async (req, res) => {
     try {
@@ -66,21 +66,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await db.execute(sql`DELETE FROM games`);
       await db.execute(sql`DELETE FROM opponents`);
       await db.execute(sql`DELETE FROM players`);
-      
+
       // Reset all sequences
       await db.execute(sql`ALTER SEQUENCE game_stats_id_seq RESTART WITH 1`);
       await db.execute(sql`ALTER SEQUENCE rosters_id_seq RESTART WITH 1`);
       await db.execute(sql`ALTER SEQUENCE games_id_seq RESTART WITH 1`);
       await db.execute(sql`ALTER SEQUENCE opponents_id_seq RESTART WITH 1`);
       await db.execute(sql`ALTER SEQUENCE players_id_seq RESTART WITH 1`);
-      
+
       res.status(200).json({ message: "All data cleared successfully" });
     } catch (error) {
       console.error('Failed to clear data:', error);
       res.status(500).json({ message: "Failed to clear data" });
     }
   });
-  
+
   // Fix game stats schema if needed
   app.post("/api/fix-game-stats-schema", async (req, res) => {
     try {
@@ -94,7 +94,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
-  
+
   // Add position data to existing stats
   app.post("/api/add-positions-to-stats", async (req, res) => {
     try {
@@ -108,7 +108,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
-  
+
   // Bulk import - imports all data in a single transaction
   app.post("/api/bulk-import", async (req, res) => {
     try {
@@ -124,14 +124,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else {
         data = req.body;
       }
-      
+
       // Validate the data structure
       const hasPlayers = Array.isArray(data.players);
       const hasOpponents = Array.isArray(data.opponents);
       const hasGames = Array.isArray(data.games);
       const hasRosters = Array.isArray(data.rosters);
       const hasGameStats = Array.isArray(data.gameStats);
-      
+
       console.log("Import validation:", { 
         players: hasPlayers ? data.players.length : 0,
         opponents: hasOpponents ? data.opponents.length : 0, 
@@ -139,19 +139,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         rosters: hasRosters ? data.rosters.length : 0,
         stats: hasGameStats ? data.gameStats.length : 0
       });
-      
+
       // Require players section at minimum
       if (!hasPlayers) {
         return res.status(400).json({ message: "Invalid data format - missing player data" });
       }
-      
+
       // Import counts
       let playersImported = 0;
       let opponentsImported = 0;
       let gamesImported = 0;
       let rostersImported = 0;
       let statsImported = 0;
-      
+
       // DIRECT INSERT PLAYERS
       // This uses raw SQL to ensure IDs are preserved exactly
       for (const player of data.players) {
@@ -176,7 +176,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.error(`Failed to import player ${player.id}:`, error);
         }
       }
-      
+
       // DIRECT INSERT OPPONENTS
       for (const opponent of data.opponents) {
         try {
@@ -199,7 +199,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.error(`Failed to import opponent ${opponent.id}:`, error);
         }
       }
-      
+
       // DIRECT INSERT GAMES
       for (const game of data.games) {
         try {
@@ -221,10 +221,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.error(`Failed to import game ${game.id}:`, error);
         }
       }
-      
+
       // DIRECT INSERT ROSTERS - with improved validation
       const rostersData = Array.isArray(data.rosters) ? data.rosters : [];
-      
+
       // Extract valid game and player IDs for reference
       const validGameIds: number[] = [];
       for (const game of games) {
@@ -232,17 +232,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
           validGameIds.push(game.id);
         }
       }
-      
+
       const validPlayerIds: number[] = [];
       for (const player of players) {
         if (player && typeof player.id === 'number') {
           validPlayerIds.push(player.id);
         }
       }
-      
+
       // First, log the total we'll attempt to import
       console.log(`Processing ${rostersData.length} roster entries...`);
-      
+
       for (const roster of rostersData) {
         try {
           // Skip invalid relationships
@@ -250,18 +250,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
             console.warn(`Skipping roster ${roster.id}: game ID ${roster.gameId} not found`);
             continue;
           }
-          
+
           if (!validPlayerIds.includes(roster.playerId)) {
             console.warn(`Skipping roster ${roster.id}: player ID ${roster.playerId} not found`);
             continue;
           }
-          
+
           // Clean and normalize data
           const position = POSITIONS.includes(roster.position) ? roster.position : "GS";
           const quarter = roster.quarter >= 1 && roster.quarter <= 4 ? roster.quarter : 1;
-          
+
           console.log(`Found valid roster entry:`, roster);
-          
+
           await db.execute(sql`
             INSERT INTO rosters (
               id, game_id, quarter, position, player_id
@@ -278,13 +278,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.error(`Failed to import roster ${roster.id}:`, error);
         }
       }
-      
+
       // DIRECT INSERT GAME STATS - with improved validation
       const statsData = Array.isArray(data.gameStats) ? data.gameStats : [];
-      
+
       // Get valid game and player IDs for reference (reusing from rosters)
       console.log(`Processing ${statsData.length} game stat entries...`);
-      
+
       for (const stat of statsData) {
         try {
           // Skip invalid relationships
@@ -292,12 +292,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
             console.warn(`Skipping stat ${stat.id}: game ID ${stat.gameId} not found`);
             continue;
           }
-          
+
           if (!validPlayerIds.includes(stat.playerId)) {
             console.warn(`Skipping stat ${stat.id}: player ID ${stat.playerId} not found`);
             continue;
           }
-          
+
           // Clean and normalize all fields
           const cleanStat = {
             id: stat.id,
@@ -315,9 +315,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             infringement: Math.max(0, parseInt(stat.infringement || 0)),
             rating: Math.min(10, Math.max(1, parseInt(stat.rating || 5)))
           };
-          
+
           console.log(`Processing stat for quarter ${cleanStat.quarter}, player ${cleanStat.playerId}:`, stat);
-          
+
           await db.execute(sql`
             INSERT INTO game_stats (
               id, game_id, player_id, quarter, goals_for, goals_against, 
@@ -345,14 +345,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.error(`Failed to import game stat ${stat.id}:`, error);
         }
       }
-      
+
       // Update sequences to prevent conflicts with future inserts
       await db.execute(sql`SELECT setval('players_id_seq', (SELECT COALESCE(MAX(id), 0) FROM players), true)`);
       await db.execute(sql`SELECT setval('opponents_id_seq', (SELECT COALESCE(MAX(id), 0) FROM opponents), true)`);
       await db.execute(sql`SELECT setval('games_id_seq', (SELECT COALESCE(MAX(id), 0) FROM games), true)`);
       await db.execute(sql`SELECT setval('rosters_id_seq', (SELECT COALESCE(MAX(id), 0) FROM rosters), true)`);
       await db.execute(sql`SELECT setval('game_stats_id_seq', (SELECT COALESCE(MAX(id), 0) FROM game_stats), true)`);
-      
+
       // Return the import results
       res.status(200).json({
         playersImported,
@@ -367,30 +367,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to import data" });
     }
   });
-  
+
   // ----- BACKUP API -----
   app.post("/api/backup", async (req, res) => {
     try {
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
       const filename = `backup-${timestamp}.json`;
-      
+
       // Get all data from storage
       const players = await storage.getPlayers();
       const opponents = await storage.getOpponents();
       const games = await storage.getGames();
-      
+
       // Get all rosters and game stats for each game
       const rosters = [];
       const gameStats = [];
-      
+
       for (const game of games) {
         const gameRosters = await storage.getRostersByGame(game.id);
         const gameStatsData = await storage.getGameStatsByGame(game.id);
-        
+
         rosters.push(...gameRosters);
         gameStats.push(...gameStatsData);
       }
-      
+
       // Create the backup object
       const backupData = {
         players,
@@ -399,7 +399,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         rosters,
         gameStats
       };
-      
+
       // Send the data as response
       res.json(backupData);
     } catch (error) {
@@ -417,17 +417,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch players" });
     }
   });
-  
+
   // Simple direct player-seasons relationships handler
   app.post("/api/players/:id/seasons", async (req, res) => {
     try {
       const playerId = parseInt(req.params.id, 10);
       const seasonIds = req.body.seasonIds || [];
-      
+
       console.log(`POST /api/players/${playerId}/seasons - DIRECT HANDLER`);
       console.log("Request body:", req.body);
       console.log("Season IDs:", seasonIds);
-      
+
       // Validate playerId
       if (isNaN(playerId) || playerId <= 0) {
         return res.status(400).json({ 
@@ -435,19 +435,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
           message: "Invalid player ID" 
         });
       }
-      
+
       // Get database client
       const client = await pool.connect();
-      
+
       try {
         await client.query('BEGIN');
-        
+
         // Check if player exists
         const playerCheck = await client.query(
           'SELECT id FROM players WHERE id = $1',
           [playerId]
         );
-        
+
         if (playerCheck.rowCount === 0) {
           await client.query('ROLLBACK');
           return res.status(404).json({ 
@@ -455,40 +455,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
             message: "Player not found" 
           });
         }
-        
+
         // Convert and validate seasonIds
         const validSeasonIds = seasonIds
           .map((id) => typeof id === 'string' ? parseInt(id, 10) : id)
           .filter((id) => !isNaN(id) && id > 0);
-          
+
         console.log("Valid season IDs:", validSeasonIds);
-        
+
         // Delete existing relationships
         await client.query(
           'DELETE FROM player_seasons WHERE player_id = $1',
           [playerId]
         );
-        
+
         // Insert new relationships if any
         if (validSeasonIds.length > 0) {
           // Create query for batch insert
           const placeholders = validSeasonIds
             .map((_, idx) => `($1, $${idx + 2})`)
             .join(', ');
-            
+
           const params = [playerId, ...validSeasonIds];
-          
+
           // Execute insert
           const query = `INSERT INTO player_seasons (player_id, season_id) VALUES ${placeholders}`;
           console.log("Insert query:", query);
           console.log("Insert params:", params);
-          
+
           await client.query(query, params);
         }
-        
+
         // Commit changes
         await client.query('COMMIT');
-        
+
         // Get updated seasons for response
         const seasonsResult = await client.query(
           `SELECT s.* 
@@ -498,13 +498,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
            ORDER BY s.start_date DESC`,
           [playerId]
         );
-        
+
         return res.json({
           success: true,
           message: `Player ${playerId} seasons updated successfully`,
           seasons: seasonsResult.rows
         });
-        
+
       } catch (dbError) {
         await client.query('ROLLBACK');
         console.error("Database error in player-seasons update:", dbError);
@@ -525,13 +525,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
-  
+
   // GET endpoint to retrieve player's seasons
   app.get("/api/players/:id/seasons", async (req, res) => {
     try {
       // Import the player-season route handler function
       const { getPlayerSeasons } = await import('./player-season-routes');
-      
+
       // Call the handler with the request and response objects
       await getPlayerSeasons(req, res);
     } catch (error) {
@@ -554,15 +554,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch player" });
     }
   });
-  
+
   // Get seasons for a specific player
   app.get("/api/players/:id/seasons", async (req, res) => {
     try {
       const playerId = Number(req.params.id);
-      
+
       // Import our specialized player-season function
       const { getPlayerSeasons } = await import('./player-season-routes');
-      
+
       // Use our function to get player seasons
       getPlayerSeasons(req, res);
     } catch (error) {
@@ -573,13 +573,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
-  
+
   // DEPRECATED - Test endpoint for direct SQL player seasons
   app.get("/api/players/:id/seasons/debug", async (req, res) => {
     try {
       const playerId = Number(req.params.id);
       console.log(`Fetching seasons for player ID: ${playerId}`);
-      
+
       // Fetch the player's seasons from the junction table
       const result = await db.execute(sql`
         SELECT s.* FROM seasons s
@@ -587,14 +587,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         WHERE ps.player_id = ${playerId}
         ORDER BY s.name
       `);
-      
+
       console.log(`Found ${result.rows.length} seasons for player ${playerId}`);
-      
+
       // Debugging output
       if (result.rows.length > 0) {
         console.log(`Season IDs for player ${playerId}: ${result.rows.map(s => s.id).join(', ')}`);
       }
-      
+
       res.json(result.rows);
     } catch (error) {
       console.error(`Error fetching player seasons: ${error}`);
@@ -606,34 +606,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Ensure we're not processing a duplicate request
       const requestId = req.headers['x-request-id'] || req.ip + ':' + Date.now();
-      
+
       // Check if we're doing an import operation (with ID) or regular create
       const hasId = req.body.id !== undefined;
-      
+
       // Use the appropriate schema based on operation type
       const schema = hasId ? importPlayerSchema : insertPlayerSchema;
       const parsedData = schema.safeParse(req.body);
-      
+
       if (!parsedData.success) {
         return res.status(400).json({ message: "Invalid player data", errors: parsedData.error.errors });
       }
-      
+
       // Let the storage layer handle the avatar color assignment
       const playerData = parsedData.data;
-      
+
       // Log the request for debugging
       console.log(`Creating player with request ID: ${requestId}`, {
         displayName: playerData.displayName,
         firstName: playerData.firstName,
         lastName: playerData.lastName
       });
-      
+
       // Create the player (avatar color handling is now in the storage layer)
       const player = await storage.createPlayer(playerData);
-      
+
       // Log successful creation
       console.log(`Successfully created player with ID: ${player.id}`);
-      
+
       res.status(201).json(player);
     } catch (error) {
       console.error("Failed to create player:", error);
@@ -644,29 +644,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch("/api/players/:id", async (req, res) => {
     try {
       const id = Number(req.params.id);
-      
+
       console.log("\n\n======= PLAYER UPDATE START ========");
       console.log("Player ID:", id);
       console.log("Raw request body:", JSON.stringify(req.body, null, 2));
-      
+
       // Simplify - always use the direct format
       const updateData = {...req.body};
-      
+
       console.log("Player update data:", JSON.stringify(updateData, null, 2));
-      
+
       // Season management is now handled separately on the player details page
       // We don't expect seasonIds in the request anymore
       let processedSeasonIds = [];
-      
+
       // Remove season IDs from player update data if it exists
       delete updateData.seasonIds;
       console.log("==================================");
-      
+
       // If avatar color is set to auto or empty, handle it properly
       if (updateData.avatarColor === 'auto' || updateData.avatarColor === '') {
         // Get the existing player first
         const existingPlayer = await storage.getPlayer(id);
-        
+
         // If player already has a color, keep it
         if (existingPlayer && existingPlayer.avatarColor) {
           updateData.avatarColor = existingPlayer.avatarColor;
@@ -674,7 +674,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Otherwise generate a unique color similar to the create route
           const existingPlayers = await storage.getPlayers();
           const usedColors = existingPlayers.map(p => p.avatarColor).filter(Boolean);
-          
+
           const availableColors = [
             'bg-blue-600', 'bg-purple-600', 'bg-green-600', 'bg-red-600', 
             'bg-orange-600', 'bg-yellow-600', 'bg-pink-600', 'bg-teal-600',
@@ -683,9 +683,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             'bg-rose-600', 'bg-blue-700', 'bg-purple-700', 'bg-green-700',
             'bg-red-700', 'bg-orange-700', 'bg-yellow-700', 'bg-pink-700'
           ];
-          
+
           const unusedColors = availableColors.filter(color => !usedColors.includes(color));
-          
+
           if (unusedColors.length > 0) {
             updateData.avatarColor = unusedColors[Math.floor(Math.random() * unusedColors.length)];
           } else {
@@ -693,7 +693,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         }
       }
-      
+
       // Create a sanitized version of the update data (only include valid fields)
       const validPlayerData = {
         displayName: updateData.displayName,
@@ -704,15 +704,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         active: updateData.active,
         avatarColor: updateData.avatarColor
       };
-      
+
       console.log("Sanitized player data for update:", validPlayerData);
-      
+
       // Update the player first
       const updatedPlayer = await storage.updatePlayer(id, validPlayerData);
       if (!updatedPlayer) {
         return res.status(404).json({ message: "Player not found" });
       }
-      
+
       // Season management is now handled separately on the player details page
       // We don't need to update player-season relationships here anymore
       console.log(`Player ${id} updated successfully. Season management is handled separately now.`);
@@ -722,16 +722,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Get the player's seasons to include in the response
         const { getPlayerSeasons } = await import('./db');
         const playerSeasons = await getPlayerSeasons(id);
-        
+
         // Create a more complete response that includes the seasons
         const enhancedResponse = {
           ...updatedPlayer,
           seasons: playerSeasons || []
         };
-        
+
         console.log(`Player ${id} successfully updated with seasons:`, playerSeasons);
         console.log("======= PLAYER UPDATE COMPLETE ========\n\n");
-        
+
         // Return the enhanced player object with seasons
         return res.json(enhancedResponse);
       } catch (error) {
@@ -787,15 +787,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Check if we're doing an import operation (with ID) or regular create
       const hasId = req.body.id !== undefined;
-      
+
       // Use the appropriate schema based on operation type
       const schema = hasId ? importOpponentSchema : insertOpponentSchema;
       const parsedData = schema.safeParse(req.body);
-      
+
       if (!parsedData.success) {
         return res.status(400).json({ message: "Invalid opponent data", errors: parsedData.error.errors });
       }
-      
+
       // Pass the parsed data to the storage layer
       const opponent = await storage.createOpponent(parsedData.data);
       res.status(201).json(opponent);
@@ -835,7 +835,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/games", async (req, res) => {
     try {
       const games = await storage.getGames();
-      
+
       // Debug game information
       console.log("Available games:", games.map(g => ({ 
         id: g.id, 
@@ -843,7 +843,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         status: g.status || (g.completed ? 'completed' : 'upcoming'),
         completed: g.completed 
       })));
-      
+
       res.json(games);
     } catch (error) {
       console.error("Error fetching games:", error);
@@ -867,7 +867,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/games", async (req, res) => {
     try {
       console.log("Game creation request:", req.body);
-      
+
       // Direct database insert for BYE games to bypass schema validation
       if (req.body.isBye === true) {
         try {
@@ -877,7 +877,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 VALUES (${req.body.date}, ${req.body.time}, ${true}, ${false}, NULL) 
                 RETURNING *`
           );
-          
+
           // Map the result to match our expected format
           const game = {
             id: result.rows[0].id,
@@ -887,7 +887,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             completed: result.rows[0].completed,
             isBye: result.rows[0].is_bye
           };
-          
+
           console.log("Created BYE game:", game);
           return res.status(201).json(game);
         } catch (dbError) {
@@ -905,7 +905,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             errors: [{ message: "Opponent is required for regular games" }] 
           });
         }
-        
+
         // Handle normal games
         const gameData = {
           date: req.body.date,
@@ -921,7 +921,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           opponentScore: req.body.opponentScore || 0,
           notes: req.body.notes || null
         };
-        
+
         console.log("Creating regular game:", gameData);
         const game = await storage.createGame(gameData);
         console.log("Created regular game:", game);
@@ -948,7 +948,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await storage.updateGame(fourthGame.id, { completed: false });
         return res.json({ message: "Fourth game updated as upcoming", game: fourthGame });
       }
-      
+
       // Add a new upcoming game (e.g., June 2, 2025)
       const newGame = await storage.createGame({
         date: "2025-06-02",
@@ -956,7 +956,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         opponentId: 2, // Using an existing opponent ID
         completed: false
       });
-      
+
       res.status(201).json({ message: "New upcoming game created", game: newGame });
     } catch (error) {
       res.status(500).json({ message: "Failed to create upcoming game" });
@@ -966,10 +966,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch("/api/games/:id", async (req, res) => {
     try {
       const id = Number(req.params.id);
-      
+
       console.log('Updating game with ID:', id);
       console.log('Update payload:', req.body);
-      
+
       // If we're updating a game to be a BYE round, allow opponentId to be null
       if (req.body.isBye === true) {
         // Make opponentId null if updating to BYE game
@@ -978,14 +978,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Don't allow non-BYE games with null opponent
         return res.status(400).json({ message: "Opponent is required for non-BYE games" });
       }
-      
+
       // Handle status changes - make sure completed field is also updated for compatibility
       if (req.body.status) {
         const completedStatuses = ['completed', 'forfeit-win', 'forfeit-loss'];
         req.body.completed = completedStatuses.includes(req.body.status);
         console.log(`Status changed to ${req.body.status}, setting completed to ${req.body.completed}`);
       }
-      
+
       // Log all available games before update for debugging
       const allGames = await storage.getGames();
       console.log('Available games:', allGames.map(g => ({ 
@@ -994,15 +994,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         status: g.status, 
         completed: g.completed 
       })));
-      
+
       const updatedGame = await storage.updateGame(id, req.body);
       if (!updatedGame) {
         console.log('Game not found for update');
         return res.status(404).json({ message: "Game not found" });
       }
-      
+
       console.log('Game updated successfully:', updatedGame);
-      
+
       res.json(updatedGame);
     } catch (error) {
       console.error("Game update error:", error);
@@ -1015,7 +1015,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const id = Number(req.params.id);
       await storage.deleteRostersByGame(id);
       await storage.deleteGameStatsByGame(id);
-      
+
       const success = await storage.deleteGame(id);
       if (!success) {
         return res.status(404).json({ message: "Game not found" });
@@ -1036,7 +1036,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch rosters" });
     }
   });
-  
+
   // API endpoint to delete all roster entries for a game
   app.delete("/api/games/:gameId/rosters", async (req, res) => {
     try {
@@ -1054,17 +1054,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!parsedData.success) {
         return res.status(400).json({ message: "Invalid roster data", errors: parsedData.error.errors });
       }
-      
+
       // Validate position
       if (!POSITIONS.includes(parsedData.data.position as any)) {
         return res.status(400).json({ message: "Invalid position" });
       }
-      
+
       // Validate quarter (1-4)
       if (parsedData.data.quarter < 1 || parsedData.data.quarter > 4) {
         return res.status(400).json({ message: "Quarter must be between 1 and 4" });
       }
-      
+
       const roster = await storage.createRoster(parsedData.data);
       res.status(201).json(roster);
     } catch (error) {
@@ -1099,13 +1099,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ----- PLAYER AVAILABILITY API -----
-  
+
   // Get player availability for a specific game
   app.get("/api/games/:gameId/availability", async (req, res) => {
     try {
       const gameId = Number(req.params.gameId);
       const { playerAvailabilityStorage } = await import('./player-availability-storage');
-      
+
       const availablePlayerIds = await playerAvailabilityStorage.getPlayerAvailabilityForGame(gameId);
       res.json({ availablePlayerIds });
     } catch (error) {
@@ -1113,20 +1113,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch player availability" });
     }
   });
-  
+
   // Set player availability for a specific game
   app.post("/api/games/:gameId/availability", async (req, res) => {
     try {
       const gameId = Number(req.params.gameId);
       const { availablePlayerIds } = req.body;
-      
+
       if (!Array.isArray(availablePlayerIds)) {
         return res.status(400).json({ message: "availablePlayerIds must be an array" });
       }
-      
+
       const { playerAvailabilityStorage } = await import('./player-availability-storage');
       const success = await playerAvailabilityStorage.setPlayerAvailabilityForGame(gameId, availablePlayerIds);
-      
+
       if (success) {
         res.json({ message: "Player availability updated successfully" });
       } else {
@@ -1137,21 +1137,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to set player availability" });
     }
   });
-  
+
   // Update individual player availability
   app.patch("/api/games/:gameId/availability/:playerId", async (req, res) => {
     try {
       const gameId = Number(req.params.gameId);
       const playerId = Number(req.params.playerId);
       const { isAvailable } = req.body;
-      
+
       if (typeof isAvailable !== 'boolean') {
         return res.status(400).json({ message: "isAvailable must be a boolean" });
       }
-      
+
       const { playerAvailabilityStorage } = await import('./player-availability-storage');
       const success = await playerAvailabilityStorage.updatePlayerAvailability(gameId, playerId, isAvailable);
-      
+
       if (success) {
         res.json({ message: "Player availability updated successfully" });
       } else {
@@ -1167,35 +1167,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Batch endpoint to get stats for multiple games at once
   app.get("/api/games/stats/batch", async (req, res) => {
     try {
-      console.log("Batch endpoint received query:", req.query);
-      const gameIdsParam = req.query.gameIds;
-      
-      if (!gameIdsParam || typeof gameIdsParam !== 'string' || gameIdsParam.trim() === '') {
-        console.log("No gameIds parameter provided or invalid format");
+      console.log('Batch endpoint received query:', req.query);
+
+      const gameIdsParam = req.query.gameIds as string;
+      if (!gameIdsParam || gameIdsParam.trim() === '') {
+        console.log('No gameIds parameter provided or invalid format');
         return res.status(400).json({ error: "No game IDs provided" });
       }
-      
+
       const gameIds = gameIdsParam.split(',')
         .map(id => parseInt(id.trim(), 10))
         .filter(id => !isNaN(id) && id > 0);
-      
+
       console.log("Parsed gameIds:", gameIds);
-      
+
       if (!gameIds.length) {
         console.log("No valid gameIds found after parsing");
         return res.status(400).json({ error: "No valid game IDs provided" });
       }
-      
+
       // Process each game ID in parallel
       const statsPromises = gameIds.map(gameId => storage.getGameStatsByGame(gameId));
       const results = await Promise.all(statsPromises);
-      
+
       // Create a map of gameId -> stats[]
       const statsMap = gameIds.reduce((acc, gameId, index) => {
         acc[gameId] = results[index];
         return acc;
       }, {} as Record<number, any[]>);
-      
+
       res.json(statsMap);
     } catch (error) {
       console.error(`Error getting batch game stats: ${error}`);
@@ -1213,7 +1213,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch game stats" });
     }
   });
-  
+
   // Add a standard route without hyphens for game stats (for consistency)
   app.get("/api/gamestats", async (req, res) => {
     try {
@@ -1221,7 +1221,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!req.query.gameId) {
         return res.json([]);
       }
-      
+
       const gameId = Number(req.query.gameId);
       const stats = await storage.getGameStatsByGame(gameId);
       res.json(stats);
@@ -1229,32 +1229,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch game stats" });
     }
   });
-  
+
   // Batch endpoint to fetch stats for multiple games in a single request
   app.get("/api/gamestats/batch", async (req, res) => {
     try {
       const gameIdsParam = req.query.gameIds as string;
-      
+
       if (!gameIdsParam) {
         return res.status(400).json({ message: "gameIds query parameter is required" });
       }
-      
+
       // Parse and validate game IDs
       const gameIds = gameIdsParam.split(',').map(id => parseInt(id)).filter(id => !isNaN(id));
-      
+
       if (gameIds.length === 0) {
         return res.status(400).json({ message: "No valid game IDs provided" });
       }
-      
+
       console.log(`Batch fetching stats for ${gameIds.length} games:`, gameIds);
-      
+
       // Fetch stats for all games in parallel
       const statsPromises = gameIds.map(id => storage.getGameStatsByGame(id));
       const statsResults = await Promise.all(statsPromises);
-      
+
       // Flatten the array of arrays into a single array of all stats
       const allStats = statsResults.flat();
-      
+
       console.log(`Returning batch of ${allStats.length} stats for ${gameIds.length} games`);
       res.json(allStats);
     } catch (error) {
@@ -1267,49 +1267,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Log the request body to diagnose issues
       console.log("Creating/updating game stat with data:", req.body);
-      
+
       // Ensure the rating is properly handled
       if (req.body.rating === undefined || req.body.rating === '') {
         req.body.rating = null;
       }
-      
+
       const parsedData = insertGameStatSchema.safeParse(req.body);
       if (!parsedData.success) {
         console.error("Game stat validation error:", parsedData.error.errors);
         return res.status(400).json({ message: "Invalid game stat data", errors: parsedData.error.errors });
       }
-      
+
       // Validate quarter (1-4)
       if (parsedData.data.quarter < 1 || parsedData.data.quarter > 4) {
         return res.status(400).json({ message: "Quarter must be between 1 and 4" });
       }
-      
+
       // Check if a stat already exists for this game/position/quarter
       const existingStats = await storage.getGameStatsByGame(parsedData.data.gameId);
       const existingStat = existingStats.find(s => 
         s.position === parsedData.data.position && 
         s.quarter === parsedData.data.quarter
       );
-      
+
       // Validate position is from allowed set
       if (!POSITIONS.includes(parsedData.data.position as any)) {
         console.error("Invalid position:", parsedData.data.position);
         return res.status(400).json({ message: "Invalid position value" });
       }
-      
+
       try {
         // First, try to find an existing stat record
         const existingStats = await storage.getGameStatsByGame(parsedData.data.gameId);
         console.log(`Found ${existingStats.length} existing stats for game ${parsedData.data.gameId}`);
-        
+
         const duplicate = existingStats.find(s => 
           s.gameId === parsedData.data.gameId && 
           s.position === parsedData.data.position && 
           s.quarter === parsedData.data.quarter
         );
-        
+
         let stat;
-        
+
         if (duplicate) {
           // Update existing stat instead of creating new one to avoid unique constraint violation
           console.log(`Updating existing stat ID ${duplicate.id} instead of creating duplicate`);
@@ -1358,7 +1358,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               RETURNING *
             `);
             console.log("Insert result:", result);
-            
+
             // The result should contain the newly created record
             if (result.length > 0) {
               stat = result[0];
@@ -1367,7 +1367,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
           } catch (insertError) {
             console.error("Error creating new game stat via SQL:", insertError);
-            
+
             // Try one more time with the regular ORM method
             try {
               stat = await storage.createGameStat(parsedData.data);
@@ -1377,7 +1377,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
           }
         }
-        
+
         // Log the successfully created/updated stat
         console.log("Game stat created/updated successfully:", stat);
         res.status(201).json(stat);
@@ -1416,9 +1416,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to delete game stat" });
     }
   });
-  
+
   // ----- SEASONS API -----
-  
+
   // Get all seasons
   app.get('/api/seasons', async (req, res) => {
     try {
@@ -1443,7 +1443,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: 'Failed to fetch active season' });
     }
   });
-  
+
   // Get season by ID
   app.get('/api/seasons/:id', async (req, res) => {
     try {
@@ -1458,7 +1458,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: 'Failed to fetch season' });
     }
   });
-  
+
   // Create season
   app.post('/api/seasons', async (req, res) => {
     try {
@@ -1470,7 +1470,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(400).json({ message: 'Invalid season data' });
     }
   });
-  
+
   // Update season
   app.patch('/api/seasons/:id', async (req, res) => {
     try {
@@ -1487,7 +1487,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(400).json({ message: 'Invalid season data' });
     }
   });
-  
+
   // Set active season
   app.post('/api/seasons/:id/activate', async (req, res) => {
     try {
@@ -1502,20 +1502,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: 'Failed to activate season' });
     }
   });
-  
+
   // Delete season
   app.delete('/api/seasons/:id', async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const activeSeason = await storage.getActiveSeason();
-      
+
       // Prevent deleting the active season
       if (activeSeason && activeSeason.id === id) {
         return res.status(400).json({ 
           message: 'Cannot delete the active season. Activate another season first.' 
         });
       }
-      
+
       const deleted = await storage.deleteSeason(id);
       if (!deleted) {
         return res.status(404).json({ message: 'Season not found' });
@@ -1526,7 +1526,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: 'Failed to delete season' });
     }
   });
-  
+
   // Get games for a specific season
   app.get('/api/seasons/:id/games', async (req, res) => {
     try {

@@ -49,7 +49,7 @@ export default function RecentGames({ games, opponents, className, seasonFilter,
 
       // Use the batch endpoint to fetch all stats in a single request
       const idsParam = gameIds.join(',');
-      const response = await fetch(`/api/games/stats/batch?gameIds=${idsParam}`);
+      const response = await fetch(`/api/games/stats/batch?gameIds=${encodeURIComponent(idsParam)}`);
 
       if (!response.ok) {
         console.error(`Failed to fetch batch statistics for games ${idsParam}. Using individual fetches as fallback.`);

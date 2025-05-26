@@ -17,13 +17,13 @@ export default function UpcomingGames({ games, opponents, className, seasonFilte
   const upcomingGames = games
     .filter(game => !game.completed)
     .slice(0, 3);
-  
+
   const getOpponentName = (opponentId: number | null) => {
     if (!opponentId) return 'Unknown Opponent';
     const opponent = opponents.find(o => o.id === opponentId);
     return opponent ? opponent.teamName : 'Unknown Opponent';
   };
-  
+
   return (
     <Card className={className}>
       <CardContent className="p-6 pb-2">
@@ -33,13 +33,12 @@ export default function UpcomingGames({ games, opponents, className, seasonFilte
             View all
           </Link>
         </div>
-        
+
         {upcomingGames.length > 0 ? (
           <div className="space-y-8">
             {upcomingGames.map((game, index) => (
               <Link key={game.id} href={`/game/${game.id}`}>
-                <div 
-                  className={`flex justify-between items-center p-4 mb-4 mt-2 border-l-4 rounded cursor-pointer hover:bg-accent/10 transition-colors ${
+                <div className={`flex justify-between items-center p-4 mb-4 mt-2 border-l-4 rounded cursor-pointer hover:bg-accent/10 transition-colors ${
                     index === 0 ? 'border-primary bg-primary/5' : 'border-accent bg-accent/5'
                   }`}
                 >
