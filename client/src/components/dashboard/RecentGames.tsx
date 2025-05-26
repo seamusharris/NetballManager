@@ -47,37 +47,26 @@ export default function RecentGames({ games, opponents, className, seasonFilter,
 
       console.log(`Recent Games loading scores for season: ${seasonId}, games: ${gameIds.join(',')}`);
 
-      // Use the batch endpoint to fetch all stats in a single request
-      const idsParam = gameIds.join(',');
-      const response = await fetch(`/api/games/stats/batch?gameIds=${encodeURIComponent(idsParam)}`);
+      // Use individual fetches since batch endpoint has issues
+      const statsMap: Record<number, any[]> = {};
 
-      if (!response.ok) {
-        console.error(`Failed to fetch batch statistics for games ${idsParam}. Using individual fetches as fallback.`);
-
-        // Fallback to individual fetches if the batch endpoint fails
-        const statsMap: Record<number, any[]> = {};
-
-        for (const gameId of gameIds) {
-          try {
-            const response = await fetch(`/api/games/${gameId}/stats`);
-            if (response.ok) {
-              const stats = await response.json();
-              statsMap[gameId] = stats;
-            } else {
-              statsMap[gameId] = []; // Empty array for failed fetches
-            }
-          } catch (error) {
-            console.error(`Error fetching stats for game ${gameId}:`, error);
+      for (const gameId of gameIds) {
+        try {
+          const response = await fetch(`/api/games/${gameId}/stats`);
+          if (response.ok) {
+            const stats = await response.json();
+            statsMap[gameId] = stats;
+          } else {
             statsMap[gameId] = []; // Empty array for failed fetches
           }
+        } catch (error) {
+          console.error(`Error fetching stats for game ${gameId}:`, error);
+          statsMap[gameId] = []; // Empty array for failed fetches
         }
-
-        return statsMap;
       }
 
-      const data = await response.json();
-      console.log(`Recent Games successfully loaded scores for ${Object.keys(data).length} games`);
-      return data;
+      console.log(`Recent Games successfully loaded scores for ${Object.keys(statsMap).length} games`);
+      return statsMap;
     },
     enabled: enableQuery,
     staleTime: 60 * 60 * 1000, // Consider data fresh for 60 minutes
