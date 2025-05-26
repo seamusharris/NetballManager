@@ -204,7 +204,7 @@ export default function OpponentMatchups({
             </div>
 
             {/* Clickable Opponent Matchups */}
-            <div className="space-y-3 max-h-96 overflow-y-auto">
+            <div className="space-y-3">
               {matchups.map((matchup) => (
                 <div 
                   key={matchup.opponent.id} 
