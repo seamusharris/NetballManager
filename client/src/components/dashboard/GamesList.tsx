@@ -283,7 +283,37 @@ export default function GamesList({ games, opponents, className }: GamesListProp
                     <TableCell className="px-2 py-2 whitespace-nowrap text-center">
                       {game.completed ? (
                         <div className="text-center">
-                          <GameScoreDisplay gameId={game.id} compact={true} />
+                          {scoresMap && scoresMap[game.id] ? (
+                            (() => {
+                              const scores = scoresMap[game.id];
+                              const isWin = scores.finalScore.for > scores.finalScore.against;
+                              const isLoss = scores.finalScore.for < scores.finalScore.against;
+
+                              const bgColor = isWin 
+                                ? "bg-green-100 border-green-200" 
+                                : isLoss 
+                                  ? "bg-red-100 border-red-200" 
+                                  : "bg-amber-100 border-amber-200";
+
+                              return (
+                                <div className="font-semibold text-left">
+                                  <div className={`inline-flex items-center px-3 py-1 rounded border text-gray-900 ${bgColor}`}>
+                                    <span className={isWin ? "font-bold" : ""}>{scores.finalScore.for}</span>
+                                    <span className="mx-2">-</span>
+                                    <span className={isLoss ? "font-bold" : ""}>{scores.finalScore.against}</span>
+                                  </div>
+                                </div>
+                              );
+                            })()
+                          ) : scoresLoading ? (
+                            <div className="flex space-x-2">
+                              <div className="h-6 w-12 bg-gray-200 animate-pulse rounded" />
+                              <span className="mx-1">-</span>
+                              <div className="h-6 w-12 bg-gray-200 animate-pulse rounded" />
+                            </div>
+                          ) : (
+                            <span className="text-red-500 text-sm">Score Error</span>
+                          )}
                         </div>
                       ) : (
                         <span className="text-gray-400">—</span>
