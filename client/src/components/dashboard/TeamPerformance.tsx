@@ -229,7 +229,7 @@ export default function TeamPerformance({ games, className, activeSeason, select
           <Badge variant="outline" className="bg-accent/10 text-accent px-2 py-1 rounded-full text-xs font-semibold">
             {selectedSeason ? 
               (typeof selectedSeason === 'string' && selectedSeason === 'current' && activeSeason ? 
-                `${activeSeason.name} (Current)` : 
+                activeSeason.name : 
                 (selectedSeason.name || "Selected Season")
               ) : 
               (activeSeason ? activeSeason.name : "Current Season")}
