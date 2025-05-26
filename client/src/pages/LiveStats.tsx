@@ -690,9 +690,25 @@ export default function LiveStats() {
           queryClient.invalidateQueries({ queryKey: ['playerStats', gameId] });
           queryClient.invalidateQueries({ queryKey: ['allGameStats'] });
           
+          // Invalidate any batch stats queries
+          queryClient.invalidateQueries({ 
+            predicate: (query) => {
+              const key = query.queryKey;
+              return key.some(k => 
+                typeof k === 'string' && k.includes('/api/games/stats/batch')
+              );
+            }
+          });
+          
           // Also clear the scores cache to ensure immediate UI updates
           clearGameCache(gameId);
-          console.log(`Cleared score cache for game ${gameId} after saving stats`);
+          
+          // Clear the statistics service batch cache
+          import('../lib/statisticsService').then(({ clearAllStatisticsCaches }) => {
+            clearAllStatisticsCaches();
+          });
+          
+          console.log(`Cleared all caches for game ${gameId} after saving stats`);
           
           // Wait to ensure everything is refreshed
           await new Promise(resolve => setTimeout(resolve, 500));

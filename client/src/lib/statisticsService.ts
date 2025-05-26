@@ -16,6 +16,13 @@ class UnifiedStatisticsService {
   private batchCache = new Map<string, Promise<any>>();
 
   /**
+   * Clear all batch caches
+   */
+  clearBatchCache(): void {
+    this.batchCache.clear();
+  }
+
+  /**
    * Get stats for multiple games efficiently using batch endpoint
    */
   async getBatchGameStats(gameIds: number[]): Promise<Record<number, GameStat[]>> {
@@ -392,7 +399,8 @@ export function invalidateGameCaches(gameId: number): void {
  * Utility to clear all statistics caches
  */
 export function clearAllStatisticsCaches(): void {
-  unifiedStatsService.batchCache.clear();
+  // Clear the batch cache from the service instance
+  statisticsService.clearBatchCache();
 
   import('./queryClient').then(({ queryClient }) => {
     queryClient.clear();
