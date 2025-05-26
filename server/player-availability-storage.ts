@@ -33,19 +33,24 @@ export class PlayerAvailabilityStorage {
       // Start transaction
       await db.execute(sql`BEGIN`);
       
+      // Get all active players to determine who should be marked as unavailable
+      const allPlayersResult = await db.execute(sql`
+        SELECT id FROM players WHERE active = true
+      `);
+      const allActivePlayerIds = allPlayersResult.rows.map(row => row.id as number);
+      
       // Clear existing availability for this game
       await db.execute(sql`
         DELETE FROM player_availability WHERE game_id = ${gameId}
       `);
       
-      // Insert new availability records
-      if (availablePlayerIds.length > 0) {
-        for (const playerId of availablePlayerIds) {
-          await db.execute(sql`
-            INSERT INTO player_availability (game_id, player_id, is_available, created_at, updated_at)
-            VALUES (${gameId}, ${playerId}, true, NOW(), NOW())
-          `);
-        }
+      // Insert records for all active players
+      for (const playerId of allActivePlayerIds) {
+        const isAvailable = availablePlayerIds.includes(playerId);
+        await db.execute(sql`
+          INSERT INTO player_availability (game_id, player_id, is_available, created_at, updated_at)
+          VALUES (${gameId}, ${playerId}, ${isAvailable}, NOW(), NOW())
+        `);
       }
       
       // Commit transaction
@@ -61,21 +66,13 @@ export class PlayerAvailabilityStorage {
   
   async updatePlayerAvailability(gameId: number, playerId: number, isAvailable: boolean): Promise<boolean> {
     try {
-      if (isAvailable) {
-        // Insert or update to available
-        await db.execute(sql`
-          INSERT INTO player_availability (game_id, player_id, is_available, created_at, updated_at)
-          VALUES (${gameId}, ${playerId}, true, NOW(), NOW())
-          ON CONFLICT (game_id, player_id) 
-          DO UPDATE SET is_available = true, updated_at = NOW()
-        `);
-      } else {
-        // Remove availability record (not available)
-        await db.execute(sql`
-          DELETE FROM player_availability 
-          WHERE game_id = ${gameId} AND player_id = ${playerId}
-        `);
-      }
+      // Always insert or update the record, maintaining both true and false states
+      await db.execute(sql`
+        INSERT INTO player_availability (game_id, player_id, is_available, created_at, updated_at)
+        VALUES (${gameId}, ${playerId}, ${isAvailable}, NOW(), NOW())
+        ON CONFLICT (game_id, player_id) 
+        DO UPDATE SET is_available = ${isAvailable}, updated_at = NOW()
+      `);
       
       return true;
     } catch (error) {
