@@ -75,7 +75,7 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
   const [playerStatsMap, setPlayerStatsMap] = useState<Record<number, PlayerStats>>({});
   const [_, navigate] = useLocation();
   const itemsPerPage = 20;
-  
+
   // Fetch games to calculate player statistics
   const { data: games = [], isLoading: isLoadingGames } = useQuery<Game[]>({
     queryKey: ['/api/games'],
@@ -85,7 +85,7 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
   const completedGames = games.filter(game => game.completed);
   const gameIds = completedGames.map(game => game.id);
   const enableQuery = gameIds.length > 0;
-  
+
   // Use React Query to fetch and cache game statistics and rosters
   const { data: gameStatsMap, isLoading: isLoadingStats } = useQuery<Record<number, GameStat[]>>({
     queryKey: ['playerGameStats', ...gameIds],
@@ -93,29 +93,29 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
       if (gameIds.length === 0) {
         return {};
       }
-      
+
       // Fetch stats for each completed game
       const statsPromises = gameIds.map(async (gameId: number) => {
         const response = await fetch(`/api/games/${gameId}/stats?_t=${Date.now()}`);
         const stats = await response.json();
         return { gameId, stats };
       });
-      
+
       const results = await Promise.all(statsPromises);
-      
+
       // Create a map of game ID to stats array
       const statsMap: Record<number, GameStat[]> = {};
       results.forEach((result: {gameId: number, stats: GameStat[]}) => {
         statsMap[result.gameId] = result.stats;
       });
-      
+
       return statsMap;
     },
     enabled: enableQuery,
     staleTime: 0, 
     gcTime: 15 * 60 * 1000,
   });
-  
+
   // Fetch roster data for tracking games played
   const { data: gameRostersMap, isLoading: isLoadingRosters } = useQuery<Record<number, any[]>>({
     queryKey: ['gameRosters', ...gameIds],
@@ -123,22 +123,22 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
       if (gameIds.length === 0) {
         return {};
       }
-      
+
       // Fetch rosters for each game to count games played
       const rosterPromises = gameIds.map(async (gameId: number) => {
         const response = await fetch(`/api/games/${gameId}/rosters`);
         const rosters = await response.json();
         return { gameId, rosters };
       });
-      
+
       const results = await Promise.all(rosterPromises);
-      
+
       // Create a map of game ID to rosters array
       const rostersMap: Record<number, any[]> = {};
       results.forEach((result: {gameId: number, rosters: any[]}) => {
         rostersMap[result.gameId] = result.rosters;
       });
-      
+
       return rostersMap;
     },
     enabled: enableQuery,
@@ -152,9 +152,9 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
   // When game stats or players change, recalculate player statistics
   useEffect(() => {
     if (!gameStatsMap || isLoading || players.length === 0) return;
-    
+
     const newPlayerStatsMap: Record<number, PlayerStats> = {};
-    
+
     // Initialize all players with zeros
     players.forEach(player => {
       newPlayerStatsMap[player.id] = {
@@ -172,28 +172,28 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
         rating: 5.0
       };
     });
-    
+
     // Count games played only from roster entries to ensure consistency
     // A player has played if they appear in the roster with a position
     if (gameRostersMap && Object.keys(gameRostersMap).length > 0) {
-      
+
       // Track which games each player participated in
       const playerGameIds: Record<number, Set<number>> = {};
-      
+
       // Initialize sets for each player
       players.forEach(player => {
         playerGameIds[player.id] = new Set();
       });
-      
+
       // Only process game rosters to find participation (ignore stats)
       Object.entries(gameRostersMap).forEach(([gameIdStr, rosters]) => {
         const gameId = parseInt(gameIdStr);
-        
+
         // For each roster entry in this game
         if (Array.isArray(rosters)) {
           rosters.forEach((roster: any) => {
             const playerId = roster.playerId;
-            
+
             // If player is assigned to a position in any quarter, count them as having played
             if (playerId && roster.position && playerGameIds[playerId]) {
               playerGameIds[playerId].add(gameId);
@@ -201,7 +201,7 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
           });
         }
       });
-      
+
       // Update games played count for each player
       players.forEach(player => {
         if (playerGameIds[player.id] && newPlayerStatsMap[player.id]) {
@@ -209,46 +209,46 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
         }
       });
     }
-    
+
     // Process all game stats - summing across ALL completed games for total stats
     if (Object.keys(gameStatsMap).length > 0) {
       // Process combined stats from all games
       const allGameStats = Object.values(gameStatsMap).flatMap(stats => stats);
-      
+
       // Process stats using a de-duplication approach to handle duplicate records
       // Create a map to track the most recent stat entry for each player in each quarter of each game
       const dedupedStats: Record<number, Record<string, GameStat>> = {};
-      
+
       // In the position-based model, we need to map position stats to players using roster data
       Object.entries(gameStatsMap).forEach(([gameIdStr, stats]) => {
         const gameId = parseInt(gameIdStr);
         const gameRosters = gameRostersMap[gameId] || [];
-        
+
         // Process each stat entry for this game
         stats.forEach(stat => {
           if (!stat || !stat.position || !stat.quarter || !stat.gameId) return;
-          
+
           // Find which player was playing this position in this quarter using roster data
           const rosterEntry = gameRosters.find((r: any) => 
             r.position === stat.position && 
             r.quarter === stat.quarter
           );
-          
+
           // Skip if no player was assigned to this position
           if (!rosterEntry || !rosterEntry.playerId) return;
-          
+
           const playerId = rosterEntry.playerId;
-          
+
           // Skip if this player is not in our tracked players
           if (!newPlayerStatsMap[playerId]) return;
-          
+
           const uniqueKey = `${stat.gameId}-${stat.quarter}-${stat.position}`; // Unique key per game, quarter, position
-          
+
           // Initialize player's stats map if needed
           if (!dedupedStats[playerId]) {
             dedupedStats[playerId] = {};
           }
-          
+
           // Keep only the most recent stat for this position, player, and quarter in this game
           if (!dedupedStats[playerId][uniqueKey] || 
               stat.id > dedupedStats[playerId][uniqueKey].id) {
@@ -256,12 +256,12 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
           }
         });
       });
-      
+
       // Now process only the de-duplicated stats to get player totals across all games
       Object.entries(dedupedStats).forEach(([playerIdStr, playerQuarterStats]) => {
         const playerId = parseInt(playerIdStr);
         if (!newPlayerStatsMap[playerId]) return;
-        
+
         Object.values(playerQuarterStats).forEach(stat => {
           // Add this player's stats based on the position they played
           newPlayerStatsMap[playerId].goals += stat.goalsFor || 0;
@@ -276,27 +276,27 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
         });
       });
     }
-    
+
     // Process player ratings from position-based stats - use the most recent quarter 1 stats
     players.forEach(player => {
       if (!newPlayerStatsMap[player.id]) return;
-      
+
       // Find all positions this player has played in the first quarter of any game
       let mostRecentRating = null;
       let mostRecentDate = new Date(0); // Start with oldest possible date
-      
+
       // Look through all games
       Object.entries(gameRostersMap || {}).forEach(([gameIdStr, rosters]) => {
         const gameId = parseInt(gameIdStr);
         const gameDate = new Date(games.find(g => g.id === gameId)?.date || '');
-        
+
         // Find quarter 1 roster entries for this player
         const playerQ1Rosters = rosters.filter((r: any) => 
           r.playerId === player.id && 
           r.quarter === 1 && 
           r.position // Make sure they had a position
         );
-        
+
         // For each position this player played in quarter 1
         playerQ1Rosters.forEach((roster: any) => {
           // Find the stats for this position and quarter
@@ -307,7 +307,7 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
             s.rating !== null && 
             s.rating !== undefined
           );
-          
+
           // If found and has a rating and is more recent than what we have
           if (positionStat?.rating !== undefined && positionStat?.rating !== null && gameDate > mostRecentDate) {
             mostRecentRating = positionStat.rating;
@@ -315,7 +315,7 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
           }
         });
       });
-      
+
       // Update with the most recent rating we found, or calculate a default
       if (mostRecentRating !== null) {
         newPlayerStatsMap[player.id].rating = mostRecentRating;
@@ -325,14 +325,14 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
           (newPlayerStatsMap[player.id].goals * 0.2) +
           (newPlayerStatsMap[player.id].rebounds * 0.3) + 
           (newPlayerStatsMap[player.id].intercepts * 0.4);
-        
+
         newPlayerStatsMap[player.id].rating = Math.min(10, Math.max(1, calculatedRating));
       }
     });
-    
+
     setPlayerStatsMap(newPlayerStatsMap);
   }, [gameStatsMap, gameRostersMap, isLoading, players]);
-  
+
   // Filter players based on search and filters
   const filteredPlayers = players.filter(player => {
     const matchesSearch = 
@@ -340,7 +340,7 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
       player.displayName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       player.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       player.lastName.toLowerCase().includes(searchQuery.toLowerCase());
-    
+
     // Check if the filter is for a position group or individual position
     const matchesPosition = 
       positionFilter === 'all' || 
@@ -348,12 +348,12 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
       (positionFilter === 'mid-courters' && (player.positionPreferences as Position[]).some(pos => positionGroups['mid-courters'].includes(pos))) ||
       (positionFilter === 'defenders' && (player.positionPreferences as Position[]).some(pos => positionGroups.defenders.includes(pos))) ||
       (player.positionPreferences as Position[]).includes(positionFilter as Position);
-    
+
     const matchesStatus = 
       statusFilter === 'all' || 
       (statusFilter === 'active' && player.active) || 
       (statusFilter === 'inactive' && !player.active);
-    
+
     return matchesSearch && matchesPosition && matchesStatus;
   });
 
@@ -379,7 +379,7 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
     .sort((a, b) => {
       // Sort by the selected field and direction
       const { field, direction } = sortConfig;
-      
+
       // Handle name sorting separately
       if (field === 'name') {
         if (direction === 'asc') {
@@ -388,56 +388,56 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
           return b.displayName.localeCompare(a.displayName);
         }
       }
-      
+
       // For numeric fields, sort numerically
       const aValue = a.stats[field];
       const bValue = b.stats[field];
-      
+
       if (direction === 'asc') {
         return aValue - bValue;
       } else {
         return bValue - aValue;
       }
     });
-  
+
   // Pagination
   const totalPages = Math.ceil(playersWithStats.length / itemsPerPage);
   const paginatedPlayers = playersWithStats.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
-  
+
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
-  
+
   // Get the player's stored avatar color
   const getAvatarColor = (player: Player): string => {
     // If the player has a stored avatar color, use it
     if (player?.avatarColor) {
       return player.avatarColor;
     }
-    
+
     // Default fallback if the player has no stored color
     return 'bg-gray-500';
   };
-  
+
   const getRatingClass = (rating: number): string => {
     if (rating >= 9) return 'bg-success/20 text-success';
     if (rating >= 8) return 'bg-accent/20 text-accent';
     if (rating >= 7) return 'bg-warning/20 text-warning';
     return 'bg-error/20 text-error';
   };
-  
+
   // Sort handler function
   const handleSort = (field: SortField) => {
     // If clicking the same field, toggle direction, otherwise set to default (desc)
     const direction = 
       sortConfig.field === field && sortConfig.direction === 'desc' ? 'asc' : 'desc';
-    
+
     setSortConfig({ field, direction });
   };
-  
+
   // Column definitions with categories
   const statCategories = [
     { 
@@ -472,18 +472,18 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
       ]
     }
   ];
-  
+
   // Helper to render sort indicator
   const renderSortIndicator = (field: SortField) => {
     if (sortConfig.field !== field) {
       return <ArrowUpDown className="ml-1 h-3 w-3 inline" />;
     }
-    
+
     return sortConfig.direction === 'asc' ? 
       <ArrowUp className="ml-1 h-3 w-3 inline text-primary" /> : 
       <ArrowDown className="ml-1 h-3 w-3 inline text-primary" />;
   };
-  
+
   return (
     <div className="space-y-6">
       {/* Filters */}
@@ -503,7 +503,7 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
                 />
               </div>
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Position</label>
               <Select value={positionFilter} onValueChange={setPositionFilter}>
@@ -524,7 +524,7 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -541,7 +541,7 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
           </div>
         </CardContent>
       </Card>
-      
+
       {/* Players Performance Table */}
       <Card>
         <CardContent className="p-6">
@@ -556,7 +556,7 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
                     Player {renderSortIndicator('name')}
                   </TableHead>
                   <TableHead className="text-center w-4 border-r border-b"></TableHead>
-                  
+
                   {/* Stat category headers */}
                   {statCategories.map((category, index) => (
                     <TableHead 
@@ -568,11 +568,11 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
                     </TableHead>
                   ))}
                 </TableRow>
-                
+
                 <TableRow>
                   <TableHead className="border-b"></TableHead>
                   <TableHead className="border-r border-b"></TableHead>
-                  
+
                   {/* Stat field column headers */}
                   {statCategories.map(category => (
                     category.fields.map((field, fieldIndex) => (
@@ -588,7 +588,7 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
                   ))}
                 </TableRow>
               </TableHeader>
-              
+
               <TableBody className="bg-white divide-y divide-gray-200">
                 {isLoading ? (
                   <TableRow>
@@ -624,21 +624,21 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
                           </div>
                         </div>
                       </TableCell>
-                      
+
                       <TableCell className="border-r"></TableCell>
-                      
+
                       {/* Games Played */}
                       <TableCell className="px-2 py-2 whitespace-nowrap text-sm text-center font-mono border-r">
                         {player.stats.gamesPlayed}
                       </TableCell>
-                      
+
                       {/* Rating */}
                       <TableCell className="px-2 py-2 whitespace-nowrap text-center border-r">
                         <span className={cn("text-sm font-mono", getRatingClass(player.stats.rating))}>
                           {player.stats.rating.toFixed(1)}
                         </span>
                       </TableCell>
-                      
+
                       {/* Shooting stats */}
                       <TableCell className="px-2 py-2 whitespace-nowrap text-sm text-center font-mono">
                         {player.stats.goals}
@@ -649,7 +649,7 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
                       <TableCell className="px-2 py-2 whitespace-nowrap text-sm text-center font-mono border-r">
                         {player.stats.missedGoals}
                       </TableCell>
-                      
+
                       {/* Defense stats */}
                       <TableCell className="px-2 py-2 whitespace-nowrap text-sm text-center font-mono">
                         {player.stats.intercepts}
@@ -660,7 +660,7 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
                       <TableCell className="px-2 py-2 whitespace-nowrap text-sm text-center font-mono border-r">
                         {player.stats.pickUp}
                       </TableCell>
-                      
+
                       {/* Errors stats */}
                       <TableCell className="px-2 py-2 whitespace-nowrap text-sm text-center font-mono">
                         {player.stats.badPass}
@@ -679,7 +679,7 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
           </div>
         </CardContent>
       </Card>
-      
+
       {/* Pagination - only show if we have more than itemsPerPage players */}
       {!isLoading && filteredPlayers.length > itemsPerPage && (
         <div className="flex items-center justify-between">
@@ -692,7 +692,7 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
               of <span className="font-medium">{filteredPlayers.length}</span> players
             </p>
           </div>
-          
+
           <Pagination>
             <PaginationContent>
               <PaginationItem>
@@ -701,7 +701,7 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
                   className={currentPage === 1 ? 'pointer-events-none opacity-50' : ''}
                 />
               </PaginationItem>
-              
+
               {Array.from({ length: Math.min(totalPages, 5) }).map((_, i) => {
                 const page = i + 1;
                 return (
@@ -715,7 +715,7 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
                   </PaginationItem>
                 );
               })}
-              
+
               <PaginationItem>
                 <PaginationNext 
                   onClick={() => currentPage < totalPages && handlePageChange(currentPage + 1)}

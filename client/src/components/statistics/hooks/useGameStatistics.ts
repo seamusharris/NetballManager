@@ -11,23 +11,23 @@ import { getCachedScores } from '@/lib/scoresCache';
 export function useGameStatistics(gameId: number, forceFresh: boolean = false) {
   // Create a unique key for freshness tracking (only when forcing fresh data)
   const freshQueryKey = forceFresh ? `fresh-${Date.now()}` : 'cached';
-  
+
   // For detail view, we can skip the raw stats fetch when using the scores cache
   const hasCachedScores = !forceFresh && getCachedScores(gameId) !== undefined;
-  
+
   // Optimized fetch of raw stats (skip when using cached scores)
   const { 
     data: rawStats, 
     isLoading: isLoadingRawStats,
     error: rawStatsError
   } = useQuery({
-    queryKey: ['gameStats', gameId, freshQueryKey],
-    queryFn: () => statisticsService.getGameStats(gameId),
+    queryKey: [`/api/games/${gameId}/stats`],
+    queryFn: () => apiRequest('GET', `/api/games/${gameId}/stats`),
     enabled: !!gameId && (!hasCachedScores || forceFresh),
     staleTime: forceFresh ? 0 : 15 * 60 * 1000, // 0 for fresh, 15 minutes otherwise
     gcTime: 30 * 60 * 1000, // Keep in cache for 30 minutes
   });
-  
+
   // Enhanced calculation of game scores with global caching
   const { 
     data: scores, 
@@ -51,7 +51,7 @@ export function useGameStatistics(gameId: number, forceFresh: boolean = false) {
     staleTime: forceFresh ? 0 : 15 * 60 * 1000, // 0 for fresh, 15 minutes otherwise
     gcTime: 30 * 60 * 1000, // Keep in cache for 30 minutes
   });
-  
+
   // Optimized position stats calculation
   const { 
     data: positionStats, 
@@ -64,7 +64,7 @@ export function useGameStatistics(gameId: number, forceFresh: boolean = false) {
     staleTime: forceFresh ? 0 : 15 * 60 * 1000, // 0 for fresh, 15 minutes otherwise
     gcTime: 30 * 60 * 1000, // Keep in cache for 30 minutes
   });
-  
+
   // Optimized player stats mapping
   const { 
     data: playerStats, 
@@ -77,12 +77,12 @@ export function useGameStatistics(gameId: number, forceFresh: boolean = false) {
     staleTime: forceFresh ? 0 : 15 * 60 * 1000, // 0 for fresh, 15 minutes otherwise
     gcTime: 30 * 60 * 1000, // Keep in cache for 30 minutes
   });
-  
+
   // Combine loading and error states
   const isLoading = isLoadingScores || isLoadingPositionStats || isLoadingPlayerStats || 
                    (isLoadingRawStats && !hasCachedScores);
   const error = rawStatsError || scoresError || positionStatsError || playerStatsError;
-  
+
   return {
     rawStats,
     scores,

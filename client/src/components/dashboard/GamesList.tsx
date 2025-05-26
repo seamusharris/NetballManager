@@ -34,12 +34,12 @@ export default function GamesList({ games, opponents, className }: GamesListProp
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [opponentFilter, setOpponentFilter] = useState<number | null>(null);
   const [showOpponentFilter, setShowOpponentFilter] = useState(true);
-  
+
   // Navigate to game details page
   const navigateToGame = (gameId: number) => {
     setLocation(`/game/${gameId}`);
   };
-  
+
   // Handle column sort click
   const handleSortClick = (column: string) => {
     if (sortColumn === column) {
@@ -51,14 +51,14 @@ export default function GamesList({ games, opponents, className }: GamesListProp
       setSortDirection('asc');
     }
   };
-  
+
   // Filter and sort games based on display mode, sort settings, and opponent filter
   const filteredGames = (() => {
     const currentDate = new Date().toISOString().split('T')[0];
-    
+
     // First, filter based on the display mode
     let filtered = [...games];
-    
+
     switch (displayMode) {
       case 'upcoming':
         filtered = filtered.filter(game => game.date >= currentDate && !game.completed);
@@ -73,16 +73,16 @@ export default function GamesList({ games, opponents, className }: GamesListProp
         break;
       // 'all' returns all games
     }
-    
+
     // Apply opponent filter if set
     if (opponentFilter !== null) {
       filtered = filtered.filter(game => game.opponentId === opponentFilter);
     }
-    
+
     // Apply sorting based on selected column and direction
     return filtered.sort((a, b) => {
       let comparison = 0;
-      
+
       switch (sortColumn) {
         case 'round':
           // Convert round values to numbers for comparison
@@ -104,22 +104,22 @@ export default function GamesList({ games, opponents, className }: GamesListProp
         default:
           comparison = (new Date(a.date).getTime() - new Date(b.date).getTime());
       }
-      
+
       // Apply sort direction
       return sortDirection === 'asc' ? comparison : -comparison;
     });
   })();
-  
+
   // Find opponent name for a game
   const getOpponentName = (game: Game) => {
     // Handle BYE games
     if (game.isBye) return '—';
-    
+
     // Find opponent in list
     const opponent = opponents.find(opp => opp.id === game.opponentId);
     return opponent ? opponent.teamName : 'Unknown Opponent';
   };
-  
+
   return (
     <Card className={className}>
       <CardContent className="p-6">
@@ -146,7 +146,7 @@ export default function GamesList({ games, opponents, className }: GamesListProp
                 }
               </SelectContent>
             </Select>
-            
+
             <Select value={displayMode} onValueChange={setDisplayMode}>
               <SelectTrigger className="bg-white border rounded-md w-[140px] h-8 text-sm">
                 <SelectValue placeholder="All Games" />
@@ -160,7 +160,7 @@ export default function GamesList({ games, opponents, className }: GamesListProp
             </Select>
           </div>
         </div>
-        
+
         <div className="overflow-x-auto border-t border-l border-b border-r rounded-md">
           <Table>
             <TableHeader>
@@ -257,18 +257,18 @@ export default function GamesList({ games, opponents, className }: GamesListProp
                         <span className="text-gray-400">—</span>
                       )}
                     </TableCell>
-                    
+
                     <TableCell className="px-3 py-2 whitespace-nowrap border-r">
                       <div className="font-medium text-gray-900">{formatDate(game.date)}</div>
                       <div className="text-xs text-gray-500">{game.time}</div>
                     </TableCell>
-                    
+
                     <TableCell className="px-3 py-2 whitespace-nowrap border-r">
                       <span className="font-medium">
                         {getOpponentName(game)}
                       </span>
                     </TableCell>
-                    
+
                     <TableCell className="px-2 py-2 whitespace-nowrap text-center border-r">
                       {/* For BYE games, always show "BYE" instead of using the status */}
                       {game.isBye ? (
@@ -279,7 +279,7 @@ export default function GamesList({ games, opponents, className }: GamesListProp
                         <GameStatusBadge status={game.status as GameStatus} size="sm" />
                       )}
                     </TableCell>
-                    
+
                     <TableCell className="px-2 py-2 whitespace-nowrap text-center">
                       {game.completed ? (
                         <div className="text-center">

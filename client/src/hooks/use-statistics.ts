@@ -1,4 +1,3 @@
-
 import { useQuery, useQueries } from '@tanstack/react-query';
 import { unifiedStatsService, GameScores, PositionStat, PlayerPerformance } from '@/lib/statisticsService';
 import { GameStat } from '@shared/schema';

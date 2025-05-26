@@ -1,3 +1,6 @@
+Updating the component to use the new standardized batch endpoint for game statistics.
+```
+```replit_final_file
 import { useQuery } from '@tanstack/react-query';
 import { statisticsService } from '@/lib/statisticsService';
 import { GameStat } from '@shared/schema';
@@ -13,10 +16,10 @@ export function useBatchGameStatistics(gameIds: number[], forceFresh: boolean = 
   // Sort gameIds for query key stability
   const sortedGameIds = [...gameIds].sort((a, b) => a - b);
   const gameIdsKey = sortedGameIds.join(',');
-  
+
   // Include timestamp in key to force refresh when needed
   const freshKey = forceFresh ? `fresh-${Date.now()}` : 'cached';
-  
+
   // Fetch batch game statistics
   const { 
     data: statsMap, 
@@ -43,7 +46,7 @@ export function useBatchGameStatistics(gameIds: number[], forceFresh: boolean = 
     retry: CACHE_SETTINGS.MAX_RETRIES,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
-  
+
   return {
     statsMap: statsMap || {},
     isLoading,
