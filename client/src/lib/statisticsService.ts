@@ -447,47 +447,7 @@ class UnifiedStatisticsService {
     return performance;
   }
 
-  /**
-   * Calculate game scores from stats array directly (for caching optimization)
-   */
-  calculateScoresFromStats(stats: GameStat[], gameId?: number): GameScores {
-    if (!stats || stats.length === 0) {
-      return {
-        quarterScores: {
-          '1': { for: 0, against: 0 },
-          '2': { for: 0, against: 0 },
-          '3': { for: 0, against: 0 },
-          '4': { for: 0, against: 0 }
-        },
-        finalScore: { for: 0, against: 0 }
-      };
-    }
-
-    // Calculate scores by quarter
-    const quarterScores: Record<string, { for: number; against: number }> = {
-      '1': { for: 0, against: 0 },
-      '2': { for: 0, against: 0 },
-      '3': { for: 0, against: 0 },
-      '4': { for: 0, against: 0 }
-    };
-
-    stats.forEach(stat => {
-      const quarter = stat.quarter.toString();
-      if (quarterScores[quarter]) {
-        quarterScores[quarter].for += stat.goalsFor || 0;
-        quarterScores[quarter].against += stat.goalsAgainst || 0;
-      }
-    });
-
-    // Calculate final score
-    const finalScore = {
-      for: Object.values(quarterScores).reduce((sum, q) => sum + q.for, 0),
-      against: Object.values(quarterScores).reduce((sum, q) => sum + q.against, 0)
-    };
-
-    return { quarterScores, finalScore };
   }
-}
 
 // Interfaces
 export interface GameScores {
