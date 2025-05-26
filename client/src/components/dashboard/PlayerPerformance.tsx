@@ -98,17 +98,7 @@ export default function PlayerPerformance({ players, games, className, seasonFil
           return { gameId, stats: [] };
         }
       });
-
-      const results = await Promise.all(statsPromises);
-
-      // Create a map of game ID to stats array
-      const statsMap: Record<number, GameStat[]> = {};
-      results.forEach((result: {gameId: number, stats: GameStat[]}) => {
-        statsMap[result.gameId] = result.stats;
-      });
-
-      console.log(`PlayerPerformance loaded stats for ${Object.keys(statsMap).length} games`);
-      return statsMap;
+      return {};
     },
     enabled: enableQuery,
     staleTime: 60000, // 1 minute

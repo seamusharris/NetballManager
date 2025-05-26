@@ -14,12 +14,34 @@ import {
 class UnifiedStatisticsService {
   // Cache for batch operations to avoid duplicate requests
   private batchCache = new Map<string, Promise<any>>();
+  // Cache for frequently accessed data
+  private frequentDataCache = new Map<string, { data: any; timestamp: number }>();
+  private readonly FREQUENT_CACHE_TTL = 2 * 60 * 1000; // 2 minutes
 
   /**
    * Clear all batch caches
    */
   clearBatchCache(): void {
     this.batchCache.clear();
+    this.frequentDataCache.clear();
+  }
+
+  /**
+   * Get frequently accessed data from cache
+   */
+  private getFrequentCache<T>(key: string): T | null {
+    const cached = this.frequentDataCache.get(key);
+    if (cached && (Date.now() - cached.timestamp) < this.FREQUENT_CACHE_TTL) {
+      return cached.data;
+    }
+    return null;
+  }
+
+  /**
+   * Set frequently accessed data in cache
+   */
+  private setFrequentCache(key: string, data: any): void {
+    this.frequentDataCache.set(key, { data, timestamp: Date.now() });
   }
 
   /**
@@ -28,18 +50,29 @@ class UnifiedStatisticsService {
   async getBatchGameStats(gameIds: number[]): Promise<Record<number, GameStat[]>> {
     if (!gameIds.length) return {};
 
-    const cacheKey = `batch-${gameIds.sort().join(',')}`;
+    const sortedIds = gameIds.sort((a, b) => a - b);
+    const cacheKey = `batch-${sortedIds.join(',')}`;
+    
+    // Check frequent cache first
+    const cachedResult = this.getFrequentCache<Record<number, GameStat[]>>(cacheKey);
+    if (cachedResult) {
+      console.log(`Using frequent cache for batch stats: ${gameIds.length} games`);
+      return cachedResult;
+    }
 
     // Check if we already have a pending request for this batch
     if (this.batchCache.has(cacheKey)) {
+      console.log(`Deduplicating batch request for ${gameIds.length} games`);
       return this.batchCache.get(cacheKey);
     }
 
-    const batchPromise = this.executeBatchRequest(gameIds);
+    const batchPromise = this.executeBatchRequest(sortedIds);
     this.batchCache.set(cacheKey, batchPromise);
 
-    // Clean up cache after request completes
-    batchPromise.finally(() => {
+    // Cache the result and clean up
+    batchPromise.then(result => {
+      this.setFrequentCache(cacheKey, result);
+    }).finally(() => {
       this.batchCache.delete(cacheKey);
     });
 

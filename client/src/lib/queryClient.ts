@@ -206,9 +206,9 @@ export const queryClient = new QueryClient({
       refetchOnWindowFocus: false,
       retry: 1,
       // More aggressive stale time for faster dashboard performance
-      staleTime: 30 * 60 * 1000, // 30 minutes
+      staleTime: 10 * 60 * 1000, // 10 minutes (reduced from 30)
       // Much longer cache time to preserve data between season switches
-      gcTime: 60 * 60 * 1000, // 60 minutes (1 hour)
+      gcTime: 30 * 60 * 1000, // 30 minutes (reduced from 60)
     },
     mutations: {
       retry: 1,

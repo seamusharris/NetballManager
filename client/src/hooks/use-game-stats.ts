@@ -15,16 +15,19 @@ export function useGameStats(gameId: number | undefined) {
 }
 
 export function useBatchGameStats(gameIds: number[]) {
+  // Filter and sort game IDs for consistency
+  const validGameIds = gameIds.filter(id => id && id > 0);
+  
   // Fetch stats for multiple games efficiently
   return useQuery<Record<number, GameStat[]>>({
-    queryKey: ['/api/games/stats/batch', gameIds],
+    queryKey: ['/api/games/stats/batch', validGameIds.sort()],
     queryFn: async () => {
-      if (!gameIds || gameIds.length === 0) {
-        console.log('No game IDs provided for batch request, returning empty object');
+      if (!validGameIds || validGameIds.length === 0) {
+        console.log('No valid game IDs provided for batch request, returning empty object');
         return {};
       }
 
-      const gameIdsParam = gameIds.join(',');
+      const gameIdsParam = validGameIds.join(',');
       console.log(`Fetching batch stats for games: ${gameIdsParam}`);
 
       try {
@@ -43,7 +46,7 @@ export function useBatchGameStats(gameIds: number[]) {
         // Fallback to individual requests
         const statsMap: Record<number, GameStat[]> = {};
         const results = await Promise.allSettled(
-          gameIds.map(id => {
+          validGameIds.map(id => {
             const apiRequest = async (method: string, url: string) => {
               const response = await fetch(url, { method });
               if (!response.ok) {
@@ -57,15 +60,15 @@ export function useBatchGameStats(gameIds: number[]) {
 
         results.forEach((result, index) => {
           if (result.status === 'fulfilled') {
-            statsMap[gameIds[index]] = result.value;
+            statsMap[validGameIds[index]] = result.value;
           } else {
-            statsMap[gameIds[index]] = [];
+            statsMap[validGameIds[index]] = [];
           }
         });
 
         return statsMap;
       }
     },
-    enabled: gameIds.length > 0,
+    enabled: validGameIds.length > 0,
   });
 }
