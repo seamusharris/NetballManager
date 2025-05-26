@@ -1168,13 +1168,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/games/stats/batch", async (req, res) => {
     try {
       console.log("Batch endpoint received query:", req.query);
-      const gameIds = req.query.gameIds ? String(req.query.gameIds).split(',').map(id => parseInt(id, 10)) : [];
+      const gameIdsParam = req.query.gameIds;
+      
+      if (!gameIdsParam || typeof gameIdsParam !== 'string' || gameIdsParam.trim() === '') {
+        console.log("No gameIds parameter provided or invalid format");
+        return res.status(400).json({ error: "No game IDs provided" });
+      }
+      
+      const gameIds = gameIdsParam.split(',')
+        .map(id => parseInt(id.trim(), 10))
+        .filter(id => !isNaN(id) && id > 0);
       
       console.log("Parsed gameIds:", gameIds);
       
       if (!gameIds.length) {
-        console.log("No valid gameIds found in query params");
-        return res.status(400).json({ error: "No game IDs provided" });
+        console.log("No valid gameIds found after parsing");
+        return res.status(400).json({ error: "No valid game IDs provided" });
       }
       
       // Process each game ID in parallel

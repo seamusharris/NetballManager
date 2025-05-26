@@ -15,15 +15,15 @@ interface BatchScoreDisplayProps {
  * instead of separate requests for each game
  */
 export default function BatchScoreDisplay({ games, className }: BatchScoreDisplayProps) {
-  // Filter to only get completed games
-  const completedGames = useMemo(() => 
-    games?.filter(g => g.completed) || [], 
-    [games]
-  );
+  // Filter to only get completed games and ensure we have valid data
+  const completedGames = useMemo(() => {
+    if (!games || !Array.isArray(games)) return [];
+    return games.filter(g => g && g.completed && typeof g.id === 'number');
+  }, [games]);
   
   // Get all game IDs for batch fetching
   const gameIds = useMemo(() => 
-    completedGames.map(g => g.id),
+    completedGames.map(g => g.id).filter(id => id && !isNaN(id)),
     [completedGames]
   );
   
@@ -31,13 +31,18 @@ export default function BatchScoreDisplay({ games, className }: BatchScoreDispla
   useEffect(() => {
     if (gameIds.length > 0) {
       console.log(`Dashboard batch loading scores for ${gameIds.length} completed games`);
+    } else if (games) {
+      console.log(`No completed games found to batch load scores for`);
     }
-  }, [gameIds]);
+  }, [gameIds, games]);
   
   // Use the statisticsService directly for consistent behavior
   useEffect(() => {
     async function loadAndCacheBatchStats() {
-      if (gameIds.length === 0) return;
+      if (!gameIds || gameIds.length === 0) {
+        console.log('No valid game IDs to batch load stats for');
+        return;
+      }
       
       try {
         // Use the service to fetch stats in a batch

@@ -37,7 +37,7 @@ export default function Dashboard() {
       </Helmet>
       
       {/* BatchScoreDisplay doesn't render anything but efficiently loads and caches game scores */}
-      {games && games.length > 0 && <BatchScoreDisplay games={games} />}
+      {games && Array.isArray(games) && games.length > 0 && <BatchScoreDisplay games={games} />}
       
       <DashboardSummary 
         players={players || []} 

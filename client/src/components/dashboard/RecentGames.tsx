@@ -18,23 +18,23 @@ export default function RecentGames({ games, opponents, className, seasonFilter,
   const recentGames = games
     .filter(game => game.completed)
     .slice(0, 3);
-  
+
   // Use a single query to fetch stats for all games if there are any
   const gameIds = recentGames.map(game => game.id);
   const enableQuery = gameIds.length > 0;
-  
+
   // Add a state for caching the data that forces component refresh
   const [refreshToken, setRefreshToken] = useState(Date.now());
-  
+
   // Force refresh when props change
   useEffect(() => {
     setRefreshToken(Date.now());
   }, [games]);
-  
+
   // Create a static cache key that doesn't depend on refreshToken
   // This ensures we use the same cached data across season changes
   const seasonId = seasonFilter || 'current';
-  
+
   // Cache game stats using React Query with aggressive caching
   const { data: allGameStats, isLoading } = useQuery({
     // Static key that won't change with refreshToken
@@ -43,19 +43,19 @@ export default function RecentGames({ games, opponents, className, seasonFilter,
       if (gameIds.length === 0) {
         return {};
       }
-      
+
       console.log(`Recent Games loading scores for season: ${seasonId}, games: ${gameIds.join(',')}`);
-      
+
       // Use the batch endpoint to fetch all stats in a single request
       const idsParam = gameIds.join(',');
       const response = await fetch(`/api/games/stats/batch?gameIds=${idsParam}`);
-      
+
       if (!response.ok) {
         console.error(`Failed to fetch batch statistics for games ${idsParam}. Using individual fetches as fallback.`);
-        
+
         // Fallback to individual fetches if the batch endpoint fails
         const statsMap: Record<number, any[]> = {};
-        
+
         for (const gameId of gameIds) {
           try {
             const response = await fetch(`/api/games/${gameId}/stats`);
@@ -70,10 +70,10 @@ export default function RecentGames({ games, opponents, className, seasonFilter,
             statsMap[gameId] = []; // Empty array for failed fetches
           }
         }
-        
+
         return statsMap;
       }
-      
+
       const data = await response.json();
       console.log(`Recent Games successfully loaded scores for ${Object.keys(data).length} games`);
       return data;
@@ -82,22 +82,22 @@ export default function RecentGames({ games, opponents, className, seasonFilter,
     staleTime: 60 * 60 * 1000, // Consider data fresh for 60 minutes
     gcTime: 24 * 60 * 60 * 1000 // Keep data in cache for 24 hours
   });
-  
+
   const getOpponentName = (opponentId: number | null) => {
     if (!opponentId) return 'Unknown Opponent';
     const opponent = opponents.find(o => o.id === opponentId);
     return opponent ? opponent.teamName : 'Unknown Opponent';
   };
-  
+
   // Calculate scores from game stats
   const getScores = (game: Game): [number, number] => {
     const gameStatsList = allGameStats?.[game.id] || [];
-    
+
     // If no stats found, return 0-0
     if (gameStatsList.length === 0) {
       return [0, 0];
     }
-    
+
     // Use the same calculation method as in GamesList.tsx
     // First, calculate goals by quarter
     const quarterGoals: Record<number, { for: number, against: number }> = {
@@ -106,18 +106,18 @@ export default function RecentGames({ games, opponents, className, seasonFilter,
       3: { for: 0, against: 0 },
       4: { for: 0, against: 0 }
     };
-    
+
     // Create a map of the latest stats for each position/quarter combination (or legacy stats)
     const latestPositionStats: Record<string, GameStat> = {};
-    
+
     // Find the latest stat for each position/quarter combination
     gameStatsList.forEach(stat => {
       if (!stat || !stat.quarter) return;
-      
+
       // For position-based stats (with valid position)
       if (stat.position) {
         const key = `${stat.position}-${stat.quarter}`;
-        
+
         // Keep only the newest stat entry for each position/quarter
         if (!latestPositionStats[key] || stat.id > latestPositionStats[key].id) {
           latestPositionStats[key] = stat;
@@ -133,7 +133,7 @@ export default function RecentGames({ games, opponents, className, seasonFilter,
         }
       }
     });
-    
+
     // Use only the latest stats for calculating quarter goals
     Object.values(latestPositionStats).forEach(stat => {
       if (stat && stat.quarter >= 1 && stat.quarter <= 4) {
@@ -141,33 +141,33 @@ export default function RecentGames({ games, opponents, className, seasonFilter,
         quarterGoals[stat.quarter].against += (stat.goalsAgainst || 0);
       }
     });
-    
+
     // Calculate total goals
     const teamScore = Object.values(quarterGoals).reduce((sum, q) => sum + q.for, 0);
     const opponentScore = Object.values(quarterGoals).reduce((sum, q) => sum + q.against, 0);
-    
+
     return [teamScore, opponentScore];
   };
-  
+
   const getResultClass = (game: Game) => {
     // Always use blue accent styling to match upcoming games
     return 'border-accent bg-accent/5';
   };
-  
+
   const getResultText = (game: Game) => {
     const [teamScore, opponentScore] = getScores(game);
     if (teamScore > opponentScore) return `W ${teamScore}-${opponentScore}`;
     if (teamScore < opponentScore) return `L ${teamScore}-${opponentScore}`;
     return `D ${teamScore}-${opponentScore}`;
   };
-  
+
   const getResultTextClass = (game: Game) => {
     const [teamScore, opponentScore] = getScores(game);
     if (teamScore > opponentScore) return 'text-success';
     if (teamScore < opponentScore) return 'text-error';
     return 'text-warning';
   };
-  
+
   return (
     <Card className={className}>
       <CardContent className="p-6 pb-2">
