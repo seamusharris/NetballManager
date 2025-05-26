@@ -44,7 +44,7 @@ export default function PerformanceCharts({ games, className, seasonFilter, acti
   const [gameRange, setGameRange] = useState('all');
   const [metricType, setMetricType] = useState('all');
   const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
-  
+
   // Filter games by selected season first
   const seasonFilteredGames = games.filter(game => {
     if (seasonFilter === 'current' && activeSeason) {
@@ -55,11 +55,11 @@ export default function PerformanceCharts({ games, className, seasonFilter, acti
     }
     return true;
   });
-  
+
   // Then filter by completion status
   const filteredGames = seasonFilteredGames.filter(game => game.completed);
   const gameIds = filteredGames.map(game => game.id);
-  
+
   // Fetch game stats for all completed games
   const { data: gameStatsMap, isLoading } = useQuery({
     queryKey: ['performanceChartStats', ...gameIds],
@@ -67,34 +67,32 @@ export default function PerformanceCharts({ games, className, seasonFilter, acti
       if (gameIds.length === 0) {
         return {};
       }
-      
+
       // Fetch stats for each completed game
       const statsPromises = gameIds.map(async (gameId) => {
         const response = await fetch(`/api/games/${gameId}/stats`);
         const stats = await response.json();
         return { gameId, stats };
       });
-      
+
       const results = await Promise.all(statsPromises);
-      
+
       // Create a map of game ID to stats array
-      const statsMap: Record<number, GameStat[]> = {};
-      results.forEach(result => {
+      return results.reduce((statsMap: Record<number, GameStat[]>, result) => {
         statsMap[result.gameId] = result.stats;
-      });
-      
-      return statsMap;
+        return statsMap;
+      }, {});
     },
     enabled: gameIds.length > 0,
     staleTime: 60000 // 1 minute
   });
-  
+
   // Calculate chart data from game stats
   useEffect(() => {
     if (!gameStatsMap || isLoading || Object.keys(gameStatsMap).length === 0) {
       return;
     }
-    
+
     // Initialize quarter stats
     const quarterStats: Record<number, QuarterStats> = {
       1: { teamScore: 0, opponentScore: 0, rebounds: 0, intercepts: 0, totalReboundOpportunities: 0 },
@@ -102,23 +100,23 @@ export default function PerformanceCharts({ games, className, seasonFilter, acti
       3: { teamScore: 0, opponentScore: 0, rebounds: 0, intercepts: 0, totalReboundOpportunities: 0 },
       4: { teamScore: 0, opponentScore: 0, rebounds: 0, intercepts: 0, totalReboundOpportunities: 0 }
     };
-    
+
     const quarterGamesCount: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0 };
-    
+
     // Process all stats
     Object.values(gameStatsMap).forEach(gameStats => {
       if (!gameStats || gameStats.length === 0) return;
-      
+
       // Create sets to track which quarters have data for this game
       const quartersWithData = new Set<number>();
-      
+
       // Aggregate stats by quarter
       gameStats.forEach(stat => {
         if (stat.quarter < 1 || stat.quarter > 4) return;
-        
+
         const quarter = stat.quarter;
         quartersWithData.add(quarter);
-        
+
         // Add to quarter totals
         quarterStats[quarter].teamScore += stat.goalsFor || 0;
         quarterStats[quarter].opponentScore += stat.goalsAgainst || 0;
@@ -126,35 +124,35 @@ export default function PerformanceCharts({ games, className, seasonFilter, acti
         quarterStats[quarter].intercepts += stat.intercepts || 0;
         quarterStats[quarter].totalReboundOpportunities += (stat.rebounds || 0) + (stat.missedGoals || 0);
       });
-      
+
       // Increment game count for quarters that had data
       quartersWithData.forEach(quarter => {
         quarterGamesCount[quarter]++;
       });
     });
-    
+
     // Calculate averages and create chart data
     const newChartData: ChartDataPoint[] = [];
-    
+
     let prevQuarterTeamScore = 0;
-    
+
     for (let quarter = 1; quarter <= 4; quarter++) {
       const gameCount = quarterGamesCount[quarter] || 1; // Avoid division by zero
       const teamScore = quarterStats[quarter].teamScore / gameCount;
       const opponentScore = quarterStats[quarter].opponentScore / gameCount;
       const intercepts = quarterStats[quarter].intercepts / gameCount;
-      
+
       // Calculate rebound rate (rebounds as percentage of rebound opportunities)
       const totalReboundOps = quarterStats[quarter].totalReboundOpportunities || 1; // Avoid division by zero
       const reboundRate = (quarterStats[quarter].rebounds / totalReboundOps) * 100;
-      
+
       // Calculate score change from previous quarter (for first quarter, compare to 0)
       const change = quarter === 1 
         ? teamScore 
         : ((teamScore - prevQuarterTeamScore) / Math.max(prevQuarterTeamScore, 0.1)) * 100;
-      
+
       prevQuarterTeamScore = teamScore;
-      
+
       newChartData.push({
         name: `Quarter ${quarter}`,
         teamScore: parseFloat(teamScore.toFixed(1)),
@@ -164,12 +162,12 @@ export default function PerformanceCharts({ games, className, seasonFilter, acti
         change: parseFloat(change.toFixed(1))
       });
     }
-    
+
     setChartData(newChartData);
-    
+
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gameStatsMap, isLoading]);
-  
+
   // If no data yet, show loading state
   if (chartData.length === 0) {
     return (
@@ -195,7 +193,7 @@ export default function PerformanceCharts({ games, className, seasonFilter, acti
       </Card>
     );
   }
-  
+
   return (
     <Card className={className}>
       <CardContent className="p-6">
@@ -210,7 +208,7 @@ export default function PerformanceCharts({ games, className, seasonFilter, acti
                 <SelectItem value="all">All Games</SelectItem>
               </SelectContent>
             </Select>
-            
+
             <Select value={metricType} onValueChange={setMetricType}>
               <SelectTrigger className="bg-white border rounded-md w-[130px]">
                 <SelectValue placeholder="All Metrics" />
@@ -223,7 +221,7 @@ export default function PerformanceCharts({ games, className, seasonFilter, acti
             </Select>
           </div>
         </div>
-        
+
         <div className="h-64 flex items-center justify-center">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
@@ -251,7 +249,7 @@ export default function PerformanceCharts({ games, className, seasonFilter, acti
             </BarChart>
           </ResponsiveContainer>
         </div>
-        
+
         <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
           {chartData.map((quarter, index) => (
             <div key={index} className="p-3 bg-primary/5 rounded-md">

@@ -1169,9 +1169,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const gameIdsParam = req.query.gameIds as string;
       
-      // More robust parameter validation
+      // More robust parameter validation - return empty object instead of error for empty requests
       if (!gameIdsParam || typeof gameIdsParam !== 'string' || gameIdsParam.trim() === '') {
-        return res.status(400).json({ error: "No game IDs provided" });
+        console.log("Batch stats endpoint: No game IDs provided, returning empty object");
+        return res.json({});
       }
 
       // Parse and validate game IDs

@@ -12,9 +12,16 @@ interface GameScoreDisplayProps {
 }
 
 export function GameScoreDisplay({ gameId, compact = false, preloadedStats, fallback = "—" }: GameScoreDisplayProps) {
-  // Only force a fresh fetch when not in compact mode (detailed view)
-  // Compact mode is used in lists and should be more cache-friendly
-  const { scores, isLoading, error } = useGameStatistics(gameId, !compact);
+  // Use preloaded stats when available to avoid unnecessary API calls
+  const hasPreloadedStats = preloadedStats && preloadedStats.length > 0;
+  
+  // Only fetch if we don't have preloaded stats
+  // For compact mode (lists), we should rely on preloaded stats when available
+  const { scores, isLoading, error } = useGameStatistics(
+    gameId, 
+    !compact && !hasPreloadedStats, // Only force fresh fetch for detailed view without preloaded data
+    hasPreloadedStats ? preloadedStats : undefined
+  );
 
   if (isLoading) {
     return compact ? (

@@ -1,11 +1,12 @@
+import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Game, Player, GameStat, Season } from '@shared/schema';
 import { cn, getInitials } from '@/lib/utils';
-import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react';
+import { apiRequest } from '@/lib/queryClient';
 
 interface PlayerPerformanceProps {
   players: Player[];
