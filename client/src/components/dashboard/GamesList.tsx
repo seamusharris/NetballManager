@@ -2,7 +2,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Game, GameStatus, Opponent } from '@shared/schema';
 import { cn, formatDate } from '@/lib/utils';
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { GameStatusBadge } from '@/components/games/GameStatusBadge';
 import { Badge } from '@/components/ui/badge';
@@ -12,6 +12,7 @@ import { useGamesScores } from '../statistics/hooks/useGamesScores';
 import { ArrowDown, ArrowUp, ArrowUpDown, FilterIcon } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { clearGameCache } from '@/lib/scoresCache';
 
 interface GamesListProps {
   games: Game[];
@@ -121,15 +122,34 @@ export default function GamesList({ games, opponents, className }: GamesListProp
     return opponent ? opponent.teamName : 'Unknown Opponent';
   };
 
-  // Get scores for all completed games efficiently using the batch hook
-  const completedGameIds = games
-    .filter(game => game.completed)
-    .map(game => game.id)
-    .filter(id => id && typeof id === 'number');
+    // Get completed games for score calculation
+  const completedGames = useMemo(() => {
+    return games?.filter(game => game.completed) || [];
+  }, [games]);
 
-  const { scoresMap, isLoading: scoresLoading, hasError: scoresError } = useGamesScores(
-    completedGameIds,
-    false // Don't force fresh data
+  // Clear cache for any games that might have stale data when component mounts
+  useEffect(() => {
+    // When navigating back to games list, clear cache for any recently updated games
+    // This ensures we get fresh scores if a game status was just changed
+    completedGames.forEach(game => {
+      // Clear the cache to force fresh calculation
+      clearGameCache(game.id);
+    });
+  }, [completedGames]);
+
+  // Force fresh scores when component mounts to handle navigation from game status updates
+  useEffect(() => {
+    // When navigating to games list, we want to ensure fresh scores
+    // especially if coming from a game status change
+    if (completedGames.length > 0) {
+      // Force refresh of scores to ensure we get updated data
+      invalidateAllScores();
+    }
+  }, []); // Only run on mount
+
+  // Use the games scores hook to get scores for all completed games
+  const { scoresMap, isLoading: isLoadingScores, invalidateAll: invalidateAllScores } = useGamesScores(
+    completedGames.map(g => g.id)
   );
 
   return (
@@ -317,7 +337,7 @@ export default function GamesList({ games, opponents, className }: GamesListProp
                                 </div>
                               );
                             })()
-                          ) : scoresLoading ? (
+                          ) : isLoadingScores ? (
                             <div className="flex space-x-2">
                               <div className="h-6 w-12 bg-gray-200 animate-pulse rounded" />
                               <span className="mx-1">-</span>
