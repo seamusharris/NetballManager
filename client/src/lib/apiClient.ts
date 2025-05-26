@@ -90,3 +90,6 @@ export async function mutateWithInvalidation<T>(
   
   return result;
 }
+
+// Legacy export for backward compatibility
+export const apiRequest = apiClient.request.bind(apiClient);
