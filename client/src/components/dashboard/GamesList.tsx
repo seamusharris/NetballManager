@@ -8,6 +8,7 @@ import { GameStatusBadge } from '@/components/games/GameStatusBadge';
 import { Badge } from '@/components/ui/badge';
 import { useLocation } from 'wouter';
 import { GameScoreDisplay } from '../statistics/GameScoreDisplay';
+import { useGamesScores } from '../statistics/hooks/useGamesScores';
 import { ArrowDown, ArrowUp, ArrowUpDown, FilterIcon } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -119,6 +120,17 @@ export default function GamesList({ games, opponents, className }: GamesListProp
     const opponent = opponents.find(opp => opp.id === game.opponentId);
     return opponent ? opponent.teamName : 'Unknown Opponent';
   };
+
+  // Get scores for all completed games efficiently using the batch hook
+  const completedGameIds = games
+    .filter(game => game.completed)
+    .map(game => game.id)
+    .filter(id => id && typeof id === 'number');
+
+  const { scoresMap, isLoading: scoresLoading, hasError: scoresError } = useGamesScores(
+    completedGameIds,
+    false // Don't force fresh data
+  );
 
   return (
     <Card className={className}>
