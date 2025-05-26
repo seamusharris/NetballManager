@@ -192,7 +192,7 @@ export default function DashboardSummary({
       {/* Performance Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
         {isLoading || statsLoading ? (
-          Array.from({ length: 4 }).map((_, i) => (
+          Array.from({ length: 5 }).map((_, i) => (
             <Skeleton key={i} className="h-32 rounded-lg" />
           ))
         ) : (
@@ -216,6 +216,11 @@ export default function DashboardSummary({
               seasonFilter={selectedSeasonId} 
               activeSeason={activeSeason}
               centralizedStats={centralizedStats}
+            />
+            <QuarterPerformanceWidget 
+              games={filteredGames} 
+              activeSeason={activeSeason} 
+              selectedSeason={selectedSeasonId === 'current' ? activeSeason : seasons.find(s => s.id.toString() === selectedSeasonId)} 
             />
             <OpponentMatchups 
               games={filteredGames} 
