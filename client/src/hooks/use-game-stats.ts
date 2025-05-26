@@ -36,7 +36,9 @@ export function useBatchGameStats(gameIds: number[]) {
       }
 
       try {
-        const response = await fetch(`/api/games/stats/batch?gameIds=${gameIdsParam}`, {
+        const url = `/api/games/stats/batch?gameIds=${encodeURIComponent(gameIdsParam)}`;
+        console.log(`Making fetch request to: ${url}`);
+        const response = await fetch(url, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',

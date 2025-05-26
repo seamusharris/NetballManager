@@ -137,7 +137,7 @@ export async function apiRequest(
     options.body = JSON.stringify(processedData);
   }
 
-  console.log(`Making ${method} request to ${correctedUrl}`);
+  console.log(`Making GET request to ${correctedUrl}`);
   const res = await fetch(correctedUrl, options);
   await throwIfResNotOk(res);
 

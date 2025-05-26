@@ -220,7 +220,10 @@ class UnifiedStatisticsService {
       const idsParam = validIds.join(',');
       console.log(`Making batch request for game IDs: ${idsParam}`);
       
-      const statsMap = await apiRequest('GET', `/api/games/stats/batch?gameIds=${idsParam}`);
+      // Properly encode the URL parameters
+      const url = `/api/games/stats/batch?gameIds=${encodeURIComponent(idsParam)}`;
+      console.log(`Full batch request URL: ${url}`);
+      const statsMap = await apiRequest('GET', url);
       console.log(`Batch fetched stats for ${validIds.length} games`);
       return statsMap || {};
     } catch (error) {

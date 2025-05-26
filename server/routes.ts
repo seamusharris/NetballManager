@@ -1167,7 +1167,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Batch endpoint to get stats for multiple games at once
   app.get("/api/games/stats/batch", async (req, res) => {
     try {
+      console.log("Batch endpoint received query:", req.query);
       const gameIdsParam = req.query.gameIds as string;
+      console.log("Extracted gameIds parameter:", gameIdsParam);
       
       // More robust parameter validation - return empty object instead of error for empty requests
       if (!gameIdsParam || typeof gameIdsParam !== 'string' || gameIdsParam.trim() === '') {
