@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { useMemo } from 'react';
 import { GameStat } from '@shared/schema';
 
 export function useGameStats(gameId: number | undefined) {
@@ -16,7 +17,10 @@ export function useGameStats(gameId: number | undefined) {
 
 export function useBatchGameStats(gameIds: number[]) {
   // Filter and sort game IDs for consistency - be more strict
-  const validGameIds = gameIds.filter(id => id && typeof id === 'number' && id > 0 && !isNaN(id));
+  const validGameIds = useMemo(() => {
+    if (!gameIds || !Array.isArray(gameIds)) return [];
+    return gameIds.filter(id => id && typeof id === 'number' && id > 0 && !isNaN(id));
+  }, [gameIds]);
   
   // Fetch stats for multiple games efficiently
   return useQuery<Record<number, GameStat[]>>({
@@ -78,6 +82,8 @@ export function useBatchGameStats(gameIds: number[]) {
         return statsMap;
       }
     },
-    enabled: validGameIds.length > 0 && validGameIds.every(id => id && id > 0),
+    enabled: validGameIds.length > 0 && validGameIds.every(id => id && id > 0 && !isNaN(id)),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
   });
 }
