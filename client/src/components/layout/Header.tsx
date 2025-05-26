@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Link } from 'wouter';
+import { cn } from '@/lib/utils';
 
 interface HeaderProps {
   setIsMobileOpen: (open: boolean) => void;
@@ -57,21 +58,37 @@ export default function Header({ setIsMobileOpen, isTablet }: HeaderProps) {
           <div className="hidden lg:flex items-center space-x-4">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="text-gray-600 hover:bg-gray-100 focus:outline-none">
+                <Button variant="ghost" className="text-blue-600 hover:bg-blue-600 hover:text-white transition-colors duration-200 focus:outline-none">
                   <Menu className="h-5 w-5 mr-2" />
                   Navigation
                   <ChevronDown className="h-4 w-4 ml-2" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-56">
-                {navLinks.map((link) => (
-                  <DropdownMenuItem key={link.path} asChild>
-                    <Link href={link.path} className="flex items-center w-full">
-                      {link.icon}
-                      <span className="ml-2">{link.label}</span>
-                    </Link>
-                  </DropdownMenuItem>
-                ))}
+              <DropdownMenuContent align="start" className="w-56 space-y-1 p-2">
+                {navLinks.map((link) => {
+                  const isActive = location === link.path || (link.path !== '/' && location.startsWith(link.path));
+                  return (
+                    <DropdownMenuItem key={link.path} asChild className="p-0">
+                      <Link 
+                        href={link.path} 
+                        className={cn(
+                          "flex items-center w-full px-3 py-2 rounded-md transition-colors duration-200",
+                          isActive 
+                            ? "bg-blue-600 text-white font-semibold" 
+                            : "text-blue-600 hover:bg-blue-600 hover:text-white"
+                        )}
+                      >
+                        <span className={cn(
+                          "w-4 h-4 mr-3 transition-colors",
+                          isActive ? "text-white" : "text-blue-600 group-hover:text-white"
+                        )}>
+                          {link.icon}
+                        </span>
+                        <span className="font-medium">{link.label}</span>
+                      </Link>
+                    </DropdownMenuItem>
+                  );
+                })}
               </DropdownMenuContent>
             </DropdownMenu>
             
