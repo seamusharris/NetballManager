@@ -209,11 +209,15 @@ export const queryClient = new QueryClient({
       staleTime: 10 * 60 * 1000, // 10 minutes (reduced from 30)
       // Much longer cache time to preserve data between season switches
       gcTime: 30 * 60 * 1000, // 30 minutes (reduced from 60)
+      // Ensure network mode is online to prevent dispatcher issues
+      networkMode: 'online',
     },
     mutations: {
       retry: 1,
       // Add a short delay before retrying mutations
       retryDelay: 1000,
+      // Ensure network mode is online for mutations too
+      networkMode: 'online',
     },
   },
 });
