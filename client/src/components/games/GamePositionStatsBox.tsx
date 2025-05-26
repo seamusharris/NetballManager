@@ -1,7 +1,7 @@
 import React from 'react';
 import { Position } from '@shared/schema';
 import { StatItemBox } from './StatItemBox';
-import { primaryPositionStats, secondaryPositionStats, statLabels, StatCategory } from '@/lib/positionStats';
+import { STAT_LABELS, PRIMARY_POSITION_STATS, SECONDARY_POSITION_STATS, StatCategory } from '@/lib/constants';
 
 interface GamePositionStatsBoxProps {
   position: Position;
@@ -17,9 +17,9 @@ export const GamePositionStatsBox: React.FC<GamePositionStatsBoxProps> = ({
   playerStats 
 }) => {
   // Get the primary and secondary stats for this position
-  const primaryStats = primaryPositionStats[position];
-  const secondaryStats = secondaryPositionStats[position];
-  
+  const primaryStats = PRIMARY_POSITION_STATS[position];
+  const secondaryStats = SECONDARY_POSITION_STATS[position];
+
   return (
     <div 
       key={position} 
@@ -37,7 +37,7 @@ export const GamePositionStatsBox: React.FC<GamePositionStatsBoxProps> = ({
           </div>
         )}
       </div>
-      
+
       {playerName && playerStats && (
         <div className="mt-1 bg-gray-50 p-3 rounded-md border border-gray-100">
           <div className="flex flex-col space-y-2 text-sm">
@@ -46,18 +46,18 @@ export const GamePositionStatsBox: React.FC<GamePositionStatsBoxProps> = ({
               {primaryStats.map((statKey) => (
                 <StatItemBox 
                   key={statKey}
-                  label={statLabels[statKey as StatCategory]} 
+                  label={STAT_LABELS[statKey as StatCategory]} 
                   value={playerStats.stats[statKey] || 0} 
                 />
               ))}
             </div>
-            
+
             {/* Secondary stats column */}
             <div className="space-y-2 mt-2 pt-2 border-t">
               {secondaryStats.map((statKey) => (
                 <StatItemBox 
                   key={statKey}
-                  label={statLabels[statKey as StatCategory]} 
+                  label={STAT_LABELS[statKey as StatCategory]} 
                   value={playerStats.stats[statKey] || 0} 
                 />
               ))}

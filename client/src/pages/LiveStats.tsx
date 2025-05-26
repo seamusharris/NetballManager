@@ -147,7 +147,7 @@ const positionStatConfig: Record<Position, Record<StatType, boolean>> = {
   }
 };
 
-// Stat colors and labels
+import { STAT_LABELS, STAT_COLORS } from '@/lib/constants';
 const statColors: Record<StatType, string> = {
   goalsFor: 'bg-green-100 hover:bg-green-200 text-green-700',
   missedGoals: 'bg-orange-100 hover:bg-orange-200 text-orange-700',
