@@ -138,13 +138,13 @@ export default function BasicStatForm({
           // Update existing stat
           console.log(`Updating existing stat ID ${existingStat.id}`);
           savePromises.push(
-            apiRequest('PATCH', `/api/gamestats/${existingStat.id}`, completeStats)
+            apiRequest('PATCH', `/api/games/${existingStat.gameId}/stats/${existingStat.id}`, completeStats)
           );
         } else {
           // Create new stat
           console.log(`Creating new stat for player ${playerId}`);
           savePromises.push(
-            apiRequest('POST', '/api/gamestats', completeStats)
+            apiRequest('POST', `/api/games/${completeStats.gameId}/stats`, completeStats)
           );
         }
       }
@@ -158,8 +158,8 @@ export default function BasicStatForm({
       });
       
       // Invalidate relevant queries
-      queryClient.invalidateQueries({ queryKey: ['/api/gamestats'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/gamestats', gameId] });
+      queryClient.invalidateQueries({ queryKey: [`/api/games/${gameId}/stats`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/games/${gameId}/stats`] });
     },
     onError: (error: any) => {
       toast({
