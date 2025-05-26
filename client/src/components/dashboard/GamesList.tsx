@@ -283,6 +283,8 @@ export default function GamesList({ games, opponents, className }: GamesListProp
                     <TableCell className="px-2 py-2 whitespace-nowrap text-center">
                       {game.completed ? (
                         <div className="text-center">
+                          {/* DEBUG: Log which games are trying to show scores */}
+                          {console.log(`GamesList trying to show score for game ${game.id}, completed: ${game.completed}`)}
                           {/* Use the same component as the game management page */}
                           <GameScoreDisplay gameId={game.id} compact={true} />
                         </div>

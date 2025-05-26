@@ -12,12 +12,24 @@ import { useMemo } from 'react';
  * @param forceFresh - Whether to force fresh data (bypass cache)
  */
 export function useBatchGameStatistics(gameIds: number[], forceFresh: boolean = false) {
+  // DEBUG: Log exactly what we receive
+  console.log('useBatchGameStatistics called with:', {
+    gameIds,
+    gameIdsType: typeof gameIds,
+    gameIdsIsArray: Array.isArray(gameIds),
+    gameIdsLength: gameIds?.length,
+    forceFresh
+  });
+
   // Filter and sort gameIds for query key stability
   const validGameIds = useMemo(() => {
     if (!gameIds || !Array.isArray(gameIds) || gameIds.length === 0) {
+      console.log('useBatchGameStatistics: Invalid gameIds, returning empty array');
       return [];
     }
-    return gameIds.filter(id => id && typeof id === 'number' && id > 0 && !isNaN(id));
+    const filtered = gameIds.filter(id => id && typeof id === 'number' && id > 0 && !isNaN(id));
+    console.log('useBatchGameStatistics: Filtered gameIds:', filtered);
+    return filtered;
   }, [gameIds]);
   
   const sortedGameIds = useMemo(() => 
