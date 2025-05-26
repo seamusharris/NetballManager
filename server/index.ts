@@ -1,7 +1,6 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
-import { runAddGameStatusMigration } from "./migrations/addGameStatus";
 import { addSeasonsSupport } from "./migrations/addSeasonsSupport";
 import { addPlayerSeasonsTable } from "./migrations/addPlayerSeasons";
 
@@ -43,7 +42,6 @@ app.use((req, res, next) => {
   // Run migrations
   try {
     log("Running database migrations...", "migration");
-    await runAddGameStatusMigration();
     await addSeasonsSupport();
     await addPlayerSeasonsTable();
     log("Database migrations completed successfully!", "migration");
