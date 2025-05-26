@@ -547,7 +547,7 @@ export default function LiveStats() {
     });
   };
 
-  // Save all stats to the database using pure position-based approach
+  // Save all stats to the database using direct position-based approach
   const saveAllStats = async () => {
     if (!liveStats || Object.keys(liveStats).length === 0) {
       toast({
@@ -561,35 +561,9 @@ export default function LiveStats() {
     setSaveInProgress(true);
 
     try {
-      console.log("Statistics roster data:", {
-        hasValidRosterEntries: rosters && rosters.length > 0,
-        entries: rosters ? rosters.length : 0,
-        sample: rosters && rosters.length > 0 ? rosters[0] : null
-      });
-
-      // Create mapping from player to position by quarter
-      const playerToPositionMap: Record<number, Record<number, Position>> = {};
-
-      // Build the player-to-position mapping from roster data
-      if (rosters && rosters.length > 0) {
-        rosters.forEach((roster: Roster) => {
-          if (!playerToPositionMap[roster.playerId]) {
-            playerToPositionMap[roster.playerId] = {};
-          }
-          playerToPositionMap[roster.playerId][roster.quarter] = roster.position;
-        });
-      } else {
-        toast({
-          title: "No roster data",
-          description: "Please set up the roster positions before tracking statistics.",
-          variant: "destructive"
-        });
-        return;
-      }
-
       const statsToSave = [];
 
-      // For each player and quarter with stats
+      // For each player and quarter with stats, save directly by their assigned position
       for (const playerId in liveStats) {
         const playerIdNum = parseInt(playerId);
 
@@ -597,65 +571,45 @@ export default function LiveStats() {
           const quarterNum = parseInt(quarter);
           const playerQuarterStats = liveStats[playerIdNum][quarterNum];
 
-          // Skip empty quarters
-          if (!playerQuarterStats) continue;
+          // Skip if no stats or no position assigned
+          if (!playerQuarterStats || !playerQuarterStats.position) continue;
 
-          // Get the position for this player in this quarter from the mapping
-          const position = playerToPositionMap[playerIdNum]?.[quarterNum];
+          const position = playerQuarterStats.position;
 
-          if (position) {
-            // Always save complete stats for this position, even if they're zeros
-            // This ensures we overwrite any previous values
-            const statObject = {
-              gameId,
-              position, 
-              quarter: quarterNum,
-              goalsFor: playerQuarterStats.goalsFor || 0,
-              goalsAgainst: playerQuarterStats.goalsAgainst || 0,
-              missedGoals: playerQuarterStats.missedGoals || 0,
-              rebounds: playerQuarterStats.rebounds || 0,
-              intercepts: playerQuarterStats.intercepts || 0,
-              badPass: playerQuarterStats.badPass || 0,
-              handlingError: playerQuarterStats.handlingError || 0,
-              pickUp: playerQuarterStats.pickUp || 0,
-              infringement: playerQuarterStats.infringement || 0
-            };
+          // Create a complete stat object for this position and quarter
+          const completeStatObject = {
+            gameId,
+            position,
+            quarter: quarterNum,
+            goalsFor: Number(playerQuarterStats.goalsFor || 0),
+            goalsAgainst: Number(playerQuarterStats.goalsAgainst || 0),
+            missedGoals: Number(playerQuarterStats.missedGoals || 0),
+            rebounds: Number(playerQuarterStats.rebounds || 0),
+            intercepts: Number(playerQuarterStats.intercepts || 0),
+            badPass: Number(playerQuarterStats.badPass || 0),
+            handlingError: Number(playerQuarterStats.handlingError || 0),
+            pickUp: Number(playerQuarterStats.pickUp || 0),
+            infringement: Number(playerQuarterStats.infringement || 0)
+          };
 
-            // Always save statistics for every position on the court
-            // This ensures we don't have gaps in the data and that scores are accurate
-            console.log(`Saving stats for position ${position} in quarter ${quarterNum}: ` + 
-              `Goals: ${playerQuarterStats.goalsFor || 0}, ` + 
-              `Against: ${playerQuarterStats.goalsAgainst || 0}`);
-
-            // Create a complete stat object with explicit values for all fields
-            const completeStatObject = {
-              gameId,
-              position,
-              quarter: quarterNum,
-              goalsFor: Number(playerQuarterStats.goalsFor || 0),
-              goalsAgainst: Number(playerQuarterStats.goalsAgainst || 0),
-              missedGoals: Number(playerQuarterStats.missedGoals || 0),
-              rebounds: Number(playerQuarterStats.rebounds || 0),
-              intercepts: Number(playerQuarterStats.intercepts || 0),
-              badPass: Number(playerQuarterStats.badPass || 0),
-              handlingError: Number(playerQuarterStats.handlingError || 0),
-              pickUp: Number(playerQuarterStats.pickUp || 0),
-              infringement: Number(playerQuarterStats.infringement || 0)
-            };
-
-            console.log("Complete stat object:", completeStatObject);
-            statsToSave.push(completeStatObject);
-          } else {
-            console.warn(`No position found for player ${playerIdNum} in quarter ${quarterNum}`);
-          }
+          console.log(`Saving stats for position ${position} in quarter ${quarterNum}:`, completeStatObject);
+          statsToSave.push(completeStatObject);
         }
+      }
+
+      if (statsToSave.length === 0) {
+        toast({
+          title: "No stats to save",
+          description: "No statistics with position assignments found to save.",
+          variant: "destructive"
+        });
+        return;
       }
 
       // Save all stats one by one
       let savedCount = 0;
       let errorCount = 0;
 
-      // Just use the original stats array - we'll let the server handle duplicates
       for (const stat of statsToSave) {
         try {
           await saveGameStat(stat);
