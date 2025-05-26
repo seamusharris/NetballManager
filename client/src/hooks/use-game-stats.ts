@@ -29,6 +29,11 @@ export function useBatchGameStats(gameIds: number[]) {
 
       const gameIdsParam = validGameIds.join(',');
       console.log(`Fetching batch stats for games: ${gameIdsParam}`);
+      
+      if (!gameIdsParam || gameIdsParam === '') {
+        console.log('Empty game IDs parameter, returning empty object');
+        return {};
+      }
 
       try {
         // Assuming apiRequest is defined elsewhere and handles the actual API call

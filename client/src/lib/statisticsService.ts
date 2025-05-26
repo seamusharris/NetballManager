@@ -163,21 +163,31 @@ class UnifiedStatisticsService {
    * Get stats for multiple games efficiently using batch endpoint
    */
   async getBatchGameStats(gameIds: number[]): Promise<Record<number, GameStat[]>> {
-    if (!gameIds.length) return {};
+    if (!gameIds || !gameIds.length) {
+      console.log('No game IDs provided to getBatchGameStats, returning empty object');
+      return {};
+    }
 
-    const sortedIds = gameIds.sort((a, b) => a - b);
+    // Filter out invalid IDs
+    const validIds = gameIds.filter(id => id && id > 0);
+    if (!validIds.length) {
+      console.log('No valid game IDs provided to getBatchGameStats, returning empty object');
+      return {};
+    }
+
+    const sortedIds = validIds.sort((a, b) => a - b);
     const cacheKey = `batch-${sortedIds.join(',')}`;
     
     // Check frequent cache first
     const cachedResult = this.getFrequentCache<Record<number, GameStat[]>>(cacheKey);
     if (cachedResult) {
-      console.log(`Using frequent cache for batch stats: ${gameIds.length} games`);
+      console.log(`Using frequent cache for batch stats: ${sortedIds.length} games`);
       return cachedResult;
     }
 
     // Check if we already have a pending request for this batch
     if (this.batchCache.has(cacheKey)) {
-      console.log(`Deduplicating batch request for ${gameIds.length} games`);
+      console.log(`Deduplicating batch request for ${sortedIds.length} games`);
       return this.batchCache.get(cacheKey);
     }
 
@@ -195,12 +205,23 @@ class UnifiedStatisticsService {
   }
 
   private async executeBatchRequest(gameIds: number[]): Promise<Record<number, GameStat[]>> {
+    if (!gameIds || !gameIds.length) {
+      console.warn('executeBatchRequest called with no game IDs');
+      return {};
+    }
+
     try {
       const idsParam = gameIds.join(',');
       console.log(`Making batch request for game IDs: ${idsParam}`);
+      
+      if (!idsParam || idsParam === '') {
+        console.warn('Empty game IDs parameter, skipping batch request');
+        return {};
+      }
+      
       const statsMap = await apiRequest('GET', `/api/games/stats/batch?gameIds=${idsParam}`);
       console.log(`Batch fetched stats for ${gameIds.length} games`);
-      return statsMap;
+      return statsMap || {};
     } catch (error) {
       console.warn('Batch fetch failed, falling back to individual requests:', error);
       return this.fallbackIndividualFetch(gameIds);

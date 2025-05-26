@@ -14,8 +14,9 @@ import { CACHE_SETTINGS } from '@/lib/constants';
  * @param forceFresh - Whether to force fresh data (bypass cache)
  */
 export function useBatchGameStatistics(gameIds: number[], forceFresh: boolean = false) {
-  // Sort gameIds for query key stability
-  const sortedGameIds = [...gameIds].sort((a, b) => a - b);
+  // Filter and sort gameIds for query key stability
+  const validGameIds = gameIds.filter(id => id && id > 0);
+  const sortedGameIds = [...validGameIds].sort((a, b) => a - b);
   const gameIdsKey = sortedGameIds.join(',');
 
   // Include timestamp in key to force refresh when needed
@@ -31,7 +32,12 @@ export function useBatchGameStatistics(gameIds: number[], forceFresh: boolean = 
   } = useQuery({
     queryKey: ['batchGameStats', gameIdsKey, freshKey],
     queryFn: async () => {
-      console.log(`Batch fetching stats for ${gameIds.length} games via React Query`);
+      if (!sortedGameIds.length) {
+        console.log('No valid game IDs for batch fetch, returning empty object');
+        return {};
+      }
+      
+      console.log(`Batch fetching stats for ${sortedGameIds.length} games via React Query`);
       try {
         const result = await statisticsService.getBatchGameStats(sortedGameIds);
         console.log(`Successfully batch fetched stats for ${Object.keys(result).length} games`);
@@ -41,7 +47,7 @@ export function useBatchGameStatistics(gameIds: number[], forceFresh: boolean = 
         throw error;
       }
     },
-    enabled: gameIds.length > 0,
+    enabled: sortedGameIds.length > 0,
     staleTime: forceFresh ? 0 : CACHE_SETTINGS.BATCH_QUERY_STALE_TIME,
     gcTime: CACHE_SETTINGS.QUERY_CACHE_TIME,
     retry: CACHE_SETTINGS.MAX_RETRIES,
