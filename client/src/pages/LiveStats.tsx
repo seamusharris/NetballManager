@@ -10,8 +10,9 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Game, Player, GameStat, Roster, allPositions, Position } from '@shared/schema';
 import { getInitials, formatShortDate, positionLabels, generatePlayerAvatarColor } from '@/lib/utils';
-import { Save, Undo, Redo, Plus, Minus, RefreshCw, RotateCcw, ChevronLeft } from 'lucide-react';
+import { Save, Undo, Redo, Plus, Minus, RefreshCw, RotateCcw } from 'lucide-react';
 import { Helmet } from 'react-helmet';
+import { BackButton } from '@/components/ui/back-button';
 import { clearGameCache, clearAllCache } from '@/lib/scoresCache';
 
 // Stat types that can be tracked
@@ -1103,15 +1104,9 @@ export default function LiveStats() {
         </div>
 
         <div className="flex justify-between items-center gap-2 w-full">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => navigate(`/game/${gameId}`)}
-            className="border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-gray-900"
-          >
-            <ChevronLeft className="mr-1 h-4 w-4" />
+          <BackButton fallbackPath={`/game/${gameId}`} className="border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-gray-900">
             Back to Game
-          </Button>
+          </BackButton>
 
           <div className="flex space-x-2">
             <Button

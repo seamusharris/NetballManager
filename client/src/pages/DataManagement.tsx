@@ -16,6 +16,7 @@ import {
   DialogTitle
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { BackButton } from "@/components/ui/back-button";
 
 export default function DataManagement() {
   const { toast } = useToast();
@@ -37,10 +38,10 @@ export default function DataManagement() {
     try {
       setIsExporting(true);
       setError(null);
-      
+
       // Export all data
       const { fileContents, filename } = await exportAllData();
-      
+
       // Create and download file
       const blob = new Blob([fileContents], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
@@ -50,7 +51,7 @@ export default function DataManagement() {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      
+
       toast({
         title: "Export Successful",
         description: `Your data has been exported to ${filename}`,
@@ -59,7 +60,7 @@ export default function DataManagement() {
     } catch (err) {
       console.error('Export failed:', err);
       setError(err instanceof Error ? err.message : 'Export failed due to an unknown error');
-      
+
       toast({
         title: "Export Failed",
         description: "There was a problem exporting your data. Please try again.",
@@ -69,7 +70,7 @@ export default function DataManagement() {
       setIsExporting(false);
     }
   };
-  
+
   const handleImportClick = () => {
     // Trigger file input click
     const fileInput = document.getElementById('import-file-input');
@@ -77,56 +78,56 @@ export default function DataManagement() {
       fileInput.click();
     }
   };
-  
+
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (!files || files.length === 0) return;
-    
+
     const file = files[0];
-    
+
     try {
       setIsImporting(true);
       setError(null);
       setImportStats(null);
-      
+
       // Read file contents
       const fileContent = await readFileAsText(file);
-      
+
       // Import the data
       const stats = await importData(fileContent);
       setImportStats(stats);
-      
+
       // Show success toast
       toast({
         title: "Import Successful",
         description: `Imported ${stats.playersImported} players, ${stats.opponentsImported} opponents, ${stats.gamesImported} games, ${stats.rostersImported} roster entries, and ${stats.statsImported} stat entries.`,
         variant: "default",
       });
-      
+
       // Invalidate all queries to refresh data
       await queryClient.invalidateQueries({ queryKey: ['/api/players'] });
       await queryClient.invalidateQueries({ queryKey: ['/api/opponents'] });
       await queryClient.invalidateQueries({ queryKey: ['/api/games'] });
-      
+
       // Reset file input
       event.target.value = '';
     } catch (err) {
       console.error('Import failed:', err);
       setError(err instanceof Error ? err.message : 'Import failed due to an unknown error');
-      
+
       toast({
         title: "Import Failed",
         description: "There was a problem importing your data. Please check the file format.",
         variant: "destructive",
       });
-      
+
       // Reset file input
       event.target.value = '';
     } finally {
       setIsImporting(false);
     }
   };
-  
+
   // Helper function to read file content
   const readFileAsText = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -142,27 +143,27 @@ export default function DataManagement() {
       reader.readAsText(file);
     });
   };
-  
+
   // Handle delete all data
   const handleDeleteClick = () => {
     setShowDeleteDialog(true);
     setDeleteConfirmation('');
   };
-  
+
   const handleDeleteAllData = async () => {
     if (deleteConfirmation !== 'DELETE') {
       return; // Don't proceed if confirmation text doesn't match
     }
-    
+
     try {
       setIsDeleting(true);
       setError(null);
-      
+
       // Create a backup first
       try {
         const backupResult = await exportAllData();
         console.log("Backup created before deletion:", backupResult.filename);
-        
+
         toast({
           title: "Backup Created",
           description: `A backup of your data was created as "${backupResult.filename}" before deletion.`,
@@ -178,57 +179,57 @@ export default function DataManagement() {
         setIsDeleting(false);
         return;
       }
-      
+
       // Delete all players - this will cascade delete related records due to database constraints
       const players = await (await fetch('/api/players')).json();
-      
+
       for (const player of players) {
         await fetch(`/api/players/${player.id}`, { method: 'DELETE' });
       }
-      
+
       // Delete all opponents
       const opponents = await (await fetch('/api/opponents')).json();
-      
+
       for (const opponent of opponents) {
         await fetch(`/api/opponents/${opponent.id}`, { method: 'DELETE' });
       }
-      
+
       // Delete all games - this should also delete associated rosters and game stats
       const games = await (await fetch('/api/games')).json();
-      
+
       // Delete all rosters and game stats first
       for (const game of games) {
         const rosters = await (await fetch(`/api/games/${game.id}/rosters`)).json();
         for (const roster of rosters) {
           await fetch(`/api/rosters/${roster.id}`, { method: 'DELETE' });
         }
-        
+
         const stats = await (await fetch(`/api/games/${game.id}/stats`)).json();
         for (const stat of stats) {
           await fetch(`/api/games/${stat.gameId}/stats/${stat.id}`, { method: 'DELETE' });
         }
-        
+
         // Now delete the game
         await fetch(`/api/games/${game.id}`, { method: 'DELETE' });
       }
-      
+
       // Invalidate all queries to refresh data
       await queryClient.invalidateQueries({ queryKey: ['/api/players'] });
       await queryClient.invalidateQueries({ queryKey: ['/api/opponents'] });
       await queryClient.invalidateQueries({ queryKey: ['/api/games'] });
-      
+
       toast({
         title: "Data Deleted",
         description: "All data has been successfully deleted from the system.",
         variant: "default",
       });
-      
+
       // Close the dialog
       setShowDeleteDialog(false);
     } catch (err) {
       console.error('Delete failed:', err);
       setError(err instanceof Error ? err.message : 'Delete failed due to an unknown error');
-      
+
       toast({
         title: "Delete Failed",
         description: "There was a problem deleting your data. Please try again.",
@@ -245,10 +246,13 @@ export default function DataManagement() {
         <title>Data Management | Netball Team Manager</title>
         <meta name="description" content="Export and import your team data" />
       </Helmet>
-      
+
       <div className="container mx-auto p-6">
+        <BackButton fallbackPath="/dashboard" className="mb-4">
+          Back to Dashboard
+        </BackButton>
         <h1 className="text-3xl font-bold mb-6">Data Management</h1>
-        
+
         {error && (
           <Alert variant="destructive" className="mb-6">
             <AlertCircle className="h-4 w-4" />
@@ -256,7 +260,7 @@ export default function DataManagement() {
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
-        
+
         {importStats && (
           <Alert className="mb-6 bg-green-50 border-green-200">
             <CheckCircle className="h-4 w-4 text-green-500" />
@@ -273,7 +277,7 @@ export default function DataManagement() {
             </AlertDescription>
           </Alert>
         )}
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <Card>
             <CardHeader>
@@ -297,7 +301,7 @@ export default function DataManagement() {
               </Button>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardHeader>
               <CardTitle>Import Data</CardTitle>
@@ -328,7 +332,7 @@ export default function DataManagement() {
               </Button>
             </CardContent>
           </Card>
-          
+
           <Card className="bg-red-50 border-red-200">
             <CardHeader>
               <CardTitle className="text-red-700">Delete All Data</CardTitle>
@@ -353,7 +357,7 @@ export default function DataManagement() {
             </CardContent>
           </Card>
         </div>
-        
+
         {/* Delete Confirmation Dialog */}
         <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
           <DialogContent className="sm:max-w-md">
@@ -363,7 +367,7 @@ export default function DataManagement() {
                 This action cannot be undone. All data will be permanently deleted from the system.
               </DialogDescription>
             </DialogHeader>
-            
+
             <div className="py-4">
               <p className="mb-4 text-sm text-gray-700">
                 To confirm deletion, please type <strong>DELETE</strong> in the field below.
@@ -375,7 +379,7 @@ export default function DataManagement() {
                 className="w-full"
               />
             </div>
-            
+
             <DialogFooter>
               <Button 
                 variant="outline" 

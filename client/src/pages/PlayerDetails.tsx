@@ -18,7 +18,8 @@ import {
 import { Player, Game, GameStat, allPositions, Position, Season } from "@shared/schema";
 import { cn, getInitials } from "@/lib/utils";
 import { PlayerAvatar } from "@/components/ui/player-avatar";
-import { ArrowLeft, Award, Target, Shield, Activity, Edit, Trash2, Calendar } from "lucide-react";
+import { BackButton } from "@/components/ui/back-button";
+import { Award, Target, Shield, Activity, Edit, Trash2, Calendar } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -497,11 +498,9 @@ export default function PlayerDetails() {
       <div className="container mx-auto p-4">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center">
-            <Link href="/dashboard">
-              <Button variant="ghost" size="sm" className="mr-2">
-                <ArrowLeft className="mr-1 h-4 w-4" /> Back to Dashboard
-              </Button>
-            </Link>
+            <BackButton fallbackPath="/dashboard" variant="ghost" className="mr-2">
+              Back to Dashboard
+            </BackButton>
           </div>
           <div className="flex gap-2">
             <Button 

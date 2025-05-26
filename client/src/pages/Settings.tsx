@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from '@/hooks/use-toast';
 import { TEAM_NAME, TEAM_SHORT_NAME, TIMEZONE, COMMON_TIMEZONES } from '@/lib/settings';
+import { BackButton } from '@/components/ui/back-button';
 
 export default function Settings() {
   const { toast } = useToast();
@@ -73,6 +74,9 @@ export default function Settings() {
       </Helmet>
       
       <div className="mb-6">
+        <BackButton fallbackPath="/dashboard" className="mb-4">
+          Back to Dashboard
+        </BackButton>
         <h1 className="text-2xl font-bold">Application Settings</h1>
         <p className="text-gray-500">Configure your team information and application preferences</p>
       </div>

@@ -22,9 +22,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { 
-  ChevronLeft, Edit, BarChart3, ClipboardList, Activity, CalendarRange, ActivitySquare, Trash2,
+  Edit, BarChart3, ClipboardList, Activity, CalendarRange, ActivitySquare, Trash2,
   FileText, Printer
 } from 'lucide-react';
+import { BackButton } from '@/components/ui/back-button';
 import { Separator } from '@/components/ui/separator';
 import { formatDate, cn, tailwindToHex, convertTailwindToHex } from '@/lib/utils';
 
@@ -1159,17 +1160,14 @@ export default function GameDetails() {
       <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-gray-50 p-6 rounded-lg">
         <div>
           <div className="flex items-center gap-3 mb-1">
-            <Button 
+            <BackButton 
+              fallbackPath="/games"
               variant="outline" 
-              size="sm" 
-              asChild
+              size="sm"
               className="border-gray-200 text-gray-700 hover:bg-gray-100 hover:text-gray-900"
             >
-              <Link to="/games">
-                <ChevronLeft className="mr-1 h-4 w-4" />
-                Back to Games List
-              </Link>
-            </Button>
+              Back to Games List
+            </BackButton>
           </div>
           
           <h1 className="text-2xl font-bold">

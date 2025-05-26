@@ -54,6 +54,7 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { CalendarIcon, PlusCircle, Pencil, Trash2 } from "lucide-react";
+import { BackButton } from "@/components/ui/back-button";
 
 // Season form schema with validation
 const seasonFormSchema = z.object({
@@ -242,6 +243,9 @@ export default function Seasons() {
 
   return (
     <div className="container mx-auto py-6">
+      <BackButton fallbackPath="/dashboard" className="mb-4">
+        Back to Dashboard
+      </BackButton>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold tracking-tight">Seasons</h1>
         <Button 
