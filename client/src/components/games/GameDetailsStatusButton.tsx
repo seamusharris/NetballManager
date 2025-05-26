@@ -90,13 +90,24 @@ export function GameDetailsStatusButton({
         completed: isCompleted
       });
       
-      // Clear game-specific caches
-      import('../../lib/scoresCache').then(({ clearGameCache }) => {
-        clearGameCache(game.id);
+      // Clear game-specific caches immediately
+      const { clearGameCache } = await import('../../lib/scoresCache');
+      clearGameCache(game.id);
+
+      // Only invalidate queries specific to this game
+      queryClient.invalidateQueries({
+        predicate: (query) => {
+          const queryKey = query.queryKey;
+          return queryKey.some(key => 
+            (typeof key === 'string' && key.includes(`/api/games/${game.id}`)) ||
+            (typeof key === 'number' && key === game.id) ||
+            (Array.isArray(queryKey) && queryKey.includes('gameScores') && queryKey.includes(game.id))
+          );
+        }
       });
-      
-      // Force refresh all data
-      queryClient.invalidateQueries();
+
+      // Also invalidate the main games list to reflect status change
+      queryClient.invalidateQueries({ queryKey: ['/api/games'] });
       
       // Call the callback with the new status
       onStatusChanged(selectedStatus);
