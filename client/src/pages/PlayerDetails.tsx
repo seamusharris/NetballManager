@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Player, Game, GameStat, allPositions, Position, Season } from "@shared/schema";
 import { cn, getInitials } from "@/lib/utils";
+import { PlayerAvatar } from "@/components/ui/player-avatar";
 import { ArrowLeft, Award, Target, Shield, Activity, Edit, Trash2, Calendar } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -535,10 +536,13 @@ export default function PlayerDetails() {
           <Card className="flex-grow md:w-1/3 md:max-w-md">
             <CardContent className="p-6">
               <div className="flex items-center">
-                <div className={cn("h-16 w-16 rounded-full flex items-center justify-center text-white mr-4", player.avatarColor || 'bg-gray-500')}>
-                  <span className="text-lg font-semibold">
-                    {getInitials(player.firstName, player.lastName)}
-                  </span>
+                <div className="mr-4">
+                  <PlayerAvatar 
+                    firstName={player.firstName}
+                    lastName={player.lastName}
+                    avatarColor={player.avatarColor || 'bg-gray-500'}
+                    size="xl"
+                  />
                 </div>
                 <div>
                   <h1 className="text-2xl font-bold mb-1">{player.displayName}</h1>

@@ -9,6 +9,37 @@ import { Player, Game, Opponent } from '@shared/schema';
 import { formatShortDate, cn, getInitials } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 
+// Define the PlayerAvatar component
+interface PlayerAvatarProps {
+  firstName: string;
+  lastName: string;
+  avatarColor: string;
+  size: 'sm' | 'md' | 'lg';
+}
+
+function PlayerAvatar({ firstName, lastName, avatarColor, size }: PlayerAvatarProps) {
+  let avatarSizeClass = 'w-6 h-6 text-[0.6rem]'; // Default small size
+  if (size === 'md') {
+    avatarSizeClass = 'w-8 h-8 text-sm';
+  } else if (size === 'lg') {
+    avatarSizeClass = 'w-10 h-10 text-base';
+  }
+
+  return (
+    <div
+      className={cn(
+        "rounded-full flex items-center justify-center text-white font-bold flex-shrink-0",
+        avatarSizeClass,
+        avatarColor
+      )}
+    >
+      <span className="font-semibold">
+        {getInitials(firstName, lastName)}
+      </span>
+    </div>
+  );
+}
+
 interface PlayerAvailabilityManagerProps {
   players: Player[];
   game: Game | undefined;
@@ -49,7 +80,7 @@ export default function PlayerAvailabilityManager({
         return player.avatarColor;
       }
     }
-    
+
     // If the player doesn't have an avatarColor or it's not a Tailwind class,
     // we use a default gray color - this should be very rare as all players
     // should have colors assigned in the database
@@ -81,7 +112,7 @@ export default function PlayerAvailabilityManager({
       'bg-primary': '#2563eb',    // Primary (blue)
       'bg-green-600': '#16a34a'   // Green
     };
-    
+
     return colorMap[colorClass] || '#9ca3af';
   };
 
@@ -134,7 +165,7 @@ export default function PlayerAvailabilityManager({
               const playerColor = getPlayerColor(player);
               const colorHex = getColorHex(playerColor);
               const displayName = player.displayName || `${player.firstName} ${player.lastName}`;
-              
+
               return (
                 <div 
                   key={player.id}
@@ -151,12 +182,12 @@ export default function PlayerAvailabilityManager({
                 >
                   <div className="flex justify-between items-center">
                     <div className="flex items-center gap-3">
-                      <div 
-                        className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold"
-                        style={{ backgroundColor: colorHex }}
-                      >
-                        {getInitials(player.firstName, player.lastName)}
-                      </div>
+                      <PlayerAvatar 
+                        firstName={player.firstName}
+                        lastName={player.lastName}
+                        avatarColor={playerColor}
+                        size="md"
+                      />
                       <div>
                         <div className="font-medium">{displayName}</div>
                         {player.positionPreferences && player.positionPreferences.length > 0 && (
