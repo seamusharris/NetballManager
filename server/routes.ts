@@ -15,8 +15,6 @@ import {
   POSITIONS
 } from "@shared/schema";
 import { fixGameStatsSchema } from "./fixDbSchema";
-import { setPositionsForStats } from "./migrations/setPositionsForStats";
-import { addPlayerSeasonUniqueConstraint } from "./migrations/addPlayerSeasonUniqueConstraint";
 import { updatePlayerSeasonRelationships, getPlayerSeasons } from "./player-season-routes";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -95,19 +93,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Add position data to existing stats
-  app.post("/api/add-positions-to-stats", async (req, res) => {
-    try {
-      const result = await setPositionsForStats();
-      res.status(200).json(result);
-    } catch (error) {
-      console.error("Error adding positions to stats:", error);
-      res.status(500).json({ 
-        success: false, 
-        message: `Position migration failed: ${error}` 
-      });
-    }
-  });
+  
 
   // Bulk import - imports all data in a single transaction
   app.post("/api/bulk-import", async (req, res) => {
