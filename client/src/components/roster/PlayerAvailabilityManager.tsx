@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Check, Search, XCircle } from 'lucide-react';
 import { Player, Game, Opponent } from '@shared/schema';
-import { formatShortDate, cn } from '@/lib/utils';
+import { formatShortDate, cn, getInitials } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 
 interface PlayerAvailabilityManagerProps {
@@ -155,7 +155,7 @@ export default function PlayerAvailabilityManager({
                         className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold"
                         style={{ backgroundColor: colorHex }}
                       >
-                        {displayName.charAt(0)}
+                        {getInitials(player.firstName, player.lastName)}
                       </div>
                       <div>
                         <div className="font-medium">{displayName}</div>
