@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/select';
 import { apiRequest } from '@/lib/queryClient';
 import { Game, GameStatus, allGameStatuses } from '@shared/schema';
+import { clearGameCache } from '@/lib/scoresCache';
 
 // Helper function to get appropriate styling for game status
 export function getStatusClass(status: GameStatus | string | null): string {
@@ -67,7 +68,7 @@ export function GameDetailsStatusButton({
   const [dialogOpen, setDialogOpen] = useState(false);
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  
+
   const handleSubmit = async () => {
     if (!selectedStatus) {
       toast({
@@ -77,21 +78,20 @@ export function GameDetailsStatusButton({
       });
       return;
     }
-    
+
     setIsSubmitting(true);
     try {
       // Determine if this status means the game is completed
       const completedStatuses = ['completed', 'forfeit-win', 'forfeit-loss'];
       const isCompleted = completedStatuses.includes(selectedStatus);
-      
+
       // Send the update request with both status and completed field
       const response = await apiRequest('PATCH', `/api/games/${game.id}`, {
         status: selectedStatus,
         completed: isCompleted
       });
-      
+
       // Clear game-specific caches immediately
-      const { clearGameCache } = await import('../../lib/scoresCache');
       clearGameCache(game.id);
 
       // Only invalidate queries specific to this game
@@ -108,15 +108,15 @@ export function GameDetailsStatusButton({
 
       // Also invalidate the main games list to reflect status change
       queryClient.invalidateQueries({ queryKey: ['/api/games'] });
-      
+
       // Call the callback with the new status
       onStatusChanged(selectedStatus);
-      
+
       toast({
         title: 'Game status updated',
         description: `Game status has been updated to ${getStatusDisplay(selectedStatus)}.`,
       });
-      
+
       // Close dialog
       setDialogOpen(false);
     } catch (error) {
@@ -129,7 +129,7 @@ export function GameDetailsStatusButton({
       setIsSubmitting(false);
     }
   };
-  
+
   return (
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
       <DialogTrigger asChild>
@@ -146,7 +146,7 @@ export function GameDetailsStatusButton({
             Change the status of this game
           </DialogDescription>
         </DialogHeader>
-        
+
         <div className="grid gap-4 py-4">
           <Select
             value={selectedStatus || undefined}
@@ -163,7 +163,7 @@ export function GameDetailsStatusButton({
               ))}
             </SelectContent>
           </Select>
-          
+
           <Button 
             type="button" 
             onClick={handleSubmit} 
