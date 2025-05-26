@@ -360,6 +360,44 @@ export interface PlayerPerformance {
 // Export singleton instance
 export const unifiedStatsService = new UnifiedStatisticsService();
 
+// Export the service instance
+export const statisticsService = new UnifiedStatisticsService();
+
+/**
+ * Utility function to invalidate all caches related to a game
+ * Call this after creating, updating, or deleting game stats
+ */
+export function invalidateGameCaches(gameId: number): void {
+  statisticsService.invalidateGameStats(gameId);
+
+  // Also invalidate React Query caches
+  import('./queryClient').then(({ queryClient }) => {
+    queryClient.invalidateQueries({
+      predicate: (query) => {
+        const queryKey = query.queryKey;
+        // Invalidate any query that involves this game
+        return queryKey.some(key => 
+          typeof key === 'string' && (
+            key.includes(`game-${gameId}`) ||
+            key.includes(`/games/${gameId}/`) ||
+            key.includes(`gameId-${gameId}`)
+          )
+        );
+      }
+    });
+  });
+}
+
+/**
+ * Utility to clear all statistics caches
+ */
+export function clearAllStatisticsCaches(): void {
+  statisticsService.clearAllCaches();
+
+  import('./queryClient').then(({ queryClient }) => {
+    queryClient.clear();
+  });
+}
 // Legacy exports for backward compatibility
 export const statisticsService = unifiedStatsService;
 
@@ -368,19 +406,19 @@ export function calculateGameScores(stats: GameStat[]) {
   if (!stats || stats.length === 0) {
     return { teamScore: 0, opponentScore: 0 };
   }
-  
+
   // For forfeit games, return standard 0-10 score
   if (stats.length > 0 && isForfeitGame({ id: stats[0].gameId } as Game)) {
     return { teamScore: 0, opponentScore: 10 };
   }
-  
+
   // Calculate regular game scores
   const teamScore = stats.reduce((total, stat) => 
     total + (stat.goalsFor || 0), 0);
-  
+
   const opponentScore = stats.reduce((total, stat) => 
     total + (stat.goalsAgainst || 0), 0);
-  
+
   return { teamScore, opponentScore };
 }
 
@@ -393,7 +431,7 @@ export function getGameStatusColor(status: GameStatus): string {
     'forfeit-win': 'orange',
     'forfeit-loss': 'red'
   };
-  
+
   return colorMap[status] || 'gray';
 }
 export { unifiedStatsService as StatisticsService };

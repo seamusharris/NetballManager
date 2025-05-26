@@ -44,9 +44,20 @@ export const AVATAR_COLORS = [
 
 // Cache settings
 export const CACHE_SETTINGS = {
-  SCORE_CACHE_EXPIRATION: 30 * 60 * 1000, // 30 minutes
-  QUERY_STALE_TIME: 5 * 60 * 1000, // 5 minutes
-  QUERY_CACHE_TIME: 10 * 60 * 1000 // 10 minutes
+  // Cache expiration times (in milliseconds)
+  SCORE_CACHE_EXPIRATION: 10 * 60 * 1000, // 10 minutes for calculated scores
+  STATS_CACHE_EXPIRATION: 5 * 60 * 1000,  // 5 minutes for raw stats
+  ROSTER_CACHE_EXPIRATION: 15 * 60 * 1000, // 15 minutes for rosters
+
+  // Query stale times for React Query (more aggressive caching)
+  QUERY_STALE_TIME: 2 * 60 * 1000,      // 2 minutes
+  QUERY_CACHE_TIME: 10 * 60 * 1000,     // 10 minutes
+  BATCH_QUERY_STALE_TIME: 5 * 60 * 1000, // 5 minutes for batch requests
+
+  // Batch processing
+  BATCH_SIZE: 20,   // Larger batch size for efficiency
+  BATCH_DELAY: 50,  // Shorter delay
+  MAX_RETRIES: 3,   // Retry failed requests
 };
 
 // Validation constants

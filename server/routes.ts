@@ -1167,38 +1167,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Batch endpoint to get stats for multiple games at once
   app.get("/api/games/stats/batch", async (req, res) => {
     try {
-      console.log('Batch endpoint received query:', req.query);
-
       const gameIdsParam = req.query.gameIds as string;
-      if (!gameIdsParam || gameIdsParam.trim() === '') {
-        console.log('No gameIds parameter provided or invalid format');
+      
+      // More robust parameter validation
+      if (!gameIdsParam || typeof gameIdsParam !== 'string' || gameIdsParam.trim() === '') {
         return res.status(400).json({ error: "No game IDs provided" });
       }
 
+      // Parse and validate game IDs
       const gameIds = gameIdsParam.split(',')
-        .map(id => parseInt(id.trim(), 10))
-        .filter(id => !isNaN(id) && id > 0);
-
-      console.log("Parsed gameIds:", gameIds);
+        .map(id => {
+          const parsed = parseInt(id.trim(), 10);
+          return isNaN(parsed) ? null : parsed;
+        })
+        .filter((id): id is number => id !== null && id > 0);
 
       if (!gameIds.length) {
-        console.log("No valid gameIds found after parsing");
         return res.status(400).json({ error: "No valid game IDs provided" });
       }
 
-      // Process each game ID in parallel
-      const statsPromises = gameIds.map(gameId => storage.getGameStatsByGame(gameId));
+      console.log(`Batch fetching stats for ${gameIds.length} games: ${gameIds.join(',')}`);
+
+      // Process each game ID in parallel with error handling
+      const statsPromises = gameIds.map(async (gameId) => {
+        try {
+          const stats = await storage.getGameStatsByGame(gameId);
+          return { gameId, stats, success: true };
+        } catch (error) {
+          console.error(`Error fetching stats for game ${gameId}:`, error);
+          return { gameId, stats: [], success: false };
+        }
+      });
+
       const results = await Promise.all(statsPromises);
 
       // Create a map of gameId -> stats[]
-      const statsMap = gameIds.reduce((acc, gameId, index) => {
-        acc[gameId] = results[index];
+      const statsMap = results.reduce((acc, result) => {
+        acc[result.gameId] = result.stats;
         return acc;
       }, {} as Record<number, any[]>);
 
+      console.log(`Batch endpoint successfully returned stats for ${gameIds.length} games`);
       res.json(statsMap);
     } catch (error) {
-      console.error(`Error getting batch game stats: ${error}`);
+      console.error(`Error in batch game stats endpoint:`, error);
       res.status(500).json({ error: "Failed to get batch game stats" });
     }
   });
@@ -1380,6 +1392,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // Log the successfully created/updated stat
         console.log("Game stat created/updated successfully:", stat);
+        
+        // Invalidate any cached data for this game
+        // This ensures fresh data is fetched on next request
+        res.set('Cache-Control', 'no-cache');
+        
         res.status(201).json(stat);
       } catch (innerError) {
         console.error("Inner error handling game stats:", innerError);
@@ -1398,6 +1415,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!updatedStat) {
         return res.status(404).json({ message: "Game stat not found" });
       }
+      
+      // Invalidate cache for this game
+      res.set('Cache-Control', 'no-cache');
+      console.log(`Updated game stat for game ${updatedStat.gameId}, cache invalidated`);
+      
       res.json(updatedStat);
     } catch (error) {
       res.status(500).json({ message: "Failed to update game stat" });

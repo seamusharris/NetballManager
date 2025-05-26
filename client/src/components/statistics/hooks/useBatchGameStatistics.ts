@@ -22,22 +22,33 @@ export function useBatchGameStatistics(gameIds: number[], forceFresh: boolean = 
     data: statsMap, 
     isLoading, 
     error,
-    refetch 
+    refetch,
+    isStale
   } = useQuery({
     queryKey: ['batchGameStats', gameIdsKey, freshKey],
-    queryFn: () => {
+    queryFn: async () => {
       console.log(`Batch fetching stats for ${gameIds.length} games via React Query`);
-      return statisticsService.getBatchGameStats(sortedGameIds);
+      try {
+        const result = await statisticsService.getBatchGameStats(sortedGameIds);
+        console.log(`Successfully batch fetched stats for ${Object.keys(result).length} games`);
+        return result;
+      } catch (error) {
+        console.error('Batch statistics fetch failed:', error);
+        throw error;
+      }
     },
     enabled: gameIds.length > 0,
-    staleTime: forceFresh ? 0 : 5 * 60 * 1000, // 0 or 5 minutes
-    gcTime: 15 * 60 * 1000, // Keep in cache for 15 minutes
+    staleTime: forceFresh ? 0 : CACHE_SETTINGS.BATCH_QUERY_STALE_TIME,
+    gcTime: CACHE_SETTINGS.QUERY_CACHE_TIME,
+    retry: CACHE_SETTINGS.MAX_RETRIES,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
   
   return {
     statsMap: statsMap || {},
     isLoading,
     error,
-    refetch
+    refetch,
+    isStale
   };
 }
