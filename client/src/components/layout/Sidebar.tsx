@@ -61,7 +61,7 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen, isTablet }: Sid
         </button>
       </div>
       <div className="px-4 py-6">
-        <p className="text-blue-200 text-xs uppercase font-bold tracking-wider mb-4 px-2">Navigation</p>
+        <p className="text-gray-500 text-xs uppercase font-bold tracking-wider mb-4 px-2">Navigation</p>
         <nav className="space-y-1">
           {navLinks.map((link) => (
             <Link 
@@ -73,13 +73,13 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen, isTablet }: Sid
                 className={cn(
                   "flex items-center px-3 py-2.5 rounded-lg transition-all duration-200 group",
                   isActive(link.path) 
-                    ? "bg-blue-700 text-white shadow-md" 
-                    : "text-blue-100 hover:bg-blue-600/50 hover:text-white"
+                    ? "bg-blue-600 text-white shadow-md" 
+                    : "text-blue-600 hover:bg-blue-600 hover:text-white"
                 )}
               >
                 <span className={cn(
                   "w-5 h-5 mr-3 transition-colors",
-                  isActive(link.path) ? "text-white" : "text-blue-200 group-hover:text-white"
+                  isActive(link.path) ? "text-white" : "text-blue-600 group-hover:text-white"
                 )}>
                   {link.icon}
                 </span>
