@@ -26,7 +26,7 @@ import {
   FileText, Printer
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
-import { formatDate, cn, tailwindToHex } from '@/lib/utils';
+import { formatDate, cn, tailwindToHex, convertTailwindToHex } from '@/lib/utils';
 
 // Helper functions for player colors
 const getPlayerColorForBorder = (avatarColor?: string): string => {
@@ -303,31 +303,7 @@ const PlayerStatsByQuarter = ({ roster, players, gameStats }: { roster: any[], p
     return player.avatarColor;
   }
   
-  // Convert Tailwind color classes to hex color values
-  function convertTailwindToHex(tailwindClass: string) {
-    const colorMap = {
-      'bg-red-500': '#ef4444',
-      'bg-orange-500': '#f97316',
-      'bg-yellow-600': '#ca8a04',
-      'bg-green-500': '#22c55e',
-      'bg-emerald-600': '#059669',
-      'bg-teal-600': '#0d9488',
-      'bg-blue-600': '#2563eb',
-      'bg-indigo-600': '#4f46e5',
-      'bg-purple-600': '#9333ea',
-      'bg-pink-600': '#db2777',
-      'bg-pink-500': '#ec4899',
-      'bg-sky-600': '#0284c7',
-      'bg-cyan-600': '#0891b2',
-      'bg-lime-600': '#65a30d',
-      'bg-amber-600': '#d97706',
-      'bg-violet-600': '#7c3aed',
-      'bg-fuchsia-600': '#c026d3',
-      'bg-rose-600': '#e11d48',
-    };
-    
-    return colorMap[tailwindClass] || '#6366f1'; // default to indigo-500 if not found
-  }
+  
   
   // Render a quarter tab/button
   const renderQuarterButton = (quarter: number) => (

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Position, POSITIONS } from '@shared/schema';
+import { convertTailwindToHex } from '@/lib/utils';
 
 interface BalancedCourtViewProps {
   roster: any[];
@@ -10,7 +11,7 @@ interface BalancedCourtViewProps {
 
 export function BalancedCourtView({ roster, players, initialQuarter = 1 }: BalancedCourtViewProps) {
   const [quarter, setQuarter] = React.useState(initialQuarter);
-  
+
   // Group roster by quarter and position
   const rosterByQuarter = React.useMemo(() => {
     return roster.reduce((acc: any, entry: any) => {
@@ -19,7 +20,7 @@ export function BalancedCourtView({ roster, players, initialQuarter = 1 }: Balan
       return acc;
     }, {});
   }, [roster]);
-  
+
   // Helper to get position coordinates on court diagram
   const getPositionCoordinates = (position: Position) => {
     const positionMap = {
@@ -31,7 +32,7 @@ export function BalancedCourtView({ roster, players, initialQuarter = 1 }: Balan
       'GD': 'bottom-28 left-16',
       'GK': 'bottom-12 left-1/2 transform -translate-x-1/2',
     };
-    
+
     return positionMap[position] || '';
   };
 
@@ -41,38 +42,12 @@ export function BalancedCourtView({ roster, players, initialQuarter = 1 }: Balan
     const player = players.find(p => p.id === playerId);
     return player ? (player.displayName || `${player.firstName} ${player.lastName}`) : null;
   };
-  
-  // Convert Tailwind color classes to hex color values
-  const convertTailwindToHex = (tailwindClass: string) => {
-    const colorMap: {[key: string]: string} = {
-      'bg-red-500': '#ef4444',
-      'bg-orange-500': '#f97316',
-      'bg-yellow-600': '#ca8a04',
-      'bg-green-500': '#22c55e',
-      'bg-emerald-600': '#059669',
-      'bg-teal-600': '#0d9488',
-      'bg-blue-600': '#2563eb',
-      'bg-indigo-600': '#4f46e5',
-      'bg-purple-600': '#9333ea',
-      'bg-pink-600': '#db2777',
-      'bg-pink-500': '#ec4899',
-      'bg-sky-600': '#0284c7',
-      'bg-cyan-600': '#0891b2',
-      'bg-lime-600': '#65a30d',
-      'bg-amber-600': '#d97706',
-      'bg-violet-600': '#7c3aed',
-      'bg-fuchsia-600': '#c026d3',
-      'bg-rose-600': '#e11d48',
-    };
-    
-    return colorMap[tailwindClass] || '#6366f1'; // default to indigo-500 if not found
-  };
-  
+
   // Function to get player color, converting from Tailwind class names to hex
   const getPlayerColor = (playerId: number | null) => {
     if (!players || !playerId) return '#cccccc';
     const player = players.find(p => p.id === playerId);
-    
+
     // First, check if we need to use a default color
     if (!player || !player.avatarColor || player.avatarColor === '#FFFFFF' || player.avatarColor === '#ffffff') {
       // Use default colors
@@ -82,18 +57,18 @@ export function BalancedCourtView({ roster, players, initialQuarter = 1 }: Balan
       ];
       return defaultColors[playerId % defaultColors.length];
     }
-    
+
     // Check if the avatarColor is a Tailwind class (starts with 'bg-')
     if (player.avatarColor.startsWith('bg-')) {
       const hexColor = convertTailwindToHex(player.avatarColor);
       console.log(`Converting ${player.avatarColor} to hex: ${hexColor} for player ${playerId}`);
       return hexColor;
     }
-    
+
     // If it's already a hex color, return it
     return player.avatarColor;
   };
-  
+
   return (
     <div className="mt-4">
       <div className="mb-4 flex justify-center items-center">
@@ -110,7 +85,7 @@ export function BalancedCourtView({ roster, players, initialQuarter = 1 }: Balan
           ))}
         </div>
       </div>
-      
+
       {/* Simple two column layout with left alignment */}
       <div className="flex flex-col md:flex-row gap-8 items-start max-w-5xl mx-auto">
         {/* Court diagram */}
@@ -122,19 +97,19 @@ export function BalancedCourtView({ roster, players, initialQuarter = 1 }: Balan
               <div className="h-1/3 border-b border-white"></div>
               <div className="h-1/3"></div>
             </div>
-            
+
             {/* Position markers */}
             {POSITIONS.map(position => {
               const entry = rosterByQuarter[quarter]?.[position];
               const playerName = getPlayerName(entry?.playerId);
               const playerColor = getPlayerColor(entry?.playerId);
-              
+
               // Use the player's avatar color for the background
               const bgColor = playerName ? playerColor : 'white';
-              
+
               // Use white text for player positions, red for unassigned
               const textColor = playerName ? 'white' : '#ef4444'; // Red color for unassigned
-              
+
               return (
                 <div key={position} className={`absolute ${getPositionCoordinates(position)}`}>
                   <div 
@@ -165,7 +140,7 @@ export function BalancedCourtView({ roster, players, initialQuarter = 1 }: Balan
             })}
           </div>
         </div>
-        
+
         {/* Roster positions by third */}
         <div className="md:w-1/2">
           <div className="space-y-6">
@@ -176,7 +151,7 @@ export function BalancedCourtView({ roster, players, initialQuarter = 1 }: Balan
                 const entry = rosterByQuarter[quarter]?.[position];
                 const playerName = getPlayerName(entry?.playerId);
                 const playerColor = getPlayerColor(entry?.playerId);
-                
+
                 return (
                   <div 
                     key={position} 
@@ -197,7 +172,7 @@ export function BalancedCourtView({ roster, players, initialQuarter = 1 }: Balan
                 );
               })}
             </div>
-            
+
             {/* Mid court positions */}
             <div className="space-y-3">
               <h3 className="text-sm font-medium text-gray-500">Mid Court</h3>
@@ -205,7 +180,7 @@ export function BalancedCourtView({ roster, players, initialQuarter = 1 }: Balan
                 const entry = rosterByQuarter[quarter]?.[position];
                 const playerName = getPlayerName(entry?.playerId);
                 const playerColor = getPlayerColor(entry?.playerId);
-                
+
                 return (
                   <div 
                     key={position} 
@@ -226,7 +201,7 @@ export function BalancedCourtView({ roster, players, initialQuarter = 1 }: Balan
                 );
               })}
             </div>
-            
+
             {/* Defense positions */}
             <div className="space-y-3">
               <h3 className="text-sm font-medium text-gray-500">Defense Third</h3>
@@ -234,7 +209,7 @@ export function BalancedCourtView({ roster, players, initialQuarter = 1 }: Balan
                 const entry = rosterByQuarter[quarter]?.[position];
                 const playerName = getPlayerName(entry?.playerId);
                 const playerColor = getPlayerColor(entry?.playerId);
-                
+
                 return (
                   <div 
                     key={position} 

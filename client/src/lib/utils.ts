@@ -100,6 +100,12 @@ export function getTailwindColorClass(hexColor: string): string | undefined {
   return HEX_TO_TAILWIND[hexColor.toLowerCase()];
 }
 
+/**
+ * Legacy function name for backward compatibility
+ * @deprecated Use tailwindToHex instead
+ */
+export const convertTailwindToHex = tailwindToHex;
+
 export function getInitials(firstName: string, lastName: string): string {
   return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
 }
