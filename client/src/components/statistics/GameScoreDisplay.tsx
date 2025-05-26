@@ -19,7 +19,7 @@ export function GameScoreDisplay({ gameId, compact = false, preloadedStats, fall
   // For compact mode (lists), we should rely on preloaded stats when available
   const { scores, isLoading, error } = useGameStatistics(
     gameId, 
-    !compact && !hasPreloadedStats, // Only force fresh fetch for detailed view without preloaded data
+    false, // Never force fresh fetch in compact mode
     hasPreloadedStats ? preloadedStats : undefined
   );
 

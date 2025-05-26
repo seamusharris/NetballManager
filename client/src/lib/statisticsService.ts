@@ -259,41 +259,7 @@ class UnifiedStatisticsService {
     return scores;
   }
 
-  calculateScoresFromStats(stats: GameStat[], gameId: number): GameScores {
-    const quarterScores = {
-      '1': { for: 0, against: 0 },
-      '2': { for: 0, against: 0 },
-      '3': { for: 0, against: 0 },
-      '4': { for: 0, against: 0 }
-    };
-
-    // Group by position/quarter and take latest
-    const latestStats: Record<string, GameStat> = {};
-    stats.forEach(stat => {
-      if (!stat.quarter || !stat.position) return;
-
-      const key = `${stat.position}-${stat.quarter}`;
-      if (!latestStats[key] || stat.id > latestStats[key].id) {
-        latestStats[key] = stat;
-      }
-    });
-
-    // Sum goals by quarter
-    Object.values(latestStats).forEach(stat => {
-      if (stat.quarter >= 1 && stat.quarter <= 4) {
-        const quarter = stat.quarter.toString() as '1' | '2' | '3' | '4';
-        quarterScores[quarter].for += stat.goalsFor || 0;
-        quarterScores[quarter].against += stat.goalsAgainst || 0;
-      }
-    });
-
-    const finalScore = {
-      for: quarterScores['1'].for + quarterScores['2'].for + quarterScores['3'].for + quarterScores['4'].for,
-      against: quarterScores['1'].against + quarterScores['2'].against + quarterScores['3'].against + quarterScores['4'].against
-    };
-
-    return { quarterScores, finalScore };
-  }
+  
 
   /**
    * Get position-based statistics for a game

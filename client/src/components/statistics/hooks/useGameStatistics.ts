@@ -58,8 +58,8 @@ export function useGameStatistics(gameId: number, forceFresh: boolean = false, p
       // Otherwise calculate normally (which will also update the cache)
       return statisticsService.calculateGameScores(gameId, forceFresh);
     },
-    enabled: !!gameId,
-    staleTime: forceFresh ? 0 : 15 * 60 * 1000, // 0 for fresh, 15 minutes otherwise
+    enabled: !!gameId && (!hasPreloadedStats || !scores), // Don't refetch if we have preloaded stats and scores
+    staleTime: hasPreloadedStats ? Infinity : (forceFresh ? 0 : 15 * 60 * 1000), // Never expire preloaded stats
     gcTime: 30 * 60 * 1000, // Keep in cache for 30 minutes
   });
 
