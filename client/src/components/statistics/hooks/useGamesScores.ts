@@ -29,8 +29,12 @@ export function useGamesScores(gameIds: number[], forceFresh = false) {
       if (!gameIds.length) return {};
 
       // Use the batch endpoint to get stats for all games at once
-      const response = await apiClient.get<Record<number, GameStat[]>>(`/api/games/stats/batch?gameIds=${gameIds.join(',')}`);
-      return response || {};
+      const response = await fetch(`/api/games/stats/batch?gameIds=${gameIds.join(',')}`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch batch stats: ${response.statusText}`);
+      }
+      const data = await response.json();
+      return data || {};
     },
     enabled: gameIds.length > 0,
     staleTime: forceFresh ? 0 : 15 * 60 * 1000,
@@ -40,7 +44,13 @@ export function useGamesScores(gameIds: number[], forceFresh = false) {
   // Get games data to handle forfeit games properly
   const { data: games = [] } = useQuery({
     queryKey: ['games'],
-    queryFn: () => apiClient.get<Game[]>('/api/games'),
+    queryFn: async () => {
+      const response = await fetch('/api/games');
+      if (!response.ok) {
+        throw new Error(`Failed to fetch games: ${response.statusText}`);
+      }
+      return response.json();
+    },
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 
