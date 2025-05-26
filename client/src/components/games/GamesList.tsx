@@ -119,24 +119,23 @@ export default function GamesList({
 
   // Use React Query to fetch and cache statistics for all games in a single request
   const { data: allGameStats, isLoading: isLoadingStats } = useQuery({
-    queryKey: ['batchGameStats', completedGameIds.sort().join(',')],
+    queryKey: ['gamesList', 'batchStats', completedGameIds.sort().join(',')],
     queryFn: async () => {
       if (completedGameIds.length === 0) {
-        console.log('No completed games to fetch stats for');
+        console.log('Games List: No completed games to fetch stats for');
         return {};
       }
 
       // Create a map to store stats by game ID
       const statsMap: Record<number, any[]> = {};
 
-      // Initialize stats map with empty arrays for all games
-      games.forEach(game => {
-        statsMap[game.id] = [];
+      // Initialize stats map with empty arrays for all completed games
+      completedGameIds.forEach(gameId => {
+        statsMap[gameId] = [];
       });
 
       try {
-        console.log(`Games List: Batch fetching stats for ${completedGameIds.length} games`);
-        // Get all stats for completed games in a single batch request
+        console.log(`Games List: Batch fetching stats for ${completedGameIds.length} completed games`);
         const response = await apiRequest('GET', `/api/games/stats/batch?gameIds=${completedGameIds.join(',')}`);
 
         // The batch endpoint returns an object with gameId as keys
@@ -149,20 +148,21 @@ export default function GamesList({
           });
           console.log(`Games List: Successfully loaded batch stats for ${Object.keys(response).length} games`);
         } else {
-          console.warn('Unexpected batch response format:', response);
+          console.warn('Games List: Unexpected batch response format:', response);
         }
       } catch (error) {
         console.error("Games List: Error fetching game stats in batch:", error);
-        // Don't fallback to individual requests here to avoid the spam
-        // The dashboard and other components handle individual requests
+        // Return empty stats map instead of attempting individual requests
+        console.log("Games List: Returning empty stats map due to batch failure");
       }
 
       return statsMap;
     },
     enabled: completedGameIds.length > 0,
-    staleTime: 2 * 60 * 1000, // Consider data fresh for 2 minutes
-    refetchOnMount: false, // Don't always refetch on mount
-    refetchOnWindowFocus: false // Don't refetch on window focus
+    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
+    refetchOnMount: false, // Don't refetch on mount
+    refetchOnWindowFocus: false, // Don't refetch on window focus
+    retry: 1 // Only retry once to avoid spam
   });
 
   // Determine game stats status
@@ -427,7 +427,11 @@ export default function GamesList({
                       {game.isBye ? (
                         <div className="font-medium text-gray-500">⸺</div>
                       ) : game.completed ? (
-                        <GameScoreDisplay gameId={game.id} compact={true} />
+                        <GameScoreDisplay 
+                          gameId={game.id} 
+                          compact={true}
+                          preloadedStats={allGameStats?.[game.id] || []}
+                        />
                       ) : (
                         <div className="font-medium text-gray-500">—</div>
                       )}

@@ -7,10 +7,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 interface GameScoreDisplayProps {
   gameId: number;
   compact?: boolean;
+  preloadedStats?: any[];
   fallback?: string;
 }
 
-export function GameScoreDisplay({ gameId, compact = false, fallback = "—" }: GameScoreDisplayProps) {
+export function GameScoreDisplay({ gameId, compact = false, preloadedStats, fallback = "—" }: GameScoreDisplayProps) {
   // Only force a fresh fetch when not in compact mode (detailed view)
   // Compact mode is used in lists and should be more cache-friendly
   const { scores, isLoading, error } = useGameStatistics(gameId, !compact);
