@@ -170,8 +170,10 @@ export class DatabaseStorage implements IStorage {
     console.log('🔍 Raw query results sample:', results.length > 0 ? {
       keys: Object.keys(results[0]),
       game: results[0].games,
-      gameStatuses: results[0].game_statuses,
-      statusIdFromGame: results[0].games.statusId
+      gameStatuses_via_snake: results[0].game_statuses,
+      gameStatuses_via_camel: results[0].gameStatuses,
+      statusIdFromGame: results[0].games.statusId,
+      fullRow: results[0]
     } : 'No results');
 
     return results.map(row => {
