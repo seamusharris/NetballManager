@@ -2,7 +2,7 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Game } from '@shared/schema';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 
@@ -27,9 +27,11 @@ export default function QuarterPerformanceWidget({
     avgOpponentScoreByQuarter: { 1: 0, 2: 0, 3: 0, 4: 0 }
   });
 
-  // Get completed games
-  const completedGamesArray = games.filter(game => game.completed);
-  const completedGameIds = completedGamesArray.map(game => game.id);
+  // Get completed games - memoize to prevent infinite re-renders
+  const completedGameIds = useMemo(() => {
+    return games.filter(game => game.completed).map(game => game.id);
+  }, [games]);
+  
   const enableQuery = completedGameIds.length > 0;
 
   const seasonId = selectedSeason?.id || 'current';
