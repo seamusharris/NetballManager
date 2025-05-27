@@ -56,8 +56,8 @@ export default function Dashboard() {
     );
   }
 
-  // Show loading state - wait for all critical data to load
-  if (isLoading || !players || !games || !opponents || !seasons) {
+  // Show loading state only if any query is still loading
+  if (isLoading) {
     return (
       <div className="p-6">
         <h1 className="text-2xl font-bold mb-4">Loading Dashboard...</h1>
@@ -67,6 +67,7 @@ export default function Dashboard() {
           <p>Games: {games?.length || 0} loaded</p>
           <p>Opponents: {opponents?.length || 0} loaded</p>
           <p>Seasons: {seasons?.length || 0} loaded</p>
+          <p>Loading states: players={isLoadingPlayers}, games={isLoadingGames}, opponents={isLoadingOpponents}, seasons={isLoadingSeasons}, activeSeason={isLoadingActiveSeason}</p>
         </div>
       </div>
     );
