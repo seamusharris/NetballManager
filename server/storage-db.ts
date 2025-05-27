@@ -176,19 +176,18 @@ export class DatabaseStorage implements IStorage {
       console.log(`✅ Retrieved ${allGameStatuses.length} game statuses`);
       console.log('📊 Game statuses:', allGameStatuses.map(s => ({ id: s.id, name: s.name })));
 
-      // Create a map for quick status lookup
+      // Create a map for quick status lookup (simple approach like opponents)
       const statusMap = new Map();
       allGameStatuses.forEach(status => {
         statusMap.set(status.id, status);
         console.log(`🗂️ Added status to map: ID ${status.id} -> ${status.name}`);
       });
 
-      // Fetch all opponents separately
       console.log('🏢 FETCHING OPPONENTS...');
       const allOpponents = await db.select().from(opponents);
       console.log(`✅ Retrieved ${allOpponents.length} opponents`);
 
-      // Create a map for quick opponent lookup
+      // Create a map for quick opponent lookup (simple approach that works)
       const opponentMap = new Map();
       allOpponents.forEach(opponent => {
         opponentMap.set(opponent.id, opponent);
@@ -204,24 +203,16 @@ export class DatabaseStorage implements IStorage {
         console.log(`   - statusId: ${game.statusId}`);
         console.log(`   - opponentId: ${game.opponentId}`);
 
-        // Get game status from map
-        console.log(`   - Looking up statusId ${game.statusId} in map...`);
-        console.log(`   - Map has status ${game.statusId}: ${statusMap.has(game.statusId)}`);
-        console.log(`   - Map size: ${statusMap.size}`);
-        console.log(`   - Map keys: [${Array.from(statusMap.keys()).join(', ')}]`);
-        
+        // Get game status from map (simple lookup like opponents)
         const gameStatus = game.statusId ? statusMap.get(game.statusId) : null;
-        console.log(`   - Found gameStatus: ${gameStatus ? 'YES' : 'NO'}`);
+        console.log(`   - StatusId: ${game.statusId}, Found gameStatus: ${gameStatus ? 'YES' : 'NO'}`);
         if (gameStatus) {
           console.log(`   - Status name: ${gameStatus.name}`);
-          console.log(`   - Status displayName: ${gameStatus.displayName}`);
-        } else if (game.statusId) {
-          console.log(`   - ❌ Status lookup failed for ID ${game.statusId}`);
         }
 
-        // Get opponent from map
+        // Get opponent from map (simple lookup that works)
         const opponent = game.opponentId ? opponentMap.get(game.opponentId) : null;
-        console.log(`   - Found opponent: ${opponent ? 'YES' : 'NO'}`);
+        console.log(`   - OpponentId: ${game.opponentId}, Found opponent: ${opponent ? 'YES' : 'NO'}`);
         if (opponent) {
           console.log(`   - Opponent name: ${opponent.teamName}`);
         }
