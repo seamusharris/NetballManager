@@ -308,8 +308,7 @@ export class DatabaseStorage implements IStorage {
 
   // Roster methods
   async getRostersByGame(gameId: number): Promise<Roster[]> {
-    return await db.select().from(rosters).where(eq(rosters.gameId, gameId));
-  }
+    return await db.select().from(rosters).where(eq(rosters.gameId, gameId));  }
 
   async getRoster(id: number): Promise<Roster | undefined> {
     const [roster] = await db.select().from(rosters).where(eq(rosters.id, id));
@@ -516,5 +515,5 @@ async function initSampleData() {
   }
 }
 
-// Initialize sample data
-initSampleData().catch(console.error);
+// Initialize sample data - commented out until getOpponents is implemented
+  // await initSampleData(storage);
