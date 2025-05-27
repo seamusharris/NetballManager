@@ -153,15 +153,31 @@ export class DatabaseStorage implements IStorage {
 
   // Game methods
   async getGames(): Promise<Game[]> {
-    console.log('\n\n🚨🚨🚨 STORAGE-DB.TS: getGames() METHOD CALLED! 🚨🚨🚨');
+    console.log('\n\n🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨');
+    console.log('🚨🚨🚨 STORAGE-DB.TS: getGames() METHOD CALLED! 🚨🚨🚨');
+    console.log('🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨');
     console.log('⭐ TIMESTAMP:', new Date().toISOString());
     console.log('⭐ METHOD: DatabaseStorage.getGames()');
     console.log('⭐ FILE: server/storage-db.ts');
+    console.log('⭐ STACK TRACE:');
+    console.trace();
     console.log('=== DEBUGGING getGames() START ===');
 
+    // Test database connection first
+    try {
+      console.log('🔌 TESTING DATABASE CONNECTION...');
+      const testResult = await db.execute(sql`SELECT 1 as test`);
+      console.log('✅ DATABASE CONNECTION OK:', testResult.rows);
+    } catch (dbError) {
+      console.error('❌ DATABASE CONNECTION FAILED:', dbError);
+      throw new Error(`Database connection failed: ${dbError}`);
+    }
+
     // Debug: Show available statuses
+    console.log('📊 FETCHING GAME STATUSES...');
     const availableStatuses = await db.select().from(gameStatuses);
     console.log('=== AVAILABLE GAME STATUSES ===');
+    console.log('Total statuses found:', availableStatuses.length);
     console.log(availableStatuses);
 
     // Debug: Show distribution of status IDs in games
@@ -186,6 +202,9 @@ export class DatabaseStorage implements IStorage {
     console.log('=== SAMPLE GAMES WITH ACTUAL STATUS DATA ===');
     console.log(gamesSample.rows);
 
+    console.log('🔍 EXECUTING DRIZZLE QUERY...');
+    console.log('🔍 Query structure: games LEFT JOIN opponents LEFT JOIN gameStatuses LEFT JOIN seasons LEFT JOIN players');
+    
     const results = await db
       .select({
         games,
@@ -200,6 +219,9 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(seasons, eq(games.seasonId, seasons.id))
       .leftJoin(players, eq(games.awardWinnerId, players.id))
       .orderBy(desc(games.date), desc(games.time));
+    
+    console.log('✅ DRIZZLE QUERY COMPLETED');
+    console.log('📊 Total results returned:', results.length);
 
     console.log('=== DRIZZLE JOIN RESULTS (first 3) ===');
     results.slice(0, 3).forEach((row, index) => {
@@ -211,15 +233,23 @@ export class DatabaseStorage implements IStorage {
       });
     });
 
-    return results.map(row => {
+    console.log('🔄 MAPPING', results.length, 'RESULTS TO GAME OBJECTS...');
+    
+    return results.map((row, index) => {
       // Debug the entire gameStatuses object
-      console.log(`=== GAME ${row.games.id} DEBUG ===`);
+      console.log(`\n=== GAME ${row.games.id} (${index + 1}/${results.length}) DEBUG ===`);
       console.log(`StatusID in games table: ${row.games.statusId}`);
+      console.log(`gameStatuses object exists:`, !!row.gameStatuses);
       console.log(`gameStatuses object:`, row.gameStatuses);
-      console.log(`Join result keys:`, Object.keys(row));
+      console.log(`opponents object exists:`, !!row.opponents);
+      console.log(`seasons object exists:`, !!row.seasons);
+      console.log(`players object exists:`, !!row.players);
+      console.log(`Raw row keys:`, Object.keys(row));
 
       const dbStatus = row.gameStatuses?.name || 'upcoming';
       const dbCompleted = row.gameStatuses?.isCompleted ?? false;
+      
+      console.log(`Computed status: "${dbStatus}", completed: ${dbCompleted}`);
 
       return {
         id: row.games.id,
@@ -277,6 +307,11 @@ export class DatabaseStorage implements IStorage {
         isBye: row.games.opponentId === null
       };
     });
+  }
+
+  // Add explicit method to check if this class is being used
+  async debugInfo(): Promise<string> {
+    return `DatabaseStorage instance - timestamp: ${new Date().toISOString()}`;
   }
 
   async getGame(id: number): Promise<Game | undefined> {

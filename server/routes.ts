@@ -808,8 +808,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ----- GAMES API -----
   app.get("/api/games", async (req, res) => {
+    console.log('\n\n🔥🔥🔥 ROUTES.TS: /api/games endpoint hit! 🔥🔥🔥');
+    console.log('⚡ TIMESTAMP:', new Date().toISOString());
+    console.log('⚡ REQUEST METHOD:', req.method);
+    console.log('⚡ REQUEST URL:', req.url);
+    console.log('⚡ ABOUT TO CALL storage.getGames()');
+    
     try {
+      console.log('🚀 CALLING storage.getGames()...');
       const games = await storage.getGames();
+      console.log('✅ storage.getGames() returned:', games.length, 'games');
 
       // Debug game information
       console.log("Available games:", games.map(g => ({ 
@@ -819,9 +827,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         completed: g.completed 
       })));
 
+      console.log('📤 SENDING RESPONSE with', games.length, 'games');
       res.json(games);
     } catch (error) {
-      console.error("Error fetching games:", error);
+      console.error("❌ ERROR in /api/games route:", error);
       res.status(500).json({ message: "Failed to fetch games" });
     }
   });
