@@ -65,13 +65,20 @@ export default function OpponentDetailed() {
         teamScore,
         opponentScore,
         result: getWinLoseLabel(teamScore, opponentScore),
-        margin: teamScore - opponentScore
+        margin: teamScore - opponentScore,
+        gameStats
       };
     });
 
     const wins = gameResults.filter(r => r.result === 'Win').length;
     const losses = gameResults.filter(r => r.result === 'Loss').length;
     const draws = gameResults.filter(r => r.result === 'Draw').length;
+
+    // Calculate quarter performance analysis
+    const quarterAnalysis = calculateQuarterAnalysis(gameResults);
+    
+    // Calculate scoring trends
+    const scoringTrends = calculateScoringTrends(gameResults);
 
     return {
       totalGames: opponentGames.length,
@@ -82,7 +89,113 @@ export default function OpponentDetailed() {
       avgMargin: gameResults.length > 0 ? Math.round(gameResults.reduce((sum, r) => sum + r.margin, 0) / gameResults.length) : 0,
       biggestWin: gameResults.filter(r => r.result === 'Win').reduce((max, r) => r.margin > max ? r.margin : max, 0),
       biggestLoss: Math.abs(gameResults.filter(r => r.result === 'Loss').reduce((min, r) => r.margin < min ? r.margin : min, 0)),
-      gameResults: gameResults.sort((a, b) => new Date(b.game.date).getTime() - new Date(a.game.date).getTime())
+      gameResults: gameResults.sort((a, b) => new Date(b.game.date).getTime() - new Date(a.game.date).getTime()),
+      quarterAnalysis,
+      scoringTrends
+    };
+  };
+
+  // Calculate quarter performance analysis
+  const calculateQuarterAnalysis = (gameResults: any[]) => {
+    if (gameResults.length === 0) return null;
+
+    const quarterScores: Record<number, { team: number, opponent: number, count: number }> = {
+      1: { team: 0, opponent: 0, count: 0 },
+      2: { team: 0, opponent: 0, count: 0 },
+      3: { team: 0, opponent: 0, count: 0 },
+      4: { team: 0, opponent: 0, count: 0 }
+    };
+
+    gameResults.forEach(result => {
+      const gameStats = result.gameStats || [];
+      const gameQuarterScores: Record<number, { team: number, opponent: number }> = {
+        1: { team: 0, opponent: 0 },
+        2: { team: 0, opponent: 0 },
+        3: { team: 0, opponent: 0 },
+        4: { team: 0, opponent: 0 }
+      };
+
+      gameStats.forEach((stat: any) => {
+        if (stat.quarter >= 1 && stat.quarter <= 4) {
+          gameQuarterScores[stat.quarter].team += stat.goalsFor || 0;
+          gameQuarterScores[stat.quarter].opponent += stat.goalsAgainst || 0;
+        }
+      });
+
+      Object.keys(gameQuarterScores).forEach(quarterStr => {
+        const quarter = parseInt(quarterStr);
+        quarterScores[quarter].team += gameQuarterScores[quarter].team;
+        quarterScores[quarter].opponent += gameQuarterScores[quarter].opponent;
+        quarterScores[quarter].count += 1;
+      });
+    });
+
+    const byQuarter: Record<number, { avgTeamScore: number, avgOpponentScore: number }> = {};
+    Object.keys(quarterScores).forEach(quarterStr => {
+      const quarter = parseInt(quarterStr);
+      const count = quarterScores[quarter].count || 1;
+      byQuarter[quarter] = {
+        avgTeamScore: quarterScores[quarter].team / count,
+        avgOpponentScore: quarterScores[quarter].opponent / count
+      };
+    });
+
+    // Find strongest and weakest quarters
+    const quarterDiffs = Object.keys(byQuarter).map(quarter => {
+      const q = parseInt(quarter);
+      const diff = byQuarter[q].avgTeamScore - byQuarter[q].avgOpponentScore;
+      return { quarter: q, diff };
+    });
+
+    const strongestQuarter = quarterDiffs.reduce((max, current) => 
+      current.diff > max.diff ? current : max
+    ).quarter;
+
+    const weakestQuarter = quarterDiffs.reduce((min, current) => 
+      current.diff < min.diff ? current : min
+    ).quarter;
+
+    return {
+      byQuarter,
+      strongestQuarter,
+      weakestQuarter
+    };
+  };
+
+  // Calculate scoring trends
+  const calculateScoringTrends = (gameResults: any[]) => {
+    if (gameResults.length === 0) return null;
+
+    const teamScores = gameResults.map(r => r.teamScore);
+    const opponentScores = gameResults.map(r => r.opponentScore);
+
+    const avgGoalsFor = teamScores.reduce((sum, score) => sum + score, 0) / teamScores.length;
+    const avgGoalsAgainst = opponentScores.reduce((sum, score) => sum + score, 0) / opponentScores.length;
+
+    const highestScoringGame = Math.max(...teamScores);
+    const lowestScoringGame = Math.min(...teamScores);
+
+    // Calculate variance
+    const variance = teamScores.reduce((sum, score) => sum + Math.pow(score - avgGoalsFor, 2), 0) / teamScores.length;
+    const goalsVariance = Math.sqrt(variance);
+
+    // Determine recent trend (last 3 games vs overall average)
+    let recentTrend: 'improving' | 'declining' | 'stable' = 'stable';
+    if (gameResults.length >= 3) {
+      const recentGames = gameResults.slice(0, 3);
+      const recentAvg = recentGames.reduce((sum, r) => sum + r.teamScore, 0) / recentGames.length;
+      
+      if (recentAvg > avgGoalsFor + 1) recentTrend = 'improving';
+      else if (recentAvg < avgGoalsFor - 1) recentTrend = 'declining';
+    }
+
+    return {
+      avgGoalsFor,
+      avgGoalsAgainst,
+      highestScoringGame,
+      lowestScoringGame,
+      goalsVariance,
+      recentTrend
     };
   };
 
@@ -179,6 +292,138 @@ export default function OpponentDetailed() {
                     <span className="font-semibold">{detailedStats.totalGames}</span>
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Quarter Performance Analysis */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5" />
+                  Quarter Performance vs {selectedOpponentData.teamName}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {detailedStats.quarterAnalysis && (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-3">
+                      {[1, 2, 3, 4].map(quarter => {
+                        const qData = detailedStats.quarterAnalysis.byQuarter[quarter];
+                        const diff = qData.avgTeamScore - qData.avgOpponentScore;
+                        const isStrongest = quarter === detailedStats.quarterAnalysis.strongestQuarter;
+                        const isWeakest = quarter === detailedStats.quarterAnalysis.weakestQuarter;
+                        
+                        return (
+                          <div 
+                            key={quarter} 
+                            className={`p-3 rounded-lg border-2 ${
+                              isStrongest ? 'bg-green-50 border-green-200' : 
+                              isWeakest ? 'bg-red-50 border-red-200' : 
+                              'bg-gray-50 border-gray-200'
+                            }`}
+                          >
+                            <div className="flex justify-between items-center mb-1">
+                              <span className="text-sm font-medium text-gray-600">Q{quarter}</span>
+                              {isStrongest && <Badge variant="outline" className="text-xs px-1 py-0 bg-green-100 text-green-700">Best</Badge>}
+                              {isWeakest && <Badge variant="outline" className="text-xs px-1 py-0 bg-red-100 text-red-700">Weak</Badge>}
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-lg font-bold text-primary">{qData.avgTeamScore.toFixed(1)}</span>
+                              <span className="text-sm text-gray-500">vs</span>
+                              <span className="text-lg font-bold text-gray-600">{qData.avgOpponentScore.toFixed(1)}</span>
+                            </div>
+                            <div className="text-center mt-1">
+                              <span className={`text-xs font-medium ${
+                                diff > 0 ? 'text-green-600' : diff < 0 ? 'text-red-600' : 'text-gray-500'
+                              }`}>
+                                {diff > 0 ? '+' : ''}{diff.toFixed(1)}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Scoring Trends */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5" />
+                  Scoring Trends
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {detailedStats.scoringTrends && (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="text-center p-3 bg-blue-50 rounded-lg">
+                        <p className="text-sm text-gray-600 mb-1">Avg Goals For</p>
+                        <p className="text-2xl font-bold text-blue-600">
+                          {detailedStats.scoringTrends.avgGoalsFor.toFixed(1)}
+                        </p>
+                      </div>
+                      <div className="text-center p-3 bg-red-50 rounded-lg">
+                        <p className="text-sm text-gray-600 mb-1">Avg Goals Against</p>
+                        <p className="text-2xl font-bold text-red-600">
+                          {detailedStats.scoringTrends.avgGoalsAgainst.toFixed(1)}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-600">Recent Form Trend</span>
+                        <div className="flex items-center gap-1">
+                          {detailedStats.scoringTrends.recentTrend === 'improving' && (
+                            <>
+                              <TrendingUp className="h-4 w-4 text-green-600" />
+                              <span className="text-green-600 font-medium">Improving</span>
+                            </>
+                          )}
+                          {detailedStats.scoringTrends.recentTrend === 'declining' && (
+                            <>
+                              <TrendingDown className="h-4 w-4 text-red-600" />
+                              <span className="text-red-600 font-medium">Declining</span>
+                            </>
+                          )}
+                          {detailedStats.scoringTrends.recentTrend === 'stable' && (
+                            <>
+                              <Target className="h-4 w-4 text-gray-500" />
+                              <span className="text-gray-500 font-medium">Stable</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-600">Highest Scoring Game</span>
+                        <span className="font-semibold text-green-600">
+                          {detailedStats.scoringTrends.highestScoringGame} goals
+                        </span>
+                      </div>
+
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-600">Lowest Scoring Game</span>
+                        <span className="font-semibold text-gray-600">
+                          {detailedStats.scoringTrends.lowestScoringGame} goals
+                        </span>
+                      </div>
+
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-600">Goals Variance</span>
+                        <span className="font-semibold text-gray-600">
+                          ±{detailedStats.scoringTrends.goalsVariance.toFixed(1)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
