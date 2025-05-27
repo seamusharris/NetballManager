@@ -203,13 +203,7 @@ export class DatabaseStorage implements IStorage {
     console.log('Join test result:', joinTest);
 
     const results = await db
-      .select({
-        games,
-        opponents,
-        gameStatuses,
-        seasons,
-        players,
-      })
+      .select()
       .from(games)
       .leftJoin(opponents, eq(games.opponentId, opponents.id))
       .leftJoin(gameStatuses, eq(games.statusId, gameStatuses.id))
