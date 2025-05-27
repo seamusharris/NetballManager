@@ -167,49 +167,17 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(players, eq(games.awardWinnerId, players.id))
       .orderBy(desc(games.date), desc(games.time));
 
-    console.log('\n=== COMPREHENSIVE DRIZZLE JOIN DEBUGGING ===');
+    console.log('🚨 COMPREHENSIVE DRIZZLE DEBUGGING START');
+    console.log('📊 Query returned', results.length, 'results');
+
     if (results.length > 0) {
       const firstRow = results[0];
-      console.log('🔍 TOP-LEVEL KEYS:', Object.keys(firstRow));
-
-      // Log each top-level key and its type/content
-      Object.keys(firstRow).forEach(key => {
-        const value = firstRow[key];
-        const type = typeof value;
-        console.log(`📋 KEY: "${key}" | TYPE: ${type} | VALUE:`, 
-          type === 'object' && value !== null ? JSON.stringify(value, null, 2) : value
-        );
-      });
-
-      // Check for any nested objects
-      console.log('\n🔍 NESTED OBJECT ANALYSIS:');
-      Object.entries(firstRow).forEach(([key, value]) => {
-        if (typeof value === 'object' && value !== null) {
-          console.log(`📦 OBJECT "${key}" contains keys:`, Object.keys(value));
-          console.log(`📦 OBJECT "${key}" full content:`, JSON.stringify(value, null, 2));
-        }
-      });
-
-      // Try all possible gameStatus access patterns
-      console.log('\n🎯 TESTING ALL POSSIBLE GAMESTATUS ACCESS PATTERNS:');
-      console.log('❓ firstRow.gameStatuses:', firstRow.gameStatuses);
-      console.log('❓ firstRow.game_statuses:', firstRow.game_statuses);
-      console.log('❓ firstRow["gameStatuses"]:', firstRow["gameStatuses"]);
-      console.log('❓ firstRow["game_statuses"]:', firstRow["game_statuses"]);
-
-      // Check if it's nested under games or other keys
-      if (firstRow.games) {
-        console.log('❓ firstRow.games.gameStatus:', firstRow.games.gameStatus);
-        console.log('❓ firstRow.games.gameStatuses:', firstRow.games.gameStatuses);
-      }
-
-      console.log('\n🔍 COMPLETE FIRST ROW DUMP:');
-      console.log(JSON.stringify(firstRow, null, 2));
-
-    } else {
-      console.log('🔍 No results found - empty query result');
+      console.log('🔑 Available keys:', Object.keys(firstRow));
+      console.log('🎯 gameStatuses access:', firstRow.gameStatuses);
+      console.log('🎯 game_statuses access:', firstRow.game_statuses);
+      console.log('🔍 Full result structure:', JSON.stringify(firstRow, null, 2));
     }
-    console.log('=== END DRIZZLE DEBUGGING ===\n');
+    console.log('🚨 DEBUGGING END');
 
     return results.map(row => {
       console.log(`🎮 Processing game ${row.games.id}: statusId=${row.games.statusId}`);
