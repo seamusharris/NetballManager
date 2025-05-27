@@ -204,7 +204,7 @@ export class DatabaseStorage implements IStorage {
         venue: games.venue,
         teamScore: games.teamScore,
         opponentScore: games.opponentScore,
-        // Game status fields
+        // Game status fields (using correct schema field names)
         gameStatusName: gameStatuses.name,
         gameStatusDisplayName: gameStatuses.displayName,
         gameStatusIsCompleted: gameStatuses.isCompleted,
