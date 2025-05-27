@@ -16,11 +16,14 @@ interface RecentGamesProps {
 }
 
 export default function RecentGames({ games, opponents, className, seasonFilter, activeSeason, centralizedStats }: RecentGamesProps) {
-  // Filter for completed games using gameStatus.isCompleted and sort by date (most recent first)
+  // Filter for recent completed games using gameStatus
   const recentGames = games
-    .filter(game => game.gameStatus?.isCompleted === true)
+    .filter(game => {
+      console.log(`RecentGames filtering game ${game.id}: isCompleted=${game.gameStatus?.isCompleted}, status=${game.gameStatus?.name}`);
+      return game.gameStatus?.isCompleted === true;
+    })
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-    .slice(0, 5);
+    .slice(0, 3);
 
   // Use centralized stats if available, otherwise empty object
   const allGameStats = centralizedStats || {};
