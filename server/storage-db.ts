@@ -6,7 +6,7 @@ import { rosters, type Roster, type InsertRoster } from "@shared/schema";
 import { gameStats, type GameStat, type InsertGameStat } from "@shared/schema";
 import { Position } from "@shared/schema";
 import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import { gameStatuses } from "@shared/schema";
 import { seasons } from "@shared/schema";
 
@@ -153,15 +153,24 @@ export class DatabaseStorage implements IStorage {
   // Game methods
   async getGames(): Promise<Game[]> {
     try {
-      const result = await db
-        .select()
+      const results = await db
+        .select({
+          // Game fields
+          games,
+          // Related data
+          opponent: opponents,
+          gameStatus: gameStatuses,
+          season: seasons,
+          awardWinner: players
+        })
         .from(games)
         .leftJoin(opponents, eq(games.opponentId, opponents.id))
-        .leftJoin(seasons, eq(games.seasonId, seasons.id))
         .leftJoin(gameStatuses, eq(games.statusId, gameStatuses.id))
-        .orderBy(games.date);
+        .leftJoin(seasons, eq(games.seasonId, seasons.id))
+        .leftJoin(players, eq(games.awardWinnerId, players.id))
+        .orderBy(desc(games.date), desc(games.time));
 
-      return result.map(row => ({
+      return results.map(row => ({
         id: row.games.id,
         date: row.games.date,
         time: row.games.time,
@@ -171,42 +180,49 @@ export class DatabaseStorage implements IStorage {
         seasonId: row.games.seasonId,
         notes: row.games.notes,
         awardWinnerId: row.games.awardWinnerId,
-        // Include opponent details if available
-        opponent: row.opponents ? {
-          id: row.opponents.id,
-          teamName: row.opponents.teamName,
-          primaryContact: row.opponents.primaryContact,
-          contactInfo: row.opponents.contactInfo
+        opponent: row.opponent ? {
+          id: row.opponent.id,
+          teamName: row.opponent.teamName,
+          primaryContact: row.opponent.primaryContact,
+          contactInfo: row.opponent.contactInfo
         } : undefined,
-        // Include season details if available
-        season: row.seasons ? {
-          id: row.seasons.id,
-          name: row.seasons.name,
-          startDate: row.seasons.startDate,
-          endDate: row.seasons.endDate,
-          isActive: row.seasons.isActive,
-          type: row.seasons.type,
-          year: row.seasons.year,
-          displayOrder: row.seasons.displayOrder
+        season: row.season ? {
+          id: row.season.id,
+          name: row.season.name,
+          startDate: row.season.startDate,
+          endDate: row.season.endDate,
+          isActive: row.season.isActive,
+          type: row.season.type,
+          year: row.season.year,
+          displayOrder: row.season.displayOrder
         } : undefined,
-        // Include status information from the game_statuses table
-        gameStatus: row.gameStatuses ? {
-          id: row.gameStatuses.id,
-          name: row.gameStatuses.name,
-          displayName: row.gameStatuses.displayName,
-          points: row.gameStatuses.points,
-          opponentPoints: row.gameStatuses.opponentPoints,
-          isCompleted: row.gameStatuses.isCompleted,
-          allowsStatistics: row.gameStatuses.allowsStatistics,
-          requiresOpponent: row.gameStatuses.requiresOpponent,
-          colorClass: row.gameStatuses.colorClass,
-          sortOrder: row.gameStatuses.sortOrder,
-          isActive: row.gameStatuses.isActive
+        awardWinner: row.awardWinner ? {
+          id: row.awardWinner.id,
+          displayName: row.awardWinner.displayName,
+          firstName: row.awardWinner.firstName,
+          lastName: row.awardWinner.lastName,
+          dateOfBirth: row.awardWinner.dateOfBirth,
+          positionPreferences: row.awardWinner.positionPreferences,
+          active: row.awardWinner.active,
+          avatarColor: row.awardWinner.avatarColor
+        } : undefined,
+        gameStatus: row.gameStatus ? {
+          id: row.gameStatus.id,
+          name: row.gameStatus.name,
+          displayName: row.gameStatus.displayName,
+          points: row.gameStatus.points,
+          opponentPoints: row.gameStatus.opponentPoints,
+          isCompleted: row.gameStatus.isCompleted,
+          allowsStatistics: row.gameStatus.allowsStatistics,
+          requiresOpponent: row.gameStatus.requiresOpponent,
+          colorClass: row.gameStatus.colorClass,
+          sortOrder: row.gameStatus.sortOrder,
+          isActive: row.gameStatus.isActive
         } : undefined,
         // Map status field to the actual status name from game_statuses table
-        status: row.gameStatuses?.name || 'upcoming',
+        status: row.gameStatus?.name || 'upcoming',
         // Legacy fields for backward compatibility - use gameStatus.isCompleted since completed column was removed
-        completed: row.gameStatuses?.isCompleted ?? false,
+        completed: row.gameStatus?.isCompleted ?? false,
         isBye: row.games.opponentId === null
       }));
     } catch (error) {
