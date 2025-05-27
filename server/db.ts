@@ -141,6 +141,9 @@ async function runMigrations() {
     const { createGameStatusesTable } = await import('./migrations/createGameStatusesTable');
     await createGameStatusesTable();
 
+    const { fixGameStatusesConstraints } = await import('./migrations/fixGameStatusesConstraints');
+    await fixGameStatusesConstraints();
+
     log("Database migrations completed successfully!", "migration");
   } catch (error) {
     log(`Migration failed: ${error}`, "migration");
