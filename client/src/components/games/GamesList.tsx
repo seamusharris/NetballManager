@@ -54,6 +54,29 @@ interface GamesListProps {
   onViewStats: (id: number) => void;
 }
 
+// Shared function for filtering games by status and search query
+const filterGamesByStatus = (games: any[], statusFilter: string, searchQuery: string) => {
+  return games.filter(game => {
+    const matchesSearch = searchQuery === '' || 
+      game.opponent?.teamName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      game.round?.toString().includes(searchQuery) ||
+      new Date(game.date).toLocaleDateString().includes(searchQuery);
+
+    if (statusFilter === 'all') return matchesSearch;
+
+    // Handle special filters using gameStatus.isCompleted
+    if (statusFilter === 'completed') {
+      return matchesSearch && game.gameStatus?.isCompleted === true;
+    }
+    if (statusFilter === 'upcoming') {
+      return matchesSearch && game.gameStatus?.isCompleted !== true;
+    }
+
+    // Match exact status name from database
+    return matchesSearch && game.gameStatus?.name === statusFilter;
+  });
+};
+
 export default function GamesList({ 
   games, 
   opponents, 
@@ -213,16 +236,14 @@ export default function GamesList({
     return opponent ? opponent.teamName : 'Unknown Opponent';
   };
 
-  // Filter games based on status
-  const filteredGames = games.filter(game => {
-    const matchesSearch = searchQuery === '' || 
-      opponents.find(o => o.id === game.opponentId)?.teamName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      game.round?.toString().includes(searchQuery) ||
-      new Date(game.date).toLocaleDateString().includes(searchQuery);
+  // Enhance games with opponent data for search filtering
+  const gamesWithOpponents = games.map(game => ({
+    ...game,
+    opponent: opponents.find(o => o.id === game.opponentId)
+  }));
 
-    if (statusFilter === 'all') return matchesSearch;
-    return matchesSearch && game.status === statusFilter;
-  });
+  // Filter games using shared filtering logic
+  const filteredGames = filterGamesByStatus(gamesWithOpponents, statusFilter, searchQuery);
 
   // Sort games strictly by date (future games first)
   const sortedGames = [...filteredGames].sort((a, b) => {

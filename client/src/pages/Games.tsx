@@ -11,6 +11,7 @@ import { Game, Opponent, Player } from '@shared/schema';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { useGameStatuses } from '@/hooks/use-game-statuses';
+import { filterGamesByStatus } from '@/lib/gameFilters';
 
 interface QueryParams {
   status?: string;
@@ -56,23 +57,8 @@ export default function Games() {
     queryFn: () => apiRequest('GET', '/api/players') as Promise<Player[]>,
   });
 
-  // Filter games based on status using gameStatus.isCompleted and database statuses
-  const filteredGames = games.filter(game => {
-    if (statusFilter === 'all') return true;
-
-    // Handle completed games filter using gameStatus.isCompleted
-    if (statusFilter === 'completed') {
-      return game.gameStatus?.isCompleted === true;
-    }
-
-    // Handle upcoming games filter using gameStatus.isCompleted
-    if (statusFilter === 'upcoming') {
-      return game.gameStatus?.isCompleted !== true;
-    }
-
-    // Match exact status name from database
-    return game.gameStatus?.name === statusFilter;
-  });
+  // Filter games based on status using shared filtering logic
+  const filteredGames = filterGamesByStatus(games, statusFilter);
 
   const handleCreate = async (game: Game) => {
     try {
