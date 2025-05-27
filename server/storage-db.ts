@@ -153,8 +153,12 @@ export class DatabaseStorage implements IStorage {
 
   // Game methods
   async getGames(): Promise<Game[]> {
+    console.log('\n\n🚨🚨🚨 STORAGE-DB.TS: getGames() METHOD CALLED! 🚨🚨🚨');
+    console.log('⭐ TIMESTAMP:', new Date().toISOString());
+    console.log('⭐ METHOD: DatabaseStorage.getGames()');
+    console.log('⭐ FILE: server/storage-db.ts');
     console.log('=== DEBUGGING getGames() START ===');
-    
+
     // Debug: Show available statuses
     const availableStatuses = await db.select().from(gameStatuses);
     console.log('=== AVAILABLE GAME STATUSES ===');
