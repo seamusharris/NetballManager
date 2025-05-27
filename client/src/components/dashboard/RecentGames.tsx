@@ -4,7 +4,7 @@ import { Link } from 'wouter';
 import { Game, Opponent, GameStat } from '@shared/schema';
 import { formatShortDate } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
-import { GameScoreDisplay } from '@/components/statistics/GameScoreDisplay';
+import { ScoreBadge } from '@/components/ui/score-badge';
 
 interface RecentGamesProps {
   games: Game[];
@@ -142,9 +142,11 @@ export default function RecentGames({ games, opponents, className, seasonFilter,
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-right">
-                    <GameScoreDisplay gameId={game.id} compact />
-                  </div>
+                    <ScoreBadge 
+                      teamScore={getScores(game)[0]} 
+                      opponentScore={getScores(game)[1]} 
+                      size="sm"
+                    />
                   </div>
                 </div>
               </Link>
