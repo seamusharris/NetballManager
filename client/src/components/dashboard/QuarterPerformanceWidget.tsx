@@ -5,6 +5,7 @@ import { Game } from '@shared/schema';
 import { useEffect, useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
+import { isGameValidForStatistics } from '@/lib/gameFilters';
 
 interface QuarterPerformanceWidgetProps {
   games: Game[];
@@ -27,21 +28,21 @@ export default function QuarterPerformanceWidget({
     avgOpponentScoreByQuarter: { 1: 0, 2: 0, 3: 0, 4: 0 }
   });
 
-  // Get completed games - memoize to prevent infinite re-renders
-  const completedGameIds = useMemo(() => {
-    return games.filter(game => game.completed).map(game => game.id);
+  // Get games valid for statistics - memoize to prevent infinite re-renders
+  const validGameIds = useMemo(() => {
+    return games.filter(isGameValidForStatistics).map(game => game.id);
   }, [games]);
   
-  const enableQuery = completedGameIds.length > 0;
+  const enableQuery = validGameIds.length > 0;
 
   const seasonId = selectedSeason?.id || 'current';
-  const gameIdsKey = completedGameIds.join(',');
+  const gameIdsKey = validGameIds.join(',');
 
-  // Fetch stats for all completed games
+  // Fetch stats for all valid games
   const { data: gameStatsMap, isLoading } = useQuery({
     queryKey: ['quarterPerformanceStats', gameIdsKey, seasonId],
     queryFn: async () => {
-      if (completedGameIds.length === 0) {
+      if (validGameIds.length === 0) {
         return {};
       }
 
@@ -55,7 +56,7 @@ export default function QuarterPerformanceWidget({
       }
 
       const statsMap: Record<number, any[]> = {};
-      for (const gameId of completedGameIds) {
+      for (const gameId of validGameIds) {
         try {
           const stats = await apiRequest('GET', `/api/games/${gameId}/stats`);
           statsMap[gameId] = stats;
@@ -73,7 +74,7 @@ export default function QuarterPerformanceWidget({
 
   // Calculate quarter performance metrics
   useEffect(() => {
-    if (!gameStatsMap || isLoading || completedGameIds.length === 0) return;
+    if (!gameStatsMap || isLoading || validGameIds.length === 0) return;
 
     const quarterScores: Record<number, { team: number, opponent: number, count: number }> = {
       1: { team: 0, opponent: 0, count: 0 },
@@ -82,7 +83,7 @@ export default function QuarterPerformanceWidget({
       4: { team: 0, opponent: 0, count: 0 }
     };
 
-    completedGameIds.forEach(gameId => {
+    validGameIds.forEach(gameId => {
       const gameStats = gameStatsMap[gameId];
       if (!gameStats || gameStats.length === 0) return;
 
@@ -123,7 +124,7 @@ export default function QuarterPerformanceWidget({
       avgTeamScoreByQuarter,
       avgOpponentScoreByQuarter
     });
-  }, [gameStatsMap, isLoading, completedGameIds]);
+  }, [gameStatsMap, isLoading, validGameIds]);
 
   // Calculate which quarter is strongest/weakest
   const quarterDiffs = Object.keys(quarterPerformance.avgTeamScoreByQuarter).map(quarter => {

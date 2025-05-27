@@ -71,9 +71,9 @@ export default function PlayerPerformance({ players, games, className, seasonFil
     return true;
   });
 
-  // Get only completed games
-  const completedGames = filteredGames.filter(game => game.completed);
-  const gameIds = completedGames.map(game => game.id);
+  // Get only games valid for statistics
+  const validGames = filteredGames.filter(isGameValidForStatistics);
+  const gameIds = validGames.map(game => game.id);
   const enableQuery = gameIds.length > 0;
 
 
@@ -143,13 +143,13 @@ export default function PlayerPerformance({ players, games, className, seasonFil
     let filteredGameIds = [...gameIds];
     const now = new Date();
 
-    // First filter out forfeit games - they should not count in player statistics
-    const validGames = filteredGames.filter(isGameValidForStatistics);
+    // Get games valid for statistics (already filtered above)
+    const statisticsValidGames = validGames;
 
     // Filter games based on time range
     if (timeRange === 'last5') {
       // Sort games by date (newest first) and get the 5 most recent
-      filteredGameIds = validGames
+      filteredGameIds = statisticsValidGames
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
         .slice(0, 5)
         .map(game => game.id);
@@ -159,7 +159,7 @@ export default function PlayerPerformance({ players, games, className, seasonFil
       const currentMonth = now.getMonth();
       const currentYear = now.getFullYear();
 
-      filteredGameIds = validGames
+      filteredGameIds = statisticsValidGames
         .filter(game => {
           const gameDate = new Date(game.date);
           return gameDate.getMonth() === currentMonth && gameDate.getFullYear() === currentYear;
@@ -168,7 +168,7 @@ export default function PlayerPerformance({ players, games, className, seasonFil
     }
     else {
       // Even with 'season' (all games), we still need to filter out forfeit games
-      filteredGameIds = validGames.map(game => game.id);
+      filteredGameIds = statisticsValidGames.map(game => game.id);
     }
 
     console.log(`Filtering player performance to ${filteredGameIds.length} games based on time range: ${timeRange}`);

@@ -7,6 +7,7 @@ import { Game, Opponent } from '@shared/schema';
 import { getWinLoseLabel, getWinLoseClass } from '@/lib/utils';
 import { GameResult } from '@/lib/resultUtils';
 import { ResultBadge } from '@/components/ui/result-badge';
+import { isGameValidForStatistics } from '@/lib/gameFilters';
 
 interface OpponentMatchup {
   opponent: Opponent;
@@ -46,7 +47,7 @@ export default function OpponentMatchups({
 
       opponents.forEach(opponent => {
         const opponentGames = games.filter(game => 
-          game.opponentId === opponent.id && game.completed
+          game.opponentId === opponent.id && isGameValidForStatistics(game)
         );
 
         if (opponentGames.length === 0) return;

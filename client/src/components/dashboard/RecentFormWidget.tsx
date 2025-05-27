@@ -4,6 +4,7 @@ import { Game, Opponent, GameResult } from '@shared/schema';
 import { getWinLoseLabel } from '@/lib/utils';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { ResultBadge } from '@/components/ui/result-badge';
+import { isGameValidForStatistics } from '@/lib/gameFilters';
 
 
 interface RecentFormWidgetProps {
@@ -21,7 +22,7 @@ export default function RecentFormWidget({
 }: RecentFormWidgetProps) {
   // Get completed games sorted by date (most recent first)
   const completedGames = games
-    .filter(game => game.completed && game.status !== 'forfeit')
+    .filter(isGameValidForStatistics)
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 5); // Last 5 games
 
