@@ -138,11 +138,7 @@ export default function RecentFormWidget({
           {formData.slice(0, 3).map((game, index) => (
             <div key={game.id} className="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
               <div>
-                <p className="text-sm font-medium">vs {game.opponent}</p>
-                <p className="text-xs text-gray-600">{new Date(game.date).toLocaleDateString('en-AU', { 
-                  day: 'numeric', 
-                  month: 'short' 
-                })}</p>
+                <p className="text-sm font-medium">{game.opponent}</p>
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-sm font-medium">{game.teamScore}-{game.opponentScore}</span>
