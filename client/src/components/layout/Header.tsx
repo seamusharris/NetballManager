@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
-import { Bell, Search, ChevronDown, Home, Users, ClipboardList, Calendar, CalendarRange, Flag, BarChart, Database, Zap, Settings as SettingsIcon } from 'lucide-react';
+import { Bell, Search, ChevronDown, Home, Users, ClipboardList, Calendar, CalendarRange, Flag, BarChart, Database, Zap, Settings as SettingsIcon, Trophy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar } from '@/components/ui/avatar';
