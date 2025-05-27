@@ -227,8 +227,8 @@ export class DatabaseStorage implements IStorage {
           } : null,
           opponent: row.opponent_name ? {
             teamName: row.opponent_name,
-            primaryColor: row.opponent_primary_color,
-            secondaryColor: row.opponent_secondary_color
+            primaryContact: row.opponent_primary_contact,
+            contactInfo: row.opponent_contact_info
           } : null,
           awardWinner: row.award_winner_display_name ? {
             displayName: row.award_winner_display_name,
