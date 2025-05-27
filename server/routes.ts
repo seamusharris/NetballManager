@@ -1641,31 +1641,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Register game status routes
+    app.use("/api/game-statuses", gameStatusRoutes);
+
   // Create HTTP server
   const httpServer = createServer(app);
   return httpServer;
-import type { Express } from "express";
-import { createServer, type Server } from "http";
-import { storage } from "./storage";
-import { z } from "zod";
-import { sql } from "drizzle-orm";
-import { db, pool } from "./db";
-import { 
-  insertPlayerSchema, importPlayerSchema,
-  insertOpponentSchema, importOpponentSchema,
-  insertGameSchema, importGameSchema,
-  insertRosterSchema, importRosterSchema,
-  insertGameStatSchema, importGameStatSchema,
-  insertSeasonSchema,
-  players, opponents, games, rosters, gameStats, seasons,
-  POSITIONS
-} from "@shared/schema";
-
-import { updatePlayerSeasonRelationships, getPlayerSeasons } from "./player-season-routes";
-// Import the game status routes
-import gameStatusRoutes from "./game-status-routes";
-
-export async function registerRoutes(app: Express): Promise<Server> {
+}
   // put application routes here
   // prefix all routes with /api
 
