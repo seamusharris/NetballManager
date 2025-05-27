@@ -267,24 +267,27 @@ export class DatabaseStorage implements IStorage {
       // The join works correctly - gameStatuses is the right key
       console.log('🔍 DEBUGGING GAME STATUS DETECTION:');
       console.log('🔸 row.gameStatuses exists:', !!row.gameStatuses);
-      console.log('🔸 row.gameStatuses value:', row.gameStatuses);
+      console.log('🔸 row.gameStatuses value:', JSON.stringify(row.gameStatuses, null, 2));
       console.log('🔸 row.gameStatuses type:', typeof row.gameStatuses);
       console.log('🔸 row.gameStatuses === null:', row.gameStatuses === null);
       console.log('🔸 row.gameStatuses === undefined:', row.gameStatuses === undefined);
       console.log('🔸 Object.keys(row.gameStatuses):', row.gameStatuses ? Object.keys(row.gameStatuses) : 'N/A');
+      console.log('🔸 Object.keys length:', row.gameStatuses ? Object.keys(row.gameStatuses).length : 'N/A');
+      console.log('🔸 row.gameStatuses.id:', row.gameStatuses?.id);
+      console.log('🔸 row.gameStatuses.name:', row.gameStatuses?.name);
 
       // Declare the gameStatus variable
       let gameStatus = null;
       
-      // Try a more explicit check
-      if (row.gameStatuses !== null && row.gameStatuses !== undefined && typeof row.gameStatuses === 'object') {
-        console.log('✅ Found gameStatus data at gameStatuses key:', row.gameStatuses);
+      // Check for actual data - empty objects have length 0
+      if (row.gameStatuses && Object.keys(row.gameStatuses).length > 0 && row.gameStatuses.id) {
+        console.log('✅ Found valid gameStatus with data:', row.gameStatuses);
         gameStatus = row.gameStatuses;
       } else {
-        console.log('❌ No valid gameStatus found - condition failed');
-        console.log('   - Not null:', row.gameStatuses !== null);
-        console.log('   - Not undefined:', row.gameStatuses !== undefined); 
-        console.log('   - Is object:', typeof row.gameStatuses === 'object');
+        console.log('❌ No valid gameStatus found');
+        console.log('   - gameStatuses exists:', !!row.gameStatuses);
+        console.log('   - Has keys:', row.gameStatuses ? Object.keys(row.gameStatuses).length > 0 : false);
+        console.log('   - Has ID:', !!row.gameStatuses?.id);
       }
       // Build the final game object
       console.log(`🏗️ CONSTRUCTING FINAL GAME OBJECT FOR GAME ${row.games.id}:`);
