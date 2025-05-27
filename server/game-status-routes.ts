@@ -1,14 +1,14 @@
 
-import { Hono } from "hono";
+import { Router } from "express";
 import { db } from "./db";
 import { gameStatuses, games } from "@shared/schema";
 import { eq, sql } from "drizzle-orm";
 import { log } from "./vite";
 
-const app = new Hono();
+const router = Router();
 
 // Get all game statuses
-app.get("/", async (c) => {
+router.get("/", async (req, res) => {
   try {
     const statuses = await db
       .select()
@@ -16,17 +16,17 @@ app.get("/", async (c) => {
       .where(eq(gameStatuses.isActive, true))
       .orderBy(gameStatuses.sortOrder);
     
-    return c.json(statuses);
+    res.json(statuses);
   } catch (error) {
     log(`Error fetching game statuses: ${error}`, "error");
-    return c.json({ error: "Failed to fetch game statuses" }, 500);
+    res.status(500).json({ error: "Failed to fetch game statuses" });
   }
 });
 
 // Get a specific game status by ID
-app.get("/:id", async (c) => {
+router.get("/:id", async (req, res) => {
   try {
-    const id = parseInt(c.req.param("id"));
+    const id = parseInt(req.params.id);
     const status = await db
       .select()
       .from(gameStatuses)
@@ -34,37 +34,37 @@ app.get("/:id", async (c) => {
       .limit(1);
     
     if (status.length === 0) {
-      return c.json({ error: "Game status not found" }, 404);
+      return res.status(404).json({ error: "Game status not found" });
     }
     
-    return c.json(status[0]);
+    res.json(status[0]);
   } catch (error) {
     log(`Error fetching game status: ${error}`, "error");
-    return c.json({ error: "Failed to fetch game status" }, 500);
+    res.status(500).json({ error: "Failed to fetch game status" });
   }
 });
 
 // Create a new game status
-app.post("/", async (c) => {
+router.post("/", async (req, res) => {
   try {
-    const body = await c.req.json();
+    const body = req.body;
     const newStatus = await db
       .insert(gameStatuses)
       .values(body)
       .returning();
     
-    return c.json(newStatus[0], 201);
+    res.status(201).json(newStatus[0]);
   } catch (error) {
     log(`Error creating game status: ${error}`, "error");
-    return c.json({ error: "Failed to create game status" }, 500);
+    res.status(500).json({ error: "Failed to create game status" });
   }
 });
 
 // Update a game status
-app.put("/:id", async (c) => {
+router.put("/:id", async (req, res) => {
   try {
-    const id = parseInt(c.req.param("id"));
-    const body = await c.req.json();
+    const id = parseInt(req.params.id);
+    const body = req.body;
     
     const updatedStatus = await db
       .update(gameStatuses)
@@ -73,20 +73,20 @@ app.put("/:id", async (c) => {
       .returning();
     
     if (updatedStatus.length === 0) {
-      return c.json({ error: "Game status not found" }, 404);
+      return res.status(404).json({ error: "Game status not found" });
     }
     
-    return c.json(updatedStatus[0]);
+    res.json(updatedStatus[0]);
   } catch (error) {
     log(`Error updating game status: ${error}`, "error");
-    return c.json({ error: "Failed to update game status" }, 500);
+    res.status(500).json({ error: "Failed to update game status" });
   }
 });
 
 // Delete a game status (soft delete by setting isActive to false)
-app.delete("/:id", async (c) => {
+router.delete("/:id", async (req, res) => {
   try {
-    const id = parseInt(c.req.param("id"));
+    const id = parseInt(req.params.id);
     
     // Check if any games are using this status
     const gamesUsingStatus = await db
@@ -95,9 +95,9 @@ app.delete("/:id", async (c) => {
       .where(eq(games.statusId, id));
     
     if (gamesUsingStatus[0].count > 0) {
-      return c.json({ 
+      return res.status(400).json({ 
         error: "Cannot delete game status that is in use by games" 
-      }, 400);
+      });
     }
     
     const deletedStatus = await db
@@ -107,14 +107,14 @@ app.delete("/:id", async (c) => {
       .returning();
     
     if (deletedStatus.length === 0) {
-      return c.json({ error: "Game status not found" }, 404);
+      return res.status(404).json({ error: "Game status not found" });
     }
     
-    return c.json({ message: "Game status deleted successfully" });
+    res.json({ message: "Game status deleted successfully" });
   } catch (error) {
     log(`Error deleting game status: ${error}`, "error");
-    return c.json({ error: "Failed to delete game status" }, 500);
+    res.status(500).json({ error: "Failed to delete game status" });
   }
 });
 
-export default app;
+export default router;
