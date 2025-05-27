@@ -75,47 +75,47 @@ export default function PrintableStatsSheet({ game, opponent, roster: propRoster
   // Export to PDF
   const handleExportPDF = () => {
     if (!game) return;
-    
+
     const doc = new jsPDF();
-    
+
     // Add title
     const gameDate = formatDate(game.date);
     const opponentName = opponent?.teamName || 'Unknown Opponent';
     const roundInfo = game.round ? ` (Round ${game.round})` : '';
     const title = `${gameDate} - Stats Sheet vs ${opponentName}${roundInfo}`;
-    
+
     doc.setFontSize(14);
     doc.text(title, 14, 15);
 
     // Import autotable dynamically
     Promise.all([import('jspdf-autotable')]).then(([autoTableModule]) => {
       const autoTable = autoTableModule.default;
-      
+
       // First page: Quarter 1 & 2
       let yPos = 20;
-      
+
       for (let quarter = 1; quarter <= 2; quarter++) {
         // Add quarter heading
         doc.setFontSize(11);
         doc.text(`Quarter ${quarter}`, 14, yPos);
-        
+
         // Create player names array for position header subtext
         const playerNames = POSITIONS.map(position => {
           const playerId = rosterByQuarterPosition[quarter]?.[position];
           return playerId ? getPlayerName(playerId) : '';
         });
-        
+
         // Create header row with position columns
         const headers = ['Stat', ...POSITIONS];
-        
+
         // Create the player names row
         const playerRow = ['Player', ...playerNames];
-        
+
         // Create rows for each stat category
         const rows = statsCategories.map(category => {
           return [category.label, '', '', '', '', '', '', ''];
         });
-        
+
         // Add the table
         autoTable(doc, {
           startY: yPos + 4,
@@ -143,33 +143,33 @@ export default function PrintableStatsSheet({ game, opponent, roster: propRoster
           }
         });
       }
-      
+
       // Second page: Quarter 3 & 4
       doc.addPage();
       yPos = 20;
-      
+
       for (let quarter = 3; quarter <= 4; quarter++) {
         // Add quarter heading
         doc.setFontSize(11);
         doc.text(`Quarter ${quarter}`, 14, yPos);
-        
+
         // Create player names array for position header subtext
         const playerNames = POSITIONS.map(position => {
           const playerId = rosterByQuarterPosition[quarter]?.[position];
           return playerId ? getPlayerName(playerId) : '';
         });
-        
+
         // Create header row with position columns
         const headers = ['Stat', ...POSITIONS];
-        
+
         // Create the player names row
         const playerRow = ['Player', ...playerNames];
-        
+
         // Create rows for each stat category
         const rows = statsCategories.map(category => {
           return [category.label, '', '', '', '', '', '', ''];
         });
-        
+
         // Add the table
         autoTable(doc, {
           startY: yPos + 4,
@@ -197,7 +197,7 @@ export default function PrintableStatsSheet({ game, opponent, roster: propRoster
           }
         });
       }
-      
+
       // Save PDF
       doc.save(`${gameDate.replace(/\//g, '-')}_stats_sheet_${opponentName.replace(/\s+/g, '_')}${roundInfo ? '_Round' + game.round : ''}.pdf`);
     });
@@ -206,14 +206,14 @@ export default function PrintableStatsSheet({ game, opponent, roster: propRoster
   // Export to Excel
   const handleExportExcel = () => {
     if (!game) return;
-    
+
     // Create a workbook with one sheet per quarter
     const wb = XLSX.utils.book_new();
-    
+
     for (let quarter = 1; quarter <= 4; quarter++) {
       // Create headers
       const headers = ['Stat Category', ...POSITIONS];
-      
+
       // Create player names row
       const playerNames = ['Players'];
       for (const position of POSITIONS) {
@@ -221,7 +221,7 @@ export default function PrintableStatsSheet({ game, opponent, roster: propRoster
         const playerName = playerId ? getPlayerName(playerId) : '';
         playerNames.push(playerName);
       }
-      
+
       // Create data array starting with headers and player names
       const data = [
         headers,
@@ -231,10 +231,10 @@ export default function PrintableStatsSheet({ game, opponent, roster: propRoster
           return [category.label, '', '', '', '', '', '', ''];
         })
       ];
-      
+
       // Create worksheet
       const ws = XLSX.utils.aoa_to_sheet(data);
-      
+
       // Set column widths
       const colWidths = [
         { wch: 20 }, // Stat Category
@@ -246,24 +246,24 @@ export default function PrintableStatsSheet({ game, opponent, roster: propRoster
         { wch: 12 }, // GD
         { wch: 12 }, // GK
       ];
-      
+
       ws['!cols'] = colWidths;
-      
+
       // Style the player names row
       for (let i = 0; i < playerNames.length; i++) {
         const cellRef = XLSX.utils.encode_cell({c: i, r: 1}); // second row (r=1)
         if (!ws[cellRef]) continue;
-        
+
         // Create cell style for player names (blue background)
         if (!ws[cellRef].s) ws[cellRef].s = {};
         ws[cellRef].s.fill = {fgColor: {rgb: "E0F2FE"}}; // Light blue bg
         ws[cellRef].s.font = {color: {rgb: "1E40AF"}}; // Blue text
       }
-      
+
       // Add worksheet to workbook
       XLSX.utils.book_append_sheet(wb, ws, `Quarter ${quarter}`);
     }
-    
+
     // Save Excel file
     const gameDate = formatDate(game.date).replace(/\//g, '-');
     const opponentName = opponent?.teamName || 'Unknown';
@@ -310,7 +310,7 @@ export default function PrintableStatsSheet({ game, opponent, roster: propRoster
   return (
     <div>
       <style>{printStyles}</style>
-      
+
       <div className="flex justify-between items-center mb-6 no-print">
         <h2 className="text-xl font-bold">Stats Collection Sheet</h2>
         <div className="flex gap-2">
@@ -337,7 +337,7 @@ export default function PrintableStatsSheet({ game, opponent, roster: propRoster
           </Button>
         </div>
       </div>
-      
+
       <div className="print-section">
         <div className="mb-2">
           <h1 className="text-xl font-bold compact-heading">
@@ -348,12 +348,41 @@ export default function PrintableStatsSheet({ game, opponent, roster: propRoster
             {game?.round && ` (Round ${game.round})`}
           </p>
         </div>
-        
+
+        {/* Score summary section */}
+        <div className="mb-4 print:mb-2">
+          <div className="grid grid-cols-4 gap-2 text-center">
+            <div className="border border-gray-300 p-2">
+              <div className="text-sm font-medium">Q1 Score</div>
+              <div className="text-lg border-b border-gray-300 pb-1 mb-1">___</div>
+              <div className="text-xs text-gray-500">Us vs Them</div>
+            </div>
+            <div className="border border-gray-300 p-2">
+              <div className="text-sm font-medium">Q2 Score</div>
+              <div className="text-lg border-b border-gray-300 pb-1 mb-1">___</div>
+              <div className="text-xs text-gray-500">Us vs Them</div>
+            </div>
+            <div className="border border-gray-300 p-2">
+              <div className="text-sm font-medium">Q3 Score</div>
+              <div className="text-lg border-b border-gray-300 pb-1 mb-1">___</div>
+              <div className="text-xs text-gray-500">Us vs Them</div>
+            </div>
+            <div className="border border-gray-300 p-2">
+              <div className="text-sm font-medium">Q4 Score</div>
+              <div className="text-lg border-b border-gray-300 pb-1 mb-1">___</div>
+              <div className="text-xs text-gray-500">Us vs Them</div>
+            </div>
+          </div>
+        </div>
+
         {/* All quarters in a more compact layout */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-2 gap-y-1">
           {[1, 2, 3, 4].map(quarter => (
             <div key={`quarter-${quarter}`} className={`mb-2 ${quarter === 3 ? 'page-break md:page-break-avoid' : ''}`}>
-              <h3 className="text-base font-semibold mb-1 compact-heading">Quarter {quarter}</h3>
+              <h3 className="text-base font-semibold mb-1 compact-heading flex justify-between items-center">
+                <span>Quarter {quarter}</span>
+                <span className="text-sm font-normal text-gray-500">Score: ___ vs ___</span>
+              </h3>
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse border border-gray-200 compact-table">
                   <thead>
