@@ -4,6 +4,30 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 // Valid netball positions
+
+// Game status model
+export const gameStatuses = pgTable("game_statuses", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().unique(), // Internal status name (e.g., 'forfeit-win', 'bye', 'completed')
+  displayName: text("display_name").notNull(), // User-friendly display name (e.g., 'Forfeit Win', 'BYE', 'Completed')
+  points: integer("points").notNull().default(0), // Points awarded for this status
+  opponentPoints: integer("opponent_points").notNull().default(0), // Points awarded to opponent
+  isCompleted: boolean("is_completed").notNull().default(false), // Whether this status marks a game as finished
+  allowsStatistics: boolean("allows_statistics").notNull().default(true), // Whether stats can be recorded
+  requiresOpponent: boolean("requires_opponent").notNull().default(true), // Whether this status requires an opponent
+  colorClass: text("color_class"), // CSS class for status badge colors
+  sortOrder: integer("sort_order").notNull().default(0), // Order for dropdown displays
+  isActive: boolean("is_active").notNull().default(true), // Whether this status is currently available
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertGameStatusSchema = createInsertSchema(gameStatuses).omit({ id: true });
+export const importGameStatusSchema = createInsertSchema(gameStatuses);
+export type InsertGameStatus = z.infer<typeof insertGameStatusSchema>;
+export type GameStatus = typeof gameStatuses.$inferSelect;
+
+
 export const POSITIONS = ["GS", "GA", "WA", "C", "WD", "GD", "GK"] as const;
 export type Position = typeof POSITIONS[number];
 export const allPositions = [...POSITIONS];
@@ -73,7 +97,8 @@ export const games = pgTable("games", {
   time: text("time").notNull(),
   opponentId: integer("opponent_id"), // Nullable for BYE games
   completed: boolean("completed").notNull().default(false), // Legacy field, kept for backward compatibility
-  status: text("status").$type<GameStatus>().default("upcoming"), // New field for more detailed game status
+  status: text("status").$type<GameStatus>().default("upcoming"), // Legacy field for backward compatibility
+  statusId: integer("status_id").references(() => gameStatuses.id), // New field referencing game_statuses table
   isBye: boolean("is_bye").notNull().default(false),
   round: text("round"), // Round number in the season or special values like "SF" or "GF"
   seasonId: integer("season_id").references(() => seasons.id), // Reference to season
@@ -172,6 +197,10 @@ export type InsertPlayerAvailability = z.infer<typeof insertPlayerAvailabilitySc
 export type PlayerAvailability = typeof playerAvailability.$inferSelect;
 
 // Define relations
+export const gameStatusesRelations = relations(gameStatuses, ({ many }) => ({
+  games: many(games)
+}));
+
 export const seasonsRelations = relations(seasons, ({ many }) => ({
   games: many(games),
   playerSeasons: many(playerSeasons)
@@ -189,6 +218,13 @@ export const playerSeasonsRelations = relations(playerSeasons, ({ one }) => ({
   season: one(seasons, {
     fields: [playerSeasons.seasonId],
     references: [seasons.id],
+  }),
+}));
+
+export const gamesRelations = relations(games, ({ one }) => ({
+  gameStatus: one(gameStatuses, {
+    fields: [games.statusId],
+    references: [gameStatuses.id],
   }),
 }));
 

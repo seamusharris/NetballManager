@@ -138,6 +138,9 @@ async function runMigrations() {
     const { migrateByesToStatus } = await import('./migrations/migrateByesToStatus');
     await migrateByesToStatus();
 
+    const { createGameStatusesTable } = await import('./migrations/createGameStatusesTable');
+    await createGameStatusesTable();
+
     log("Database migrations completed successfully!", "migration");
   } catch (error) {
     log(`Migration failed: ${error}`, "migration");

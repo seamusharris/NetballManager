@@ -6,10 +6,10 @@ import {
   CardDescription, 
   CardHeader, 
   CardTitle 
-} from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -17,21 +17,25 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from "@/hooks/use-toast";
 import { TEAM_NAME, TEAM_SHORT_NAME, TIMEZONE, COMMON_TIMEZONES } from '@/lib/settings';
 import { BackButton } from '@/components/ui/back-button';
+import { Download, Upload, Database, FileText } from "lucide-react";
+import { exportToJSON, exportToCSV, importFromJSON } from "@/lib/dataExportImport";
+import { useRef } from "react";
+import { GameStatusManager } from "@/components/settings/GameStatusManager";
 
 export default function Settings() {
   const { toast } = useToast();
   const [teamName, setTeamName] = useState(TEAM_NAME);
   const [teamShortName, setTeamShortName] = useState(TEAM_SHORT_NAME);
   const [timezone, setTimezone] = useState(TIMEZONE);
-  
+
   // Get current browser timezone
   const getBrowserTimezone = () => {
     return Intl.DateTimeFormat().resolvedOptions().timeZone;
   };
-  
+
   // Format timezone for display
   const formatTimezone = (tz: string) => {
     try {
@@ -44,35 +48,35 @@ export default function Settings() {
       const tzPart = new Intl.DateTimeFormat('en-US', options)
         .formatToParts(now)
         .find(part => part.type === 'timeZoneName');
-      
+
       // Format like "America/New_York (EST)"
       return `${tz} (${tzPart?.value || ''})`;
     } catch (e) {
       return tz;
     }
   };
-  
+
   // This would normally save to backend, but for now we'll just update localStorage
   const saveSettings = () => {
     localStorage.setItem('app_team_name', teamName);
     localStorage.setItem('app_team_short_name', teamShortName);
     localStorage.setItem('app_timezone', timezone);
-    
+
     toast({
       title: "Settings saved",
       description: "Your settings have been saved successfully.",
     });
-    
+
     // Reload the page to apply the settings
     window.location.reload();
   };
-  
+
   return (
     <div className="container py-8 mx-auto">
       <Helmet>
         <title>Application Settings | {TEAM_NAME} Stats Tracker</title>
       </Helmet>
-      
+
       <div className="mb-6">
         <BackButton fallbackPath="/dashboard" className="mb-4">
           Back to Dashboard
@@ -80,7 +84,7 @@ export default function Settings() {
         <h1 className="text-2xl font-bold">Application Settings</h1>
         <p className="text-gray-500">Configure your team information and application preferences</p>
       </div>
-      
+
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
@@ -97,7 +101,7 @@ export default function Settings() {
                 onChange={(e) => setTeamName(e.target.value)}
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="teamShortName">Team Short Name</Label>
               <Input 
@@ -110,12 +114,36 @@ export default function Settings() {
                 This shorter name will be used where space is limited
               </p>
             </div>
-            
+
             <Button onClick={saveSettings} className="w-full">Save Settings</Button>
           </CardContent>
         </Card>
-        
+
         <div className="space-y-6">
+        <h1 className="text-3xl font-bold">Settings</h1>
+
+        <GameStatusManager />
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Database className="h-5 w-5" />
+              Data Management
+            </CardTitle>
+            <CardDescription>
+              Export and import your netball management data
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+              <Button variant="outline" className="w-full">
+                Backup All Data
+              </Button>
+              <Button variant="outline" className="w-full">
+                Export Statistics
+              </Button>
+            </CardContent>
+          </Card>
+
           <Card>
             <CardHeader>
               <CardTitle>Display Preferences</CardTitle>
@@ -135,7 +163,7 @@ export default function Settings() {
                     <SelectItem value={getBrowserTimezone()}>
                       Browser Default ({getBrowserTimezone()})
                     </SelectItem>
-                    
+
                     {COMMON_TIMEZONES.map((tz) => (
                       <SelectItem key={tz} value={tz}>
                         {formatTimezone(tz)}
@@ -147,13 +175,13 @@ export default function Settings() {
                   This timezone will be used for displaying dates and times across the application
                 </p>
               </div>
-              
+
               <Button onClick={saveSettings} variant="outline" className="w-full">
                 Save Display Preferences
               </Button>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardHeader>
               <CardTitle>Backup & Export</CardTitle>
