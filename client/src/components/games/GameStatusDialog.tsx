@@ -110,6 +110,8 @@ export function GameStatusDialog({
       case 'forfeit': return 'Forfeit';
       case 'forfeit-win': return 'Forfeit (Win)';
       case 'forfeit-loss': return 'Forfeit (Loss)';
+      case 'bye': return 'BYE Round';
+      case 'abandoned': return 'Abandoned';
       default: return status;
     }
   };
@@ -123,6 +125,10 @@ export function GameStatusDialog({
         return 'Our team forfeited the game. Score will be recorded as 0-10.';
       case 'in-progress':
         return 'Game is currently being played and will allow live stat entry.';
+      case 'bye':
+        return 'BYE round - no game scheduled. Points awarded as per competition rules.';
+      case 'abandoned':
+        return 'Game cancelled due to weather or other circumstances. Points awarded as per competition rules.';
       default:
         return '';
     }

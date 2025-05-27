@@ -15,10 +15,10 @@ interface UpcomingGamesProps {
 }
 
 export default function UpcomingGames({ games, opponents, className, seasonFilter, activeSeason }: UpcomingGamesProps) {
-  // Filter out completed games and take the 3 most immediate upcoming games
-  const upcomingGames = games
-    .filter(game => !game.completed)
-    .slice(0, 3);
+  // Filter for upcoming games (not completed and not bye/abandoned)
+  const upcomingGames = games.filter(game => 
+    game.status === 'upcoming' || game.status === 'in-progress'
+  );
 
   const getOpponentName = (opponentId: number | null) => {
     if (!opponentId) return 'Unknown Opponent';

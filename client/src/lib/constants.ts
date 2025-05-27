@@ -20,14 +20,27 @@ export const POSITION_GROUPS = {
 };
 
 // Game status constants
-export const GAME_STATUSES: GameStatus[] = ["upcoming", "in-progress", "completed", "forfeit-win", "forfeit-loss"];
+export const GAME_STATUSES: GameStatus[] = ["upcoming", "in-progress", "completed", "forfeit-win", "forfeit-loss", "bye", "abandoned"];
 
 export const GAME_STATUS_LABELS: Record<GameStatus, string> = {
   'upcoming': 'Upcoming',
   'in-progress': 'In Progress',
   'completed': 'Completed', 
   'forfeit-win': 'Forfeit Win',
-  'forfeit-loss': 'Forfeit Loss'
+  'forfeit-loss': 'Forfeit Loss',
+  'bye': 'BYE',
+  'abandoned': 'Abandoned'
+};
+
+// Competition points system
+export const COMPETITION_POINTS: Record<GameStatus, number> = {
+  'upcoming': 0,
+  'in-progress': 0,
+  'completed': 0, // Points determined by win/loss from score
+  'forfeit-win': 4,
+  'forfeit-loss': 0,
+  'bye': 4, // BYE rounds awarded same points as a win
+  'abandoned': 2 // Abandoned games typically award some points (like a draw)
 };
 
 // UI constants

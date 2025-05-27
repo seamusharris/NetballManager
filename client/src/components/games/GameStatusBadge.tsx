@@ -25,38 +25,37 @@ import { Button } from '@/components/ui/button';
 /**
  * Get the CSS class for a game status
  */
-export function getStatusClass(status: string): string {
+function getStatusClass(status: GameStatus): string {
   switch (status) {
+    case 'upcoming':
+      return 'bg-blue-50 text-blue-700 border-blue-200';
     case 'in-progress':
-      return 'bg-amber-100 text-amber-800 hover:bg-amber-200';
+      return 'bg-yellow-50 text-yellow-700 border-yellow-200';
     case 'completed':
-      return 'bg-green-100 text-green-800 hover:bg-green-200';
+      return 'bg-green-50 text-green-700 border-green-200';
     case 'forfeit-win':
-      return 'bg-orange-100 text-orange-800 hover:bg-orange-200';
+      return 'bg-orange-50 text-orange-700 border-orange-200';
     case 'forfeit-loss':
-      return 'bg-red-100 text-red-800 hover:bg-red-200';
+      return 'bg-red-50 text-red-700 border-red-200';
+    case 'bye':
+      return 'bg-purple-50 text-purple-700 border-purple-200';
+    case 'abandoned':
+      return 'bg-gray-50 text-gray-700 border-gray-200';
     default:
-      return 'bg-blue-100 text-blue-800 hover:bg-blue-200';
+      return 'bg-gray-50 text-gray-700 border-gray-200';
   }
 }
 
-/**
- * Get the display text for a game status
- */
-export function getStatusDisplay(status: string): string {
+function getStatusDisplay(status: GameStatus): string {
   switch (status) {
-    case 'in-progress':
-      return 'In Progress';
-    case 'completed':
-      return 'Completed';
-    case 'forfeit-win':
-      return 'Forfeit (Win)';
-    case 'forfeit-loss':
-      return 'Forfeit (Loss)';
-    case 'upcoming':
-      return 'Upcoming';
-    default:
-      return status.charAt(0).toUpperCase() + status.slice(1);
+    case 'upcoming': return 'Upcoming';
+    case 'in-progress': return 'In Progress';
+    case 'completed': return 'Completed';
+    case 'forfeit-win': return 'Forfeit Win';
+    case 'forfeit-loss': return 'Forfeit Loss';
+    case 'bye': return 'BYE';
+    case 'abandoned': return 'Abandoned';
+    default: return status;
   }
 }
 
@@ -75,7 +74,7 @@ export function GameStatusBadge({
   size = 'default'
 }: GameStatusBadgeProps) {
   const badgeSize = size === 'sm' ? 'px-2 py-1 text-xs' : 'px-3 py-1';
-  
+
   return (
     <Badge 
       variant="outline" 
@@ -112,38 +111,38 @@ export function GameStatusButton({
   const [selectedStatus, setSelectedStatus] = React.useState<GameStatus>(game.status as GameStatus);
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  
+
   // Keep selectedStatus in sync with game.status when it changes
   React.useEffect(() => {
     setSelectedStatus(game.status as GameStatus);
   }, [game.status]);
-  
+
   const updateGameStatus = async () => {
     if (selectedStatus === game.status) {
       setIsOpen(false);
       return;
     }
-    
+
     setIsSubmitting(true);
     try {
       // Send the update request
       await apiRequest('PATCH', `/api/games/${game.id}`, {
         status: selectedStatus
       });
-      
+
       // Force refresh all data
       queryClient.invalidateQueries();
-      
+
       // Force immediate refetch of this specific game
       queryClient.fetchQuery({
         queryKey: [`/api/games/${game.id}`]
       });
-      
+
       // Force immediate refetch of all games list
       queryClient.fetchQuery({
         queryKey: ['/api/games']
       });
-      
+
       // Update the local game object directly for immediate UI feedback
       setSelectedStatus(prev => {
         const statusDisplay = getStatusDisplay(prev);
@@ -153,12 +152,12 @@ export function GameStatusButton({
         });
         return prev;
       });
-      
+
       toast({
         title: 'Game status updated',
         description: `Game status has been updated to ${getStatusDisplay(selectedStatus)}.`,
       });
-      
+
       setIsOpen(false);
     } catch (error) {
       console.error('Failed to update game status:', error);
@@ -171,12 +170,12 @@ export function GameStatusButton({
       setIsSubmitting(false);
     }
   };
-  
+
   // Simple badge without dialog
   if (!withDialog) {
     return <GameStatusBadge status={game.status as GameStatus} size={size} className={className} />;
   }
-  
+
   // Badge with status change dialog
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -197,7 +196,7 @@ export function GameStatusButton({
             Change the status of this game.
           </DialogDescription>
         </DialogHeader>
-        
+
         <div className="py-4">
           <Select 
             value={selectedStatus} 
@@ -214,7 +213,7 @@ export function GameStatusButton({
               ))}
             </SelectContent>
           </Select>
-          
+
           {selectedStatus && (
             <div className="text-sm text-muted-foreground mt-2">
               {selectedStatus === 'forfeit-win' && (
@@ -226,7 +225,7 @@ export function GameStatusButton({
             </div>
           )}
         </div>
-        
+
         <div className="flex justify-end gap-3">
           <Button variant="outline" onClick={() => setIsOpen(false)}>
             Cancel

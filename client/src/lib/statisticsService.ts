@@ -566,7 +566,9 @@ export function getGameStatusColor(status: GameStatus): string {
     'in-progress': 'amber',
     'completed': 'green',
     'forfeit-win': 'orange',
-    'forfeit-loss': 'red'
+    'forfeit-loss': 'red',
+    'bye': 'purple',
+    'abandoned': 'gray'
   };
 
   return colorMap[status] || 'gray';

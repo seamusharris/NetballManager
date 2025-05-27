@@ -28,7 +28,7 @@ export type InsertSeason = z.infer<typeof insertSeasonSchema>;
 export type Season = typeof seasons.$inferSelect;
 
 // Game status types
-export const GAME_STATUSES = ["upcoming", "in-progress", "completed", "forfeit-win", "forfeit-loss"] as const;
+export const GAME_STATUSES = ["upcoming", "in-progress", "completed", "forfeit-win", "forfeit-loss", "bye", "abandoned"] as const;
 export type GameStatus = typeof GAME_STATUSES[number];
 export const allGameStatuses = [...GAME_STATUSES];
 

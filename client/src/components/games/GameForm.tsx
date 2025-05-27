@@ -27,19 +27,18 @@ const formSchema = insertGameSchema.extend({
   date: z.string().min(1, "Date is required"),
   time: z.string().min(1, "Time is required"),
   opponentId: z.string(), // No validation directly on the field
-  isBye: z.boolean().default(false),
   round: z.string().optional(),
   status: z.string().optional(),
   seasonId: z.string().optional() // Season ID as string for form handling
 }).refine(
   (data) => {
-    // If it's a bye, we don't need opponent
-    if (data.isBye) return true;
-    // If not a bye, opponent is required
+    // If it's a bye or abandoned, we don't need opponent
+    if (data.status === 'bye' || data.status === 'abandoned') return true;
+    // For regular games, opponent is required
     return data.opponentId !== "";
   },
   {
-    message: "Opponent is required unless it's a BYE round",
+    message: "Opponent is required unless it's a BYE round or abandoned game",
     path: ["opponentId"]
   }
 );
@@ -68,7 +67,6 @@ export default function GameForm({ game, opponents, seasons, activeSeason, onSub
       date: game?.date || "",
       time: game?.time || "",
       opponentId: game?.opponentId ? String(game.opponentId) : "",
-      isBye: game?.isBye || false,
       round: game?.round || "",
       status: game?.status || "upcoming",
       seasonId: game?.seasonId ? String(game.seasonId) : activeSeason ? String(activeSeason.id) : ""
@@ -76,19 +74,19 @@ export default function GameForm({ game, opponents, seasons, activeSeason, onSub
   });
   
   const handleSubmit = (values: FormValues) => {
-    // Special handling for BYE games - they don't need an opponent
-    if (values.isBye) {
-      const byeGameData = {
+    // Special handling for BYE and abandoned games - they don't need an opponent
+    if (values.status === 'bye' || values.status === 'abandoned') {
+      const specialGameData = {
         date: values.date,
         time: values.time,
         round: values.round,
-        isBye: true,
-        status: values.status || 'upcoming',
+        status: values.status,
+        opponentId: null,
         seasonId: values.seasonId ? parseInt(values.seasonId) : (activeSeason ? activeSeason.id : undefined)
       };
       
-      console.log("Submitting BYE game:", byeGameData);
-      onSubmit(byeGameData);
+      console.log("Submitting special game:", specialGameData);
+      onSubmit(specialGameData);
       return;
     }
     
@@ -99,7 +97,6 @@ export default function GameForm({ game, opponents, seasons, activeSeason, onSub
       round: values.round,
       opponentId: parseInt(values.opponentId),
       status: values.status || 'upcoming',
-      isBye: false,
       seasonId: values.seasonId ? parseInt(values.seasonId) : (activeSeason ? activeSeason.id : undefined)
     };
     
@@ -113,34 +110,6 @@ export default function GameForm({ game, opponents, seasons, activeSeason, onSub
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         <FormField
           control={form.control}
-          name="isBye"
-          render={({ field }) => (
-            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-              <div className="space-y-0.5">
-                <FormLabel>BYE Round</FormLabel>
-                <FormDescription>
-                  Mark as BYE if your team doesn't have a scheduled match this round
-                </FormDescription>
-              </div>
-              <FormControl>
-                <Switch
-                  checked={field.value}
-                  onCheckedChange={(checked) => {
-                    field.onChange(checked);
-                    // If BYE is checked, clear opponent field
-                    if (checked) {
-                      form.setValue("opponentId", "");
-                    }
-                  }}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
-        <FormField
-          control={form.control}
           name="opponentId"
           render={({ field }) => (
             <FormItem>
@@ -148,11 +117,15 @@ export default function GameForm({ game, opponents, seasons, activeSeason, onSub
               <Select 
                 onValueChange={field.onChange} 
                 defaultValue={field.value}
-                disabled={form.watch("isBye")}
+                disabled={form.watch("status") === 'bye' || form.watch("status") === 'abandoned'}
               >
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder={form.watch("isBye") ? "Not required for BYE" : "Select opponent"} />
+                    <SelectValue placeholder={
+                      form.watch("status") === 'bye' ? "Not required for BYE" :
+                      form.watch("status") === 'abandoned' ? "Not required for abandoned games" :
+                      "Select opponent"
+                    } />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
@@ -164,8 +137,10 @@ export default function GameForm({ game, opponents, seasons, activeSeason, onSub
                 </SelectContent>
               </Select>
               <FormDescription>
-                {form.watch("isBye") 
+                {form.watch("status") === 'bye' 
                   ? "No opponent needed for BYE rounds" 
+                  : form.watch("status") === 'abandoned'
+                  ? "No opponent needed for abandoned games"
                   : "Select the team your squad will be playing against"}
               </FormDescription>
               <FormMessage />
