@@ -168,7 +168,7 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(games.date), desc(games.time));
 
     return results.map(row => {
-      const gameStatus = row.gameStatuses;
+      const gameStatus = row.game_statuses;
       return {
         id: row.games.id,
         date: row.games.date,
