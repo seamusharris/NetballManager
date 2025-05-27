@@ -186,6 +186,68 @@ export class DatabaseStorage implements IStorage {
     console.log('=== SAMPLE GAMES WITH ACTUAL STATUS DATA ===');
     console.log(gamesSample.rows);
 
+    // Check what's actually in the game_statuses table
+    const statusTableCheck = await db.execute(sql`
+      SELECT * FROM game_statuses ORDER BY id
+    `);
+    console.log('=== ACTUAL GAME_STATUSES TABLE CONTENTS ===');
+    console.log(statusTableCheck.rows);
+
+    // Check the exact column names in the game_statuses table
+    const columnCheck = await db.execute(sql`
+      SELECT column_name, data_type 
+      FROM information_schema.columns 
+      WHERE table_name = 'game_statuses' 
+      ORDER BY ordinal_position
+    `);
+    console.log('=== GAME_STATUSES TABLE COLUMNS ===');
+    console.log(columnCheck.rows);
+
+    // Test a manual join to see what happens
+    const manualJoinTest = await db.execute(sql`
+      SELECT 
+        g.id as game_id, 
+        g.status_id, 
+        gs.id as status_table_id, 
+        gs.name as status_name,
+        gs.display_name,
+        gs.is_completed
+      FROM games g
+      LEFT JOIN game_statuses gs ON g.status_id = gs.id
+      WHERE g.id IN (61, 73, 69)
+      ORDER BY g.id 
+    `);
+    console.log('=== MANUAL JOIN TEST RESULTS ===');
+    console.log(manualJoinTest.rows);
+
+    // Test the Drizzle imports - check if gameStatuses schema matches the actual table
+    console.log('=== DRIZZLE SCHEMA INSPECTION ===');
+    console.log('gameStatuses table config:', {
+      tableName: gameStatuses._.name,
+      columns: Object.keys(gameStatuses).filter(key => !key.startsWith('_'))
+    });
+
+    // Check if the foreign key constraint exists
+    const fkCheck = await db.execute(sql`
+      SELECT 
+        tc.constraint_name, 
+        tc.table_name, 
+        kcu.column_name, 
+        ccu.table_name AS foreign_table_name,
+        ccu.column_name AS foreign_column_name 
+      FROM 
+        information_schema.table_constraints AS tc 
+        JOIN information_schema.key_column_usage AS kcu
+          ON tc.constraint_name = kcu.constraint_name
+        JOIN information_schema.constraint_column_usage AS ccu
+          ON ccu.constraint_name = tc.constraint_name
+      WHERE constraint_type = 'FOREIGN KEY' 
+        AND tc.table_name='games'
+        AND kcu.column_name='status_id'
+    `);
+    console.log('=== FOREIGN KEY CONSTRAINT CHECK ===');
+    console.log(fkCheck.rows);
+
     // Join working correctly now with explicit field selection
     // Explicitly select the fields we need to avoid nested objects
     const results = await db
