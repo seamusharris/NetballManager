@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { TrendingUp, TrendingDown, Target, Trophy, AlertTriangle, ChevronRight } from 'lucide-react';
 import { Game, Opponent } from '@shared/schema';
 import { getWinLoseLabel, getWinLoseClass } from '@/lib/utils';
-import { ResultBadge, GameResult } from '@/lib/resultUtils';
+import { ResultBadge, GameResult } from '@/lib/resultUtils.tsx';
 
 interface OpponentMatchup {
   opponent: Opponent;
@@ -65,7 +64,7 @@ export default function OpponentMatchups({
 
         sortedGames.forEach((game, index) => {
           const gameStats = centralizedStats[game.id] || [];
-          
+
           // Calculate team and opponent scores from stats
           const teamScore = gameStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
           const opponentScore = gameStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
@@ -74,7 +73,7 @@ export default function OpponentMatchups({
           totalScoreAgainst += opponentScore;
 
           const result = getWinLoseLabel(teamScore, opponentScore);
-          
+
           if (result === 'Win') wins++;
           else if (result === 'Loss') losses++;
           else draws++;
@@ -97,7 +96,7 @@ export default function OpponentMatchups({
         if (recentResults.length >= 2) {
           const recentWins = recentResults.filter(r => r === 'W').length;
           const recentWinRate = (recentWins / recentResults.length) * 100;
-          
+
           if (recentWinRate > winRate + 20) trend = 'improving';
           else if (recentWinRate < winRate - 20) trend = 'declining';
         }
@@ -204,7 +203,7 @@ export default function OpponentMatchups({
                   </div>
                 </div>
               )}
-              
+
               {worstMatchup && worstMatchup !== bestMatchup && (
                 <div className="flex items-center justify-between p-2 bg-red-50 rounded-lg">
                   <div>
