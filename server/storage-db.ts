@@ -218,15 +218,19 @@ export class DatabaseStorage implements IStorage {
       console.log(`=== GAME ${row.games.id} DEBUG ===`);
       console.log(`StatusID in games table: ${row.games.statusId}`);
       console.log(`gameStatuses object:`, row.gameStatuses);
-      console.log(`gameStatuses?.name:`, row.gameStatuses?.name);
-      console.log(`gameStatuses?.isCompleted:`, row.gameStatuses?.isCompleted);
+      console.log(`Full row structure:`, JSON.stringify(row, null, 2));
 
-      // Extract status data - the gameStatuses object should contain the joined data
-      const gameStatus = row.gameStatuses;
-      const statusName = gameStatus?.name || 'upcoming';
-      const isCompleted = gameStatus?.isCompleted || false;
+      // Extract status data more explicitly - check all possible property access patterns
+      let statusName = 'upcoming';
+      let isCompleted = false;
 
-      console.log(`Final mapped values - status: "${statusName}", completed: ${isCompleted}`);
+      if (row.gameStatuses) {
+        statusName = row.gameStatuses.name || 'upcoming';
+        isCompleted = row.gameStatuses.isCompleted === true;
+        console.log(`✅ Successfully extracted: status="${statusName}", completed=${isCompleted}`);
+      } else {
+        console.log(`❌ gameStatuses is null/undefined for game ${row.games.id}`);
+      }
 
       return {
         id: row.games.id,
