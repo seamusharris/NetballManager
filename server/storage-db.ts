@@ -186,6 +186,22 @@ export class DatabaseStorage implements IStorage {
     console.log('=== SAMPLE GAMES WITH ACTUAL STATUS DATA ===');
     console.log(gamesSample.rows);
 
+    // Test the exact join we're using in the main query
+    console.log('=== TESTING DRIZZLE JOIN SYNTAX ===');
+    const joinTest = await db
+      .select({
+        gameId: games.id,
+        gameStatusId: games.statusId,
+        statusName: gameStatuses.name,
+        statusIsCompleted: gameStatuses.isCompleted
+      })
+      .from(games)
+      .leftJoin(gameStatuses, eq(games.statusId, gameStatuses.id))
+      .where(eq(games.id, 62)) // Test with a specific game
+      .limit(1);
+    
+    console.log('Join test result:', joinTest);
+
     const results = await db
       .select({
         games,
@@ -218,33 +234,24 @@ export class DatabaseStorage implements IStorage {
       console.log(`=== GAME ${row.games.id} DETAILED DEBUG ===`);
       console.log(`StatusID in games table: ${row.games.statusId}`);
       console.log(`gameStatuses object:`, row.gameStatuses);
-      console.log(`gameStatuses type:`, typeof row.gameStatuses);
-      console.log(`gameStatuses keys:`, row.gameStatuses ? Object.keys(row.gameStatuses) : 'N/A');
+      console.log(`Full row keys:`, Object.keys(row));
       
-      // Test all possible ways to access the data
-      if (row.gameStatuses) {
-        console.log(`Direct property access:`);
-        console.log(`  - row.gameStatuses.name: "${row.gameStatuses.name}"`);
-        console.log(`  - row.gameStatuses.isCompleted: ${row.gameStatuses.isCompleted}`);
-        console.log(`  - row.gameStatuses.is_completed: ${row.gameStatuses.is_completed}`);
-        
-        console.log(`Property descriptors:`);
-        for (const key in row.gameStatuses) {
-          console.log(`  - ${key}: ${row.gameStatuses[key]} (${typeof row.gameStatuses[key]})`);
-        }
-      }
-
-      // Extract status data - try multiple access patterns
+      // Extract status data with proper fallbacks
       let statusName = 'upcoming';
       let isCompleted = false;
 
-      if (row.gameStatuses) {
-        // Try different property name patterns
-        statusName = row.gameStatuses.name || row.gameStatuses.display_name || 'upcoming';
-        isCompleted = row.gameStatuses.isCompleted === true || row.gameStatuses.is_completed === true;
-        console.log(`✅ Extracted values: status="${statusName}", completed=${isCompleted}`);
+      // Check if we have gameStatuses data from the join
+      if (row.gameStatuses && row.gameStatuses.name) {
+        statusName = row.gameStatuses.name;
+        isCompleted = row.gameStatuses.isCompleted || false;
+        console.log(`✅ Using joined gameStatuses: status="${statusName}", completed=${isCompleted}`);
       } else {
-        console.log(`❌ gameStatuses is null/undefined for game ${row.games.id}`);
+        console.log(`❌ No gameStatuses data for game ${row.games.id}, statusId: ${row.games.statusId}`);
+        
+        // Fallback: if we have a statusId but no joined data, there might be a join issue
+        if (row.games.statusId) {
+          console.log(`⚠️ WARNING: Game has statusId ${row.games.statusId} but no joined gameStatuses data!`);
+        }
       }
 
       return {
