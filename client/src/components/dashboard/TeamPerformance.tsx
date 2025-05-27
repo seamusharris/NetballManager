@@ -32,7 +32,7 @@ export default function TeamPerformance({ games, className, activeSeason, select
 
   // Calculate basic performance metrics
   const totalGames = games.length;
-  const completedGamesArray = games.filter(game => game.completed);
+  const completedGamesArray = games.filter(game => game.gameStatus?.isCompleted === true);
   const completedGamesCount = completedGamesArray.length;
 
   // Add a key to force refresh when seasons change
@@ -251,7 +251,7 @@ export default function TeamPerformance({ games, className, activeSeason, select
           </div>
           <div className="text-center bg-gray-50 p-3 rounded-lg">
             <p className="text-gray-500 text-sm mb-1">Upcoming</p>
-            <p className="text-3xl font-bold text-primary">{games.filter(game => !game.completed && !game.isBye).length}</p>
+            <p className="text-3xl font-bold text-primary">{games.filter(game => game.gameStatus?.isCompleted !== true && !game.isBye).length}</p>
           </div>
         </div>
       </CardContent>
