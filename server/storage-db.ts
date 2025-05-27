@@ -247,23 +247,23 @@ export class DatabaseStorage implements IStorage {
           displayOrder: row.seasons.displayOrder
         } : undefined,
         // Include status information from the game_statuses table
-        gameStatus: row.gameStatuses ? {
-          id: row.gameStatuses.id,
-          name: row.gameStatuses.name,
-          displayName: row.gameStatuses.displayName,
-          points: row.gameStatuses.points,
-          opponentPoints: row.gameStatuses.opponentPoints,
-          isCompleted: row.gameStatuses.isCompleted,
-          allowsStatistics: row.gameStatuses.allowsStatistics,
-          requiresOpponent: row.gameStatuses.requiresOpponent,
-          colorClass: row.gameStatuses.colorClass,
-          sortOrder: row.gameStatuses.sortOrder,
-          isActive: row.gameStatuses.isActive
+        gameStatus: row.game_statuses ? {
+          id: row.game_statuses.id,
+          name: row.game_statuses.name,
+          displayName: row.game_statuses.displayName,
+          points: row.game_statuses.points,
+          opponentPoints: row.game_statuses.opponentPoints,
+          isCompleted: row.game_statuses.isCompleted,
+          allowsStatistics: row.game_statuses.allowsStatistics,
+          requiresOpponent: row.game_statuses.requiresOpponent,
+          colorClass: row.game_statuses.colorClass,
+          sortOrder: row.game_statuses.sortOrder,
+          isActive: row.game_statuses.isActive
         } : undefined,
         // Map status field to the actual status name from game_statuses table
-        status: row.gameStatuses?.name || 'upcoming',
+        status: row.game_statuses?.name || 'upcoming',
         // Legacy fields for backward compatibility - use gameStatus.isCompleted since completed column was removed
-        completed: row.gameStatuses?.isCompleted ?? false,
+        completed: row.game_statuses?.isCompleted ?? false,
         isBye: row.games.opponentId === null
       };
     } catch (error) {
