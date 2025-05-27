@@ -390,7 +390,6 @@ export default function GamesList({
                     <TableCell className="px-6 py-4 whitespace-nowrap">
                       {game.isBye ? (
                         <div className="font-medium text-gray-500">⸺</div>
-```
                       ) : game.completed ? (
                         <div className="text-center">
                           {scoresMap && scoresMap[game.id] ? (
