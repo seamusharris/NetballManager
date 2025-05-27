@@ -220,7 +220,7 @@ export class DatabaseStorage implements IStorage {
         awardWinnerLastName: players.lastName,
       })
       .from(games)
-      .leftJoin(gameStatuses, eq(games.statusId, gameStatuses.id))
+      .innerJoin(gameStatuses, eq(games.statusId, gameStatuses.id))
       .leftJoin(opponents, eq(games.opponentId, opponents.id))
       .leftJoin(players, eq(games.awardWinnerId, players.id))
       .orderBy(desc(games.date), desc(games.time));
@@ -229,19 +229,20 @@ export class DatabaseStorage implements IStorage {
     console.log('🔍 RAW STRUCTURE INSPECTION:');
     results.slice(0, 2).forEach((row, index) => {
       console.log(`\n--- RAW RESULT ${index} ---`);
-      console.log('Object keys:', Object.keys(row));
-      console.log('row.games exists?', !!row.id); // Changed from row.games to row.id
-      console.log('row.gameStatuses exists?', !!row.gameStatusName); // Changed to row.gameStatusName, checking if the status name exists
-
-      // Check what's actually in the gameStatuses object
-      console.log('gameStatuses content:', { // Adjusted to use the new structure
-        name: row.gameStatusName,
-        displayName: row.gameStatusDisplayName,
-        isCompleted: row.gameStatusIsCompleted
+      console.log('All row keys:', Object.keys(row));
+      console.log('Game ID:', row.id);
+      console.log('Status ID from games table:', row.statusId);
+      console.log('Status fields from join:', {
+        gameStatusName: row.gameStatusName,
+        gameStatusDisplayName: row.gameStatusDisplayName,
+        gameStatusIsCompleted: row.gameStatusIsCompleted,
+        gameStatusAllowsStatistics: row.gameStatusAllowsStatistics,
+        gameStatusColorClass: row.gameStatusColorClass
       });
-
-      // Check if the join is working at all
-      console.log('games.statusId:', row.statusId);  // Changed from row.games.statusId to row.statusId
+      
+      // Check if ANY status fields are populated
+      const hasAnyStatusField = row.gameStatusName || row.gameStatusDisplayName || row.gameStatusIsCompleted !== undefined;
+      console.log('Has any status field populated?', hasAnyStatusField);
     });
 
     return results.map(row => {
