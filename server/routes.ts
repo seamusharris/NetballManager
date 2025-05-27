@@ -809,14 +809,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ----- GAMES API -----
   app.get("/api/games", async (req, res) => {
     try {
+      // Add cache-busting headers
+      res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.set('Pragma', 'no-cache');
+      res.set('Expires', '0');
+
       const games = await storage.getGames();
 
       // Debug game information
-      console.log("Available games:", games.map(g => ({ 
+      console.log("ROUTES: Available games:", games.map(g => ({ 
         id: g.id, 
         date: g.date, 
-        status: g.status || (g.completed ? 'completed' : 'upcoming'),
-        completed: g.completed 
+        status: g.status,
+        completed: g.completed,
+        statusId: g.statusId,
+        gameStatusName: g.gameStatus?.name
       })));
 
       res.json(games);

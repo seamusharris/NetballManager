@@ -228,27 +228,10 @@ export class DatabaseStorage implements IStorage {
       console.log(`=== GAME ${row.games.id} DETAILED DEBUG ===`);
       console.log(`StatusID in games table: ${row.games.statusId}`);
       console.log(`gameStatuses object:`, row.gameStatuses);
-      console.log(`Full row keys:`, Object.keys(row));
+      console.log(`gameStatuses name:`, row.gameStatuses?.name);
+      console.log(`gameStatuses isCompleted:`, row.gameStatuses?.isCompleted);
       
-      // Extract status data with proper fallbacks
-      let statusName = 'upcoming';
-      let isCompleted = false;
-
-      // Check if we have gameStatuses data from the join
-      if (row.gameStatuses && row.gameStatuses.name) {
-        statusName = row.gameStatuses.name;
-        isCompleted = row.gameStatuses.isCompleted || false;
-        console.log(`✅ Using joined gameStatuses: status="${statusName}", completed=${isCompleted}`);
-      } else {
-        console.log(`❌ No gameStatuses data for game ${row.games.id}, statusId: ${row.games.statusId}`);
-        
-        // Fallback: if we have a statusId but no joined data, there might be a join issue
-        if (row.games.statusId) {
-          console.log(`⚠️ WARNING: Game has statusId ${row.games.statusId} but no joined gameStatuses data!`);
-        }
-      }
-
-      return {
+      const game = {
         id: row.games.id,
         date: row.games.date,
         time: row.games.time,
@@ -297,11 +280,21 @@ export class DatabaseStorage implements IStorage {
           sortOrder: row.gameStatuses.sortOrder,
           isActive: row.gameStatuses.isActive
         } : undefined,
-        // Use the values we extracted above
-        status: statusName,
-        completed: isCompleted,
+        // Direct mapping - no complex logic
+        status: row.gameStatuses?.name || 'upcoming',
+        completed: row.gameStatuses?.isCompleted || false,
         isBye: row.games.opponentId === null
       };
+
+      console.log(`✅ FINAL GAME OBJECT:`, {
+        id: game.id,
+        status: game.status,
+        completed: game.completed,
+        statusId: game.statusId,
+        gameStatusName: game.gameStatus?.name
+      });
+
+      return game;
     });
   }
 
