@@ -149,8 +149,11 @@ export default function DashboardSummary({
     setRefreshKey(prev => prev + 1);
   };
 
+  console.log('=== Checking loading state ===', { isLoading });
+
   // Only show loading if basic data is still loading
   if (isLoading) {
+    console.log('=== Returning loading state ===');
     return (
       <div className="p-6">
         <h2 className="text-2xl font-heading font-bold text-neutral-dark mb-4">Dashboard</h2>
@@ -164,13 +167,22 @@ export default function DashboardSummary({
     );
   }
 
-  console.log('DashboardSummary about to render main content');
+  console.log('=== Past loading check, about to render main content ===');
+  console.log('Render conditions:', {
+    isLoading,
+    filteredGamesLength: filteredGames.length,
+    statsLoading,
+    centralizedStatsKeys: centralizedStats ? Object.keys(centralizedStats).length : 0
+  });
 
   // Ensure we have the necessary data
   const statsMap = centralizedStats || {};
   console.log(`Dashboard rendering with ${Object.keys(statsMap).length} games stats loaded`);
 
-  return (
+  console.log('=== About to return main JSX ===');
+
+  try {
+    return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-heading font-bold text-neutral-dark">Dashboard</h2>
@@ -297,4 +309,8 @@ export default function DashboardSummary({
       )}
     </div>
   );
+  } catch (error) {
+    console.error("Error during rendering:", error);
+    return <div>Error: {error.message}</div>;
+  }
 }
