@@ -157,102 +157,83 @@ export class DatabaseStorage implements IStorage {
     console.log('⭐ TIMESTAMP:', new Date().toISOString());
     console.log('⭐ METHOD: DatabaseStorage.getGames()');
     console.log('⭐ FILE: server/storage-db.ts');
-    console.log('⭐ APPROACH: Fetching games, statuses, and opponents separately then combining');
+    console.log('⭐ APPROACH: Using direct SQL query with joins that we know work');
 
     try {
-      // Fetch games first (no joins to avoid Drizzle empty object issues)
-      console.log('📋 FETCHING GAMES...');
-      const gamesResult = await db
-        .select()
-        .from(games)
-        .leftJoin(players, eq(games.awardWinnerId, players.id))
-        .orderBy(desc(games.date), desc(games.time));
+      // Use raw SQL query since we know it works with the correct column types
+      console.log('📋 FETCHING GAMES WITH DIRECT SQL...');
+      const gamesResult = await db.execute(sql`
+        SELECT 
+          g.id,
+          g.date,
+          g.time,
+          g.opponent_id,
+          g.status_id,
+          g.round,
+          g.season_id,
+          g.notes,
+          g.award_winner_id,
+          g.venue,
+          g.team_score,
+          g.opponent_score,
+          gs.name as status_name,
+          gs.display_name as status_display_name,
+          gs.is_completed as status_is_completed,
+          gs.allows_statistics as status_allows_statistics,
+          gs.color_class as status_color_class,
+          o.team_name as opponent_name,
+          o.primary_color as opponent_primary_color,
+          o.secondary_color as opponent_secondary_color,
+          p.display_name as award_winner_display_name,
+          p.first_name as award_winner_first_name,
+          p.last_name as award_winner_last_name
+        FROM games g
+        LEFT JOIN game_statuses gs ON g.status_id = gs.id
+        LEFT JOIN opponents o ON g.opponent_id = o.id
+        LEFT JOIN players p ON g.award_winner_id = p.id
+        ORDER BY g.date DESC, g.time DESC
+      `);
 
-      console.log(`✅ Retrieved ${gamesResult.length} games from database`);
+      console.log(`✅ Retrieved ${gamesResult.rows.length} games from database using direct SQL`);
 
-      // Fetch all game statuses separately
-      console.log('📊 FETCHING GAME STATUSES...');
-      const allGameStatuses = await db.select().from(gameStatuses);
-      console.log(`✅ Retrieved ${allGameStatuses.length} game statuses`);
-      console.log('📊 Game statuses:', allGameStatuses.map(s => ({ id: s.id, name: s.name })));
+      // Transform the raw SQL results into our expected format
+      const combinedGames = gamesResult.rows.map((row, index) => {
+        console.log(`🎮 Processing game ${index + 1}/${gamesResult.rows.length} (ID: ${row.id})`);
+        console.log(`   - statusId: ${row.status_id}`);
+        console.log(`   - status_name: ${row.status_name}`);
+        console.log(`   - opponentId: ${row.opponent_id}`);
+        console.log(`   - opponent_name: ${row.opponent_name}`);
 
-      // Create a map for quick status lookup (simple approach like opponents)
-      const statusMap = new Map();
-      allGameStatuses.forEach(status => {
-        const statusId = Number(status.id); // Ensure number type
-        statusMap.set(statusId, status);
-        console.log(`🗂️ Added status to map: ID ${statusId} (${typeof statusId}) -> ${status.name}`);
-      });
-
-      console.log('🏢 FETCHING OPPONENTS...');
-      const allOpponents = await db.select().from(opponents);
-      console.log(`✅ Retrieved ${allOpponents.length} opponents`);
-
-      // Create a map for quick opponent lookup (simple approach that works)
-      const opponentMap = new Map();
-      allOpponents.forEach(opponent => {
-        opponentMap.set(opponent.id, opponent);
-      });
-
-      console.log('🔄 COMBINING DATA WITH JAVASCRIPT LOGIC...');
-
-      // Map games with their related data using JavaScript
-      const combinedGames = gamesResult.map((row, index) => {
-        const game = row.games;
-
-        console.log(`🎮 Processing game ${index + 1}/${gamesResult.length} (ID: ${game.id})`);
-        console.log(`   - statusId: ${game.statusId}`);
-        console.log(`   - opponentId: ${game.opponentId}`);
-
-        // Get game status from map (ensure consistent types like opponents)
-        const statusIdToLookup = game.statusId ? Number(game.statusId) : null;
-        const gameStatus = statusIdToLookup ? statusMap.get(statusIdToLookup) : null;
-        console.log(`   - StatusId: ${game.statusId} (${typeof game.statusId}) -> ${statusIdToLookup} (${typeof statusIdToLookup})`);
-        console.log(`   - Found gameStatus: ${gameStatus ? 'YES' : 'NO'}`);
-        if (gameStatus) {
-          console.log(`   - Status name: ${gameStatus.name}`);
-        } else if (game.statusId) {
-          console.log(`   - ❌ Status lookup failed for ID ${game.statusId}`);
-        }
-
-        // Get opponent from map (simple lookup that works)
-        const opponent = game.opponentId ? opponentMap.get(game.opponentId) : null;
-        console.log(`   - OpponentId: ${game.opponentId}, Found opponent: ${opponent ? 'YES' : 'NO'}`);
-        if (opponent) {
-          console.log(`   - Opponent name: ${opponent.teamName}`);
-        }
-
-        // Build the final game object
         const gameObject = {
-          id: game.id,
-          date: game.date,
-          time: game.time,
-          opponentId: game.opponentId,
-          statusId: game.statusId,
-          round: game.round,
-          seasonId: game.seasonId,
-          notes: game.notes,
-          awardWinnerId: game.awardWinnerId,
-          isBye: gameStatus?.name === 'bye',
-          venue: game.venue,
-          teamScore: game.teamScore ?? 0,
-          opponentScore: game.opponentScore ?? 0,
-          gameStatus: gameStatus ? {
-            name: gameStatus.name,
-            displayName: gameStatus.displayName,
-            isCompleted: gameStatus.isCompleted,
-            allowsStatistics: gameStatus.allowsStatistics,
-            colorClass: gameStatus.colorClass
+          id: row.id,
+          date: row.date,
+          time: row.time,
+          opponentId: row.opponent_id,
+          statusId: row.status_id,
+          round: row.round,
+          seasonId: row.season_id,
+          notes: row.notes,
+          awardWinnerId: row.award_winner_id,
+          isBye: row.status_name === 'bye',
+          venue: row.venue || null,
+          teamScore: row.team_score ?? 0,
+          opponentScore: row.opponent_score ?? 0,
+          gameStatus: row.status_name ? {
+            name: row.status_name,
+            displayName: row.status_display_name,
+            isCompleted: row.status_is_completed,
+            allowsStatistics: row.status_allows_statistics,
+            colorClass: row.status_color_class
           } : null,
-          opponent: opponent ? {
-            teamName: opponent.teamName,
-            primaryColor: opponent.primaryColor,
-            secondaryColor: opponent.secondaryColor
+          opponent: row.opponent_name ? {
+            teamName: row.opponent_name,
+            primaryColor: row.opponent_primary_color,
+            secondaryColor: row.opponent_secondary_color
           } : null,
-          awardWinner: row.players ? {
-            displayName: row.players.displayName,
-            firstName: row.players.firstName,
-            lastName: row.players.lastName
+          awardWinner: row.award_winner_display_name ? {
+            displayName: row.award_winner_display_name,
+            firstName: row.award_winner_first_name,
+            lastName: row.award_winner_last_name
           } : null
         };
 
