@@ -70,7 +70,7 @@ export default function GamesList({
   useEffect(() => {
     const searchParams = new URLSearchParams(window.location.search);
     const statusParam = searchParams.get('status');
-    if (statusParam && ['upcoming', 'completed', 'in-progress', 'forfeit'].includes(statusParam)) {
+    if (statusParam && ['upcoming', 'completed', 'in-progress', 'forfeit-win', 'forfeit-loss', 'bye', 'abandoned'].includes(statusParam)) {
       setStatusFilter(statusParam);
       // Clear the URL parameter after setting the filter
       const newUrl = window.location.pathname;
@@ -280,7 +280,10 @@ export default function GamesList({
                     <SelectItem value="upcoming">Upcoming</SelectItem>
                     <SelectItem value="in-progress">In Progress</SelectItem>
                     <SelectItem value="completed">Completed</SelectItem>
-                    <SelectItem value="forfeit">Forfeit</SelectItem>
+                    <SelectItem value="forfeit-win">Forfeit Win</SelectItem>
+                    <SelectItem value="forfeit-loss">Forfeit Loss</SelectItem>
+                    <SelectItem value="bye">BYE</SelectItem>
+                    <SelectItem value="abandoned">Abandoned</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
