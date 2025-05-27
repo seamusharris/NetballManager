@@ -153,6 +153,20 @@ export class DatabaseStorage implements IStorage {
 
   // Game methods
   async getGames(): Promise<Game[]> {
+    // Debug: Show available statuses
+    const availableStatuses = await db.select().from(gameStatuses);
+    console.log('Available game statuses:', availableStatuses.map(s => ({ id: s.id, name: s.name, isCompleted: s.isCompleted })));
+    
+    // Debug: Show distribution of status IDs in games
+    const statusDistribution = await db.execute(sql`
+      SELECT status_id, COUNT(*) as count 
+      FROM games 
+      WHERE status_id IS NOT NULL 
+      GROUP BY status_id 
+      ORDER BY status_id
+    `);
+    console.log('Game status ID distribution:', statusDistribution.rows);
+
     const results = await db
       .select({
         games,
@@ -169,26 +183,11 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(games.date), desc(games.time));
 
     return results.map(row => {
-      // Debug the actual row data to see what's happening with the join
-      console.log(`Game ${row.games.id} raw data:`, {
-        gameStatusId: row.games.statusId,
-        gameStatusObject: row.gameStatuses,
-        statusName: row.gameStatuses?.name,
-        isCompleted: row.gameStatuses?.isCompleted
-      });
+      // Debug status ID mapping
+      console.log(`Game ${row.games.id} - StatusID: ${row.games.statusId}, Found Status: ${row.gameStatuses?.name || 'NULL'}`);
 
       const dbStatus = row.gameStatuses?.name || 'upcoming';
       const dbCompleted = row.gameStatuses?.isCompleted ?? false;
-      
-      // Log the actual dbCompleted value for debugging
-      console.log(`Game ${row.games.id} detailed debug:`, {
-        rawIsCompleted: row.gameStatuses?.isCompleted,
-        rawIsCompletedType: typeof row.gameStatuses?.isCompleted,
-        dbCompleted: dbCompleted,
-        dbCompletedType: typeof dbCompleted,
-        statusName: row.gameStatuses?.name,
-        gameStatusObject: row.gameStatuses
-      });
 
       return {
         id: row.games.id,
