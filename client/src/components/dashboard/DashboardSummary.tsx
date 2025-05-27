@@ -19,6 +19,7 @@ import OpponentMatchups from './OpponentMatchups';
 import { Player, Game, Opponent, Season } from '@shared/schema';
 import { sortByDate } from '@/lib/utils';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
+import { useGameStatuses } from '@/hooks/use-game-statuses';
 
 interface DashboardSummaryProps {
   players: Player[];

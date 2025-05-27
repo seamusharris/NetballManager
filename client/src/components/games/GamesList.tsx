@@ -43,6 +43,7 @@ import { GameScoreDisplay } from '@/components/statistics/GameScoreDisplay';
 import { useGamesScores } from '@/components/statistics/hooks/useGamesScores';
 import { GameStatusBadge } from './GameStatusBadge';
 import { GameStatusDialog } from './GameStatusDialog';
+import { useGameStatuses } from '@/hooks/use-game-statuses';
 
 interface GamesListProps {
   games: Game[];
@@ -389,6 +390,7 @@ export default function GamesList({
                     <TableCell className="px-6 py-4 whitespace-nowrap">
                       {game.isBye ? (
                         <div className="font-medium text-gray-500">⸺</div>
+```
                       ) : game.completed ? (
                         <div className="text-center">
                           {scoresMap && scoresMap[game.id] ? (
