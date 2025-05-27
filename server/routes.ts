@@ -16,6 +16,7 @@ import {
 } from "@shared/schema";
 
 import { updatePlayerSeasonRelationships, getPlayerSeasons } from "./player-season-routes";
+import gameStatusRoutes from "./game-status-routes";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // put application routes here
