@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { isForfeitGame } from '@/lib/utils';
-import { apiRequest } from '@/lib/queryClient';
 import { 
   Card, 
   CardContent 
@@ -37,10 +36,11 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Edit, Trash2, FileText, CalendarRange, Search, Trophy, ThumbsDown, Minus, ActivitySquare, Eye } from 'lucide-react';
-import { Game, Opponent, GameStat, GameStatus } from '@shared/schema';
+import { Game, Opponent, GameStatus } from '@shared/schema';
 import { formatDate, formatShortDate } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
 import { GameScoreDisplay } from '@/components/statistics/GameScoreDisplay';
+import { useGamesScores } from '@/components/statistics/hooks/useGamesScores';
 import { GameStatusBadge } from './GameStatusBadge';
 import { GameStatusDialog } from './GameStatusDialog';
 
@@ -117,82 +117,30 @@ export default function GamesList({
     staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
   });
 
-  // Use React Query to fetch and cache statistics for all games in a single request
-  const { data: allGameStats, isLoading: isLoadingStats } = useQuery({
-    queryKey: ['gamesList', 'batchStats', completedGameIds.sort().join(',')],
-    queryFn: async () => {
-      if (completedGameIds.length === 0) {
-        console.log('Games List: No completed games to fetch stats for');
-        return {};
-      }
-
-      // Create a map to store stats by game ID
-      const statsMap: Record<number, any[]> = {};
-
-      // Initialize stats map with empty arrays for all completed games
-      completedGameIds.forEach(gameId => {
-        statsMap[gameId] = [];
-      });
-
-      try {
-        console.log(`Games List: Batch fetching stats for ${completedGameIds.length} completed games`);
-        const response = await apiRequest('GET', `/api/games/stats/batch?gameIds=${completedGameIds.join(',')}`);
-
-        // The batch endpoint returns an object with gameId as keys
-        if (response && typeof response === 'object') {
-          Object.entries(response).forEach(([gameIdStr, stats]) => {
-            const gameId = parseInt(gameIdStr);
-            if (Array.isArray(stats)) {
-              statsMap[gameId] = stats;
-            }
-          });
-          console.log(`Games List: Successfully loaded batch stats for ${Object.keys(response).length} games`);
-        } else {
-          console.warn('Games List: Unexpected batch response format:', response);
-        }
-      } catch (error) {
-        console.error("Games List: Error fetching game stats in batch:", error);
-        // Return empty stats map instead of attempting individual requests
-        console.log("Games List: Returning empty stats map due to batch failure");
-      }
-
-      return statsMap;
-    },
-    enabled: completedGameIds.length > 0,
-    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
-    refetchOnMount: false, // Don't refetch on mount
-    refetchOnWindowFocus: false, // Don't refetch on window focus
-    retry: 1 // Only retry once to avoid spam
-  });
+  // Use the same efficient scores approach as the dashboard
+  const { scoresMap, isLoading: isLoadingScores } = useGamesScores(completedGameIds);
 
   // Determine game stats status
   useEffect(() => {
-    if (!allGameStats) return;
+    if (!scoresMap) return;
 
     const statsStatuses: Record<number, StatsStatus> = {};
 
-    // Check each game's stats status
-    Object.entries(allGameStats).forEach(([gameIdStr, stats]) => {
-      const gameId = parseInt(gameIdStr);
-
-      // If there are no stats at all, mark as none
-      if (!stats || stats.length === 0) {
-        statsStatuses[gameId] = 'none';
-        return;
-      }
-
-      // Find the game to check if it's completed
-      const game = games.find(g => g.id === gameId);
-
-      if (game?.completed) {
+    // Check each completed game's stats status
+    completedGameIds.forEach(gameId => {
+      const scores = scoresMap[gameId];
+      
+      if (scores) {
+        // If we have scores, mark as complete
         statsStatuses[gameId] = 'complete';
       } else {
-        statsStatuses[gameId] = 'partial';
+        // If no scores for a completed game, mark as none
+        statsStatuses[gameId] = 'none';
       }
     });
 
     setGameStatsStatus(statsStatuses);
-  }, [allGameStats, games]);
+  }, [scoresMap, completedGameIds]);
 
   // Calculate roster statuses
   useEffect(() => {
@@ -427,11 +375,39 @@ export default function GamesList({
                       {game.isBye ? (
                         <div className="font-medium text-gray-500">⸺</div>
                       ) : game.completed ? (
-                        <GameScoreDisplay 
-                          gameId={game.id} 
-                          compact={true}
-                          preloadedStats={allGameStats?.[game.id] || []}
-                        />
+                        <div className="text-center">
+                          {scoresMap && scoresMap[game.id] ? (
+                            (() => {
+                              const scores = scoresMap[game.id];
+                              const isWin = scores.finalScore.for > scores.finalScore.against;
+                              const isLoss = scores.finalScore.for < scores.finalScore.against;
+
+                              const bgColor = isWin 
+                                ? "bg-green-100 border-green-200" 
+                                : isLoss 
+                                  ? "bg-red-100 border-red-200" 
+                                  : "bg-amber-100 border-amber-200";
+
+                              return (
+                                <div className="font-semibold text-left">
+                                  <div className={`inline-flex items-center px-3 py-1 rounded border text-gray-900 ${bgColor}`}>
+                                    <span className={isWin ? "font-bold" : ""}>{scores.finalScore.for}</span>
+                                    <span className="mx-2">-</span>
+                                    <span className={isLoss ? "font-bold" : ""}>{scores.finalScore.against}</span>
+                                  </div>
+                                </div>
+                              );
+                            })()
+                          ) : isLoadingScores ? (
+                            <div className="flex space-x-2">
+                              <div className="h-6 w-12 bg-gray-200 animate-pulse rounded" />
+                              <span className="mx-1">-</span>
+                              <div className="h-6 w-12 bg-gray-200 animate-pulse rounded" />
+                            </div>
+                          ) : (
+                            <span className="text-red-500 text-sm">Score Error</span>
+                          )}
+                        </div>
                       ) : (
                         <div className="font-medium text-gray-500">—</div>
                       )}
