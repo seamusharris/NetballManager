@@ -242,7 +242,7 @@ export class DatabaseStorage implements IStorage {
         });
       }
 
-      const gameStatus = row.game_statuses;
+      console.log(`🎯 Final gameStatus for game ${row.games.id}:`, gameStatus);
       return {
         id: row.games.id,
         date: row.games.date,
