@@ -175,8 +175,6 @@ export class DatabaseStorage implements IStorage {
         time: row.games.time,
         opponentId: row.games.opponentId,
         statusId: row.games.statusId,
-        status: gameStatus?.name || 'upcoming',
-        completed: gameStatus?.isCompleted ?? false,
         round: row.games.round,
         seasonId: row.games.seasonId,
         notes: row.games.notes,
@@ -185,8 +183,6 @@ export class DatabaseStorage implements IStorage {
         venue: row.games.venue,
         teamScore: row.games.teamScore ?? 0,
         opponentScore: row.games.opponentScore ?? 0,
-        // Add computed fields
-        gameStatusName: gameStatus?.name || 'upcoming',
         gameStatus: gameStatus ? {
           name: gameStatus.name,
           displayName: gameStatus.displayName,
