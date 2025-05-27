@@ -1,6 +1,7 @@
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
-import { Game, GameStatus, allGameStatuses } from '@shared/schema';
+import { Game, GameStatus } from '@shared/schema';
+import { useGameStatuses } from '@/hooks/use-game-statuses';
 import { cn } from '@/lib/utils';
 import { apiRequest } from '@/lib/queryClient';
 import { useQueryClient } from '@tanstack/react-query';
@@ -111,6 +112,7 @@ export function GameStatusButton({
   const [selectedStatus, setSelectedStatus] = React.useState<GameStatus>(game.status as GameStatus);
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { data: gameStatuses } = useGameStatuses();
 
   // Keep selectedStatus in sync with game.status when it changes
   React.useEffect(() => {
@@ -206,9 +208,9 @@ export function GameStatusButton({
               <SelectValue placeholder="Select status" />
             </SelectTrigger>
             <SelectContent>
-              {allGameStatuses.map((status) => (
-                <SelectItem key={status} value={status}>
-                  {getStatusDisplay(status)}
+              {gameStatuses?.filter(s => s.isActive).map((statusObj) => (
+                <SelectItem key={statusObj.name} value={statusObj.name}>
+                  {statusObj.displayName}
                 </SelectItem>
               ))}
             </SelectContent>

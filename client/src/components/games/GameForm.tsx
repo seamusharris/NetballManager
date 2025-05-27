@@ -217,9 +217,9 @@ export default function GameForm({ game, opponents, seasons, activeSeason, onSub
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {allGameStatuses?.map(status => (
-                    <SelectItem key={status} value={status}>
-                      {status.charAt(0).toUpperCase() + status.slice(1).replace('-', ' ')}
+                  {allGameStatuses?.filter(s => s.isActive).map(statusObj => (
+                    <SelectItem key={statusObj.name} value={statusObj.name}>
+                      {statusObj.displayName}
                     </SelectItem>
                   ))}
                 </SelectContent>

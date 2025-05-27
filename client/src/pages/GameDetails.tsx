@@ -101,7 +101,7 @@ const getPlayerColorForBackground = (avatarColor?: string): string => {
   
   return colorMap[avatarColor] || "rgb(245, 243, 255)";
 };
-import { GameStatus, Position, POSITIONS, allGameStatuses } from '@shared/schema';
+import { GameStatus, Position, POSITIONS } from '@shared/schema';
 import { primaryPositionStats, secondaryPositionStats, statLabels } from '@/lib/positionStats';
 import { useToast } from '@/hooks/use-toast';
 import {

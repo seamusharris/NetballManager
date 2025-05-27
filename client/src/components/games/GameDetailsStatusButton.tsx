@@ -18,7 +18,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { apiRequest } from '@/lib/queryClient';
-import { Game, GameStatus, allGameStatuses } from '@shared/schema';
+import { Game, GameStatus } from '@shared/schema';
+import { useGameStatuses } from '@/hooks/use-game-statuses';
 import { clearGameCache } from '@/lib/scoresCache';
 
 // Helper function to get appropriate styling for game status
@@ -68,6 +69,7 @@ export function GameDetailsStatusButton({
   const [dialogOpen, setDialogOpen] = useState(false);
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { data: gameStatuses, isLoading } = useGameStatuses();
 
   const handleSubmit = async () => {
     if (!selectedStatus) {
@@ -156,9 +158,9 @@ export function GameDetailsStatusButton({
               <SelectValue placeholder="Select status" />
             </SelectTrigger>
             <SelectContent>
-              {allGameStatuses.map((status) => (
-                <SelectItem key={status} value={status}>
-                  {getStatusDisplay(status)}
+              {gameStatuses?.filter(s => s.isActive).map((statusObj) => (
+                <SelectItem key={statusObj.name} value={statusObj.name}>
+                  {statusObj.displayName}
                 </SelectItem>
               ))}
             </SelectContent>
