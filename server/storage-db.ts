@@ -288,16 +288,16 @@ export class DatabaseStorage implements IStorage {
 
       // Declare the gameStatus variable
       let gameStatus = null;
-      
-      // Check for actual data - empty objects have length 0
-      if (row.gameStatuses && Object.keys(row.gameStatuses).length > 0 && row.gameStatuses.id) {
-        console.log('✅ Found valid gameStatus with data:', row.gameStatuses);
+
+      // Check if gameStatuses has actual data (not just an empty object)
+      if (row.gameStatuses && row.gameStatuses.id) {
+        console.log('✅ Found valid gameStatus with ID:', row.gameStatuses.id);
         gameStatus = row.gameStatuses;
       } else {
         console.log('❌ No valid gameStatus found');
         console.log('   - gameStatuses exists:', !!row.gameStatuses);
-        console.log('   - Has keys:', row.gameStatuses ? Object.keys(row.gameStatuses).length > 0 : false);
-        console.log('   - Has ID:', !!row.gameStatuses?.id);
+        console.log('   - gameStatuses.id exists:', row.gameStatuses?.id);
+        console.log('   - Full gameStatuses object:', JSON.stringify(row.gameStatuses));
       }
       // Build the final game object
       console.log(`🏗️ CONSTRUCTING FINAL GAME OBJECT FOR GAME ${row.games.id}:`);
@@ -312,7 +312,7 @@ export class DatabaseStorage implements IStorage {
         seasonId: row.games.seasonId,
         notes: row.games.notes,
         awardWinnerId: row.games.awardWinnerId,
-        isBye: row.games.opponentId === null,
+        isBye: gameStatus?.name === 'bye',
         venue: row.games.venue,
         teamScore: row.games.teamScore ?? 0,
         opponentScore: row.games.opponentScore ?? 0,
@@ -323,7 +323,7 @@ export class DatabaseStorage implements IStorage {
           allowsStatistics: gameStatus.allowsStatistics,
           colorClass: gameStatus.colorClass
         } : null,
-        opponent: (row.opponents && Object.keys(row.opponents).length > 0 && row.opponents.id) ? {
+        opponent: (row.opponents && row.opponents.id) ? {
           teamName: row.opponents.teamName,
           primaryColor: row.opponents.primaryColor,
           secondaryColor: row.opponents.secondaryColor
