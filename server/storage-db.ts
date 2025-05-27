@@ -189,36 +189,7 @@ export class DatabaseStorage implements IStorage {
     // Join working correctly now with explicit field selection
 
     const results = await db
-      .select({
-        // Game fields
-        id: games.id,
-        date: games.date,
-        time: games.time,
-        opponentId: games.opponentId,
-        statusId: games.statusId,
-        round: games.round,
-        seasonId: games.seasonId,
-        notes: games.notes,
-        awardWinnerId: games.awardWinnerId,
-        isBye: games.isBye,
-        venue: games.venue,
-        teamScore: games.teamScore,
-        opponentScore: games.opponentScore,
-        // Game status fields (using correct schema field names)
-        gameStatusName: gameStatuses.name,
-        gameStatusDisplayName: gameStatuses.displayName,
-        gameStatusIsCompleted: gameStatuses.isCompleted,
-        gameStatusAllowsStatistics: gameStatuses.allowsStatistics,
-        gameStatusColorClass: gameStatuses.colorClass,
-        // Opponent fields
-        opponentName: opponents.teamName,
-        opponentPrimaryColor: opponents.primaryColor,
-        opponentSecondaryColor: opponents.secondaryColor,
-        // Award winner fields
-        awardWinnerDisplayName: players.displayName,
-        awardWinnerFirstName: players.firstName,
-        awardWinnerLastName: players.lastName,
-      })
+      .select()
       .from(games)
       .leftJoin(gameStatuses, eq(games.statusId, gameStatuses.id))
       .leftJoin(opponents, eq(games.opponentId, opponents.id))
@@ -246,59 +217,59 @@ export class DatabaseStorage implements IStorage {
     });
 
     return results.map(row => {
-      console.log(`\n--- MAPPING RESULT FOR GAME ${row.id} ---`);
-      console.log('Raw row data:', {
-        gameStatusName: row.gameStatusName,
-        gameStatusDisplayName: row.gameStatusDisplayName,
-        gameStatusIsCompleted: row.gameStatusIsCompleted,
-        statusId: row.statusId
+      console.log(`\n--- MAPPING RESULT FOR GAME ${row.games.id} ---`);
+      console.log('Raw row structure:', {
+        games: !!row.games,
+        gameStatuses: !!row.game_statuses,
+        hasStatusName: row.game_statuses?.name,
+        statusId: row.games.statusId
       });
 
-      // Extract game status information from explicitly selected fields
-      const statusName = row.gameStatusName;
-      const isCompleted = row.gameStatusIsCompleted;
+      // Extract game status information from the joined table
+      const statusName = row.game_statuses?.name;
+      const isCompleted = row.game_statuses?.isCompleted;
 
       console.log('Status mapping:', {
-        'statusId': row.statusId,
+        'statusId': row.games.statusId,
         'statusName': statusName,
         'isCompleted': isCompleted,
-        'gameStatusDisplayName': row.gameStatusDisplayName
+        'displayName': row.game_statuses?.displayName
       });
 
       return {
-        id: row.id,
-        date: row.date,
-        time: row.time,
-        opponentId: row.opponentId,
-        statusId: row.statusId,
+        id: row.games.id,
+        date: row.games.date,
+        time: row.games.time,
+        opponentId: row.games.opponentId,
+        statusId: row.games.statusId,
         status: statusName || 'upcoming',
         completed: isCompleted ?? false,
-        round: row.round,
-        seasonId: row.seasonId,
-        notes: row.notes,
-        awardWinnerId: row.awardWinnerId,
-        isBye: row.opponentId === null,
-        venue: row.venue,
-        teamScore: row.teamScore ?? 0,
-        opponentScore: row.opponentScore ?? 0,
+        round: row.games.round,
+        seasonId: row.games.seasonId,
+        notes: row.games.notes,
+        awardWinnerId: row.games.awardWinnerId,
+        isBye: row.games.opponentId === null,
+        venue: row.games.venue,
+        teamScore: row.games.teamScore ?? 0,
+        opponentScore: row.games.opponentScore ?? 0,
         // Add computed fields
         gameStatusName: statusName,
-        gameStatus: row.gameStatusName ? {
-          name: row.gameStatusName,
-          displayName: row.gameStatusDisplayName,
-          isCompleted: row.gameStatusIsCompleted,
-          allowsStatistics: row.gameStatusAllowsStatistics,
-          colorClass: row.gameStatusColorClass
+        gameStatus: row.game_statuses ? {
+          name: row.game_statuses.name,
+          displayName: row.game_statuses.displayName,
+          isCompleted: row.game_statuses.isCompleted,
+          allowsStatistics: row.game_statuses.allowsStatistics,
+          colorClass: row.game_statuses.colorClass
         } : null,
-        opponent: row.opponentName ? {
-          teamName: row.opponentName,
-          primaryColor: row.opponentPrimaryColor,
-          secondaryColor: row.opponentSecondaryColor
+        opponent: row.opponents ? {
+          teamName: row.opponents.teamName,
+          primaryColor: row.opponents.primaryColor,
+          secondaryColor: row.opponents.secondaryColor
         } : null,
-        awardWinner: row.awardWinnerDisplayName ? {
-          displayName: row.awardWinnerDisplayName,
-          firstName: row.awardWinnerFirstName,
-          lastName: row.awardWinnerLastName
+        awardWinner: row.players ? {
+          displayName: row.players.displayName,
+          firstName: row.players.firstName,
+          lastName: row.players.lastName
         } : null
       };
     });
