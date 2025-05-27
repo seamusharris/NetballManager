@@ -20,11 +20,16 @@ export default function RecentFormWidget({
   centralizedStats, 
   className 
 }: RecentFormWidgetProps) {
+  // Debug: Log all games being processed
+  console.log('RecentFormWidget - All games:', games.map(g => ({id: g.id, status: g.gameStatus?.name, isCompleted: g.gameStatus?.isCompleted, allowsStats: g.gameStatus?.allowsStatistics})));
+  
   // Get completed games sorted by date (most recent first)
   const completedGames = games
     .filter(isGameValidForStatistics)
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 5); // Last 5 games
+    
+  console.log('RecentFormWidget - Filtered completed games:', completedGames.map(g => ({id: g.id, status: g.gameStatus?.name})));
 
   // Calculate form data
   const formData = completedGames.map(game => {
