@@ -121,7 +121,7 @@ export function ScoreDisplay({ teamScore, opponentScore, compact = false, classN
         getResultBorderColor(result),
         className
       )}>
-      <span className={teamScore > opponentScore ? "font-bold" : ""}>{teamScore}</span>
+        <span className={teamScore > opponentScore ? "font-bold" : ""}>{teamScore}</span>
         <span className="mx-2">-</span>
         <span className={opponentScore > teamScore ? "font-bold" : ""}>{opponentScore}</span>
       </div>
