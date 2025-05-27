@@ -215,19 +215,34 @@ export class DatabaseStorage implements IStorage {
     });
 
     return results.map(row => {
-      console.log(`=== GAME ${row.games.id} DEBUG ===`);
+      console.log(`=== GAME ${row.games.id} DETAILED DEBUG ===`);
       console.log(`StatusID in games table: ${row.games.statusId}`);
       console.log(`gameStatuses object:`, row.gameStatuses);
-      console.log(`Full row structure:`, JSON.stringify(row, null, 2));
+      console.log(`gameStatuses type:`, typeof row.gameStatuses);
+      console.log(`gameStatuses keys:`, row.gameStatuses ? Object.keys(row.gameStatuses) : 'N/A');
+      
+      // Test all possible ways to access the data
+      if (row.gameStatuses) {
+        console.log(`Direct property access:`);
+        console.log(`  - row.gameStatuses.name: "${row.gameStatuses.name}"`);
+        console.log(`  - row.gameStatuses.isCompleted: ${row.gameStatuses.isCompleted}`);
+        console.log(`  - row.gameStatuses.is_completed: ${row.gameStatuses.is_completed}`);
+        
+        console.log(`Property descriptors:`);
+        for (const key in row.gameStatuses) {
+          console.log(`  - ${key}: ${row.gameStatuses[key]} (${typeof row.gameStatuses[key]})`);
+        }
+      }
 
-      // Extract status data more explicitly - check all possible property access patterns
+      // Extract status data - try multiple access patterns
       let statusName = 'upcoming';
       let isCompleted = false;
 
       if (row.gameStatuses) {
-        statusName = row.gameStatuses.name || 'upcoming';
-        isCompleted = row.gameStatuses.isCompleted === true;
-        console.log(`✅ Successfully extracted: status="${statusName}", completed=${isCompleted}`);
+        // Try different property name patterns
+        statusName = row.gameStatuses.name || row.gameStatuses.display_name || 'upcoming';
+        isCompleted = row.gameStatuses.isCompleted === true || row.gameStatuses.is_completed === true;
+        console.log(`✅ Extracted values: status="${statusName}", completed=${isCompleted}`);
       } else {
         console.log(`❌ gameStatuses is null/undefined for game ${row.games.id}`);
       }
