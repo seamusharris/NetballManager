@@ -153,106 +153,73 @@ export class DatabaseStorage implements IStorage {
 
   // Game methods
   async getGames(): Promise<Game[]> {
-    console.log('\n\n🚨🚨🚨 STORAGE-DB.TS: getGames() METHOD CALLED! 🚨🚨🚨');
-    console.log('⭐ TIMESTAMP:', new Date().toISOString());
-    console.log('⭐ METHOD: DatabaseStorage.getGames()');
-    console.log('⭐ FILE: server/storage-db.ts');
-    console.log('⭐ APPROACH: Using direct SQL query with joins that we know work');
-
     try {
-      // Use raw SQL query since we know it works with the correct column types
-      console.log('📋 FETCHING GAMES WITH DIRECT SQL...');
-      const gamesResult = await db.execute(sql`
-        SELECT 
-          g.id,
-          g.date,
-          g.time,
-          g.opponent_id,
-          g.status_id,
-          g.round,
-          g.season_id,
-          g.notes,
-          g.award_winner_id,
-          g.venue,
-          g.team_score,
-          g.opponent_score,
-          gs.name as status_name,
-          gs.display_name as status_display_name,
-          gs.is_completed as status_is_completed,
-          gs.allows_statistics as status_allows_statistics,
-          gs.color_class as status_color_class,
-          o.team_name as opponent_name,
-          o.primary_color as opponent_primary_color,
-          o.secondary_color as opponent_secondary_color,
-          p.display_name as award_winner_display_name,
-          p.first_name as award_winner_first_name,
-          p.last_name as award_winner_last_name
-        FROM games g
-        LEFT JOIN game_statuses gs ON g.status_id = gs.id
-        LEFT JOIN opponents o ON g.opponent_id = o.id
-        LEFT JOIN players p ON g.award_winner_id = p.id
-        ORDER BY g.date DESC, g.time DESC
-      `);
+      // Use proper Drizzle ORM with LEFT JOINs to fetch games with related data
+      const result = await db
+        .select({
+          // Game fields
+          id: games.id,
+          date: games.date,
+          time: games.time,
+          opponentId: games.opponentId,
+          statusId: games.statusId,
+          round: games.round,
+          seasonId: games.seasonId,
+          notes: games.notes,
+          awardWinnerId: games.awardWinnerId,
+          // Game status fields
+          statusName: gameStatuses.name,
+          statusDisplayName: gameStatuses.displayName,
+          statusIsCompleted: gameStatuses.isCompleted,
+          statusAllowsStatistics: gameStatuses.allowsStatistics,
+          statusColorClass: gameStatuses.colorClass,
+          // Opponent fields
+          opponentTeamName: opponents.teamName,
+          opponentPrimaryContact: opponents.primaryContact,
+          opponentContactInfo: opponents.contactInfo,
+          // Award winner fields
+          awardWinnerDisplayName: players.displayName,
+          awardWinnerFirstName: players.firstName,
+          awardWinnerLastName: players.lastName,
+        })
+        .from(games)
+        .leftJoin(gameStatuses, eq(games.statusId, gameStatuses.id))
+        .leftJoin(opponents, eq(games.opponentId, opponents.id))
+        .leftJoin(players, eq(games.awardWinnerId, players.id))
+        .orderBy(desc(games.date), desc(games.time));
 
-      console.log(`✅ Retrieved ${gamesResult.rows.length} games from database using direct SQL`);
-
-      // Transform the raw SQL results into our expected format
-      const combinedGames = gamesResult.rows.map((row, index) => {
-        console.log(`🎮 Processing game ${index + 1}/${gamesResult.rows.length} (ID: ${row.id})`);
-        console.log(`   - statusId: ${row.status_id}`);
-        console.log(`   - status_name: ${row.status_name}`);
-        console.log(`   - opponentId: ${row.opponent_id}`);
-        console.log(`   - opponent_name: ${row.opponent_name}`);
-
-        const gameObject = {
-          id: row.id,
-          date: row.date,
-          time: row.time,
-          opponentId: row.opponent_id,
-          statusId: row.status_id,
-          round: row.round,
-          seasonId: row.season_id,
-          notes: row.notes,
-          awardWinnerId: row.award_winner_id,
-          isBye: row.status_name === 'bye',
-          venue: row.venue || null,
-          teamScore: row.team_score ?? 0,
-          opponentScore: row.opponent_score ?? 0,
-          gameStatus: row.status_name ? {
-            name: row.status_name,
-            displayName: row.status_display_name,
-            isCompleted: row.status_is_completed,
-            allowsStatistics: row.status_allows_statistics,
-            colorClass: row.status_color_class
-          } : null,
-          opponent: row.opponent_name ? {
-            teamName: row.opponent_name,
-            primaryContact: row.opponent_primary_contact,
-            contactInfo: row.opponent_contact_info
-          } : null,
-          awardWinner: row.award_winner_display_name ? {
-            displayName: row.award_winner_display_name,
-            firstName: row.award_winner_first_name,
-            lastName: row.award_winner_last_name
-          } : null
-        };
-
-        console.log(`   ✅ Final game object: status=${gameObject.gameStatus?.name || 'null'}, opponent=${gameObject.opponent?.teamName || 'null'}, isBye=${gameObject.isBye}`);
-
-        return gameObject;
-      });
-
-      console.log('\n📊 FINAL SUMMARY:');
-      const gamesWithStatus = combinedGames.filter(g => g.gameStatus !== null).length;
-      const gamesWithOpponent = combinedGames.filter(g => g.opponent !== null).length;
-      console.log(`✅ Games with status: ${gamesWithStatus}/${combinedGames.length}`);
-      console.log(`✅ Games with opponent: ${gamesWithOpponent}/${combinedGames.length}`);
-
-      console.log('\n🏁 STORAGE-DB.TS: getGames() METHOD COMPLETE');
-      return combinedGames;
-
+      // Transform the results into the expected format
+      return result.map(row => ({
+        id: row.id,
+        date: row.date,
+        time: row.time,
+        opponentId: row.opponentId,
+        statusId: row.statusId,
+        round: row.round,
+        seasonId: row.seasonId,
+        notes: row.notes,
+        awardWinnerId: row.awardWinnerId,
+        isBye: row.statusName === 'bye' || row.opponentId === null,
+        gameStatus: row.statusName ? {
+          name: row.statusName,
+          displayName: row.statusDisplayName,
+          isCompleted: row.statusIsCompleted,
+          allowsStatistics: row.statusAllowsStatistics,
+          colorClass: row.statusColorClass
+        } : null,
+        opponent: row.opponentTeamName ? {
+          teamName: row.opponentTeamName,
+          primaryContact: row.opponentPrimaryContact,
+          contactInfo: row.opponentContactInfo
+        } : null,
+        awardWinner: row.awardWinnerDisplayName ? {
+          displayName: row.awardWinnerDisplayName,
+          firstName: row.awardWinnerFirstName,
+          lastName: row.awardWinnerLastName
+        } : null
+      }));
     } catch (error) {
-      console.error('❌ Error in getGames():', error);
+      console.error('Error fetching games:', error);
       throw error;
     }
   }
