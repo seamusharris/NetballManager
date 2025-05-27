@@ -777,7 +777,10 @@ export default function PlayerDetails() {
                               // Double check player is on roster for this game and has an actual position (not "off")
                               const gameRosters = allGameRosters[game.gameId] || [];
                               const isOnRoster = gameRosters.some((roster: any) => 
-                                roster.playerId === playerId && allPositions.includes```text
+                                roster.playerId === playerId && allPositions.includes(roster.position)
+                              );
+
+                               ```text
 (roster.position)
                               );
 
@@ -785,7 +788,7 @@ export default function PlayerDetails() {
 
                               return (
                                 <TableRow 
-                                  key={game.gameId}
+                                  key={game.gameId},
                                   className={`hover:bg-gray-100 transition-colors duration-150 ${index === stats.gameStats.length - 1 ? "" : "border-b"}`}
                                 >
                                   {/* Date column */}
