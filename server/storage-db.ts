@@ -273,6 +273,9 @@ export class DatabaseStorage implements IStorage {
       console.log('🔸 row.gameStatuses === undefined:', row.gameStatuses === undefined);
       console.log('🔸 Object.keys(row.gameStatuses):', row.gameStatuses ? Object.keys(row.gameStatuses) : 'N/A');
 
+      // Declare the gameStatus variable
+      let gameStatus = null;
+      
       // Try a more explicit check
       if (row.gameStatuses !== null && row.gameStatuses !== undefined && typeof row.gameStatuses === 'object') {
         console.log('✅ Found gameStatus data at gameStatuses key:', row.gameStatuses);
