@@ -90,7 +90,7 @@ export function ResultBadge({ result, size = 'md', className }: ResultBadgeProps
     'div',
     {
       className: cn(
-        'rounded-full flex items-center justify-center font-bold text-white',
+        'rounded-full flex items-center justify-center font-bold text-white leading-none',
         getResultBgColor(result),
         sizeClasses[size],
         className
