@@ -273,7 +273,7 @@ export class DatabaseStorage implements IStorage {
         // Map status field to the actual status name from game_statuses table
         status: dbStatus,
         // Legacy fields for backward compatibility - use gameStatus.isCompleted since completed column was removed
-        completed: dbCompleted,
+        completed: row.gameStatuses?.isCompleted ?? false,
         isBye: row.games.opponentId === null
       };
     });
