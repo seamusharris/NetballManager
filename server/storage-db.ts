@@ -167,20 +167,80 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(players, eq(games.awardWinnerId, players.id))
       .orderBy(desc(games.date), desc(games.time));
 
-    console.log('🔍 Raw query results sample:', results.length > 0 ? {
-      keys: Object.keys(results[0]),
-      game: results[0].games,
-      gameStatuses_via_snake: results[0].game_statuses,
-      gameStatuses_via_camel: results[0].gameStatuses,
-      statusIdFromGame: results[0].games.statusId,
-      fullRowKeys: Object.keys(results[0]),
-      allTableKeys: Object.keys(results[0]).filter(key => typeof results[0][key] === 'object' && results[0][key] !== null)
-    } : 'No results');
+    console.log('\n=== COMPREHENSIVE DRIZZLE JOIN DEBUGGING ===');
+    if (results.length > 0) {
+      const firstRow = results[0];
+      console.log('🔍 TOP-LEVEL KEYS:', Object.keys(firstRow));
+
+      // Log each top-level key and its type/content
+      Object.keys(firstRow).forEach(key => {
+        const value = firstRow[key];
+        const type = typeof value;
+        console.log(`📋 KEY: "${key}" | TYPE: ${type} | VALUE:`, 
+          type === 'object' && value !== null ? JSON.stringify(value, null, 2) : value
+        );
+      });
+
+      // Check for any nested objects
+      console.log('\n🔍 NESTED OBJECT ANALYSIS:');
+      Object.entries(firstRow).forEach(([key, value]) => {
+        if (typeof value === 'object' && value !== null) {
+          console.log(`📦 OBJECT "${key}" contains keys:`, Object.keys(value));
+          console.log(`📦 OBJECT "${key}" full content:`, JSON.stringify(value, null, 2));
+        }
+      });
+
+      // Try all possible gameStatus access patterns
+      console.log('\n🎯 TESTING ALL POSSIBLE GAMESTATUS ACCESS PATTERNS:');
+      console.log('❓ firstRow.gameStatuses:', firstRow.gameStatuses);
+      console.log('❓ firstRow.game_statuses:', firstRow.game_statuses);
+      console.log('❓ firstRow["gameStatuses"]:', firstRow["gameStatuses"]);
+      console.log('❓ firstRow["game_statuses"]:', firstRow["game_statuses"]);
+
+      // Check if it's nested under games or other keys
+      if (firstRow.games) {
+        console.log('❓ firstRow.games.gameStatus:', firstRow.games.gameStatus);
+        console.log('❓ firstRow.games.gameStatuses:', firstRow.games.gameStatuses);
+      }
+
+      console.log('\n🔍 COMPLETE FIRST ROW DUMP:');
+      console.log(JSON.stringify(firstRow, null, 2));
+
+    } else {
+      console.log('🔍 No results found - empty query result');
+    }
+    console.log('=== END DRIZZLE DEBUGGING ===\n');
 
     return results.map(row => {
       console.log(`🎮 Processing game ${row.games.id}: statusId=${row.games.statusId}`);
-      console.log(`🔍 Available keys on row:`, Object.keys(row));
-      console.log(`🔍 game_statuses data:`, row.game_statuses);
+
+      // Try every possible way to access gameStatus data
+      let gameStatus = null;
+
+      // Method 1: Direct access via imported table name
+      if (row.gameStatuses) {
+        console.log('✅ Found gameStatus via row.gameStatuses');
+        gameStatus = row.gameStatuses;
+      }
+      // Method 2: Snake case access
+      else if (row.game_statuses) {
+        console.log('✅ Found gameStatus via row.game_statuses');
+        gameStatus = row.game_statuses;
+      }
+      // Method 3: Check all available keys for anything status-related
+      else {
+        console.log('❌ No gameStatus found via standard methods');
+        console.log('🔍 Available keys for this row:', Object.keys(row));
+
+        // Search through all keys for anything that might be the status
+        Object.keys(row).forEach(key => {
+          const value = row[key];
+          if (typeof value === 'object' && value !== null && value.isCompleted !== undefined) {
+            console.log(`🎯 FOUND POTENTIAL STATUS OBJECT AT KEY "${key}":`, value);
+            gameStatus = value;
+          }
+        });
+      }
 
       const gameStatus = row.game_statuses;
       return {
