@@ -206,21 +206,15 @@ export default function GamesList({
     return opponent ? opponent.teamName : 'Unknown Opponent';
   };
 
-  // Filter games based on search and status filters
+  // Filter games based on status
   const filteredGames = games.filter(game => {
-    const opponentName = getOpponentName(game.opponentId);
+    const matchesSearch = searchQuery === '' || 
+      opponents.find(o => o.id === game.opponentId)?.teamName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      game.round?.toString().includes(searchQuery) ||
+      new Date(game.date).toLocaleDateString().includes(searchQuery);
 
-    const matchesSearch = 
-      searchQuery === '' || 
-      opponentName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      game.date.includes(searchQuery) ||
-      game.time.includes(searchQuery);
-
-    const matchesStatus = 
-      statusFilter === 'all' || 
-      (statusFilter === game.status);
-
-    return matchesSearch && matchesStatus;
+    if (statusFilter === 'all') return matchesSearch;
+    return matchesSearch && game.status === statusFilter;
   });
 
   // Sort games strictly by date (future games first)
