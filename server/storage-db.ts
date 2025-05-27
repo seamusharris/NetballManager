@@ -154,15 +154,7 @@ export class DatabaseStorage implements IStorage {
   async getGames(): Promise<Game[]> {
     try {
       const results = await db
-        .select({
-          // Game fields
-          games,
-          // Related data
-          opponent: opponents,
-          gameStatus: gameStatuses,
-          season: seasons,
-          awardWinner: players
-        })
+        .select()
         .from(games)
         .leftJoin(opponents, eq(games.opponentId, opponents.id))
         .leftJoin(gameStatuses, eq(games.statusId, gameStatuses.id))
@@ -180,49 +172,49 @@ export class DatabaseStorage implements IStorage {
         seasonId: row.games.seasonId,
         notes: row.games.notes,
         awardWinnerId: row.games.awardWinnerId,
-        opponent: row.opponent ? {
-          id: row.opponent.id,
-          teamName: row.opponent.teamName,
-          primaryContact: row.opponent.primaryContact,
-          contactInfo: row.opponent.contactInfo
+        opponent: row.opponents ? {
+          id: row.opponents.id,
+          teamName: row.opponents.teamName,
+          primaryContact: row.opponents.primaryContact,
+          contactInfo: row.opponents.contactInfo
         } : undefined,
-        season: row.season ? {
-          id: row.season.id,
-          name: row.season.name,
-          startDate: row.season.startDate,
-          endDate: row.season.endDate,
-          isActive: row.season.isActive,
-          type: row.season.type,
-          year: row.season.year,
-          displayOrder: row.season.displayOrder
+        season: row.seasons ? {
+          id: row.seasons.id,
+          name: row.seasons.name,
+          startDate: row.seasons.startDate,
+          endDate: row.seasons.endDate,
+          isActive: row.seasons.isActive,
+          type: row.seasons.type,
+          year: row.seasons.year,
+          displayOrder: row.seasons.displayOrder
         } : undefined,
-        awardWinner: row.awardWinner ? {
-          id: row.awardWinner.id,
-          displayName: row.awardWinner.displayName,
-          firstName: row.awardWinner.firstName,
-          lastName: row.awardWinner.lastName,
-          dateOfBirth: row.awardWinner.dateOfBirth,
-          positionPreferences: row.awardWinner.positionPreferences,
-          active: row.awardWinner.active,
-          avatarColor: row.awardWinner.avatarColor
+        awardWinner: row.players ? {
+          id: row.players.id,
+          displayName: row.players.displayName,
+          firstName: row.players.firstName,
+          lastName: row.players.lastName,
+          dateOfBirth: row.players.dateOfBirth,
+          positionPreferences: row.players.positionPreferences,
+          active: row.players.active,
+          avatarColor: row.players.avatarColor
         } : undefined,
-        gameStatus: row.gameStatus ? {
-          id: row.gameStatus.id,
-          name: row.gameStatus.name,
-          displayName: row.gameStatus.displayName,
-          points: row.gameStatus.points,
-          opponentPoints: row.gameStatus.opponentPoints,
-          isCompleted: row.gameStatus.isCompleted,
-          allowsStatistics: row.gameStatus.allowsStatistics,
-          requiresOpponent: row.gameStatus.requiresOpponent,
-          colorClass: row.gameStatus.colorClass,
-          sortOrder: row.gameStatus.sortOrder,
-          isActive: row.gameStatus.isActive
+        gameStatus: row.gameStatuses ? {
+          id: row.gameStatuses.id,
+          name: row.gameStatuses.name,
+          displayName: row.gameStatuses.displayName,
+          points: row.gameStatuses.points,
+          opponentPoints: row.gameStatuses.opponentPoints,
+          isCompleted: row.gameStatuses.isCompleted,
+          allowsStatistics: row.gameStatuses.allowsStatistics,
+          requiresOpponent: row.gameStatuses.requiresOpponent,
+          colorClass: row.gameStatuses.colorClass,
+          sortOrder: row.gameStatuses.sortOrder,
+          isActive: row.gameStatuses.isActive
         } : undefined,
         // Map status field to the actual status name from game_statuses table
-        status: row.gameStatus?.name || 'upcoming',
+        status: row.gameStatuses?.name || 'upcoming',
         // Legacy fields for backward compatibility - use gameStatus.isCompleted since completed column was removed
-        completed: row.gameStatus?.isCompleted ?? false,
+        completed: row.gameStatuses?.isCompleted ?? false,
         isBye: row.games.opponentId === null
       }));
     } catch (error) {
