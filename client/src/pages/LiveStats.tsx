@@ -864,7 +864,7 @@ export default function LiveStats() {
   };
 
   // Check if a stat is position-specific
-  const isPositionSpecificStat = (stat: StatType): boolean => {
+  const isPositionSpecificStat = (stat:StatType): boolean => {
     return !isCommonStat(stat);
   };
 

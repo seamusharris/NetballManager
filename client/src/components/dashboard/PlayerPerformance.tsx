@@ -8,6 +8,7 @@ import { useQuery } from '@tanstack/react-query';
 import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
 import { useBatchGameStatistics } from '@/components/statistics/hooks/useBatchGameStatistics';
+import { isGameValidForStatistics } from '@/lib/gameFilters';
 
 interface PlayerPerformanceProps {
   players: Player[];
@@ -75,7 +76,7 @@ export default function PlayerPerformance({ players, games, className, seasonFil
   const gameIds = completedGames.map(game => game.id);
   const enableQuery = gameIds.length > 0;
 
-  
+
 
   // Use the batch stats hook instead of individual requests
   const { statsMap: gameStatsMap, isLoading: isLoadingStats } = useBatchGameStatistics(gameIds, false);
@@ -143,7 +144,7 @@ export default function PlayerPerformance({ players, games, className, seasonFil
     const now = new Date();
 
     // First filter out forfeit games - they should not count in player statistics
-    const validGames = completedGames.filter(game => game.status !== 'forfeit');
+    const validGames = filteredGames.filter(isGameValidForStatistics);
 
     // Filter games based on time range
     if (timeRange === 'last5') {

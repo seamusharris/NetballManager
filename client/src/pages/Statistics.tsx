@@ -19,22 +19,23 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Game, Player, Opponent, Roster, GameStat } from '@shared/schema';
 import { useToast } from '@/hooks/use-toast';
 import { exportStatsToPDF, exportStatsToExcel } from '@/lib/exportUtils';
+import { isGameValidForStatistics } from '@/lib/gameFilters';
 
 export default function Statistics() {
   const [location, navigate] = useLocation();
   const [selectedGameId, setSelectedGameId] = useState<number | null>(null);
   const { toast } = useToast();
-  
+
   // Parse game ID from URL query parameter or route
   useEffect(() => {
     // Check for URL query parameter
     const queryParams = new URLSearchParams(window.location.search);
     const gameIdQuery = queryParams.get('game');
-    
+
     // Check if we're on a route like /game/:id/stats
     const path = location;
     const gameIdFromPath = path.match(/^\/game\/(\d+)\/stats$/);
-    
+
     if (gameIdQuery && !isNaN(Number(gameIdQuery))) {
       console.log(`Setting selected game ID to ${gameIdQuery} from URL parameter`);
       // Set the selected game ID
@@ -49,28 +50,28 @@ export default function Statistics() {
       // We don't navigate away since this is the proper path format
     }
   }, [navigate, location]);
-  
+
   // Type our data with explicit types from the schema
   const { data: games = [], isLoading: isLoadingGames } = useQuery<Game[]>({
     queryKey: ['/api/games'],
   });
-  
+
   const { data: opponents = [], isLoading: isLoadingOpponents } = useQuery<Opponent[]>({
     queryKey: ['/api/opponents'],
   });
-  
+
   const { data: players = [], isLoading: isLoadingPlayers } = useQuery<Player[]>({
     queryKey: ['/api/players'],
   });
-  
+
   // Use state to store roster data
   const [rosterData, setRosterData] = useState<Roster[]>([]);
   const [loadingRosters, setLoadingRosters] = useState(false);
-  
+
   // Fetch roster data directly when selectedGameId changes
   useEffect(() => {
     if (!selectedGameId) return;
-    
+
     async function fetchRosters() {
       setLoadingRosters(true);
       try {
@@ -86,10 +87,10 @@ export default function Statistics() {
         setLoadingRosters(false);
       }
     }
-    
+
     fetchRosters();
   }, [selectedGameId]);
-  
+
   // Attempt to fetch roster data again when selectedGameId changes
   useEffect(() => {
     if (selectedGameId) {
@@ -113,19 +114,19 @@ export default function Statistics() {
         });
     }
   }, [selectedGameId]);
-  
+
   // Use our manually fetched roster data instead of the query result
   const rosters = rosterData;
   const isLoadingRosters = loadingRosters;
-  
+
   // State for game stats
   const [gameStatsData, setGameStatsData] = useState<GameStat[]>([]);
   const [loadingGameStats, setLoadingGameStats] = useState(false);
-  
+
   // Fetch game statistics when selectedGameId changes
   useEffect(() => {
     if (!selectedGameId) return;
-    
+
     async function fetchGameStats() {
       setLoadingGameStats(true);
       try {
@@ -141,49 +142,49 @@ export default function Statistics() {
         setLoadingGameStats(false);
       }
     }
-    
+
     fetchGameStats();
   }, [selectedGameId]);
-  
+
   // Check to ensure we have valid roster entries with the expected fields
   const hasValidRosterEntries = Array.isArray(rosters) && 
     rosters.length > 0 && 
     'position' in rosters[0] && 
     'playerId' in rosters[0] &&
     'quarter' in rosters[0];
-  
+
   // If we don't have valid roster entries, use an empty array
   const fixedRosters = hasValidRosterEntries ? rosters : [];
-  
+
   // Debug log showing the data we're working with
   console.log("Statistics roster data:", {
     hasValidRosterEntries,
     entries: fixedRosters.length,
     sample: fixedRosters.length > 0 ? fixedRosters[0] : null
   });
-  
+
   const isLoading = isLoadingGames || isLoadingOpponents || isLoadingPlayers || 
     (selectedGameId ? (isLoadingRosters || loadingGameStats) : false);
-  
+
   // Filter to only completed games for statistics
-  const completedGames = games.filter(game => game.completed);
-  
+  const completedGames = games.filter(game => isGameValidForStatistics(game));
+
   // Get selected game and opponent
   const selectedGame = selectedGameId 
     ? games.find(game => game.id === selectedGameId) 
     : null;
-    
+
   const selectedOpponent = selectedGame
     ? opponents.find(opponent => opponent.id === selectedGame.opponentId)
     : null;
-  
+
   return (
     <>
       <Helmet>
         <title>Statistics | NetballManager</title>
         <meta name="description" content="Track detailed netball game statistics, player performance metrics and game results" />
       </Helmet>
-      
+
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -232,7 +233,7 @@ export default function Statistics() {
             </div>
           )}
         </div>
-        
+
         {isLoading ? (
           <Skeleton className="h-[500px] w-full" />
         ) : games.length === 0 ? (
@@ -258,7 +259,7 @@ export default function Statistics() {
                   Round {selectedGame.round} vs. {selectedOpponent.teamName}
                 </h3>
                 <p className="text-gray-600">{selectedGame.date} at {selectedGame.time}</p>
-                
+
                 {/* Export buttons */}
                 <ExportButtons
                   onExportPDF={() => {
@@ -289,7 +290,7 @@ export default function Statistics() {
                 />
               </CardContent>
             </Card>
-            
+
             {selectedGame.status === 'forfeit' ? (
               <Card className="p-6 text-center">
                 <p className="text-gray-600 mb-2">This game is marked as a forfeit.</p>

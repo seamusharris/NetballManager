@@ -25,6 +25,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import PlayerForm from "@/components/players/PlayerForm";
 import PlayerSeasonsManager from "@/components/players/PlayerSeasonsManager";
+import { isGameValidForStatistics } from '@/lib/gameFilters';
 
 export default function PlayerDetails() {
   const { id } = useParams<{ id: string }>();
@@ -294,8 +295,8 @@ export default function PlayerDetails() {
           gameGoals += stat.goalsFor || 0;
           gameGoalsAgainst += stat.goalsAgainst || 0;
           gameMissedGoals += stat.missedGoals || 0;
-          gameRebounds += stat.rebounds || 0;
-          gameIntercepts += stat.intercepts || 0;
+          gameRebounds += gameRebounds || 0;
+          gameIntercepts += gameIntercepts || 0;
           gameBadPasses += gameBadPasses || 0;
           gameHandlingErrors += gameHandlingErrors || 0;
           gamePickUps += gamePickUps || 0;
@@ -462,7 +463,7 @@ export default function PlayerDetails() {
     return (
       <div className="container mx-auto p-4">
         <div className="flex items-center mb-4">
-          
+
           <h1 className="text-2xl font-bold">Loading player data...</h1>
         </div>
       </div>
@@ -473,7 +474,7 @@ export default function PlayerDetails() {
     return (
       <div className="container mx-auto p-4">
         <div className="flex items-center mb-4">
-          
+
           <h1 className="text-2xl font-bold">Player not found</h1>
         </div>
       </div>
@@ -491,7 +492,7 @@ export default function PlayerDetails() {
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center">
             <BackButton fallbackPath="/dashboard" variant="ghost" className="mr-2">
-              
+
             </BackButton>
           </div>
           <div className="flex gap-2">
@@ -776,7 +777,8 @@ export default function PlayerDetails() {
                               // Double check player is on roster for this game and has an actual position (not "off")
                               const gameRosters = allGameRosters[game.gameId] || [];
                               const isOnRoster = gameRosters.some((roster: any) => 
-                                roster.playerId === playerId && allPositions.includes(roster.position)
+                                roster.playerId === playerId && allPositions.includes```text
+(roster.position)
                               );
 
                                                             if (!isOnRoster) return null; // Skip if not on roster or only "off" position
