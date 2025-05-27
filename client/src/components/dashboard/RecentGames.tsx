@@ -16,15 +16,9 @@ interface RecentGamesProps {
 }
 
 export default function RecentGames({ games, opponents, className, seasonFilter, activeSeason, centralizedStats }: RecentGamesProps) {
-  // Filter for completed games and sort by date (most recent first)
+  // Filter for completed games using gameStatus.isCompleted and sort by date (most recent first)
   const recentGames = games
-    .filter(game => 
-      game.status === 'completed' || 
-      game.status === 'forfeit-win' || 
-      game.status === 'forfeit-loss' || 
-      game.status === 'bye' || 
-      game.status === 'abandoned'
-    )
+    .filter(game => game.gameStatus?.isCompleted === true)
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 5);
 
