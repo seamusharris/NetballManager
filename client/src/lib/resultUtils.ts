@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { cn } from '@/lib/utils';
 
@@ -85,17 +86,17 @@ export function ResultBadge({ result, size = 'md', className }: ResultBadgeProps
 
   const resultLetter = result.charAt(0);
 
-  return (
-    <div
-      className={cn(
+  return React.createElement(
+    'div',
+    {
+      className: cn(
         'rounded-full flex items-center justify-center font-bold text-white',
         getResultBgColor(result),
         sizeClasses[size],
         className
-      )}
-    >
-      {resultLetter}
-    </div>
+      )
+    },
+    resultLetter
   );
 }
 
@@ -114,42 +115,66 @@ export function ScoreDisplay({ teamScore, opponentScore, compact = false, classN
                             teamScore < opponentScore ? 'Loss' : 'Draw';
 
   if (compact) {
-    return (
-      <div
-        className={cn(
+    return React.createElement(
+      'div',
+      {
+        className: cn(
           'inline-flex items-center px-3 py-1 rounded border text-gray-900',
           getResultLightBgColor(result),
           getResultBorderColor(result),
           className
-        )}
-      >
-        <span className={teamScore > opponentScore ? "font-bold" : ""}>{teamScore}</span>
-        <span className="mx-2">-</span>
-        <span className={opponentScore > teamScore ? "font-bold" : ""}>{opponentScore}</span>
-      </div>
+        )
+      },
+      React.createElement(
+        'span',
+        { className: teamScore > opponentScore ? 'font-bold' : '' },
+        teamScore
+      ),
+      React.createElement(
+        'span',
+        { className: 'mx-2' },
+        '-'
+      ),
+      React.createElement(
+        'span',
+        { className: opponentScore > teamScore ? 'font-bold' : '' },
+        opponentScore
+      )
     );
   }
 
-  return (
-    <div className={cn(
-      'flex items-center justify-between p-4 rounded-lg border',
-      getResultLightBgColor(result),
-      getResultBorderColor(result),
-      className
-    )}>
-      <div className="text-center">
-        <div className="text-2xl font-bold">
-          {teamScore}
-        </div>
-      </div>
-
-      <div className="text-xl font-bold text-gray-400">vs</div>
-
-      <div className="text-center">
-        <div className="text-2xl font-bold">
-          {opponentScore}
-        </div>
-      </div>
-    </div>
+  return React.createElement(
+    'div',
+    {
+      className: cn(
+        'flex items-center justify-between p-4 rounded-lg border',
+        getResultLightBgColor(result),
+        getResultBorderColor(result),
+        className
+      )
+    },
+    React.createElement(
+      'div',
+      { className: 'text-center' },
+      React.createElement(
+        'div',
+        { className: 'text-2xl font-bold' },
+        teamScore
+      )
+    ),
+    React.createElement(
+      'div',
+      { className: 'text-xl font-bold text-gray-400' },
+      'vs'
+    ),
+    React.createElement(
+      'div',
+      { className: 'text-center' },
+      React.createElement(
+        'div',
+        { className: 'text-2xl font-bold' },
+        opponentScore
+      )
+    )
   );
 }
