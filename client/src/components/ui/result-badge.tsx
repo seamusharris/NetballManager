@@ -13,23 +13,23 @@ interface ResultBadgeProps {
 
 export function ResultBadge({ result, className, size = 'default' }: ResultBadgeProps) {
   const sizeClasses = {
-    'sm': 'px-1.5 py-0.5 text-xs',
-    'md': 'px-2 py-0.5 text-xs', 
-    'default': 'px-2.5 py-0.5 text-xs'
+    'sm': 'h-6 w-6 text-xs',
+    'md': 'h-7 w-7 text-sm', 
+    'default': 'h-8 w-8 text-sm'
   };
 
   return (
-    <Badge
-      variant="outline"
+    <div
       className={cn(
+        'inline-flex items-center justify-center rounded-full font-semibold border-0',
         sizeClasses[size],
-        result === 'Win' ? 'bg-green-50 text-green-700 border-green-200' :
-        result === 'Loss' ? 'bg-red-50 text-red-700 border-red-200' :
-        'bg-yellow-50 text-yellow-700 border-yellow-200',
+        result === 'Win' ? 'bg-green-500 text-white' :
+        result === 'Loss' ? 'bg-red-500 text-white' :
+        'bg-yellow-500 text-white',
         className
       )}
     >
       {result === 'Win' ? 'W' : result === 'Loss' ? 'L' : 'D'}
-    </Badge>
+    </div>
   );
 }
