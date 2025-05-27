@@ -163,18 +163,32 @@ export function GameStatusDialog({
                 </SelectTrigger>
                 <SelectContent>
                   {GAME_STATUSES.map((status) => (
-                    <SelectItem key={status} value={status}>
-                      {getStatusDisplayName(status)}
+                    <SelectItem key={status.name} value={status.name}>
+                      {status.displayName}
                     </SelectItem>
                   ))}
                 </SelectContent>
-              </Select>
 
-              {getStatusDescription(selectedStatus) && (
-                <p className="text-sm text-muted-foreground">
-                  {getStatusDescription(selectedStatus)}
-                </p>
-              )}
+              {selectedStatus && GAME_STATUSES && (
+                            <div className="text-sm text-muted-foreground mt-2">
+                              {(() => {
+                                const statusObj = GAME_STATUSES.find(s => s.name === selectedStatus);
+                                if (statusObj?.name === 'forfeit-win') {
+                                  return 'Opponent forfeited the game. Score will be recorded as 10-0 in our favor.';
+                                }
+                                if (statusObj?.name === 'forfeit-loss') {
+                                  return 'Our team forfeited the game. Score will be recorded as 0-10.';
+                                }
+                                if (statusObj?.name === 'bye') {
+                                  return 'BYE round - no game scheduled. Points awarded as per competition rules.';
+                                }
+                                if (statusObj?.name === 'abandoned') {
+                                  return 'Game cancelled due to weather or other circumstances. Points awarded as per competition rules.';
+                                }
+                                return '';
+                              })()}
+                            </div>
+                          )}
             </div>
           </div>
 
