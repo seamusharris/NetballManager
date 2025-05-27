@@ -117,15 +117,13 @@ export default function GamesList({
     .filter(game => {
       // A game is completed if it has a status that marks it as completed
       // We'll need to check this against the actual game status data
-      return game.status === 'completed' || game.status === 'forfeit-win' || 
-             game.status === 'forfeit-loss' || game.status === 'bye' || 
-             game.status === 'abandoned';
+      return game.gameStatus?.isCompleted === true;
     })
     .map(game => game.id);
 
   // Get all non-BYE game IDs for checking roster status
   const nonByeGameIds = games
-    .filter(game => game.status !== 'bye')
+    .filter(game => game.gameStatus?.name !== 'bye')
     .map(game => game.id);
 
   // Use React Query to fetch roster data for all games to check if they're complete
@@ -404,18 +402,21 @@ export default function GamesList({
                             BYE
                           </Badge>
                         ) : (
-                          <>
-                            <GameStatusBadge 
-                              status={game.status || (game.completed ? 'completed' : 'upcoming')}
-                            />
-                          </>
+                          <GameStatusBadge 
+                            game={game} 
+                            editable={true} 
+                            onStatusChange={() => {
+                              setSelectedGame(game);
+                              setStatusDialogOpen(true);
+                            }} 
+                          />
                         )}
                       </div>
                     </TableCell>
                     <TableCell className="px-6 py-4 whitespace-nowrap">
                       {game.isBye ? (
                         <div className="font-medium text-gray-500">⸺</div>
-                      ) : game.completed ? (
+                      ) : game.gameStatus?.isCompleted ? (
                         <div className="text-center">
                           {scoresMap && scoresMap[game.id] ? (
                             (() => {
