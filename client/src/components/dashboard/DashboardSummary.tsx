@@ -149,7 +149,8 @@ export default function DashboardSummary({
     setRefreshKey(prev => prev + 1);
   };
 
-  if (isLoading || (allGameIds.length > 0 && statsLoading)) {
+  // Show loading state if basic data is loading OR if we have games but stats are still loading
+  if (isLoading || (filteredGames.length > 0 && statsLoading)) {
     return (
       <div className="p-6">
         <h2 className="text-2xl font-heading font-bold text-neutral-dark mb-4">Dashboard</h2>
@@ -157,6 +158,11 @@ export default function DashboardSummary({
           <div className="text-center">
             <h3 className="text-lg font-medium mb-2">Loading Dashboard...</h3>
             <p className="text-gray-500">Please wait while we load your team data.</p>
+            <div className="mt-4 text-sm text-gray-400">
+              <p>Filtered Games: {filteredGames.length}</p>
+              <p>Stats Loading: {statsLoading ? 'Yes' : 'No'}</p>
+              <p>Basic Loading: {isLoading ? 'Yes' : 'No'}</p>
+            </div>
           </div>
         </div>
       </div>
