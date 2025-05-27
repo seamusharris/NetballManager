@@ -257,128 +257,70 @@ export class DatabaseStorage implements IStorage {
     console.log('=== FOREIGN KEY CONSTRAINT CHECK ===');
     console.log(fkCheck.rows);
 
-    // Join working correctly now with explicit field selection
-    // Explicitly select the fields we need to avoid nested objects
+    // Use Drizzle's automatic field resolution instead of explicit mapping
     const results = await db
-      .select({
-        id: games.id,
-        date: games.date,
-        time: games.time,
-        opponentId: games.opponentId,
-        statusId: games.statusId,
-        round: games.round,
-        seasonId: games.seasonId,
-        notes: games.notes,
-        awardWinnerId: games.awardWinnerId,
-        venue: games.venue,
-        teamScore: games.teamScore,
-        opponentScore: games.opponentScore,
-        statusName: gameStatuses.name,
-        statusDisplayName: gameStatuses.displayName,
-        statusIsCompleted: gameStatuses.isCompleted,
-        statusAllowsStatistics: gameStatuses.allowsStatistics,
-        statusColorClass: gameStatuses.colorClass,
-        opponentTeamName: opponents.teamName,
-        opponentPrimaryColor: opponents.primaryColor,
-        opponentSecondaryColor: opponents.secondaryColor,
-        awardWinnerDisplayName: players.displayName,
-        awardWinnerFirstName: players.firstName,
-        awardWinnerLastName: players.lastName
-      })
+      .select()
       .from(games)
       .leftJoin(gameStatuses, eq(games.statusId, gameStatuses.id))
       .leftJoin(opponents, eq(games.opponentId, opponents.id))
       .leftJoin(players, eq(games.awardWinnerId, players.id))
       .orderBy(desc(games.date), desc(games.time));
 
-    console.log('=== DRIZZLE JOIN RESULTS (first 2) ===');
-    console.log('🔍 RAW STRUCTURE INSPECTION:');
+    console.log('=== DRIZZLE JOIN RESULTS (first 2 with nested structure) ===');
     console.log('Total results count:', results.length);
-    console.log('Sample row structure:');
+    
     if (results.length > 0) {
-      console.log('First row keys:', Object.keys(results[0]));
-      console.log('First row values:', results[0]);
-    }
-
-    results.slice(0, 2).forEach((row, index) => {
-      console.log(`\n--- RAW RESULT ${index} ---`);
-      console.log('All row keys:', Object.keys(row));
-// Check if ANY status fields are populated
-      const hasAnyStatusField = row.statusName || row.statusDisplayName || row.statusIsCompleted !== undefined;
-      console.log('Has any status field populated?', hasAnyStatusField);
-
-      // Log all non-undefined values
-      console.log('All non-undefined fields:');
-      Object.entries(row).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
-          console.log(`  ${key}: ${value}`);
-        }
-      });
-    });
-
-    console.log('\n=== DEBUGGING: WHY ARE STATUS FIELDS UNDEFINED? ===');
-    console.log('Checking if the join is working properly...');
-
-    // Simple test - get first result and inspect the raw structure deeply
-    if (results.length > 0) {
-      const firstResult = results[0];
-      console.log('First result game id:', firstResult.id);
-      console.log('First result statusId (from games table):', firstResult.statusId);
-
-      // Check if any properties contain the status data we need
-      console.log('Looking for status data in all properties:');
-      Object.entries(firstResult).forEach(([key, value]) => {
-        if (typeof value === 'object' && value !== null) {
-          console.log(`  Object property ${key}:`, value);
-        } else if (key.toLowerCase().includes('status') || key.toLowerCase().includes('complete')) {
-          console.log(`  Status-related property ${key}:`, value);
-        }
+      console.log('First row structure:', {
+        games: results[0].games,
+        gameStatuses: results[0].gameStatuses,
+        opponents: results[0].opponents,
+        players: results[0].players
       });
     }
 
     return results.map(row => {
-      console.log(`\n--- MAPPING RESULT FOR GAME ${row.id} ---`);
-      console.log('Status mapping:', {
-        'statusId': row.statusId,
-        'statusName': row.statusName,
-        'isCompleted': row.statusIsCompleted,
-        'displayName': row.statusDisplayName
+      console.log(`\n--- MAPPING RESULT FOR GAME ${row.games.id} ---`);
+      console.log('Status mapping from nested object:', {
+        'statusId': row.games.statusId,
+        'statusName': row.gameStatuses?.name,
+        'isCompleted': row.gameStatuses?.isCompleted,
+        'displayName': row.gameStatuses?.displayName
       });
 
       return {
-        id: row.id,
-        date: row.date,
-        time: row.time,
-        opponentId: row.opponentId,
-        statusId: row.statusId,
-        status: row.statusName || 'upcoming',
-        completed: row.statusIsCompleted ?? false,
-        round: row.round,
-        seasonId: row.seasonId,
-        notes: row.notes,
-        awardWinnerId: row.awardWinnerId,
-        isBye: row.opponentId === null,
-        venue: row.venue,
-        teamScore: row.teamScore ?? 0,
-        opponentScore: row.opponentScore ?? 0,
+        id: row.games.id,
+        date: row.games.date,
+        time: row.games.time,
+        opponentId: row.games.opponentId,
+        statusId: row.games.statusId,
+        status: row.gameStatuses?.name || 'upcoming',
+        completed: row.gameStatuses?.isCompleted ?? false,
+        round: row.games.round,
+        seasonId: row.games.seasonId,
+        notes: row.games.notes,
+        awardWinnerId: row.games.awardWinnerId,
+        isBye: row.games.opponentId === null,
+        venue: row.games.venue,
+        teamScore: row.games.teamScore ?? 0,
+        opponentScore: row.games.opponentScore ?? 0,
         // Add computed fields
-        gameStatusName: row.statusName,
-        gameStatus: row.statusName ? {
-          name: row.statusName,
-          displayName: row.statusDisplayName,
-          isCompleted: row.statusIsCompleted,
-          allowsStatistics: row.statusAllowsStatistics,
-          colorClass: row.statusColorClass
+        gameStatusName: row.gameStatuses?.name,
+        gameStatus: row.gameStatuses ? {
+          name: row.gameStatuses.name,
+          displayName: row.gameStatuses.displayName,
+          isCompleted: row.gameStatuses.isCompleted,
+          allowsStatistics: row.gameStatuses.allowsStatistics,
+          colorClass: row.gameStatuses.colorClass
         } : null,
-        opponent: row.opponentTeamName ? {
-          teamName: row.opponentTeamName,
-          primaryColor: row.opponentPrimaryColor,
-          secondaryColor: row.opponentSecondaryColor
+        opponent: row.opponents ? {
+          teamName: row.opponents.teamName,
+          primaryColor: row.opponents.primaryColor,
+          secondaryColor: row.opponents.secondaryColor
         } : null,
-        awardWinner: row.awardWinnerDisplayName ? {
-          displayName: row.awardWinnerDisplayName,
-          firstName: row.awardWinnerFirstName,
-          lastName: row.awardWinnerLastName
+        awardWinner: row.players ? {
+          displayName: row.players.displayName,
+          firstName: row.players.firstName,
+          lastName: row.players.lastName
         } : null
       };
     });
