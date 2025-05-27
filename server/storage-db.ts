@@ -156,27 +156,21 @@ export class DatabaseStorage implements IStorage {
     const results = await db
       .select({
         games,
+        opponents,
         gameStatuses,
         seasons,
         players,
       })
       .from(games)
+      .leftJoin(opponents, eq(games.opponentId, opponents.id))
       .leftJoin(gameStatuses, eq(games.statusId, gameStatuses.id))
       .leftJoin(seasons, eq(games.seasonId, seasons.id))
       .leftJoin(players, eq(games.awardWinnerId, players.id))
       .orderBy(desc(games.date), desc(games.time));
 
     return results.map(row => {
-      const hasStats = gamesWithStats.has(row.games.id);
       const dbStatus = row.gameStatuses?.name || 'upcoming';
       const dbCompleted = row.gameStatuses?.isCompleted ?? false;
-
-      // Use the database status as the source of truth
-      // Don't override status just because stats exist - games can be in-progress with stats
-      const actualStatus = dbStatus;
-
-      // Completion is determined by the game status, not just presence of stats
-      const actuallyCompleted = dbCompleted;
 
       return {
         id: row.games.id,
@@ -228,9 +222,9 @@ export class DatabaseStorage implements IStorage {
           isActive: row.gameStatuses.isActive
         } : undefined,
         // Map status field to the actual status name from game_statuses table
-        status: actualStatus,
+        status: dbStatus,
         // Legacy fields for backward compatibility - use gameStatus.isCompleted since completed column was removed
-        completed: actuallyCompleted,
+        completed: dbCompleted,
         isBye: row.games.opponentId === null
       };
     });
