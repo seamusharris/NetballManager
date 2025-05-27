@@ -10,7 +10,6 @@ import {
 } from "../shared/schema";
 import { db } from "./db";
 import { eq, desc, and, isNull } from "drizzle-orm";
-import { storage as dbStorage } from "./storage-db";
 
 // Storage interface
 export interface IStorage {
@@ -25,14 +24,14 @@ export interface IStorage {
   createPlayer(player: InsertPlayer): Promise<Player>;
   updatePlayer(id: number, player: Partial<InsertPlayer>): Promise<Player | undefined>;
   deletePlayer(id: number): Promise<boolean>;
-
+  
   // Opponent methods
   getOpponents(): Promise<Opponent[]>;
   getOpponent(id: number): Promise<Opponent | undefined>;
   createOpponent(opponent: InsertOpponent): Promise<Opponent>;
   updateOpponent(id: number, opponent: Partial<InsertOpponent>): Promise<Opponent | undefined>;
   deleteOpponent(id: number): Promise<boolean>;
-
+  
   // Game methods
   getGames(): Promise<Game[]>;
   getGamesBySeason(seasonId: number): Promise<Game[]>;
@@ -40,7 +39,7 @@ export interface IStorage {
   createGame(game: InsertGame): Promise<Game>;
   updateGame(id: number, game: Partial<InsertGame>): Promise<Game | undefined>;
   deleteGame(id: number): Promise<boolean>;
-
+  
   // Roster methods
   getRostersByGame(gameId: number): Promise<Roster[]>;
   getRoster(id: number): Promise<Roster | undefined>;
@@ -48,7 +47,7 @@ export interface IStorage {
   updateRoster(id: number, roster: Partial<InsertRoster>): Promise<Roster | undefined>;
   deleteRoster(id: number): Promise<boolean>;
   deleteRostersByGame(gameId: number): Promise<boolean>;
-
+  
   // Game Stats methods
   getGameStatsByGame(gameId: number): Promise<GameStat[]>;
   getGameStat(id: number): Promise<GameStat | undefined>;
@@ -56,7 +55,7 @@ export interface IStorage {
   updateGameStat(id: number, gameStat: Partial<InsertGameStat>): Promise<GameStat | undefined>;
   deleteGameStat(id: number): Promise<boolean>;
   deleteGameStatsByGame(gameId: number): Promise<boolean>;
-
+  
   // Season methods
   getSeasons(): Promise<Season[]>;
   getSeason(id: number): Promise<Season | undefined>;
@@ -65,7 +64,7 @@ export interface IStorage {
   updateSeason(id: number, season: Partial<InsertSeason>): Promise<Season | undefined>;
   setActiveSeason(id: number): Promise<Season | undefined>;
   deleteSeason(id: number): Promise<boolean>;
-
+  
   // Games by season
   getGamesBySeason(seasonId: number): Promise<Game[]>;
 }
@@ -105,7 +104,7 @@ export class DatabaseStorage implements IStorage {
     // Get existing player colors to avoid duplicates
     const existingPlayers = await this.getPlayers();
     const usedColors = existingPlayers.map(p => p.avatarColor).filter(Boolean);
-
+    
     // Define our color palette for players
     const avatarColors = [
       'bg-blue-600',    // Blue
@@ -129,10 +128,10 @@ export class DatabaseStorage implements IStorage {
       'bg-green-700',   // Dark Green
       'bg-red-700',     // Dark Red
     ];
-
+    
     // Determine the avatar color
     let avatarColor: string;
-
+    
     // If specific color provided and not "auto", use it
     if (insertPlayer.avatarColor && 
         insertPlayer.avatarColor !== 'auto' && 
@@ -141,16 +140,16 @@ export class DatabaseStorage implements IStorage {
     } else {
       // Otherwise, pick an unused color or random one if all are used
       const unusedColors = avatarColors.filter(color => !usedColors.includes(color));
-
+      
       if (unusedColors.length > 0) {
         avatarColor = unusedColors[Math.floor(Math.random() * unusedColors.length)];
       } else {
         avatarColor = avatarColors[Math.floor(Math.random() * avatarColors.length)];
       }
     }
-
+    
     console.log("Creating player with avatar color:", avatarColor);
-
+    
     // Prepare the player data with guaranteed avatar color
     const playerData = {
       displayName: insertPlayer.displayName,
@@ -161,13 +160,13 @@ export class DatabaseStorage implements IStorage {
       active: insertPlayer.active !== undefined ? insertPlayer.active : true,
       avatarColor // Always include avatar color
     };
-
+    
     // Create the player with all properties including avatar color
     const [player] = await db
       .insert(players)
       .values(playerData)
       .returning();
-
+    
     return player;
   }
 
@@ -175,16 +174,16 @@ export class DatabaseStorage implements IStorage {
     try {
       console.log("Storage: Updating player with ID:", id);
       console.log("Storage: Update data received:", JSON.stringify(updatePlayer, null, 2));
-
+      
       // Handle type-safe update to avoid TS errors
       const updateData: Record<string, any> = {};
-
+      
       if (updatePlayer.displayName !== undefined) updateData.displayName = updatePlayer.displayName;
       if (updatePlayer.firstName !== undefined) updateData.firstName = updatePlayer.firstName;
       if (updatePlayer.lastName !== undefined) updateData.lastName = updatePlayer.lastName;
       if (updatePlayer.dateOfBirth !== undefined) updateData.dateOfBirth = updatePlayer.dateOfBirth;
       if (updatePlayer.active !== undefined) updateData.active = updatePlayer.active === true;
-
+      
       // Ensure position preferences is always an array
       if (updatePlayer.positionPreferences !== undefined) {
         if (Array.isArray(updatePlayer.positionPreferences)) {
@@ -197,11 +196,11 @@ export class DatabaseStorage implements IStorage {
           updateData.positionPreferences = [];
         }
       }
-
+      
       if (updatePlayer.avatarColor !== undefined) updateData.avatarColor = updatePlayer.avatarColor;
-
+      
       console.log("Storage: Processed update data:", JSON.stringify(updateData, null, 2));
-
+      
       // Only perform update if there are fields to update
       if (Object.keys(updateData).length === 0) {
         console.log("Storage: No valid update fields provided for player", id);
@@ -209,13 +208,13 @@ export class DatabaseStorage implements IStorage {
         const existingPlayer = await this.getPlayer(id);
         return existingPlayer;
       }
-
+      
       const [updated] = await db
         .update(players)
         .set(updateData)
         .where(eq(players.id, id))
         .returning();
-
+      
       console.log("Storage: Player update successful:", updated ? "Yes" : "No");
       return updated || undefined;
     } catch (error) {
@@ -298,7 +297,7 @@ export class DatabaseStorage implements IStorage {
     // Delete related rosters and game stats first
     await this.deleteRostersByGame(id);
     await this.deleteGameStatsByGame(id);
-
+    
     const result = await db
       .delete(games)
       .where(eq(games.id, id))
@@ -308,7 +307,8 @@ export class DatabaseStorage implements IStorage {
 
   // Roster methods
   async getRostersByGame(gameId: number): Promise<Roster[]> {
-    return await db.select().from(rosters).where(eq(rosters.gameId, gameId));  }
+    return await db.select().from(rosters).where(eq(rosters.gameId, gameId));
+  }
 
   async getRoster(id: number): Promise<Roster | undefined> {
     const [roster] = await db.select().from(rosters).where(eq(rosters.id, id));
@@ -321,7 +321,7 @@ export class DatabaseStorage implements IStorage {
     const position = validPositions.includes(insertRoster.position) 
       ? insertRoster.position as Position 
       : 'GS'; // Default to GS if invalid position
-
+      
     const [roster] = await db
       .insert(rosters)
       .values({
@@ -337,11 +337,11 @@ export class DatabaseStorage implements IStorage {
   async updateRoster(id: number, updateRoster: Partial<InsertRoster>): Promise<Roster | undefined> {
     // Handle type-safe update to avoid TS errors
     const updateData: Record<string, any> = {};
-
+    
     if (updateRoster.gameId !== undefined) updateData.gameId = updateRoster.gameId;
     if (updateRoster.quarter !== undefined) updateData.quarter = updateRoster.quarter;
     if (updateRoster.playerId !== undefined) updateData.playerId = updateRoster.playerId;
-
+    
     // Special handling for position to ensure it's a valid enum value
     if (updateRoster.position !== undefined) {
       const validPositions = ['GS', 'GA', 'WA', 'C', 'WD', 'GD', 'GK'];
@@ -349,7 +349,7 @@ export class DatabaseStorage implements IStorage {
         updateData.position = updateRoster.position;
       }
     }
-
+    
     const [updated] = await db
       .update(rosters)
       .set(updateData)
@@ -416,7 +416,7 @@ export class DatabaseStorage implements IStorage {
       .returning({ id: gameStats.id });
     return result.length > 0;
   }
-
+  
   // Season methods
   async getSeasons(): Promise<Season[]> {
     return await db.select().from(seasons).orderBy(desc(seasons.year), seasons.displayOrder);
@@ -449,14 +449,14 @@ export class DatabaseStorage implements IStorage {
   async setActiveSeason(id: number): Promise<Season | undefined> {
     // First deactivate all seasons
     await db.update(seasons).set({ isActive: false });
-
+    
     // Then activate the specified season
     const [season] = await db
       .update(seasons)
       .set({ isActive: true })
       .where(eq(seasons.id, id))
       .returning();
-
+      
     return season || undefined;
   }
 
@@ -464,35 +464,21 @@ export class DatabaseStorage implements IStorage {
     const result = await db.delete(seasons).where(eq(seasons.id, id));
     return result.rowCount > 0;
   }
-
+  
   // Games by season
   async getGamesBySeason(seasonId: number): Promise<Game[]> {
     return await db.select().from(games).where(eq(games.seasonId, seasonId));
   }
 }
 
-// Create a debugging wrapper
-const debugStorage = {
-  ...dbStorage,
-  async getGames() {
-    console.log('🎯 STORAGE.TS: getGames() called - forwarding to storage-db.ts');
-    console.log('⏰ TIMESTAMP:', new Date().toISOString());
-
-    const result = await dbStorage.getGames();
-
-    console.log('🎯 STORAGE.TS: storage-db.ts returned', result.length, 'games');
-    return result;
-  }
-};
-
 // Export a single instance of DatabaseStorage
-export const storage = debugStorage;
+export const storage = new DatabaseStorage();
 
 // Add some sample data for demonstration if none exists
 async function initSampleData() {
   // Check if we have any opponents
   const opponentList = await storage.getOpponents();
-
+  
   if (opponentList.length === 0) {
     // Add sample opponents
     await storage.createOpponent({
@@ -500,13 +486,13 @@ async function initSampleData() {
       primaryContact: "Jane Smith",
       contactInfo: "coach@thundernetball.com"
     });
-
+    
     await storage.createOpponent({
       teamName: "Lightning Strikers",
       primaryContact: "Mike Johnson",
       contactInfo: "mike@lightningstrikers.com"
     });
-
+    
     await storage.createOpponent({
       teamName: "Phoenix Jets",
       primaryContact: "Sarah Williams",
@@ -515,5 +501,5 @@ async function initSampleData() {
   }
 }
 
-// Initialize sample data - commented out until getOpponents is implemented
-  // await initSampleData(storage);
+// Initialize sample data
+initSampleData().catch(console.error);

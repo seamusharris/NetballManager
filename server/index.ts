@@ -1,29 +1,15 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
-
-console.log('🌟 SERVER INDEX.TS: Starting server initialization');
-console.log('🌟 TIMESTAMP:', new Date().toISOString());
+import { setupVite, serveStatic, log } from "./vite";
+import { addSeasonsSupport } from "./migrations/addSeasonsSupport";
+import { addPlayerSeasonsTable } from "./migrations/addPlayerSeasons";
+import { addQueryIndexes } from "./migrations/addQueryIndexes";
+import { createGameStatusesTable } from "./migrations/createGameStatusesTable";
+import { cleanupLegacyGameColumns } from "./migrations/cleanupLegacyGameColumns";
 
 const app = express();
-import cors from 'cors';
-import helmet from 'helmet';
-
-app.use(cors({
-  origin: ["http://localhost:5000", "http://localhost:3000", "http://0.0.0.0:5000"],
-  credentials: true
-}));
-
-app.use(helmet());
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-
-// Add request logging middleware
-app.use((req, res, next) => {
-  if (req.url.includes('/api/games')) {
-    console.log(`🔍 REQUEST: ${req.method} ${req.url} at ${new Date().toISOString()}`);
-  }
-  next();
-});
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 
 app.use((req, res, next) => {
   const start = Date.now();
@@ -54,13 +40,6 @@ app.use((req, res, next) => {
 
   next();
 });
-
-import { setupVite, serveStatic, log } from "./vite";
-import { addSeasonsSupport } from "./migrations/addSeasonsSupport";
-import { addPlayerSeasonsTable } from "./migrations/addPlayerSeasons";
-import { addQueryIndexes } from "./migrations/addQueryIndexes";
-import { createGameStatusesTable } from "./migrations/createGameStatusesTable";
-import { cleanupLegacyGameColumns } from "./migrations/cleanupLegacyGameColumns";
 
 (async () => {
   // Run migrations
