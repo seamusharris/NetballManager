@@ -173,7 +173,8 @@ export class DatabaseStorage implements IStorage {
       gameStatuses_via_snake: results[0].game_statuses,
       gameStatuses_via_camel: results[0].gameStatuses,
       statusIdFromGame: results[0].games.statusId,
-      fullRow: results[0]
+      fullRowKeys: Object.keys(results[0]),
+      allTableKeys: Object.keys(results[0]).filter(key => typeof results[0][key] === 'object' && results[0][key] !== null)
     } : 'No results');
 
     return results.map(row => {
