@@ -816,15 +816,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const games = await storage.getGames();
 
-      // Debug game information
-      console.log("ROUTES: Available games:", games.map(g => ({ 
-        id: g.id, 
-        date: g.date, 
+      console.log('ROUTES: Raw storage result sample:', games.length > 0 ? {
+        id: games[0].id,
+        statusId: games[0].statusId,
+        gameStatus: games[0].gameStatus,
+        allKeys: Object.keys(games[0])
+      } : 'No games');
+
+      console.log('ROUTES: Available games:', games.map(g => ({
+        id: g.id,
+        date: g.date,
         status: g.status,
         completed: g.completed,
         statusId: g.statusId,
-        gameStatusName: g.gameStatus?.name
+        gameStatusName: g.gameStatus?.name,
+        hasGameStatus: !!g.gameStatus,
+        fullGameStatus: g.gameStatus
       })));
+
+      console.log('ROUTES: About to send JSON response with', games.length, 'games');
+      console.log('ROUTES: First game object being sent:', games.length > 0 ? JSON.stringify(games[0], null, 2) : 'No games');
 
       res.json(games);
     } catch (error) {
