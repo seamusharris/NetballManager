@@ -115,7 +115,7 @@ export default function RecentGames({ games, opponents, className, seasonFilter,
       <CardContent className="p-6 pb-2">
         <div className="flex justify-between items-center mb-4">
           <h3 className="font-heading font-semibold text-neutral-dark">Recent Games</h3>
-          <Link href="/games" className="text-accent text-sm hover:underline">
+          <Link href="/games?status=completed" className="text-accent text-sm hover:underline">
             View all
           </Link>
         </div>

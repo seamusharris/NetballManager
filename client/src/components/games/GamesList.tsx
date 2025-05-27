@@ -64,7 +64,19 @@ export default function GamesList({
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [itemToDelete, setItemToDelete] = useState<number | null>(null);
-  const [_, navigate] = useLocation();
+  const [, setLocation] = useLocation();
+
+  // Check for status filter in URL parameters on component mount
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const statusParam = searchParams.get('status');
+    if (statusParam && ['upcoming', 'completed', 'in-progress', 'forfeit'].includes(statusParam)) {
+      setStatusFilter(statusParam);
+      // Clear the URL parameter after setting the filter
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, '', newUrl);
+    }
+  }, []);
   // Use an enum-like type for roster status
   type RosterStatus = 'not-started' | 'partial' | 'complete';
   const [gameRosterStatus, setGameRosterStatus] = useState<Record<number, RosterStatus>>({});
@@ -129,7 +141,7 @@ export default function GamesList({
     // Check each completed game's stats status
     completedGameIds.forEach(gameId => {
       const scores = scoresMap[gameId];
-      
+
       if (scores) {
         // If we have scores, mark as complete
         statsStatuses[gameId] = 'complete';

@@ -47,10 +47,17 @@ export default function Games() {
     queryKey: ['/api/seasons/active'],
   });
   
-  // Check for edit parameter in the URL and handle edit game loading
+  // Check for URL parameters and handle edit game loading and status filtering
   useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    
+    // Handle status filter from URL
+    const statusParam = searchParams.get('status');
+    if (statusParam && ['upcoming', 'completed', 'in-progress', 'forfeit'].includes(statusParam)) {
+      // This will be handled by GamesList component's statusFilter prop
+    }
+    
     if (games.length > 0) {
-      const searchParams = new URLSearchParams(window.location.search);
       // Support both editId (legacy) and edit (new) parameters
       const editId = searchParams.get('editId') || searchParams.get('edit');
       // Get the returnTo parameter if it exists
