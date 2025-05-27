@@ -153,21 +153,6 @@ export class DatabaseStorage implements IStorage {
 
   // Game methods
   async getGames(): Promise<Game[]> {
-    // First, let's test the raw SQL query to see what's happening
-    console.log('=== DEBUGGING GAMES JOIN ===');
-    const rawTest = await db.execute(sql`
-      SELECT 
-        g.id as game_id, 
-        g.status_id, 
-        gs.id as status_table_id, 
-        gs.name as status_name
-      FROM games g
-      LEFT JOIN game_statuses gs ON g.status_id = gs.id
-      ORDER BY g.id 
-      LIMIT 3
-    `);
-    console.log('Raw SQL join test:', rawTest.rows);
-
     const results = await db
       .select({
         games,
@@ -176,22 +161,10 @@ export class DatabaseStorage implements IStorage {
         players,
       })
       .from(games)
-      .leftJoin(gameStatuses, eq(games.status_id, gameStatuses.id))
+      .leftJoin(gameStatuses, eq(games.statusId, gameStatuses.id))
       .leftJoin(seasons, eq(games.seasonId, seasons.id))
       .leftJoin(players, eq(games.awardWinnerId, players.id))
       .orderBy(desc(games.date), desc(games.time));
-
-    // Debug the join results
-    console.log('Storage getGames Debug - First 3 raw join results:');
-    results.slice(0, 3).forEach((row, i) => {
-      console.log(`Row ${i}:`, {
-        gameId: row.games.id,
-        statusId: row.games.statusId,
-        gameStatusesObject: row.gameStatuses,
-        statusName: row.gameStatuses?.name,
-        willDefaultToUpcoming: !row.gameStatuses?.name
-      });
-    });
 
     return results.map(row => ({
       id: row.games.id,
@@ -257,7 +230,7 @@ export class DatabaseStorage implements IStorage {
         .from(games)
         .leftJoin(opponents, eq(games.opponentId, opponents.id))
         .leftJoin(seasons, eq(games.seasonId, seasons.id))
-        .leftJoin(gameStatuses, eq(games.status_id, gameStatuses.id))
+        .leftJoin(gameStatuses, eq(games.statusId, gameStatuses.id))
         .where(eq(games.id, id))
         .limit(1);
 
