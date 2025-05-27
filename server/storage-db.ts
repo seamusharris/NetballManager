@@ -179,8 +179,9 @@ export class DatabaseStorage implements IStorage {
       // Create a map for quick status lookup (simple approach like opponents)
       const statusMap = new Map();
       allGameStatuses.forEach(status => {
-        statusMap.set(status.id, status);
-        console.log(`🗂️ Added status to map: ID ${status.id} -> ${status.name}`);
+        const statusId = Number(status.id); // Ensure number type
+        statusMap.set(statusId, status);
+        console.log(`🗂️ Added status to map: ID ${statusId} (${typeof statusId}) -> ${status.name}`);
       });
 
       console.log('🏢 FETCHING OPPONENTS...');
@@ -203,11 +204,15 @@ export class DatabaseStorage implements IStorage {
         console.log(`   - statusId: ${game.statusId}`);
         console.log(`   - opponentId: ${game.opponentId}`);
 
-        // Get game status from map (simple lookup like opponents)
-        const gameStatus = game.statusId ? statusMap.get(game.statusId) : null;
-        console.log(`   - StatusId: ${game.statusId}, Found gameStatus: ${gameStatus ? 'YES' : 'NO'}`);
+        // Get game status from map (ensure consistent types like opponents)
+        const statusIdToLookup = game.statusId ? Number(game.statusId) : null;
+        const gameStatus = statusIdToLookup ? statusMap.get(statusIdToLookup) : null;
+        console.log(`   - StatusId: ${game.statusId} (${typeof game.statusId}) -> ${statusIdToLookup} (${typeof statusIdToLookup})`);
+        console.log(`   - Found gameStatus: ${gameStatus ? 'YES' : 'NO'}`);
         if (gameStatus) {
           console.log(`   - Status name: ${gameStatus.name}`);
+        } else if (game.statusId) {
+          console.log(`   - ❌ Status lookup failed for ID ${game.statusId}`);
         }
 
         // Get opponent from map (simple lookup that works)
