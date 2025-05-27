@@ -6,14 +6,15 @@ interface ScoreBadgeProps {
   teamScore: number;
   opponentScore: number;
   className?: string;
-  size?: 'sm' | 'md' | 'default';
+  size?: 'sm' | 'md' | 'default' | 'lg';
 }
 
 export function ScoreBadge({ teamScore, opponentScore, className, size = 'default' }: ScoreBadgeProps) {
   const sizeClasses = {
     'sm': 'px-2 py-1 text-xs',
     'md': 'px-2.5 py-1 text-sm', 
-    'default': 'px-3 py-1.5 text-sm'
+    'default': 'px-3 py-1.5 text-sm',
+    'lg': 'px-4 py-2 text-base'
   };
 
   const getResultColor = () => {
