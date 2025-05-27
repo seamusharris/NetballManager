@@ -264,22 +264,31 @@ export class DatabaseStorage implements IStorage {
       console.log(`🔗 Game statusId: ${row.games.statusId}`);
       console.log(`🏢 Game opponentId: ${row.games.opponentId}`);
 
-      // Simplified status resolution - just use row.gameStatuses directly
+      // Fix: Use the correct gameStatuses key (it exists but our detection was wrong)
       let gameStatus = null;
       console.log('🔍 GAME STATUS RESOLUTION PROCESS:');
-      console.log(`   - row.gameStatuses exists: ${!!row.gameStatuses}`);
-      console.log(`   - row.gameStatuses value:`, row.gameStatuses);
-      
-      // Use row.gameStatuses directly if it exists and has valid data
-      if (row.gameStatuses && typeof row.gameStatuses === 'object') {
-        console.log('✅ Using row.gameStatuses directly');
+      console.log('🔑 ALL AVAILABLE KEYS IN ROW:', Object.keys(row));
+
+      // The join works correctly - gameStatuses is the right key
+      if (row.gameStatuses && typeof row.gameStatuses === 'object' && row.gameStatuses.id) {
+        console.log('✅ Found gameStatus data at gameStatuses key:', row.gameStatuses);
         gameStatus = row.gameStatuses;
       } else {
         console.log('❌ No valid gameStatus found');
+        console.log('🔸 row.gameStatuses exists:', !!row.gameStatuses);
+        console.log('🔸 row.gameStatuses value:', row.gameStatuses);
+        console.log('🔸 row.gameStatuses type:', typeof row.gameStatuses);
+
+        // Emergency fallback - log everything to find the issue
+        Object.keys(row).forEach(key => {
+          if (key.toLowerCase().includes('status') || key.toLowerCase().includes('game')) {
+            console.log(`   - ${key}:`, typeof row[key], row[key]);
+          }
+        });
       }
       // Build the final game object
       console.log(`🏗️ CONSTRUCTING FINAL GAME OBJECT FOR GAME ${row.games.id}:`);
-      
+
       const gameObject = {
         id: row.games.id,
         date: row.games.date,
