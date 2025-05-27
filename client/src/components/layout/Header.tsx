@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
-import { Bell, Search, ChevronDown, Home, Users, ClipboardList, Calendar, CalendarRange, Flag, BarChart, Database, Zap, Settings as SettingsIcon, Trophy } from 'lucide-react';
+import { Bell, Search, ChevronDown, Home, Users, ClipboardList, Calendar, CalendarRange, Flag, BarChart, Database, Zap, Settings as SettingsIcon, Trophy, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar } from '@/components/ui/avatar';
-import { Menu } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,7 +12,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Link } from 'wouter';
 import { cn } from '@/lib/utils';
-import { Trophy } from 'lucide-react';
 
 interface HeaderProps {
   setIsMobileOpen: (open: boolean) => void;
