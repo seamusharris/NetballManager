@@ -174,11 +174,13 @@ export class DatabaseStorage implements IStorage {
       console.log('📊 FETCHING GAME STATUSES...');
       const allGameStatuses = await db.select().from(gameStatuses);
       console.log(`✅ Retrieved ${allGameStatuses.length} game statuses`);
+      console.log('📊 Game statuses:', allGameStatuses.map(s => ({ id: s.id, name: s.name })));
 
       // Create a map for quick status lookup
       const statusMap = new Map();
       allGameStatuses.forEach(status => {
         statusMap.set(status.id, status);
+        console.log(`🗂️ Added status to map: ID ${status.id} -> ${status.name}`);
       });
 
       // Fetch all opponents separately
@@ -203,11 +205,18 @@ export class DatabaseStorage implements IStorage {
         console.log(`   - opponentId: ${game.opponentId}`);
 
         // Get game status from map
+        console.log(`   - Looking up statusId ${game.statusId} in map...`);
+        console.log(`   - Map has status ${game.statusId}: ${statusMap.has(game.statusId)}`);
+        console.log(`   - Map size: ${statusMap.size}`);
+        console.log(`   - Map keys: [${Array.from(statusMap.keys()).join(', ')}]`);
+        
         const gameStatus = game.statusId ? statusMap.get(game.statusId) : null;
         console.log(`   - Found gameStatus: ${gameStatus ? 'YES' : 'NO'}`);
         if (gameStatus) {
           console.log(`   - Status name: ${gameStatus.name}`);
           console.log(`   - Status displayName: ${gameStatus.displayName}`);
+        } else if (game.statusId) {
+          console.log(`   - ❌ Status lookup failed for ID ${game.statusId}`);
         }
 
         // Get opponent from map
