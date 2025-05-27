@@ -115,12 +115,14 @@ export function ScoreDisplay({ teamScore, opponentScore, compact = false, classN
 
   if (compact) {
     return (
-      <div className={cn(
-        'inline-flex items-center px-3 py-1 rounded border text-gray-900',
-        getResultLightBgColor(result),
-        getResultBorderColor(result),
-        className
-      )}>
+      <div
+        className={cn(
+          'inline-flex items-center px-3 py-1 rounded border text-gray-900',
+          getResultLightBgColor(result),
+          getResultBorderColor(result),
+          className
+        )}
+      >
         <span className={teamScore > opponentScore ? "font-bold" : ""}>{teamScore}</span>
         <span className="mx-2">-</span>
         <span className={opponentScore > teamScore ? "font-bold" : ""}>{opponentScore}</span>
