@@ -110,7 +110,7 @@ export async function fixGameStatusesConstraints(): Promise<boolean> {
       }
     ];
 
-    // Insert each status individually to ensure proper ID assignment
+    // Insert each status using Drizzle ORM to ensure proper column mapping
     for (const status of initialStatuses) {
       await db.execute(sql`
         INSERT INTO game_statuses (
@@ -122,7 +122,7 @@ export async function fixGameStatusesConstraints(): Promise<boolean> {
           ${status.colorClass}, ${status.sortOrder}, ${status.isActive}
         );
       `);
-    }
+    }</old_str>
 
     log("Recreated game_statuses with standard entries", "migration");
 
