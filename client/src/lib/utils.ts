@@ -262,7 +262,26 @@ export function getWinLoseClass(status: 'Win' | 'Loss' | 'Draw'): string {
 }
 
 /**
- * Check if a game is a forfeit game
+ * Check if a game status represents a forfeit game (database-driven)
+ * @param gameStatus The GameStatus object from the database
+ * @returns true if the game status indicates a forfeit
+ */
+export function isForfeitStatus(gameStatus: { name: string }): boolean {
+  return gameStatus.name.startsWith('forfeit-');
+}
+
+/**
+ * Check if a game allows statistics based on its status (database-driven)
+ * @param gameStatus The GameStatus object from the database
+ * @returns true if the game status allows statistics
+ */
+export function gameStatusAllowsStatistics(gameStatus: { allowsStatistics: boolean }): boolean {
+  return gameStatus.allowsStatistics;
+}
+
+/**
+ * Legacy function - Check if a game is a forfeit game
+ * @deprecated Use isForfeitStatus with GameStatus object instead
  * @param game The game object or game status string
  * @returns true if the game is any type of forfeit game
  */
@@ -274,7 +293,8 @@ export function isForfeitGame(game: { status?: string | null } | string | undefi
 }
 
 /**
- * Check if a game allows statistics to be recorded
+ * Legacy function - Check if a game allows statistics to be recorded
+ * @deprecated Use gameStatusAllowsStatistics with GameStatus object instead
  * @param game The game object or game status string
  * @returns true if the game allows statistics (not forfeit, not BYE)
  */
@@ -286,7 +306,31 @@ export function gameAllowsStatistics(game: { status?: string, isBye?: boolean } 
 }
 
 /**
- * Get the fixed score for a forfeit game
+ * Get the fixed score for a forfeit game (database-driven)
+ * @param gameStatus The GameStatus object from the database
+ * @returns The forfeit game scores by quarter and final
+ */
+export function getForfeitGameScoreFromStatus(gameStatus: { name: string, points: number, opponentPoints: number }) {
+  const isWin = gameStatus.name === 'forfeit-win';
+  const teamScore = gameStatus.points;
+  const opponentScore = gameStatus.opponentPoints;
+  
+  return {
+    quarterScores: {
+      '1': { for: isWin ? teamScore : 0, against: isWin ? 0 : opponentScore },
+      '2': { for: 0, against: 0 },
+      '3': { for: 0, against: 0 },
+      '4': { for: 0, against: 0 }
+    },
+    teamScore,
+    opponentScore,
+    finalScore: { for: teamScore, against: opponentScore }
+  };
+}
+
+/**
+ * Legacy function - Get the fixed score for a forfeit game
+ * @deprecated Use getForfeitGameScoreFromStatus with GameStatus object instead
  * @param game The game object or game status string
  * @returns The forfeit game scores by quarter and final
  */

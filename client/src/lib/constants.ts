@@ -19,29 +19,12 @@ export const POSITION_GROUPS = {
   defenders: ['GD', 'GK'] as Position[]
 };
 
-// Game status constants
-export const GAME_STATUSES: GameStatus[] = ["upcoming", "in-progress", "completed", "forfeit-win", "forfeit-loss", "bye", "abandoned"];
+// Game status constants are now managed through the database
+// Use the useGameStatuses hook to fetch current game status data
+// All game status information (names, labels, points, etc.) comes from the database
 
-export const GAME_STATUS_LABELS: Record<GameStatus, string> = {
-  'upcoming': 'Upcoming',
-  'in-progress': 'In Progress',
-  'completed': 'Completed', 
-  'forfeit-win': 'Forfeit Win',
-  'forfeit-loss': 'Forfeit Loss',
-  'bye': 'BYE',
-  'abandoned': 'Abandoned'
-};
-
-// Competition points system
-export const COMPETITION_POINTS: Record<GameStatus, number> = {
-  'upcoming': 0,
-  'in-progress': 0,
-  'completed': 0, // Points determined by win/loss from score
-  'forfeit-win': 4,
-  'forfeit-loss': 0,
-  'bye': 4, // BYE rounds awarded same points as a win
-  'abandoned': 2 // Abandoned games typically award some points (like a draw)
-};
+// Legacy type for backward compatibility - actual statuses come from database
+export type LegacyGameStatus = "upcoming" | "in-progress" | "completed" | "forfeit-win" | "forfeit-loss" | "bye" | "abandoned";
 
 // UI constants
 export const QUARTERS = [1, 2, 3, 4] as const;
