@@ -157,201 +157,118 @@ export class DatabaseStorage implements IStorage {
     console.log('⭐ TIMESTAMP:', new Date().toISOString());
     console.log('⭐ METHOD: DatabaseStorage.getGames()');
     console.log('⭐ FILE: server/storage-db.ts');
-    console.log('⭐ QUERY: Building join query with games, gameStatuses, opponents, players');
+    console.log('⭐ APPROACH: Fetching games, statuses, and opponents separately then combining');
 
-    // First, let's verify the data exists in the database
-    console.log('\n🔍 DATABASE VERIFICATION CHECKS:');
     try {
-      // Check games table sample
-      const gamesSample = await db.execute(sql`
-        SELECT id, date, status_id, opponent_id 
-        FROM games 
-        ORDER BY id 
-        LIMIT 3
-      `);
-      console.log('📋 Sample games in database:', gamesSample.rows);
-
-      // Check game_statuses table
-      const statusesSample = await db.execute(sql`
-        SELECT id, name, display_name, is_completed 
-        FROM game_statuses 
-        ORDER BY id 
-        LIMIT 5
-      `);
-      console.log('📊 Available game statuses:', statusesSample.rows);
-
-      // Check for games with NULL statusId
-      const nullStatusCount = await db.execute(sql`
-        SELECT COUNT(*) as count 
-        FROM games 
-        WHERE status_id IS NULL
-      `);
-      console.log('⚠️ Games with NULL status_id:', nullStatusCount.rows[0].count);
-
-      // Test the join manually with SQL
-      const joinTest = await db.execute(sql`
-        SELECT 
-          g.id as game_id, 
-          g.status_id, 
-          gs.id as status_table_id, 
-          gs.name as status_name,
-          gs.display_name,
-          gs.is_completed
-        FROM games g
-        LEFT JOIN game_statuses gs ON g.status_id = gs.id
-        ORDER BY g.id 
-        LIMIT 3
-      `);
-      console.log('🔗 Manual join test results:', joinTest.rows);
-
-    } catch (verificationError) {
-      console.error('❌ Database verification failed:', verificationError);
-    }
-
-    // Log the exact SQL we're executing
-    console.log('🔧 BUILDING DRIZZLE QUERY:');
-    console.log('   - FROM: games table');
-    console.log('   - LEFT JOIN: gameStatuses ON games.statusId = gameStatuses.id');
-    console.log('   - LEFT JOIN: opponents ON games.opponentId = opponents.id');
-    console.log('   - LEFT JOIN: players ON games.awardWinnerId = players.id');
-    console.log('   - ORDER BY: games.date DESC, games.time DESC');
-
-    // Execute the query with error handling
-    let results;
-    try {
-      console.log('🚀 EXECUTING DRIZZLE QUERY...');
-      results = await db
+      // Fetch games first (no joins to avoid Drizzle empty object issues)
+      console.log('📋 FETCHING GAMES...');
+      const gamesResult = await db
         .select()
         .from(games)
-        .leftJoin(gameStatuses, eq(games.statusId, gameStatuses.id))
-        .leftJoin(opponents, eq(games.opponentId, opponents.id))
         .leftJoin(players, eq(games.awardWinnerId, players.id))
         .orderBy(desc(games.date), desc(games.time));
-      console.log('✅ QUERY EXECUTED SUCCESSFULLY');
-    } catch (queryError) {
-      console.error('❌ QUERY EXECUTION FAILED:', queryError);
-      throw queryError;
+
+      console.log(`✅ Retrieved ${gamesResult.length} games from database`);
+
+      // Fetch all game statuses separately
+      console.log('📊 FETCHING GAME STATUSES...');
+      const allGameStatuses = await db.select().from(gameStatuses);
+      console.log(`✅ Retrieved ${allGameStatuses.length} game statuses`);
+
+      // Create a map for quick status lookup
+      const statusMap = new Map();
+      allGameStatuses.forEach(status => {
+        statusMap.set(status.id, status);
+      });
+
+      // Fetch all opponents separately
+      console.log('🏢 FETCHING OPPONENTS...');
+      const allOpponents = await db.select().from(opponents);
+      console.log(`✅ Retrieved ${allOpponents.length} opponents`);
+
+      // Create a map for quick opponent lookup
+      const opponentMap = new Map();
+      allOpponents.forEach(opponent => {
+        opponentMap.set(opponent.id, opponent);
+      });
+
+      console.log('🔄 COMBINING DATA WITH JAVASCRIPT LOGIC...');
+
+      // Map games with their related data using JavaScript
+      const combinedGames = gamesResult.map((row, index) => {
+        const game = row.games;
+
+        console.log(`🎮 Processing game ${index + 1}/${gamesResult.length} (ID: ${game.id})`);
+        console.log(`   - statusId: ${game.statusId}`);
+        console.log(`   - opponentId: ${game.opponentId}`);
+
+        // Get game status from map
+        const gameStatus = game.statusId ? statusMap.get(game.statusId) : null;
+        console.log(`   - Found gameStatus: ${gameStatus ? 'YES' : 'NO'}`);
+        if (gameStatus) {
+          console.log(`   - Status name: ${gameStatus.name}`);
+          console.log(`   - Status displayName: ${gameStatus.displayName}`);
+        }
+
+        // Get opponent from map
+        const opponent = game.opponentId ? opponentMap.get(game.opponentId) : null;
+        console.log(`   - Found opponent: ${opponent ? 'YES' : 'NO'}`);
+        if (opponent) {
+          console.log(`   - Opponent name: ${opponent.teamName}`);
+        }
+
+        // Build the final game object
+        const gameObject = {
+          id: game.id,
+          date: game.date,
+          time: game.time,
+          opponentId: game.opponentId,
+          statusId: game.statusId,
+          round: game.round,
+          seasonId: game.seasonId,
+          notes: game.notes,
+          awardWinnerId: game.awardWinnerId,
+          isBye: gameStatus?.name === 'bye',
+          venue: game.venue,
+          teamScore: game.teamScore ?? 0,
+          opponentScore: game.opponentScore ?? 0,
+          gameStatus: gameStatus ? {
+            name: gameStatus.name,
+            displayName: gameStatus.displayName,
+            isCompleted: gameStatus.isCompleted,
+            allowsStatistics: gameStatus.allowsStatistics,
+            colorClass: gameStatus.colorClass
+          } : null,
+          opponent: opponent ? {
+            teamName: opponent.teamName,
+            primaryColor: opponent.primaryColor,
+            secondaryColor: opponent.secondaryColor
+          } : null,
+          awardWinner: row.players ? {
+            displayName: row.players.displayName,
+            firstName: row.players.firstName,
+            lastName: row.players.lastName
+          } : null
+        };
+
+        console.log(`   ✅ Final game object: status=${gameObject.gameStatus?.name || 'null'}, opponent=${gameObject.opponent?.teamName || 'null'}, isBye=${gameObject.isBye}`);
+
+        return gameObject;
+      });
+
+      console.log('\n📊 FINAL SUMMARY:');
+      const gamesWithStatus = combinedGames.filter(g => g.gameStatus !== null).length;
+      const gamesWithOpponent = combinedGames.filter(g => g.opponent !== null).length;
+      console.log(`✅ Games with status: ${gamesWithStatus}/${combinedGames.length}`);
+      console.log(`✅ Games with opponent: ${gamesWithOpponent}/${combinedGames.length}`);
+
+      console.log('\n🏁 STORAGE-DB.TS: getGames() METHOD COMPLETE');
+      return combinedGames;
+
+    } catch (error) {
+      console.error('❌ Error in getGames():', error);
+      throw error;
     }
-
-    console.log('🚨 COMPREHENSIVE DRIZZLE DEBUGGING START');
-    console.log('📊 Query returned', results.length, 'results');
-
-    // Log sample data for first 3 records
-    if (results.length > 0) {
-      for (let i = 0; i < Math.min(3, results.length); i++) {
-        const row = results[i];
-        console.log(`\n🔍 ROW ${i + 1} ANALYSIS:`);
-        console.log('🔑 Available keys:', Object.keys(row));
-        console.log('🎮 games object:', JSON.stringify(row.games, null, 2));
-        console.log('📋 gameStatuses object:', JSON.stringify(row.gameStatuses, null, 2));
-        console.log('🎯 gameStatuses type:', typeof row.gameStatuses);
-        console.log('🎯 gameStatuses keys:', row.gameStatuses ? Object.keys(row.gameStatuses) : 'null/undefined');
-        console.log('🆔 gameStatuses.id:', row.gameStatuses?.id);
-        console.log('📝 gameStatuses.name:', row.gameStatuses?.name);
-        console.log('🏆 opponents object:', row.opponents ? JSON.stringify(row.opponents, null, 2) : 'null');
-        console.log('👤 players object:', row.players ? JSON.stringify(row.players, null, 2) : 'null');
-      }
-    }
-    console.log('🚨 DEBUGGING END');
-
-    console.log('🔄 STARTING RESULTS MAPPING PROCESS');
-    console.log(`📊 Processing ${results.length} database rows`);
-
-    return results.map((row, index) => {
-      console.log(`\n🎮 PROCESSING GAME ROW ${index + 1}/${results.length}`);
-      console.log(`🆔 Game ID: ${row.games.id}`);
-      console.log(`📅 Game Date: ${row.games.date}`);
-      console.log(`🔗 Game statusId: ${row.games.statusId}`);
-      console.log(`🏢 Game opponentId: ${row.games.opponentId}`);
-
-      // The join works correctly - gameStatuses is the right key
-      console.log('🔍 DEBUGGING GAME STATUS DETECTION:');
-      console.log('🔸 row.gameStatuses exists:', !!row.gameStatuses);
-      console.log('🔸 row.gameStatuses value:', JSON.stringify(row.gameStatuses, null, 2));
-      console.log('🔸 row.gameStatuses type:', typeof row.gameStatuses);
-      console.log('🔸 row.gameStatuses === null:', row.gameStatuses === null);
-      console.log('🔸 row.gameStatuses === undefined:', row.gameStatuses === undefined);
-      console.log('🔸 Object.keys(row.gameStatuses):', row.gameStatuses ? Object.keys(row.gameStatuses) : 'N/A');
-      console.log('🔸 Object.keys length:', row.gameStatuses ? Object.keys(row.gameStatuses).length : 'N/A');
-      console.log('🔸 row.gameStatuses.id:', row.gameStatuses?.id);
-      console.log('🔸 row.gameStatuses.name:', row.gameStatuses?.name);
-
-      // Debugging opponents data
-      console.log('🏢 DEBUGGING OPPONENT DETECTION:');
-      console.log('🔸 row.opponents exists:', !!row.opponents);
-      console.log('🔸 row.opponents value:', JSON.stringify(row.opponents, null, 2));
-      console.log('🔸 row.opponents type:', typeof row.opponents);
-      console.log('🔸 Object.keys(row.opponents):', row.opponents ? Object.keys(row.opponents) : 'N/A');
-      console.log('🔸 Object.keys length:', row.opponents ? Object.keys(row.opponents).length : 'N/A');
-      console.log('🔸 row.opponents.id:', row.opponents?.id);
-      console.log('🔸 row.opponents.teamName:', row.opponents?.teamName);
-
-      // Declare the gameStatus variable
-      let gameStatus = null;
-
-      // Check if gameStatuses has actual data (not just an empty object)
-      if (row.gameStatuses && row.gameStatuses.id) {
-        console.log('✅ Found valid gameStatus with ID:', row.gameStatuses.id);
-        gameStatus = row.gameStatuses;
-      } else {
-        console.log('❌ No valid gameStatus found');
-        console.log('   - gameStatuses exists:', !!row.gameStatuses);
-        console.log('   - gameStatuses.id exists:', row.gameStatuses?.id);
-        console.log('   - Full gameStatuses object:', JSON.stringify(row.gameStatuses));
-      }
-      // Build the final game object
-      console.log(`🏗️ CONSTRUCTING FINAL GAME OBJECT FOR GAME ${row.games.id}:`);
-
-      const gameObject = {
-        id: row.games.id,
-        date: row.games.date,
-        time: row.games.time,
-        opponentId: row.games.opponentId,
-        statusId: row.games.statusId,
-        round: row.games.round,
-        seasonId: row.games.seasonId,
-        notes: row.games.notes,
-        awardWinnerId: row.games.awardWinnerId,
-        isBye: gameStatus?.name === 'bye',
-        venue: row.games.venue,
-        teamScore: row.games.teamScore ?? 0,
-        opponentScore: row.games.opponentScore ?? 0,
-        gameStatus: gameStatus ? {
-          name: gameStatus.name,
-          displayName: gameStatus.displayName,
-          isCompleted: gameStatus.isCompleted,
-          allowsStatistics: gameStatus.allowsStatistics,
-          colorClass: gameStatus.colorClass
-        } : null,
-        opponent: (row.opponents && row.opponents.id) ? {
-          teamName: row.opponents.teamName,
-          primaryColor: row.opponents.primaryColor,
-          secondaryColor: row.opponents.secondaryColor
-        } : null,
-        awardWinner: row.players ? {
-          displayName: row.players.displayName,
-          firstName: row.players.firstName,
-          lastName: row.players.lastName
-        } : null
-      };
-
-      console.log('📋 Final game object properties:');
-      console.log(`   - id: ${gameObject.id}`);
-      console.log(`   - statusId: ${gameObject.statusId}`);
-      console.log(`   - gameStatus: ${gameObject.gameStatus ? 'PRESENT' : 'NULL'}`);
-      if (gameObject.gameStatus) {
-        console.log(`   - gameStatus.name: ${gameObject.gameStatus.name}`);
-        console.log(`   - gameStatus.displayName: ${gameObject.gameStatus.displayName}`);
-        console.log(`   - gameStatus.isCompleted: ${gameObject.gameStatus.isCompleted}`);
-      }
-      console.log(`   - opponent: ${gameObject.opponent ? 'PRESENT' : 'NULL'}`);
-      console.log(`   - isBye: ${gameObject.isBye}`);
-
-      return gameObject;
-    });
-
-    console.log('\n🏁 STORAGE-DB.TS: getGames() METHOD COMPLETE');
-    console.log(`📊 Returning ${results.length} games to caller`);
   }
 
   async getGame(id: number): Promise<Game | undefined> {
