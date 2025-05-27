@@ -56,8 +56,23 @@ export default function Dashboard() {
     );
   }
 
+  console.log('=== Dashboard.tsx render state ===', {
+    isLoading,
+    isLoadingPlayers,
+    isLoadingGames, 
+    isLoadingOpponents,
+    isLoadingSeasons,
+    isLoadingActiveSeason,
+    playersLength: players?.length,
+    gamesLength: games?.length,
+    opponentsLength: opponents?.length,
+    seasonsLength: seasons?.length,
+    activeSeason
+  });
+
   // Show loading state only if any query is still loading
   if (isLoading) {
+    console.log('=== Dashboard returning loading state ===');
     return (
       <div className="p-6">
         <h1 className="text-2xl font-bold mb-4">Loading Dashboard...</h1>
@@ -72,6 +87,8 @@ export default function Dashboard() {
       </div>
     );
   }
+
+  console.log('=== Dashboard about to render DashboardSummary ===');
 
   return (
     <>
