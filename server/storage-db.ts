@@ -7,6 +7,7 @@ import { gameStats, type GameStat, type InsertGameStat } from "@shared/schema";
 import { Position } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
+import { gameStatuses } from "@shared/schema";
 
 export interface IStorage {
   // User methods
@@ -20,21 +21,21 @@ export interface IStorage {
   createPlayer(player: InsertPlayer): Promise<Player>;
   updatePlayer(id: number, player: Partial<InsertPlayer>): Promise<Player | undefined>;
   deletePlayer(id: number): Promise<boolean>;
-  
+
   // Opponent methods
   getOpponents(): Promise<Opponent[]>;
   getOpponent(id: number): Promise<Opponent | undefined>;
   createOpponent(opponent: InsertOpponent): Promise<Opponent>;
   updateOpponent(id: number, opponent: Partial<InsertOpponent>): Promise<Opponent | undefined>;
   deleteOpponent(id: number): Promise<boolean>;
-  
+
   // Game methods
   getGames(): Promise<Game[]>;
   getGame(id: number): Promise<Game | undefined>;
   createGame(game: InsertGame): Promise<Game>;
   updateGame(id: number, game: Partial<InsertGame>): Promise<Game | undefined>;
   deleteGame(id: number): Promise<boolean>;
-  
+
   // Roster methods
   getRostersByGame(gameId: number): Promise<Roster[]>;
   getRoster(id: number): Promise<Roster | undefined>;
@@ -42,7 +43,7 @@ export interface IStorage {
   updateRoster(id: number, roster: Partial<InsertRoster>): Promise<Roster | undefined>;
   deleteRoster(id: number): Promise<boolean>;
   deleteRostersByGame(gameId: number): Promise<boolean>;
-  
+
   // Game Stats methods
   getGameStatsByGame(gameId: number): Promise<GameStat[]>;
   getGameStat(id: number): Promise<GameStat | undefined>;
@@ -150,12 +151,135 @@ export class DatabaseStorage implements IStorage {
 
   // Game methods
   async getGames(): Promise<Game[]> {
-    return await db.select().from(games);
+    try {
+      const result = await db
+        .select()
+        .from(games)
+        .leftJoin(opponents, eq(games.opponentId, opponents.id))
+        .leftJoin(seasons, eq(games.seasonId, seasons.id))
+        .leftJoin(gameStatuses, eq(games.statusId, gameStatuses.id))
+        .orderBy(games.date);
+
+      return result.map(row => ({
+        id: row.games.id,
+        date: row.games.date,
+        time: row.games.time,
+        opponentId: row.games.opponentId,
+        statusId: row.games.statusId,
+        round: row.games.round,
+        seasonId: row.games.seasonId,
+        notes: row.games.notes,
+        awardWinnerId: row.games.awardWinnerId,
+        // Include opponent details if available
+        opponent: row.opponents ? {
+          id: row.opponents.id,
+          teamName: row.opponents.teamName,
+          primaryContact: row.opponents.primaryContact,
+          contactInfo: row.opponents.contactInfo
+        } : undefined,
+        // Include season details if available
+        season: row.seasons ? {
+          id: row.seasons.id,
+          name: row.seasons.name,
+          startDate: row.seasons.startDate,
+          endDate: row.seasons.endDate,
+          isActive: row.seasons.isActive,
+          type: row.seasons.type,
+          year: row.seasons.year,
+          displayOrder: row.seasons.displayOrder
+        } : undefined,
+        // Include status information from the game_statuses table
+        gameStatus: row.game_statuses ? {
+          id: row.game_statuses.id,
+          name: row.game_statuses.name,
+          displayName: row.game_statuses.displayName,
+          points: row.game_statuses.points,
+          opponentPoints: row.game_statuses.opponentPoints,
+          isCompleted: row.game_statuses.isCompleted,
+          allowsStatistics: row.game_statuses.allowsStatistics,
+          requiresOpponent: row.game_statuses.requiresOpponent,
+          colorClass: row.game_statuses.colorClass,
+          sortOrder: row.game_statuses.sortOrder,
+          isActive: row.game_statuses.isActive
+        } : undefined,
+        // Map status field to the actual status name from game_statuses table
+        status: row.game_statuses?.name || (row.games.completed ? 'completed' : 'upcoming'),
+        // Legacy fields for backward compatibility
+        completed: row.game_statuses?.isCompleted ?? row.games.completed,
+        isBye: row.games.opponentId === null
+      }));
+    } catch (error) {
+      console.error('Error fetching games:', error);
+      throw error;
+    }
   }
 
   async getGame(id: number): Promise<Game | undefined> {
-    const [game] = await db.select().from(games).where(eq(games.id, id));
-    return game || undefined;
+    try {
+      const result = await db
+        .select()
+        .from(games)
+        .leftJoin(opponents, eq(games.opponentId, opponents.id))
+        .leftJoin(seasons, eq(games.seasonId, seasons.id))
+        .leftJoin(gameStatuses, eq(games.statusId, gameStatuses.id))
+        .where(eq(games.id, id))
+        .limit(1);
+
+      if (result.length === 0) return undefined;
+
+      const row = result[0];
+      return {
+        id: row.games.id,
+        date: row.games.date,
+        time: row.games.time,
+        opponentId: row.games.opponentId,
+        statusId: row.games.statusId,
+        round: row.games.round,
+        seasonId: row.games.seasonId,
+        notes: row.games.notes,
+        awardWinnerId: row.games.awardWinnerId,
+        // Include opponent details if available
+        opponent: row.opponents ? {
+          id: row.opponents.id,
+          teamName: row.opponents.teamName,
+          primaryContact: row.opponents.primaryContact,
+          contactInfo: row.opponents.contactInfo
+        } : undefined,
+        // Include season details if available
+        season: row.seasons ? {
+          id: row.seasons.id,
+          name: row.seasons.name,
+          startDate: row.seasons.startDate,
+          endDate: row.seasons.endDate,
+          isActive: row.seasons.isActive,
+          type: row.seasons.type,
+          year: row.seasons.year,
+          displayOrder: row.seasons.displayOrder
+        } : undefined,
+        // Include status information from the game_statuses table
+        gameStatus: row.game_statuses ? {
+          id: row.game_statuses.id,
+          name: row.game_statuses.name,
+          displayName: row.game_statuses.displayName,
+          points: row.game_statuses.points,
+          opponentPoints: row.game_statuses.opponentPoints,
+          isCompleted: row.game_statuses.isCompleted,
+          allowsStatistics: row.game_statuses.allowsStatistics,
+          requiresOpponent: row.game_statuses.requiresOpponent,
+          colorClass: row.game_statuses.colorClass,
+          sortOrder: row.game_statuses.sortOrder,
+          isActive: row.game_statuses.isActive
+        } : undefined,
+        // Map status field to the actual status name from game_statuses table
+        status: row.game_statuses?.name || (row.games.completed ? 'completed' : 'upcoming'),
+        // Legacy fields for backward compatibility
+        completed: row.game_statuses?.isCompleted ?? row.games.completed,
+        isBye: row.games.opponentId === null
+      };
+    } catch (error) {
+      console.error('Error fetching game:', error);
+      throw error;
+    }
   }
 
   async createGame(insertGame: InsertGame): Promise<Game> {
@@ -179,7 +303,7 @@ export class DatabaseStorage implements IStorage {
     // Delete related rosters and game stats first
     await this.deleteRostersByGame(id);
     await this.deleteGameStatsByGame(id);
-    
+
     const result = await db
       .delete(games)
       .where(eq(games.id, id))
@@ -276,3 +400,4 @@ export class DatabaseStorage implements IStorage {
 
 // Export the database storage implementation
 export const storage = new DatabaseStorage();
+```
