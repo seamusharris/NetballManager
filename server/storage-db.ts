@@ -220,7 +220,7 @@ export class DatabaseStorage implements IStorage {
         awardWinnerLastName: players.lastName,
       })
       .from(games)
-      .innerJoin(gameStatuses, eq(games.statusId, gameStatuses.id))
+      .leftJoin(gameStatuses, eq(games.statusId, gameStatuses.id))
       .leftJoin(opponents, eq(games.opponentId, opponents.id))
       .leftJoin(players, eq(games.awardWinnerId, players.id))
       .orderBy(desc(games.date), desc(games.time));
@@ -271,8 +271,8 @@ export class DatabaseStorage implements IStorage {
         time: row.time,
         opponentId: row.opponentId,
         statusId: row.statusId,
-        status: statusName,
-        completed: isCompleted,
+        status: statusName || 'upcoming',
+        completed: isCompleted ?? false,
         round: row.round,
         seasonId: row.seasonId,
         notes: row.notes,
