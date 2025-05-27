@@ -1642,14 +1642,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Register game status routes
-    app.use("/api/game-statuses", gameStatusRoutes);
+  app.use("/api/game-statuses", gameStatusRoutes);
 
   // Create HTTP server
   const httpServer = createServer(app);
   return httpServer;
 }
-  // put application routes here
-  // prefix all routes with /api
 
   // ----- DIAGNOSTIC APIs -----
 
