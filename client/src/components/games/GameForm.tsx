@@ -20,7 +20,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { insertGameSchema, Game, Opponent, Season, allGameStatuses } from "@shared/schema";
+import { insertGameSchema, Game, Opponent, Season } from "@shared/schema";
+import { useGameStatuses } from "@/hooks/use-game-statuses";
 
 // Extend the schema for the form validation
 const formSchema = insertGameSchema.extend({
@@ -60,7 +61,7 @@ interface GameFormProps {
 
 export default function GameForm({ game, opponents, seasons, activeSeason, onSubmit, isSubmitting }: GameFormProps) {
   const isEditing = !!game;
-  
+
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -72,7 +73,7 @@ export default function GameForm({ game, opponents, seasons, activeSeason, onSub
       seasonId: game?.seasonId ? String(game.seasonId) : activeSeason ? String(activeSeason.id) : ""
     },
   });
-  
+
   const handleSubmit = (values: FormValues) => {
     // Special handling for BYE and abandoned games - they don't need an opponent
     if (values.status === 'bye' || values.status === 'abandoned') {
@@ -84,12 +85,12 @@ export default function GameForm({ game, opponents, seasons, activeSeason, onSub
         opponentId: null,
         seasonId: values.seasonId ? parseInt(values.seasonId) : (activeSeason ? activeSeason.id : undefined)
       };
-      
+
       console.log("Submitting special game:", specialGameData);
       onSubmit(specialGameData);
       return;
     }
-    
+
     // Regular games need an opponent
     const formattedValues = {
       date: values.date,
@@ -99,11 +100,13 @@ export default function GameForm({ game, opponents, seasons, activeSeason, onSub
       status: values.status || 'upcoming',
       seasonId: values.seasonId ? parseInt(values.seasonId) : (activeSeason ? activeSeason.id : undefined)
     };
-    
+
     console.log("Submitting regular game:", formattedValues);
     onSubmit(formattedValues);
   };
-  
+
+  const { data: allGameStatuses } = useGameStatuses();
+
   return (
     <Form {...form}>
       <h2 className="text-xl font-bold mb-6">{isEditing ? "Edit Game" : "Schedule New Game"}</h2>
@@ -147,7 +150,7 @@ export default function GameForm({ game, opponents, seasons, activeSeason, onSub
             </FormItem>
           )}
         />
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             control={form.control}
@@ -162,7 +165,7 @@ export default function GameForm({ game, opponents, seasons, activeSeason, onSub
               </FormItem>
             )}
           />
-          
+
           <FormField
             control={form.control}
             name="time"
@@ -197,7 +200,7 @@ export default function GameForm({ game, opponents, seasons, activeSeason, onSub
             </FormItem>
           )}
         />
-        
+
         <FormField
           control={form.control}
           name="status"
@@ -214,7 +217,7 @@ export default function GameForm({ game, opponents, seasons, activeSeason, onSub
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {allGameStatuses.map(status => (
+                  {allGameStatuses?.map(status => (
                     <SelectItem key={status} value={status}>
                       {status.charAt(0).toUpperCase() + status.slice(1).replace('-', ' ')}
                     </SelectItem>
@@ -228,7 +231,7 @@ export default function GameForm({ game, opponents, seasons, activeSeason, onSub
             </FormItem>
           )}
         />
-        
+
         <FormField
           control={form.control}
           name="seasonId"
@@ -259,7 +262,7 @@ export default function GameForm({ game, opponents, seasons, activeSeason, onSub
             </FormItem>
           )}
         />
-        
+
         <div className="flex justify-end space-x-2">
           <Button type="button" variant="outline" onClick={() => form.reset()}>
             Reset
@@ -272,3 +275,4 @@ export default function GameForm({ game, opponents, seasons, activeSeason, onSub
     </Form>
   );
 }
+```

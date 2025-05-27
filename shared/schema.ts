@@ -52,6 +52,7 @@ export type InsertSeason = z.infer<typeof insertSeasonSchema>;
 export type Season = typeof seasons.$inferSelect;
 
 // Legacy game status types are now managed in the game_statuses table
+// All game status constants have been moved to the database-driven system
 
 // Player model
 export const players = pgTable("players", {

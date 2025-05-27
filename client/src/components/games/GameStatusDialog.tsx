@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Game, GAME_STATUSES, GameStatus } from '@shared/schema';
+import { Game } from '@shared/schema';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { Button } from '@/components/ui/button';
@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
+import { useGameStatuses } from '@/hooks/use-game-statuses';
 
 interface GameStatusDialogProps {
   game: Game | null;
@@ -47,7 +48,7 @@ export function GameStatusDialog({
   const updateGameStatus = useMutation({
     mutationFn: async () => {
       if (!game || !selectedStatus) return null;
-      
+
       // Prepare update data with new status
       const updateData = {
         status: selectedStatus,
@@ -56,26 +57,26 @@ export function GameStatusDialog({
                   selectedStatus === 'forfeit-win' || 
                   selectedStatus === 'forfeit-loss'
       };
-      
+
       return apiRequest('PATCH', `/api/games/${game.id}`, updateData);
     },
     onSuccess: () => {
       // Invalidate relevant queries to refresh the data
       queryClient.invalidateQueries({ queryKey: ['/api/games'] });
       queryClient.invalidateQueries({ queryKey: ['/api/games', game?.id?.toString()] });
-      
+
       // Invalidate batch stats queries for any status change to ensure
       // scores and caching behavior are properly updated
       queryClient.invalidateQueries({ queryKey: ['batchGameStats'] });
       // Also clear any individual game stats cache
       queryClient.invalidateQueries({ queryKey: ['/api/games', game?.id, 'stats'] });
-      
+
       // Show success toast
       toast({
         title: 'Game status updated',
         description: `Game status has been updated to ${selectedStatus}.`,
       });
-      
+
       // Close dialog and call success callback
       onOpenChange(false);
       if (onSuccess) onSuccess();
@@ -134,6 +135,8 @@ export function GameStatusDialog({
     }
   };
 
+  const GAME_STATUSES = useGameStatuses();
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
@@ -144,13 +147,13 @@ export function GameStatusDialog({
               Update the status of this game.
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="grid gap-4 py-4">
             <div className="space-y-2">
               <label className="text-sm font-medium leading-none">
                 Game Status
               </label>
-              
+
               <Select
                 value={selectedStatus}
                 onValueChange={handleStatusChange}
@@ -166,7 +169,7 @@ export function GameStatusDialog({
                   ))}
                 </SelectContent>
               </Select>
-              
+
               {getStatusDescription(selectedStatus) && (
                 <p className="text-sm text-muted-foreground">
                   {getStatusDescription(selectedStatus)}
@@ -174,7 +177,7 @@ export function GameStatusDialog({
               )}
             </div>
           </div>
-          
+
           <DialogFooter>
             <Button
               type="button"
