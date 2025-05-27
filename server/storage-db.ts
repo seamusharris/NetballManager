@@ -212,16 +212,18 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(games.date), desc(games.time));
 
     console.log('=== DRIZZLE JOIN RESULTS (first 5) ===');
-    results.slice(0, 5).forEach((row, index) => {
-      console.log(`Result ${index}:`, {
-        gameId: row.games.id,
-        gameDate: row.games.date,
-        gameStatusId: row.games.statusId,
-        gameStatusObject: row.gameStatuses,
-        gameStatusName: row.gameStatuses?.name,
-        gameStatusIsCompleted: row.gameStatuses?.isCompleted,
-        joinKeys: Object.keys(row)
-      });
+    console.log('🔍 RAW STRUCTURE INSPECTION:');
+    results.slice(0, 2).forEach((row, index) => {
+      console.log(`\n--- RAW RESULT ${index} ---`);
+      console.log('Full row object:', JSON.stringify(row, null, 2));
+      console.log('Object keys:', Object.keys(row));
+      console.log('Type of row:', typeof row);
+      
+      // Try different possible structures
+      console.log('row.games?', !!row.games);
+      console.log('row.gameStatuses?', !!row.gameStatuses);
+      console.log('row.game_statuses?', !!row.game_statuses);
+      console.log('Direct properties:', Object.getOwnPropertyNames(row));
     });
 
     return results.map(row => {
