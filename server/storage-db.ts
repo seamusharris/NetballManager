@@ -204,9 +204,9 @@ export class DatabaseStorage implements IStorage {
           isActive: row.gameStatuses.isActive
         } : undefined,
         // Map status field to the actual status name from game_statuses table
-        status: row.gameStatuses?.name || (row.games.completed ? 'completed' : 'upcoming'),
-        // Legacy fields for backward compatibility
-        completed: row.gameStatuses?.isCompleted ?? row.games.completed,
+        status: row.gameStatuses?.name || 'upcoming',
+        // Legacy fields for backward compatibility - use gameStatus.isCompleted since completed column was removed
+        completed: row.gameStatuses?.isCompleted ?? false,
         isBye: row.games.opponentId === null
       }));
     } catch (error) {
@@ -272,9 +272,9 @@ export class DatabaseStorage implements IStorage {
           isActive: row.gameStatuses.isActive
         } : undefined,
         // Map status field to the actual status name from game_statuses table
-        status: row.gameStatuses?.name || (row.games.completed ? 'completed' : 'upcoming'),
-        // Legacy fields for backward compatibility
-        completed: row.gameStatuses?.isCompleted ?? row.games.completed,
+        status: row.gameStatuses?.name || 'upcoming',
+        // Legacy fields for backward compatibility - use gameStatus.isCompleted since completed column was removed
+        completed: row.gameStatuses?.isCompleted ?? false,
         isBye: row.games.opponentId === null
       };
     } catch (error) {
