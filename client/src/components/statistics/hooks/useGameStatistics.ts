@@ -14,8 +14,8 @@ export function useGameStatistics(gameId: number, forceFresh: boolean = false, p
   // Create a unique key for freshness tracking (only when forcing fresh data)
   const freshQueryKey = forceFresh ? `fresh-${Date.now()}` : 'cached';
 
-  // Check if we have preloaded stats
-  const hasPreloadedStats = preloadedStats && Array.isArray(preloadedStats);
+  // Check if we have preloaded stats - must have actual data, not just an empty array
+  const hasPreloadedStats = preloadedStats && Array.isArray(preloadedStats) && preloadedStats.length >= 0;
 
   // For detail view, we can skip the raw stats fetch when using the scores cache or preloaded data
   const hasCachedScores = !forceFresh && getCachedScores(gameId) !== undefined;
@@ -58,7 +58,7 @@ export function useGameStatistics(gameId: number, forceFresh: boolean = false, p
       // Otherwise calculate normally (which will also update the cache)
       return statisticsService.calculateGameScores(gameId, forceFresh);
     },
-    enabled: !!gameId && (!hasPreloadedStats || !scores), // Don't refetch if we have preloaded stats and scores
+    enabled: !!gameId && !hasPreloadedStats, // Skip entirely if we have preloaded stats
     staleTime: hasPreloadedStats ? Infinity : (forceFresh ? 0 : 15 * 60 * 1000), // Never expire preloaded stats
     gcTime: 30 * 60 * 1000, // Keep in cache for 30 minutes
   });
@@ -101,10 +101,12 @@ export function useGameStatistics(gameId: number, forceFresh: boolean = false, p
     gcTime: 30 * 60 * 1000, // Keep in cache for 30 minutes
   });
 
-  // Combine loading and error states
+  // Combine loading and error states - be more forgiving with errors when we have preloaded data
   const isLoading = isLoadingScores || isLoadingPositionStats || isLoadingPlayerStats || 
                    (isLoadingRawStats && !hasCachedScores && !hasPreloadedStats);
-  const error = rawStatsError || scoresError || positionStatsError || playerStatsError;
+  
+  // Only report errors if we don't have any alternative data source
+  const error = hasPreloadedStats ? null : (rawStatsError || scoresError || positionStatsError || playerStatsError);
 
   return {
     rawStats: hasPreloadedStats ? preloadedStats : rawStats,

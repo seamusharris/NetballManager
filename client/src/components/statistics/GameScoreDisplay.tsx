@@ -13,7 +13,8 @@ interface GameScoreDisplayProps {
 
 export function GameScoreDisplay({ gameId, compact = false, preloadedStats, fallback = "—" }: GameScoreDisplayProps) {
   // Use preloaded stats when available to avoid unnecessary API calls
-  const hasPreloadedStats = preloadedStats && preloadedStats.length > 0;
+  // Accept even empty arrays as valid preloaded data to prevent API calls
+  const hasPreloadedStats = preloadedStats && Array.isArray(preloadedStats);
 
   // Only fetch if we don't have preloaded stats
   // For compact mode (lists), we should rely on preloaded stats when available

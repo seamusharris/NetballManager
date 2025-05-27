@@ -459,3 +459,4 @@ export default function GamesList({
     </div>
   );
 }
+```The `fallback` prop is removed from the `GameScoreDisplay` component in `GamesList`.
