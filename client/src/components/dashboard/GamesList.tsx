@@ -63,13 +63,13 @@ export default function GamesList({ games, opponents, className }: GamesListProp
 
     switch (displayMode) {
       case 'upcoming':
-        filtered = filtered.filter(game => game.date >= currentDate && !game.completed);
+        filtered = filtered.filter(game => game.status === 'upcoming' || game.status === 'in-progress');
         break;
       case 'completed':
-        filtered = filtered.filter(game => game.completed);
+        filtered = filtered.filter(game => game.status === 'completed' || game.status === 'forfeit-win' || game.status === 'forfeit-loss' || game.status === 'bye' || game.status === 'abandoned');
         break;
       case 'recent':
-        filtered = filtered.filter(game => game.completed)
+        filtered = filtered.filter(game => game.status === 'completed' || game.status === 'forfeit-win' || game.status === 'forfeit-loss' || game.status === 'bye' || game.status === 'abandoned')
           .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
           .slice(0, 5);
         break;
@@ -124,7 +124,13 @@ export default function GamesList({ games, opponents, className }: GamesListProp
 
     // Get completed games for score calculation
   const completedGames = useMemo(() => {
-    return games?.filter(game => game.completed) || [];
+    return games?.filter(game => 
+      game.status === 'completed' || 
+      game.status === 'forfeit-win' || 
+      game.status === 'forfeit-loss' || 
+      game.status === 'bye' || 
+      game.status === 'abandoned'
+    ) || [];
   }, [games]);
 
   // Clear cache for any games that might have stale data when component mounts
@@ -313,7 +319,7 @@ export default function GamesList({ games, opponents, className }: GamesListProp
                     </TableCell>
 
                     <TableCell className="px-2 py-2 whitespace-nowrap text-center">
-                      {game.completed ? (
+                      {game.status === 'completed' || game.status === 'forfeit-win' || game.status === 'forfeit-loss' || game.status === 'bye' || game.status === 'abandoned' ? (
                         <div className="text-center">
                           {scoresMap && scoresMap[game.id] ? (
                             (() => {
