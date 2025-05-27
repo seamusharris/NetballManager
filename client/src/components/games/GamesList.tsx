@@ -257,6 +257,10 @@ export default function GamesList({
     }
   };
 
+  const navigate = (path: string) => {
+    setLocation(path);
+  };
+
   return (
     <div className="space-y-6">
       {/* Filters */}
@@ -451,3 +455,5 @@ export default function GamesList({
     </div>
   );
 }
+
+export { GamesList };
