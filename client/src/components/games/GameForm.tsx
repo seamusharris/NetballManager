@@ -275,4 +275,3 @@ export default function GameForm({ game, opponents, seasons, activeSeason, onSub
     </Form>
   );
 }
-```
