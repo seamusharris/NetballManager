@@ -297,8 +297,4 @@ export default function DashboardSummary({
       )}
     </div>
   );
-  } catch (error) {
-    console.error("Error during rendering:", error);
-    return <div>Error: {error.message}</div>;
-  }
 }
