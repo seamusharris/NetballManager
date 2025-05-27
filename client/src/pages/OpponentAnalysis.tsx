@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { TrendingUp, TrendingDown, Target, Trophy, AlertTriangle, Eye } from 'lucide-react';
+import { TrendingUp, TrendingDown, Target } from 'lucide-react';
 import { Game, Opponent, Season } from '@shared/schema';
 import { getWinLoseLabel } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
@@ -280,7 +280,6 @@ export default function OpponentAnalysis() {
                   <TableHead className="text-center">Score Diff</TableHead>
                   <TableHead className="text-center">Recent Form</TableHead>
                   <TableHead className="text-center">Trend</TableHead>
-                  <TableHead className="text-center">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -351,19 +350,6 @@ export default function OpponentAnalysis() {
                       <div className="flex justify-center">
                         {getTrendIcon(matchup.trend)}
                       </div>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleRowClick(matchup.opponent.id);
-                        }}
-                      >
-                        <Eye className="h-3 w-3 mr-1" />
-                        View
-                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}
