@@ -16,12 +16,12 @@ export default function Dashboard() {
   const { data: opponents = [], isLoading: isLoadingOpponents, error: opponentsError } = useQuery<any[]>({
     queryKey: ['/api/opponents'],
   });
-  
+
   // Fetch all seasons
   const { data: seasons = [], isLoading: isLoadingSeasons, error: seasonsError } = useQuery<any[]>({
     queryKey: ['/api/seasons'],
   });
-  
+
   // Fetch active season
   const { data: activeSeason, isLoading: isLoadingActiveSeason, error: activeSeasonError } = useQuery<any>({
     queryKey: ['/api/seasons/active'],
@@ -72,10 +72,10 @@ export default function Dashboard() {
         <title>Dashboard | {TEAM_NAME} Stats Tracker</title>
         <meta name="description" content={`View ${TEAM_NAME} team's performance metrics, upcoming games, and player statistics`} />
       </Helmet>
-      
+
       {/* BatchScoreDisplay doesn't render anything but efficiently loads and caches game scores */}
       {games && Array.isArray(games) && games.length > 0 && <BatchScoreDisplay games={games} />}
-      
+
       <DashboardSummary 
         players={players || []} 
         games={games || []} 
