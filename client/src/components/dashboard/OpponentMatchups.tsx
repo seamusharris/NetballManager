@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { TrendingUp, TrendingDown, Target, Trophy, AlertTriangle, ChevronRight } from 'lucide-react';
 import { Game, Opponent } from '@shared/schema';
 import { getWinLoseLabel, getWinLoseClass } from '@/lib/utils';
+import { ResultBadge, GameResult } from '@/lib/resultUtils';
 
 interface OpponentMatchup {
   opponent: Opponent;
@@ -134,17 +135,17 @@ export default function OpponentMatchups({
   const overallWinRate = totalGames > 0 ? Math.round((totalWins / totalGames) * 100) : 0;
 
   const getFormDisplay = (form: string[]) => {
-    return form.slice(0, 3).map((result, index) => (
-      <span 
-        key={index}
-        className={`inline-block w-4 h-4 rounded-full text-xs font-bold text-white text-center leading-4 mx-0.5 ${
-          result === 'W' ? 'bg-green-500' : 
-          result === 'L' ? 'bg-red-500' : 'bg-yellow-500'
-        }`}
-      >
-        {result}
-      </span>
-    ));
+    return form.slice(0, 3).map((result, index) => {
+      const gameResult: GameResult = result === 'W' ? 'Win' : result === 'L' ? 'Loss' : 'Draw';
+      return (
+        <ResultBadge 
+          key={index}
+          result={gameResult}
+          size="sm"
+          className="mx-0.5"
+        />
+      );
+    });
   };
 
   return (

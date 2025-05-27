@@ -1,16 +1,16 @@
-
 import { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { useSearch, useLocation } from 'wouter';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Game, Opponent, Player } from '@shared/schema';
+import { TrendingUp, TrendingDown, Target, Trophy, AlertTriangle, Eye } from 'lucide-react';
+import { Game, Opponent, Season } from '@shared/schema';
+import { getWinLoseLabel } from '@/lib/utils';
+import { useQuery } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/apiClient';
-import { getWinLoseLabel, getWinLoseClass } from '@/lib/utils';
-import { Trophy, TrendingUp, TrendingDown, Target, Eye } from 'lucide-react';
+import { ResultBadge, GameResult } from '@/lib/resultUtils';
 
 interface OpponentMatchup {
   opponent: Opponent;
@@ -58,12 +58,12 @@ export default function OpponentAnalysis() {
 
   // Fetch centralized stats for all completed games
   const completedGameIds = games.filter((game: Game) => game.completed).map((game: Game) => game.id);
-  
+
   const { data: centralizedStats = {} } = useQuery({
     queryKey: ['dashboardStats', completedGameIds.join(',')],
     queryFn: async () => {
       if (completedGameIds.length === 0) return {};
-      
+
       try {
         const response = await apiRequest('GET', `/api/games/stats/batch?gameIds=${completedGameIds.join(',')}`);
         return response;
@@ -131,7 +131,7 @@ export default function OpponentAnalysis() {
 
         sortedCompletedGames.forEach((game, index) => {
           const gameStats = centralizedStats[game.id] || [];
-          
+
           // Calculate team and opponent scores from stats
           const teamScore = gameStats.reduce((sum: any, stat: any) => sum + (stat.goalsFor || 0), 0);
           const opponentScore = gameStats.reduce((sum: any, stat: any) => sum + (stat.goalsAgainst || 0), 0);
@@ -140,7 +140,7 @@ export default function OpponentAnalysis() {
           totalScoreAgainst += opponentScore;
 
           const result = getWinLoseLabel(teamScore, opponentScore);
-          
+
           if (result === 'Win') wins++;
           else if (result === 'Loss') losses++;
           else draws++;
@@ -162,7 +162,7 @@ export default function OpponentAnalysis() {
         if (recentResults.length >= 2) {
           const recentWins = recentResults.filter(r => r === 'W').length;
           const recentWinRate = (recentWins / recentResults.length) * 100;
-          
+
           if (recentWinRate > winRate + 20) trend = 'improving';
           else if (recentWinRate < winRate - 20) trend = 'declining';
         }
@@ -206,15 +206,9 @@ export default function OpponentAnalysis() {
 
   const getFormDisplay = (form: string[]) => {
     return form.slice(0, 5).map((result, index) => (
-      <span 
-        key={index}
-        className={`inline-block w-5 h-5 rounded-full text-xs font-bold text-white text-center leading-5 mx-0.5 ${
-          result === 'W' ? 'bg-green-500' : 
-          result === 'L' ? 'bg-red-500' : 'bg-yellow-500'
-        }`}
-      >
-        {result}
-      </span>
+      
+        <ResultBadge key={index} result={result === 'W' ? 'win' : result === 'L' ? 'loss' : 'draw'} />
+      
     ));
   };
 
@@ -245,7 +239,7 @@ export default function OpponentAnalysis() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-heading font-bold text-neutral-dark">Opponent Analysis</h1>
-        
+
         <Select value={selectedSeason} onValueChange={setSelectedSeason}>
           <SelectTrigger className="w-[250px]">
             <SelectValue placeholder="Select season" />
@@ -373,7 +367,7 @@ export default function OpponentAnalysis() {
               </TableBody>
             </Table>
           </div>
-          
+
           {matchups.length === 0 && (
             <div className="text-center py-8 text-gray-500">
               No opponents found for the selected season.
