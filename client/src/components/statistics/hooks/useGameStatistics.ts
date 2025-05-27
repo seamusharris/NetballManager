@@ -58,7 +58,7 @@ export function useGameStatistics(gameId: number, forceFresh: boolean = false, p
       // Otherwise calculate normally (which will also update the cache)
       return statisticsService.calculateGameScores(gameId, forceFresh);
     },
-    enabled: !!gameId && !hasPreloadedStats, // Skip entirely if we have preloaded stats
+    enabled: !!gameId, // Always enable the query, let the queryFn handle preloaded stats
     staleTime: hasPreloadedStats ? Infinity : (forceFresh ? 0 : 15 * 60 * 1000), // Never expire preloaded stats
     gcTime: 30 * 60 * 1000, // Keep in cache for 30 minutes
   });
@@ -78,7 +78,7 @@ export function useGameStatistics(gameId: number, forceFresh: boolean = false, p
       return statisticsService.getPositionStats(gameId, forceFresh);
     },
     enabled: !!gameId,
-    staleTime: forceFresh ? 0 : 15 * 60 * 1000, // 0 for fresh, 15 minutes otherwise
+    staleTime: hasPreloadedStats ? Infinity : (forceFresh ? 0 : 15 * 60 * 1000), // Never expire preloaded stats
     gcTime: 30 * 60 * 1000, // Keep in cache for 30 minutes
   });
 
@@ -97,7 +97,7 @@ export function useGameStatistics(gameId: number, forceFresh: boolean = false, p
       return statisticsService.mapStatsToPlayers(gameId, forceFresh);
     },
     enabled: !!gameId,
-    staleTime: forceFresh ? 0 : 15 * 60 * 1000, // 0 for fresh, 15 minutes otherwise
+    staleTime: hasPreloadedStats ? Infinity : (forceFresh ? 0 : 15 * 60 * 1000), // Never expire preloaded stats
     gcTime: 30 * 60 * 1000, // Keep in cache for 30 minutes
   });
 
