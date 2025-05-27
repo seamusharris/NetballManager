@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { cn } from '@/lib/utils';
 
@@ -121,11 +120,12 @@ export function ScoreDisplay({ teamScore, opponentScore, compact = false, classN
         getResultLightBgColor(result),
         getResultBorderColor(result),
         className
-      )}>
-        <span className={teamScore > opponentScore ? "font-bold" : ""}>{teamScore}</span>
-        <span className="mx-2">-</span>
-        <span className={opponentScore > teamScore ? "font-bold" : ""}>{opponentScore}</span>
-      </div>
+      )}
+    >
+      <span className={teamScore > opponentScore ? "font-bold" : ""}>{teamScore}</span>
+      <span className="mx-2">-</span>
+      <span className={opponentScore > teamScore ? "font-bold" : ""}>{opponentScore}</span>
+    </div>
     );
   }
 
@@ -141,9 +141,9 @@ export function ScoreDisplay({ teamScore, opponentScore, compact = false, classN
           {teamScore}
         </div>
       </div>
-      
+
       <div className="text-xl font-bold text-gray-400">vs</div>
-      
+
       <div className="text-center">
         <div className="text-2xl font-bold">
           {opponentScore}
