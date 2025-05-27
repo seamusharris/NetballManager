@@ -284,23 +284,48 @@ export class DatabaseStorage implements IStorage {
 
     console.log('=== DRIZZLE JOIN RESULTS (first 2) ===');
     console.log('🔍 RAW STRUCTURE INSPECTION:');
+    console.log('Total results count:', results.length);
+    console.log('Sample row structure:');
+    if (results.length > 0) {
+      console.log('First row keys:', Object.keys(results[0]));
+      console.log('First row values:', results[0]);
+    }
+
     results.slice(0, 2).forEach((row, index) => {
       console.log(`\n--- RAW RESULT ${index} ---`);
       console.log('All row keys:', Object.keys(row));
-      console.log('Game ID:', row.id);
-      console.log('Status ID from games table:', row.statusId);
-      console.log('Status fields from join:', {
-        gameStatusName: row.statusName,
-        gameStatusDisplayName: row.statusDisplayName,
-        gameStatusIsCompleted: row.statusIsCompleted,
-        gameStatusAllowsStatistics: row.statusAllowsStatistics,
-        gameStatusColorClass: row.statusColorClass
-      });
-
-      // Check if ANY status fields are populated
+// Check if ANY status fields are populated
       const hasAnyStatusField = row.statusName || row.statusDisplayName || row.statusIsCompleted !== undefined;
       console.log('Has any status field populated?', hasAnyStatusField);
+
+      // Log all non-undefined values
+      console.log('All non-undefined fields:');
+      Object.entries(row).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          console.log(`  ${key}: ${value}`);
+        }
+      });
     });
+
+    console.log('\n=== DEBUGGING: WHY ARE STATUS FIELDS UNDEFINED? ===');
+    console.log('Checking if the join is working properly...');
+
+    // Simple test - get first result and inspect the raw structure deeply
+    if (results.length > 0) {
+      const firstResult = results[0];
+      console.log('First result game id:', firstResult.id);
+      console.log('First result statusId (from games table):', firstResult.statusId);
+
+      // Check if any properties contain the status data we need
+      console.log('Looking for status data in all properties:');
+      Object.entries(firstResult).forEach(([key, value]) => {
+        if (typeof value === 'object' && value !== null) {
+          console.log(`  Object property ${key}:`, value);
+        } else if (key.toLowerCase().includes('status') || key.toLowerCase().includes('complete')) {
+          console.log(`  Status-related property ${key}:`, value);
+        }
+      });
+    }
 
     return results.map(row => {
       console.log(`\n--- MAPPING RESULT FOR GAME ${row.id} ---`);
