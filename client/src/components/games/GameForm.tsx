@@ -59,7 +59,7 @@ interface GameFormProps {
   isSubmitting: boolean;
 }
 
-export default function GameForm({ game, opponents, seasons, activeSeason, onSubmit, isSubmitting }: GameFormProps) {
+export function GameForm({ game, opponents, seasons, activeSeason, onSubmit, isSubmitting }: GameFormProps) {
   const isEditing = !!game;
 
   const form = useForm<FormValues>({
@@ -275,3 +275,5 @@ export default function GameForm({ game, opponents, seasons, activeSeason, onSub
     </Form>
   );
 }
+
+export default GameForm;
