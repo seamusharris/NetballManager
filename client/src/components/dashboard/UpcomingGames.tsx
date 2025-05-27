@@ -15,9 +15,9 @@ interface UpcomingGamesProps {
 }
 
 export default function UpcomingGames({ games, opponents, className, seasonFilter, activeSeason }: UpcomingGamesProps) {
-  // Filter for upcoming games (not completed and not bye/abandoned)
+  // Filter for upcoming games using the isCompleted flag from game_statuses table
   const upcomingGames = games.filter(game => 
-    game.status === 'upcoming' || game.status === 'in-progress'
+    game.gameStatus?.isCompleted !== true
   );
 
   const getOpponentName = (opponentId: number | null) => {
