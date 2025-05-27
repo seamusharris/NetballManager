@@ -206,9 +206,7 @@ export default function OpponentAnalysis() {
 
   const getFormDisplay = (form: string[]) => {
     return form.slice(0, 5).map((result, index) => (
-      
-        <ResultBadge key={index} result={result === 'W' ? 'win' : result === 'L' ? 'loss' : 'draw'} />
-      
+      <ResultBadge key={index} result={result === 'W' ? 'Win' : result === 'L' ? 'Loss' : 'Draw'} size="sm" />
     ));
   };
 
