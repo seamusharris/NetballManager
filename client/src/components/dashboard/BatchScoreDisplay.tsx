@@ -36,9 +36,9 @@ export default function BatchScoreDisplay({ games, className }: BatchScoreDispla
   // Log batch request for debugging
   useEffect(() => {
     if (gameIds.length > 0) {
-      console.log(`Dashboard batch loading scores for ${gameIds.length} completed games`);
+      
     } else if (games) {
-      console.log(`No completed games found to batch load scores for`);
+      
     }
   }, [gameIds, games]);
 
@@ -46,16 +46,16 @@ export default function BatchScoreDisplay({ games, className }: BatchScoreDispla
   useEffect(() => {
     async function loadAndCacheBatchStats() {
       if (!gameIds || gameIds.length === 0) {
-        console.log('No valid game IDs to batch load stats for');
+        
         return;
       }
 
       try {
-        console.log(`Dashboard batch loading scores for games: ${gameIds.join(',')}`);
+        
 
         // Only proceed if we have valid game IDs
         if (!gameIds || gameIds.length === 0) {
-          console.log('BatchScoreDisplay: No valid game IDs to process');
+          
           return;
         }
         
@@ -84,7 +84,7 @@ export default function BatchScoreDisplay({ games, className }: BatchScoreDispla
           }
         });
 
-        console.log(`Successfully cached scores for ${completedGames.length} games using batch endpoint`);
+        
       } catch (error) {
         console.error("Error loading batch game statistics:", error);
       }

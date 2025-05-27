@@ -14,7 +14,7 @@ import {
   players, opponents, games, rosters, gameStats, seasons,
   POSITIONS
 } from "@shared/schema";
-import { fixGameStatsSchema } from "./fixDbSchema";
+
 import { updatePlayerSeasonRelationships, getPlayerSeasons } from "./player-season-routes";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -79,19 +79,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Fix game stats schema if needed
-  app.post("/api/fix-game-stats-schema", async (req, res) => {
-    try {
-      const result = await fixGameStatsSchema();
-      res.status(200).json(result);
-    } catch (error) {
-      console.error("Error fixing game stats schema:", error);
-      res.status(500).json({ 
-        success: false, 
-        message: `Schema fix failed: ${error}` 
-      });
-    }
-  });
+  
 
   
 
