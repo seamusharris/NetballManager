@@ -56,12 +56,18 @@ export default function Dashboard() {
     );
   }
 
-  // Show loading state
-  if (isLoading) {
+  // Show loading state - wait for all critical data to load
+  if (isLoading || !players || !games || !opponents || !seasons) {
     return (
       <div className="p-6">
         <h1 className="text-2xl font-bold mb-4">Loading Dashboard...</h1>
         <p>Please wait while we load your data...</p>
+        <div className="mt-4 text-sm text-gray-500">
+          <p>Players: {players?.length || 0} loaded</p>
+          <p>Games: {games?.length || 0} loaded</p>
+          <p>Opponents: {opponents?.length || 0} loaded</p>
+          <p>Seasons: {seasons?.length || 0} loaded</p>
+        </div>
       </div>
     );
   }

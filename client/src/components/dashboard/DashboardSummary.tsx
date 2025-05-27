@@ -163,27 +163,7 @@ export default function DashboardSummary({
     );
   }
 
-  // Debug: Add a simple fallback to test if component is rendering
   console.log('DashboardSummary about to render main content');
-  
-  // Temporary debug return to see if this component renders at all
-  if (games.length === 0) {
-    return (
-      <div className="p-6">
-        <h2 className="text-2xl font-heading font-bold text-neutral-dark mb-4">Dashboard (Debug Mode)</h2>
-        <div className="bg-yellow-100 border border-yellow-400 rounded p-4 mb-4">
-          <h3 className="font-bold">Debug Info:</h3>
-          <p>Players: {players.length}</p>
-          <p>Games: {games.length}</p>
-          <p>Opponents: {opponents.length}</p>
-          <p>Seasons: {seasons.length}</p>
-          <p>Active Season: {activeSeason?.name || 'None'}</p>
-          <p>Selected Season: {selectedSeasonId}</p>
-        </div>
-        <p className="text-gray-500">No games found. This is normal if you haven't created any games yet.</p>
-      </div>
-    );
-  }
 
   // Ensure we have the necessary data
   const statsMap = centralizedStats || {};
