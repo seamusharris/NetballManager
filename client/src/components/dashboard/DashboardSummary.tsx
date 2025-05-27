@@ -149,19 +149,23 @@ export default function DashboardSummary({
     setRefreshKey(prev => prev + 1);
   };
 
-  console.log('=== Checking loading state ===', { isLoading });
+  console.log('=== Dashboard render check ===', { 
+    isLoading, 
+    hasPlayers: players?.length > 0,
+    hasGames: games?.length > 0,
+    hasSeasons: seasons?.length > 0,
+    activeSeason: activeSeason?.name
+  });
 
-  // Only show loading if basic data is still loading
-  if (isLoading) {
+  // Only show loading if we truly have no data yet
+  if (isLoading && (!players?.length || !games?.length || !seasons?.length)) {
+    console.log("Dashboard still loading core data, showing loading state");
     return (
-      <div className="p-6">
-        <h2 className="text-2xl font-heading font-bold text-neutral-dark mb-4">Dashboard</h2>
-        <div className="flex items-center justify-center h-64">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-3"></div>
-            <h3 className="text-lg font-medium mb-2">Loading Dashboard...</h3>
-            <p className="text-gray-500">Please wait while we load your team data.</p>
-          </div>
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <h2 className="text-xl font-semibold mb-2">Loading Dashboard</h2>
+          <p className="text-muted-foreground">Please wait while we load your team data...</p>
         </div>
       </div>
     );
@@ -169,6 +173,8 @@ export default function DashboardSummary({
 
   // Ensure we have the necessary data
   const statsMap = centralizedStats || {};
+
+  console.log('Dashboard proceeding with render - core data loaded');
 
   return (
     <div className="space-y-6">
