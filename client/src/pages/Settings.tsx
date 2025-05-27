@@ -85,6 +85,12 @@ export default function Settings() {
         <p className="text-gray-500">Configure your team information and application preferences</p>
       </div>
 
+      {/* Game Status Management - Full Width */}
+      <div className="mb-8">
+        <GameStatusManager />
+      </div>
+
+      {/* Other Settings - Grid Layout */}
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
@@ -120,84 +126,80 @@ export default function Settings() {
         </Card>
 
         <div className="space-y-6">
-        <h1 className="text-3xl font-bold">Settings</h1>
-
-        <GameStatusManager />
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Database className="h-5 w-5" />
-              Data Management
-            </CardTitle>
-            <CardDescription>
-              Export and import your netball management data
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-              <Button variant="outline" className="w-full">
-                Backup All Data
-              </Button>
-              <Button variant="outline" className="w-full">
-                Export Statistics
-              </Button>
-            </CardContent>
-          </Card>
-
           <Card>
             <CardHeader>
-              <CardTitle>Display Preferences</CardTitle>
-              <CardDescription>Customize how information is displayed</CardDescription>
+              <CardTitle className="flex items-center gap-2">
+                <Database className="h-5 w-5" />
+                Data Management
+              </CardTitle>
+              <CardDescription>
+                Export and import your netball management data
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="timezone">Timezone</Label>
-                <Select 
-                  value={timezone} 
-                  onValueChange={setTimezone}
-                >
-                  <SelectTrigger id="timezone" className="w-full">
-                    <SelectValue placeholder="Select timezone" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={getBrowserTimezone()}>
-                      Browser Default ({getBrowserTimezone()})
-                    </SelectItem>
+                <Button variant="outline" className="w-full">
+                  Backup All Data
+                </Button>
+                <Button variant="outline" className="w-full">
+                  Export Statistics
+                </Button>
+              </CardContent>
+            </Card>
 
-                    {COMMON_TIMEZONES.map((tz) => (
-                      <SelectItem key={tz} value={tz}>
-                        {formatTimezone(tz)}
+            <Card>
+              <CardHeader>
+                <CardTitle>Display Preferences</CardTitle>
+                <CardDescription>Customize how information is displayed</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="timezone">Timezone</Label>
+                  <Select 
+                    value={timezone} 
+                    onValueChange={setTimezone}
+                  >
+                    <SelectTrigger id="timezone" className="w-full">
+                      <SelectValue placeholder="Select timezone" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={getBrowserTimezone()}>
+                        Browser Default ({getBrowserTimezone()})
                       </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-gray-500">
-                  This timezone will be used for displaying dates and times across the application
-                </p>
-              </div>
 
-              <Button onClick={saveSettings} variant="outline" className="w-full">
-                Save Display Preferences
-              </Button>
-            </CardContent>
-          </Card>
+                      {COMMON_TIMEZONES.map((tz) => (
+                        <SelectItem key={tz} value={tz}>
+                          {formatTimezone(tz)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-gray-500">
+                    This timezone will be used for displaying dates and times across the application
+                  </p>
+                </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Backup & Export</CardTitle>
-              <CardDescription>Manage your data</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Button variant="outline" className="w-full">
-                Backup All Data
-              </Button>
-              <Button variant="outline" className="w-full">
-                Export Statistics
-              </Button>
-            </CardContent>
-          </Card>
+                <Button onClick={saveSettings} variant="outline" className="w-full">
+                  Save Display Preferences
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Backup & Export</CardTitle>
+                <CardDescription>Manage your data</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Button variant="outline" className="w-full">
+                  Backup All Data
+                </Button>
+                <Button variant="outline" className="w-full">
+                  Export Statistics
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
         </div>
-      </div>
     </div>
   );
 }
