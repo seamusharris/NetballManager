@@ -218,11 +218,16 @@ export class DatabaseStorage implements IStorage {
 
     return results.map(row => {
       console.log(`\n--- MAPPING RESULT FOR GAME ${row.games.id} ---`);
+      console.log('🔍 COMPLETE ROW STRUCTURE:');
+      console.log('All row keys:', Object.keys(row));
+      console.log('Row contents:', JSON.stringify(row, null, 2));
       console.log('Raw row structure:', {
         games: !!row.games,
-        gameStatuses: !!row.game_statuses,
+        game_statuses: !!row.game_statuses,
+        gameStatuses: !!row.gameStatuses,
         hasStatusName: row.game_statuses?.name,
-        statusId: row.games.statusId
+        statusId: row.games.statusId,
+        allRowKeys: Object.keys(row)
       });
 
       // Extract game status information from the joined table
