@@ -1,9 +1,10 @@
-
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Game, Opponent } from '@shared/schema';
+import { Game, Opponent, GameResult } from '@shared/schema';
 import { getWinLoseLabel } from '@/lib/utils';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { ResultBadge } from '@/components/result-badge'; // Assuming this component exists
+
 
 interface RecentFormWidgetProps {
   games: Game[];
@@ -27,11 +28,11 @@ export default function RecentFormWidget({
   // Calculate form data
   const formData = completedGames.map(game => {
     const stats = centralizedStats?.[game.id] || [];
-    
+
     // Calculate scores from stats
     let teamScore = 0;
     let opponentScore = 0;
-    
+
     stats.forEach(stat => {
       teamScore += stat.goalsFor || 0;
       opponentScore += stat.goalsAgainst || 0;
@@ -39,7 +40,7 @@ export default function RecentFormWidget({
 
     const result = getWinLoseLabel(teamScore, opponentScore);
     const opponent = opponents.find(o => o.id === game.opponentId);
-    
+
     return {
       id: game.id,
       date: game.date,
@@ -63,16 +64,7 @@ export default function RecentFormWidget({
   const trend = recentWins >= 2 ? 'up' : recentWins === 1 ? 'neutral' : 'down';
 
   const getResultBadge = (result: string) => {
-    switch (result) {
-      case 'Win':
-        return <Badge variant="outline" className="bg-green-100 text-green-700 text-xs px-2 py-0">W</Badge>;
-      case 'Loss':
-        return <Badge variant="outline" className="bg-red-100 text-red-700 text-xs px-2 py-0">L</Badge>;
-      case 'Draw':
-        return <Badge variant="outline" className="bg-gray-100 text-gray-700 text-xs px-2 py-0">D</Badge>;
-      default:
-        return <Badge variant="outline" className="bg-gray-100 text-gray-700 text-xs px-2 py-0">-</Badge>;
-    }
+    return <ResultBadge result={result as GameResult} size="sm" />;
   };
 
   const getTrendIcon = () => {
@@ -109,12 +101,10 @@ export default function RecentFormWidget({
           {getTrendIcon()}
         </div>
 
-        {/* Form visualization */}
-        <div className="flex justify-center space-x-2 mb-4">
-          {formData.map((game, index) => (
-            <div key={game.id} className="text-center">
-              {getResultBadge(game.result)}
-            </div>
+        {/* Form display */}
+        <div className="flex justify-center space-x-1 mb-3">
+          {formData.slice(0, 5).map((game, index) => (
+            <ResultBadge key={game.id} result={game.result as GameResult} size="md" />
           ))}
         </div>
 
