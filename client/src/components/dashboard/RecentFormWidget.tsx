@@ -22,11 +22,7 @@ export default function RecentFormWidget({
 }: RecentFormWidgetProps) {
   // Get completed games sorted by date (most recent first)
   const completedGames = games
-    .filter(game => {
-      // Debug log to see what's being filtered
-      console.log(`RecentFormWidget filtering game ${game.id}: isCompleted=${game.gameStatus?.isCompleted}, allowsStatistics=${game.gameStatus?.allowsStatistics}, status=${game.gameStatus?.name}`);
-      return isGameValidForStatistics(game);
-    })
+    .filter(isGameValidForStatistics)
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 5); // Last 5 games
 
