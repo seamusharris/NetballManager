@@ -264,79 +264,18 @@ export class DatabaseStorage implements IStorage {
       console.log(`🔗 Game statusId: ${row.games.statusId}`);
       console.log(`🏢 Game opponentId: ${row.games.opponentId}`);
 
-      // Detailed status resolution logging
+      // Simplified status resolution - just use row.gameStatuses directly
       let gameStatus = null;
       console.log('🔍 GAME STATUS RESOLUTION PROCESS:');
-
-      // Method 1: Check row.gameStatuses
-      console.log('🔸 Method 1: Checking row.gameStatuses...');
-      console.log(`   - Exists: ${!!row.gameStatuses}`);
-      console.log(`   - Type: ${typeof row.gameStatuses}`);
-      if (row.gameStatuses) {
-        console.log(`   - Value: ${JSON.stringify(row.gameStatuses)}`);
-        console.log(`   - Has ID: ${!!row.gameStatuses.id}`);
-        console.log(`   - ID Value: ${row.gameStatuses.id}`);
-        
-        if (row.gameStatuses.id) {
-          console.log('✅ VALID gameStatus found via row.gameStatuses');
-          gameStatus = row.gameStatuses;
-        } else {
-          console.log('⚠️ gameStatuses exists but has no ID - likely empty join result');
-        }
-      } else {
-        console.log('❌ row.gameStatuses is null/undefined');
-      }
-
-      // Method 2: Check row.game_statuses
-      if (!gameStatus) {
-        console.log('🔸 Method 2: Checking row.game_statuses...');
-        console.log(`   - Exists: ${!!row.game_statuses}`);
-        console.log(`   - Type: ${typeof row.game_statuses}`);
-        if (row.game_statuses) {
-          console.log(`   - Value: ${JSON.stringify(row.game_statuses)}`);
-          console.log(`   - Has ID: ${!!row.game_statuses.id}`);
-          if (row.game_statuses.id) {
-            console.log('✅ VALID gameStatus found via row.game_statuses');
-            gameStatus = row.game_statuses;
-          } else {
-            console.log('⚠️ game_statuses exists but has no ID');
-          }
-        } else {
-          console.log('❌ row.game_statuses is null/undefined');
-        }
-      }
-
-      // Method 3: Exhaustive search through all keys
-      if (!gameStatus) {
-        console.log('🔸 Method 3: Exhaustive key search...');
-        console.log('🔍 Available keys for this row:', Object.keys(row));
-
-        Object.keys(row).forEach(key => {
-          const value = row[key];
-          console.log(`   - Key "${key}": ${typeof value}, exists: ${!!value}`);
-          if (typeof value === 'object' && value !== null) {
-            const hasStatusProps = value.hasOwnProperty('isCompleted') || 
-                                  value.hasOwnProperty('displayName') || 
-                                  value.hasOwnProperty('name');
-            console.log(`     Properties: ${Object.keys(value).join(', ')}`);
-            console.log(`     Looks like status: ${hasStatusProps}`);
-            
-            if (hasStatusProps && value.id) {
-              console.log(`🎯 FOUND POTENTIAL STATUS OBJECT AT KEY "${key}":`, value);
-              gameStatus = value;
-            }
-          }
-        });
-      }
-
-      // Final status logging
-      console.log(`🎯 FINAL GAME STATUS RESOLUTION FOR GAME ${row.games.id}:`);
-      console.log(`   - Found status: ${!!gameStatus}`);
-      console.log(`   - Status object: ${gameStatus ? JSON.stringify(gameStatus) : 'null'}`);
+      console.log(`   - row.gameStatuses exists: ${!!row.gameStatuses}`);
+      console.log(`   - row.gameStatuses value:`, row.gameStatuses);
       
-      if (row.games.statusId && !gameStatus) {
-        console.log(`🚨 WARNING: Game has statusId ${row.games.statusId} but no gameStatus was resolved!`);
-        console.log('🚨 This indicates a potential join failure or missing data!');
+      // Use row.gameStatuses directly if it exists and has valid data
+      if (row.gameStatuses && typeof row.gameStatuses === 'object') {
+        console.log('✅ Using row.gameStatuses directly');
+        gameStatus = row.gameStatuses;
+      } else {
+        console.log('❌ No valid gameStatus found');
       }
       // Build the final game object
       console.log(`🏗️ CONSTRUCTING FINAL GAME OBJECT FOR GAME ${row.games.id}:`);
