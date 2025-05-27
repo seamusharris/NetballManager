@@ -8,6 +8,7 @@ import { Position } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 import { gameStatuses } from "@shared/schema";
+import { seasons } from "@shared/schema";
 
 export interface IStorage {
   // User methods
@@ -189,23 +190,23 @@ export class DatabaseStorage implements IStorage {
           displayOrder: row.seasons.displayOrder
         } : undefined,
         // Include status information from the game_statuses table
-        gameStatus: row.game_statuses ? {
-          id: row.game_statuses.id,
-          name: row.game_statuses.name,
-          displayName: row.game_statuses.displayName,
-          points: row.game_statuses.points,
-          opponentPoints: row.game_statuses.opponentPoints,
-          isCompleted: row.game_statuses.isCompleted,
-          allowsStatistics: row.game_statuses.allowsStatistics,
-          requiresOpponent: row.game_statuses.requiresOpponent,
-          colorClass: row.game_statuses.colorClass,
-          sortOrder: row.game_statuses.sortOrder,
-          isActive: row.game_statuses.isActive
+        gameStatus: row.gameStatuses ? {
+          id: row.gameStatuses.id,
+          name: row.gameStatuses.name,
+          displayName: row.gameStatuses.displayName,
+          points: row.gameStatuses.points,
+          opponentPoints: row.gameStatuses.opponentPoints,
+          isCompleted: row.gameStatuses.isCompleted,
+          allowsStatistics: row.gameStatuses.allowsStatistics,
+          requiresOpponent: row.gameStatuses.requiresOpponent,
+          colorClass: row.gameStatuses.colorClass,
+          sortOrder: row.gameStatuses.sortOrder,
+          isActive: row.gameStatuses.isActive
         } : undefined,
         // Map status field to the actual status name from game_statuses table
-        status: row.game_statuses?.name || (row.games.completed ? 'completed' : 'upcoming'),
+        status: row.gameStatuses?.name || (row.games.completed ? 'completed' : 'upcoming'),
         // Legacy fields for backward compatibility
-        completed: row.game_statuses?.isCompleted ?? row.games.completed,
+        completed: row.gameStatuses?.isCompleted ?? row.games.completed,
         isBye: row.games.opponentId === null
       }));
     } catch (error) {
@@ -257,23 +258,23 @@ export class DatabaseStorage implements IStorage {
           displayOrder: row.seasons.displayOrder
         } : undefined,
         // Include status information from the game_statuses table
-        gameStatus: row.game_statuses ? {
-          id: row.game_statuses.id,
-          name: row.game_statuses.name,
-          displayName: row.game_statuses.displayName,
-          points: row.game_statuses.points,
-          opponentPoints: row.game_statuses.opponentPoints,
-          isCompleted: row.game_statuses.isCompleted,
-          allowsStatistics: row.game_statuses.allowsStatistics,
-          requiresOpponent: row.game_statuses.requiresOpponent,
-          colorClass: row.game_statuses.colorClass,
-          sortOrder: row.game_statuses.sortOrder,
-          isActive: row.game_statuses.isActive
+        gameStatus: row.gameStatuses ? {
+          id: row.gameStatuses.id,
+          name: row.gameStatuses.name,
+          displayName: row.gameStatuses.displayName,
+          points: row.gameStatuses.points,
+          opponentPoints: row.gameStatuses.opponentPoints,
+          isCompleted: row.gameStatuses.isCompleted,
+          allowsStatistics: row.gameStatuses.allowsStatistics,
+          requiresOpponent: row.gameStatuses.requiresOpponent,
+          colorClass: row.gameStatuses.colorClass,
+          sortOrder: row.gameStatuses.sortOrder,
+          isActive: row.gameStatuses.isActive
         } : undefined,
         // Map status field to the actual status name from game_statuses table
-        status: row.game_statuses?.name || (row.games.completed ? 'completed' : 'upcoming'),
+        status: row.gameStatuses?.name || (row.games.completed ? 'completed' : 'upcoming'),
         // Legacy fields for backward compatibility
-        completed: row.game_statuses?.isCompleted ?? row.games.completed,
+        completed: row.gameStatuses?.isCompleted ?? row.games.completed,
         isBye: row.games.opponentId === null
       };
     } catch (error) {
@@ -400,4 +401,3 @@ export class DatabaseStorage implements IStorage {
 
 // Export the database storage implementation
 export const storage = new DatabaseStorage();
-```
