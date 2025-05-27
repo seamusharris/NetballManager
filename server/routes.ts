@@ -1644,24 +1644,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create HTTP server
   const httpServer = createServer(app);
   return httpServer;
-import {
-  players,
-  opponents,
-  games,
-  gameStats,
-  rosters,
-  seasons,
-  playerAvailability,
-  users,
-  gameStatuses,
-  type InsertPlayer,
-  type InsertOpponent,
-  type InsertGame,
-  type InsertGameStat,
-  type InsertRoster,
-  type InsertSeason,
-  type InsertPlayerAvailability,
-  type InsertUser,
+import type { Express } from "express";
+import { createServer, type Server } from "http";
+import { storage } from "./storage";
+import { z } from "zod";
+import { sql } from "drizzle-orm";
+import { db, pool } from "./db";
+import { 
+  insertPlayerSchema, importPlayerSchema,
+  insertOpponentSchema, importOpponentSchema,
+  insertGameSchema, importGameSchema,
+  insertRosterSchema, importRosterSchema,
+  insertGameStatSchema, importGameStatSchema,
+  insertSeasonSchema,
+  players, opponents, games, rosters, gameStats, seasons,
+  POSITIONS
 } from "@shared/schema";
 
 import { updatePlayerSeasonRelationships, getPlayerSeasons } from "./player-season-routes";
