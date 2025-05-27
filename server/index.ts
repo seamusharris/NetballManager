@@ -2,7 +2,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { addSeasonsSupport } from "./migrations/addSeasonsSupport";
-import { addPlayerSeasons } from "./migrations/addPlayerSeasons";
+import { addPlayerSeasonsTable } from "./migrations/addPlayerSeasons";
 import { addQueryIndexes } from "./migrations/addQueryIndexes";
 import { createGameStatusesTable } from "./migrations/createGameStatusesTable";
 
@@ -46,7 +46,7 @@ app.use((req, res, next) => {
     log("Running database migrations...", "migration");
 
     await addSeasonsSupport();
-    await addPlayerSeasons();
+    await addPlayerSeasonsTable();
     await createGameStatusesTable();
     await addQueryIndexes();
 
