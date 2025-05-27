@@ -142,9 +142,7 @@ export default function RecentGames({ games, opponents, className, seasonFilter,
                     </div>
                   </div>
                   <div className="text-right">
-                    <span className={`font-semibold ${getResultTextClass(game)}`}>
-                      {getResultText(game)}
-                    </span>
+                    <BatchGameScoreDisplay gameId={game.id} />
                   </div>
                 </div>
               </Link>
