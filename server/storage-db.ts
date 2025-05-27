@@ -153,10 +153,13 @@ export class DatabaseStorage implements IStorage {
 
   // Game methods
   async getGames(): Promise<Game[]> {
+    console.log('=== DEBUGGING getGames() START ===');
+    
     // Debug: Show available statuses
     const availableStatuses = await db.select().from(gameStatuses);
-    console.log('Available game statuses:', availableStatuses.map(s => ({ id: s.id, name: s.name, isCompleted: s.isCompleted })));
-    
+    console.log('=== AVAILABLE GAME STATUSES ===');
+    console.log(availableStatuses);
+
     // Debug: Show distribution of status IDs in games
     const statusDistribution = await db.execute(sql`
       SELECT status_id, COUNT(*) as count 
@@ -165,7 +168,19 @@ export class DatabaseStorage implements IStorage {
       GROUP BY status_id 
       ORDER BY status_id
     `);
-    console.log('Game status ID distribution:', statusDistribution.rows);
+    console.log('=== GAME STATUS ID DISTRIBUTION ===');
+    console.log(statusDistribution.rows);
+
+    // Show sample games with their actual status IDs
+    const gamesSample = await db.execute(sql`
+      SELECT g.id, g.date, g.status_id, gs.name as status_name, gs.is_completed
+      FROM games g
+      LEFT JOIN game_statuses gs ON g.status_id = gs.id
+      ORDER BY g.id 
+      LIMIT 10
+    `);
+    console.log('=== SAMPLE GAMES WITH ACTUAL STATUS DATA ===');
+    console.log(gamesSample.rows);
 
     const results = await db
       .select({
@@ -182,9 +197,22 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(players, eq(games.awardWinnerId, players.id))
       .orderBy(desc(games.date), desc(games.time));
 
+    console.log('=== DRIZZLE JOIN RESULTS (first 3) ===');
+    results.slice(0, 3).forEach((row, index) => {
+      console.log(`Result ${index}:`, {
+        gameId: row.games.id,
+        gameStatusId: row.games.statusId,
+        gameStatusObject: row.gameStatuses,
+        joinKeys: Object.keys(row)
+      });
+    });
+
     return results.map(row => {
-      // Debug status ID mapping
-      console.log(`Game ${row.games.id} - StatusID: ${row.games.statusId}, Found Status: ${row.gameStatuses?.name || 'NULL'}`);
+      // Debug the entire gameStatuses object
+      console.log(`=== GAME ${row.games.id} DEBUG ===`);
+      console.log(`StatusID in games table: ${row.games.statusId}`);
+      console.log(`gameStatuses object:`, row.gameStatuses);
+      console.log(`Join result keys:`, Object.keys(row));
 
       const dbStatus = row.gameStatuses?.name || 'upcoming';
       const dbCompleted = row.gameStatuses?.isCompleted ?? false;
