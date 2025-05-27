@@ -4,7 +4,7 @@ import { Link } from 'wouter';
 import { Game, Opponent, GameStat } from '@shared/schema';
 import { formatShortDate } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
-import { BatchGameScoreDisplay } from '@/components/dashboard/BatchGameScoreDisplay';
+import { GameScoreDisplay } from '@/components/statistics/GameScoreDisplay';
 
 interface RecentGamesProps {
   games: Game[];
@@ -142,7 +142,9 @@ export default function RecentGames({ games, opponents, className, seasonFilter,
                     </div>
                   </div>
                   <div className="text-right">
-                    <BatchGameScoreDisplay gameId={game.id} />
+                    <div className="text-right">
+                    <GameScoreDisplay gameId={game.id} compact />
+                  </div>
                   </div>
                 </div>
               </Link>
