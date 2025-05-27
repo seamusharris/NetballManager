@@ -276,6 +276,16 @@ export class DatabaseStorage implements IStorage {
       console.log('🔸 row.gameStatuses.id:', row.gameStatuses?.id);
       console.log('🔸 row.gameStatuses.name:', row.gameStatuses?.name);
 
+      // Debugging opponents data
+      console.log('🏢 DEBUGGING OPPONENT DETECTION:');
+      console.log('🔸 row.opponents exists:', !!row.opponents);
+      console.log('🔸 row.opponents value:', JSON.stringify(row.opponents, null, 2));
+      console.log('🔸 row.opponents type:', typeof row.opponents);
+      console.log('🔸 Object.keys(row.opponents):', row.opponents ? Object.keys(row.opponents) : 'N/A');
+      console.log('🔸 Object.keys length:', row.opponents ? Object.keys(row.opponents).length : 'N/A');
+      console.log('🔸 row.opponents.id:', row.opponents?.id);
+      console.log('🔸 row.opponents.teamName:', row.opponents?.teamName);
+
       // Declare the gameStatus variable
       let gameStatus = null;
       
@@ -313,7 +323,7 @@ export class DatabaseStorage implements IStorage {
           allowsStatistics: gameStatus.allowsStatistics,
           colorClass: gameStatus.colorClass
         } : null,
-        opponent: row.opponents ? {
+        opponent: (row.opponents && Object.keys(row.opponents).length > 0 && row.opponents.id) ? {
           teamName: row.opponents.teamName,
           primaryColor: row.opponents.primaryColor,
           secondaryColor: row.opponents.secondaryColor
