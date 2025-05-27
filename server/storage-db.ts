@@ -7,7 +7,7 @@ import { gameStats, type GameStat, type InsertGameStat } from "@shared/schema";
 import { Position } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc } from "drizzle-orm";
-import { gameStatuses } from "@shared/schema";
+import { gameStatuses, type GameStatus } from "@shared/schema";
 import { seasons } from "@shared/schema";
 import { sql } from "drizzle-orm";
 
@@ -226,6 +226,15 @@ export class DatabaseStorage implements IStorage {
       tableName: gameStatuses._.name,
       columns: Object.keys(gameStatuses).filter(key => !key.startsWith('_'))
     });
+    
+    // Test if we can select directly from gameStatuses table
+    console.log('=== DIRECT GAMESTATUSES SELECT TEST ===');
+    try {
+      const directStatusTest = await db.select().from(gameStatuses);
+      console.log('Direct gameStatuses select results:', directStatusTest);
+    } catch (error) {
+      console.error('ERROR: Cannot select from gameStatuses table:', error);
+    }
 
     // Check if the foreign key constraint exists
     const fkCheck = await db.execute(sql`
