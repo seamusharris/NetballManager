@@ -11,6 +11,7 @@ import GamesList from './GamesList';
 import UpcomingGames from './UpcomingGames';
 import PerformanceCharts from './PerformanceCharts';
 import QuarterPerformanceWidget from './QuarterPerformanceWidget';
+import RecentFormWidget from './RecentFormWidget';
 import { Card, CardContent } from "@/components/ui/card"
 import { Users } from "lucide-react"
 
@@ -192,7 +193,7 @@ export default function DashboardSummary({
       {/* Performance Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
         {isLoading || statsLoading ? (
-          Array.from({ length: 5 }).map((_, i) => (
+          Array.from({ length: 6 }).map((_, i) => (
             <Skeleton key={i} className="h-32 rounded-lg" />
           ))
         ) : (
@@ -221,6 +222,11 @@ export default function DashboardSummary({
               games={filteredGames} 
               activeSeason={activeSeason} 
               selectedSeason={selectedSeasonId === 'current' ? activeSeason : seasons.find(s => s.id.toString() === selectedSeasonId)} 
+            />
+            <RecentFormWidget 
+              games={filteredGames} 
+              opponents={opponents}
+              centralizedStats={centralizedStats}
             />
             <OpponentMatchups 
               games={filteredGames} 
