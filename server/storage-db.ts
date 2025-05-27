@@ -200,7 +200,21 @@ export class DatabaseStorage implements IStorage {
       .where(eq(games.id, 62)) // Test with a specific game
       .limit(1);
     
-    console.log('Join test result:', joinTest);
+    console.log('Drizzle join test result:', joinTest);
+
+    // Also test with raw SQL to compare
+    const rawSqlTest = await db.execute(sql`
+      SELECT 
+        g.id as game_id,
+        g.status_id,
+        gs.name as status_name,
+        gs.is_completed
+      FROM games g
+      LEFT JOIN game_statuses gs ON g.status_id = gs.id
+      WHERE g.id = 62
+      LIMIT 1
+    `);
+    console.log('Raw SQL test result:', rawSqlTest.rows);
 
     const results = await db
       .select()
@@ -211,19 +225,30 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(players, eq(games.awardWinnerId, players.id))
       .orderBy(desc(games.date), desc(games.time));
 
-    console.log('=== DRIZZLE JOIN RESULTS (first 5) ===');
+    console.log('=== DRIZZLE JOIN RESULTS (first 2) ===');
     console.log('🔍 RAW STRUCTURE INSPECTION:');
     results.slice(0, 2).forEach((row, index) => {
       console.log(`\n--- RAW RESULT ${index} ---`);
-      console.log('Full row object:', JSON.stringify(row, null, 2));
       console.log('Object keys:', Object.keys(row));
-      console.log('Type of row:', typeof row);
+      console.log('row.games exists?', !!row.games);
+      console.log('row.gameStatuses exists?', !!row.gameStatuses);
+      console.log('row.game_statuses exists?', !!row.game_statuses);
       
-      // Try different possible structures
-      console.log('row.games?', !!row.games);
-      console.log('row.gameStatuses?', !!row.gameStatuses);
-      console.log('row.game_statuses?', !!row.game_statuses);
-      console.log('Direct properties:', Object.getOwnPropertyNames(row));
+      // Check what's actually in the gameStatuses object
+      if (row.gameStatuses) {
+        console.log('gameStatuses content:', {
+          id: row.gameStatuses.id,
+          name: row.gameStatuses.name,
+          isCompleted: row.gameStatuses.isCompleted
+        });
+      } else {
+        console.log('gameStatuses is null/undefined');
+      }
+      
+      // Check if the join is working at all
+      if (row.games) {
+        console.log('games.statusId:', row.games.statusId);
+      }
     });
 
     return results.map(row => {
