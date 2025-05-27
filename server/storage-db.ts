@@ -264,27 +264,24 @@ export class DatabaseStorage implements IStorage {
       console.log(`🔗 Game statusId: ${row.games.statusId}`);
       console.log(`🏢 Game opponentId: ${row.games.opponentId}`);
 
-      // Fix: Use the correct gameStatuses key (it exists but our detection was wrong)
-      let gameStatus = null;
-      console.log('🔍 GAME STATUS RESOLUTION PROCESS:');
-      console.log('🔑 ALL AVAILABLE KEYS IN ROW:', Object.keys(row));
-
       // The join works correctly - gameStatuses is the right key
-      if (row.gameStatuses && typeof row.gameStatuses === 'object') {
+      console.log('🔍 DEBUGGING GAME STATUS DETECTION:');
+      console.log('🔸 row.gameStatuses exists:', !!row.gameStatuses);
+      console.log('🔸 row.gameStatuses value:', row.gameStatuses);
+      console.log('🔸 row.gameStatuses type:', typeof row.gameStatuses);
+      console.log('🔸 row.gameStatuses === null:', row.gameStatuses === null);
+      console.log('🔸 row.gameStatuses === undefined:', row.gameStatuses === undefined);
+      console.log('🔸 Object.keys(row.gameStatuses):', row.gameStatuses ? Object.keys(row.gameStatuses) : 'N/A');
+
+      // Try a more explicit check
+      if (row.gameStatuses !== null && row.gameStatuses !== undefined && typeof row.gameStatuses === 'object') {
         console.log('✅ Found gameStatus data at gameStatuses key:', row.gameStatuses);
         gameStatus = row.gameStatuses;
       } else {
-        console.log('❌ No valid gameStatus found');
-        console.log('🔸 row.gameStatuses exists:', !!row.gameStatuses);
-        console.log('🔸 row.gameStatuses value:', row.gameStatuses);
-        console.log('🔸 row.gameStatuses type:', typeof row.gameStatuses);
-
-        // Emergency fallback - log everything to find the issue
-        Object.keys(row).forEach(key => {
-          if (key.toLowerCase().includes('status') || key.toLowerCase().includes('game')) {
-            console.log(`   - ${key}:`, typeof row[key], row[key]);
-          }
-        });
+        console.log('❌ No valid gameStatus found - condition failed');
+        console.log('   - Not null:', row.gameStatuses !== null);
+        console.log('   - Not undefined:', row.gameStatuses !== undefined); 
+        console.log('   - Is object:', typeof row.gameStatuses === 'object');
       }
       // Build the final game object
       console.log(`🏗️ CONSTRUCTING FINAL GAME OBJECT FOR GAME ${row.games.id}:`);
