@@ -201,12 +201,15 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(players, eq(games.awardWinnerId, players.id))
       .orderBy(desc(games.date), desc(games.time));
 
-    console.log('=== DRIZZLE JOIN RESULTS (first 3) ===');
-    results.slice(0, 3).forEach((row, index) => {
+    console.log('=== DRIZZLE JOIN RESULTS (first 5) ===');
+    results.slice(0, 5).forEach((row, index) => {
       console.log(`Result ${index}:`, {
         gameId: row.games.id,
+        gameDate: row.games.date,
         gameStatusId: row.games.statusId,
         gameStatusObject: row.gameStatuses,
+        gameStatusName: row.gameStatuses?.name,
+        gameStatusIsCompleted: row.gameStatuses?.isCompleted,
         joinKeys: Object.keys(row)
       });
     });
@@ -216,10 +219,14 @@ export class DatabaseStorage implements IStorage {
       console.log(`=== GAME ${row.games.id} DEBUG ===`);
       console.log(`StatusID in games table: ${row.games.statusId}`);
       console.log(`gameStatuses object:`, row.gameStatuses);
-      console.log(`Join result keys:`, Object.keys(row));
+      console.log(`gameStatuses.name:`, row.gameStatuses?.name);
+      console.log(`gameStatuses.isCompleted:`, row.gameStatuses?.isCompleted);
 
-      const dbStatus = row.gameStatuses?.name || 'upcoming';
-      const dbCompleted = row.gameStatuses?.isCompleted ?? false;
+      // Get status name and completion directly from the joined gameStatuses table
+      const statusName = row.gameStatuses?.name || 'upcoming';
+      const isCompleted = row.gameStatuses?.isCompleted ?? false;
+
+      console.log(`Mapped status: ${statusName}, completed: ${isCompleted}`);
 
       return {
         id: row.games.id,
@@ -270,10 +277,9 @@ export class DatabaseStorage implements IStorage {
           sortOrder: row.gameStatuses.sortOrder,
           isActive: row.gameStatuses.isActive
         } : undefined,
-        // Map status field to the actual status name from game_statuses table
-        status: dbStatus,
-        // Legacy fields for backward compatibility - use gameStatus.isCompleted since completed column was removed
-        completed: row.gameStatuses?.isCompleted ?? false,
+        // Use the values we extracted above
+        status: statusName,
+        completed: isCompleted,
         isBye: row.games.opponentId === null
       };
     });
