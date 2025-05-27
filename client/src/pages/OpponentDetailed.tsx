@@ -215,7 +215,6 @@ export default function OpponentDetailed() {
                     </div>
                     <ResultBadge 
                       result={result.result as GameResult}
-                      size="sm"
                     />
                   </div>
                 ))}
