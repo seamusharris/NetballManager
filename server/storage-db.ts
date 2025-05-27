@@ -176,7 +176,7 @@ export class DatabaseStorage implements IStorage {
         players,
       })
       .from(games)
-      .leftJoin(gameStatuses, eq(games.statusId, gameStatuses.id))
+      .leftJoin(gameStatuses, eq(games.status_id, gameStatuses.id))
       .leftJoin(seasons, eq(games.seasonId, seasons.id))
       .leftJoin(players, eq(games.awardWinnerId, players.id))
       .orderBy(desc(games.date), desc(games.time));
@@ -257,7 +257,7 @@ export class DatabaseStorage implements IStorage {
         .from(games)
         .leftJoin(opponents, eq(games.opponentId, opponents.id))
         .leftJoin(seasons, eq(games.seasonId, seasons.id))
-        .leftJoin(gameStatuses, eq(games.statusId, gameStatuses.id))
+        .leftJoin(gameStatuses, eq(games.status_id, gameStatuses.id))
         .where(eq(games.id, id))
         .limit(1);
 
