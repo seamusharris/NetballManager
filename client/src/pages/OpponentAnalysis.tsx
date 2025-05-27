@@ -10,7 +10,8 @@ import { Game, Opponent, Season } from '@shared/schema';
 import { getWinLoseLabel } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/apiClient';
-import { ResultBadge, GameResult } from '@/lib/resultUtils';
+import { GameResult } from '@/lib/resultUtils';
+import { ResultBadge } from '@/components/ui/result-badge';
 
 interface OpponentMatchup {
   opponent: Opponent;
