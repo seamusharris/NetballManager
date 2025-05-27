@@ -179,6 +179,9 @@ export class DatabaseStorage implements IStorage {
 
       const dbStatus = row.gameStatuses?.name || 'upcoming';
       const dbCompleted = row.gameStatuses?.isCompleted ?? false;
+      
+      // Log the actual dbCompleted value for debugging
+      console.log(`Game ${row.games.id} - dbCompleted value:`, dbCompleted, 'type:', typeof dbCompleted);
 
       return {
         id: row.games.id,
