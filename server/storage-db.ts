@@ -169,6 +169,14 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(games.date), desc(games.time));
 
     return results.map(row => {
+      // Debug the actual row data to see what's happening with the join
+      console.log(`Game ${row.games.id} raw data:`, {
+        gameStatusId: row.games.statusId,
+        gameStatusObject: row.gameStatuses,
+        statusName: row.gameStatuses?.name,
+        isCompleted: row.gameStatuses?.isCompleted
+      });
+
       const dbStatus = row.gameStatuses?.name || 'upcoming';
       const dbCompleted = row.gameStatuses?.isCompleted ?? false;
 
