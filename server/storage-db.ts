@@ -162,6 +162,18 @@ export class DatabaseStorage implements IStorage {
         .leftJoin(players, eq(games.awardWinnerId, players.id))
         .orderBy(desc(games.date), desc(games.time));
 
+      // Debug the join results
+      console.log('Storage getGames Debug - First 3 raw join results:');
+      results.slice(0, 3).forEach((row, i) => {
+        console.log(`Row ${i}:`, {
+          gameId: row.games.id,
+          statusId: row.games.statusId,
+          gameStatusesObject: row.gameStatuses,
+          statusName: row.gameStatuses?.name,
+          willDefaultToUpcoming: !row.gameStatuses?.name
+        });
+      });
+
       return results.map(row => ({
         id: row.games.id,
         date: row.games.date,
