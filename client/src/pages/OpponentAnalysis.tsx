@@ -206,14 +206,17 @@ export default function OpponentAnalysis() {
   }, [filteredGames, opponents, centralizedStats]);
 
   const getFormDisplay = (form: string[]) => {
-    return form.slice(0, 5).map((result, index) => (
-      <ResultBadge 
-        key={index} 
-        result={result === 'W' ? 'Win' : result === 'L' ? 'Loss' : 'Draw'} 
-        size="sm" 
-        className="mx-0.5"
-      />
-    ));
+    return form.slice(0, 5).map((result, index) => {
+      const gameResult: GameResult = result === 'W' ? 'Win' : result === 'L' ? 'Loss' : 'Draw';
+      return (
+        <ResultBadge 
+          key={index} 
+          result={gameResult} 
+          size="sm" 
+          className="mx-0.5"
+        />
+      );
+    });
   };
 
   const getTrendIcon = (trend: string) => {

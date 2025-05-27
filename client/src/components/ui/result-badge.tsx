@@ -29,7 +29,7 @@ export function ResultBadge({ result, className, size = 'default' }: ResultBadge
         className
       )}
     >
-      {result}
+      {result === 'Win' ? 'W' : result === 'Loss' ? 'L' : 'D'}
     </Badge>
   );
 }

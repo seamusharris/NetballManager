@@ -3,6 +3,8 @@ import { useQuery } from '@tanstack/react-query';
 import { useParams, useLocation } from 'wouter';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { ResultBadge } from '@/components/ui/result-badge';
+import { GameResult } from '@/lib/resultUtils';
 import { BackButton } from '@/components/ui/back-button';
 import { BarChart3, Calendar, Trophy, TrendingUp, TrendingDown, Target } from 'lucide-react';
 import { Game, Opponent } from '@shared/schema';
@@ -211,16 +213,10 @@ export default function OpponentDetailed() {
                         {result.result === 'Win' ? '+' : result.result === 'Loss' ? '' : ''}{result.margin}
                       </p>
                     </div>
-                    <Badge 
-                      variant="outline" 
-                      className={
-                        result.result === 'Win' ? 'bg-green-50 text-green-700 border-green-200' :
-                        result.result === 'Loss' ? 'bg-red-50 text-red-700 border-red-200' :
-                        'bg-yellow-50 text-yellow-700 border-yellow-200'
-                      }
-                    >
-                      {result.result}
-                    </Badge>
+                    <ResultBadge 
+                      result={result.result as GameResult}
+                      size="sm"
+                    />
                   </div>
                 ))}
               </div>
