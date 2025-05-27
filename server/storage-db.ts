@@ -166,61 +166,74 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(players, eq(games.awardWinnerId, players.id))
       .orderBy(desc(games.date), desc(games.time));
 
-    return results.map(row => ({
-      id: row.games.id,
-      date: row.games.date,
-      time: row.games.time,
-      opponentId: row.games.opponentId,
-      statusId: row.games.statusId,
-      round: row.games.round,
-      seasonId: row.games.seasonId,
-      notes: row.games.notes,
-      awardWinnerId: row.games.awardWinnerId,
-      opponent: row.opponents ? {
-        id: row.opponents.id,
-        teamName: row.opponents.teamName,
-        primaryContact: row.opponents.primaryContact,
-        contactInfo: row.opponents.contactInfo
-      } : undefined,
-      season: row.seasons ? {
-        id: row.seasons.id,
-        name: row.seasons.name,
-        startDate: row.seasons.startDate,
-        endDate: row.seasons.endDate,
-        isActive: row.seasons.isActive,
-        type: row.seasons.type,
-        year: row.seasons.year,
-        displayOrder: row.seasons.displayOrder
-      } : undefined,
-      awardWinner: row.players ? {
-        id: row.players.id,
-        displayName: row.players.displayName,
-        firstName: row.players.firstName,
-        lastName: row.players.lastName,
-        dateOfBirth: row.players.dateOfBirth,
-        positionPreferences: row.players.positionPreferences,
-        active: row.players.active,
-        avatarColor: row.players.avatarColor
-      } : undefined,
-      gameStatus: row.gameStatuses ? {
-        id: row.gameStatuses.id,
-        name: row.gameStatuses.name,
-        displayName: row.gameStatuses.displayName,
-        points: row.gameStatuses.points,
-        opponentPoints: row.gameStatuses.opponentPoints,
-        isCompleted: row.gameStatuses.isCompleted,
-        allowsStatistics: row.gameStatuses.allowsStatistics,
-        requiresOpponent: row.gameStatuses.requiresOpponent,
-        colorClass: row.gameStatuses.colorClass,
-        sortOrder: row.gameStatuses.sortOrder,
-        isActive: row.gameStatuses.isActive
-      } : undefined,
-      // Map status field to the actual status name from game_statuses table
-      status: row.gameStatuses?.name || 'upcoming',
-      // Legacy fields for backward compatibility - use gameStatus.isCompleted since completed column was removed
-      completed: row.gameStatuses?.isCompleted ?? false,
-      isBye: row.games.opponentId === null
-    }));
+    return results.map(row => {
+      const hasStats = gamesWithStats.has(row.games.id);
+      const dbStatus = row.gameStatuses?.name || 'upcoming';
+      const dbCompleted = row.gameStatuses?.isCompleted ?? false;
+
+      // Use the database status as the source of truth
+      // Don't override status just because stats exist - games can be in-progress with stats
+      const actualStatus = dbStatus;
+
+      // Completion is determined by the game status, not just presence of stats
+      const actuallyCompleted = dbCompleted;
+
+      return {
+        id: row.games.id,
+        date: row.games.date,
+        time: row.games.time,
+        opponentId: row.games.opponentId,
+        statusId: row.games.statusId,
+        round: row.games.round,
+        seasonId: row.games.seasonId,
+        notes: row.games.notes,
+        awardWinnerId: row.games.awardWinnerId,
+        opponent: row.opponents ? {
+          id: row.opponents.id,
+          teamName: row.opponents.teamName,
+          primaryContact: row.opponents.primaryContact,
+          contactInfo: row.opponents.contactInfo
+        } : undefined,
+        season: row.seasons ? {
+          id: row.seasons.id,
+          name: row.seasons.name,
+          startDate: row.seasons.startDate,
+          endDate: row.seasons.endDate,
+          isActive: row.seasons.isActive,
+          type: row.seasons.type,
+          year: row.seasons.year,
+          displayOrder: row.seasons.displayOrder
+        } : undefined,
+        awardWinner: row.players ? {
+          id: row.players.id,
+          displayName: row.players.displayName,
+          firstName: row.players.firstName,
+          lastName: row.players.lastName,
+          dateOfBirth: row.players.dateOfBirth,
+          positionPreferences: row.players.positionPreferences,
+          active: row.players.active,
+          avatarColor: row.players.avatarColor
+        } : undefined,
+        gameStatus: row.gameStatuses ? {
+          id: row.gameStatuses.id,
+          name: row.gameStatuses.name,
+          displayName: row.gameStatuses.displayName,
+          points: row.gameStatuses.points,
+          opponentPoints: row.gameStatuses.opponentPoints,
+          isCompleted: row.gameStatuses.isCompleted,
+          allowsStatistics: row.gameStatuses.allowsStatistics,
+          requiresOpponent: row.gameStatuses.requiresOpponent,
+          colorClass: row.gameStatuses.colorClass,
+          sortOrder: row.gameStatuses.sortOrder,
+          isActive: row.gameStatuses.isActive
+        } : undefined,
+        // Map status field to the actual status name from game_statuses table
+        status: actualStatus,
+        // Legacy fields for backward compatibility - use gameStatus.isCompleted since completed column was removed
+        completed: actuallyCompleted,
+        isBye: row.games.opponentId === null
+      };
+    });
   }
 
   async getGame(id: number): Promise<Game | undefined> {
