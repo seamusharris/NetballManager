@@ -88,14 +88,20 @@ export default function GamesList({
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
   const [selectedGame, setSelectedGame] = useState<Game | null>(null);
 
-  // Fetch game stats for all completed games
+  // Fetch game stats for all completed games (based on game status)
   const completedGameIds = games
-    .filter(game => game.completed)
+    .filter(game => {
+      // A game is completed if it has a status that marks it as completed
+      // We'll need to check this against the actual game status data
+      return game.status === 'completed' || game.status === 'forfeit-win' || 
+             game.status === 'forfeit-loss' || game.status === 'bye' || 
+             game.status === 'abandoned';
+    })
     .map(game => game.id);
 
   // Get all non-BYE game IDs for checking roster status
   const nonByeGameIds = games
-    .filter(game => !game.isBye)
+    .filter(game => game.status !== 'bye')
     .map(game => game.id);
 
   // Use React Query to fetch roster data for all games to check if they're complete

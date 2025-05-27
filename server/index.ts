@@ -5,6 +5,7 @@ import { addSeasonsSupport } from "./migrations/addSeasonsSupport";
 import { addPlayerSeasonsTable } from "./migrations/addPlayerSeasons";
 import { addQueryIndexes } from "./migrations/addQueryIndexes";
 import { createGameStatusesTable } from "./migrations/createGameStatusesTable";
+import { cleanupLegacyGameColumns } from "./migrations/cleanupLegacyGameColumns";
 
 const app = express();
 app.use(express.json());
@@ -49,6 +50,9 @@ app.use((req, res, next) => {
     await addPlayerSeasonsTable();
     await createGameStatusesTable();
     await addQueryIndexes();
+
+    // Clean up legacy columns
+    await cleanupLegacyGameColumns();
 
     log("Database migrations completed successfully!", "migration");
   } catch (error) {

@@ -51,10 +51,7 @@ export const importSeasonSchema = createInsertSchema(seasons);
 export type InsertSeason = z.infer<typeof insertSeasonSchema>;
 export type Season = typeof seasons.$inferSelect;
 
-// Game status types
-export const GAME_STATUSES = ["upcoming", "in-progress", "completed", "forfeit-win", "forfeit-loss", "bye", "abandoned"] as const;
-export type GameStatus = typeof GAME_STATUSES[number];
-export const allGameStatuses = [...GAME_STATUSES];
+// Legacy game status types are now managed in the game_statuses table
 
 // Player model
 export const players = pgTable("players", {
@@ -96,10 +93,7 @@ export const games = pgTable("games", {
   date: text("date").notNull(),
   time: text("time").notNull(),
   opponentId: integer("opponent_id"), // Nullable for BYE games
-  completed: boolean("completed").notNull().default(false), // Legacy field, kept for backward compatibility
-  status: text("status").$type<GameStatus>().default("upcoming"), // Legacy field for backward compatibility
-  statusId: integer("status_id").references(() => gameStatuses.id), // New field referencing game_statuses table
-  isBye: boolean("is_bye").notNull().default(false),
+  statusId: integer("status_id").references(() => gameStatuses.id), // References game_statuses table
   round: text("round"), // Round number in the season or special values like "SF" or "GF"
   seasonId: integer("season_id").references(() => seasons.id), // Reference to season
   notes: text("notes"), // Game notes for recording observations, player performance, etc.
