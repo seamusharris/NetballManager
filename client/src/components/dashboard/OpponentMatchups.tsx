@@ -5,7 +5,8 @@ import { Badge } from '@/components/ui/badge';
 import { TrendingUp, TrendingDown, Target, Trophy, AlertTriangle, ChevronRight } from 'lucide-react';
 import { Game, Opponent } from '@shared/schema';
 import { getWinLoseLabel, getWinLoseClass } from '@/lib/utils';
-import { ResultBadge, GameResult } from '@/lib/resultUtils';
+import { GameResult } from '@/lib/resultUtils';
+import { ResultBadge } from '@/components/ui/result-badge';
 
 interface OpponentMatchup {
   opponent: Opponent;

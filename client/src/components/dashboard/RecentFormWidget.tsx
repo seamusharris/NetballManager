@@ -3,7 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Game, Opponent, GameResult } from '@shared/schema';
 import { getWinLoseLabel } from '@/lib/utils';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
-import { ResultBadge } from '@/lib/resultUtils';
+import { ResultBadge } from '@/components/ui/result-badge';
 
 
 interface RecentFormWidgetProps {
