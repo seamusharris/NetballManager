@@ -177,9 +177,9 @@ export class DatabaseStorage implements IStorage {
     return results.map(row => {
       console.log(`🎮 Processing game ${row.games.id}: statusId=${row.games.statusId}`);
       console.log(`🔍 Available keys on row:`, Object.keys(row));
-      console.log(`🔍 game_statuses data:`, row.game_statuses);
+      console.log(`🔍 gameStatuses data:`, row.gameStatuses);
 
-      const gameStatus = row.game_statuses;
+      const gameStatus = row.gameStatuses;
       return {
         id: row.games.id,
         date: row.games.date,
