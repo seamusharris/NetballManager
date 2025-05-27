@@ -1,252 +1,190 @@
-import { useState, useEffect } from 'react';
-import { useQuery, useMutation } from '@tanstack/react-query';
-import { Helmet } from 'react-helmet';
-import { useToast } from '@/hooks/use-toast';
+import React, { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { GameForm } from '@/components/games/GameForm';
+import { GamesList } from '@/components/games/GamesList';
+import { CrudDialog } from '@/components/ui/crud-dialog';
 import { Plus } from 'lucide-react';
-import GamesList from '@/components/games/GamesList';
-import GameForm from '@/components/games/GameForm';
-import { apiRequest } from '@/lib/queryClient';
-import { queryClient } from '@/lib/queryClient';
-import { Game } from '@shared/schema';
-import { useLocation } from 'wouter';
+import { apiRequest } from '@/lib/apiClient';
+import { Game, Opponent, Player } from '@shared/schema';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useToast } from '@/hooks/use-toast';
+import { useGameStatuses } from '@/hooks/use-game-statuses';
+
+interface QueryParams {
+  status?: string;
+  season?: string;
+}
 
 export default function Games() {
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [editingGame, setEditingGame] = useState<Game | null>(null);
   const { toast } = useToast();
-  const [_, navigate] = useLocation();
-  
-  // Immediate query invalidation when component mounts
+  const queryClient = useQueryClient();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingGame, setEditingGame] = useState<Game | null>(null);
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+
+  // Get URL search params
+  const urlParams = new URLSearchParams(window.location.search);
+
   useEffect(() => {
-    // Force a refresh of all game data and statistics
-    queryClient.invalidateQueries({ queryKey: ['/api/games'] });
-    queryClient.invalidateQueries({ queryKey: ['gameScores'] });
-    queryClient.invalidateQueries({ queryKey: ['gameStats'] });
+    const status = urlParams.get('status');
+    if (status) {
+      setStatusFilter(status);
+    }
   }, []);
-  
-  // Fetch games data
-  const { data: games = [], isLoading: isLoadingGames } = useQuery<any[]>({
-    queryKey: ['/api/games'],
-    staleTime: 0, // Consider data stale immediately
+
+  // Fetch game statuses from database
+  const { data: gameStatuses = [], isLoading: isLoadingStatuses } = useGameStatuses();
+
+  // Fetch games
+  const { data: games = [], isLoading: isLoadingGames } = useQuery<Game[]>({
+    queryKey: ['games'],
+    queryFn: () => apiRequest('GET', '/api/games') as Promise<Game[]>,
+    staleTime: 5 * 60 * 1000,
   });
-  
-  // Fetch opponents data
-  const { data: opponents = [], isLoading: isLoadingOpponents } = useQuery<any[]>({
-    queryKey: ['/api/opponents'],
+
+  // Fetch opponents
+  const { data: opponents = [] } = useQuery<Opponent[]>({
+    queryKey: ['opponents'],
+    queryFn: () => apiRequest('GET', '/api/opponents') as Promise<Opponent[]>,
   });
-  
-  // Fetch seasons data
-  const { data: seasons = [], isLoading: isLoadingSeasons } = useQuery<any[]>({
-    queryKey: ['/api/seasons'],
+
+  // Fetch players
+  const { data: players = [] } = useQuery<Player[]>({
+    queryKey: ['players'],
+    queryFn: () => apiRequest('GET', '/api/players') as Promise<Player[]>,
   });
-  
-  // Fetch active season
-  const { data: activeSeason, isLoading: isLoadingActiveSeason } = useQuery<any>({
-    queryKey: ['/api/seasons/active'],
-  });
-  
-  // Check for URL parameters and handle edit game loading and status filtering
-  useEffect(() => {
-    const searchParams = new URLSearchParams(window.location.search);
-    
-    // Handle status filter from URL
-    const statusParam = searchParams.get('status');
-    if (statusParam && ['upcoming', 'completed', 'in-progress', 'forfeit'].includes(statusParam)) {
-      // This will be handled by GamesList component's statusFilter prop
+
+  // Filter games based on status using gameStatus.isCompleted and database statuses
+  const filteredGames = games.filter(game => {
+    if (statusFilter === 'all') return true;
+
+    // Handle completed games filter using gameStatus.isCompleted
+    if (statusFilter === 'completed') {
+      return game.gameStatus?.isCompleted === true;
     }
-    
-    if (games.length > 0) {
-      // Support both editId (legacy) and edit (new) parameters
-      const editId = searchParams.get('editId') || searchParams.get('edit');
-      // Get the returnTo parameter if it exists
-      const returnTo = searchParams.get('returnTo');
-      
-      if (editId) {
-        const gameId = parseInt(editId);
-        const gameToEdit = games.find(game => game.id === gameId);
-        if (gameToEdit) {
-          // Set the editing game to trigger the dialog
-          setEditingGame(gameToEdit);
-          
-          // Store the return path if provided
-          if (returnTo === 'gameDetails') {
-            // We'll use this to navigate back to game details after editing
-            sessionStorage.setItem('returnToGameDetails', gameId.toString());
-          }
-          
-          // Clear the URL parameter without reloading the page
-          const newUrl = window.location.pathname;
-          window.history.replaceState({}, '', newUrl);
-        }
-      }
+
+    // Handle upcoming games filter using gameStatus.isCompleted
+    if (statusFilter === 'upcoming') {
+      return game.gameStatus?.isCompleted !== true;
     }
-  }, [games]);
-  
-  const isLoading = isLoadingGames || isLoadingOpponents || isLoadingSeasons || isLoadingActiveSeason;
-  
-  const createMutation = useMutation({
-    mutationFn: async (newGame: any) => {
-      const res = await apiRequest('POST', '/api/games', newGame);
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/games'] });
+
+    // Match exact status name from database
+    return game.gameStatus?.name === statusFilter;
+  });
+
+  const handleCreate = async (game: Game) => {
+    try {
+      await apiRequest('POST', '/api/games', game);
+      queryClient.invalidateQueries({ queryKey: ['games'] });
+      setIsDialogOpen(false);
       toast({
-        title: "Success",
-        description: "Game scheduled successfully",
+        title: 'Success',
+        description: 'Game created successfully.',
       });
-      setIsAddDialogOpen(false);
-    },
-    onError: (error) => {
+    } catch (error) {
       toast({
-        title: "Error",
-        description: `Failed to schedule game: ${error}`,
-        variant: "destructive",
+        title: 'Error',
+        description: 'Failed to create game.',
+        variant: 'destructive',
       });
     }
-  });
-  
-  const updateMutation = useMutation({
-    mutationFn: async ({ id, game }: { id: number, game: any }) => {
-      const res = await apiRequest('PATCH', `/api/games/${id}`, game);
-      return res.json();
-    },
-    onSuccess: (data, variables) => {
-      // Invalidate games list
-      queryClient.invalidateQueries({ queryKey: ['/api/games'] });
-      
-      // Also invalidate game stats if the game was marked as completed
-      if (variables.game.completed) {
-        queryClient.invalidateQueries({ queryKey: ['allGameStats'] });
-        queryClient.invalidateQueries({ queryKey: ['gameStats', variables.id] });
-        queryClient.invalidateQueries({ queryKey: ['gameScores', variables.id] });
-        queryClient.invalidateQueries({ queryKey: ['positionStats', variables.id] });
-        queryClient.invalidateQueries({ queryKey: ['playerStats', variables.id] });
-      }
-      
-      toast({
-        title: "Success",
-        description: "Game updated successfully",
-      });
+  };
+
+  const handleUpdate = async (game: Game) => {
+    if (!editingGame) return;
+    try {
+      await apiRequest('PATCH', `/api/games/${editingGame.id}`, game);
+      queryClient.invalidateQueries({ queryKey: ['games'] });
       setEditingGame(null);
-    },
-    onError: (error) => {
       toast({
-        title: "Error",
-        description: `Failed to update game: ${error}`,
-        variant: "destructive",
+        title: 'Success',
+        description: 'Game updated successfully.',
+      });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to update game.',
+        variant: 'destructive',
       });
     }
-  });
-  
-  const deleteMutation = useMutation({
-    mutationFn: async (id: number) => {
-      const res = await apiRequest('DELETE', `/api/games/${id}`);
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/games'] });
+  };
+
+  const handleDelete = async (id: number) => {
+    try {
+      await apiRequest('DELETE', `/api/games/${id}`);
+      queryClient.invalidateQueries({ queryKey: ['games'] });
       toast({
-        title: "Success",
-        description: "Game deleted successfully",
+        title: 'Success',
+        description: 'Game deleted successfully.',
       });
-    },
-    onError: (error) => {
+    } catch (error) {
       toast({
-        title: "Error",
-        description: `Failed to delete game: ${error}`,
-        variant: "destructive",
+        title: 'Error',
+        description: 'Failed to delete game.',
+        variant: 'destructive',
       });
     }
-  });
-  
-  const handleCreateGame = (data: any) => {
-    createMutation.mutate(data);
   };
-  
-  const handleUpdateGame = (data: any) => {
-    if (editingGame) {
-      updateMutation.mutate({ id: editingGame.id, game: data });
-    }
-  };
-  
-  const handleDeleteGame = (id: number) => {
-    deleteMutation.mutate(id);
-  };
-  
-  const handleViewStats = (id: number) => {
-    navigate(`/statistics?game=${id}`);
-  };
-  
+
   return (
     <>
-      <Helmet>
-        <title>Games | NetballManager</title>
-        <meta name="description" content="Manage your netball team's game schedule, track completed games, and schedule new matches" />
-      </Helmet>
-      
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-heading font-bold text-neutral-dark">Game Management</h2>
-          <Button
-            onClick={() => setIsAddDialogOpen(true)}
-            className="bg-primary hover:bg-primary-light text-white"
-          >
-            <Plus className="w-4 h-4 mr-1" /> Schedule Game
-          </Button>
-        </div>
-        
-        <GamesList 
-          games={games} 
-          opponents={opponents} 
-          isLoading={isLoading} 
-          onEdit={setEditingGame}
-          onDelete={handleDeleteGame}
-          onViewStats={handleViewStats}
-        />
-        
-        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-          <DialogContent className="sm:max-w-[550px]">
-            <DialogTitle className="sr-only">Schedule New Game</DialogTitle>
-            <GameForm 
-              opponents={opponents as any[]}
-              seasons={seasons as any[]}
-              activeSeason={activeSeason}
-              onSubmit={handleCreateGame} 
-              isSubmitting={createMutation.isPending} 
-            />
-          </DialogContent>
-        </Dialog>
-        
-        <Dialog open={!!editingGame} onOpenChange={(open) => {
-          if (!open) {
-            setEditingGame(null);
-            
-            // Check if we should return to game details
-            const returnToGameId = sessionStorage.getItem('returnToGameDetails');
-            if (returnToGameId) {
-              // Clear the storage item
-              sessionStorage.removeItem('returnToGameDetails');
-              // Navigate back to the game details page
-              navigate(`/game/${returnToGameId}`);
-            }
-          }
-        }}>
-          <DialogContent className="sm:max-w-[550px]">
-            <DialogTitle className="sr-only">Edit Game</DialogTitle>
-            <GameForm 
-              game={editingGame || undefined}
-              opponents={opponents as any[]}
-              seasons={seasons as any[]}
-              activeSeason={activeSeason}
-              onSubmit={handleUpdateGame} 
-              isSubmitting={updateMutation.isPending} 
-            />
-          </DialogContent>
-        </Dialog>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Games</CardTitle>
+          <CardDescription>Manage games here</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between pb-4">
+            <div className="flex items-center gap-4">
+              <div className="min-w-[200px]">
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Filter by status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Games</SelectItem>
+                    <SelectItem value="upcoming">Upcoming</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                    {gameStatuses
+                      .filter(status => status.isActive)
+                      .sort((a, b) => a.sortOrder - b.sortOrder)
+                      .map(status => (
+                        <SelectItem key={status.id} value={status.name}>
+                          {status.displayName}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <Button onClick={() => setIsDialogOpen(true)}>
+              <Plus className="w-4 h-4 mr-2" />
+              Add Game
+            </Button>
+          </div>
+          <GamesList games={filteredGames} opponents={opponents} onDelete={handleDelete} onEdit={setEditingGame} />
+        </CardContent>
+      </Card>
+
+      <CrudDialog
+        isOpen={isDialogOpen}
+        setIsOpen={setIsDialogOpen}
+        title="Add Game"
+        onSubmit={handleCreate}
+      >
+        <GameForm opponents={opponents} players={players} />
+      </CrudDialog>
+
+      <CrudDialog
+        isOpen={!!editingGame}
+        setIsOpen={() => setEditingGame(null)}
+        title="Edit Game"
+        onSubmit={handleUpdate}
+      >
+        <GameForm game={editingGame} opponents={opponents} players={players} />
+      </CrudDialog>
     </>
   );
 }

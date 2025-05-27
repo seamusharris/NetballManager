@@ -157,105 +157,6 @@ export class DatabaseStorage implements IStorage {
     console.log('⭐ TIMESTAMP:', new Date().toISOString());
     console.log('⭐ METHOD: DatabaseStorage.getGames()');
     console.log('⭐ FILE: server/storage-db.ts');
-    console.log('=== DEBUGGING getGames() START ===');
-
-    // Debug: Show available statuses
-    const availableStatuses = await db.select().from(gameStatuses);
-    console.log('=== AVAILABLE GAME STATUSES ===');
-    console.log(availableStatuses);
-
-    // Debug: Show distribution of status IDs in games
-    const statusDistribution = await db.execute(sql`
-      SELECT status_id, COUNT(*) as count 
-      FROM games 
-      WHERE status_id IS NOT NULL 
-      GROUP BY status_id 
-      ORDER BY status_id
-    `);
-    console.log('=== GAME STATUS ID DISTRIBUTION ===');
-    console.log(statusDistribution.rows);
-
-    // Show sample games with their actual status IDs
-    const gamesSample = await db.execute(sql`
-      SELECT g.id, g.date, g.status_id, gs.name as status_name, gs.is_completed
-      FROM games g
-      LEFT JOIN game_statuses gs ON g.status_id = gs.id
-      ORDER BY g.id 
-      LIMIT 10
-    `);
-    console.log('=== SAMPLE GAMES WITH ACTUAL STATUS DATA ===');
-    console.log(gamesSample.rows);
-
-    // Check what's actually in the game_statuses table
-    const statusTableCheck = await db.execute(sql`
-      SELECT * FROM game_statuses ORDER BY id
-    `);
-    console.log('=== ACTUAL GAME_STATUSES TABLE CONTENTS ===');
-    console.log(statusTableCheck.rows);
-
-    // Check the exact column names in the game_statuses table
-    const columnCheck = await db.execute(sql`
-      SELECT column_name, data_type 
-      FROM information_schema.columns 
-      WHERE table_name = 'game_statuses' 
-      ORDER BY ordinal_position
-    `);
-    console.log('=== GAME_STATUSES TABLE COLUMNS ===');
-    console.log(columnCheck.rows);
-
-    // Test a manual join to see what happens
-    const manualJoinTest = await db.execute(sql`
-      SELECT 
-        g.id as game_id, 
-        g.status_id, 
-        gs.id as status_table_id, 
-        gs.name as status_name,
-        gs.display_name,
-        gs.is_completed
-      FROM games g
-      LEFT JOIN game_statuses gs ON g.status_id = gs.id
-      WHERE g.id IN (61, 73, 69)
-      ORDER BY g.id 
-    `);
-    console.log('=== MANUAL JOIN TEST RESULTS ===');
-    console.log(manualJoinTest.rows);
-
-    // Test the Drizzle imports - check if gameStatuses schema matches the actual table
-    console.log('=== DRIZZLE SCHEMA INSPECTION ===');
-    console.log('gameStatuses table config:', {
-      tableName: gameStatuses._.name,
-      columns: Object.keys(gameStatuses).filter(key => !key.startsWith('_'))
-    });
-    
-    // Test if we can select directly from gameStatuses table
-    console.log('=== DIRECT GAMESTATUSES SELECT TEST ===');
-    try {
-      const directStatusTest = await db.select().from(gameStatuses);
-      console.log('Direct gameStatuses select results:', directStatusTest);
-    } catch (error) {
-      console.error('ERROR: Cannot select from gameStatuses table:', error);
-    }
-
-    // Check if the foreign key constraint exists
-    const fkCheck = await db.execute(sql`
-      SELECT 
-        tc.constraint_name, 
-        tc.table_name, 
-        kcu.column_name, 
-        ccu.table_name AS foreign_table_name,
-        ccu.column_name AS foreign_column_name 
-      FROM 
-        information_schema.table_constraints AS tc 
-        JOIN information_schema.key_column_usage AS kcu
-          ON tc.constraint_name = kcu.constraint_name
-        JOIN information_schema.constraint_column_usage AS ccu
-          ON ccu.constraint_name = tc.constraint_name
-      WHERE constraint_type = 'FOREIGN KEY' 
-        AND tc.table_name='games'
-        AND kcu.column_name='status_id'
-    `);
-    console.log('=== FOREIGN KEY CONSTRAINT CHECK ===');
-    console.log(fkCheck.rows);
 
     // Use Drizzle's automatic field resolution instead of explicit mapping
     const results = await db
@@ -266,35 +167,16 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(players, eq(games.awardWinnerId, players.id))
       .orderBy(desc(games.date), desc(games.time));
 
-    console.log('=== DRIZZLE JOIN RESULTS (first 2 with nested structure) ===');
-    console.log('Total results count:', results.length);
-    
-    if (results.length > 0) {
-      console.log('First row structure:', {
-        games: results[0].games,
-        gameStatuses: results[0].gameStatuses,
-        opponents: results[0].opponents,
-        players: results[0].players
-      });
-    }
-
     return results.map(row => {
-      console.log(`\n--- MAPPING RESULT FOR GAME ${row.games.id} ---`);
-      console.log('Status mapping from nested object:', {
-        'statusId': row.games.statusId,
-        'statusName': row.gameStatuses?.name,
-        'isCompleted': row.gameStatuses?.isCompleted,
-        'displayName': row.gameStatuses?.displayName
-      });
-
+      const gameStatus = row.gameStatuses;
       return {
         id: row.games.id,
         date: row.games.date,
         time: row.games.time,
         opponentId: row.games.opponentId,
         statusId: row.games.statusId,
-        status: row.gameStatuses?.name || 'upcoming',
-        completed: row.gameStatuses?.isCompleted ?? false,
+        status: gameStatus?.name || 'upcoming',
+        completed: gameStatus?.isCompleted ?? false,
         round: row.games.round,
         seasonId: row.games.seasonId,
         notes: row.games.notes,
@@ -304,13 +186,13 @@ export class DatabaseStorage implements IStorage {
         teamScore: row.games.teamScore ?? 0,
         opponentScore: row.games.opponentScore ?? 0,
         // Add computed fields
-        gameStatusName: row.gameStatuses?.name,
-        gameStatus: row.gameStatuses ? {
-          name: row.gameStatuses.name,
-          displayName: row.gameStatuses.displayName,
-          isCompleted: row.gameStatuses.isCompleted,
-          allowsStatistics: row.gameStatuses.allowsStatistics,
-          colorClass: row.gameStatuses.colorClass
+        gameStatusName: gameStatus?.name || 'upcoming',
+        gameStatus: gameStatus ? {
+          name: gameStatus.name,
+          displayName: gameStatus.displayName,
+          isCompleted: gameStatus.isCompleted,
+          allowsStatistics: gameStatus.allowsStatistics,
+          colorClass: gameStatus.colorClass
         } : null,
         opponent: row.opponents ? {
           teamName: row.opponents.teamName,
