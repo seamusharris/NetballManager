@@ -780,15 +780,11 @@ export default function PlayerDetails() {
                                 roster.playerId === playerId && allPositions.includes(roster.position)
                               );
 
-                               ```text
-(roster.position)
-                              );
-
-                                                            if (!isOnRoster) return null; // Skip if not on roster or only "off" position
+                              if (!isOnRoster) return null; // Skip if not on roster or only "off" position
 
                               return (
                                 <TableRow 
-                                  key={game.gameId},
+                                  key={game.gameId}
                                   className={`hover:bg-gray-100 transition-colors duration-150 ${index === stats.gameStats.length - 1 ? "" : "border-b"}`}
                                 >
                                   {/* Date column */}
