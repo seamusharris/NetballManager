@@ -206,7 +206,12 @@ export default function OpponentAnalysis() {
 
   const getFormDisplay = (form: string[]) => {
     return form.slice(0, 5).map((result, index) => (
-      <ResultBadge key={index} result={result === 'W' ? 'Win' : result === 'L' ? 'Loss' : 'Draw'} size="sm" />
+      <ResultBadge 
+        key={index} 
+        result={result === 'W' ? 'Win' : result === 'L' ? 'Loss' : 'Draw'} 
+        size="sm" 
+        className="mx-0.5"
+      />
     ));
   };
 
@@ -338,7 +343,7 @@ export default function OpponentAnalysis() {
                       ) : '-'}
                     </TableCell>
                     <TableCell className="text-center">
-                      <div className="flex justify-center">
+                      <div className="flex justify-center items-center">
                         {matchup.recentForm.length > 0 ? getFormDisplay(matchup.recentForm) : '-'}
                       </div>
                     </TableCell>
