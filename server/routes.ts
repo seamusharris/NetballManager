@@ -809,32 +809,84 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ----- GAMES API -----
   app.get("/api/games", async (req, res) => {
     try {
+      console.log('\n\n🚨🚨🚨 ROUTES.TS: /api/games ENDPOINT CALLED! 🚨🚨🚨');
+      console.log('⭐ TIMESTAMP:', new Date().toISOString());
+      console.log('⭐ METHOD: GET /api/games');
+      console.log('⭐ FILE: server/routes.ts');
+      console.log('⭐ REQUEST: Setting cache-busting headers');
+
       // Add cache-busting headers
       res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
       res.set('Pragma', 'no-cache');
       res.set('Expires', '0');
 
+      console.log('📞 CALLING storage.getGames()...');
       const games = await storage.getGames();
+      console.log(`✅ storage.getGames() returned ${games.length} games`);
 
+      // Log detailed analysis of first few games
+      console.log('\n🔍 DETAILED GAMES ANALYSIS:');
+      for (let i = 0; i < Math.min(3, games.length); i++) {
+        const game = games[i];
+        console.log(`\n📋 GAME ${i + 1}:`);
+        console.log(`   - ID: ${game.id}`);
+        console.log(`   - Date: ${game.date}`);
+        console.log(`   - StatusId: ${game.statusId}`);
+        console.log(`   - GameStatus present: ${!!game.gameStatus}`);
+        console.log(`   - GameStatus value: ${JSON.stringify(game.gameStatus)}`);
+        console.log(`   - OpponentId: ${game.opponentId}`);
+        console.log(`   - IsBye: ${game.isBye}`);
+        console.log(`   - Opponent present: ${!!game.opponent}`);
+      }
+
+      console.log('\n🔄 PROCESSING GAMES FOR RESPONSE...');
       // Ensure gameStatus field is properly included in each game object
-      const gamesWithStatus = games.map(game => ({
-        ...game,
-        // Ensure gameStatus is explicitly included
-        gameStatus: game.gameStatus || null
-      }));
+      const gamesWithStatus = games.map((game, index) => {
+        console.log(`🔸 Processing game ${index + 1}/${games.length} (ID: ${game.id})`);
+        console.log(`   - Original gameStatus: ${game.gameStatus ? 'PRESENT' : 'NULL'}`);
+        
+        const processedGame = {
+          ...game,
+          // Ensure gameStatus is explicitly included
+          gameStatus: game.gameStatus || null
+        };
+        
+        console.log(`   - Final gameStatus: ${processedGame.gameStatus ? 'PRESENT' : 'NULL'}`);
+        if (processedGame.gameStatus) {
+          console.log(`   - GameStatus name: ${processedGame.gameStatus.name}`);
+          console.log(`   - GameStatus displayName: ${processedGame.gameStatus.displayName}`);
+        }
+        
+        return processedGame;
+      });
 
-      console.log('ROUTES: Games with status sample:', gamesWithStatus.length > 0 ? {
-        id: gamesWithStatus[0].id,
-        statusId: gamesWithStatus[0].statusId,
-        gameStatus: gamesWithStatus[0].gameStatus,
-        hasGameStatus: !!gamesWithStatus[0].gameStatus
-      } : 'No games');
+      console.log('\n📊 FINAL RESPONSE ANALYSIS:');
+      console.log(`📈 Total games: ${gamesWithStatus.length}`);
+      const gamesWithStatusCount = gamesWithStatus.filter(g => !!g.gameStatus).length;
+      const gamesWithoutStatusCount = gamesWithStatus.filter(g => !g.gameStatus).length;
+      console.log(`✅ Games WITH gameStatus: ${gamesWithStatusCount}`);
+      console.log(`❌ Games WITHOUT gameStatus: ${gamesWithoutStatusCount}`);
 
-      console.log('ROUTES: Sending', gamesWithStatus.length, 'games with gameStatus field');
+      // Sample game for logging
+      if (gamesWithStatus.length > 0) {
+        const sampleGame = gamesWithStatus[0];
+        console.log('🎯 SAMPLE GAME FOR CLIENT:', {
+          id: sampleGame.id,
+          statusId: sampleGame.statusId,
+          gameStatus: sampleGame.gameStatus,
+          hasGameStatus: !!sampleGame.gameStatus,
+          gameStatusKeys: sampleGame.gameStatus ? Object.keys(sampleGame.gameStatus) : null
+        });
+      }
+
+      console.log('\n📤 SENDING RESPONSE TO CLIENT...');
+      console.log(`📊 Response size: ${gamesWithStatus.length} games`);
+      console.log('🏁 ROUTES.TS: /api/games ENDPOINT COMPLETE');
 
       res.json(gamesWithStatus);
     } catch (error) {
-      console.error("Error fetching games:", error);
+      console.error("❌ ERROR in /api/games endpoint:", error);
+      console.error("Error stack:", error.stack);
       res.status(500).json({ message: "Failed to fetch games" });
     }
   });
