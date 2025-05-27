@@ -270,7 +270,7 @@ export class DatabaseStorage implements IStorage {
       console.log('🔑 ALL AVAILABLE KEYS IN ROW:', Object.keys(row));
 
       // The join works correctly - gameStatuses is the right key
-      if (row.gameStatuses && typeof row.gameStatuses === 'object' && row.gameStatuses.id) {
+      if (row.gameStatuses && typeof row.gameStatuses === 'object') {
         console.log('✅ Found gameStatus data at gameStatuses key:', row.gameStatuses);
         gameStatus = row.gameStatuses;
       } else {
