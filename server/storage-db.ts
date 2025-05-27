@@ -271,10 +271,6 @@ export class DatabaseStorage implements IStorage {
           sortOrder: row.game_statuses.sortOrder,
           isActive: row.game_statuses.isActive
         } : undefined,
-        // Map status field to the actual status name from game_statuses table
-        status: row.game_statuses?.name || 'upcoming',
-        // Legacy fields for backward compatibility - use gameStatus.isCompleted since completed column was removed
-        completed: row.game_statuses?.isCompleted ?? false,
         isBye: row.games.opponentId === null
       };
     } catch (error) {
