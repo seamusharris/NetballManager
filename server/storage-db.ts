@@ -246,10 +246,16 @@ export class DatabaseStorage implements IStorage {
 
     return results.map(row => {
       console.log(`\n--- MAPPING RESULT FOR GAME ${row.id} ---`);
+      console.log('Raw row data:', {
+        gameStatusName: row.gameStatusName,
+        gameStatusDisplayName: row.gameStatusDisplayName,
+        gameStatusIsCompleted: row.gameStatusIsCompleted,
+        statusId: row.statusId
+      });
 
       // Extract game status information from explicitly selected fields
       const statusName = row.gameStatusName;
-      const isCompleted = row.gameStatusIsCompleted ?? false;
+      const isCompleted = row.gameStatusIsCompleted;
 
       console.log('Status mapping:', {
         'statusId': row.statusId,
@@ -270,7 +276,7 @@ export class DatabaseStorage implements IStorage {
         seasonId: row.seasonId,
         notes: row.notes,
         awardWinnerId: row.awardWinnerId,
-        isBye: row.isBye ?? false,
+        isBye: row.opponentId === null,
         venue: row.venue,
         teamScore: row.teamScore ?? 0,
         opponentScore: row.opponentScore ?? 0,
