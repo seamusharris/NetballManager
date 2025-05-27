@@ -43,7 +43,7 @@ export default function RecentFormWidget({
     return {
       id: game.id,
       date: game.date,
-      opponent: opponent?.name || 'Unknown',
+      opponent: opponent?.teamName || opponent?.name || 'Unknown Opponent',
       result,
       teamScore,
       opponentScore,
@@ -119,7 +119,7 @@ export default function RecentFormWidget({
         </div>
 
         {/* Statistics */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-3 mb-3">
           <div className="text-center bg-primary/5 p-2 rounded-lg">
             <p className="text-xs text-gray-500 mb-1">Win Rate</p>
             <p className="text-lg font-bold text-primary">{winPercentage}%</p>
@@ -132,16 +132,25 @@ export default function RecentFormWidget({
           </div>
         </div>
 
-        {/* Latest result */}
-        {formData.length > 0 && (
-          <div className="mt-3 pt-3 border-t">
-            <p className="text-xs text-gray-500 mb-1">Latest vs {formData[0].opponent}</p>
-            <div className="flex justify-between items-center">
-              <span className="text-sm font-medium">{formData[0].teamScore}-{formData[0].opponentScore}</span>
-              {getResultBadge(formData[0].result)}
+        {/* Detailed game results */}
+        <div className="space-y-2">
+          <p className="text-xs text-gray-500 font-medium">Recent Results</p>
+          {formData.slice(0, 3).map((game, index) => (
+            <div key={game.id} className="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
+              <div>
+                <p className="text-sm font-medium">vs {game.opponent}</p>
+                <p className="text-xs text-gray-600">{new Date(game.date).toLocaleDateString('en-AU', { 
+                  day: 'numeric', 
+                  month: 'short' 
+                })}</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium">{game.teamScore}-{game.opponentScore}</span>
+                {getResultBadge(game.result)}
+              </div>
             </div>
-          </div>
-        )}
+          ))}
+        </div>
       </CardContent>
     </Card>
   );
