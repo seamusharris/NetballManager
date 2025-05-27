@@ -29,17 +29,6 @@ export default function Dashboard() {
 
   const isLoading = isLoadingPlayers || isLoadingGames || isLoadingOpponents || isLoadingSeasons || isLoadingActiveSeason;
 
-  // Debug logging
-  console.log('Dashboard render:', {
-    isLoading,
-    playersCount: players?.length,
-    gamesCount: games?.length,
-    opponentsCount: opponents?.length,
-    seasonsCount: seasons?.length,
-    activeSeason,
-    errors: { playersError, gamesError, opponentsError, seasonsError, activeSeasonError }
-  });
-
   // Show error state if any query fails
   if (playersError || gamesError || opponentsError || seasonsError || activeSeasonError) {
     return (
@@ -56,39 +45,18 @@ export default function Dashboard() {
     );
   }
 
-  console.log('=== Dashboard.tsx render state ===', {
-    isLoading,
-    isLoadingPlayers,
-    isLoadingGames, 
-    isLoadingOpponents,
-    isLoadingSeasons,
-    isLoadingActiveSeason,
-    playersLength: players?.length,
-    gamesLength: games?.length,
-    opponentsLength: opponents?.length,
-    seasonsLength: seasons?.length,
-    activeSeason
-  });
-
   // Show loading state only if any query is still loading
   if (isLoading) {
-    console.log('=== Dashboard returning loading state ===');
     return (
-      <div className="p-6">
-        <h1 className="text-2xl font-bold mb-4">Loading Dashboard...</h1>
-        <p>Please wait while we load your data...</p>
-        <div className="mt-4 text-sm text-gray-500">
-          <p>Players: {players?.length || 0} loaded</p>
-          <p>Games: {games?.length || 0} loaded</p>
-          <p>Opponents: {opponents?.length || 0} loaded</p>
-          <p>Seasons: {seasons?.length || 0} loaded</p>
-          <p>Loading states: players={isLoadingPlayers}, games={isLoadingGames}, opponents={isLoadingOpponents}, seasons={isLoadingSeasons}, activeSeason={isLoadingActiveSeason}</p>
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <h2 className="text-xl font-semibold mb-2">Loading Dashboard</h2>
+          <p className="text-muted-foreground">Please wait while we load your team data...</p>
         </div>
       </div>
     );
   }
-
-  console.log('=== Dashboard about to render DashboardSummary ===');
 
   return (
     <>

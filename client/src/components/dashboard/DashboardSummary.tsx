@@ -153,12 +153,12 @@ export default function DashboardSummary({
 
   // Only show loading if basic data is still loading
   if (isLoading) {
-    console.log('=== Returning loading state ===');
     return (
       <div className="p-6">
         <h2 className="text-2xl font-heading font-bold text-neutral-dark mb-4">Dashboard</h2>
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-3"></div>
             <h3 className="text-lg font-medium mb-2">Loading Dashboard...</h3>
             <p className="text-gray-500">Please wait while we load your team data.</p>
           </div>
@@ -167,22 +167,10 @@ export default function DashboardSummary({
     );
   }
 
-  console.log('=== Past loading check, about to render main content ===');
-  console.log('Render conditions:', {
-    isLoading,
-    filteredGamesLength: filteredGames.length,
-    statsLoading,
-    centralizedStatsKeys: centralizedStats ? Object.keys(centralizedStats).length : 0
-  });
-
   // Ensure we have the necessary data
   const statsMap = centralizedStats || {};
-  console.log(`Dashboard rendering with ${Object.keys(statsMap).length} games stats loaded`);
 
-  console.log('=== About to return main JSX ===');
-
-  try {
-    return (
+  return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-heading font-bold text-neutral-dark">Dashboard</h2>
