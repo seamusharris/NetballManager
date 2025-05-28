@@ -5,6 +5,7 @@ import { Game, Opponent } from '@shared/schema';
 import { formatShortDate } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
 import { GameScoreDisplay } from '@/components/statistics/GameScoreDisplay';
+import { GameBadge } from '@/components/ui/game-badge';
 
 interface UpcomingGamesProps {
   games: Game[];
@@ -50,9 +51,9 @@ export default function UpcomingGames({ games, opponents, className, seasonFilte
                     <div className="flex items-center gap-2">
                       <p className="text-xs text-gray-500">{formatShortDate(game.date)} • {game.time}</p>
                       {game.round && (
-                        <span className="text-xs px-1.5 py-0.5 bg-secondary/10 text-secondary rounded-full">
+                        <GameBadge variant="round">
                           Round {game.round}
-                        </span>
+                        </GameBadge>
                       )}
                     </div>
                   </div>
