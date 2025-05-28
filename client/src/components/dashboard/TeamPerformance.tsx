@@ -254,6 +254,13 @@ export default function TeamPerformance({ games, className, activeSeason, select
             <p className="text-3xl font-bold text-primary">{games.filter(game => game.gameStatus?.isCompleted !== true && !game.isBye).length}</p>
           </div>
         </div>
+
+        {/* Dummy ViewMore button for spacing testing */}
+        <div className="flex justify-end mt-2 mb-3 pt-0">
+          <button className="px-2 py-1 text-xs font-medium text-gray-600 bg-gray-50 border border-gray-200 rounded hover:bg-gray-100 hover:border-gray-300 transition-colors duration-200">
+            View more →
+          </button>
+        </div>
       </CardContent>
     </Card>
   );
