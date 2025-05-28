@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -34,109 +35,127 @@ input[type=number] {
 
 @layer base {
   :root {
-    /* Modern color scheme - Blue with better contrast */
-    --primary: 217 91% 60%;            /* #3b82f6 Blue-500 */
-    --primary-light: 213 93% 68%;      /* #60a5fa Blue-400 */
-    --primary-dark: 224 76% 48%;       /* #1d4ed8 Blue-700 */
-    --secondary: 142 76% 36%;          /* #10b981 Emerald-500 */
-    --secondary-light: 142 77% 44%;    /* #34d399 Emerald-400 */
-    --secondary-dark: 142 72% 29%;     /* #059669 Emerald-600 */
-    --accent: 262 83% 58%;             /* #8b5cf6 Violet-500 */
-    --accent-light: 262 90% 67%;       /* #a78bfa Violet-400 */
-    --accent-dark: 262 76% 50%;        /* #7c3aed Violet-600 */
-    --success: 142 70% 49%;            /* #2ecc71 */
-    --error: 6 78% 57%;                /* #e74c3c */
-    --warning: 37 90% 51%;             /* #f39c12 */
+    /* Netball-themed color palette */
+    --netball-court-blue: 214 84% 56%;      /* #4f8ff7 - Court blue primary */
+    --netball-court-blue-dark: 214 76% 48%; /* #3b7ae0 - Darker court blue */
+    --netball-court-blue-light: 214 90% 68%; /* #7db0ff - Lighter court blue */
     
-    /* Shadcn variables */
-    --background: 220 14% 96%;         /* #f8fafc Slate-50 */
-    --foreground: 215 25% 27%;         /* #334155 Slate-700 */
+    --netball-orange: 25 95% 53%;           /* #f97316 - Netball orange */
+    --netball-orange-dark: 25 85% 45%;      /* #e56307 - Darker orange */
+    --netball-orange-light: 25 100% 70%;    /* #ffa366 - Lighter orange */
+    
+    --netball-green: 142 76% 36%;           /* #059669 - Success/win green */
+    --netball-green-dark: 142 72% 29%;      /* #047857 - Darker green */
+    --netball-green-light: 142 82% 50%;     /* #10b981 - Lighter green */
+    
+    --netball-red: 0 84% 60%;               /* #ef4444 - Loss/error red */
+    --netball-red-dark: 0 76% 52%;          /* #dc2626 - Darker red */
+    --netball-red-light: 0 90% 71%;         /* #f87171 - Lighter red */
+    
+    /* Neutral grays with better contrast */
+    --neutral-50: 210 20% 98%;              /* #fafafa */
+    --neutral-100: 210 15% 94%;             /* #f4f4f5 */
+    --neutral-200: 210 12% 87%;             /* #e4e4e7 */
+    --neutral-300: 210 10% 78%;             /* #d4d4d8 */
+    --neutral-400: 210 8% 65%;              /* #a1a1aa */
+    --neutral-500: 210 6% 51%;              /* #71717a */
+    --neutral-600: 210 5% 40%;              /* #52525b */
+    --neutral-700: 210 6% 30%;              /* #3f3f46 */
+    --neutral-800: 210 7% 20%;              /* #27272a */
+    --neutral-900: 210 10% 12%;             /* #18181b */
+    
+    /* Shadcn UI variables with netball theme */
+    --background: var(--neutral-50);
+    --foreground: var(--neutral-800);
     
     --card: 0 0% 100%;
-    --card-foreground: 220 38% 23%;
+    --card-foreground: var(--neutral-800);
     
     --popover: 0 0% 100%;
-    --popover-foreground: 220 38% 23%;
+    --popover-foreground: var(--neutral-800);
     
-    --primary: 213 64% 45%;            /* Blue primary */
+    --primary: var(--netball-court-blue);
     --primary-foreground: 0 0% 100%;
     
-    --secondary: 355 75% 56%;          /* Netball secondary */
+    --secondary: var(--netball-orange);
     --secondary-foreground: 0 0% 100%;
     
-    --muted: 60 5% 96%;
-    --muted-foreground: 25 5% 45%;
+    --muted: var(--neutral-100);
+    --muted-foreground: var(--neutral-500);
     
-    --accent: 203 38% 45%;             /* Netball accent */
+    --accent: var(--netball-green);
     --accent-foreground: 0 0% 100%;
     
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 210 20% 98%;
+    --destructive: var(--netball-red);
+    --destructive-foreground: 0 0% 100%;
     
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 213 64% 45%;               /* Blue primary */
+    --border: var(--neutral-200);
+    --input: var(--neutral-200);
+    --ring: var(--netball-court-blue);
     
-    --chart-1: 213 64% 45%;            /* Blue primary */
-    --chart-2: 355 75% 56%;            /* Netball secondary */
-    --chart-3: 203 38% 45%;            /* Netball accent */
-    --chart-4: 142 70% 49%;            /* Success */
-    --chart-5: 37 90% 51%;             /* Warning */
+    /* Chart colors */
+    --chart-1: var(--netball-court-blue);
+    --chart-2: var(--netball-orange);
+    --chart-3: var(--netball-green);
+    --chart-4: var(--netball-red);
+    --chart-5: 262 83% 58%;                 /* Purple accent */
     
-    --sidebar-background: 224 76% 48%; /* Blue-700 */
+    /* Sidebar colors */
+    --sidebar-background: var(--netball-court-blue-dark);
     --sidebar-foreground: 0 0% 100%;
-    --sidebar-primary: 217 91% 60%;    /* Blue-500 */
+    --sidebar-primary: var(--netball-court-blue);
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 224 84% 40%;     /* Blue-800 */
+    --sidebar-accent: var(--netball-court-blue-dark);
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 224 84% 40%;     /* Blue-800 */
+    --sidebar-border: var(--netball-court-blue-dark);
     --sidebar-ring: 0 0% 100%;
+    
+    /* Status colors for wins/losses */
+    --status-win: var(--netball-green);
+    --status-loss: var(--netball-red);
+    --status-draw: var(--neutral-400);
+    --status-upcoming: var(--netball-court-blue);
+    --status-in-progress: var(--netball-orange);
     
     --radius: 0.5rem;
   }
  
   .dark {
-    --background: 220 38% 15%;
-    --foreground: 210 20% 98%;
+    --background: var(--neutral-900);
+    --foreground: var(--neutral-100);
     
-    --card: 224 71% 4%;
-    --card-foreground: 210 20% 98%;
+    --card: var(--neutral-800);
+    --card-foreground: var(--neutral-100);
     
-    --popover: 224 71% 4%;
-    --popover-foreground: 210 20% 98%;
+    --popover: var(--neutral-800);
+    --popover-foreground: var(--neutral-100);
     
-    --primary: 145 44% 20%;
-    --primary-foreground: 100 14% 97%;
+    --primary: var(--netball-court-blue-light);
+    --primary-foreground: var(--neutral-900);
     
-    --secondary: 355 75% 56%;
-    --secondary-foreground: 100 14% 97%;
+    --secondary: var(--netball-orange-light);
+    --secondary-foreground: var(--neutral-900);
     
-    --muted: 215 27.9% 16.9%;
-    --muted-foreground: 217.9 10.6% 64.9%;
+    --muted: var(--neutral-800);
+    --muted-foreground: var(--neutral-400);
     
-    --accent: 203 38% 45%;
-    --accent-foreground: 100 14% 97%;
+    --accent: var(--netball-green-light);
+    --accent-foreground: var(--neutral-900);
     
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 20% 98%;
+    --destructive: var(--netball-red-light);
+    --destructive-foreground: var(--neutral-900);
     
-    --border: 215 27.9% 16.9%;
-    --input: 215 27.9% 16.9%;
-    --ring: 145 44% 20%;
+    --border: var(--neutral-700);
+    --input: var(--neutral-700);
+    --ring: var(--netball-court-blue-light);
     
-    --chart-1: 145 44% 25%;            /* Netball primary - lighter */
-    --chart-2: 355 75% 66%;            /* Netball secondary - lighter */
-    --chart-3: 203 38% 55%;            /* Netball accent - lighter */
-    --chart-4: 142 70% 59%;            /* Success - lighter */
-    --chart-5: 37 90% 61%;             /* Warning - lighter */
-    
-    --sidebar-background: 145 44% 15%;
-    --sidebar-foreground: 0 0% 90%;
-    --sidebar-primary: 143 45% 26%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 145 55% 9%;
-    --sidebar-accent-foreground: 0 0% 90%;
-    --sidebar-border: 145 55% 9%;
+    --sidebar-background: var(--neutral-800);
+    --sidebar-foreground: var(--neutral-100);
+    --sidebar-primary: var(--netball-court-blue-light);
+    --sidebar-primary-foreground: var(--neutral-900);
+    --sidebar-accent: var(--neutral-700);
+    --sidebar-accent-foreground: var(--neutral-100);
+    --sidebar-border: var(--neutral-700);
     --sidebar-ring: 0 0% 100%;
   }
 }
@@ -147,77 +166,288 @@ input[type=number] {
   }
   
   body {
-    @apply font-body antialiased bg-background text-foreground;
+    @apply font-sans antialiased bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    line-height: 1.6;
   }
   
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-heading;
+  /* Typography hierarchy */
+  h1 {
+    @apply text-3xl md:text-4xl font-bold tracking-tight text-foreground mb-4;
+    line-height: 1.2;
+  }
+  
+  h2 {
+    @apply text-2xl md:text-3xl font-semibold tracking-tight text-foreground mb-3;
+    line-height: 1.3;
+  }
+  
+  h3 {
+    @apply text-xl md:text-2xl font-semibold text-foreground mb-2;
+    line-height: 1.4;
+  }
+  
+  h4 {
+    @apply text-lg md:text-xl font-medium text-foreground mb-2;
+    line-height: 1.4;
+  }
+  
+  h5 {
+    @apply text-base md:text-lg font-medium text-foreground mb-1;
+    line-height: 1.5;
+  }
+  
+  h6 {
+    @apply text-sm md:text-base font-medium text-foreground mb-1;
+    line-height: 1.5;
+  }
+  
+  /* Better number display */
+  .stat-number {
+    @apply font-mono font-bold tabular-nums;
+    font-feature-settings: "tnum" 1;
+  }
+  
+  /* Improved readability */
+  p {
+    @apply text-muted-foreground leading-relaxed;
   }
 }
 
 @layer components {
+  /* Sidebar styling */
   .sidebar-link {
-    @apply flex items-center bg-sidebar-primary text-white mb-2 py-2 px-3 rounded-md hover:bg-sidebar-accent hover:text-white transition duration-200;
+    @apply flex items-center gap-3 px-4 py-3 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent transition-all duration-200 font-medium;
   }
   
   .sidebar-link.active {
-    @apply bg-sidebar-accent text-white font-medium;
+    @apply bg-sidebar-accent text-sidebar-accent-foreground shadow-sm;
   }
   
+  /* Enhanced input styling */
   .stats-input {
-    @apply w-12 text-center border rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-primary;
+    @apply w-16 h-10 text-center border-2 rounded-lg px-2 text-sm font-mono font-semibold 
+           focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary 
+           transition-all duration-200 bg-background;
   }
   
+  /* Card components */
   .page-card {
-    @apply bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200;
+    @apply bg-card rounded-xl shadow-sm border border-border p-6 
+           hover:shadow-md transition-all duration-200 backdrop-blur-sm;
   }
   
+  .metric-card {
+    @apply bg-gradient-to-br from-card to-card/80 rounded-lg border border-border p-4 
+           hover:shadow-md transition-all duration-200 backdrop-blur-sm;
+  }
+  
+  .stat-card {
+    @apply bg-card rounded-lg border border-border p-4 text-center 
+           hover:bg-muted/50 transition-all duration-200;
+  }
+  
+  /* Section headers */
   .section-header {
-    @apply flex items-center justify-between mb-6 pb-4 border-b border-gray-200;
+    @apply flex items-center justify-between mb-6 pb-4 border-b border-border;
   }
   
   .page-title {
-    @apply text-2xl font-bold text-gray-900;
+    @apply text-3xl font-bold text-foreground tracking-tight;
   }
   
   .page-subtitle {
-    @apply text-gray-600 mt-1;
+    @apply text-muted-foreground mt-1 text-lg;
   }
   
+  .section-title {
+    @apply text-xl font-semibold text-foreground;
+  }
+  
+  /* Enhanced button styles */
   .btn-primary {
-    @apply bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium px-4 py-2 rounded-lg shadow-sm transition-all duration-200 hover:shadow-md;
+    @apply bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary 
+           text-primary-foreground font-medium px-6 py-2.5 rounded-lg shadow-sm 
+           transition-all duration-200 hover:shadow-md hover:scale-[1.02] 
+           focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2;
   }
   
   .btn-secondary {
-    @apply bg-white hover:bg-gray-50 text-gray-700 font-medium px-4 py-2 rounded-lg border border-gray-300 shadow-sm transition-all duration-200 hover:shadow-md;
+    @apply bg-secondary hover:bg-secondary/90 text-secondary-foreground font-medium 
+           px-6 py-2.5 rounded-lg shadow-sm transition-all duration-200 hover:shadow-md 
+           hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-secondary/50 focus:ring-offset-2;
   }
   
+  .btn-outline {
+    @apply border-2 border-border hover:border-primary hover:bg-primary/5 
+           text-foreground hover:text-primary font-medium px-6 py-2.5 rounded-lg 
+           transition-all duration-200 hover:shadow-sm focus:outline-none 
+           focus:ring-2 focus:ring-primary/50 focus:ring-offset-2;
+  }
+  
+  .btn-ghost {
+    @apply hover:bg-muted text-foreground font-medium px-4 py-2 rounded-lg 
+           transition-all duration-200 focus:outline-none focus:ring-2 
+           focus:ring-primary/50 focus:ring-offset-2;
+  }
+  
+  /* Form inputs */
   .form-input {
-    @apply block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 transition-colors duration-200;
+    @apply w-full rounded-lg border border-input bg-background px-4 py-2.5 text-sm 
+           ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium 
+           placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 
+           focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed 
+           disabled:opacity-50 transition-all duration-200;
+  }
+  
+  /* Badge styles for status */
+  .badge-win {
+    @apply inline-flex items-center rounded-full border-0 bg-green-500/10 px-3 py-1 
+           text-xs font-semibold text-green-700 ring-1 ring-green-500/20;
+  }
+  
+  .badge-loss {
+    @apply inline-flex items-center rounded-full border-0 bg-red-500/10 px-3 py-1 
+           text-xs font-semibold text-red-700 ring-1 ring-red-500/20;
+  }
+  
+  .badge-draw {
+    @apply inline-flex items-center rounded-full border-0 bg-neutral-500/10 px-3 py-1 
+           text-xs font-semibold text-neutral-700 ring-1 ring-neutral-500/20;
+  }
+  
+  .badge-upcoming {
+    @apply inline-flex items-center rounded-full border-0 bg-blue-500/10 px-3 py-1 
+           text-xs font-semibold text-blue-700 ring-1 ring-blue-500/20;
+  }
+  
+  .badge-in-progress {
+    @apply inline-flex items-center rounded-full border-0 bg-orange-500/10 px-3 py-1 
+           text-xs font-semibold text-orange-700 ring-1 ring-orange-500/20 animate-pulse;
+  }
+  
+  /* Score display styling */
+  .score-large {
+    @apply text-4xl md:text-5xl font-bold font-mono tabular-nums tracking-tight;
+  }
+  
+  .score-medium {
+    @apply text-2xl md:text-3xl font-bold font-mono tabular-nums;
+  }
+  
+  .score-small {
+    @apply text-lg md:text-xl font-semibold font-mono tabular-nums;
+  }
+  
+  /* Data tables */
+  .data-table {
+    @apply w-full border-collapse bg-card rounded-lg overflow-hidden shadow-sm;
+  }
+  
+  .data-table th {
+    @apply bg-muted/50 px-4 py-3 text-left text-sm font-semibold text-muted-foreground 
+           border-b border-border;
+  }
+  
+  .data-table td {
+    @apply px-4 py-3 text-sm border-b border-border;
+  }
+  
+  .data-table tr:hover {
+    @apply bg-muted/30;
+  }
+  
+  /* Loading states */
+  .loading-shimmer {
+    @apply animate-pulse bg-gradient-to-r from-muted via-muted/50 to-muted;
+  }
+  
+  /* Chart containers */
+  .chart-container {
+    @apply bg-card rounded-lg border border-border p-6 shadow-sm;
+  }
+  
+  /* Navigation breadcrumbs */
+  .breadcrumb-item {
+    @apply text-muted-foreground hover:text-foreground transition-colors duration-200;
+  }
+  
+  .breadcrumb-current {
+    @apply text-foreground font-medium;
   }
 }
 
-/* Custom tooltips that appear instantly */
+/* Enhanced tooltips */
 [title] {
   position: relative;
-  cursor: pointer;
+  cursor: help;
 }
 
 [title]:hover::after {
   content: attr(title);
   position: absolute;
-  bottom: 100%;
+  bottom: 125%;
   left: 50%;
   transform: translateX(-50%);
-  background-color: #333;
-  color: white;
-  padding: 4px 8px;
-  border-radius: 4px;
+  background-color: hsl(var(--neutral-800));
+  color: hsl(var(--neutral-100));
+  padding: 8px 12px;
+  border-radius: 6px;
   font-size: 12px;
+  font-weight: 500;
   white-space: nowrap;
-  z-index: 10;
+  z-index: 50;
   pointer-events: none;
   margin-bottom: 5px;
   opacity: 0.95;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  animation: tooltip-fade-in 0.2s ease-out;
+}
+
+[title]:hover::before {
+  content: '';
+  position: absolute;
+  bottom: 115%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 4px solid transparent;
+  border-top-color: hsl(var(--neutral-800));
+  z-index: 50;
+  pointer-events: none;
+  animation: tooltip-fade-in 0.2s ease-out;
+}
+
+@keyframes tooltip-fade-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(4px);
+  }
+  to {
+    opacity: 0.95;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* Smooth transitions for interactive elements */
+* {
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+/* Focus states for accessibility */
+.focus-visible {
+  @apply outline-none ring-2 ring-primary/50 ring-offset-2;
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  .page-card, .metric-card, .stat-card {
+    box-shadow: none !important;
+    border: 1px solid #e5e5e5 !important;
+  }
 }
