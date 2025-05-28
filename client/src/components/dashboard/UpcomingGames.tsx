@@ -1,4 +1,4 @@
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Link } from 'wouter';
 import { Game, Opponent } from '@shared/schema';
@@ -74,7 +74,7 @@ export default function UpcomingGames({ games, opponents, className, seasonFilte
             </Link>
           </div>
         )}
-        
+
         {upcomingGames.length > upcomingGames.slice(0, 5).length ? (
           <ViewMoreButton href="/games?status=upcoming">
             View more →

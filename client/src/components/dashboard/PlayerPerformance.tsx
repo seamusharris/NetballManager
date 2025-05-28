@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Game, Player, GameStat, Season } from '@shared/schema';
@@ -10,7 +10,6 @@ import { apiRequest } from '@/lib/queryClient';
 import { useBatchGameStatistics } from '@/components/statistics/hooks/useBatchGameStatistics';
 import { isGameValidForStatistics } from '@/lib/gameFilters';
 import { ViewMoreButton } from '@/components/ui/view-more-button';
-import { CardHeader, CardTitle } from '@/components/ui/card';
 
 interface PlayerPerformanceProps {
   players: Player[];
