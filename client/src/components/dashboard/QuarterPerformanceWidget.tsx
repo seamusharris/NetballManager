@@ -5,7 +5,6 @@ import { useEffect, useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { isGameValidForStatistics } from '@/lib/gameFilters';
-import { CardHeader, CardTitle } from '@/components/ui/card';
 
 interface QuarterPerformanceWidgetProps {
   games: Game[];
