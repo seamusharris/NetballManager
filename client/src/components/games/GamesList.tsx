@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { isForfeitGame } from '@/lib/utils';
@@ -35,7 +36,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Edit, Trash2, FileText, CalendarRange, Search, Trophy, ThumbsDown, Minus, ActivitySquare, Eye } from 'lucide-react';
+import { Edit, Trash2, FileText, CalendarRange, Search, Trophy, ThumbsDown, Minus, ActivitySquare, Eye, ArrowDown, ArrowUp, ArrowUpDown, FilterIcon } from 'lucide-react';
 import { Game, Opponent, GameStatus } from '@shared/schema';
 import { formatDate, formatShortDate } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
@@ -48,10 +49,17 @@ import { useGameStatuses } from '@/hooks/use-game-statuses';
 interface GamesListProps {
   games: Game[];
   opponents: Opponent[];
-  isLoading: boolean;
-  onEdit: (game: Game) => void;
-  onDelete: (id: number) => void;
-  onViewStats: (id: number) => void;
+  isLoading?: boolean;
+  onEdit?: (game: Game) => void;
+  onDelete?: (id: number) => void;
+  onViewStats?: (id: number) => void;
+  className?: string;
+  // Dashboard-specific props
+  isDashboard?: boolean;
+  showFilters?: boolean;
+  showActions?: boolean;
+  maxRows?: number;
+  title?: string;
 }
 
 // Shared function for filtering games by status and search query
@@ -80,27 +88,39 @@ const filterGamesByStatus = (games: any[], statusFilter: string, searchQuery: st
 export default function GamesList({ 
   games, 
   opponents, 
-  isLoading, 
+  isLoading = false,
   onEdit, 
   onDelete,
-  onViewStats
+  onViewStats,
+  className,
+  isDashboard = false,
+  showFilters = true,
+  showActions = true,
+  maxRows,
+  title
 }: GamesListProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [sortColumn, setSortColumn] = useState<string>('date');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [opponentFilter, setOpponentFilter] = useState<number | null>(null);
   const [itemToDelete, setItemToDelete] = useState<number | null>(null);
   const [, setLocation] = useLocation();
 
-  // Check for status filter in URL parameters on component mount
+  // Check for status filter in URL parameters on component mount (only for non-dashboard)
   useEffect(() => {
-    const searchParams = new URLSearchParams(window.location.search);
-    const statusParam = searchParams.get('status');
-    if (statusParam && ['upcoming', 'completed', 'in-progress', 'forfeit-win', 'forfeit-loss', 'bye', 'abandoned'].includes(statusParam)) {
-      setStatusFilter(statusParam);
-      // Clear the URL parameter after setting the filter
-      const newUrl = window.location.pathname;
-      window.history.replaceState({}, '', newUrl);
+    if (!isDashboard) {
+      const searchParams = new URLSearchParams(window.location.search);
+      const statusParam = searchParams.get('status');
+      if (statusParam && ['upcoming', 'completed', 'in-progress', 'forfeit-win', 'forfeit-loss', 'bye', 'abandoned'].includes(statusParam)) {
+        setStatusFilter(statusParam);
+        // Clear the URL parameter after setting the filter
+        const newUrl = window.location.pathname;
+        window.history.replaceState({}, '', newUrl);
+      }
     }
-  }, []);
+  }, [isDashboard]);
+
   // Use an enum-like type for roster status
   type RosterStatus = 'not-started' | 'partial' | 'complete';
   const [gameRosterStatus, setGameRosterStatus] = useState<Record<number, RosterStatus>>({});
@@ -115,8 +135,6 @@ export default function GamesList({
   // Fetch game stats for all completed games (based on game status)
   const completedGameIds = games
     .filter(game => {
-      // A game is completed if it has a status that marks it as completed
-      // We'll need to check this against the actual game status data
       return game.gameStatus?.isCompleted === true;
     })
     .map(game => game.id);
@@ -126,7 +144,7 @@ export default function GamesList({
     .filter(game => game.gameStatus?.name !== 'bye')
     .map(game => game.id);
 
-  // Use React Query to fetch roster data for all games to check if they're complete
+  // Use React Query to fetch roster data for all games to check if they're complete (only for non-dashboard)
   const { data: allRosterData, isLoading: isLoadingRosters } = useQuery({
     queryKey: ['allRosters', ...nonByeGameIds],
     queryFn: async () => {
@@ -153,16 +171,16 @@ export default function GamesList({
 
       return rostersMap;
     },
-    enabled: nonByeGameIds.length > 0,
+    enabled: nonByeGameIds.length > 0 && !isDashboard,
     staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
   });
 
   // Use the same efficient scores approach as the dashboard
   const { scoresMap, isLoading: isLoadingScores } = useGamesScores(completedGameIds);
 
-  // Determine game stats status
+  // Determine game stats status (only for non-dashboard)
   useEffect(() => {
-    if (!scoresMap) return;
+    if (isDashboard || !scoresMap) return;
 
     const statsStatuses: Record<number, StatsStatus> = {};
 
@@ -180,11 +198,11 @@ export default function GamesList({
     });
 
     setGameStatsStatus(statsStatuses);
-  }, [scoresMap, completedGameIds]);
+  }, [scoresMap, completedGameIds, isDashboard]);
 
-  // Calculate roster statuses
+  // Calculate roster statuses (only for non-dashboard)
   useEffect(() => {
-    if (!allRosterData) return;
+    if (isDashboard || !allRosterData) return;
 
     const rosterStatuses: Record<number, RosterStatus> = {};
 
@@ -223,9 +241,19 @@ export default function GamesList({
     });
 
     setGameRosterStatus(rosterStatuses);
-  }, [allRosterData]);
+  }, [allRosterData, isDashboard]);
 
-
+  // Handle column sort click
+  const handleSortClick = (column: string) => {
+    if (sortColumn === column) {
+      // Toggle direction if clicking the same column
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      // Set new column and default to ascending
+      setSortColumn(column);
+      setSortDirection('asc');
+    }
+  };
 
   // Get opponent name by ID
   const getOpponentName = (opponentId: number | null) => {
@@ -241,36 +269,52 @@ export default function GamesList({
   }));
 
   // Filter games using shared filtering logic
-  const filteredGames = filterGamesByStatus(gamesWithOpponents, statusFilter, searchQuery);
+  let filteredGames = filterGamesByStatus(gamesWithOpponents, statusFilter, searchQuery);
 
-  // Sort games strictly by date (future games first)
+  // Apply opponent filter if set
+  if (opponentFilter !== null) {
+    filteredGames = filteredGames.filter(game => game.opponentId === opponentFilter);
+  }
+
+  // Sort games based on column and direction
   const sortedGames = [...filteredGames].sort((a, b) => {
-    // Convert date strings to timestamps for comparison
-    const dateA = new Date(a.date).getTime();
-    const dateB = new Date(b.date).getTime();
+    let comparison = 0;
 
-    // If dates are different, sort by date (future dates first)
-    if (dateA !== dateB) {
-      return dateB - dateA; // Future games first (descending order)
+    switch (sortColumn) {
+      case 'round':
+        const roundA = a.round ? parseInt(a.round) : 0;
+        const roundB = b.round ? parseInt(b.round) : 0;
+        comparison = roundA - roundB;
+        break;
+      case 'date':
+        comparison = (new Date(a.date).getTime() - new Date(b.date).getTime());
+        break;
+      case 'opponent':
+        const opponentA = opponents.find(opp => opp.id === a.opponentId)?.teamName || '';
+        const opponentB = opponents.find(opp => opp.id === b.opponentId)?.teamName || '';
+        comparison = opponentA.localeCompare(opponentB);
+        break;
+      case 'status':
+        const statusA = a.gameStatus?.name || '';
+        const statusB = b.gameStatus?.name || '';
+        comparison = statusA.localeCompare(statusB);
+        break;
+      default:
+        comparison = (new Date(a.date).getTime() - new Date(b.date).getTime());
     }
 
-    // If dates are the same, sort by time
-    // Convert time strings (HH:MM) to comparable values
-    const [hoursA, minutesA] = a.time.split(':').map(Number);
-    const [hoursB, minutesB] = b.time.split(':').map(Number);
-    const timeA = hoursA * 60 + minutesA;
-    const timeB = hoursB * 60 + minutesB;
-
-    // Earlier time of day first for same date
-    return timeA - timeB;
+    return sortDirection === 'asc' ? comparison : -comparison;
   });
+
+  // Apply max rows limit if specified (for dashboard)
+  const finalGames = maxRows ? sortedGames.slice(0, maxRows) : sortedGames;
 
   const confirmDelete = (id: number) => {
     setItemToDelete(id);
   };
 
   const handleDeleteConfirmed = () => {
-    if (itemToDelete !== null) {
+    if (itemToDelete !== null && onDelete) {
       onDelete(itemToDelete);
       setItemToDelete(null);
     }
@@ -282,117 +326,218 @@ export default function GamesList({
 
   return (
     <div className="space-y-6">
-      {/* Filters */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex flex-wrap justify-between gap-4">
-            <div className="w-[360px]">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                <Input
-                  type="text"
-                  placeholder="Search games..."
-                  className="pl-10 pr-4 py-2 w-full"
-                  value={searchQuery}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div className="flex gap-3 items-center">
-              <div className="w-[140px]">
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="All Games" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Games</SelectItem>
-                    <SelectItem value="upcoming">Upcoming</SelectItem>
-                    <SelectItem value="in-progress">In Progress</SelectItem>
-                    <SelectItem value="completed">Completed</SelectItem>
-                    <SelectItem value="forfeit-win">Forfeit Win</SelectItem>
-                    <SelectItem value="forfeit-loss">Forfeit Loss</SelectItem>
-                    <SelectItem value="bye">BYE</SelectItem>
-                    <SelectItem value="abandoned">Abandoned</SelectItem>
-                  </SelectContent>
-                </Select>
+      {/* Filters - only show if not dashboard or showFilters is true */}
+      {(!isDashboard || showFilters) && (
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex flex-wrap justify-between gap-4">
+              <div className="w-[360px]">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                  <Input
+                    type="text"
+                    placeholder="Search games..."
+                    className="pl-10 pr-4 py-2 w-full"
+                    value={searchQuery}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
+                  />
+                </div>
               </div>
 
-              <Button 
-                className="bg-accent hover:bg-accent-light text-white"
-                onClick={() => {
-                  // Reset filters
-                  setSearchQuery('');
-                  setStatusFilter('all');
-                }}
-              >
-                Reset Filters
-              </Button>
+              <div className="flex gap-3 items-center">
+                {/* Opponent Filter */}
+                <div className="w-[180px]">
+                  <Select 
+                    value={opponentFilter?.toString() || "all"}
+                    onValueChange={(value) => setOpponentFilter(value === "all" ? null : Number(value))}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="All Opponents" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Opponents</SelectItem>
+                      {opponents
+                        .filter(opp => games.some(game => game.opponentId === opp.id))
+                        .sort((a, b) => a.teamName.localeCompare(b.teamName))
+                        .map(opponent => (
+                          <SelectItem key={opponent.id} value={opponent.id.toString()}>
+                            {opponent.teamName}
+                          </SelectItem>
+                        ))
+                      }
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Status Filter */}
+                <div className="w-[140px]">
+                  <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="All Games" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Games</SelectItem>
+                      <SelectItem value="upcoming">Upcoming</SelectItem>
+                      <SelectItem value="in-progress">In Progress</SelectItem>
+                      <SelectItem value="completed">Completed</SelectItem>
+                      <SelectItem value="forfeit-win">Forfeit Win</SelectItem>
+                      <SelectItem value="forfeit-loss">Forfeit Loss</SelectItem>
+                      <SelectItem value="bye">BYE</SelectItem>
+                      <SelectItem value="abandoned">Abandoned</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <Button 
+                  className="bg-accent hover:bg-accent-light text-white"
+                  onClick={() => {
+                    // Reset filters
+                    setSearchQuery('');
+                    setStatusFilter('all');
+                    setOpponentFilter(null);
+                  }}
+                >
+                  Reset Filters
+                </Button>
+              </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Games Table */}
       <Card className="overflow-hidden">
+        {title && (
+          <CardContent className="p-6 pb-4">
+            <h3 className="font-heading font-semibold text-neutral-dark">{title}</h3>
+          </CardContent>
+        )}
         <div className="overflow-x-auto">
           <Table>
-            <TableHeader className="bg-gray-50">
+            <TableHeader className={isDashboard ? "bg-blue-50" : "bg-gray-50"}>
               <TableRow>
-                <TableHead className="px-6 py-3 text-left font-bold">Date & Time</TableHead>
-                <TableHead className="px-6 py-3 text-left font-bold">Round</TableHead>
-                <TableHead className="px-6 py-3 text-left font-bold">Opponent</TableHead>
-                <TableHead className="px-6 py-3 text-left font-bold">Status</TableHead>
-                <TableHead className="px-6 py-3 text-left font-bold">Score</TableHead>
+                <TableHead 
+                  className={`px-6 py-3 text-left font-bold cursor-pointer ${isDashboard ? 'w-20 border-r border-b text-center' : ''}`}
+                  onClick={() => handleSortClick('date')}
+                >
+                  <div className="flex items-center">
+                    {isDashboard ? 'Date' : 'Date & Time'}
+                    <div className="ml-1">
+                      {sortColumn !== 'date' ? (
+                        <ArrowUpDown className="ml-1 h-3 w-3 inline" />
+                      ) : (
+                        sortDirection === 'asc' ? 
+                          <ArrowUp className="ml-1 h-3 w-3 inline text-primary" /> : 
+                          <ArrowDown className="ml-1 h-3 w-3 inline text-primary" />
+                      )}
+                    </div>
+                  </div>
+                </TableHead>
+                <TableHead 
+                  className={`px-6 py-3 text-left font-bold cursor-pointer ${isDashboard ? 'w-20 border-r border-b text-center' : ''}`}
+                  onClick={() => handleSortClick('round')}
+                >
+                  <div className="flex items-center">
+                    Round
+                    <div className="ml-1">
+                      {sortColumn !== 'round' ? (
+                        <ArrowUpDown className="ml-1 h-3 w-3 inline" />
+                      ) : (
+                        sortDirection === 'asc' ? 
+                          <ArrowUp className="ml-1 h-3 w-3 inline text-primary" /> : 
+                          <ArrowDown className="ml-1 h-3 w-3 inline text-primary" />
+                      )}
+                    </div>
+                  </div>
+                </TableHead>
+                <TableHead 
+                  className={`px-6 py-3 text-left font-bold cursor-pointer ${isDashboard ? 'border-r border-b' : ''}`}
+                  onClick={() => handleSortClick('opponent')}
+                >
+                  <div className="flex items-center">
+                    Opponent
+                    <div className="ml-1">
+                      {sortColumn !== 'opponent' ? (
+                        <ArrowUpDown className="ml-1 h-3 w-3 inline" />
+                      ) : (
+                        sortDirection === 'asc' ? 
+                          <ArrowUp className="ml-1 h-3 w-3 inline text-primary" /> : 
+                          <ArrowDown className="ml-1 h-3 w-3 inline text-primary" />
+                      )}
+                    </div>
+                  </div>
+                </TableHead>
+                <TableHead 
+                  className={`px-6 py-3 text-left font-bold cursor-pointer ${isDashboard ? 'w-24 text-center border-r border-b' : ''}`}
+                  onClick={() => handleSortClick('status')}
+                >
+                  <div className="flex items-center justify-center">
+                    Status
+                    <div className="ml-1">
+                      {sortColumn !== 'status' ? (
+                        <ArrowUpDown className="ml-1 h-3 w-3 inline" />
+                      ) : (
+                        sortDirection === 'asc' ? 
+                          <ArrowUp className="ml-1 h-3 w-3 inline text-primary" /> : 
+                          <ArrowDown className="ml-1 h-3 w-3 inline text-primary" />
+                      )}
+                    </div>
+                  </div>
+                </TableHead>
+                <TableHead className={`px-6 py-3 text-left font-bold ${isDashboard ? 'w-24 text-center border-b' : ''}`}>Score</TableHead>
+                {showActions && !isDashboard && (
+                  <TableHead className="px-6 py-3 text-left font-bold">Actions</TableHead>
+                )}
               </TableRow>
             </TableHeader>
-            <TableBody>
+            <TableBody className={isDashboard ? "bg-white divide-y divide-gray-200" : ""}>
               {isLoading ? (
                 Array(5).fill(0).map((_, i) => (
                   <TableRow key={i}>
-                    <TableCell colSpan={5}>
+                    <TableCell colSpan={showActions && !isDashboard ? 6 : 5}>
                       <Skeleton className="h-12 w-full" />
                     </TableCell>
                   </TableRow>
                 ))
-              ) : sortedGames.length === 0 ? (
+              ) : finalGames.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8 text-gray-500">
+                  <TableCell colSpan={showActions && !isDashboard ? 6 : 5} className={`text-center py-8 text-gray-500 ${isDashboard ? 'border-b' : ''}`}>
                     No games found. Please add a game or adjust your filters.
                   </TableCell>
                 </TableRow>
               ) : (
-                sortedGames.map(game => (
+                finalGames.map(game => (
                   <TableRow 
                     key={game.id}
-                    className="cursor-pointer hover:bg-gray-50"
+                    className={`cursor-pointer ${isDashboard ? 'hover:bg-gray-50 transition-colors' : 'hover:bg-gray-50'}`}
                     onClick={() => navigate(`/game/${game.id}`)}
                   >
-                    <TableCell className="px-6 py-4 whitespace-nowrap">
+                    <TableCell className={`px-6 py-4 whitespace-nowrap ${isDashboard ? 'border-r' : ''}`}>
                       <div className="flex flex-col">
                         <span className="font-medium text-gray-900">{formatDate(game.date)}</span>
-                        <span className="text-sm text-gray-500">{game.time}</span>
+                        {!isDashboard && <span className="text-sm text-gray-500">{game.time}</span>}
+                        {isDashboard && <div className="text-xs text-gray-500">{game.time}</div>}
                       </div>
                     </TableCell>
-                    <TableCell className="px-6 py-4 whitespace-nowrap">
+                    <TableCell className={`px-6 py-4 whitespace-nowrap ${isDashboard ? 'border-r text-center' : ''}`}>
                       {game.round ? (
                         <div className="font-medium">
                           <Badge variant="outline" className="px-2 py-1 rounded-full bg-blue-100 text-blue-700 border-blue-200">
-                            Round {game.round}
+                            {isDashboard ? game.round : `Round ${game.round}`}
                           </Badge>
                         </div>
                       ) : (
                         <span className="text-gray-400">--</span>
                       )}
                     </TableCell>
-                    <TableCell className="px-6 py-4 whitespace-nowrap">
+                    <TableCell className={`px-6 py-4 whitespace-nowrap ${isDashboard ? 'border-r' : ''}`}>
                       {game.isBye ? (
                         <div className="font-medium text-gray-500">⸺</div>
                       ) : (
                         <div className="font-medium">{getOpponentName(game.opponentId)}</div>
                       )}
                     </TableCell>
-                    <TableCell className="px-6 py-4 whitespace-nowrap">
+                    <TableCell className={`px-6 py-4 whitespace-nowrap ${isDashboard ? 'border-r text-center' : ''}`}>
                       <div className="flex items-center gap-2">
                         {game.isBye ? (
                           <Badge
@@ -409,7 +554,7 @@ export default function GamesList({
                         )}
                       </div>
                     </TableCell>
-                    <TableCell className="px-6 py-4 whitespace-nowrap">
+                    <TableCell className={`px-6 py-4 whitespace-nowrap ${isDashboard ? 'text-center' : ''}`}>
                       {game.isBye ? (
                         <div className="font-medium text-gray-500">⸺</div>
                       ) : game.gameStatus?.isCompleted ? (
@@ -451,7 +596,64 @@ export default function GamesList({
                       )}
                     </TableCell>
 
-
+                    {/* Actions column - only for non-dashboard */}
+                    {showActions && !isDashboard && (
+                      <TableCell className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center space-x-2" onClick={(e) => e.stopPropagation()}>
+                          {onEdit && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => onEdit(game)}
+                              className="h-8 w-8 p-0"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          )}
+                          {onViewStats && game.gameStatus?.isCompleted && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => onViewStats(game.id)}
+                              className="h-8 w-8 p-0"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          )}
+                          {onDelete && (
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    This action cannot be undone. This will permanently delete the game
+                                    and remove all associated data from our servers.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() => onDelete(game.id)}
+                                    className="bg-red-600 hover:bg-red-700"
+                                  >
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          )}
+                        </div>
+                      </TableCell>
+                    )}
                   </TableRow>
                 ))
               )}

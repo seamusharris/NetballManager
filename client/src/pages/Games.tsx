@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,6 +10,7 @@ import { Plus } from 'lucide-react';
 import { apiRequest } from '@/lib/apiClient';
 import { Game, Opponent, Player } from '@shared/schema';
 import { useToast } from '@/hooks/use-toast';
+import { useLocation } from 'wouter';
 
 interface QueryParams {
   status?: string;
@@ -17,9 +19,10 @@ interface QueryParams {
 
 export default function Games() {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
+  const queryClient = = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingGame, setEditingGame] = useState<Game | null>(null);
+  const [, setLocation] = useLocation();
   
 
   // Fetch games
@@ -106,6 +109,10 @@ export default function Games() {
     }
   };
 
+  const handleViewStats = (gameId: number) => {
+    setLocation(`/game/${gameId}`);
+  };
+
   return (
     <>
       <Card>
@@ -120,7 +127,17 @@ export default function Games() {
               Add Game
             </Button>
           </div>
-          <GamesList games={games} opponents={opponents} onDelete={handleDelete} onEdit={setEditingGame} />
+          <GamesList 
+            games={games} 
+            opponents={opponents} 
+            isLoading={isLoadingGames}
+            onDelete={handleDelete} 
+            onEdit={setEditingGame}
+            onViewStats={handleViewStats}
+            isDashboard={false}
+            showFilters={true}
+            showActions={true}
+          />
         </CardContent>
       </Card>
 
