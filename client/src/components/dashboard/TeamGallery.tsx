@@ -1,6 +1,6 @@
-import { Card, CardContent } from '@/components/ui/card';
 import { Link } from 'wouter';
 import { ClipboardList, CalendarPlus, UserPlus, LineChart } from 'lucide-react';
+import { BaseWidget } from '@/components/ui/base-widget';
 
 interface TeamGalleryProps {
   className?: string;
@@ -8,9 +8,12 @@ interface TeamGalleryProps {
 
 export default function TeamGallery({ className }: TeamGalleryProps) {
   return (
-    <Card className={className}>
-      <CardContent className="p-6">
-        <h3 className="font-heading font-semibold text-neutral-dark mb-4">Team Gallery</h3>
+    <BaseWidget 
+      title="Team Gallery" 
+      description="Team photos and quick actions"
+      className={className}
+      contentClassName="p-6"
+    >
         
         <div className="grid grid-cols-2 gap-3 mb-6">
           <img 
@@ -35,7 +38,7 @@ export default function TeamGallery({ className }: TeamGalleryProps) {
           />
         </div>
         
-        <h3 className="font-heading font-semibold text-neutral-dark mb-3">Quick Actions</h3>
+        <h4 className="text-sm font-medium text-gray-600 mb-3">Quick Actions</h4>
         <div className="grid grid-cols-2 gap-3">
           <Link href="/roster">
             <a className="flex flex-col items-center justify-center bg-primary/5 hover:bg-primary/10 transition-colors p-4 rounded text-primary text-center">
@@ -65,7 +68,6 @@ export default function TeamGallery({ className }: TeamGalleryProps) {
             </a>
           </Link>
         </div>
-      </CardContent>
-    </Card>
+    </BaseWidget>
   );
 }

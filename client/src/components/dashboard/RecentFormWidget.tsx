@@ -6,6 +6,7 @@ import { getWinLoseLabel } from '@/lib/utils';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { ResultBadge } from '@/components/ui/result-badge';
 import { isGameValidForStatistics } from '@/lib/gameFilters';
+import { BaseWidget } from '@/components/ui/base-widget';
 
 
 interface RecentFormWidgetProps {
@@ -103,79 +104,78 @@ export default function RecentFormWidget({
   }
 
   return (
-    <Card className={className}>
-      <CardHeader>
-        <CardTitle>Recent Form</CardTitle>
-      </CardHeader>
-      <CardContent className="p-6">
-        {/* Enhanced Form Display with Trend */}
-        <div className="text-center mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
-          <div className="flex justify-center items-center space-x-2 mb-2">
-            <span className="text-xs text-gray-500 font-medium">Last 5 Games</span>
-            {getTrendIcon()}
-          </div>
-          <div className="flex justify-center space-x-1 mb-2">
-            {formData.slice(0, 5).map((game, index) => (
-              <div key={game.id} className="relative group">
-                <ResultBadge result={game.result as GameResult} size="md" />
-                {/* Tooltip on hover */}
-                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
-                  {game.opponent}: {game.teamScore}-{game.opponentScore}
-                </div>
-              </div>
-            ))}
-          </div>
+    <BaseWidget 
+      title="Recent Form" 
+      description="Performance in the last 5 completed games"
+      contentClassName="p-6"
+    >
+      {/* Enhanced Form Display with Trend */}
+      <div className="text-center mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+        <div className="flex justify-center items-center space-x-2 mb-1">
+          <span className="text-xs text-gray-500 font-medium">Last 5 Games</span>
+          {getTrendIcon()}
         </div>
-
-        {/* Goal Margins and Stats */}
-        {formData.length > 1 && (
-          <div className="mt-8">
-            <div className="grid grid-cols-3 gap-4">
-              {/* Goal Difference Trend Chart - 2/3 width */}
-              <div className="col-span-2 p-3 pb-2 bg-gray-50 rounded-lg border border-gray-200">
-                <p className="text-xs text-gray-500 text-center mb-1 font-medium">Goal margins</p>
-                <div className="flex justify-center items-end space-x-2 h-32">
-                  {formData.slice(0, 5).map((game, index) => {
-                    const margin = Math.abs(game.margin);
-                    const height = Math.max(20, Math.min(80, margin * 10)); // Expanded scale for larger container
-                    const isPositive = game.margin > 0;
-                    const isDraw = game.margin === 0;
-
-                    return (
-                      <div key={game.id} className="relative group">
-                        <div 
-                          className={`w-4 rounded-t-md transition-opacity hover:opacity-80 ${
-                            isDraw ? 'bg-gray-400' : 
-                            isPositive ? 'bg-green-500' : 'bg-red-500'
-                          }`}
-                          style={{ height: `${height}px` }}
-                        />
-                        <span className="text-xs text-gray-500 font-medium text-center block mt-1">{margin}</span>
-                        {/* Tooltip on hover */}
-                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
-                          {game.opponent}: {game.teamScore}-{game.opponentScore}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+        <div className="flex justify-center space-x-1 mb-2">
+          {formData.slice(0, 5).map((game, index) => (
+            <div key={game.id} className="relative group">
+              <ResultBadge result={game.result as GameResult} size="md" />
+              {/* Tooltip on hover */}
+              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
+                {game.opponent}: {game.teamScore}-{game.opponentScore}
               </div>
+            </div>
+          ))}
+        </div>
+      </div>
 
-              {/* Stats Column - 1/3 width */}
-              <div className="space-y-3">
-                <div className="text-center bg-gray-100 p-3 rounded-lg border border-gray-200">
-                  <p className="text-xs text-gray-500 mb-1">Win Rate</p>
-                  <p className="text-xl font-bold text-gray-700">{winPercentage}%</p>
-                </div>
-                <div className="text-center bg-gray-100 p-3 rounded-lg border border-gray-200">
-                  <p className="text-xs text-gray-500 mb-1">Played</p>
-                  <p className="text-xl font-bold text-gray-700">{completedGames.length}</p>
-                </div>
+      {/* Goal Margins and Stats */}
+      {formData.length > 1 && (
+        <div className="mt-8">
+          <div className="grid grid-cols-3 gap-4">
+            {/* Goal Difference Trend Chart - 2/3 width */}
+            <div className="col-span-2 p-3 pb-2 bg-gray-50 rounded-lg border border-gray-200">
+              <p className="text-xs text-gray-500 text-center mb-1 font-medium">Goal margins</p>
+              <div className="flex justify-center items-end space-x-2 h-32">
+                {formData.slice(0, 5).map((game, index) => {
+                  const margin = Math.abs(game.margin);
+                  const height = Math.max(20, Math.min(80, margin * 10)); // Expanded scale for larger container
+                  const isPositive = game.margin > 0;
+                  const isDraw = game.margin === 0;
+
+                  return (
+                    <div key={game.id} className="relative group">
+                      <div 
+                        className={`w-4 rounded-t-md transition-opacity hover:opacity-80 ${
+                          isDraw ? 'bg-gray-400' : 
+                          isPositive ? 'bg-green-500' : 'bg-red-500'
+                        }`}
+                        style={{ height: `${height}px` }}
+                      />
+                      <span className="text-xs text-gray-500 font-medium text-center block mt-1">{margin}</span>
+                      {/* Tooltip on hover */}
+                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
+                        {game.opponent}: {game.teamScore}-{game.opponentScore}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Stats Column - 1/3 width */}
+            <div className="space-y-3">
+              <div className="text-center bg-gray-100 p-3 rounded-lg border border-gray-200">
+                <p className="text-xs text-gray-500 mb-1">Win Rate</p>
+                <p className="text-xl font-bold text-gray-700">{winPercentage}%</p>
+              </div>
+              <div className="text-center bg-gray-100 p-3 rounded-lg border border-gray-200">
+                <p className="text-xs text-gray-500 mb-1">Played</p>
+                <p className="text-xl font-bold text-gray-700">{completedGames.length}</p>
               </div>
             </div>
           </div>
-        )}
-      </CardContent>
-    </Card>
+        </div>
+      )}
+    </BaseWidget>
   );
 }
