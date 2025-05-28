@@ -216,6 +216,7 @@ export default function OpponentMatchups({
             </div>
           </div>
         )}
+        </div>
 
         {matchups.length > 0 ? (
           <ViewMoreButton href="/opponent-analysis">
