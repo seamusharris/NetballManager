@@ -62,6 +62,7 @@ export default function Games() {
 
   const handleCreate = async (game: Game) => {
     try {
+      console.log('Creating game with data:', game);
       await apiRequest('POST', '/api/games', game);
       queryClient.invalidateQueries({ queryKey: ['games'] });
       setIsDialogOpen(false);
@@ -70,6 +71,7 @@ export default function Games() {
         description: 'Game created successfully.',
       });
     } catch (error) {
+      console.error('Failed to create game:', error);
       toast({
         title: 'Error',
         description: 'Failed to create game.',
@@ -81,6 +83,7 @@ export default function Games() {
   const handleUpdate = async (game: Game) => {
     if (!editingGame) return;
     try {
+      console.log('Updating game with data:', game);
       await apiRequest('PATCH', `/api/games/${editingGame.id}`, game);
       queryClient.invalidateQueries({ queryKey: ['games'] });
       setEditingGame(null);
@@ -89,6 +92,7 @@ export default function Games() {
         description: 'Game updated successfully.',
       });
     } catch (error) {
+      console.error('Failed to update game:', error);
       toast({
         title: 'Error',
         description: 'Failed to update game.',

@@ -29,24 +29,23 @@ const formSchema = insertGameSchema.extend({
   time: z.string().min(1, "Time is required"),
   opponentId: z.string(), // No validation directly on the field
   round: z.string().optional(),
-  status: z.string().optional(),
+  statusId: z.string().optional(), // Use statusId instead of status
   seasonId: z.string().optional() // Season ID as string for form handling
 }).refine(
   (data) => {
-    // If it's a bye or abandoned, we don't need opponent
-    if (data.status === 'bye' || data.status === 'abandoned') return true;
-    // For regular games, opponent is required
+    // For regular games, opponent is required (we'll handle BYE logic differently)
     return data.opponentId !== "";
   },
   {
-    message: "Opponent is required unless it's a BYE round or abandoned game",
+    message: "Opponent is required for games",
     path: ["opponentId"]
   }
 );
 
-// Convert string opponentId to number for submission
+// Convert string fields to numbers for submission
 type FormValues = z.infer<typeof formSchema> & {
   opponentId: string;
+  statusId: string;
   seasonId: string;
 };
 
@@ -69,39 +68,23 @@ export function GameForm({ game, opponents, seasons, activeSeason, onSubmit, isS
       time: game?.time || "",
       opponentId: game?.opponentId ? String(game.opponentId) : "",
       round: game?.round || "",
-      status: game?.status || "upcoming",
+      statusId: game?.statusId ? String(game.statusId) : "1", // Default to first status (usually "upcoming")
       seasonId: game?.seasonId ? String(game.seasonId) : activeSeason ? String(activeSeason.id) : ""
     },
   });
 
   const handleSubmit = (values: FormValues) => {
-    // Special handling for BYE and abandoned games - they don't need an opponent
-    if (values.status === 'bye' || values.status === 'abandoned') {
-      const specialGameData = {
-        date: values.date,
-        time: values.time,
-        round: values.round,
-        status: values.status,
-        opponentId: null,
-        seasonId: values.seasonId ? parseInt(values.seasonId) : (activeSeason ? activeSeason.id : undefined)
-      };
-
-      console.log("Submitting special game:", specialGameData);
-      onSubmit(specialGameData);
-      return;
-    }
-
-    // Regular games need an opponent
+    // Format the values for submission
     const formattedValues = {
       date: values.date,
       time: values.time,
       round: values.round,
       opponentId: parseInt(values.opponentId),
-      status: values.status || 'upcoming',
+      statusId: parseInt(values.statusId),
       seasonId: values.seasonId ? parseInt(values.seasonId) : (activeSeason ? activeSeason.id : undefined)
     };
 
-    console.log("Submitting regular game:", formattedValues);
+    console.log("Submitting game with statusId:", formattedValues);
     onSubmit(formattedValues);
   };
 
@@ -120,15 +103,10 @@ export function GameForm({ game, opponents, seasons, activeSeason, onSubmit, isS
               <Select 
                 onValueChange={field.onChange} 
                 defaultValue={field.value}
-                disabled={form.watch("status") === 'bye' || form.watch("status") === 'abandoned'}
               >
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder={
-                      form.watch("status") === 'bye' ? "Not required for BYE" :
-                      form.watch("status") === 'abandoned' ? "Not required for abandoned games" :
-                      "Select opponent"
-                    } />
+                    <SelectValue placeholder="Select opponent" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
@@ -140,11 +118,7 @@ export function GameForm({ game, opponents, seasons, activeSeason, onSubmit, isS
                 </SelectContent>
               </Select>
               <FormDescription>
-                {form.watch("status") === 'bye' 
-                  ? "No opponent needed for BYE rounds" 
-                  : form.watch("status") === 'abandoned'
-                  ? "No opponent needed for abandoned games"
-                  : "Select the team your squad will be playing against"}
+                Select the team your squad will be playing against
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -203,7 +177,7 @@ export function GameForm({ game, opponents, seasons, activeSeason, onSubmit, isS
 
         <FormField
           control={form.control}
-          name="status"
+          name="statusId"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Game Status</FormLabel>
@@ -218,7 +192,7 @@ export function GameForm({ game, opponents, seasons, activeSeason, onSubmit, isS
                 </FormControl>
                 <SelectContent>
                   {allGameStatuses?.filter(s => s.isActive).map(statusObj => (
-                    <SelectItem key={statusObj.name} value={statusObj.name}>
+                    <SelectItem key={statusObj.id} value={statusObj.id.toString()}>
                       {statusObj.displayName}
                     </SelectItem>
                   ))}

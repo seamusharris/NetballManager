@@ -1020,20 +1020,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Opponent is required for non-BYE games" });
       }
 
+      // Handle statusId updates - ensure it's a valid number
+      if (req.body.statusId !== undefined) {
+        const statusId = parseInt(req.body.statusId);
+        if (isNaN(statusId)) {
+          return res.status(400).json({ message: "Invalid statusId - must be a number" });
+        }
+        req.body.statusId = statusId;
+        console.log(`Updating game status to statusId: ${statusId}`);
+      }
+
       // Handle legacy status changes (no longer needed as we use statusId)
       if (req.body.status) {
         // Legacy status handling - just log for debugging
         console.log(`Legacy status field received: ${req.body.status} - consider using statusId instead`);
       }
-
-      // Log all available games before update for debugging
-      const allGames = await storage.getGames();
-      console.log('Available games:', allGames.map(g => ({ 
-        id: g.id, 
-        date: g.date, 
-        status: g.status, 
-        completed: g.completed 
-      })));
 
       const updatedGame = await storage.updateGame(id, req.body);
       if (!updatedGame) {
