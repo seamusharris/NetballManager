@@ -47,9 +47,9 @@ export default function UpcomingGames({ games, opponents, className, seasonFilte
                   }`}
                 >
                   <div>
-                    <p className="font-semibold">vs. {getOpponentName(game.opponentId)}</p>
+                    <p className="font-semibold text-gray-800">{getOpponentName(game.opponentId)}</p>
                     <div className="flex items-center gap-2">
-                      <p className="text-xs text-gray-500">{formatShortDate(game.date)} • {game.time}</p>
+                      <p className="text-xs text-gray-700">{formatShortDate(game.date)} • {game.time}</p>
                       {game.round && (
                         <GameBadge variant="round">
                           Round {game.round}

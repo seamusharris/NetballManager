@@ -153,9 +153,9 @@ export default function RecentGames({ games, opponents, className, seasonFilter,
                   className={`flex justify-between items-center p-4 mb-4 mt-2 border-l-4 rounded ${getResultClass(game)} cursor-pointer ${getHoverClass(game)} transition-colors`}
                 >
                   <div>
-                    <p className="font-semibold">{getOpponentName(game.opponentId)}</p>
+                    <p className="font-semibold text-gray-800">{getOpponentName(game.opponentId)}</p>
                     <div className="flex items-center gap-2">
-                      <p className="text-xs text-gray-500">{formatShortDate(game.date)}</p>
+                      <p className="text-xs text-gray-700">{formatShortDate(game.date)}</p>
                       {game.round && (
                         <GameBadge variant="round">
                           Round {game.round}
