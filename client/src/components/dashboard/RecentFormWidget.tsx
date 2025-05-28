@@ -147,12 +147,12 @@ export default function RecentFormWidget({
 
         {/* Goal Difference Trend (Enhanced Chart) */}
         {formData.length > 1 && (
-          <div className="mt-6 mb-0">
-            <div className="p-4 pb-1 bg-gray-50 rounded-lg">
-              <div className="flex justify-center items-end space-x-2 h-20">
+          <div className="mt-4 mb-2">
+            <div className="p-3 pb-2 bg-gray-50 rounded-lg">
+              <div className="flex justify-center items-end space-x-2 h-24">
                 {formData.slice(0, 5).reverse().map((game, index) => {
                   const margin = Math.abs(game.margin);
-                  const height = Math.max(16, Math.min(72, margin * 8)); // Larger scale to use full container
+                  const height = Math.max(20, Math.min(80, margin * 10)); // Expanded scale for larger container
                   const isPositive = game.margin > 0;
                   const isDraw = game.margin === 0;
                   
