@@ -174,7 +174,7 @@ export default function RecentFormWidget({
                   );
                 })}
               </div>
-              <p className="text-xs text-gray-400 text-center mt-0.5 mb-0">Goal margins (oldest → newest)</p>
+              <p className="text-xs text-gray-400 text-center mt-0 mb-0">Goal margins (oldest → newest)</p>
             </div>
           </div>
         )}
