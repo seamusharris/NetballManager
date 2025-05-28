@@ -28,6 +28,13 @@ export default function Games() {
     queryFn: () => apiRequest('GET', '/api/games') as Promise<Game[]>,
     staleTime: 5 * 60 * 1000,
   });
+  
+  // Debug logging
+  console.log('Games page:', {
+    gamesCount: games.length,
+    isLoading: isLoadingGames,
+    sampleGame: games[0]
+  });
 
   // Fetch opponents
   const { data: opponents = [] } = useQuery<Opponent[]>({

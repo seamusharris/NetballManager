@@ -28,6 +28,14 @@ export default function Players() {
     endpoint: '/api/seasons'
   });
   
+  // Debug logging
+  console.log('Players page:', {
+    playersCount: players.length,
+    isLoading,
+    error,
+    seasonsCount: seasons.length
+  });
+  
   // Find the player to edit if an edit ID is provided in the URL
   useEffect(() => {
     if (editId && players.length > 0) {

@@ -79,13 +79,22 @@ export default function OpponentAnalysis() {
 
   // Filter games by season
   const filteredGames = selectedSeason === 'current' 
-    ? games.filter((game: Game) => game.seasonId === activeSeason?.id)
+    ? activeSeason?.id 
+      ? games.filter((game: Game) => game.seasonId === activeSeason.id)
+      : games // If no active season, show all games
     : selectedSeason === 'all'
     ? games
     : games.filter((game: Game) => game.seasonId === parseInt(selectedSeason));
 
   useEffect(() => {
     const calculateMatchups = () => {
+      console.log('OpponentAnalysis: Calculating matchups');
+      console.log('- Total games:', games.length);
+      console.log('- Filtered games:', filteredGames.length);
+      console.log('- Total opponents:', opponents.length);
+      console.log('- Selected season:', selectedSeason);
+      console.log('- Active season:', activeSeason);
+      
       const opponentMatchups: OpponentMatchup[] = [];
 
       opponents.forEach((opponent: Opponent) => {
