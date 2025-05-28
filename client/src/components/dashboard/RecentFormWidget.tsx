@@ -147,7 +147,7 @@ export default function RecentFormWidget({
 
         {/* Goal Difference Trend (Enhanced Chart) */}
         {formData.length > 1 && (
-          <div className="mt-4 mb-0">
+          <div className="mt-6 mb-0">
             <div className="p-4 pb-1 bg-gray-50 rounded-lg">
               <div className="flex justify-center items-end space-x-2 h-20">
                 {formData.slice(0, 5).reverse().map((game, index) => {
@@ -174,7 +174,7 @@ export default function RecentFormWidget({
                   );
                 })}
               </div>
-              <p className="text-xs text-gray-400 text-center mt-1 mb-0">Goal margins (oldest → newest)</p>
+              <p className="text-xs text-gray-400 text-center mt-0.5 mb-0">Goal margins (oldest → newest)</p>
             </div>
           </div>
         )}
