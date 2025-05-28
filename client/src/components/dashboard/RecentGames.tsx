@@ -135,10 +135,10 @@ export default function RecentGames({ games, opponents, className, seasonFilter,
 
   return (
     <Card className={className}>
+      <CardHeader>
+        <CardTitle>Recent Games</CardTitle>
+      </CardHeader>
       <CardContent className="p-6 pb-2">
-        <div className="mb-6 pb-3 border-b border-gray-100">
-          <h3 className="text-lg font-bold text-gray-900 tracking-tight">Recent Games</h3>
-        </div>
         <div className="space-y-8">
           {isLoading ? (
             <p className="text-gray-500 text-center py-4">Loading recent games...</p>

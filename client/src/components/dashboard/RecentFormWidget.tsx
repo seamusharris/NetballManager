@@ -103,10 +103,8 @@ export default function RecentFormWidget({
 
   return (
     <Card className={className}>
-      <CardHeader className="pb-0">
-        <div className="mb-6 pb-3 border-b border-gray-100">
-          <CardTitle className="text-lg font-bold text-gray-900 tracking-tight">Recent Form</CardTitle>
-        </div>
+      <CardHeader>
+        <CardTitle>Recent Form</CardTitle>
       </CardHeader>
       <CardContent className="p-6">
         <div className="flex justify-between items-center mb-4">

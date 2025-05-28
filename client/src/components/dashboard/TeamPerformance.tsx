@@ -221,10 +221,8 @@ export default function TeamPerformance({ games, className, activeSeason, select
 
   return (
     <Card className={className}>
-      <CardHeader className="pb-0">
-        <div className="mb-6 pb-3 border-b border-gray-100">
-          <CardTitle className="text-lg font-bold text-gray-900 tracking-tight">Team Performance</CardTitle>
-        </div>
+      <CardHeader>
+        <CardTitle>Team Performance</CardTitle>
       </CardHeader>
       <CardContent className="p-6 pb-2">
         <div className="mb-4">

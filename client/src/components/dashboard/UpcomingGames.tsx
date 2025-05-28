@@ -31,10 +31,10 @@ export default function UpcomingGames({ games, opponents, className, seasonFilte
 
   return (
     <Card className={className}>
+      <CardHeader>
+        <CardTitle>Upcoming Games</CardTitle>
+      </CardHeader>
       <CardContent className="p-6 pb-2">
-        <div className="mb-6 pb-3 border-b border-gray-100">
-          <h3 className="text-lg font-bold text-gray-900 tracking-tight">Upcoming Games</h3>
-        </div>
 
         {upcomingGames.length > 0 ? (
           <div className="space-y-8">
