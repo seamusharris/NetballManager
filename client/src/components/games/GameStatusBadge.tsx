@@ -26,7 +26,7 @@ import { Button } from '@/components/ui/button';
 /**
  * Get the CSS class for a game status
  */
-function getStatusClass(status: GameStatus): string {
+function getStatusClass(status: string): string {
   switch (status) {
     case 'upcoming':
       return 'bg-blue-50 text-blue-700 border-blue-200';
@@ -47,7 +47,7 @@ function getStatusClass(status: GameStatus): string {
   }
 }
 
-function getStatusDisplay(status: GameStatus): string {
+function getStatusDisplay(status: string): string {
   switch (status) {
     case 'upcoming': return 'Upcoming';
     case 'in-progress': return 'In Progress';
@@ -62,7 +62,7 @@ function getStatusDisplay(status: GameStatus): string {
 
 // Simple status badge component
 interface GameStatusBadgeProps {
-  status: GameStatus;
+  status: string;
   onClick?: () => void;
   className?: string;
   size?: 'default' | 'sm';
@@ -109,18 +109,18 @@ export function GameStatusButton({
 }: GameStatusButtonProps) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const [selectedStatus, setSelectedStatus] = React.useState<GameStatus>(game.status as GameStatus);
+  const [selectedStatus, setSelectedStatus] = React.useState<GameStatus>(game.gameStatus?.name as GameStatus || 'upcoming');
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { data: gameStatuses } = useGameStatuses();
 
-  // Keep selectedStatus in sync with game.status when it changes
+  // Keep selectedStatus in sync with game.gameStatus when it changes
   React.useEffect(() => {
-    setSelectedStatus(game.status as GameStatus);
-  }, [game.status]);
+    setSelectedStatus(game.gameStatus?.name as GameStatus || 'upcoming');
+  }, [game.gameStatus?.name]);
 
   const updateGameStatus = async () => {
-    if (selectedStatus === game.status) {
+    if (selectedStatus === game.gameStatus?.name) {
       setIsOpen(false);
       return;
     }
@@ -175,7 +175,7 @@ export function GameStatusButton({
 
   // Simple badge without dialog
   if (!withDialog) {
-    return <GameStatusBadge status={game.status as GameStatus} size={size} className={className} />;
+    return <GameStatusBadge status={game.gameStatus?.name as GameStatus || 'upcoming'} size={size} className={className} />;
   }
 
   // Badge with status change dialog
@@ -184,7 +184,7 @@ export function GameStatusButton({
       <DialogTrigger asChild>
         <div data-status-button>
           <GameStatusBadge 
-            status={game.status as GameStatus} 
+            status={game.gameStatus?.name as GameStatus || 'upcoming'} 
             size={size} 
             className={className} 
             onClick={() => setIsOpen(true)}
@@ -234,7 +234,7 @@ export function GameStatusButton({
           </Button>
           <Button 
             onClick={updateGameStatus}
-            disabled={isSubmitting || selectedStatus === game.status}
+            disabled={isSubmitting || selectedStatus === game.gameStatus?.name}
           >
             {isSubmitting ? 'Updating...' : 'Update Status'}
           </Button>

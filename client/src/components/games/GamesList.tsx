@@ -41,7 +41,7 @@ import { formatDate, formatShortDate } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
 import { GameScoreDisplay } from '@/components/statistics/GameScoreDisplay';
 import { useGamesScores } from '@/components/statistics/hooks/useGamesScores';
-import { GameStatusBadge } from './GameStatusBadge';
+import { GameStatusButton } from './GameStatusBadge';
 import { GameStatusDialog } from './GameStatusDialog';
 import { useGameStatuses } from '@/hooks/use-game-statuses';
 
@@ -402,13 +402,9 @@ export default function GamesList({
                             BYE
                           </Badge>
                         ) : (
-                          <GameStatusBadge 
-                            game={game} 
-                            editable={true} 
-                            onStatusChange={() => {
-                              setSelectedGame(game);
-                              setStatusDialogOpen(true);
-                            }} 
+                          <GameStatusButton 
+                            game={game}
+                            withDialog={false}
                           />
                         )}
                       </div>
