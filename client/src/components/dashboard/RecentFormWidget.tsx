@@ -1,4 +1,4 @@
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Game, Opponent, GameResult } from '@shared/schema';
 import { getWinLoseLabel } from '@/lib/utils';
@@ -22,13 +22,13 @@ export default function RecentFormWidget({
 }: RecentFormWidgetProps) {
   // Debug: Log all games being processed
   console.log('RecentFormWidget - All games:', games.map(g => ({id: g.id, status: g.gameStatus?.name, isCompleted: g.gameStatus?.isCompleted, allowsStats: g.gameStatus?.allowsStatistics})));
-  
+
   // Get completed games sorted by date (most recent first)
   const completedGames = games
     .filter(isGameValidForStatistics)
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 5); // Last 5 games
-    
+
   console.log('RecentFormWidget - Filtered completed games:', completedGames.map(g => ({id: g.id, status: g.gameStatus?.name})));
 
   // Calculate form data
@@ -87,10 +87,12 @@ export default function RecentFormWidget({
   if (completedGames.length === 0) {
     return (
       <Card className={className}>
-        <CardContent className="p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="font-heading font-semibold text-neutral-dark">Recent Form</h3>
+        <CardHeader className="pb-0">
+          <div className="mb-6 pb-3 border-b border-gray-100">
+            <CardTitle className="text-lg font-bold text-gray-900 tracking-tight">Recent Form</CardTitle>
           </div>
+        </CardHeader>
+        <CardContent className="p-6">
           <div className="text-center text-gray-500">
             <p>No completed games yet</p>
           </div>
@@ -101,9 +103,13 @@ export default function RecentFormWidget({
 
   return (
     <Card className={className}>
+      <CardHeader className="pb-0">
+        <div className="mb-6 pb-3 border-b border-gray-100">
+          <CardTitle className="text-lg font-bold text-gray-900 tracking-tight">Recent Form</CardTitle>
+        </div>
+      </CardHeader>
       <CardContent className="p-6">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="font-heading font-semibold text-neutral-dark">Recent Form</h3>
           {getTrendIcon()}
         </div>
 

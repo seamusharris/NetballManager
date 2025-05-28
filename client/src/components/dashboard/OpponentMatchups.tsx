@@ -152,10 +152,12 @@ export default function OpponentMatchups({
 
   return (
     <Card className={className}>
-      <CardHeader className="pb-3">
-        <CardTitle>
-          Opponent Matchups
-        </CardTitle>
+      <CardHeader className="pb-0">
+        <div className="mb-6 pb-3 border-b border-gray-100">
+          <CardTitle className="text-lg font-bold text-gray-900 tracking-tight">
+            Opponent Matchups
+          </CardTitle>
+        </div>
       </CardHeader>
       <CardContent className="p-6 pb-2">
         {matchups.length === 0 ? (

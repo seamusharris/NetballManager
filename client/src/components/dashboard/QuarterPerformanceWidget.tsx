@@ -1,4 +1,3 @@
-
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Game } from '@shared/schema';
@@ -6,6 +5,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { isGameValidForStatistics } from '@/lib/gameFilters';
+import { CardHeader, CardTitle } from '@/components/ui/card';
 
 interface QuarterPerformanceWidgetProps {
   games: Game[];
@@ -33,23 +33,23 @@ export default function QuarterPerformanceWidget({
     const validGames = games.filter(game => {
       // Must have a game status
       if (!game.gameStatus) return false;
-      
+
       // Must be completed
       if (!game.gameStatus.isCompleted) return false;
-      
+
       // Must allow statistics (this covers forfeit games, BYE games, etc.)
       if (!game.gameStatus.allowsStatistics) return false;
-      
+
       // Exclude abandoned games from statistics
       if (game.gameStatus.name === 'abandoned') return false;
-      
+
       return true;
     });
-    
+
     console.log('QuarterPerformanceWidget valid games:', validGames.length, 'out of', games.length);
     return validGames.map(game => game.id);
   }, [games]);
-  
+
   const enableQuery = validGameIds.length > 0;
 
   const seasonId = selectedSeason?.id || 'current';
@@ -97,7 +97,7 @@ export default function QuarterPerformanceWidget({
       validGameIds: validGameIds.length,
       gameStatsMapKeys: gameStatsMap ? Object.keys(gameStatsMap) : []
     });
-    
+
     if (!gameStatsMap || isLoading || validGameIds.length === 0) return;
 
     const quarterScores: Record<number, { team: number, opponent: number, count: number }> = {
@@ -174,6 +174,11 @@ export default function QuarterPerformanceWidget({
 
   return (
     <Card className={className}>
+      <CardHeader className="pb-0">
+        <div className="mb-6 pb-3 border-b border-gray-100">
+          <CardTitle className="text-lg font-bold text-gray-900 tracking-tight">Quarter Performance</CardTitle>
+        </div>
+      </CardHeader>
       <CardContent className="p-6">
         <div className="flex justify-between items-center mb-4">
           <h3 className="font-heading font-semibold text-neutral-dark">Quarter Performance</h3>
@@ -187,7 +192,7 @@ export default function QuarterPerformanceWidget({
             const diff = teamScore - opponentScore;
             const isStrongest = quarter === strongestQuarter.quarter;
             const isWeakest = quarter === weakestQuarter.quarter;
-            
+
             return (
               <div 
                 key={quarter} 
@@ -220,7 +225,7 @@ export default function QuarterPerformanceWidget({
         </div>
 
         <div className="mb-4" />
-        
+
       </CardContent>
     </Card>
   );

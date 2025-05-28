@@ -1,4 +1,4 @@
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Game, GameStat } from '@shared/schema';
 import { useEffect, useState } from 'react';
@@ -221,9 +221,13 @@ export default function TeamPerformance({ games, className, activeSeason, select
 
   return (
     <Card className={className}>
+      <CardHeader className="pb-0">
+        <div className="mb-6 pb-3 border-b border-gray-100">
+          <CardTitle className="text-lg font-bold text-gray-900 tracking-tight">Team Performance</CardTitle>
+        </div>
+      </CardHeader>
       <CardContent className="p-6 pb-2">
         <div className="mb-4">
-          <h3 className="font-heading font-semibold text-neutral-dark">Team Performance</h3>
         </div>
 
         {/* Key performance indicators - 3x2 grid for more statistics */}

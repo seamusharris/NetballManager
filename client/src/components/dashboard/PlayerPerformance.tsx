@@ -10,6 +10,7 @@ import { apiRequest } from '@/lib/queryClient';
 import { useBatchGameStatistics } from '@/components/statistics/hooks/useBatchGameStatistics';
 import { isGameValidForStatistics } from '@/lib/gameFilters';
 import { ViewMoreButton } from '@/components/ui/view-more-button';
+import { CardHeader, CardTitle } from '@/components/ui/card';
 
 interface PlayerPerformanceProps {
   players: Player[];
@@ -39,7 +40,7 @@ type SortField = 'name' | 'gamesPlayed' | 'goals' | 'goalsAgainst' | 'missedGoal
 type SortDirection = 'asc' | 'desc';
 
 interface SortConfig {
-  field: SortField;
+  field: SortConfig;
   direction: SortDirection;
 }
 
@@ -65,8 +66,7 @@ export default function PlayerPerformance({ players, games, className, seasonFil
   const filteredGames = games.filter(game => {
     if (seasonFilter === 'current' && activeSeason) {
       return game.seasonId === activeSeason.id;
-    } else if (seasonFilter && seasonFilter !== 'current') {
-      const seasonId = parseInt(seasonFilter);
+    } else if (seasonFilter && seasonFilter !== 'current') {      const seasonId = parseInt(seasonFilter);
       return game.seasonId === seasonId;
     }
     return true;
@@ -546,6 +546,11 @@ export default function PlayerPerformance({ players, games, className, seasonFil
 
   return (
     <Card className={className}>
+      <CardHeader className="pb-0">
+        <div className="mb-6 pb-3 border-b border-gray-100">
+          <CardTitle className="text-lg font-bold text-gray-900 tracking-tight">Player Performance</CardTitle>
+        </div>
+      </CardHeader>
       <CardContent className="p-6 pb-2">
         <div className="mb-4">
           <h3 className="font-heading font-semibold text-neutral-dark">Player Performance</h3>
