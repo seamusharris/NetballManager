@@ -7,6 +7,7 @@ import { Game, Opponent } from '@shared/schema';
 import { getWinLoseLabel, getWinLoseClass } from '@/lib/utils';
 import { GameResult } from '@/lib/resultUtils';
 import { ViewMoreButton } from '@/components/ui/view-more-button';
+import { ResultBadge } from '@/components/ui/result-badge';
 import { isGameValidForStatistics } from '@/lib/gameFilters';
 
 interface OpponentMatchup {
