@@ -157,7 +157,7 @@ export default function OpponentMatchups({
           Opponent Matchups
         </CardTitle>
       </CardHeader>
-      <CardContent className="pt-0">
+      <CardContent className="p-6 pb-2">
         {matchups.length === 0 ? (
           <p className="text-gray-500 text-center py-4">
             No completed games against opponents yet
