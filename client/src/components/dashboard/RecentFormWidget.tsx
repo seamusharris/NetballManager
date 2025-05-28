@@ -166,11 +166,11 @@ export default function RecentFormWidget({
                         }`}
                         style={{ height: `${height}px` }}
                       />
-                      <span className="text-xs text-gray-500 mt-1 font-medium">{margin}</span>
+                      <span className="text-xs text-gray-500 font-medium">{margin}</span>
                       <span className="text-xs text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-center max-w-16 truncate">
                         {game.opponent.split(' ')[0]}
                       </span>
-                      <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 mt-1">
+                      <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                         <TooltipIcon 
                           content={`${game.opponent}: ${game.teamScore}-${game.opponentScore}`}
                           iconClassName="w-3 h-3 text-gray-400 hover:text-gray-600"
@@ -180,7 +180,7 @@ export default function RecentFormWidget({
                   );
                 })}
               </div>
-              <p className="text-xs text-gray-400 text-center -mt-0.5 mb-2">Goal margins (oldest → newest)</p>
+              <p className="text-xs text-gray-400 text-center -mt-2 mb-2">Goal margins (oldest → newest)</p>
             </div>
           </div>
         )}
