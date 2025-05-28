@@ -75,10 +75,12 @@ export default function UpcomingGames({ games, opponents, className, seasonFilte
           </div>
         )}
         
-        {upcomingGames.length > upcomingGames.slice(0, 5).length && (
+        {upcomingGames.length > upcomingGames.slice(0, 5).length ? (
           <ViewMoreButton href="/games?status=upcoming">
             View more →
           </ViewMoreButton>
+        ) : (
+          <div className="mb-4" />
         )}
       </CardContent>
     </Card>

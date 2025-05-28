@@ -6,7 +6,6 @@ import { TrendingUp, TrendingDown, Target, Trophy, AlertTriangle, ChevronRight }
 import { Game, Opponent } from '@shared/schema';
 import { getWinLoseLabel, getWinLoseClass } from '@/lib/utils';
 import { GameResult } from '@/lib/resultUtils';
-import { ResultBadge } from '@/components/ui/result-badge';
 import { ViewMoreButton } from '@/components/ui/view-more-button';
 import { isGameValidForStatistics } from '@/lib/gameFilters';
 
@@ -216,11 +215,13 @@ export default function OpponentMatchups({
             </div>
           </div>
         )}
-        
-        {matchups.length > 0 && (
+
+        {matchups.length > 0 ? (
           <ViewMoreButton href="/opponent-analysis">
             View more →
           </ViewMoreButton>
+        ) : (
+          <div className="mb-4" />
         )}
       </CardContent>
     </Card>

@@ -173,11 +173,13 @@ export default function RecentGames({ games, opponents, className, seasonFilter,
             ))
           )}
         </div>
-        
-        {games.filter(game => game.gameStatus?.isCompleted === true).length > 3 && (
+
+        {games.filter(game => game.gameStatus?.isCompleted === true).length > 3 ? (
           <ViewMoreButton href="/games?status=completed">
             View more →
           </ViewMoreButton>
+        ) : (
+          <div className="mb-4" />
         )}
       </CardContent>
     </Card>
