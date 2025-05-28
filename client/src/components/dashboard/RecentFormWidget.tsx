@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { TooltipIcon } from '@/components/ui/tooltip-icon';
 import { Game, Opponent, GameResult } from '@shared/schema';
 import { getWinLoseLabel } from '@/lib/utils';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
@@ -157,19 +158,24 @@ export default function RecentFormWidget({
                   const isDraw = game.margin === 0;
 
                   return (
-                    <div key={game.id} className="flex flex-col items-center group">
+                    <div key={game.id} className="flex flex-col items-center group relative">
                       <div 
                         className={`w-4 rounded-t-md transition-opacity hover:opacity-80 ${
                           isDraw ? 'bg-gray-400' : 
                           isPositive ? 'bg-green-500' : 'bg-red-500'
                         }`}
                         style={{ height: `${height}px` }}
-                        title={`${game.opponent}: ${game.margin > 0 ? '+' : ''}${game.margin}`}
                       />
                       <span className="text-xs text-gray-500 mt-1 font-medium">{margin}</span>
                       <span className="text-xs text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-center max-w-16 truncate">
                         {game.opponent.split(' ')[0]}
                       </span>
+                      <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 mt-1">
+                        <TooltipIcon 
+                          content={`${game.opponent}: ${game.teamScore}-${game.opponentScore}`}
+                          iconClassName="w-3 h-3 text-gray-400 hover:text-gray-600"
+                        />
+                      </div>
                     </div>
                   );
                 })}
