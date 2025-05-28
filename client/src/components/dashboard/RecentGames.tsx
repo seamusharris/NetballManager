@@ -148,7 +148,7 @@ export default function RecentGames({ games, opponents, className, seasonFilter,
             recentGames.map(game => (
               <Link key={game.id} href={`/game/${game.id}`}>
                 <div 
-                  className={`flex justify-between items-center p-4 mb-4 mt-2 border-l-4 rounded ${getResultClass(game)} cursor-pointer ${getHoverClass(game)} transition-colors`}
+                  className={`flex justify-between items-center p-4 mb-4 mt-2 border-l-4 border-t border-r border-b rounded ${getResultClass(game)} cursor-pointer ${getHoverClass(game)} transition-colors`}
                 >
                   <div>
                     <p className="font-semibold text-gray-800">{getOpponentName(game.opponentId)}</p>
