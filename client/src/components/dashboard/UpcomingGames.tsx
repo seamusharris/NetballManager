@@ -6,6 +6,7 @@ import { formatShortDate } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
 import { GameScoreDisplay } from '@/components/statistics/GameScoreDisplay';
 import { GameBadge } from '@/components/ui/game-badge';
+import { ViewMoreButton } from '@/components/ui/view-more-button';
 
 interface UpcomingGamesProps {
   games: Game[];
@@ -75,13 +76,9 @@ export default function UpcomingGames({ games, opponents, className, seasonFilte
         )}
         
         {upcomingGames.length > upcomingGames.slice(0, 5).length && (
-          <div className="flex justify-end mt-3 pt-1">
-            <Link href="/games?status=upcoming">
-              <button className="px-2 py-1 text-xs font-medium text-gray-600 bg-gray-50 border border-gray-200 rounded hover:bg-gray-100 hover:border-gray-300 transition-colors duration-200">
-                View more →
-              </button>
-            </Link>
-          </div>
+          <ViewMoreButton href="/games?status=upcoming">
+            View more →
+          </ViewMoreButton>
         )}
       </CardContent>
     </Card>
