@@ -226,3 +226,5 @@ export default function OpponentMatchups({
         )}
       </CardContent>
     </Card>
+  );
+}
