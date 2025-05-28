@@ -120,6 +120,17 @@ export default function RecentGames({ games, opponents, className, seasonFilter,
     return 'text-warning';
   };
 
+  const getHoverClass = (game: Game) => {
+    const [teamScore, opponentScore] = getScores(game);
+    if (teamScore > opponentScore) {
+      return 'hover:bg-green-100';
+    } else if (teamScore < opponentScore) {
+      return 'hover:bg-red-100';
+    } else {
+      return 'hover:bg-yellow-100';
+    }
+  };
+
   return (
     <Card className={className}>
       <CardContent className="p-6 pb-2">
@@ -138,7 +149,7 @@ export default function RecentGames({ games, opponents, className, seasonFilter,
             recentGames.map(game => (
               <Link key={game.id} href={`/game/${game.id}`}>
                 <div 
-                  className={`flex justify-between items-center p-4 mb-4 mt-2 border-l-4 rounded ${getResultClass(game)} cursor-pointer hover:bg-accent/10 transition-colors`}
+                  className={`flex justify-between items-center p-4 mb-4 mt-2 border-l-4 rounded ${getResultClass(game)} cursor-pointer ${getHoverClass(game)} transition-colors`}
                 >
                   <div>
                     <p className="font-semibold">{getOpponentName(game.opponentId)}</p>
