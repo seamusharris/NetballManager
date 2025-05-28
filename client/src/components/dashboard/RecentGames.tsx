@@ -135,11 +135,8 @@ export default function RecentGames({ games, opponents, className, seasonFilter,
   return (
     <Card className={className}>
       <CardContent className="p-6 pb-2">
-        <div className="flex justify-between items-center mb-4">
+        <div className="mb-4">
           <h3 className="font-heading font-semibold text-neutral-dark">Recent Games</h3>
-          <Link href="/games?status=completed" className="text-accent text-sm hover:underline">
-            View all
-          </Link>
         </div>
         <div className="space-y-8">
           {isLoading ? (
@@ -174,6 +171,15 @@ export default function RecentGames({ games, opponents, className, seasonFilter,
               </Link>
             ))
           )}
+        </div>
+        
+        <div className="flex justify-end mt-4 pt-2 border-t border-gray-100">
+          <Link 
+            href="/games?status=completed" 
+            className="text-sm text-blue-600 hover:text-blue-800 hover:underline font-medium transition-colors duration-200"
+          >
+            View all games →
+          </Link>
         </div>
       </CardContent>
     </Card>

@@ -31,11 +31,8 @@ export default function UpcomingGames({ games, opponents, className, seasonFilte
   return (
     <Card className={className}>
       <CardContent className="p-6 pb-2">
-        <div className="flex justify-between items-center mb-4">
+        <div className="mb-4">
           <h3 className="font-heading font-semibold text-neutral-dark">Upcoming Games</h3>
-          <Link href="/games?status=upcoming" className="text-accent text-sm hover:underline">
-            View all
-          </Link>
         </div>
 
         {upcomingGames.length > 0 ? (
@@ -73,6 +70,17 @@ export default function UpcomingGames({ games, opponents, className, seasonFilte
             <p className="text-gray-500 mb-4">No upcoming games scheduled</p>
             <Link href="/games" className="text-accent hover:underline">
               Go to Games List
+            </Link>
+          </div>
+        )}
+        
+        {upcomingGames.length > 0 && (
+          <div className="flex justify-end mt-4 pt-2 border-t border-gray-100">
+            <Link 
+              href="/games?status=upcoming" 
+              className="text-sm text-blue-600 hover:text-blue-800 hover:underline font-medium transition-colors duration-200"
+            >
+              View all upcoming →
             </Link>
           </div>
         )}
