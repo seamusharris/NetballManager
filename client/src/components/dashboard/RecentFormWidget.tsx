@@ -148,18 +148,18 @@ export default function RecentFormWidget({
         {/* Goal Difference Trend (Enhanced Chart) */}
         {formData.length > 1 && (
           <div className="mt-4">
-            <div className="p-3 bg-gray-50 rounded-lg overflow-hidden">
-              <div className="flex justify-center items-end space-x-1 h-12 max-w-full">
+            <div className="p-4 bg-gray-50 rounded-lg">
+              <div className="flex justify-center items-end space-x-2 h-16">
                 {formData.slice(0, 5).reverse().map((game, index) => {
                   const margin = Math.abs(game.margin);
-                  const height = Math.max(8, Math.min(40, margin * 4)); // Reduced scale to fit container
+                  const height = Math.max(12, Math.min(56, margin * 6)); // Back to original larger scale
                   const isPositive = game.margin > 0;
                   const isDraw = game.margin === 0;
                   
                   return (
-                    <div key={game.id} className="flex flex-col items-center group flex-shrink-0">
+                    <div key={game.id} className="flex flex-col items-center group">
                       <div 
-                        className={`w-3 rounded-t-sm transition-opacity hover:opacity-80 ${
+                        className={`w-4 rounded-t-md transition-opacity hover:opacity-80 ${
                           isDraw ? 'bg-gray-400' : 
                           isPositive ? 'bg-green-500' : 'bg-red-500'
                         }`}
@@ -167,14 +167,14 @@ export default function RecentFormWidget({
                         title={`${game.opponent}: ${game.margin > 0 ? '+' : ''}${game.margin}`}
                       />
                       <span className="text-xs text-gray-500 mt-1 font-medium">{margin}</span>
-                      <span className="text-xs text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-center max-w-12 truncate">
+                      <span className="text-xs text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-center max-w-16 truncate">
                         {game.opponent.split(' ')[0]}
                       </span>
                     </div>
                   );
                 })}
               </div>
-              <p className="text-xs text-gray-400 text-center mt-2">Goal margins (oldest → newest)</p>
+              <p className="text-xs text-gray-400 text-center mt-1">Goal margins (oldest → newest)</p>
             </div>
           </div>
         )}
