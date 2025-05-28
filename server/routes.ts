@@ -833,7 +833,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(`   - Date: ${game.date}`);
         console.log(`   - StatusId: ${game.statusId}`);
         console.log(`   - GameStatus present: ${!!game.gameStatus}`);
-```
         console.log(`   - GameStatus value: ${JSON.stringify(game.gameStatus)}`);
         console.log(`   - OpponentId: ${game.opponentId}`);
         console.log(`   - IsBye: ${game.isBye}`);
