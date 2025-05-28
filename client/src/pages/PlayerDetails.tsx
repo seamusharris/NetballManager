@@ -71,7 +71,7 @@ export default function PlayerDetails() {
     queryFn: async () => {
       if (isNaN(playerId)) return { stats: {}, rosters: {} };
 
-      const completedGames = (games as Game[]).filter(game => game.completed);
+      const completedGames = (games as Game[]).filter(game => game.gameStatus?.isCompleted === true);
       const gameIds = completedGames.map(game => game.id);
 
       if (gameIds.length === 0) {

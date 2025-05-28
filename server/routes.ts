@@ -833,6 +833,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(`   - Date: ${game.date}`);
         console.log(`   - StatusId: ${game.statusId}`);
         console.log(`   - GameStatus present: ${!!game.gameStatus}`);
+```
         console.log(`   - GameStatus value: ${JSON.stringify(game.gameStatus)}`);
         console.log(`   - OpponentId: ${game.opponentId}`);
         console.log(`   - IsBye: ${game.isBye}`);
@@ -844,19 +845,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const gamesWithStatus = games.map((game, index) => {
         console.log(`🔸 Processing game ${index + 1}/${games.length} (ID: ${game.id})`);
         console.log(`   - Original gameStatus: ${game.gameStatus ? 'PRESENT' : 'NULL'}`);
-        
+
         const processedGame = {
           ...game,
           // Ensure gameStatus is explicitly included
           gameStatus: game.gameStatus || null
         };
-        
+
         console.log(`   - Final gameStatus: ${processedGame.gameStatus ? 'PRESENT' : 'NULL'}`);
         if (processedGame.gameStatus) {
           console.log(`   - GameStatus name: ${processedGame.gameStatus.name}`);
           console.log(`   - GameStatus displayName: ${processedGame.gameStatus.displayName}`);
         }
-        
+
         return processedGame;
       });
 
@@ -1019,11 +1020,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Opponent is required for non-BYE games" });
       }
 
-      // Handle status changes - make sure completed field is also updated for compatibility
+      // Handle legacy status changes (no longer needed as we use statusId)
       if (req.body.status) {
-        const completedStatuses = ['completed', 'forfeit-win', 'forfeit-loss'];
-        req.body.completed = completedStatuses.includes(req.body.status);
-        console.log(`Status changed to ${req.body.status}, setting completed to ${req.body.completed}`);
+        // Legacy status handling - just log for debugging
+        console.log(`Legacy status field received: ${req.body.status} - consider using statusId instead`);
       }
 
       // Log all available games before update for debugging

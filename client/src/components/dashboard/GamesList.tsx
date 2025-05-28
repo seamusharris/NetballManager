@@ -125,11 +125,7 @@ export default function GamesList({ games, opponents, className }: GamesListProp
     // Get completed games for score calculation
   const completedGames = useMemo(() => {
     return games?.filter(game => 
-      game.status === 'completed' || 
-      game.status === 'forfeit-win' || 
-      game.status === 'forfeit-loss' || 
-      game.status === 'bye' || 
-      game.status === 'abandoned'
+      game.gameStatus?.isCompleted === true
     ) || [];
   }, [games]);
 
