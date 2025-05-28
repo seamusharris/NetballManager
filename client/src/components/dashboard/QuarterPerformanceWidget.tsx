@@ -30,7 +30,24 @@ export default function QuarterPerformanceWidget({
 
   // Get games valid for statistics - memoize to prevent infinite re-renders
   const validGameIds = useMemo(() => {
-    return games.filter(isGameValidForStatistics).map(game => game.id);
+    const validGames = games.filter(game => {
+      // Must have a game status
+      if (!game.gameStatus) return false;
+      
+      // Must be completed
+      if (!game.gameStatus.isCompleted) return false;
+      
+      // Must allow statistics (this covers forfeit games, BYE games, etc.)
+      if (!game.gameStatus.allowsStatistics) return false;
+      
+      // Exclude abandoned games from statistics
+      if (game.gameStatus.name === 'abandoned') return false;
+      
+      return true;
+    });
+    
+    console.log('QuarterPerformanceWidget valid games:', validGames.length, 'out of', games.length);
+    return validGames.map(game => game.id);
   }, [games]);
   
   const enableQuery = validGameIds.length > 0;
@@ -74,6 +91,13 @@ export default function QuarterPerformanceWidget({
 
   // Calculate quarter performance metrics
   useEffect(() => {
+    console.log('QuarterPerformanceWidget calculating metrics:', {
+      gameStatsMap: !!gameStatsMap,
+      isLoading,
+      validGameIds: validGameIds.length,
+      gameStatsMapKeys: gameStatsMap ? Object.keys(gameStatsMap) : []
+    });
+    
     if (!gameStatsMap || isLoading || validGameIds.length === 0) return;
 
     const quarterScores: Record<number, { team: number, opponent: number, count: number }> = {
@@ -85,6 +109,7 @@ export default function QuarterPerformanceWidget({
 
     validGameIds.forEach(gameId => {
       const gameStats = gameStatsMap[gameId];
+      console.log(`Processing game ${gameId}:`, gameStats ? gameStats.length + ' stats' : 'no stats');
       if (!gameStats || gameStats.length === 0) return;
 
       const gameQuarterScores: Record<number, { team: number, opponent: number }> = {
