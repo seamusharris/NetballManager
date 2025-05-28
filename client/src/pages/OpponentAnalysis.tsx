@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { ResultBadge } from '@/components/ui/result-badge';
 import { TrendingUp, TrendingDown, Target, Trophy } from 'lucide-react';
 import { Game, Opponent, Season } from '@shared/schema';
 import { getWinLoseLabel } from '@/lib/utils';
