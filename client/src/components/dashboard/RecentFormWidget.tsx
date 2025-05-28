@@ -115,7 +115,7 @@ export default function RecentFormWidget({
             {getTrendIcon()}
           </div>
           <div className="flex justify-center space-x-1 mb-2">
-            {formData.slice(0, 5).reverse().map((game, index) => (
+            {formData.slice(0, 5).map((game, index) => (
               <div key={game.id} className="relative group">
                 <ResultBadge result={game.result as GameResult} size="md" />
                 {/* Tooltip on hover */}
@@ -175,7 +175,7 @@ export default function RecentFormWidget({
                   );
                 })}
               </div>
-              <p className="text-xs text-gray-400 text-center -mt-2 mb-2">Goal margins (newest ← oldest)</p>
+              <p className="text-xs text-gray-400 text-center -mt-2 mb-2">Goal margins (oldest → newest)</p>
             </div>
           </div>
         )}
