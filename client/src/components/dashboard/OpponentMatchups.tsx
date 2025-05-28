@@ -163,7 +163,7 @@ export default function OpponentMatchups({
             No completed games against opponents yet
           </p>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-8">
             {/* Overall Stats */}
             <div className="grid grid-cols-3 gap-4 text-center">
               <div>
@@ -183,7 +183,7 @@ export default function OpponentMatchups({
             {/* Best and Worst Matchups */}
             <div className="space-y-4">
               {bestMatchup && (
-                <div className="flex items-center justify-between p-4 bg-green-50 border-l-4 border-t border-r border-b border-green-500 border-t-green-500 border-r-green-500 border-b-green-500 rounded">
+                <div className="flex items-center justify-between p-4 mb-4 bg-green-50 border-l-4 border-t border-r border-b border-green-500 border-t-green-500 border-r-green-500 border-b-green-500 rounded">
                   <div>
                     <div className="flex items-center gap-2 mb-1">
                       <Trophy className="h-4 w-4 text-green-600" />
@@ -199,7 +199,7 @@ export default function OpponentMatchups({
               )}
 
               {worstMatchup && worstMatchup !== bestMatchup && (
-                <div className="flex items-center justify-between p-4 mb-6 bg-red-50 border-l-4 border-t border-r border-b border-red-500 border-t-red-500 border-r-red-500 border-b-red-500 rounded">
+                <div className="flex items-center justify-between p-4 mb-4 bg-red-50 border-l-4 border-t border-r border-b border-red-500 border-t-red-500 border-r-red-500 border-b-red-500 rounded">
                   <div>
                     <div className="flex items-center gap-2 mb-1">
                       <AlertTriangle className="h-4 w-4 text-red-600" />
