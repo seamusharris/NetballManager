@@ -24,11 +24,11 @@ export default function RecentFormWidget({
   // Debug: Log all games being processed
   console.log('RecentFormWidget - All games:', games.map(g => ({id: g.id, status: g.gameStatus?.name, isCompleted: g.gameStatus?.isCompleted, allowsStats: g.gameStatus?.allowsStatistics})));
 
-  // Get completed games sorted by date (most recent first)
+  // Get completed games sorted by date (oldest first for consistency)
   const completedGames = games
     .filter(isGameValidForStatistics)
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-    .slice(0, 5); // Last 5 games
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+    .slice(-5); // Last 5 games in chronological order
 
   console.log('RecentFormWidget - Filtered completed games:', completedGames.map(g => ({id: g.id, status: g.gameStatus?.name})));
 
@@ -115,7 +115,7 @@ export default function RecentFormWidget({
             {getTrendIcon()}
           </div>
           <div className="flex justify-center space-x-1 mb-2">
-            {formData.slice(0, 5).map((game, index) => (
+            {formData.slice(0, 5).reverse().map((game, index) => (
               <div key={game.id} className="relative group">
                 <ResultBadge result={game.result as GameResult} size="md" />
                 {/* Tooltip on hover */}
@@ -138,7 +138,7 @@ export default function RecentFormWidget({
               <div className="col-span-2 p-3 pb-2 bg-gray-50 rounded-lg border border-gray-200">
                 <p className="text-xs text-gray-500 text-center mb-1 font-medium">Goal margins</p>
                 <div className="flex justify-center items-end space-x-2 h-32">
-                  {formData.slice(0, 5).map((game, index) => {
+                  {formData.slice(0, 5).reverse().map((game, index) => {
                     const margin = Math.abs(game.margin);
                     const height = Math.max(20, Math.min(80, margin * 10)); // Expanded scale for larger container
                     const isPositive = game.margin > 0;
