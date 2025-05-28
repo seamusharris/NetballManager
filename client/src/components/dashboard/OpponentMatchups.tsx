@@ -137,12 +137,13 @@ export default function OpponentMatchups({
   const overallWinRate = totalGames > 0 ? Math.round((totalWins / totalGames) * 100) : 0;
 
   const getFormDisplay = (form: string[], matchup: OpponentMatchup) => {
-    // Get the most recent 3 games for this opponent
+    // Get the most recent 3 games for this opponent, but show in chronological order
     const recentGames = matchup.games
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-      .slice(0, 3);
+      .slice(0, 3)
+      .reverse(); // Reverse to show oldest to newest
 
-    return form.slice(0, 3).map((result, index) => {
+    return form.slice(0, 3).reverse().map((result, index) => {
       const gameResult: GameResult = result === 'W' ? 'Win' : result === 'L' ? 'Loss' : 'Draw';
       const game = recentGames[index];
       
