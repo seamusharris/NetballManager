@@ -170,10 +170,6 @@ export default function QuarterPerformanceWidget({
         <CardTitle>Quarter Performance</CardTitle>
       </CardHeader>
       <CardContent className="p-6">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="font-heading font-semibold text-neutral-dark">Quarter Performance</h3>
-        </div>
-
         {/* Quarter breakdown grid */}
         <div className="grid grid-cols-2 gap-3 mb-4">
           {[1, 2, 3, 4].map(quarter => {
