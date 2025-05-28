@@ -11,7 +11,7 @@ interface GameBadgeProps {
 
 const badgeVariants = {
   variant: {
-    round: 'bg-purple-100 text-purple-700',
+    round: 'bg-gray-200 text-gray-800',
     status: 'bg-blue-100 text-blue-700', 
     score: 'bg-gray-100 text-gray-700',
     default: 'bg-gray-100 text-gray-600'
