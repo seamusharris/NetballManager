@@ -224,6 +224,14 @@ export default function OpponentMatchups({
         ) : (
           <div className="mb-4" />
         )}
+
+        {matchups.length > 0 ? (
+          <ViewMoreButton href="/opponent-analysis">
+            View more →
+          </ViewMoreButton>
+        ) : (
+          <div className="mb-4" />
+        )}
       </CardContent>
     </Card>
   );
