@@ -111,44 +111,73 @@ export default function RecentFormWidget({
           {getTrendIcon()}
         </div>
 
-        {/* Form display */}
-        <div className="flex justify-center space-x-1 mb-3">
-          {formData.slice(0, 5).map((game, index) => (
-            <ResultBadge key={game.id} result={game.result as GameResult} size="md" />
-          ))}
+        {/* Enhanced Form Display with Trend */}
+        <div className="text-center mb-4">
+          <div className="flex justify-center items-center space-x-2 mb-2">
+            <span className="text-xs text-gray-500 font-medium">Last 5 Games</span>
+            {getTrendIcon()}
+          </div>
+          <div className="flex justify-center space-x-1 mb-2">
+            {formData.slice(0, 5).map((game, index) => (
+              <div key={game.id} className="relative group">
+                <ResultBadge result={game.result as GameResult} size="md" />
+                {/* Tooltip on hover */}
+                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
+                  {game.opponent}: {game.teamScore}-{game.opponentScore}
+                </div>
+              </div>
+            ))}
+          </div>
+          <p className="text-xs text-gray-400">
+            {recentTrend.length > 0 ? `${recentWins}/${recentTrend.length} recent wins` : 'Hover for details'}
+          </p>
         </div>
 
-        {/* Statistics */}
-        <div className="grid grid-cols-2 gap-3 mb-3">
-          <div className="text-center bg-primary/5 p-2 rounded-lg">
+        {/* Compact Statistics Grid */}
+        <div className="grid grid-cols-3 gap-2 mb-3">
+          <div className="text-center bg-gradient-to-br from-primary/10 to-primary/5 p-3 rounded-lg border border-primary/10">
             <p className="text-xs text-gray-500 mb-1">Win Rate</p>
-            <p className="text-lg font-bold text-primary">{winPercentage}%</p>
-            <p className="text-xs text-gray-600">{wins}W {losses}L {draws > 0 ? `${draws}D` : ''}</p>
+            <p className="text-xl font-bold text-primary">{winPercentage}%</p>
           </div>
-          <div className="text-center bg-primary/5 p-2 rounded-lg">
-            <p className="text-xs text-gray-500 mb-1">Recent</p>
-            <p className="text-lg font-bold text-primary">{completedGames.length}</p>
-            <p className="text-xs text-gray-600">Games</p>
+          <div className="text-center bg-gradient-to-br from-blue-50 to-blue-25 p-3 rounded-lg border border-blue-100">
+            <p className="text-xs text-gray-500 mb-1">Played</p>
+            <p className="text-xl font-bold text-blue-600">{completedGames.length}</p>
+          </div>
+          <div className="text-center bg-gradient-to-br from-gray-50 to-gray-25 p-3 rounded-lg border border-gray-100">
+            <p className="text-xs text-gray-500 mb-1">Record</p>
+            <p className="text-xs font-medium text-gray-700">{wins}W-{losses}L{draws > 0 ? `-${draws}D` : ''}</p>
           </div>
         </div>
 
-        {/* Detailed game results */}
-        <div className="space-y-2">
-          <p className="text-xs text-gray-500 font-medium">Recent Results</p>
-          {formData.slice(0, 3).map((game, index) => (
-            <div key={game.id} className="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
-              <div>
-                <p className="text-sm font-medium">{game.opponent}</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium">{game.teamScore}-{game.opponentScore}</span>
-                {getResultBadge(game.result)}
-              </div>
+        {/* Goal Difference Trend (Mini Chart Alternative) */}
+        {formData.length > 1 && (
+          <div className="mt-3 p-3 bg-gray-50 rounded-lg">
+            <p className="text-xs text-gray-500 font-medium mb-2">Goal Margins</p>
+            <div className="flex justify-center items-end space-x-1 h-8">
+              {formData.slice(0, 5).reverse().map((game, index) => {
+                const margin = Math.abs(game.margin);
+                const height = Math.max(8, Math.min(32, margin * 4)); // Scale height based on margin
+                const isPositive = game.margin > 0;
+                const isDraw = game.margin === 0;
+                
+                return (
+                  <div key={game.id} className="flex flex-col items-center">
+                    <div 
+                      className={`w-2 rounded-t-sm ${
+                        isDraw ? 'bg-gray-400' : 
+                        isPositive ? 'bg-green-500' : 'bg-red-500'
+                      }`}
+                      style={{ height: `${height}px` }}
+                      title={`${game.opponent}: ${game.margin > 0 ? '+' : ''}${game.margin}`}
+                    />
+                    <span className="text-xs text-gray-400 mt-1">{margin}</span>
+                  </div>
+                );
+              })}
             </div>
-          ))}
-        </div>
-
-        <div className="mb-4" />
+            <p className="text-xs text-gray-400 text-center mt-1">Goal difference (oldest → newest)</p>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
