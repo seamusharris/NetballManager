@@ -145,33 +145,38 @@ export default function RecentFormWidget({
           </div>
         </div>
 
-        {/* Goal Difference Trend (Mini Chart Alternative) */}
+        {/* Goal Difference Trend (Enhanced Chart) */}
         {formData.length > 1 && (
-          <div className="mt-3 p-3 bg-gray-50 rounded-lg">
-            <p className="text-xs text-gray-500 font-medium mb-2">Goal Margins</p>
-            <div className="flex justify-center items-end space-x-1 h-8">
-              {formData.slice(0, 5).reverse().map((game, index) => {
-                const margin = Math.abs(game.margin);
-                const height = Math.max(8, Math.min(32, margin * 4)); // Scale height based on margin
-                const isPositive = game.margin > 0;
-                const isDraw = game.margin === 0;
-                
-                return (
-                  <div key={game.id} className="flex flex-col items-center">
-                    <div 
-                      className={`w-2 rounded-t-sm ${
-                        isDraw ? 'bg-gray-400' : 
-                        isPositive ? 'bg-green-500' : 'bg-red-500'
-                      }`}
-                      style={{ height: `${height}px` }}
-                      title={`${game.opponent}: ${game.margin > 0 ? '+' : ''}${game.margin}`}
-                    />
-                    <span className="text-xs text-gray-400 mt-1">{margin}</span>
-                  </div>
-                );
-              })}
+          <div className="mt-4">
+            <p className="text-sm text-gray-700 font-medium mb-3 text-center">Goal Margins</p>
+            <div className="p-4 bg-gray-50 rounded-lg">
+              <div className="flex justify-center items-end space-x-2 h-16">
+                {formData.slice(0, 5).reverse().map((game, index) => {
+                  const margin = Math.abs(game.margin);
+                  const height = Math.max(12, Math.min(56, margin * 6)); // Increased scale and height
+                  const isPositive = game.margin > 0;
+                  const isDraw = game.margin === 0;
+                  
+                  return (
+                    <div key={game.id} className="flex flex-col items-center group">
+                      <div 
+                        className={`w-4 rounded-t-md transition-opacity hover:opacity-80 ${
+                          isDraw ? 'bg-gray-400' : 
+                          isPositive ? 'bg-green-500' : 'bg-red-500'
+                        }`}
+                        style={{ height: `${height}px` }}
+                        title={`${game.opponent}: ${game.margin > 0 ? '+' : ''}${game.margin}`}
+                      />
+                      <span className="text-xs text-gray-500 mt-2 font-medium">{margin}</span>
+                      <span className="text-xs text-gray-400 mt-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-center max-w-16 truncate">
+                        {game.opponent.split(' ')[0]}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+              <p className="text-xs text-gray-400 text-center mt-3">Goal difference by game (oldest → newest)</p>
             </div>
-            <p className="text-xs text-gray-400 text-center mt-1">Goal difference (oldest → newest)</p>
           </div>
         )}
       </CardContent>
