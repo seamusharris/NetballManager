@@ -225,9 +225,6 @@ export default function TeamPerformance({ games, className, activeSeason, select
         <CardTitle>Team Performance</CardTitle>
       </CardHeader>
       <CardContent className="p-6 pb-2">
-        <div className="mb-4">
-        </div>
-
         {/* Key performance indicators - 3x2 grid for more statistics */}
         <div className="grid grid-cols-3 gap-4 mb-6">
           <div className="text-center bg-gray-50 p-3 rounded-lg">
