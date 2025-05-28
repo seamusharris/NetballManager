@@ -125,14 +125,11 @@ export default function RecentFormWidget({
               </div>
             ))}
           </div>
-          <p className="text-xs text-gray-400">
-            {recentTrend.length > 0 ? `${recentWins}/${recentTrend.length} recent wins` : 'Hover for details'}
-          </p>
         </div>
 
         {/* Goal Margins and Stats */}
         {formData.length > 1 && (
-          <div className="mt-2">
+          <div className="mt-8">
             <div className="grid grid-cols-3 gap-4">
               {/* Goal Difference Trend Chart - 2/3 width */}
               <div className="col-span-2 p-3 pb-2 bg-gray-50 rounded-lg border border-gray-200">
