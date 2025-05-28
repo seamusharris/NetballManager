@@ -7,6 +7,7 @@ import { Game, Opponent } from '@shared/schema';
 import { getWinLoseLabel, getWinLoseClass } from '@/lib/utils';
 import { GameResult } from '@/lib/resultUtils';
 import { ResultBadge } from '@/components/ui/result-badge';
+import { ViewMoreButton } from '@/components/ui/view-more-button';
 import { isGameValidForStatistics } from '@/lib/gameFilters';
 
 interface OpponentMatchup {
@@ -152,17 +153,8 @@ export default function OpponentMatchups({
   return (
     <Card className={className}>
       <CardHeader className="pb-3">
-        <CardTitle className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Trophy className="h-5 w-5" />
-            Opponent Matchups
-          </div>
-          <button
-            onClick={() => navigate('/opponent-analysis')}
-            className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1"
-          >
-            View All <ChevronRight className="h-3 w-3" />
-          </button>
+        <CardTitle>
+          Opponent Matchups
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-0">
@@ -223,6 +215,12 @@ export default function OpponentMatchups({
               )}
             </div>
           </div>
+        )}
+        
+        {matchups.length > 0 && (
+          <ViewMoreButton href="/opponent-analysis">
+            View more →
+          </ViewMoreButton>
         )}
       </CardContent>
     </Card>
