@@ -136,16 +136,43 @@ export default function OpponentMatchups({
   const totalWins = matchups.reduce((sum, matchup) => sum + matchup.wins, 0);
   const overallWinRate = totalGames > 0 ? Math.round((totalWins / totalGames) * 100) : 0;
 
-  const getFormDisplay = (form: string[]) => {
+  const getFormDisplay = (form: string[], matchup: OpponentMatchup) => {
+    // Get the most recent 3 games for this opponent
+    const recentGames = matchup.games
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .slice(0, 3);
+
     return form.slice(0, 3).map((result, index) => {
       const gameResult: GameResult = result === 'W' ? 'Win' : result === 'L' ? 'Loss' : 'Draw';
+      const game = recentGames[index];
+      
+      if (!game) {
+        return (
+          <ResultBadge 
+            key={index}
+            result={gameResult}
+            size="sm"
+            className="mx-0.5"
+          />
+        );
+      }
+
+      // Calculate scores for this game
+      const gameStats = centralizedStats[game.id] || [];
+      const teamScore = gameStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
+      const opponentScore = gameStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
+
       return (
-        <ResultBadge 
-          key={index}
-          result={gameResult}
-          size="sm"
-          className="mx-0.5"
-        />
+        <div key={index} className="relative group mx-0.5">
+          <ResultBadge 
+            result={gameResult}
+            size="sm"
+          />
+          {/* Tooltip on hover */}
+          <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
+            {teamScore}-{opponentScore}
+          </div>
+        </div>
       );
     });
   };
@@ -190,7 +217,7 @@ export default function OpponentMatchups({
                 </div>
                 <div className="text-right">
                   <p className="text-lg font-bold text-green-700 mb-1">{bestMatchup.winRate}%</p>
-                  <div className="flex">{getFormDisplay(bestMatchup.recentForm)}</div>
+                  <div className="flex">{getFormDisplay(bestMatchup.recentForm, bestMatchup)}</div>
                 </div>
               </div>
             )}
@@ -206,7 +233,7 @@ export default function OpponentMatchups({
                 </div>
                 <div className="text-right">
                   <p className="text-lg font-bold text-red-700 mb-1">{worstMatchup.winRate}%</p>
-                  <div className="flex">{getFormDisplay(worstMatchup.recentForm)}</div>
+                  <div className="flex">{getFormDisplay(worstMatchup.recentForm, worstMatchup)}</div>
                 </div>
               </div>
             )}

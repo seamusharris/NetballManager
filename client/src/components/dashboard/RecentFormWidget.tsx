@@ -115,7 +115,7 @@ export default function RecentFormWidget({
             {getTrendIcon()}
           </div>
           <div className="flex justify-center space-x-1 mb-2">
-            {formData.slice(0, 5).map((game, index) => (
+            {formData.slice(0, 5).reverse().map((game, index) => (
               <div key={game.id} className="relative group">
                 <ResultBadge result={game.result as GameResult} size="md" />
                 {/* Tooltip on hover */}
@@ -151,14 +151,14 @@ export default function RecentFormWidget({
           <div className="mt-2">
             <div className="p-3 pb-1 bg-gray-50 rounded-lg border border-gray-200">
               <div className="flex justify-center items-end space-x-2 h-32">
-                {formData.slice(0, 5).reverse().map((game, index) => {
+                {formData.slice(0, 5).map((game, index) => {
                   const margin = Math.abs(game.margin);
                   const height = Math.max(20, Math.min(80, margin * 10)); // Expanded scale for larger container
                   const isPositive = game.margin > 0;
                   const isDraw = game.margin === 0;
 
                   return (
-                    <div key={game.id} className="flex flex-col items-center group relative">
+                    <div key={game.id} className="relative group">
                       <div 
                         className={`w-4 rounded-t-md transition-opacity hover:opacity-80 ${
                           isDraw ? 'bg-gray-400' : 
@@ -166,21 +166,16 @@ export default function RecentFormWidget({
                         }`}
                         style={{ height: `${height}px` }}
                       />
-                      <span className="text-xs text-gray-500 font-medium">{margin}</span>
-                      <span className="text-xs text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-center max-w-16 truncate">
-                        {game.opponent.split(' ')[0]}
-                      </span>
-                      <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                        <TooltipIcon 
-                          content={`${game.opponent}: ${game.teamScore}-${game.opponentScore}`}
-                          iconClassName="w-3 h-3 text-gray-400 hover:text-gray-600"
-                        />
+                      <span className="text-xs text-gray-500 font-medium text-center block mt-1">{margin}</span>
+                      {/* Tooltip on hover */}
+                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
+                        {game.opponent}: {game.teamScore}-{game.opponentScore}
                       </div>
                     </div>
                   );
                 })}
               </div>
-              <p className="text-xs text-gray-400 text-center -mt-2 mb-2">Goal margins (oldest → newest)</p>
+              <p className="text-xs text-gray-400 text-center -mt-2 mb-2">Goal margins (newest ← oldest)</p>
             </div>
           </div>
         )}
