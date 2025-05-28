@@ -149,8 +149,8 @@ export default function RecentFormWidget({
         {/* Goal Difference Trend (Enhanced Chart) */}
         {formData.length > 1 && (
           <div className="mt-2">
-            <div className="pt-4 px-2 pb-1 bg-gray-50 rounded-lg border border-gray-200">
-              <div className="flex justify-center items-end space-x-2 h-20">
+            <div className="p-3 pb-1 bg-gray-50 rounded-lg border border-gray-200">
+              <div className="flex justify-center items-end space-x-2 h-32">
                 {formData.slice(0, 5).reverse().map((game, index) => {
                   const margin = Math.abs(game.margin);
                   const height = Math.max(20, Math.min(80, margin * 10)); // Expanded scale for larger container
@@ -180,7 +180,7 @@ export default function RecentFormWidget({
                   );
                 })}
               </div>
-              <p className="text-xs text-gray-400 text-center mt-1 mb-1">Goal margins (oldest → newest)</p>
+              <p className="text-xs text-gray-400 text-center -mt-2 mb-2">Goal margins (oldest → newest)</p>
             </div>
           </div>
         )}
