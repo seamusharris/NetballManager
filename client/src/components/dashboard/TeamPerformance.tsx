@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { getWinLoseLabel } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
+import { BaseWidget } from '@/components/base/base-widget';
 
 interface TeamPerformanceProps {
   games: Game[];
@@ -220,11 +221,12 @@ export default function TeamPerformance({ games, className, activeSeason, select
   }, [gameStatsMap, isLoading]);
 
   return (
-    <Card className={className}>
-      <CardHeader>
-        <CardTitle>Team Performance</CardTitle>
-      </CardHeader>
-      <CardContent className="p-6 pb-2">
+    <BaseWidget 
+      title="Team Performance" 
+      description="Overall team statistics and performance metrics"
+      className={className}
+      contentClassName="p-6 pb-2"
+    >
         {/* Key performance indicators - 3x2 grid for more statistics */}
         <div className="grid grid-cols-3 gap-4 mb-6">
           <div className="text-center bg-gray-50 p-3 rounded-lg">
@@ -253,7 +255,6 @@ export default function TeamPerformance({ games, className, activeSeason, select
             <p className="text-3xl font-bold text-primary">{games.filter(game => game.gameStatus?.isCompleted !== true && !game.isBye).length}</p>
           </div>
         </div>
-      </CardContent>
-    </Card>
+    </BaseWidget>
   );
 }

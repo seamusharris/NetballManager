@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { BaseWidget } from '@/components/ui/base-widget';
 import { Link } from 'wouter';
 import { Game, Opponent, GameStat } from '@shared/schema';
 import { formatShortDate } from '@/lib/utils';
@@ -134,11 +134,8 @@ export default function RecentGames({ games, opponents, className, seasonFilter,
   };
 
   return (
-    <Card className={className}>
-      <CardHeader>
-        <CardTitle>Recent Games</CardTitle>
-      </CardHeader>
-      <CardContent className="p-6 pb-2">
+    <BaseWidget className={className} title="Recent Games">
+      <div className="p-6 pb-2">
         <div className="space-y-8">
           {isLoading ? (
             <p className="text-gray-500 text-center py-4">Loading recent games...</p>
@@ -181,7 +178,7 @@ export default function RecentGames({ games, opponents, className, seasonFilter,
         ) : (
           <div className="mb-4" />
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </BaseWidget>
   );
 }

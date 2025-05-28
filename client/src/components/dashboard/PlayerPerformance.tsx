@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { CustomHeaderWidget } from '@/components/ui/base-widget';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Game, Player, GameStat, Season } from '@shared/schema';
@@ -544,33 +544,29 @@ export default function PlayerPerformance({ players, games, className, seasonFil
     const topPlayers = playersWithStats.slice(0, 5);
 
   return (
-    <Card className={className}>
-      <CardHeader>
-        <CardTitle>Player Performance</CardTitle>
-      </CardHeader>
-      <CardContent className="p-6 pb-2">
-        <div className="mb-4">
-          <h3 className="font-heading font-semibold text-neutral-dark">Player Performance</h3>
-        </div>
-
-        <div className="flex justify-between items-center mb-4">
-          <Select 
-            value={timeRange} 
-            onValueChange={(value) => {
-              setTimeRange(value);
-              // Force a recalculation when time range changes
-              setStatsKey(prev => prev + 1);
-            }}
-          >
-            <SelectTrigger className="bg-white border rounded-md w-[140px] h-8 text-sm">
-              <SelectValue placeholder="Last 5 Games" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="last5">Last 5 Games</SelectItem>
-              <SelectItem value="season">This Season</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+    <CustomHeaderWidget 
+      title="Player Performance" 
+      description="Individual player statistics and performance"
+      className={className}
+      contentClassName="p-6 pb-2"
+      headerContent={
+        <Select 
+          value={timeRange} 
+          onValueChange={(value) => {
+            setTimeRange(value);
+            setStatsKey(prev => prev + 1);
+          }}
+        >
+          <SelectTrigger className="bg-white border rounded-md w-[140px] h-8 text-sm">
+            <SelectValue placeholder="Last 5 Games" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="last5">Last 5 Games</SelectItem>
+            <SelectItem value="season">This Season</SelectItem>
+          </SelectContent>
+        </Select>
+      }
+    >
 
         <div className="overflow-x-auto border-t border-l border-b rounded-md">
           <Table>
@@ -715,7 +711,6 @@ export default function PlayerPerformance({ players, games, className, seasonFil
         ) : (
           <div className="mb-4" />
         )}
-      </CardContent>
-    </Card>
+    </CustomHeaderWidget>
   );
 }

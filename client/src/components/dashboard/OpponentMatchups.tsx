@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { BaseWidget } from '@/components/ui/base-widget';
 import { Badge } from '@/components/ui/badge';
 import { TrendingUp, TrendingDown, Target, Trophy, AlertTriangle, ChevronRight } from 'lucide-react';
 import { Game, Opponent } from '@shared/schema';
@@ -179,11 +179,12 @@ export default function OpponentMatchups({
   };
 
   return (
-    <Card className={className}>
-      <CardHeader>
-        <CardTitle>Opponent Matchups</CardTitle>
-      </CardHeader>
-      <CardContent className="p-6 pb-2">
+    <BaseWidget 
+      title="Opponent Matchups" 
+      description="Performance against different opponents"
+      className={className}
+      contentClassName="p-6 pb-2"
+    >
         {matchups.length === 0 ? (
           <p className="text-gray-500 text-center py-4">
             No completed games against opponents yet
@@ -248,7 +249,6 @@ export default function OpponentMatchups({
         ) : (
           <div className="mb-4" />
         )}
-      </CardContent>
-    </Card>
+    </BaseWidget>
   );
 }

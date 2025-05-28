@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import { CustomHeaderWidget } from '@/components/ui/base-widget';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   BarChart, 
@@ -171,56 +171,59 @@ export default function PerformanceCharts({ games, className, seasonFilter, acti
   // If no data yet, show loading state
   if (chartData.length === 0) {
     return (
-      <Card className={className}>
-        <CardContent className="p-6">
-          <div className="flex justify-between items-center mb-6">
-            <h3 className="font-heading font-semibold text-neutral-dark">Quarter-by-Quarter Performance</h3>
-            <div className="flex space-x-3">
-              <Select value={gameRange} onValueChange={setGameRange}>
-                <SelectTrigger className="bg-white border rounded-md w-[130px]">
-                  <SelectValue placeholder="All Games" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Games</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <div className="h-64 flex items-center justify-center">
-            <p className="text-gray-400">Loading chart data or no completed games yet...</p>
-          </div>
-        </CardContent>
-      </Card>
+      <CustomHeaderWidget 
+        title="Quarter-by-Quarter Performance" 
+        description="Performance trends across game quarters"
+        className={className}
+        contentClassName="p-6"
+        headerContent={
+          <Select value={gameRange} onValueChange={setGameRange}>
+            <SelectTrigger className="bg-white border rounded-md w-[130px]">
+              <SelectValue placeholder="All Games" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Games</SelectItem>
+            </SelectContent>
+          </Select>
+        }
+      >
+        <div className="h-64 flex items-center justify-center">
+          <p className="text-gray-400">Loading chart data or no completed games yet...</p>
+        </div>
+      </CustomHeaderWidget>
     );
   }
 
   return (
-    <Card className={className}>
-      <CardContent className="p-6">
-        <div className="flex justify-between items-center mb-6">
-          <h3 className="font-heading font-semibold text-neutral-dark">Quarter-by-Quarter Performance</h3>
-          <div className="flex space-x-3">
-            <Select value={gameRange} onValueChange={setGameRange}>
-              <SelectTrigger className="bg-white border rounded-md w-[130px]">
-                <SelectValue placeholder="All Games" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Games</SelectItem>
-              </SelectContent>
-            </Select>
+    <CustomHeaderWidget 
+      title="Quarter-by-Quarter Performance" 
+      description="Performance trends across game quarters"
+      className={className}
+      contentClassName="p-6"
+      headerContent={
+        <div className="flex space-x-3">
+          <Select value={gameRange} onValueChange={setGameRange}>
+            <SelectTrigger className="bg-white border rounded-md w-[130px]">
+              <SelectValue placeholder="All Games" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Games</SelectItem>
+            </SelectContent>
+          </Select>
 
-            <Select value={metricType} onValueChange={setMetricType}>
-              <SelectTrigger className="bg-white border rounded-md w-[130px]">
-                <SelectValue placeholder="All Metrics" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Metrics</SelectItem>
-                <SelectItem value="goals">Goals Only</SelectItem>
-                <SelectItem value="defense">Defense Only</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <Select value={metricType} onValueChange={setMetricType}>
+            <SelectTrigger className="bg-white border rounded-md w-[130px]">
+              <SelectValue placeholder="All Metrics" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Metrics</SelectItem>
+              <SelectItem value="goals">Goals Only</SelectItem>
+              <SelectItem value="defense">Defense Only</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
+      }
+    >
 
         <div className="h-64 flex items-center justify-center">
           <ResponsiveContainer width="100%" height="100%">
@@ -271,7 +274,6 @@ export default function PerformanceCharts({ games, className, seasonFilter, acti
             </div>
           ))}
         </div>
-      </CardContent>
-    </Card>
+    </CustomHeaderWidget>
   );
 }

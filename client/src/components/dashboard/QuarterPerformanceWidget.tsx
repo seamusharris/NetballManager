@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { BaseWidget } from '@/components/ui/base-widget';
 import { Badge } from '@/components/ui/badge';
 import { Game } from '@shared/schema';
 import { useEffect, useState, useMemo } from 'react';
@@ -165,11 +165,12 @@ export default function QuarterPerformanceWidget({
   );
 
   return (
-    <Card className={className}>
-      <CardHeader>
-        <CardTitle>Quarter Performance</CardTitle>
-      </CardHeader>
-      <CardContent className="p-6">
+    <BaseWidget 
+      title="Quarter Performance" 
+      description="Performance breakdown by quarter"
+      className={className}
+      contentClassName="p-6"
+    >
         {/* Quarter breakdown grid */}
         <div className="grid grid-cols-2 gap-3 mb-4">
           {[1, 2, 3, 4].map(quarter => {
@@ -212,7 +213,6 @@ export default function QuarterPerformanceWidget({
 
         <div className="mb-4" />
 
-      </CardContent>
-    </Card>
+    </BaseWidget>
   );
 }

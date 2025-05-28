@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { BaseWidget } from '@/components/ui/base-widget';
 import { Button } from '@/components/ui/button';
 import { Link } from 'wouter';
 import { Game, Opponent } from '@shared/schema';
@@ -31,11 +31,12 @@ export default function UpcomingGames({ games, opponents, className, seasonFilte
   };
 
   return (
-    <Card className={className}>
-      <CardHeader>
-        <CardTitle>Upcoming Games</CardTitle>
-      </CardHeader>
-      <CardContent className="p-6 pb-2">
+    <BaseWidget 
+      title="Upcoming Games" 
+      description="Scheduled games and fixtures"
+      className={className}
+      contentClassName="p-6 pb-2"
+    >
 
         {upcomingGames.length > 0 ? (
           <div className="space-y-8">
@@ -83,7 +84,6 @@ export default function UpcomingGames({ games, opponents, className, seasonFilte
         ) : (
           <div className="mb-4" />
         )}
-      </CardContent>
-    </Card>
+    </BaseWidget>
   );
 }
