@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -164,9 +163,9 @@ export default function OpponentMatchups({
             No completed games against opponents yet
           </p>
         ) : (
-          <div className="space-y-8">
+          <div>
             {/* Overall Stats */}
-            <div className="grid grid-cols-3 gap-4 text-center">
+            <div className="grid grid-cols-3 gap-4 text-center mb-8">
               <div>
                 <p className="text-2xl font-bold text-blue-600">{overallWinRate}%</p>
                 <p className="text-xs text-gray-600">Overall Win Rate</p>
@@ -182,39 +181,37 @@ export default function OpponentMatchups({
             </div>
 
             {/* Best and Worst Matchups */}
-            <div className="space-y-4">
-              {bestMatchup && (
-                <div className="flex items-center justify-between p-4 mb-4 mt-2 bg-green-50 border-l-4 border-t border-r border-b border-green-500 border-t-green-500 border-r-green-500 border-b-green-500 rounded">
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <Trophy className="h-4 w-4 text-green-600" />
-                      <span className="text-sm font-medium text-green-800">Best</span>
-                    </div>
-                    <p className="font-semibold text-green-900">{bestMatchup.opponent.teamName}</p>
+            {bestMatchup && (
+              <div className="flex items-center justify-between p-4 mb-4 mt-2 bg-green-50 border-l-4 border-t border-r border-b border-green-500 border-t-green-500 border-r-green-500 border-b-green-500 rounded">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <Trophy className="h-4 w-4 text-green-600" />
+                    <span className="text-sm font-medium text-green-800">Best</span>
                   </div>
-                  <div className="text-right">
-                    <p className="text-lg font-bold text-green-700 mb-1">{bestMatchup.winRate}%</p>
-                    <div className="flex">{getFormDisplay(bestMatchup.recentForm)}</div>
-                  </div>
+                  <p className="font-semibold text-green-900">{bestMatchup.opponent.teamName}</p>
                 </div>
-              )}
+                <div className="text-right">
+                  <p className="text-lg font-bold text-green-700 mb-1">{bestMatchup.winRate}%</p>
+                  <div className="flex">{getFormDisplay(bestMatchup.recentForm)}</div>
+                </div>
+              </div>
+            )}
 
-              {worstMatchup && worstMatchup !== bestMatchup && (
-                <div className="flex items-center justify-between p-4 mb-4 mt-2 bg-red-50 border-l-4 border-t border-r border-b border-red-500 border-t-red-500 border-r-red-500 border-b-red-500 rounded">
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <AlertTriangle className="h-4 w-4 text-red-600" />
-                      <span className="text-sm font-medium text-red-800">Challenge</span>
-                    </div>
-                    <p className="font-semibold text-red-900">{worstMatchup.opponent.teamName}</p>
+            {worstMatchup && worstMatchup !== bestMatchup && (
+              <div className="flex items-center justify-between p-4 mb-4 mt-2 bg-red-50 border-l-4 border-t border-r border-b border-red-500 border-t-red-500 border-r-red-500 border-b-red-500 rounded">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <AlertTriangle className="h-4 w-4 text-red-600" />
+                    <span className="text-sm font-medium text-red-800">Challenge</span>
                   </div>
-                  <div className="text-right">
-                    <p className="text-lg font-bold text-red-700 mb-1">{worstMatchup.winRate}%</p>
-                    <div className="flex">{getFormDisplay(worstMatchup.recentForm)}</div>
-                  </div>
+                  <p className="font-semibold text-red-900">{worstMatchup.opponent.teamName}</p>
                 </div>
-              )}
-            </div>
+                <div className="text-right">
+                  <p className="text-lg font-bold text-red-700 mb-1">{worstMatchup.winRate}%</p>
+                  <div className="flex">{getFormDisplay(worstMatchup.recentForm)}</div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
