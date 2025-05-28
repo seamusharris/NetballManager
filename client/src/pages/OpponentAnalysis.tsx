@@ -11,7 +11,6 @@ import { getWinLoseLabel } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/apiClient';
 import { GameResult } from '@/lib/resultUtils';
-import { ResultBadge } from '@/components/ui/result-badge';
 
 interface OpponentMatchup {
   opponent: Opponent;
@@ -96,13 +95,13 @@ export default function OpponentAnalysis() {
       console.log('- Total opponents:', opponents.length);
       console.log('- Selected season:', selectedSeason);
       console.log('- Active season:', activeSeason);
-      
+
       // Debug game status filtering
       const gamesWithValidStatus = filteredGames.filter(game => 
         game.gameStatus?.isCompleted && game.gameStatus?.allowsStatistics
       );
       console.log('- Games with valid status for statistics:', gamesWithValidStatus.length);
-      
+
       if (filteredGames.length > 0) {
         console.log('- Sample game statuses:', filteredGames.slice(0, 3).map(g => ({
           id: g.id,
@@ -112,7 +111,7 @@ export default function OpponentAnalysis() {
           statusName: g.gameStatus?.name
         })));
       }
-      
+
       const opponentMatchups: OpponentMatchup[] = [];
 
       opponents.forEach((opponent: Opponent) => {
@@ -142,8 +141,14 @@ export default function OpponentAnalysis() {
           return;
         }
 
-        const completedGames = opponentGames.filter((game: Game) => 
-          game.gameStatus?.isCompleted && game.gameStatus?.allowsStatistics
+        // Get completed games for win/loss calculation (excluding abandoned games)
+        const allCompletedGames = opponentGames.filter((game: Game) => 
+          game.gameStatus?.isCompleted && game.gameStatus?.name !== 'abandoned'
+        );
+
+        // Get only games with statistics for stat calculations (also excludes abandoned)
+        const gamesWithStats = opponentGames.filter((game: Game) => 
+          game.gameStatus?.isCompleted && game.gameStatus?.allowsStatistics && game.gameStatus?.name !== 'abandoned'
         );
         const upcomingGames = opponentGames.filter((game: Game) => 
           !game.gameStatus?.isCompleted
@@ -157,7 +162,7 @@ export default function OpponentAnalysis() {
         const recentResults: string[] = [];
 
         // Sort completed games by date for recent form calculation
-        const sortedCompletedGames = [...completedGames].sort((a, b) => 
+        const sortedCompletedGames = [...gamesWithStats].sort((a, b) => 
           new Date(b.date).getTime() - new Date(a.date).getTime()
         );
 
@@ -165,8 +170,19 @@ export default function OpponentAnalysis() {
           const gameStats = centralizedStats[game.id] || [];
 
           // Calculate team and opponent scores from stats
-          const teamScore = gameStats.reduce((sum: any, stat: any) => sum + (stat.goalsFor || 0), 0);
-          const opponentScore = gameStats.reduce((sum: any, stat: any) => sum + (stat.goalsAgainst || 0), 0);
+          let teamScore = gameStats.reduce((sum: any, stat: any) => sum + (stat.goalsFor || 0), 0);
+          let opponentScore = gameStats.reduce((sum: any, stat: any) => sum + (stat.goalsAgainst || 0), 0);
+
+          // Check if this is a forfeit game (but not abandoned)
+          if (game.gameStatus?.name === 'forfeit-win') {
+            teamScore = game.gameStatus.points;
+            opponentScore = game.gameStatus.opponentPoints;
+          } else if (game.gameStatus?.name === 'forfeit-loss') {
+            teamScore = game.gameStatus.points;
+            opponentScore = game.gameStatus.opponentPoints;
+          } else if (game.gameStatus?.allowsStatistics && game.gameStatus?.name !== 'abandoned') {
+            // Do nothing, the scores are already calculated
+          }
 
           totalScoreFor += teamScore;
           totalScoreAgainst += opponentScore;
@@ -183,7 +199,7 @@ export default function OpponentAnalysis() {
           }
         });
 
-        const totalCompletedGames = completedGames.length;
+        const totalCompletedGames = gamesWithStats.length;
         const winRate = totalCompletedGames > 0 ? Math.round((wins / totalCompletedGames) * 100) : 0;
         const avgScoreFor = totalCompletedGames > 0 ? Math.round((totalScoreFor / totalCompletedGames) * 10) / 10 : 0;
         const avgScoreAgainst = totalCompletedGames > 0 ? Math.round((totalScoreAgainst / totalCompletedGames) * 10) / 10 : 0;

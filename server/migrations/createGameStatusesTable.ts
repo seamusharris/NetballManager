@@ -133,10 +133,10 @@ export async function createGameStatusesTable(): Promise<boolean> {
       {
         name: 'abandoned',
         displayName: 'Abandoned',
-        points: 0,
+        points: 0, // No points awarded for abandoned games by default
         opponentPoints: 0,
         isCompleted: true,
-        allowsStatistics: false,
+        allowsStatistics: false, // No statistics recorded for abandoned games
         requiresOpponent: true,
         colorClass: 'bg-gray-600',
         sortOrder: 7,

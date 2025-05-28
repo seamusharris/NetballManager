@@ -54,12 +54,20 @@ export default function OpponentDetailed() {
     if (!selectedOpponentData) return null;
 
     const opponentGames = games.filter((game: Game) => 
-      game.opponentId === selectedOpponentData.id && 
-      game.gameStatus?.isCompleted && 
-      game.gameStatus?.allowsStatistics
+      game.opponentId === selectedOpponentData.id
     );
 
-    const gameResults = opponentGames.map((game: Game) => {
+    // Get completed games for win/loss calculation (excluding abandoned games)
+    const allCompletedGames = opponentGames.filter((game: Game) => 
+      game.gameStatus?.isCompleted && game.gameStatus?.name !== 'abandoned'
+    );
+
+    // Get only games with statistics for stat calculations (also excludes abandoned)
+    const gamesWithStats = opponentGames.filter((game: Game) => 
+      game.gameStatus?.isCompleted && game.gameStatus?.allowsStatistics && game.gameStatus?.name !== 'abandoned'
+    );
+
+    const gameResults = gamesWithStats.map((game: Game) => {
       const gameStats = centralizedStats[game.id] || [];
       const teamScore = gameStats.reduce((sum: number, stat: any) => sum + (stat.goalsFor || 0), 0);
       const opponentScore = gameStats.reduce((sum: number, stat: any) => sum + (stat.goalsAgainst || 0), 0);
@@ -80,16 +88,16 @@ export default function OpponentDetailed() {
 
     // Calculate quarter performance analysis
     const quarterAnalysis = calculateQuarterAnalysis(gameResults);
-    
+
     // Calculate scoring trends
     const scoringTrends = calculateScoringTrends(gameResults);
 
     return {
-      totalGames: opponentGames.length,
+      totalGames: allCompletedGames.length,
       wins,
       losses,
       draws,
-      winRate: opponentGames.length > 0 ? Math.round((wins / opponentGames.length) * 100) : 0,
+      winRate: allCompletedGames.length > 0 ? Math.round((wins / allCompletedGames.length) * 100) : 0,
       avgMargin: gameResults.length > 0 ? Math.round(gameResults.reduce((sum, r) => sum + r.margin, 0) / gameResults.length) : 0,
       biggestWin: gameResults.filter(r => r.result === 'Win').reduce((max, r) => r.margin > max ? r.margin : max, 0),
       biggestLoss: Math.abs(gameResults.filter(r => r.result === 'Loss').reduce((min, r) => r.margin < min ? r.margin : min, 0)),
@@ -188,7 +196,7 @@ export default function OpponentDetailed() {
     if (gameResults.length >= 3) {
       const recentGames = gameResults.slice(0, 3);
       const recentAvg = recentGames.reduce((sum, r) => sum + r.teamScore, 0) / recentGames.length;
-      
+
       if (recentAvg > avgGoalsFor + 1) recentTrend = 'improving';
       else if (recentAvg < avgGoalsFor - 1) recentTrend = 'declining';
     }
@@ -318,7 +326,7 @@ export default function OpponentDetailed() {
                         const diff = qData.avgTeamScore - qData.avgOpponentScore;
                         const isStrongest = quarter === detailedStats.quarterAnalysis.strongestQuarter;
                         const isWeakest = quarter === detailedStats.quarterAnalysis.weakestQuarter;
-                        
+
                         return (
                           <div 
                             key={quarter} 

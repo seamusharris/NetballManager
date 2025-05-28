@@ -80,13 +80,13 @@ export const HEX_TO_TAILWIND: Record<string, string> =
  */
 export function tailwindToHex(tailwindClass: string): string {
   if (!tailwindClass || typeof tailwindClass !== 'string') return '#6366f1';
-  
+
   const hexColor = TAILWIND_TO_HEX[tailwindClass];
   if (!hexColor) {
     console.log(`Missing color mapping for ${tailwindClass}, using default color`);
     return '#6366f1'; // Default to indigo-500
   }
-  
+
   return hexColor;
 }
 
@@ -112,7 +112,7 @@ export function getInitials(firstName: string, lastName: string): string {
 
 export function formatDate(dateStr: string | null | undefined): string {
   if (!dateStr) return '';
-  
+
   try {
     const [year, month, day] = dateStr.split('-');
     return `${day}/${month}/${year}`;
@@ -127,7 +127,7 @@ export function formatShortDate(date: string): string {
     day: 'numeric',
     year: 'numeric'
   };
-  
+
   return new Date(date).toLocaleDateString('en-US', options);
 }
 
@@ -161,7 +161,7 @@ export function generateRandomColor(seed: string): string {
   for (let i = 0; i < seed.length; i++) {
     hash = seed.charCodeAt(i) + ((hash << 5) - hash);
   }
-  
+
   // Convert to color
   const hue = Math.abs(hash % 360);
   return `hsl(${hue}, 60%, 50%)`;
@@ -204,14 +204,14 @@ export function wasPlayerOnCourt(
   rosters: any[]
 ): boolean {
   if (!rosters || !Array.isArray(rosters)) return false;
-  
+
   // Find the roster entry for this player, game, and quarter
   const rosterEntry = rosters.find(roster => 
     roster.playerId === playerId && 
     roster.gameId === gameId && 
     roster.quarter === quarter
   );
-  
+
   // Check if the player was assigned to an actual on-court position
   return !!rosterEntry && isOnCourtPosition(rosterEntry.position);
 }
@@ -229,7 +229,7 @@ export function didPlayerParticipateInGame(
   rosters: any[]
 ): boolean {
   if (!rosters || !Array.isArray(rosters)) return false;
-  
+
   // Find any roster entries where the player was in an on-court position
   return rosters.some(roster => 
     roster.playerId === playerId && 
@@ -246,7 +246,10 @@ export function sortByDate<T extends { date: string }>(items: T[], ascending: bo
   });
 }
 
-export function getWinLoseLabel(teamScore: number, opponentScore: number): 'Win' | 'Loss' | 'Draw' {
+export function getWinLoseLabel(teamScore: number, opponentScore: number, gameStatus?: { name: string }): 'Win' | 'Loss' | 'Draw' | 'Abandoned' {
+  // Handle abandoned games specially
+  if (gameStatus?.name === 'abandoned') return 'Abandoned';
+
   if (teamScore > opponentScore) return 'Win';
   if (teamScore < opponentScore) return 'Loss';
   return 'Draw';
@@ -287,7 +290,7 @@ export function gameStatusAllowsStatistics(gameStatus: { allowsStatistics: boole
  */
 export function isForfeitGame(game: { status?: string | null } | string | undefined): boolean {
   if (!game) return false;
-  
+
   const status = typeof game === 'string' ? game : game.status;
   return status === 'forfeit-win' || status === 'forfeit-loss';
 }
@@ -300,7 +303,7 @@ export function isForfeitGame(game: { status?: string | null } | string | undefi
  */
 export function gameAllowsStatistics(game: { status?: string, isBye?: boolean } | undefined): boolean {
   if (!game) return false;
-  
+
   // Forfeit games and BYE games don't record statistics
   return !isForfeitGame(game) && !(game.isBye === true);
 }
@@ -314,7 +317,7 @@ export function getForfeitGameScoreFromStatus(gameStatus: { name: string, points
   const isWin = gameStatus.name === 'forfeit-win';
   const teamScore = gameStatus.points;
   const opponentScore = gameStatus.opponentPoints;
-  
+
   return {
     quarterScores: {
       '1': { for: isWin ? teamScore : 0, against: isWin ? 0 : opponentScore },
@@ -346,10 +349,10 @@ export function getForfeitGameScore(game: { status?: string | null } | string | 
       finalScore: { for: 0, against: 0 }
     };
   }
-  
+
   const status = typeof game === 'string' ? game : game.status;
   const isWin = status === 'forfeit-win';
-  
+
   // For forfeit-win: GS and GA score 5 goals each in Q1 (10-0 total)
   // For forfeit-loss: 5 goals in Q1 against GK and 5 in Q1 against GD (0-10 total)
   return {

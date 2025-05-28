@@ -11,6 +11,39 @@ export function isGameValidForStatistics(game: Game): boolean {
   // Must allow statistics (this covers forfeit games, BYE games, etc.)
   if (!game.gameStatus.allowsStatistics) return false;
 
+  // Exclude abandoned games from statistics
+  if (game.gameStatus.name === 'abandoned') return false;
+
+  return true;
+}
+
+/**
+ * Check if a single game counts for win/loss records (excludes abandoned games)
+ */
+export function isGameValidForRecords(game: Game): boolean {
+  // Must have a game status
+  if (!game.gameStatus) return false;
+
+  // Must be completed
+  if (!game.gameStatus.isCompleted) return false;
+
+  // Exclude abandoned games from win/loss records
+  if (game.gameStatus.name === 'abandoned') return false;
+
+  return true;
+}
+
+/**
+ * Check if a single game counts for points/ladder calculations (includes abandoned games with points)
+ */
+export function isGameValidForPoints(game: Game): boolean {
+  // Must have a game status
+  if (!game.gameStatus) return false;
+
+  // Must be completed
+  if (!game.gameStatus.isCompleted) return false;
+
+  // Include all completed games for points calculation (even abandoned games if they award points)
   return true;
 }
 
