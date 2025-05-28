@@ -107,10 +107,6 @@ export default function RecentFormWidget({
         <CardTitle>Recent Form</CardTitle>
       </CardHeader>
       <CardContent className="p-6">
-        <div className="flex justify-between items-center mb-4">
-          {getTrendIcon()}
-        </div>
-
         {/* Enhanced Form Display with Trend */}
         <div className="text-center mb-4">
           <div className="flex justify-center items-center space-x-2 mb-2">
