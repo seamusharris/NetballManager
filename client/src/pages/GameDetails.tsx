@@ -32,7 +32,7 @@ import { formatDate, cn, tailwindToHex, convertTailwindToHex } from '@/lib/utils
 // Helper functions for player colors
 const getPlayerColorForBorder = (avatarColor?: string): string => {
   if (!avatarColor) return "#7c3aed"; // Default violet-700
-  
+
   // Map of background colors to border colors
   const colorMap: Record<string, string> = {
     'bg-red-500': '#b91c1c', // red-700
@@ -62,13 +62,13 @@ const getPlayerColorForBorder = (avatarColor?: string): string => {
     'bg-pink-600': '#be185d', // pink-700
     'bg-purple-600': '#7e22ce' // purple-700
   };
-  
+
   return colorMap[avatarColor] || "#7c3aed";
 };
 
 const getPlayerColorForBackground = (avatarColor?: string): string => {
   if (!avatarColor) return "rgb(245, 243, 255)"; // Default violet-50
-  
+
   // Map of background colors to light background colors
   const colorMap: Record<string, string> = {
     'bg-red-500': '#fef2f2', // red-50
@@ -98,7 +98,7 @@ const getPlayerColorForBackground = (avatarColor?: string): string => {
     'bg-pink-600': '#fdf2f8', // pink-50
     'bg-purple-600': '#faf5ff' // purple-50
   };
-  
+
   return colorMap[avatarColor] || "rgb(245, 243, 255)";
 };
 import { GameStatus, Position, POSITIONS } from '@shared/schema';
@@ -135,6 +135,7 @@ import {
   getGameStatusColor 
 } from '@/lib/statisticsService';
 import { GameStatusButton } from '@/components/games/GameStatusButton';
+import LiveStatsButton from '@/components/games/LiveStatsButton';
 
 // Function to get opponent name
 const getOpponentName = (opponents: any[], opponentId: number | null) => {
@@ -150,38 +151,38 @@ const getOpponentName = (opponents: any[], opponentId: number | null) => {
 // Component to display player statistics from their positions played
 const PlayerStatsByQuarter = ({ roster, players, gameStats }: { roster: any[], players: any[], gameStats: any[] }) => {
   const [activeQuarter, setActiveQuarter] = useState<number>(0); // 0 means all quarters
-  
+
   // Calculate player statistics by combining all positions they played
   const playerStats = useMemo(() => {
     // Create a set of all unique player IDs in the roster
     const uniquePlayerIds = new Set<number>();
-    
+
     // Create a mapping of player ID to positions they played in each quarter
     const playerPositions: Record<number, { playerId: number, positions: Record<number, string> }> = {};
-    
+
     // Add all players from roster
     roster.forEach(entry => {
       if (!entry.playerId) return;
-      
+
       uniquePlayerIds.add(entry.playerId);
-      
+
       if (!playerPositions[entry.playerId]) {
         playerPositions[entry.playerId] = {
           playerId: entry.playerId,
           positions: {}
         };
       }
-      
+
       playerPositions[entry.playerId].positions[entry.quarter] = entry.position;
     });
-    
+
     // For each player in the game, calculate their statistics
     const result: Record<number, any> = {};
-    
+
     // Make sure all players in the roster are included
     players.forEach(player => {
       if (!uniquePlayerIds.has(player.id)) return;
-      
+
       // Initialize stats for every player in the roster
       result[player.id] = {
         playerId: player.id,
@@ -201,12 +202,12 @@ const PlayerStatsByQuarter = ({ roster, players, gameStats }: { roster: any[], p
         }
       };
     });
-    
+
     // Then calculate stats based on positions played
     Object.values(playerPositions).forEach(player => {
       // Get the player stats entry we created
       const playerStat = result[player.playerId];
-      
+
       // Get stats for each quarter the player played in
       Object.entries(player.positions).forEach(([quarter, position]) => {
         const quarterNum = parseInt(quarter);
@@ -214,7 +215,7 @@ const PlayerStatsByQuarter = ({ roster, players, gameStats }: { roster: any[], p
         const positionStat = gameStats.find(
           stat => stat.position === position && stat.quarter === quarterNum
         );
-        
+
         if (positionStat) {
           // Initialize quarter stats if not already there
           if (!playerStat.quarterStats[quarterNum]) {
@@ -231,20 +232,20 @@ const PlayerStatsByQuarter = ({ roster, players, gameStats }: { roster: any[], p
               infringement: 0
             };
           }
-          
+
           // Add stats from this position in this quarter
           const stats = playerStat.quarterStats[quarterNum];
-          
+
           // Increment stats based on what was recorded for this position
           if (position === 'GS' || position === 'GA') {
             stats.goals += positionStat.goalsFor || 0;
             stats.missedGoals += positionStat.missedGoals || 0;
           }
-          
+
           if (position === 'GD' || position === 'GK') {
             stats.goalsAgainst += positionStat.goalsAgainst || 0;
           }
-          
+
           // Common stats for all positions
           stats.rebounds += positionStat.rebounds || 0;
           stats.intercepts += positionStat.intercepts || 0;
@@ -252,7 +253,7 @@ const PlayerStatsByQuarter = ({ roster, players, gameStats }: { roster: any[], p
           stats.handlingError += positionStat.handlingError || 0;
           stats.pickUp += positionStat.pickUp || 0;
           stats.infringement += positionStat.infringement || 0;
-          
+
           // Add to total stats
           playerStat.totalStats.goals += position === 'GS' || position === 'GA' ? (positionStat.goalsFor || 0) : 0;
           playerStat.totalStats.missedGoals += position === 'GS' || position === 'GA' ? (positionStat.missedGoals || 0) : 0;
@@ -265,26 +266,26 @@ const PlayerStatsByQuarter = ({ roster, players, gameStats }: { roster: any[], p
           playerStat.totalStats.infringement += positionStat.infringement || 0;
         }
       });
-      
+
       // Add player to results
       result[player.playerId] = playerStat;
     });
-    
+
     return Object.values(result);
   }, [roster, players, gameStats]);
-  
+
   // Helper function to get player name (moved from elsewhere in the file)
   function getPlayerName(players: any[], playerId: number) {
     if (!players || !playerId) return null;
     const player = players.find(p => p.id === playerId);
     return player ? (player.displayName || `${player.firstName} ${player.lastName}`) : null;
   }
-  
+
   // Helper function to get player color (moved from elsewhere in the file)
   function getPlayerColor(players: any[], playerId: number) {
     if (!players || !playerId) return '#cccccc';
     const player = players.find(p => p.id === playerId);
-    
+
     // First, check if we need to use a default color
     if (!player || !player.avatarColor || player.avatarColor === '#FFFFFF' || player.avatarColor === '#ffffff') {
       // Use a very obvious, distinctive color based on player ID for maximum visibility
@@ -294,18 +295,18 @@ const PlayerStatsByQuarter = ({ roster, players, gameStats }: { roster: any[], p
       ];
       return defaultColors[playerId % defaultColors.length];
     }
-    
+
     // Check if the avatarColor is a Tailwind class (starts with 'bg-')
     if (player.avatarColor.startsWith('bg-')) {
       return convertTailwindToHex(player.avatarColor);
     }
-    
+
     // If it's already a hex color, return it
     return player.avatarColor;
   }
-  
-  
-  
+
+
+
   // Render a quarter tab/button
   const renderQuarterButton = (quarter: number) => (
     <Button 
@@ -318,13 +319,13 @@ const PlayerStatsByQuarter = ({ roster, players, gameStats }: { roster: any[], p
       {quarter === 0 ? "All" : `Q${quarter}`}
     </Button>
   );
-  
+
   // Render a player's statistics box
   const renderPlayerStatsBox = (player: any) => {
     // For 'All' quarters, use totalStats
     // For specific quarters, use quarterStats or create empty stats if not available
     let relevantStats;
-    
+
     if (activeQuarter === 0) {
       relevantStats = player.totalStats;
     } else {
@@ -334,7 +335,7 @@ const PlayerStatsByQuarter = ({ roster, players, gameStats }: { roster: any[], p
         const rosterEntry = roster.find(r => 
           r.playerId === player.playerId && r.quarter === activeQuarter
         );
-        
+
         relevantStats = {
           position: rosterEntry?.position || 'N/A',
           goals: 0,
@@ -351,7 +352,7 @@ const PlayerStatsByQuarter = ({ roster, players, gameStats }: { roster: any[], p
         relevantStats = player.quarterStats[activeQuarter];
       }
     }
-    
+
     // These stats are displayed for all players regardless of position
     return (
       <div 
@@ -375,7 +376,7 @@ const PlayerStatsByQuarter = ({ roster, players, gameStats }: { roster: any[], p
             </div>
           )}
         </div>
-        
+
         <div className="mt-1 bg-gray-50 p-3 rounded-md border border-gray-100">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -398,7 +399,7 @@ const PlayerStatsByQuarter = ({ roster, players, gameStats }: { roster: any[], p
       </div>
     );
   };
-  
+
   return (
     <div>
       <div className="mb-4 flex justify-center items-center">
@@ -406,7 +407,7 @@ const PlayerStatsByQuarter = ({ roster, players, gameStats }: { roster: any[], p
           {[0, 1, 2, 3, 4].map(q => renderQuarterButton(q))}
         </div>
       </div>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {playerStats
           .sort((a, b) => {
@@ -427,7 +428,7 @@ const calculateQuarterScores = (gameStats: any[], game: any) => {
   // Special handling for forfeit games - use consistent scoring for forfeit games
   if (game && (game.status === 'forfeit-win' || game.status === 'forfeit-loss')) {
     const isWin = game.status === 'forfeit-win';
-    
+
     // For forfeit-loss: 5 goals in Q1 against GK and 5 in Q1 against GD
     // For forfeit-win: GS and GA score 5 goals each in Q1
     return [
@@ -437,19 +438,19 @@ const calculateQuarterScores = (gameStats: any[], game: any) => {
       { quarter: 4, teamScore: 0, opponentScore: 0 }
     ];
   }
-  
+
   // For non-forfeit games, calculate normally
   const quarters = [1, 2, 3, 4];
-  
+
   return quarters.map(quarter => {
     const quarterStats = gameStats.filter(stat => stat.quarter === quarter);
-    
+
     const teamScore = quarterStats.reduce((total, stat) => 
       total + (stat.goalsFor || 0), 0);
-    
+
     const opponentScore = quarterStats.reduce((total, stat) => 
       total + (stat.goalsAgainst || 0), 0);
-    
+
     return {
       quarter,
       teamScore,
@@ -461,7 +462,7 @@ const calculateQuarterScores = (gameStats: any[], game: any) => {
 // Court position roster component
 const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuarter = 1 }) => {
   const [quarter, setQuarter] = useState(initialQuarter);
-  
+
   // Group roster by quarter and position
   const rosterByQuarter = useMemo(() => {
     return roster.reduce((acc, entry) => {
@@ -470,7 +471,7 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
       return acc;
     }, {});
   }, [roster]);
-  
+
   // Helper to get position coordinates on court diagram
   const getPositionCoordinates = (position: Position) => {
     const positionMap = {
@@ -482,7 +483,7 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
       'GD': 'bottom-28 left-16',
       'GK': 'bottom-12 left-1/2 transform -translate-x-1/2',
     };
-    
+
     return positionMap[position] || '';
   };
 
@@ -492,39 +493,39 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
     const player = players.find(p => p.id === playerId);
     return player ? (player.displayName || `${player.firstName} ${player.lastName}`) : null;
   };
-  
+
   // Function to get player color, converting from Tailwind class names to hex
   const getPlayerColor = (playerId) => {
     if (!players || !playerId) return '#cccccc';
     const player = players.find(p => p.id === playerId);
-    
+
     // If player doesn't exist or has no color, return a default gray
     if (!player || !player.avatarColor || player.avatarColor === '#FFFFFF' || player.avatarColor === '#ffffff') {
       return '#cccccc'; // Simple gray fallback for all players without colors
     }
-    
+
     // Check if the avatarColor is a Tailwind class (starts with 'bg-')
     if (player.avatarColor.startsWith('bg-')) {
       const hexColor = tailwindToHex(player.avatarColor);
       return hexColor;
     }
-    
+
     // If it's already a hex color, return it
     return player.avatarColor;
   };
-  
+
   // Get player performance stats for display from the actual game statistics
   const getPlayerPerformanceStats = (position) => {
     const entry = rosterByQuarter[quarter]?.[position];
-    
+
     // Find the statistics for this position in this quarter
     const positionStat = gameStats?.find?.(
       stat => stat.position === position && stat.quarter === quarter
     );
-    
+
     // If we have no entry in the roster (player) and no stats, return null
     if (!entry && !positionStat) return null;
-    
+
     // Return position-specific relevant statistics
     const stats = {
       // Common stats for all positions
@@ -532,10 +533,10 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
       badPass: positionStat?.badPass || 0,
       handlingError: positionStat?.handlingError || 0
     };
-    
+
     // Get player name if we have a player assigned
     const playerName = entry?.playerId ? getPlayerName(entry.playerId) : "Unassigned";
-    
+
     // Add position-specific stats
     if (position === 'GS' || position === 'GA') {
       // Attacking positions
@@ -575,7 +576,7 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
       };
     }
   };
-  
+
   // Helper function to render position-specific stats
   const renderPositionStats = (position, playerStats) => {
     if (position === 'GS' || position === 'GA') {
@@ -604,7 +605,7 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
       );
     }
   };
-  
+
   return (
     <div className="mt-4">
       <div className="mb-4 flex justify-center items-center">
@@ -621,7 +622,7 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
           ))}
         </div>
       </div>
-      
+
       {/* Horizontal court layout with stats below */}
       <div className="flex flex-col gap-6 max-w-7xl mx-auto px-4">
         {/* Horizontal court diagram - significantly taller and more proportional to an actual netball court */}
@@ -638,31 +639,31 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
             const entry = rosterByQuarter[quarter]?.[position];
             const playerName = getPlayerName(entry?.playerId);
             const playerColor = getPlayerColor(entry?.playerId);
-            
+
             // Use the player's avatar color for the background
             const bgColor = playerName ? playerColor : 'white';
-            
+
             // Use white text for player positions, red for unassigned
             const textColor = playerName ? 'white' : '#ef4444'; // Red color for unassigned
-            
+
             // New position coordinates for horizontal court with horizontal offsets
             const horizontalPositions = {
               // Attack end - left side
               'GS': 'top-[25%] left-[10%] -translate-x-1/2 -translate-y-1/2',
               'GA': 'top-[75%] left-[23%] -translate-x-1/2 -translate-y-1/2',
-              
+
               // Mid-court - center
               'WA': 'top-[25%] left-[43%] -translate-x-1/2 -translate-y-1/2',
               'C': 'top-[50%] left-[50%] -translate-x-1/2 -translate-y-1/2',
               'WD': 'top-[75%] left-[57%] -translate-x-1/2 -translate-y-1/2',
-              
+
               // Defense end - right side
               'GD': 'top-[25%] left-[77%] -translate-x-1/2 -translate-y-1/2',
               'GK': 'top-[75%] left-[90%] -translate-x-1/2 -translate-y-1/2',
             };
-            
+
             const positionClass = horizontalPositions[position] || '';
-            
+
             return (
               <div key={position} className={`absolute ${positionClass}`}>
                 <div 
@@ -697,7 +698,7 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
             );
           })}
         </div>
-        
+
         {/* Stats boxes in horizontal grid below the court */}
         <div className="grid grid-cols-2 md:grid-cols-7 gap-3">
           {/* All positions in a single row */}
@@ -705,15 +706,15 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
             const entry = rosterByQuarter[quarter]?.[position];
             const playerName = getPlayerName(entry?.playerId);
             const playerColor = getPlayerColor(entry?.playerId);
-            
+
             // Find position stats directly, regardless of whether a player is assigned
             const positionStat = gameStats?.find(stat => 
               stat.position === position && stat.quarter === quarter
             );
-            
+
             // Get performance stats (for players) or create stats object (for unassigned positions)
             let playerStats = getPlayerPerformanceStats(position);
-            
+
             // If no player stats but we have position stats, create a stats object
             if (!playerStats && positionStat) {
               playerStats = {
@@ -730,7 +731,7 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
                 }
               };
             }
-            
+
             return (
               <div key={position} className="col-span-1">
                 <PositionBox 
@@ -751,23 +752,23 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
 // Position statistics renderer
 const StatisticsByPosition = ({ gameStats }) => {
   const [expanded, setExpanded] = useState<string | null>(null);
-  
+
   // Group stats by position
   const statsByPosition = useMemo(() => {
     return gameStats.reduce((acc, stat) => {
       if (!acc[stat.position]) {
         acc[stat.position] = {};
       }
-      
+
       if (!acc[stat.position][stat.quarter]) {
         acc[stat.position][stat.quarter] = {};
       }
-      
+
       acc[stat.position][stat.quarter] = stat;
       return acc;
     }, {} as Record<string, Record<number, any>>);
   }, [gameStats]);
-  
+
   // Get combined stats across quarters
   const combinedStats = useMemo(() => {
     return Object.entries(statsByPosition).reduce((acc: any, [position, quarters]) => {
@@ -786,13 +787,13 @@ const StatisticsByPosition = ({ gameStats }) => {
       return acc;
     }, {});
   }, [statsByPosition]);
-  
+
   return (
     <div className="space-y-4">
       {POSITIONS.map(position => {
         const stats = combinedStats[position] || {};
         const isEmpty = Object.values(stats).every(val => !val);
-        
+
         return (
           <Card key={position} className={isEmpty ? 'border-dashed' : ''}>
             <CardHeader className="pb-2">
@@ -830,7 +831,7 @@ const StatisticsByPosition = ({ gameStats }) => {
                   </div>
                 </div>
               )}
-              
+
               {expanded === position && !isEmpty && (
                 <div className="mt-4 pt-4 border-t">
                   <h4 className="font-medium mb-2">Quarter Breakdown</h4>
@@ -838,13 +839,13 @@ const StatisticsByPosition = ({ gameStats }) => {
                     {[1, 2, 3, 4].map(quarter => {
                       const quarterStats = statsByPosition[position]?.[quarter] || {};
                       const hasStats = Object.values(quarterStats).some(val => val);
-                      
+
                       if (!hasStats) return (
                         <div key={quarter} className="text-sm text-gray-400">
                           Q{quarter}: No statistics recorded
                         </div>
                       );
-                      
+
                       return (
                         <div key={quarter} className="bg-gray-50 p-3 rounded-md">
                           <div className="font-medium mb-2">Quarter {quarter}</div>
@@ -931,20 +932,20 @@ const QuarterScores = ({ quarterScores, gameStatus }) => {
       return acc;
     }, []);
   }, [quarterScores]);
-  
+
   // Calculate total scores
   const totalTeamScore = quarterScores.reduce((sum, q) => sum + q.teamScore, 0);
   const totalOpponentScore = quarterScores.reduce((sum, q) => sum + q.opponentScore, 0);
-  
+
   // Calculate cumulative scores by quarter
   const cumulativeScores = useMemo(() => {
     let teamRunningTotal = 0;
     let opponentRunningTotal = 0;
-    
+
     return scoringByQuarter.map(score => {
       teamRunningTotal += score.teamScore;
       opponentRunningTotal += score.opponentScore;
-      
+
       return {
         quarter: score.quarter,
         teamScore: score.teamScore,
@@ -954,11 +955,11 @@ const QuarterScores = ({ quarterScores, gameStatus }) => {
       };
     });
   }, [scoringByQuarter]);
-  
+
   // Check if the team is winning, losing, or tied
   let scoreStatus;
   let statusColor;
-  
+
   if (totalTeamScore > totalOpponentScore) {
     scoreStatus = 'winning';
     statusColor = 'bg-green-500';
@@ -969,7 +970,7 @@ const QuarterScores = ({ quarterScores, gameStatus }) => {
     scoreStatus = 'tied';
     statusColor = 'bg-amber-500';
   }
-  
+
   return (
     <div>
       <div className="mt-4 max-w-2xl mx-auto">
@@ -1030,20 +1031,20 @@ export default function GameDetails() {
   const gameId = parseInt(id);
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  
+
   // State for edit game dialog
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  
+
   // State for game notes
   const [gameNotes, setGameNotes] = useState<string>("");
   const [isEditingNotes, setIsEditingNotes] = useState<boolean>(false);
-  
+
   // State for award winner
   const [isEditingAward, setIsEditingAward] = useState<boolean>(false);
   const [selectedAwardWinner, setSelectedAwardWinner] = useState<number | null>(null);
-  
+
   const [activeTab, setActiveTab] = useState('overview');
-  
+
   // Fetch game data
   const { 
     data: game,
@@ -1053,7 +1054,7 @@ export default function GameDetails() {
     queryFn: () => fetch(`/api/games/${gameId}`).then(res => res.json()),
     enabled: !isNaN(gameId)
   });
-  
+
   // Fetch players
   const { 
     data: players,
@@ -1062,7 +1063,7 @@ export default function GameDetails() {
     queryKey: ['/api/players'],
     queryFn: () => fetch('/api/players').then(res => res.json())
   });
-  
+
   // Fetch opponents
   const { 
     data: opponents,
@@ -1071,7 +1072,7 @@ export default function GameDetails() {
     queryKey: ['/api/opponents'],
     queryFn: () => fetch('/api/opponents').then(res => res.json())
   });
-  
+
   // Fetch roster for this game
   const { 
     data: roster,
@@ -1082,17 +1083,17 @@ export default function GameDetails() {
     queryFn: () => fetch(`/api/games/${gameId}/rosters`).then(res => res.json()),
     enabled: !isNaN(gameId)
   });
-  
+
   // Fetch seasons data
   const { data: seasons = [], isLoading: isLoadingSeasons } = useQuery<any[]>({
     queryKey: ['/api/seasons'],
   });
-  
+
   // Fetch active season
   const { data: activeSeason, isLoading: isLoadingActiveSeason } = useQuery<any>({
     queryKey: ['/api/seasons/active'],
   });
-  
+
   // Force refetch when component mounts or route changes
   useEffect(() => {
     if (gameId && !isNaN(gameId)) {
@@ -1101,7 +1102,7 @@ export default function GameDetails() {
       refetchRosters();
     }
   }, [gameId, refetchRosters]);
-  
+
   // Fetch game stats
   const { 
     data: gameStats,
@@ -1115,13 +1116,13 @@ export default function GameDetails() {
     refetchOnWindowFocus: true, // Refetch when window gains focus
     refetchOnMount: 'always' // Always refetch when component mounts
   });
-  
+
   // Calculate quarter scores
   const quarterScores = useMemo(() => {
     if (!gameStats || !game) return [];
     return calculateQuarterScores(gameStats, game);
   }, [gameStats, game]);
-  
+
   // Loading state
   if (isLoadingGame || isLoadingPlayers || isLoadingOpponents || isLoadingRoster) {
     return (
@@ -1131,7 +1132,7 @@ export default function GameDetails() {
       </div>
     );
   }
-  
+
   if (!game) {
     return (
       <div className="py-10 text-center">
@@ -1146,7 +1147,7 @@ export default function GameDetails() {
       </div>
     );
   }
-  
+
   // Check if this is a forfeit game, which has special display and restrictions
   const isForfeitGame = game.status === 'forfeit-win' || game.status === 'forfeit-loss';
   const opponentName = getOpponentName(opponents || [], game.opponentId);
@@ -1156,7 +1157,7 @@ export default function GameDetails() {
       <Helmet>
         <title>Game Details | Netball Stats Tracker</title>
       </Helmet>
-      
+
       <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-gray-50 p-6 rounded-lg">
         <div>
           <div className="flex items-center gap-3 mb-1">
@@ -1167,7 +1168,7 @@ export default function GameDetails() {
               className="border-gray-200 text-gray-700 hover:bg-gray-100 hover:text-gray-900"
             />
           </div>
-          
+
           <h1 className="text-2xl font-bold">
             {game.opponentId ? (
               <span>
@@ -1177,9 +1178,9 @@ export default function GameDetails() {
               <span>BYE Round</span>
             )}
           </h1>
-          
+
           <div className="flex flex-wrap gap-2 mt-4 mb-4">
-            
+
             {/* Roster Button */}
             {!game.isBye && (
               <Button 
@@ -1194,7 +1195,7 @@ export default function GameDetails() {
                 </Link>
               </Button>
             )}
-            
+
             {/* Live Stats Button */}
             {!game.isBye && !game.completed && (
               <Button 
@@ -1209,7 +1210,7 @@ export default function GameDetails() {
                 </Link>
               </Button>
             )}
-            
+
             {/* Edit Game Button */}
             <Button 
               variant="outline" 
@@ -1220,7 +1221,7 @@ export default function GameDetails() {
               <Edit className="mr-2 h-4 w-4" />
               Edit Game
             </Button>
-            
+
             {/* Delete Game Button */}
             <AlertDialog>
               <AlertDialogTrigger asChild>
@@ -1233,7 +1234,7 @@ export default function GameDetails() {
                   Delete Game
                 </Button>
               </AlertDialogTrigger>
-              
+
               <AlertDialogContent>
                 <AlertDialogHeader>
                   <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
@@ -1251,17 +1252,17 @@ export default function GameDetails() {
                         await fetch(`/api/games/${gameId}`, {
                           method: 'DELETE',
                         });
-                        
+
                         // Invalidate queries
                         queryClient.invalidateQueries({
                           queryKey: ['/api/games'],
                         });
-                        
+
                         toast({
                           title: "Game deleted",
                           description: "Game has been deleted successfully",
                         });
-                        
+
                         // Redirect to games list
                         window.location.href = '/games';
                       } catch (error) {
@@ -1279,7 +1280,7 @@ export default function GameDetails() {
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
-            
+
             {/* Edit Game Dialog */}
             <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
               <DialogContent className="sm:max-w-[550px]">
@@ -1298,7 +1299,7 @@ export default function GameDetails() {
                           headers: { 'Content-Type': 'application/json' },
                           body: JSON.stringify(formData)
                         });
-                        
+
                         // Invalidate queries to refresh data
                         queryClient.invalidateQueries({
                           queryKey: ['/api/games', gameId],
@@ -1306,12 +1307,12 @@ export default function GameDetails() {
                         queryClient.invalidateQueries({
                           queryKey: ['/api/games'],
                         });
-                        
+
                         toast({
                           title: "Game updated",
                           description: "Game details have been updated successfully",
                         });
-                        
+
                         setIsEditDialogOpen(false);
                       } catch (error) {
                         console.error("Error updating game:", error);
@@ -1327,20 +1328,20 @@ export default function GameDetails() {
               </DialogContent>
             </Dialog>
           </div>
-          
+
           <div className="text-gray-500">
             {formatDate(game.date)} {game.time && `at ${game.time}`}
             {game.location && ` · ${game.location}`}
             {game.round && ` · Round ${game.round}`}
           </div>
         </div>
-        
+
         {/* View Statistics button removed - stats now available directly on this page */}
       </div>
-      
+
       {/* Show quarter scores summary */}
       <QuarterScores quarterScores={quarterScores} gameStatus={game?.status} />
-      
+
       <div className="mt-8">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-4">
@@ -1361,7 +1362,7 @@ export default function GameDetails() {
               Stats Sheet
             </TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value="overview" className="mt-6">
             <div className="space-y-6">
               {/* Court Positions */}
@@ -1430,7 +1431,7 @@ export default function GameDetails() {
                               },
                               body: JSON.stringify({ awardWinnerId: selectedAwardWinner }),
                             });
-                            
+
                             if (response.ok) {
                               // Invalidate the game query to refresh the data
                               queryClient.invalidateQueries({ queryKey: ['/api/games', gameId] });
@@ -1497,7 +1498,7 @@ export default function GameDetails() {
                       {(() => {
                         // Find the award winner from the players array
                         const awardWinner = players?.find(p => p.id === game.awardWinnerId);
-                        
+
                         if (!awardWinner) {
                           return (
                             <div className="flex items-center justify-center h-full py-6 text-gray-500 italic">
@@ -1505,43 +1506,43 @@ export default function GameDetails() {
                             </div>
                           );
                         }
-                        
+
                         // Find positions played by this player in this game
                         const playerPositions = roster?.filter(r => r.playerId === awardWinner.id) || [];
-                        
+
                         // Initialize stat counters
                         let goals = 0;
                         let intercepts = 0; 
                         let rebounds = 0;
-                        
+
                         // Sum up stats from all positions this player played
                         playerPositions.forEach(rosterEntry => {
                           const stat = gameStats?.find(s => 
                             s.position === rosterEntry.position && 
                             s.quarter === rosterEntry.quarter
                           );
-                          
+
                           if (stat) {
                             goals += stat.goalsFor || 0;
                             intercepts += stat.intercepts || 0;
                             rebounds += stat.rebounds || 0;
                           }
                         });
-                        
+
                         // Get player initials
                         const getInitials = (firstName: string, lastName: string) => {
                           // Handle first name (considering first part of compound names)
                           const firstInitial = firstName.trim().charAt(0).toUpperCase();
-                          
+
                           // Handle last name (including hyphenated or multi-part names)
                           let lastInitial = '';
                           if (lastName && lastName.trim()) {
                             lastInitial = lastName.trim().charAt(0).toUpperCase();
                           }
-                          
+
                           return `${firstInitial}${lastInitial}`;
                         };
-                        
+
                         return (
                           <div className="flex items-center space-x-4">
                             {/* Player Avatar */}
@@ -1550,7 +1551,7 @@ export default function GameDetails() {
                             >
                               {getInitials(awardWinner.firstName, awardWinner.lastName)}
                             </div>
-                            
+
                             {/* Player Stats Box - With colors matching player's avatar */}
                             <div 
                               className="flex-1 flex items-center p-3 rounded-lg border-2"
@@ -1573,7 +1574,7 @@ export default function GameDetails() {
                                   Player of the Match
                                 </div>
                               </div>
-                              
+
                               <div className="flex space-x-6">
                                 <div className="text-center">
                                   <div 
@@ -1632,8 +1633,8 @@ export default function GameDetails() {
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-xl font-bold">Game Notes</CardTitle>
                   {!isEditingNotes ? (
-                    <Button 
-                      variant="outline" 
+                    <Button ```text
+variant="outline" 
                       size="sm" 
                       onClick={() => {
                         setIsEditingNotes(true);
@@ -1666,7 +1667,7 @@ export default function GameDetails() {
                               },
                               body: JSON.stringify({ notes: gameNotes }),
                             });
-                            
+
                             if (response.ok) {
                               // Invalidate the game query to refresh the data
                               queryClient.invalidateQueries({ queryKey: ['/api/games', gameId] });
@@ -1713,9 +1714,9 @@ export default function GameDetails() {
               </Card>
             </div>
           </TabsContent>
-          
 
-          
+
+
           <TabsContent value="players" className="mt-6">
             {isForfeitGame ? (
               <div className="text-center py-10 border rounded-lg bg-gray-50">
@@ -1774,14 +1775,14 @@ export default function GameDetails() {
               </div>
             )}
           </TabsContent>
-          
+
           <TabsContent value="statssheet" className="mt-6">
             <PrintableStatsSheet
               game={game}
               opponent={opponents?.find(o => o.id === game.opponentId) || null}
             />
           </TabsContent>
-          
+
 
         </Tabs>
       </div>
