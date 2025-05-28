@@ -217,13 +217,13 @@ export default function OpponentMatchups({
           </div>
         )}
 
-        {matchups.length > 0 ? (
-          <ViewMoreButton href="/opponent-analysis">
-            View more →
-          </ViewMoreButton>
-        ) : (
-          <div className="mb-4" />
-        )}
+        <div className="mt-2">
+          {matchups.length > 0 ? (
+            <ViewMoreButton href="/opponent-analysis">
+              View more →
+            </ViewMoreButton>
+          ) : null}
+        </div>
       </CardContent>
     </Card>
   );
