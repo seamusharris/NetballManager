@@ -8,10 +8,7 @@ import { CrudDialog } from '@/components/ui/crud-dialog';
 import { Plus } from 'lucide-react';
 import { apiRequest } from '@/lib/apiClient';
 import { Game, Opponent, Player } from '@shared/schema';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { useGameStatuses } from '@/hooks/use-game-statuses';
-import { filterGamesByStatus } from '@/lib/gameFilters';
 
 interface QueryParams {
   status?: string;
@@ -23,20 +20,7 @@ export default function Games() {
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingGame, setEditingGame] = useState<Game | null>(null);
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-
-  // Get URL search params
-  const urlParams = new URLSearchParams(window.location.search);
-
-  useEffect(() => {
-    const status = urlParams.get('status');
-    if (status) {
-      setStatusFilter(status);
-    }
-  }, []);
-
-  // Fetch game statuses from database
-  const { data: gameStatuses = [], isLoading: isLoadingStatuses } = useGameStatuses();
+  
 
   // Fetch games
   const { data: games = [], isLoading: isLoadingGames } = useQuery<Game[]>({
@@ -56,9 +40,6 @@ export default function Games() {
     queryKey: ['players'],
     queryFn: () => apiRequest('GET', '/api/players') as Promise<Player[]>,
   });
-
-  // Filter games based on status using shared filtering logic
-  const filteredGames = filterGamesByStatus(games, statusFilter);
 
   const handleCreate = async (game: Game) => {
     try {
@@ -126,35 +107,13 @@ export default function Games() {
           <CardDescription>Manage games here</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-between pb-4">
-            <div className="flex items-center gap-4">
-              <div className="min-w-[200px]">
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Filter by status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Games</SelectItem>
-                    <SelectItem value="upcoming">Upcoming</SelectItem>
-                    <SelectItem value="completed">Completed</SelectItem>
-                    {gameStatuses
-                      .filter(status => status.isActive)
-                      .sort((a, b) => a.sortOrder - b.sortOrder)
-                      .map(status => (
-                        <SelectItem key={status.id} value={status.name}>
-                          {status.displayName}
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+          <div className="flex justify-end pb-4">
             <Button onClick={() => setIsDialogOpen(true)}>
               <Plus className="w-4 h-4 mr-2" />
               Add Game
             </Button>
           </div>
-          <GamesList games={filteredGames} opponents={opponents} onDelete={handleDelete} onEdit={setEditingGame} />
+          <GamesList games={games} opponents={opponents} onDelete={handleDelete} onEdit={setEditingGame} />
         </CardContent>
       </Card>
 
