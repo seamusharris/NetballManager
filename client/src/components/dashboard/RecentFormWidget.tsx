@@ -109,7 +109,7 @@ export default function RecentFormWidget({
       </CardHeader>
       <CardContent className="p-6">
         {/* Enhanced Form Display with Trend */}
-        <div className="text-center mb-4">
+        <div className="text-center mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
           <div className="flex justify-center items-center space-x-2 mb-2">
             <span className="text-xs text-gray-500 font-medium">Last 5 Games</span>
             {getTrendIcon()}
@@ -166,13 +166,13 @@ export default function RecentFormWidget({
 
               {/* Stats Column - 1/3 width */}
               <div className="space-y-3">
-                <div className="text-center bg-gradient-to-br from-primary/10 to-primary/5 p-3 rounded-lg border border-primary/10">
+                <div className="text-center bg-gray-100 p-3 rounded-lg border border-gray-200">
                   <p className="text-xs text-gray-500 mb-1">Win Rate</p>
-                  <p className="text-xl font-bold text-primary">{winPercentage}%</p>
+                  <p className="text-xl font-bold text-gray-700">{winPercentage}%</p>
                 </div>
-                <div className="text-center bg-gradient-to-br from-blue-50 to-blue-25 p-3 rounded-lg border border-blue-100">
+                <div className="text-center bg-gray-100 p-3 rounded-lg border border-gray-200">
                   <p className="text-xs text-gray-500 mb-1">Played</p>
-                  <p className="text-xl font-bold text-blue-600">{completedGames.length}</p>
+                  <p className="text-xl font-bold text-gray-700">{completedGames.length}</p>
                 </div>
               </div>
             </div>
