@@ -19,7 +19,7 @@ interface QueryParams {
 
 export default function Games() {
   const { toast } = useToast();
-  const queryClient = = useQueryClient();
+  const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingGame, setEditingGame] = useState<Game | null>(null);
   const [, setLocation] = useLocation();
