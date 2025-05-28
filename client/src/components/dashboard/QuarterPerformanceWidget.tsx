@@ -90,13 +90,6 @@ export default function QuarterPerformanceWidget({
 
   // Calculate quarter performance metrics
   useEffect(() => {
-    console.log('QuarterPerformanceWidget calculating metrics:', {
-      gameStatsMap: !!gameStatsMap,
-      isLoading,
-      validGameIds: validGameIds.length,
-      gameStatsMapKeys: gameStatsMap ? Object.keys(gameStatsMap) : []
-    });
-
     if (!gameStatsMap || isLoading || validGameIds.length === 0) return;
 
     const quarterScores: Record<number, { team: number, opponent: number, count: number }> = {

@@ -21,8 +21,8 @@ export default function RecentGames({ games, opponents, className, seasonFilter,
   // Filter for recent completed games using gameStatus
   const recentGames = games
     .filter(game => {
-      console.log(`RecentGames filtering game ${game.id}: isCompleted=${game.gameStatus?.isCompleted}, status=${game.gameStatus?.name}`);
-      return game.gameStatus?.isCompleted === true;
+      const isCompleted = game.gameStatus?.isCompleted ?? game.completed;
+      return isCompleted;
     })
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 3);

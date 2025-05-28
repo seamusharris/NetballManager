@@ -18,10 +18,11 @@ interface UpcomingGamesProps {
 
 export default function UpcomingGames({ games, opponents, className, seasonFilter, activeSeason }: UpcomingGamesProps) {
   // Filter for upcoming games using the isCompleted flag from game_statuses table
-  const upcomingGames = games.filter(game => {
-    console.log(`UpcomingGames filtering game ${game.id}: isCompleted=${game.gameStatus?.isCompleted}, status=${game.gameStatus?.name}`);
-    return game.gameStatus?.isCompleted !== true;
-  });
+  const upcomingGames = games
+    .filter(game => {
+        const isCompleted = game.gameStatus?.isCompleted ?? game.completed;
+        return !isCompleted;
+      });
 
   const getOpponentName = (opponentId: number | null) => {
     if (!opponentId) return 'Unknown Opponent';

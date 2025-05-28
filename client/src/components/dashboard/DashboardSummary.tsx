@@ -41,17 +41,6 @@ export default function DashboardSummary({
   const [selectedSeasonId, setSelectedSeasonId] = useState<string>('current');
   const queryClient = useQueryClient();
 
-  // Debug logging
-  console.log('DashboardSummary render:', {
-    playersCount: players?.length,
-    gamesCount: games?.length,
-    opponentsCount: opponents?.length,
-    seasonsCount: seasons?.length,
-    activeSeason: activeSeason,
-    isLoading,
-    selectedSeasonId
-  });
-
   // Set active season as selected by default
   useEffect(() => {
     if (activeSeason && selectedSeasonId === 'current') {

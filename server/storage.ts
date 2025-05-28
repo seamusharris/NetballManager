@@ -268,23 +268,8 @@ export class DatabaseStorage implements IStorage {
 
   // Game methods
   async getGames(): Promise<Game[]> {
-    console.log('\n🔍 STORAGE.TS: getGames() method called');
-
     const { gameStatuses, opponents, seasons } = await import("@shared/schema");
 
-    console.log('📋 Imported schema objects:', {
-      games: !!games,
-      gameStatuses: !!gameStatuses,
-      opponents: !!opponents,
-      seasons: !!seasons
-    });
-
-    // Test the join condition first
-    console.log('🔗 Testing join condition...');
-    const joinCondition = eq(games.statusId, gameStatuses.id);
-    console.log('Join condition created:', joinCondition);
-
-    console.log('🚀 Executing Drizzle query...');
     const results = await db
       .select({
         games: games,
@@ -297,23 +282,6 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(opponents, eq(games.opponentId, opponents.id))
       .leftJoin(seasons, eq(games.seasonId, seasons.id));
 
-    console.log(`✅ Drizzle query returned ${results.length} results`);
-
-    // Debug the raw results before mapping
-    console.log('\n🔍 RAW DRIZZLE RESULTS (first 3):');
-    for (let i = 0; i < Math.min(3, results.length); i++) {
-      const result = results[i];
-      console.log(`Result ${i + 1}:`, {
-        gameId: result.games?.id,
-        gameStatusId: result.games?.statusId,
-        gameStatusObject: result.gameStatus,
-        gameStatusPresent: !!result.gameStatus,
-        gameStatusName: result.gameStatus?.name || 'NULL',
-        opponentPresent: !!result.opponent,
-        seasonPresent: !!result.season
-      });
-    }
-
     const mappedResults = results.map(row => ({
       ...row.games,
       gameStatus: row.gameStatus || null,
@@ -322,15 +290,6 @@ export class DatabaseStorage implements IStorage {
       isBye: row.games.opponentId === null
     }));
 
-    console.log(`🎯 After mapping: ${mappedResults.length} games`);
-    console.log('🔍 Sample mapped game:', {
-      id: mappedResults[0]?.id,
-      statusId: mappedResults[0]?.statusId,
-      gameStatus: mappedResults[0]?.gameStatus,
-      hasGameStatus: !!mappedResults[0]?.gameStatus
-    });
-
-    console.log('✅ STORAGE.TS: getGames() method complete\n');
     return mappedResults;
   }
 
