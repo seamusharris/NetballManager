@@ -9,6 +9,7 @@ import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
 import { useBatchGameStatistics } from '@/components/statistics/hooks/useBatchGameStatistics';
 import { isGameValidForStatistics } from '@/lib/gameFilters';
+import { ViewMoreButton } from '@/components/ui/view-more-button';
 
 interface PlayerPerformanceProps {
   players: Player[];
@@ -540,12 +541,17 @@ export default function PlayerPerformance({ players, games, className, seasonFil
       <ArrowDown className="ml-1 h-3 w-3 inline text-primary" />;
   };
 
+    // Get the top 5 players
+    const topPlayers = playersWithStats.slice(0, 5);
+
   return (
     <Card className={className}>
-      <CardContent className="p-6">
-        <div className="flex justify-between items-center mb-4">
+      <CardContent className="p-6 pb-2">
+        <div className="mb-4">
           <h3 className="font-heading font-semibold text-neutral-dark">Player Performance</h3>
+        </div>
 
+        <div className="flex justify-between items-center mb-4">
           <Select 
             value={timeRange} 
             onValueChange={(value) => {
@@ -699,6 +705,14 @@ export default function PlayerPerformance({ players, games, className, seasonFil
             </TableBody>
           </Table>
         </div>
+
+        {topPlayers.length > 5 ? (
+          <ViewMoreButton href="/players">
+            View more →
+          </ViewMoreButton>
+        ) : (
+          <div className="mb-4" />
+        )}
       </CardContent>
     </Card>
   );

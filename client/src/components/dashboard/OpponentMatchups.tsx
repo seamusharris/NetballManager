@@ -152,12 +152,33 @@ export default function OpponentMatchups({
 
   return (
     <Card className={className}>
+      <CardContent className="p-6 pb-2">
+        <div className="mb-4">
+          <h3 className="font-heading font-semibold text-neutral-dark">Opponent Matchups</h3>
+        </div>
+      
+      
+      <CardContent className="p-6 pb-2">
+        <div className="mb-4">
+          <h3 className="font-heading font-semibold text-neutral-dark">Opponent Matchups</h3>
+        </div>
+      
+      <CardContent className="p-6 pb-2">
+        <div className="mb-4">
+          <h3 className="font-heading font-semibold text-neutral-dark">Opponent Matchups</h3>
+        </div>
+      
+      
       <CardHeader className="pb-3">
         <CardTitle>
           Opponent Matchups
         </CardTitle>
       </CardHeader>
       <CardContent className="p-6 pb-2">
+        <div className="mb-4">
+          <h3 className="font-heading font-semibold text-neutral-dark">Opponent Matchups</h3>
+        </div>
+      
         {matchups.length === 0 ? (
           <p className="text-gray-500 text-center py-4">
             No completed games against opponents yet
@@ -181,7 +202,7 @@ export default function OpponentMatchups({
             </div>
 
             {/* Best and Worst Matchups */}
-            <div className="space-y-4">
+            <div className="space-y-8">
               {bestMatchup && (
                 <div className="flex items-center justify-between p-4 mb-4 mt-2 bg-green-50 border-l-4 border-t border-r border-b border-green-500 border-t-green-500 border-r-green-500 border-b-green-500 rounded">
                   <div>

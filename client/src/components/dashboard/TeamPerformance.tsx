@@ -221,8 +221,8 @@ export default function TeamPerformance({ games, className, activeSeason, select
 
   return (
     <Card className={className}>
-      <CardContent className="p-6">
-        <div className="flex justify-between items-center mb-4">
+      <CardContent className="p-6 pb-2">
+        <div className="mb-4">
           <h3 className="font-heading font-semibold text-neutral-dark">Team Performance</h3>
         </div>
 
@@ -255,12 +255,7 @@ export default function TeamPerformance({ games, className, activeSeason, select
           </div>
         </div>
 
-        {/* Dummy ViewMore button for spacing testing */}
-        <div className="flex justify-end mt-2 mb-3 pt-0">
-          <button className="px-2 py-1 text-xs font-medium text-gray-600 bg-gray-50 border border-gray-200 rounded hover:bg-gray-100 hover:border-gray-300 transition-colors duration-200">
-            View more →
-          </button>
-        </div>
+        <div className="mb-4" />
       </CardContent>
     </Card>
   );

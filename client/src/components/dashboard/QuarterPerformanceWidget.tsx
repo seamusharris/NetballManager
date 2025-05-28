@@ -219,12 +219,7 @@ export default function QuarterPerformanceWidget({
           })}
         </div>
 
-        {/* Dummy ViewMore button for alignment testing */}
-        <div className="flex justify-end mt-2 mb-3 pt-0">
-          <button className="px-2 py-1 text-xs font-medium text-gray-600 bg-gray-50 border border-gray-200 rounded hover:bg-gray-100 hover:border-gray-300 transition-colors duration-200">
-            View More
-          </button>
-        </div>
+        <div className="mb-4" />
         
       </CardContent>
     </Card>
