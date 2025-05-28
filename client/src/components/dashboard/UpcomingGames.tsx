@@ -75,12 +75,11 @@ export default function UpcomingGames({ games, opponents, className, seasonFilte
         )}
         
         {upcomingGames.length > 0 && (
-          <div className="flex justify-end mt-4 pt-2 border-t border-gray-100">
-            <Link 
-              href="/games?status=upcoming" 
-              className="text-sm text-blue-600 hover:text-blue-800 hover:underline font-medium transition-colors duration-200"
-            >
-              View all upcoming →
+          <div className="flex justify-end mt-4 pt-2">
+            <Link href="/games?status=upcoming">
+              <button className="px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 hover:border-gray-400 transition-colors duration-200">
+                View more →
+              </button>
             </Link>
           </div>
         )}
