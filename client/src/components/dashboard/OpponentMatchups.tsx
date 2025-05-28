@@ -188,7 +188,7 @@ export default function OpponentMatchups({
                     <Trophy className="h-4 w-4 text-green-600" />
                     <span className="text-sm font-medium text-green-800">Best</span>
                   </div>
-                  <p className="font-semibold text-green-900">{bestMatchup.opponent.teamName}</p>
+                  <p className="font-semibold text-gray-800">{bestMatchup.opponent.teamName}</p>
                 </div>
                 <div className="text-right">
                   <p className="text-lg font-bold text-green-700 mb-1">{bestMatchup.winRate}%</p>
@@ -204,7 +204,7 @@ export default function OpponentMatchups({
                     <AlertTriangle className="h-4 w-4 text-red-600" />
                     <span className="text-sm font-medium text-red-800">Challenge</span>
                   </div>
-                  <p className="font-semibold text-red-900">{worstMatchup.opponent.teamName}</p>
+                  <p className="font-semibold text-gray-800">{worstMatchup.opponent.teamName}</p>
                 </div>
                 <div className="text-right">
                   <p className="text-lg font-bold text-red-700 mb-1">{worstMatchup.winRate}%</p>
