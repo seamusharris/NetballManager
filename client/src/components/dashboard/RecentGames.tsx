@@ -96,8 +96,14 @@ export default function RecentGames({ games, opponents, className, seasonFilter,
   };
 
   const getResultClass = (game: Game) => {
-    // Always use blue accent styling to match upcoming games
-    return 'border-accent bg-accent/5';
+    const [teamScore, opponentScore] = getScores(game);
+    if (teamScore > opponentScore) {
+      return 'border-green-500 bg-green-50';
+    } else if (teamScore < opponentScore) {
+      return 'border-red-500 bg-red-50';
+    } else {
+      return 'border-yellow-500 bg-yellow-50';
+    }
   };
 
   const getResultText = (game: Game) => {
