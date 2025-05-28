@@ -25,8 +25,10 @@ export default function OpponentDetailed() {
     queryFn: () => apiRequest('GET', '/api/opponents')
   });
 
-  // Fetch centralized stats for all completed games
-  const completedGameIds = games.filter((game: Game) => game.completed).map((game: Game) => game.id);
+  // Fetch centralized stats for all completed games that allow statistics
+  const completedGameIds = games.filter((game: Game) => 
+    game.gameStatus?.isCompleted && game.gameStatus?.allowsStatistics
+  ).map((game: Game) => game.id);
 
   const { data: centralizedStats = {} } = useQuery({
     queryKey: ['dashboardStats', completedGameIds.join(',')],
@@ -52,7 +54,9 @@ export default function OpponentDetailed() {
     if (!selectedOpponentData) return null;
 
     const opponentGames = games.filter((game: Game) => 
-      game.opponentId === selectedOpponentData.id && game.completed
+      game.opponentId === selectedOpponentData.id && 
+      game.gameStatus?.isCompleted && 
+      game.gameStatus?.allowsStatistics
     );
 
     const gameResults = opponentGames.map((game: Game) => {

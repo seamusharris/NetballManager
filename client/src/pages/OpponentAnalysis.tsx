@@ -57,8 +57,10 @@ export default function OpponentAnalysis() {
     queryFn: () => apiRequest('GET', '/api/seasons/active')
   });
 
-  // Fetch centralized stats for all completed games
-  const completedGameIds = games.filter((game: Game) => game.completed).map((game: Game) => game.id);
+  // Fetch centralized stats for all completed games that allow statistics
+  const completedGameIds = games.filter((game: Game) => 
+    game.gameStatus?.isCompleted && game.gameStatus?.allowsStatistics
+  ).map((game: Game) => game.id);
 
   const { data: centralizedStats = {} } = useQuery({
     queryKey: ['dashboardStats', completedGameIds.join(',')],
@@ -95,6 +97,22 @@ export default function OpponentAnalysis() {
       console.log('- Selected season:', selectedSeason);
       console.log('- Active season:', activeSeason);
       
+      // Debug game status filtering
+      const gamesWithValidStatus = filteredGames.filter(game => 
+        game.gameStatus?.isCompleted && game.gameStatus?.allowsStatistics
+      );
+      console.log('- Games with valid status for statistics:', gamesWithValidStatus.length);
+      
+      if (filteredGames.length > 0) {
+        console.log('- Sample game statuses:', filteredGames.slice(0, 3).map(g => ({
+          id: g.id,
+          hasGameStatus: !!g.gameStatus,
+          isCompleted: g.gameStatus?.isCompleted,
+          allowsStatistics: g.gameStatus?.allowsStatistics,
+          statusName: g.gameStatus?.name
+        })));
+      }
+      
       const opponentMatchups: OpponentMatchup[] = [];
 
       opponents.forEach((opponent: Opponent) => {
@@ -124,8 +142,12 @@ export default function OpponentAnalysis() {
           return;
         }
 
-        const completedGames = opponentGames.filter((game: Game) => game.completed);
-        const upcomingGames = opponentGames.filter((game: Game) => !game.completed);
+        const completedGames = opponentGames.filter((game: Game) => 
+          game.gameStatus?.isCompleted && game.gameStatus?.allowsStatistics
+        );
+        const upcomingGames = opponentGames.filter((game: Game) => 
+          !game.gameStatus?.isCompleted
+        );
 
         let wins = 0;
         let losses = 0;
