@@ -173,13 +173,15 @@ export default function RecentGames({ games, opponents, className, seasonFilter,
           )}
         </div>
         
-        <div className="flex justify-end mt-4 pt-2">
-          <Link href="/games?status=completed">
-            <button className="px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 hover:border-gray-400 transition-colors duration-200">
-              View more →
-            </button>
-          </Link>
-        </div>
+        {games.filter(game => game.gameStatus?.isCompleted === true).length > 3 && (
+          <div className="flex justify-end mt-3 pt-1">
+            <Link href="/games?status=completed">
+              <button className="px-2 py-1 text-xs font-medium text-gray-600 bg-gray-50 border border-gray-200 rounded hover:bg-gray-100 hover:border-gray-300 transition-colors duration-200">
+                View more →
+              </button>
+            </Link>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

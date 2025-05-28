@@ -74,10 +74,10 @@ export default function UpcomingGames({ games, opponents, className, seasonFilte
           </div>
         )}
         
-        {upcomingGames.length > 0 && (
-          <div className="flex justify-end mt-4 pt-2">
+        {upcomingGames.length > upcomingGames.slice(0, 5).length && (
+          <div className="flex justify-end mt-3 pt-1">
             <Link href="/games?status=upcoming">
-              <button className="px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 hover:border-gray-400 transition-colors duration-200">
+              <button className="px-2 py-1 text-xs font-medium text-gray-600 bg-gray-50 border border-gray-200 rounded hover:bg-gray-100 hover:border-gray-300 transition-colors duration-200">
                 View more →
               </button>
             </Link>
