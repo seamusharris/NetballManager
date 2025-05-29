@@ -793,7 +793,6 @@ export class DatabaseStorage implements IStorage {
       return true;
     } catch (error) {
       console.error('Error adding player to club:', error);
-```text
       return false;
     }
   }
