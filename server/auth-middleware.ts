@@ -163,7 +163,7 @@ export function requireGameAccess(requireEditAccess = false) {
 /**
  * Load user's club permissions
  */
-export async function loadUserPermissions(userId: number) {
+export async function loadUserClubPermissions(userId: number) {
   const result = await db.execute(sql`
     SELECT 
       cu.club_id,
