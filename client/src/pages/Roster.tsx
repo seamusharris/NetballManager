@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet';
 import SimpleRosterManager from '@/components/roster/SimpleRosterManager';
 import PlayerAvailabilityManager from '@/components/roster/PlayerAvailabilityManager';
-import { useLocation, Link } from 'wouter';
+import { useLocation, useParams } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, Users } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,11 +21,17 @@ export default function Roster() {
     queryKey: ['/api/players'],
   });
 
+  // Get gameId from URL path parameter or query parameter (for backwards compatibility)
+  const params = useParams();
+  const queryParams = new URLSearchParams(window.location.search);
+  const gameId = params.gameId || queryParams.get('game');
+
   // Parse URL query parameters to get game ID
   useEffect(() => {
-    // Get the game ID from the URL query parameter if it exists
+    // Get gameId from URL path parameter or query parameter (for backwards compatibility)
+    const params = useParams();
     const queryParams = new URLSearchParams(window.location.search);
-    const gameId = queryParams.get('game');
+    const gameId = params.gameId || queryParams.get('game');
 
     if (gameId && !isNaN(Number(gameId))) {
       // Set the selected game ID and update the URL to remove the query parameter

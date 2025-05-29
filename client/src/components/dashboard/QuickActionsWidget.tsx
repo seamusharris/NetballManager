@@ -1,4 +1,3 @@
-
 import { Link } from 'wouter';
 import { 
   CalendarPlus, 
@@ -13,9 +12,10 @@ import { Button } from '@/components/ui/button';
 
 interface QuickActionsWidgetProps {
   className?: string;
+  gameId?: string;
 }
 
-export function QuickActionsWidget({ className }: QuickActionsWidgetProps) {
+export function QuickActionsWidget({ className, gameId }: QuickActionsWidgetProps) {
   console.log('QuickActionsWidget rendering');
   const actions = [
     {
@@ -35,7 +35,7 @@ export function QuickActionsWidget({ className }: QuickActionsWidgetProps) {
     {
       icon: ClipboardList,
       label: 'Manage Roster',
-      href: '/roster',
+      href: `/roster/${gameId}`,
       color: 'bg-purple-500 hover:bg-purple-600',
       description: 'Set team lineup'
     },
