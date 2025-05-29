@@ -738,7 +738,9 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
                   position={position as Position}
                   playerName={playerName}
                   playerColor={playerColor}
-                  playerStats={playerStats}
+                  playerStats={the code you provided has been cut off.
+```jsx
+playerStats}
                 />
               </div>
             );
@@ -1767,7 +1769,7 @@ export default function GameDetails() {
                 <h3 className="text-lg font-medium mb-2">No roster assigned</h3>
                 <p className="text-gray-500 mb-4">There are no positions assigned for this game yet.</p>
                 <Button asChild>
-                  <Link to={`/game/${gameId}/roster`}>
+                  <Link to={`/roster/${gameId}`}>
                     <Edit className="mr-2 h-4 w-4" />
                     Set Up Roster
                   </Link>

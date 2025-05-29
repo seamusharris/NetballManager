@@ -41,7 +41,7 @@ export default function Statistics() {
       // Set the selected game ID
       setSelectedGameId(Number(gameIdQuery));
       // Replace the URL without the query parameter for cleaner navigation
-      navigate('/statistics', { replace: true });
+      navigate(`/game/${gameIdQuery}/stats`, { replace: true });
     }
     else if (gameIdFromPath && gameIdFromPath[1] && !isNaN(Number(gameIdFromPath[1]))) {
       console.log(`Setting selected game ID to ${gameIdFromPath[1]} from URL path`);
