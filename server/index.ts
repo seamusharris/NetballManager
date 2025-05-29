@@ -48,8 +48,8 @@ app.use((req, res, next) => {
     const { addSeasonsSupport } = await import('./migrations/addSeasonsSupport');
     await addSeasonsSupport();
 
-    const { addPlayerSeasons } = await import('./migrations/addPlayerSeasons');
-    await addPlayerSeasons();
+    const { addPlayerSeasonsTable } = await import('./migrations/addPlayerSeasons');
+    await addPlayerSeasonsTable();
 
     const { createGameStatusesTable } = await import('./migrations/createGameStatusesTable');
     await createGameStatusesTable();
