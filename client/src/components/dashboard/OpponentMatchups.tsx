@@ -146,7 +146,7 @@ export default function OpponentMatchups({
     return form.slice(0, 3).reverse().map((result, index) => {
       const gameResult: GameResult = result === 'W' ? 'Win' : result === 'L' ? 'Loss' : 'Draw';
       const game = recentGames[index];
-      
+
       if (!game) {
         return (
           <ResultBadge 
@@ -189,55 +189,21 @@ export default function OpponentMatchups({
             No completed games against opponents yet
           </p>
         ) : (
-          <div>
-            {/* Overall Stats */}
-            <div className="grid grid-cols-3 gap-4 text-center mb-8">
-              <div>
-                <p className="text-2xl font-bold text-blue-600">{overallWinRate}%</p>
-                <p className="text-xs text-gray-600">Overall Win Rate</p>
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-gray-700">{matchups.length}</p>
-                <p className="text-xs text-gray-600">Opponents Faced</p>
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-gray-700">{totalGames}</p>
-                <p className="text-xs text-gray-600">Total Games</p>
-              </div>
-            </div>
-
-            {/* Best and Worst Matchups */}
-            {bestMatchup && (
-              <div className="flex items-center justify-between p-4 mb-4 mt-2 bg-green-50 border-l-4 border-t border-r border-b border-green-500 border-t-green-500 border-r-green-500 border-b-green-500 rounded">
+          <div className="space-y-4">
+            {matchups.map(matchup => (
+              
+              <div key={matchup.opponent.id} className="flex items-center justify-between p-4 mb-4 mt-2 bg-gray-50 border-l-4 border-t border-r border-b border-gray-500 border-t-gray-500 border-r-gray-500 border-b-gray-500 rounded">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
-                    <Trophy className="h-4 w-4 text-green-600" />
-                    <span className="text-sm font-medium text-green-800">Best</span>
+                    <span className="text-sm font-medium text-gray-800">{matchup.opponent.teamName}</span>
                   </div>
-                  <p className="font-semibold text-gray-800">{bestMatchup.opponent.teamName}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-lg font-bold text-green-700 mb-1">{bestMatchup.winRate}%</p>
-                  <div className="flex">{getFormDisplay(bestMatchup.recentForm, bestMatchup)}</div>
+                  <p className="text-lg font-bold text-gray-700 mb-1">{matchup.winRate}%</p>
+                  <div className="flex">{getFormDisplay(matchup.recentForm, matchup)}</div>
                 </div>
               </div>
-            )}
-
-            {worstMatchup && worstMatchup !== bestMatchup && (
-              <div className="flex items-center justify-between p-4 mb-4 mt-2 bg-red-50 border-l-4 border-t border-r border-b border-red-500 border-t-red-500 border-r-red-500 border-b-red-500 rounded">
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <AlertTriangle className="h-4 w-4 text-red-600" />
-                    <span className="text-sm font-medium text-red-800">Challenge</span>
-                  </div>
-                  <p className="font-semibold text-gray-800">{worstMatchup.opponent.teamName}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-lg font-bold text-red-700 mb-1">{worstMatchup.winRate}%</p>
-                  <div className="flex">{getFormDisplay(worstMatchup.recentForm, worstMatchup)}</div>
-                </div>
-              </div>
-            )}
+            ))}
           </div>
         )}
 

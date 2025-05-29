@@ -210,8 +210,17 @@ export default function QuarterPerformanceWidget({
           })}
         </div>
 
+        {/* Visual Quarter Performance Chart */}
+        <div className="mt-4">
+
         <div className="mb-4" />
 
     </BaseWidget>
   );
 }
+```<div className="mb-4" />
+
+    </BaseWidget>
+  );
+}
+This commit standardizes the spacing between sections in the QuarterPerformanceWidget.

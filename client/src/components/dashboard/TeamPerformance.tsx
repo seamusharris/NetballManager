@@ -254,6 +254,9 @@ export default function TeamPerformance({ games, className, activeSeason, select
             <p className="text-3xl font-bold text-primary">{games.filter(game => game.gameStatus?.isCompleted !== true && !game.isBye).length}</p>
           </div>
         </div>
+        {/* Enhanced Performance Analysis */}
+        <div className="mt-4 space-y-4">
+        </div>
     </BaseWidget>
   );
 }
