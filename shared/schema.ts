@@ -244,15 +244,15 @@ export const insertClubUserSchema = createInsertSchema(clubUsers).omit({ id: tru
 export type InsertClubUser = z.infer<typeof insertClubUserSchema>;
 export type ClubUser = typeof clubUsers.$inferSelect;
 
-// Player borrowing for games
+// Player borrowing between teams within the same club
 export const playerBorrowing = pgTable("player_borrowing", {
   id: serial("id").primaryKey(),
   gameId: integer("game_id").notNull().references(() => games.id, { onDelete: "cascade" }),
   playerId: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
   borrowingTeamId: integer("borrowing_team_id").notNull().references(() => teams.id, { onDelete: "cascade" }),
   lendingTeamId: integer("lending_team_id").notNull().references(() => teams.id, { onDelete: "cascade" }),
-  approvedByLendingClub: boolean("approved_by_lending_club").notNull().default(false),
-  approvedByBorrowingClub: boolean("approved_by_borrowing_club").notNull().default(false),
+  approvedByLendingClub: boolean("approved_by_lending_club").notNull().default(true), // Auto-approved within same club
+  approvedByBorrowingClub: boolean("approved_by_borrowing_club").notNull().default(true), // Auto-approved within same club
   jerseyNumber: integer("jersey_number"),
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow().notNull(),

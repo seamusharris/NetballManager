@@ -2,7 +2,7 @@
 import { Express, Request, Response } from 'express';
 import { db } from './db';
 import { sql } from 'drizzle-orm';
-import { AuthenticatedRequest, requireClubAccess, requireGameAccess } from './auth-middleware';
+import { AuthenticatedRequest, requireClubAccess } from './auth-middleware';
 import { z } from 'zod';
 
 const borrowPlayerSchema = z.object({
@@ -14,12 +14,8 @@ const borrowPlayerSchema = z.object({
   notes: z.string().optional(),
 });
 
-const approveBorrowingSchema = z.object({
-  approve: z.boolean(),
-});
-
 export function registerPlayerBorrowingRoutes(app: Express) {
-  // Get all borrowing requests for a club
+  // Get all borrowing requests within the current club
   app.get('/api/clubs/:clubId/player-borrowing', requireClubAccess(), async (req: AuthenticatedRequest, res: Response) => {
     try {
       const clubId = parseInt(req.params.clubId);
@@ -32,16 +28,16 @@ export function registerPlayerBorrowingRoutes(app: Express) {
           bt.name as borrowing_team_name,
           g.date as game_date,
           g.time as game_time,
-          lc.name as lending_club_name,
-          bc.name as borrowing_club_name
+          ls.name as lending_season_name,
+          bs.name as borrowing_season_name
         FROM player_borrowing pb
         JOIN players p ON pb.player_id = p.id
         JOIN teams lt ON pb.lending_team_id = lt.id
         JOIN teams bt ON pb.borrowing_team_id = bt.id
         JOIN games g ON pb.game_id = g.id
-        JOIN clubs lc ON lt.club_id = lc.id
-        JOIN clubs bc ON bt.club_id = bc.id
-        WHERE lt.club_id = ${clubId} OR bt.club_id = ${clubId}
+        JOIN seasons ls ON lt.season_id = ls.id
+        JOIN seasons bs ON bt.season_id = bs.id
+        WHERE lt.club_id = ${clubId} AND bt.club_id = ${clubId}
         ORDER BY g.date DESC, pb.created_at DESC
       `);
 
@@ -52,12 +48,11 @@ export function registerPlayerBorrowingRoutes(app: Express) {
         playerName: row.player_name,
         borrowingTeamId: row.borrowing_team_id,
         borrowingTeamName: row.borrowing_team_name,
-        borrowingClubName: row.borrowing_club_name,
+        borrowingSeasonName: row.borrowing_season_name,
         lendingTeamId: row.lending_team_id,
         lendingTeamName: row.lending_team_name,
-        lendingClubName: row.lending_club_name,
-        approvedByLendingClub: row.approved_by_lending_club,
-        approvedByBorrowingClub: row.approved_by_borrowing_club,
+        lendingSeasonName: row.lending_season_name,
+        approved: row.approved_by_lending_club && row.approved_by_borrowing_club,
         jerseyNumber: row.jersey_number,
         notes: row.notes,
         gameDate: row.game_date,
@@ -72,18 +67,44 @@ export function registerPlayerBorrowingRoutes(app: Express) {
     }
   });
 
-  // Create a new borrowing request
+  // Create a new borrowing request within the same club
   app.post('/api/clubs/:clubId/player-borrowing', requireClubAccess('canManageGames'), async (req: AuthenticatedRequest, res: Response) => {
     try {
+      const clubId = parseInt(req.params.clubId);
       const validatedData = borrowPlayerSchema.parse(req.body);
       
-      // Verify the borrowing team belongs to the current club
-      const teamResult = await db.execute(sql`
-        SELECT club_id FROM teams WHERE id = ${validatedData.borrowingTeamId}
+      // Verify both teams belong to the current club
+      const teamsResult = await db.execute(sql`
+        SELECT 
+          lt.club_id as lending_club_id,
+          bt.club_id as borrowing_club_id
+        FROM teams lt, teams bt
+        WHERE lt.id = ${validatedData.lendingTeamId} 
+        AND bt.id = ${validatedData.borrowingTeamId}
       `);
 
-      if (teamResult.rows.length === 0 || teamResult.rows[0].club_id !== req.user?.currentClubId) {
-        return res.status(403).json({ error: 'Can only create borrowing requests for your own teams' });
+      if (teamsResult.rows.length === 0) {
+        return res.status(404).json({ error: 'One or both teams not found' });
+      }
+
+      const { lending_club_id, borrowing_club_id } = teamsResult.rows[0];
+
+      if (lending_club_id !== clubId || borrowing_club_id !== clubId) {
+        return res.status(403).json({ error: 'Both teams must belong to your club' });
+      }
+
+      if (validatedData.lendingTeamId === validatedData.borrowingTeamId) {
+        return res.status(400).json({ error: 'Cannot borrow from the same team' });
+      }
+
+      // Verify the player is actually on the lending team
+      const playerTeamResult = await db.execute(sql`
+        SELECT id FROM team_players 
+        WHERE team_id = ${validatedData.lendingTeamId} AND player_id = ${validatedData.playerId}
+      `);
+
+      if (playerTeamResult.rows.length === 0) {
+        return res.status(400).json({ error: 'Player is not on the lending team' });
       }
 
       // Check if request already exists
@@ -96,32 +117,33 @@ export function registerPlayerBorrowingRoutes(app: Express) {
         return res.status(400).json({ error: 'Borrowing request already exists for this player and game' });
       }
 
-      // Create borrowing request
+      // Create borrowing request (automatically approved since it's within the same club)
       await db.execute(sql`
         INSERT INTO player_borrowing (
           game_id, player_id, borrowing_team_id, lending_team_id,
-          approved_by_borrowing_club, jersey_number, notes
+          approved_by_borrowing_club, approved_by_lending_club, jersey_number, notes
         ) VALUES (
           ${validatedData.gameId}, ${validatedData.playerId}, 
           ${validatedData.borrowingTeamId}, ${validatedData.lendingTeamId},
-          true, ${validatedData.jerseyNumber || null}, ${validatedData.notes || null}
+          true, true, ${validatedData.jerseyNumber || null}, ${validatedData.notes || null}
         )
       `);
 
-      res.json({ message: 'Borrowing request created successfully' });
+      res.json({ message: 'Player borrowing request created and approved successfully' });
     } catch (error) {
       console.error('Error creating borrowing request:', error);
       res.status(500).json({ error: 'Failed to create borrowing request' });
     }
   });
 
-  // Approve/deny a borrowing request
+  // Update a borrowing request (mainly for notes or jersey number)
   app.patch('/api/clubs/:clubId/player-borrowing/:borrowingId', requireClubAccess('canManageGames'), async (req: AuthenticatedRequest, res: Response) => {
     try {
+      const clubId = parseInt(req.params.clubId);
       const borrowingId = parseInt(req.params.borrowingId);
-      const validatedData = approveBorrowingSchema.parse(req.body);
+      const { jerseyNumber, notes } = req.body;
       
-      // Get borrowing request details
+      // Verify the borrowing request belongs to this club
       const borrowingResult = await db.execute(sql`
         SELECT pb.*, lt.club_id as lending_club_id, bt.club_id as borrowing_club_id
         FROM player_borrowing pb
@@ -135,22 +157,15 @@ export function registerPlayerBorrowingRoutes(app: Express) {
       }
 
       const borrowing = borrowingResult.rows[0];
-      const currentClubId = req.user?.currentClubId;
 
-      // Determine which club is approving
-      let updateField: string;
-      if (borrowing.lending_club_id === currentClubId) {
-        updateField = 'approved_by_lending_club';
-      } else if (borrowing.borrowing_club_id === currentClubId) {
-        updateField = 'approved_by_borrowing_club';
-      } else {
-        return res.status(403).json({ error: 'Not authorized to approve this request' });
+      if (borrowing.lending_club_id !== clubId || borrowing.borrowing_club_id !== clubId) {
+        return res.status(403).json({ error: 'Not authorized to modify this request' });
       }
 
-      // Update approval status
+      // Update the borrowing request
       await db.execute(sql`
         UPDATE player_borrowing 
-        SET ${sql.raw(updateField)} = ${validatedData.approve}
+        SET jersey_number = ${jerseyNumber || null}, notes = ${notes || null}
         WHERE id = ${borrowingId}
       `);
 
@@ -161,32 +176,78 @@ export function registerPlayerBorrowingRoutes(app: Express) {
     }
   });
 
-  // Get available players for borrowing from other clubs
+  // Remove a borrowing request
+  app.delete('/api/clubs/:clubId/player-borrowing/:borrowingId', requireClubAccess('canManageGames'), async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const clubId = parseInt(req.params.clubId);
+      const borrowingId = parseInt(req.params.borrowingId);
+      
+      // Verify the borrowing request belongs to this club
+      const borrowingResult = await db.execute(sql`
+        SELECT pb.*, lt.club_id as lending_club_id, bt.club_id as borrowing_club_id
+        FROM player_borrowing pb
+        JOIN teams lt ON pb.lending_team_id = lt.id
+        JOIN teams bt ON pb.borrowing_team_id = bt.id
+        WHERE pb.id = ${borrowingId}
+      `);
+
+      if (borrowingResult.rows.length === 0) {
+        return res.status(404).json({ error: 'Borrowing request not found' });
+      }
+
+      const borrowing = borrowingResult.rows[0];
+
+      if (borrowing.lending_club_id !== clubId || borrowing.borrowing_club_id !== clubId) {
+        return res.status(403).json({ error: 'Not authorized to delete this request' });
+      }
+
+      await db.execute(sql`
+        DELETE FROM player_borrowing WHERE id = ${borrowingId}
+      `);
+
+      res.json({ message: 'Borrowing request removed successfully' });
+    } catch (error) {
+      console.error('Error removing borrowing request:', error);
+      res.status(500).json({ error: 'Failed to remove borrowing request' });
+    }
+  });
+
+  // Get available players for borrowing from other teams in the same club
   app.get('/api/clubs/:clubId/players/available-for-borrowing', requireClubAccess(), async (req: AuthenticatedRequest, res: Response) => {
     try {
       const clubId = parseInt(req.params.clubId);
       const gameId = req.query.gameId as string;
+      const excludeTeamId = req.query.excludeTeamId as string;
       
       if (!gameId) {
         return res.status(400).json({ error: 'gameId query parameter is required' });
+      }
+
+      let excludeClause = '';
+      let excludeParams = [];
+
+      if (excludeTeamId) {
+        excludeClause = 'AND t.id != $3';
+        excludeParams = [excludeTeamId];
       }
 
       const result = await db.execute(sql`
         SELECT 
           p.id, p.display_name, p.position_preferences,
           t.id as team_id, t.name as team_name,
-          c.id as club_id, c.name as club_name
+          s.name as season_name
         FROM players p
         JOIN team_players tp ON p.id = tp.player_id
         JOIN teams t ON tp.team_id = t.id
-        JOIN clubs c ON t.club_id = c.id
-        WHERE c.id != ${clubId}
+        JOIN seasons s ON t.season_id = s.id
+        WHERE t.club_id = ${clubId}
           AND p.active = true
+          ${excludeTeamId ? sql`AND t.id != ${parseInt(excludeTeamId)}` : sql``}
           AND p.id NOT IN (
             SELECT player_id FROM player_borrowing 
             WHERE game_id = ${gameId}
           )
-        ORDER BY c.name, t.name, p.display_name
+        ORDER BY s.name, t.name, p.display_name
       `);
 
       const availablePlayers = result.rows.map(row => ({
@@ -195,14 +256,59 @@ export function registerPlayerBorrowingRoutes(app: Express) {
         positionPreferences: row.position_preferences,
         teamId: row.team_id,
         teamName: row.team_name,
-        clubId: row.club_id,
-        clubName: row.club_name
+        seasonName: row.season_name
       }));
 
       res.json(availablePlayers);
     } catch (error) {
       console.error('Error fetching available players for borrowing:', error);
       res.status(500).json({ error: 'Failed to fetch available players' });
+    }
+  });
+
+  // Get borrowed players for a specific game
+  app.get('/api/games/:gameId/borrowed-players', requireClubAccess(), async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const gameId = parseInt(req.params.gameId);
+      
+      const result = await db.execute(sql`
+        SELECT 
+          pb.*,
+          p.display_name as player_name,
+          p.position_preferences,
+          lt.name as lending_team_name,
+          bt.name as borrowing_team_name,
+          ls.name as lending_season_name,
+          bs.name as borrowing_season_name
+        FROM player_borrowing pb
+        JOIN players p ON pb.player_id = p.id
+        JOIN teams lt ON pb.lending_team_id = lt.id
+        JOIN teams bt ON pb.borrowing_team_id = bt.id
+        JOIN seasons ls ON lt.season_id = ls.id
+        JOIN seasons bs ON bt.season_id = bs.id
+        WHERE pb.game_id = ${gameId}
+        ORDER BY p.display_name
+      `);
+
+      const borrowedPlayers = result.rows.map(row => ({
+        id: row.id,
+        playerId: row.player_id,
+        playerName: row.player_name,
+        positionPreferences: row.position_preferences,
+        borrowingTeamId: row.borrowing_team_id,
+        borrowingTeamName: row.borrowing_team_name,
+        borrowingSeasonName: row.borrowing_season_name,
+        lendingTeamId: row.lending_team_id,
+        lendingTeamName: row.lending_team_name,
+        lendingSeasonName: row.lending_season_name,
+        jerseyNumber: row.jersey_number,
+        notes: row.notes
+      }));
+
+      res.json(borrowedPlayers);
+    } catch (error) {
+      console.error('Error fetching borrowed players for game:', error);
+      res.status(500).json({ error: 'Failed to fetch borrowed players' });
     }
   });
 }
