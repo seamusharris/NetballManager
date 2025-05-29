@@ -905,6 +905,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { getGames } = await import('./db');
       res.json(await getGames());
     }
+    } catch (error) {
+      console.error('Error fetching games:', error);
+      res.status(500).json({ message: "Failed to fetch games" });
+    }
   });
 
   app.get("/api/games/:id", async (req, res) => {
