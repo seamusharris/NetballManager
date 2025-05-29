@@ -271,11 +271,18 @@ export default function DashboardSummary({
               activeSeason={activeSeason} 
               selectedSeason={selectedSeasonId === 'current' ? activeSeason : seasons.find(s => s.id.toString() === selectedSeasonId)} 
             />
-             {/* Position vs Opponent Analysis */}
-             <Suspense fallback={<Skeleton className="h-32 rounded-lg" />}>
-              <PositionOpponentAnalysis seasonId={selectedSeasonId} />
-            </Suspense>
           </>
+        )}
+      </div>
+
+      {/* Position vs Opponent Analysis - Full Width */}
+      <div className="mb-6">
+        {isLoading || statsLoading ? (
+          <Skeleton className="h-[400px] w-full rounded-lg" />
+        ) : (
+          <Suspense fallback={<Skeleton className="h-[400px] w-full rounded-lg" />}>
+            <PositionOpponentAnalysis seasonId={selectedSeasonId} />
+          </Suspense>
         )}
       </div>
 
