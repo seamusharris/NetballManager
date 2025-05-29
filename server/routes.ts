@@ -827,18 +827,83 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.set('Expires', '0');
 
       const clubId = req.user?.currentClubId;
-      const games = await storage.getGamesByClub(clubId!);
+      
+// Filter to include only games that this club has access to
+    if (req.user?.currentClubId) {
+      const result = await db.execute(sql`
+        SELECT 
+          g.*,
+          gs.name as status, gs.display_name as status_display_name, gs.is_completed, gs.allows_statistics,
+          o.team_name as opponent_team_name, o.primary_contact, o.contact_info,
+          s.name as season_name, s.start_date as season_start, s.end_date as season_end, s.is_active as season_active,
+          ht.name as home_team_name, ht.division as home_team_division,
+          at.name as away_team_name, at.division as away_team_division
+        FROM games g
+        LEFT JOIN game_statuses gs ON g.status_id = gs.id
+        LEFT JOIN opponents o ON g.opponent_id = o.id
+        LEFT JOIN seasons s ON g.season_id = s.id
+        LEFT JOIN teams ht ON g.home_team_id = ht.id
+        LEFT JOIN teams at ON g.away_team_id = at.id
+        WHERE (ht.club_id = ${clubId} OR at.club_id = ${clubId})
+           OR EXISTS (
+             SELECT 1 FROM game_permissions gp 
+             WHERE gp.game_id = g.id AND gp.club_id = ${clubId}
+           )
+        ORDER BY g.date DESC, g.time DESC
+      `);
 
-      // Ensure gameStatus field is properly included in each game object
-      const gamesWithStatus = games.map((game) => ({
-        ...game,
-        gameStatus: game.gameStatus || null
+      const games = result.rows.map(row => ({
+        id: row.id,
+        date: row.date,
+        time: row.time,
+        opponentId: row.opponent_id,
+        homeTeamId: row.home_team_id,
+        awayTeamId: row.away_team_id,
+        venue: row.venue,
+        isInterClub: row.is_inter_club,
+        statusId: row.status_id,
+        round: row.round,
+        seasonId: row.season_id,
+        notes: row.notes,
+        awardWinnerId: row.award_winner_id,
+        gameStatus: row.status ? {
+          id: row.status_id,
+          name: row.status,
+          displayName: row.status_display_name,
+          isCompleted: row.is_completed,
+          allowsStatistics: row.allows_statistics
+        } : null,
+        opponent: row.opponent_team_name ? {
+          id: row.opponent_id,
+          teamName: row.opponent_team_name,
+          primaryContact: row.primary_contact,
+          contactInfo: row.contact_info
+        } : null,
+        season: row.season_name ? {
+          id: row.season_id,
+          name: row.season_name,
+          startDate: row.season_start,
+          endDate: row.season_end,
+          isActive: row.season_active
+        } : null,
+        homeTeam: row.home_team_name ? {
+          id: row.home_team_id,
+          name: row.home_team_name,
+          division: row.home_team_division
+        } : null,
+        awayTeam: row.away_team_name ? {
+          id: row.away_team_id,
+          name: row.away_team_name,
+          division: row.away_team_division
+        } : null,
+        isBye: false // Legacy support
       }));
 
-      res.json(gamesWithStatus);
-    } catch (error) {
-      console.error("Error in /api/games endpoint:", error);
-      res.status(500).json({ message: "Failed to fetch games" });
+      res.json(games);
+    } else {
+      // Fallback to old behavior
+      const { getGames } = await import('./db');
+      res.json(await getGames());
     }
   });
 
@@ -1557,7 +1622,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Game stat not found" });
       }
       res.status(204).send();
-    } catch (error) {
+        } catch (error) {
       res.status(500).json({ message: "Failed to delete game stat" });
     }
   });

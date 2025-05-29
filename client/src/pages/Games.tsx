@@ -45,6 +45,24 @@ export default function Games() {
     queryFn: () => apiRequest('GET', '/api/opponents') as Promise<Opponent[]>,
   });
 
+  // Fetch teams
+  const { data: teams = [] } = useQuery({
+    queryKey: ['teams'],
+    queryFn: () => apiRequest('GET', '/api/teams')
+  });
+
+  // Fetch seasons
+  const { data: seasons = [] } = useQuery({
+    queryKey: ['seasons'], 
+    queryFn: () => apiRequest('GET', '/api/seasons')
+  });
+
+  // Fetch active season
+  const { data: activeSeason } = useQuery({
+    queryKey: ['seasons', 'active'],
+    queryFn: () => apiRequest('GET', '/api/seasons/active')
+  });
+
   // Fetch players
   const { data: players = [] } = useQuery<Player[]>({
     queryKey: ['players'],
@@ -159,7 +177,14 @@ export default function Games() {
         title="Add Game"
         onSubmit={handleCreate}
       >
-        <GameForm opponents={opponents} players={players} />
+        <GameForm 
+          opponents={opponents} 
+          players={players} 
+          seasons={seasons}
+          activeSeason={activeSeason}
+          onSubmit={handleCreate}
+          isSubmitting={false}
+        />
       </CrudDialog>
 
       <CrudDialog
@@ -168,7 +193,15 @@ export default function Games() {
         title="Edit Game"
         onSubmit={handleUpdate}
       >
-        <GameForm game={editingGame} opponents={opponents} players={players} />
+        <GameForm 
+          game={editingGame} 
+          opponents={opponents} 
+          players={players} 
+          seasons={seasons}
+          activeSeason={activeSeason}
+          onSubmit={handleUpdate}
+          isSubmitting={false}
+        />
       </CrudDialog>
     </>
   );

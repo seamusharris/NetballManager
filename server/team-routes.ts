@@ -3,7 +3,6 @@ import { db } from "./db";
 import { sql } from "drizzle-orm";
 
 export function registerTeamRoutes(app: Express) {
-
   // Get all teams for a season
   app.get("/api/seasons/:seasonId/teams", async (req, res) => {
     try {
