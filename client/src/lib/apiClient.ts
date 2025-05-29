@@ -1,4 +1,3 @@
-
 import { queryClient } from './queryClient';
 
 export interface ApiResponse<T = any> {
@@ -13,10 +12,11 @@ export class ApiClient {
   async request<T = any>(
     method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE',
     endpoint: string,
-    data?: any
+    data?: any,
+    clubId?: number
   ): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
-    
+
     const config: RequestInit = {
       method,
       headers: {
@@ -24,12 +24,25 @@ export class ApiClient {
       },
     };
 
+    // Add club context to headers or query params
+    if (clubId) {
+      if (method === 'GET') {
+        const urlObj = new URL(url, window.location.origin);
+        urlObj.searchParams.set('clubId', clubId.toString());
+        endpoint = urlObj.pathname + urlObj.search;
+      } else if (data) {
+        data.clubId = clubId;
+      } else {
+        data = { clubId };
+      }
+    }
+
     if (data && method !== 'GET') {
       config.body = JSON.stringify(data);
     }
 
     const response = await fetch(url, config);
-    
+
     if (method === 'DELETE' && response.status === 204) {
       return true as T;
     }
@@ -43,29 +56,29 @@ export class ApiClient {
     if (contentType && contentType.includes('application/json')) {
       return await response.json();
     }
-    
+
     return await response.text() as T;
   }
 
   // Convenience methods
-  get<T>(endpoint: string): Promise<T> {
-    return this.request<T>('GET', endpoint);
+  get<T>(endpoint: string, clubId?: number): Promise<T> {
+    return this.request<T>('GET', endpoint, undefined, clubId);
   }
 
-  post<T>(endpoint: string, data?: any): Promise<T> {
-    return this.request<T>('POST', endpoint, data);
+  post<T>(endpoint: string, data?: any, clubId?: number): Promise<T> {
+    return this.request<T>('POST', endpoint, data, clubId);
   }
 
-  put<T>(endpoint: string, data?: any): Promise<T> {
-    return this.request<T>('PUT', endpoint, data);
+  put<T>(endpoint: string, data?: any, clubId?: number): Promise<T> {
+    return this.request<T>('PUT', endpoint, data, clubId);
   }
 
-  patch<T>(endpoint: string, data?: any): Promise<T> {
-    return this.request<T>('PATCH', endpoint, data);
+  patch<T>(endpoint: string, data?: any, clubId?: number): Promise<T> {
+    return this.request<T>('PATCH', endpoint, data, clubId);
   }
 
-  delete<T>(endpoint: string): Promise<T> {
-    return this.request<T>('DELETE', endpoint);
+  delete<T>(endpoint: string, clubId?: number): Promise<T> {
+    return this.request<T>('DELETE', endpoint, undefined, clubId);
   }
 }
 
@@ -77,7 +90,7 @@ export async function mutateWithInvalidation<T>(
   invalidatePatterns: string[]
 ): Promise<T> {
   const result = await mutationFn();
-  
+
   // Invalidate related queries
   invalidatePatterns.forEach(pattern => {
     queryClient.invalidateQueries({
@@ -87,7 +100,7 @@ export async function mutateWithInvalidation<T>(
       }
     });
   });
-  
+
   return result;
 }
 

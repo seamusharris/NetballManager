@@ -99,16 +99,20 @@ function Router() {
   );
 }
 
+import { ClubProvider } from '@/contexts/ClubContext'; // Adding this line based on the instructions in <thinking>.
+
 function App() {
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <ErrorBoundary>
-            <Toaster />
-            <Router />
-          </ErrorBoundary>
-        </TooltipProvider>
+        <ClubProvider>
+          <TooltipProvider>
+            <ErrorBoundary>
+              <Toaster />
+              <Router />
+            </ErrorBoundary>
+          </TooltipProvider>
+        </ClubProvider>
       </QueryClientProvider>
     </ErrorBoundary>
   );
