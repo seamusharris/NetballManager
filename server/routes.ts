@@ -1032,9 +1032,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const gameId = Number(req.params.gameId);
       const { createFallbackRoster } = await import('./roster-fallback');
-      
+
       await createFallbackRoster(gameId);
-      
+
       res.json({ 
         success: true, 
         message: "Fallback roster created successfully" 
@@ -1262,7 +1262,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Ensure position context exists for this game/quarter/position
       const { ensurePositionContext } = await import('./roster-fallback');
       const playerId = await ensurePositionContext(gameId, parsedData.data.quarter, parsedData.data.position);
-      
+
       if (!playerId) {
         console.warn(`No position context available for Game ${gameId}, Q${parsedData.data.quarter}, ${parsedData.data.position}`);
       }
@@ -1669,6 +1669,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error(`Error fetching games for season ${req.params.id}:`, error);
       res.status(500).json({ message: 'Failed to fetch games for season' });
+    }
+  });
+
+  // Health check
+  app.get('/api/health', (req, res) => {
+    res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  });
+
+  // User clubs endpoint - for now return dummy data until auth is implemented
+  app.get('/api/user/clubs', async (req: any, res) => {
+    try {
+      // For now, return a default club setup
+      // This will be replaced with proper user authentication later
+      const defaultClubs = [
+        {
+          clubId: 1,
+          clubName: "Default Club",
+          clubCode: "DC",
+          role: "admin",
+          permissions: {
+            canManagePlayers: true,
+            canManageGames: true,
+            canManageStats: true,
+            canViewOtherTeams: true,
+          }
+        }
+      ];
+
+      res.json(defaultClubs);
+    } catch (error) {
+      console.error('Error fetching user clubs:', error);
+      res.status(500).json({ error: 'Failed to fetch user clubs' });
+    }
+  });
+
+  // Club details endpoint
+  app.get('/api/clubs/:clubId', async (req: any, res) => {
+    try {
+      const clubId = parseInt(req.params.clubId);
+
+      // For now, return default club data
+      // This will be replaced with proper database queries later
+      const defaultClub = {
+        id: 1,
+        name: "Default Club",
+        code: "DC",
+        primaryColor: "#007acc",
+        secondaryColor: "#ffffff"
+      };
+
+      if (clubId === 1) {
+        res.json(defaultClub);
+      } else {
+        res.status(404).json({ error: 'Club not found' });
+      }
+    } catch (error) {
+      console.error('Error fetching club details:', error);
+      res.status(500).json({ error: 'Failed to fetch club details' });
     }
   });
 

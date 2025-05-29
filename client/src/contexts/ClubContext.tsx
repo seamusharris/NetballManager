@@ -52,7 +52,7 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
 
   // Set default club on load
   useEffect(() => {
-    if (userClubs.length > 0 && !currentClubId) {
+    if (Array.isArray(userClubs) && userClubs.length > 0 && !currentClubId) {
       const storedClubId = localStorage.getItem('currentClubId');
       const clubId = storedClubId ? parseInt(storedClubId) : userClubs[0].clubId;
       
@@ -68,7 +68,7 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
   };
 
   const hasPermission = (permission: keyof UserClubAccess['permissions']) => {
-    if (!currentClubId) return false;
+    if (!currentClubId || !Array.isArray(userClubs)) return false;
     const clubAccess = userClubs.find(club => club.clubId === currentClubId);
     return clubAccess?.permissions[permission] || false;
   };
