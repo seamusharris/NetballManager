@@ -281,7 +281,11 @@ export default function DashboardSummary({
           <Skeleton className="h-[400px] w-full rounded-lg" />
         ) : (
           <Suspense fallback={<Skeleton className="h-[400px] w-full rounded-lg" />}>
-            <PositionOpponentAnalysis seasonId={selectedSeasonId} />
+            <PositionOpponentAnalysis 
+              seasonId={selectedSeasonId === 'current' ? activeSeason?.id : 
+                       selectedSeasonId === 'all' ? undefined : 
+                       parseInt(selectedSeasonId)} 
+            />
           </Suspense>
         )}
       </div>

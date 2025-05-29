@@ -1,4 +1,3 @@
-
 import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -57,14 +56,18 @@ export default function PositionOpponentAnalysis({ seasonId }: PositionOpponentA
 
   // Filter games by season and completed status
   const completedGames = useMemo(() => {
-    return games.filter(game => 
-      game.status === 'completed' && 
-      (!seasonId || game.seasonId === seasonId)
-    );
+    return games.filter(game => {
+      // Check if game is completed and allows statistics
+      const isValidGame = game.status === 'completed';
+      if (!isValidGame) return false;
+
+      // Handle season filtering - seasonId is now always numeric or undefined
+      return seasonId ? game.seasonId === seasonId : true;
+    });
   }, [games, seasonId]);
 
   const gameIds = completedGames.map(g => g.id);
-  
+
   // Get batch stats for all games
   const { data: gameStatsMap = {} } = useBatchGameStats(gameIds);
 
@@ -92,7 +95,7 @@ export default function PositionOpponentAnalysis({ seasonId }: PositionOpponentA
 
       // Group stats by position for this game
       const positionTotals: Record<Position, { goalsFor: number; goalsAgainst: number }> = {} as any;
-      
+
       allPositions.forEach(pos => {
         positionTotals[pos] = { goalsFor: 0, goalsAgainst: 0 };
       });
@@ -153,7 +156,7 @@ export default function PositionOpponentAnalysis({ seasonId }: PositionOpponentA
         if (!player) return;
 
         const key = `${roster.playerId}-${roster.position}-${game.opponentId}`;
-        
+
         // Find stats for this position and quarter
         const stat = gameStats.find(s => 
           s.position === roster.position && s.quarter === roster.quarter
