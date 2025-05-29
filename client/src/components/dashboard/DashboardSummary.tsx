@@ -98,17 +98,19 @@ export default function DashboardSummary({
     (game.date >= currentDate && !game.completed)
   ), true);
 
-  // Centralized stats fetching for all games to prevent redundant API calls
-  const allGameIds = filteredGames.map(game => game.id);
+  // Centralized stats fetching for completed games only
+  const completedGameIds = filteredGames
+    .filter(game => game.gameStatus?.isCompleted && game.gameStatus?.allowsStatistics)
+    .map(game => game.id);
 
   const { data: centralizedStats, isLoading: statsLoading } = useQuery({
-    queryKey: ['dashboardStats', selectedSeasonId, allGameIds.join(',')],
+    queryKey: ['dashboardStats', selectedSeasonId, completedGameIds.join(',')],
     queryFn: async () => {
-      console.log(`Dashboard centralizing stats fetch for ${allGameIds.length} games`);
+      console.log(`Dashboard centralizing stats fetch for ${completedGameIds.length} games`);
       const statsMap: Record<number, any[]> = {};
 
-      // Fetch stats for all games
-      for (const gameId of allGameIds) {
+      // Fetch stats for completed games only
+      for (const gameId of completedGameIds) {
         try {
           const response = await fetch(`/api/games/${gameId}/stats`);
           if (response.ok) {
@@ -126,7 +128,7 @@ export default function DashboardSummary({
       console.log(`Dashboard centralized fetch completed for ${Object.keys(statsMap).length} games`);
       return statsMap;
     },
-    enabled: allGameIds.length > 0,
+    enabled: completedGameIds.length > 0,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 15 * 60 * 1000 // 15 minutes
   });
@@ -207,7 +209,7 @@ export default function DashboardSummary({
       {/* Performance Metrics - 12 widget grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-6">
         {isLoading || statsLoading ? (
-          Array.from({ length: 12 }).map((_, i) => (
+          Array.from({ length: 7 }).map((_, i) => (
             <Skeleton key={i} className="h-32 rounded-lg" />
           ))
         ) : (
@@ -253,22 +255,6 @@ export default function DashboardSummary({
               seasonFilter={selectedSeasonId} 
               activeSeason={activeSeason}
             />
-            {/* Placeholder widgets for future expansion */}
-            <div className="h-32 rounded-lg border-2 border-dashed border-gray-200 flex items-center justify-center text-gray-400 text-sm">
-              Widget Slot 8
-            </div>
-            <div className="h-32 rounded-lg border-2 border-dashed border-gray-200 flex items-center justify-center text-gray-400 text-sm">
-              Widget Slot 9
-            </div>
-            <div className="h-32 rounded-lg border-2 border-dashed border-gray-200 flex items-center justify-center text-gray-400 text-sm">
-              Widget Slot 10
-            </div>
-            <div className="h-32 rounded-lg border-2 border-dashed border-gray-200 flex items-center justify-center text-gray-400 text-sm">
-              Widget Slot 11
-            </div>
-            <div className="h-32 rounded-lg border-2 border-dashed border-gray-200 flex items-center justify-center text-gray-400 text-sm">
-              Widget Slot 12
-            </div>
           </>
         )}
       </div>
