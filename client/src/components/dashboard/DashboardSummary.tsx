@@ -13,6 +13,7 @@ import AdvancedTeamAnalytics from '@/components/dashboard/AdvancedTeamAnalytics'
 import { Card, CardContent } from "@/components/ui/card"
 import { Users } from "lucide-react"
 import { GamesList } from '@/components/games/GamesList';
+import PerformanceCharts from '@/components/dashboard/PerformanceCharts';
 
 import OpponentMatchups from './OpponentMatchups';
 import TopPlayersWidget from './TopPlayersWidget';
