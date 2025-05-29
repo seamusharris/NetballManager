@@ -827,7 +827,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.set('Expires', '0');
 
       const clubId = req.user?.currentClubId;
-      
+
 // Filter to include only games that this club has access to
     if (req.user?.currentClubId) {
       const result = await db.execute(sql`
