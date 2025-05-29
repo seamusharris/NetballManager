@@ -310,79 +310,7 @@ export default function TeamPerformance({ games, className, activeSeason, select
         </div>
         {/* Enhanced Performance Analysis */}
         <div className="mt-4 space-y-4">
-          {/* Option 1: Team Strength Gauge */}
-          <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
-            <div className="flex justify-center items-center space-x-2 mb-3">
-              <span className="text-xs text-gray-500 font-medium">Team Strength Gauge</span>
-            </div>
-            <div className="flex justify-center">
-              <svg width="160" height="90" viewBox="0 0 160 90">
-                {/* Gauge background arc */}
-                <path
-                  d="M 20 70 A 60 60 0 0 1 140 70"
-                  stroke="#e5e7eb"
-                  strokeWidth="8"
-                  fill="none"
-                />
-                {/* Gauge progress arc */}
-                <path
-                  d={`M 20 70 A 60 60 0 0 1 ${20 + (quarterPerformance.teamWinRate / 100) * 120} ${70 - Math.sin((quarterPerformance.teamWinRate / 100) * Math.PI) * 60}`}
-                  stroke="#3b82f6"
-                  strokeWidth="8"
-                  fill="none"
-                  strokeLinecap="round"
-                />
-                {/* Gauge needle */}
-                <line
-                  x1="80"
-                  y1="70"
-                  x2={80 + Math.cos((Math.PI * quarterPerformance.teamWinRate / 100) - Math.PI) * 50}
-                  y2={70 + Math.sin((Math.PI * quarterPerformance.teamWinRate / 100) - Math.PI) * 50}
-                  stroke="#1f2937"
-                  strokeWidth="3"
-                  strokeLinecap="round"
-                />
-                <circle cx="80" cy="70" r="4" fill="#1f2937" />
-                <text x="80" y="85" textAnchor="middle" className="text-xs font-bold fill-current">
-                  {quarterPerformance.teamWinRate}%
-                </text>
-              </svg>
-            </div>
-          </div>
-
-          {/* Option 2: Performance Trend Line */}
-          <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
-            <div className="flex justify-center items-center space-x-2 mb-3">
-              <span className="text-xs text-gray-500 font-medium">Win Rate Trend</span>
-            </div>
-            <div className="flex justify-center">
-              <svg width="200" height="60" viewBox="0 0 200 60">
-                {/* Grid lines */}
-                <line x1="20" y1="10" x2="180" y2="10" stroke="#f3f4f6" strokeWidth="1" />
-                <line x1="20" y1="30" x2="180" y2="30" stroke="#f3f4f6" strokeWidth="1" />
-                <line x1="20" y1="50" x2="180" y2="50" stroke="#f3f4f6" strokeWidth="1" />
-
-                {/* Trend line - simulate based on current performance */}
-                <path
-                  d={`M 20 ${50 - (quarterPerformance.teamWinRate * 0.4)} L 60 ${45 - (quarterPerformance.teamWinRate * 0.35)} L 100 ${40 - (quarterPerformance.teamWinRate * 0.3)} L 140 ${35 - (quarterPerformance.teamWinRate * 0.32)} L 180 ${50 - (quarterPerformance.teamWinRate * 0.4)}`}
-                  stroke="#3b82f6"
-                  strokeWidth="2"
-                  fill="none"
-                />
-
-                {/* Data points */}
-                {[20, 60, 100, 140, 180].map((x, index) => (
-                  <circle 
-                    key={index} 
-                    cx={x} 
-                    cy={50 - (quarterPerformance.teamWinRate * 0.4) + (Math.random() - 0.5) * 10} 
-                    r="3" 
-                    fill="#3b82f6" 
-                  />
-                ))}
-              </svg>
-            </div>
-          </div>
+          
 
           {/* Option 3: Goals Distribution Chart */}
           <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
@@ -479,23 +407,24 @@ export default function TeamPerformance({ games, className, activeSeason, select
             </div>
           </div>
 
-          {/* Option 7: Performance Comparison Radar */}
+          {/* Performance Comparison Radar */}
           <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
             <div className="flex justify-center items-center space-x-2 mb-4">
               <span className="text-sm text-gray-500 font-medium">Performance Radar</span>
             </div>
             <div className="flex justify-center">
-              <svg width="180" height="180" viewBox="0 0 180 180">
+              <svg width="240" height="240" viewBox="0 0 240 240">
                 {/* Radar grid */}
-                <circle cx="90" cy="90" r="60" stroke="#e5e7eb" strokeWidth="1" fill="none" />
-                <circle cx="90" cy="90" r="40" stroke="#e5e7eb" strokeWidth="1" fill="none" />
-                <circle cx="90" cy="90" r="20" stroke="#e5e7eb" strokeWidth="1" fill="none" />
+                <circle cx="120" cy="120" r="80" stroke="#e5e7eb" strokeWidth="1" fill="none" />
+                <circle cx="120" cy="120" r="60" stroke="#e5e7eb" strokeWidth="1" fill="none" />
+                <circle cx="120" cy="120" r="40" stroke="#e5e7eb" strokeWidth="1" fill="none" />
+                <circle cx="120" cy="120" r="20" stroke="#e5e7eb" strokeWidth="1" fill="none" />
 
                 {/* Axis lines */}
-                <line x1="90" y1="30" x2="90" y2="150" stroke="#e5e7eb" strokeWidth="1" />
-                <line x1="30" y1="90" x2="150" y2="90" stroke="#e5e7eb" strokeWidth="1" />
-                <line x1="47.7" y1="47.7" x2="132.3" y2="132.3" stroke="#e5e7eb" strokeWidth="1" />
-                <line x1="132.3" y1="47.7" x2="47.7" y2="132.3" stroke="#e5e7eb" strokeWidth="1" />
+                <line x1="120" y1="40" x2="120" y2="200" stroke="#e5e7eb" strokeWidth="1" />
+                <line x1="40" y1="120" x2="200" y2="120" stroke="#e5e7eb" strokeWidth="1" />
+                <line x1="63.4" y1="63.4" x2="176.6" y2="176.6" stroke="#e5e7eb" strokeWidth="1" />
+                <line x1="176.6" y1="63.4" x2="63.4" y2="176.6" stroke="#e5e7eb" strokeWidth="1" />
 
                 {/* Performance polygon */}
                 {(() => {
@@ -508,9 +437,9 @@ export default function TeamPerformance({ games, className, activeSeason, select
 
                   const points = metrics.map((value, index) => {
                     const angle = (index * 2 * Math.PI) / 4;
-                    const radius = value * 45;
-                    const x = 90 + radius * Math.cos(angle - Math.PI/2);
-                    const y = 90 + radius * Math.sin(angle - Math.PI/2);
+                    const radius = value * 70;
+                    const x = 120 + radius * Math.cos(angle - Math.PI/2);
+                    const y = 120 + radius * Math.sin(angle - Math.PI/2);
                     return `${x},${y}`;
                   }).join(' ');
 
@@ -524,11 +453,11 @@ export default function TeamPerformance({ games, className, activeSeason, select
                   );
                 })()}
 
-                {/* Labels */}
-                <text x="90" y="20" textAnchor="middle" className="text-sm font-medium fill-current">Win%</text>
-                <text x="165" y="95" textAnchor="middle" className="text-sm font-medium fill-current">Goals</text>
-                <text x="90" y="170" textAnchor="middle" className="text-sm font-medium fill-current">Ratio</text>
-                <text x="15" y="95" textAnchor="middle" className="text-sm font-medium fill-current">Games</text>
+                {/* Labels with better positioning */}
+                <text x="120" y="25" textAnchor="middle" className="text-sm font-medium fill-current">Win%</text>
+                <text x="220" y="125" textAnchor="middle" className="text-sm font-medium fill-current">Goals</text>
+                <text x="120" y="230" textAnchor="middle" className="text-sm font-medium fill-current">Ratio</text>
+                <text x="20" y="125" textAnchor="middle" className="text-sm font-medium fill-current">Games</text>
               </svg>
             </div>
           </div>
