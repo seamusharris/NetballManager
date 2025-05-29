@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Link } from 'wouter';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -147,7 +148,8 @@ export default function DashboardSummary({
     hasPlayers: players?.length > 0,
     hasGames: games?.length > 0,
     hasSeasons: seasons?.length > 0,
-    activeSeason: activeSeason?.name
+    activeSeason: activeSeason?.name,
+    filteredGamesCount: filteredGames?.length
   });
 
   // Only show loading if we truly have no data yet
@@ -206,7 +208,7 @@ export default function DashboardSummary({
         </Card>
       )}
 
-      {/* Performance Metrics - 12 widget grid */}
+      {/* Performance Metrics - 7 widget grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-6">
         {isLoading || statsLoading ? (
           Array.from({ length: 7 }).map((_, i) => (
@@ -232,7 +234,6 @@ export default function DashboardSummary({
               opponents={opponents} 
               seasonFilter={selectedSeasonId} 
               activeSeason={activeSeason}
-              centralizedStats={centralizedStats}
             />
             <QuarterPerformanceWidget 
               games={filteredGames} 
@@ -258,8 +259,6 @@ export default function DashboardSummary({
           </>
         )}
       </div>
-
-      
 
       {/* Games List */}
       <div className="grid grid-cols-1 gap-6">
