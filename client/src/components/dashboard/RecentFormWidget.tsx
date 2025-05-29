@@ -1,7 +1,8 @@
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ResultBadge } from '@/components/ui/result-badge';
-import { GameResult, getWinLoseLabel } from '@/lib/resultUtils';
+import { GameResult } from '@/lib/resultUtils';
+import { getWinLoseLabel } from '@/lib/utils';
 import { isGameValidForStatistics } from '@/lib/gameFilters';
 import { RECENT_GAMES_COUNT } from '@/lib/constants';
 import { Badge } from '@/components/ui/badge';
