@@ -1,11 +1,14 @@
-
 import React, { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Users, AlertTriangle, Check } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertCircle, Users, UserCheck, Clock } from 'lucide-react';
 import { apiRequest } from '@/lib/apiClient';
+import { Game, Player, Roster, Team, POSITIONS } from '@shared/schema';
+import type { Position } from '@shared/schema';
 import { useToast } from '@/hooks/use-toast';
 import RosterManager from './RosterManager';
 
@@ -65,12 +68,12 @@ export default function TeamAwareRosterManager({
     setIsCreatingFallback(true);
     try {
       await apiRequest('POST', `/api/games/${gameId}/create-fallback-roster`);
-      
+
       toast({
         title: 'Fallback Roster Created',
         description: 'Basic roster assignments have been created to enable stats tracking.',
       });
-      
+
       if (onRosterChange) {
         onRosterChange();
       }
@@ -142,7 +145,7 @@ export default function TeamAwareRosterManager({
             {statusInfo.icon}
             <AlertDescription>{statusInfo.text}</AlertDescription>
           </div>
-          
+
           {rosterStatus === 'empty' && (
             <Button
               variant="outline"

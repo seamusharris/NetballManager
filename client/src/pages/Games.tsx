@@ -58,8 +58,7 @@ export default function Games() {
       // Ensure game has season context - use active season if not specified
       if (!game.seasonId) {
         try {
-          const activeSeasonResponse = await apiRequest('GET', '/api/seasons/active');
-          const activeSeason = await activeSeasonResponse.json();
+          const activeSeason = await apiRequest('GET', '/api/seasons/active');
           game.seasonId = activeSeason.id;
           console.log(`Assigned game to active season: ${activeSeason.name} (ID: ${activeSeason.id})`);
         } catch (error) {

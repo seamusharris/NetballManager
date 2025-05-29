@@ -20,8 +20,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { insertGameSchema, Game, Opponent, Season } from "@shared/schema";
+import { insertGameSchema, Game, Opponent, Season, Team } from "@shared/schema";
 import { useGameStatuses } from "@/hooks/use-game-statuses";
+import { useTeams } from "@/hooks/use-teams";
 
 // Extend the schema for the form validation
 const formSchema = insertGameSchema.extend({
@@ -30,7 +31,8 @@ const formSchema = insertGameSchema.extend({
   opponentId: z.string(), // No validation directly on the field
   round: z.string().optional(),
   statusId: z.string().optional(), // Use statusId instead of status
-  seasonId: z.string().optional() // Season ID as string for form handling
+  seasonId: z.string().optional(), // Season ID as string for form handling
+  homeTeamId: z.string() // Team ID as string for form handling
 }).refine(
   (data) => {
     // For regular games, opponent is required (we'll handle BYE logic differently)
@@ -47,6 +49,7 @@ type FormValues = z.infer<typeof formSchema> & {
   opponentId: string;
   statusId: string;
   seasonId: string;
+  homeTeamId: string;
 };
 
 interface GameFormProps {
@@ -69,7 +72,8 @@ export function GameForm({ game, opponents, seasons, activeSeason, onSubmit, isS
       opponentId: game?.opponentId ? String(game.opponentId) : "",
       round: game?.round || "",
       statusId: game?.statusId ? String(game.statusId) : "1", // Default to first status (usually "upcoming")
-      seasonId: game?.seasonId ? String(game.seasonId) : activeSeason ? String(activeSeason.id) : ""
+      seasonId: game?.seasonId ? String(game.seasonId) : activeSeason ? String(activeSeason.id) : "",
+      homeTeamId: game?.homeTeamId ? String(game.homeTeamId) : ""
     },
   });
 
@@ -81,7 +85,8 @@ export function GameForm({ game, opponents, seasons, activeSeason, onSubmit, isS
       round: values.round,
       opponentId: parseInt(values.opponentId),
       statusId: parseInt(values.statusId),
-      seasonId: values.seasonId ? parseInt(values.seasonId) : (activeSeason ? activeSeason.id : undefined)
+      seasonId: values.seasonId ? parseInt(values.seasonId) : (activeSeason ? activeSeason.id : undefined),
+      homeTeamId: parseInt(values.homeTeamId)
     };
 
     console.log("Submitting game with statusId:", formattedValues);
@@ -89,11 +94,43 @@ export function GameForm({ game, opponents, seasons, activeSeason, onSubmit, isS
   };
 
   const { data: allGameStatuses } = useGameStatuses();
+  const { data: teams } = useTeams();
 
   return (
     <Form {...form}>
       <h2 className="text-xl font-bold mb-6">{isEditing ? "Edit Game" : "Schedule New Game"}</h2>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+        <FormField
+          control={form.control}
+          name="homeTeamId"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Home Team</FormLabel>
+              <Select 
+                onValueChange={field.onChange} 
+                defaultValue={field.value}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select home team" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {teams?.map(team => (
+                    <SelectItem key={team.id} value={team.id.toString()}>
+                      {team.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormDescription>
+                Select the team playing at home
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
         <FormField
           control={form.control}
           name="opponentId"
