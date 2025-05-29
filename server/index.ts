@@ -1,4 +1,3 @@
-
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
@@ -47,13 +46,20 @@ app.use((req, res, next) => {
   try {
     log("Running database migrations...", "migration");
 
+    // Run migrations in order
     await addSeasonsSupport();
     await addPlayerSeasonsTable();
     await createGameStatusesTable();
     await addQueryIndexes();
-
-    // Clean up legacy columns
     await cleanupLegacyGameColumns();
+
+    // Multi-club support migration
+    const { addMultiClubSupport } = await import("./migrations/addMultiClubSupport");
+    await addMultiClubSupport();
+
+    // Multi-club data migration
+    const { migrateExistingDataToMultiClub } = await import("./migrations/migrateToMultiClub");
+    await migrateExistingDataToMultiClub();
 
     log("Database migrations completed successfully!", "migration");
   } catch (error) {

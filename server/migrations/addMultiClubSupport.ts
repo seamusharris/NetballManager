@@ -1,11 +1,32 @@
-import { sql } from "drizzle-orm";
-import { db } from "../db";
+/**
+ * Migration to add multi-club support tables and columns
+ * This will add the new tables for clubs, teams, team_players, etc.
+ */
 
-export async function addMultiClubSupport() {
-  console.log("9:00:37 PM [migration] Starting multi-club support migration");
+import { db } from '../db';
+import { sql } from 'drizzle-orm';
+import { log } from '../vite';
 
+export async function addMultiClubSupport(): Promise<void> {
   try {
-    // Create clubs table if it doesn't exist
+    log("Starting multi-club support migration", "migration");
+
+    // Check if home_team_id column already exists
+    const homeTeamIdExists = await db.execute(sql`
+      SELECT EXISTS (
+        SELECT FROM information_schema.columns 
+        WHERE table_schema = 'public'
+        AND table_name = 'games'
+        AND column_name = 'home_team_id'
+      );
+    `);
+
+    if (homeTeamIdExists.rows[0].exists) {
+      log("Multi-club columns already exist, skipping migration", "migration");
+      return;
+    }
+
+    // Create clubs table
     await db.execute(sql`
       CREATE TABLE IF NOT EXISTS clubs (
         id SERIAL PRIMARY KEY,
@@ -22,8 +43,9 @@ export async function addMultiClubSupport() {
         updated_at TIMESTAMP DEFAULT NOW() NOT NULL
       )
     `);
+    log("Created clubs table", "migration");
 
-    // Create teams table if it doesn't exist
+    // Create teams table
     await db.execute(sql`
       CREATE TABLE IF NOT EXISTS teams (
         id SERIAL PRIMARY KEY,
@@ -37,62 +59,84 @@ export async function addMultiClubSupport() {
         UNIQUE(club_id, season_id, name)
       )
     `);
+    log("Created teams table", "migration");
 
-    // Create default club if none exists
-    const existingClubs = await db.execute(sql`SELECT COUNT(*) as count FROM clubs`);
-    const clubCount = existingClubs.rows[0]?.count || 0;
+    // Create team_players table
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS team_players (
+        id SERIAL PRIMARY KEY,
+        team_id INTEGER NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
+        player_id INTEGER NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+        is_regular BOOLEAN NOT NULL DEFAULT true,
+        jersey_number INTEGER,
+        position_preferences JSON,
+        created_at TIMESTAMP DEFAULT NOW() NOT NULL,
+        UNIQUE(team_id, player_id)
+      )
+    `);
+    log("Created team_players table", "migration");
 
-    if (clubCount === 0) {
-      console.log("9:00:37 PM [migration] Creating default club");
-      await db.execute(sql`
-        INSERT INTO clubs (name, code, primary_color, secondary_color)
-        VALUES ('Default Club', 'DEFAULT', '#1f2937', '#ffffff')
-      `);
-    }
+    // Create club_users table
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS club_users (
+        id SERIAL PRIMARY KEY,
+        club_id INTEGER NOT NULL REFERENCES clubs(id) ON DELETE CASCADE,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        role TEXT NOT NULL,
+        can_manage_players BOOLEAN NOT NULL DEFAULT false,
+        can_manage_games BOOLEAN NOT NULL DEFAULT false,
+        can_manage_stats BOOLEAN NOT NULL DEFAULT false,
+        can_view_other_teams BOOLEAN NOT NULL DEFAULT false,
+        is_active BOOLEAN NOT NULL DEFAULT true,
+        created_at TIMESTAMP DEFAULT NOW() NOT NULL,
+        UNIQUE(club_id, user_id)
+      )
+    `);
+    log("Created club_users table", "migration");
 
-    // Create default teams for each season if none exist
-    const seasons = await db.execute(sql`SELECT id, name FROM seasons`);
-    const defaultClub = await db.execute(sql`SELECT id FROM clubs WHERE code = 'DEFAULT' LIMIT 1`);
-    const clubId = defaultClub.rows[0]?.id;
+    // Create player_borrowing table
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS player_borrowing (
+        id SERIAL PRIMARY KEY,
+        game_id INTEGER NOT NULL REFERENCES games(id) ON DELETE CASCADE,
+        player_id INTEGER NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+        borrowing_team_id INTEGER NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
+        lending_team_id INTEGER NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
+        approved_by_lending_club BOOLEAN NOT NULL DEFAULT false,
+        approved_by_borrowing_club BOOLEAN NOT NULL DEFAULT false,
+        jersey_number INTEGER,
+        notes TEXT,
+        created_at TIMESTAMP DEFAULT NOW() NOT NULL,
+        UNIQUE(game_id, player_id)
+      )
+    `);
+    log("Created player_borrowing table", "migration");
 
-    if (clubId && seasons.rows.length > 0) {
-      for (const season of seasons.rows) {
-        // Check if team already exists for this season
-        const existingTeam = await db.execute(sql`
-          SELECT id FROM teams 
-          WHERE club_id = ${clubId} AND season_id = ${season.id}
-        `);
+    // Create game_permissions table
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS game_permissions (
+        id SERIAL PRIMARY KEY,
+        game_id INTEGER NOT NULL REFERENCES games(id) ON DELETE CASCADE,
+        club_id INTEGER NOT NULL REFERENCES clubs(id) ON DELETE CASCADE,
+        can_edit_stats BOOLEAN NOT NULL DEFAULT false,
+        can_view_detailed_stats BOOLEAN NOT NULL DEFAULT true,
+        UNIQUE(game_id, club_id)
+      )
+    `);
+    log("Created game_permissions table", "migration");
 
-        if (existingTeam.rows.length === 0) {
-          console.log(`9:00:37 PM [migration] Creating default team for season ${season.name}`);
-          await db.execute(sql`
-            INSERT INTO teams (club_id, season_id, name, division)
-            VALUES (${clubId}, ${season.id}, 'Main Team', 'Division 1')
-          `);
-        }
-      }
-    }
+    // Add team references to games table
+    await db.execute(sql`
+      ALTER TABLE games 
+      ADD COLUMN home_team_id INTEGER REFERENCES teams(id),
+      ADD COLUMN away_team_id INTEGER REFERENCES teams(id),
+      ADD COLUMN is_inter_club BOOLEAN NOT NULL DEFAULT false
+    `);
+    log("Added team columns to games table", "migration");
 
-    // Add team references to games table (nullable for backward compatibility)
-    try {
-      await db.execute(sql`
-        ALTER TABLE games 
-        ADD COLUMN home_team_id INTEGER REFERENCES teams(id),
-        ADD COLUMN away_team_id INTEGER REFERENCES teams(id),
-        ADD COLUMN is_inter_club BOOLEAN NOT NULL DEFAULT false
-      `);
-      console.log("9:00:37 PM [migration] Added team columns to games table");
-    } catch (error) {
-      if (error.message?.includes('already exists')) {
-        console.log("9:00:37 PM [migration] Team columns already exist in games table");
-      } else {
-        throw error;
-      }
-    }
-
-    console.log("9:00:37 PM [migration] Multi-club support migration completed successfully");
+    log("Multi-club support migration completed successfully", "migration");
   } catch (error) {
-    console.error("9:00:37 PM [migration] Error in multi-club support migration:", error);
+    log(`Error in multi-club support migration: ${error}`, "migration");
     throw error;
   }
 }
