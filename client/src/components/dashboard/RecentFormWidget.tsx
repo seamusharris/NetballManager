@@ -1,11 +1,12 @@
+import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ResultBadge } from '@/components/ui/result-badge';
+import { GameResult, getWinLoseLabel } from '@/lib/resultUtils';
+import { isGameValidForStatistics } from '@/lib/gameFilters';
+import { RECENT_GAMES_COUNT } from '@/lib/constants';
 import { Badge } from '@/components/ui/badge';
 import { TooltipIcon } from '@/components/ui/tooltip-icon';
-import { Game, Opponent, GameResult } from '@shared/schema';
-import { getWinLoseLabel } from '@/lib/utils';
-import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
-import { ResultBadge } from '@/components/ui/result-badge';
-import { isGameValidForStatistics } from '@/lib/gameFilters';
+import { Game, Opponent } from '@shared/schema';
 import { BaseWidget } from '@/components/ui/base-widget';
 
 
@@ -29,7 +30,7 @@ export default function RecentFormWidget({
   const completedGames = games
     .filter(isGameValidForStatistics)
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-    .slice(-5); // Last 5 games in chronological order
+    .slice(-RECENT_GAMES_COUNT); // Last 5 games in chronological order
 
   console.log('RecentFormWidget - Filtered completed games:', completedGames.map(g => ({id: g.id, status: g.gameStatus?.name})));
 
@@ -141,7 +142,7 @@ export default function RecentFormWidget({
         </div>
       </div>
 
-      
+
 
       {/* Option 3: Trend Line with Dots */}
       <div className="text-center mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
@@ -159,7 +160,7 @@ export default function RecentFormWidget({
               const nextGame = formData[index + 1];
               const x2 = 10 + ((index + 1) * 25);
               const y2 = nextGame?.result === 'Win' ? 10 : nextGame?.result === 'Draw' ? 20 : 30;
-              
+
               return (
                 <line
                   key={`line-${index}`}
@@ -178,7 +179,7 @@ export default function RecentFormWidget({
               const y = game.result === 'Win' ? 10 : game.result === 'Draw' ? 20 : 30;
               const color = game.result === 'Win' ? '#10b981' : 
                            game.result === 'Draw' ? '#f59e0b' : '#ef4444';
-              
+
               return (
                 <circle
                   key={`dot-${index}`}
@@ -237,9 +238,9 @@ export default function RecentFormWidget({
         <p className="text-xs text-gray-600 mt-1">{winPercentage}% Win Rate</p>
       </div>
 
-      
 
-      
+
+
 
       {/* Goals Breakdown - Full Width Row */}
       <div className="mt-4 p-3 bg-gray-50 rounded-lg border border-gray-200">

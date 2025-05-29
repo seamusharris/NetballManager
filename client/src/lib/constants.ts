@@ -29,6 +29,9 @@ export type LegacyGameStatus = "upcoming" | "in-progress" | "completed" | "forfe
 // UI constants
 export const QUARTERS = [1, 2, 3, 4] as const;
 
+// Display constants
+export const RECENT_GAMES_COUNT = 5;
+
 export const AVATAR_COLORS = [
   'bg-blue-600', 'bg-purple-600', 'bg-green-600', 'bg-red-600',
   'bg-orange-600', 'bg-yellow-600', 'bg-pink-600', 'bg-teal-600',

@@ -7,6 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import { ScoreBadge } from '@/components/ui/score-badge';
 import { GameBadge } from '@/components/ui/game-badge';
 import { ViewMoreButton } from '@/components/ui/view-more-button';
+import { RECENT_GAMES_COUNT } from '@/lib/constants';
 
 interface RecentGamesProps {
   games: Game[];
@@ -25,7 +26,7 @@ export default function RecentGames({ games, opponents, className, seasonFilter,
       return isCompleted;
     })
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-    .slice(0, 3);
+    .slice(0, RECENT_GAMES_COUNT);
 
   // Use centralized stats if available, otherwise empty object
   const allGameStats = centralizedStats || {};
@@ -174,7 +175,7 @@ export default function RecentGames({ games, opponents, className, seasonFilter,
           )}
         </div>
 
-        {games.filter(game => game.gameStatus?.isCompleted === true).length > 3 ? (
+        {games.filter(game => game.gameStatus?.isCompleted === true).length > RECENT_GAMES_COUNT ? (
           <ViewMoreButton href="/games?status=completed">
             View more →
           </ViewMoreButton>
