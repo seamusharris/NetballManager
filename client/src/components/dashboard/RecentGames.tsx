@@ -260,60 +260,35 @@ export default function RecentGames({ games, opponents, className, seasonFilter,
           ) : recentGames.length === 0 ? (
             <p className="text-gray-500 text-center py-4">No recent games to display</p>
           ) : (
-            recentGames.map((game, index) => {
-              const [teamScore, opponentScore] = getScores(game);
-              const margin = teamScore - opponentScore;
-              const isWin = teamScore > opponentScore;
-              const isLoss = teamScore < opponentScore;
-              
-              return (
-                <Link key={game.id} href={`/game/${game.id}`}>
-                  <div 
-                    className={`flex justify-between items-center p-4 border-l-4 border-t border-r border-b rounded ${getResultClass(game)} cursor-pointer ${getHoverClass(game)} transition-colors relative`}
-                  >
-                    {/* Game Order Indicator */}
-                    <div className="absolute -left-1 -top-1 w-5 h-5 bg-gray-600 text-white text-xs rounded-full flex items-center justify-center font-bold">
-                      {index + 1}
-                    </div>
-                    
-                    <div className="flex-1">
-                      <p className="font-semibold text-gray-800">{getOpponentName(game.opponentId)}</p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <p className="text-xs text-gray-700">{formatShortDate(game.date)}</p>
-                        {game.round && (
-                          <GameBadge variant="round">
-                            Round {game.round}
-                          </GameBadge>
-                        )}
-                        
-                        {/* Score Margin Visual */}
-                        <div className={`text-xs px-2 py-0.5 rounded ${
-                          isWin ? 'bg-green-100 text-green-700' : 
-                          isLoss ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'
-                        }`}>
-                          {margin > 0 ? `+${margin}` : margin === 0 ? 'DRAW' : margin}
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="text-right flex items-center gap-2">
-                      {/* Performance Icon */}
-                      <div className={`text-xl ${
-                        isWin ? 'text-green-500' : isLoss ? 'text-red-500' : 'text-yellow-500'
-                      }`}>
-                        {isWin ? '🏆' : isLoss ? '💔' : '🤝'}
-                      </div>
-                      
-                      <ScoreBadge 
-                        teamScore={teamScore} 
-                        opponentScore={opponentScore} 
-                        size="md"
-                      />
+            recentGames.map(game => (
+              <Link key={game.id} href={`/game/${game.id}`}>
+                <div 
+                  className={`flex justify-between items-center p-4 border-l-4 border-t border-r border-b rounded ${getResultClass(game)} cursor-pointer ${getHoverClass(game)} transition-colors`}
+                >
+                  <div className="flex-1">
+                    <p className="font-semibold text-gray-800">{getOpponentName(game.opponentId)}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <p className="text-xs text-gray-700">{formatShortDate(game.date)}</p>
+                      {game.round && (
+                        <GameBadge variant="round">
+                          Round {game.round}
+                        </GameBadge>
+                      )}
                     </div>
                   </div>
-                </Link>
-              );
-            })
+                  <div className="text-right flex items-center gap-2">
+                    <div className={`text-xs font-semibold ${getResultTextClass(game)}`}>
+                      {getResultText(game)}
+                    </div>
+                    <ScoreBadge 
+                      teamScore={getScores(game)[0]} 
+                      opponentScore={getScores(game)[1]} 
+                      size="md"
+                    />
+                  </div>
+                </div>
+              </Link>
+            ))
           )}
         </div>
 
