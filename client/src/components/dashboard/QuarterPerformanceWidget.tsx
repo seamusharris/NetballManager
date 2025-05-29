@@ -217,4 +217,3 @@ export default function QuarterPerformanceWidget({
     </BaseWidget>
   );
 }
-This commit standardizes the spacing between sections in the QuarterPerformanceWidget.
