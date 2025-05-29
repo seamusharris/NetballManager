@@ -108,68 +108,215 @@ export default function RecentFormWidget({
       title="Recent Form" 
       contentClassName="px-4 py-6"
     >
-      {/* Enhanced Form Display with Sparklines */}
+      {/* Option 1: Progress Ring/Circle */}
       <div className="text-center mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
         <div className="flex justify-center items-center space-x-2 mb-3">
-          <span className="text-xs text-gray-500 font-medium">Last 5 Games Trend</span>
+          <span className="text-xs text-gray-500 font-medium">Win Rate Progress</span>
           {getTrendIcon()}
         </div>
-        
-        {/* Goal Scoring Sparkline */}
-        <div className="mb-3">
-          <p className="text-xs text-gray-400 mb-1">Goals Scored</p>
-          <div className="flex justify-center items-end space-x-1 h-8">
-            {formData.slice(0, 5).map((game, index) => {
-              const maxGoals = Math.max(...formData.slice(0, 5).map(g => g.teamScore));
-              const height = Math.max(4, (game.teamScore / Math.max(maxGoals, 1)) * 24);
-              return (
-                <div key={game.id} className="relative group">
-                  <div 
-                    className="w-3 bg-blue-500 rounded-t-sm transition-opacity hover:opacity-80"
-                    style={{ height: `${height}px` }}
-                  />
-                  {/* Tooltip on hover */}
-                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
-                    {game.opponent}: {game.teamScore} goals
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Performance Momentum Arc */}
-        <div className="mb-2">
-          <p className="text-xs text-gray-400 mb-1">Momentum</p>
-          <div className="flex justify-center">
-            <svg width="60" height="30" viewBox="0 0 60 30">
-              {/* Background arc */}
+        <div className="flex justify-center mb-2">
+          <div className="relative w-16 h-16">
+            <svg className="w-16 h-16 transform -rotate-90" viewBox="0 0 36 36">
               <path
-                d="M 10 25 Q 30 5 50 25"
-                stroke="#e5e7eb"
-                strokeWidth="2"
-                fill="none"
+                className="text-gray-300"
+                stroke="currentColor"
+                strokeWidth="3"
+                fill="transparent"
+                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
               />
-              {/* Momentum arc */}
               <path
-                d="M 10 25 Q 30 5 50 25"
-                stroke={trend === 'up' ? '#10b981' : trend === 'down' ? '#ef4444' : '#6b7280'}
-                strokeWidth="2"
-                fill="none"
-                strokeDasharray="40"
-                strokeDashoffset={trend === 'up' ? 0 : trend === 'down' ? 20 : 10}
-                className="transition-all duration-500"
-              />
-              {/* Momentum indicator dot */}
-              <circle
-                cx={trend === 'up' ? 45 : trend === 'down' ? 15 : 30}
-                cy={trend === 'up' ? 15 : trend === 'down' ? 25 : 10}
-                r="2"
-                fill={trend === 'up' ? '#10b981' : trend === 'down' ? '#ef4444' : '#6b7280'}
-                className="transition-all duration-500"
+                className={winPercentage >= 60 ? "text-green-500" : winPercentage >= 40 ? "text-yellow-500" : "text-red-500"}
+                stroke="currentColor"
+                strokeWidth="3"
+                strokeDasharray={`${winPercentage}, 100`}
+                strokeLinecap="round"
+                fill="transparent"
+                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
               />
             </svg>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="text-sm font-bold text-gray-700">{winPercentage}%</span>
+            </div>
           </div>
+        </div>
+      </div>
+
+      {/* Option 2: Mini Heatmap Grid */}
+      <div className="text-center mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+        <div className="flex justify-center items-center space-x-2 mb-3">
+          <span className="text-xs text-gray-500 font-medium">Performance Heatmap</span>
+          {getTrendIcon()}
+        </div>
+        <div className="flex justify-center space-x-1">
+          {formData.slice(0, 5).map((game, index) => {
+            const intensity = game.result === 'Win' ? 100 : game.result === 'Draw' ? 50 : 20;
+            const bgColor = game.result === 'Win' ? 'bg-green-500' : 
+                           game.result === 'Draw' ? 'bg-yellow-400' : 'bg-red-500';
+            return (
+              <div key={game.id} className="relative group">
+                <div 
+                  className={`w-6 h-6 ${bgColor} rounded-sm transition-opacity hover:opacity-80`}
+                  style={{ opacity: intensity / 100 }}
+                />
+                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
+                  {game.opponent}: {game.teamScore}-{game.opponentScore}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Option 3: Trend Line with Dots */}
+      <div className="text-center mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+        <div className="flex justify-center items-center space-x-2 mb-3">
+          <span className="text-xs text-gray-500 font-medium">Performance Trend</span>
+          {getTrendIcon()}
+        </div>
+        <div className="flex justify-center">
+          <svg width="120" height="40" viewBox="0 0 120 40">
+            {/* Draw trend line */}
+            {formData.slice(0, 5).map((game, index) => {
+              if (index === formData.length - 1) return null;
+              const x1 = 10 + (index * 25);
+              const y1 = game.result === 'Win' ? 10 : game.result === 'Draw' ? 20 : 30;
+              const nextGame = formData[index + 1];
+              const x2 = 10 + ((index + 1) * 25);
+              const y2 = nextGame?.result === 'Win' ? 10 : nextGame?.result === 'Draw' ? 20 : 30;
+              
+              return (
+                <line
+                  key={`line-${index}`}
+                  x1={x1}
+                  y1={y1}
+                  x2={x2}
+                  y2={y2}
+                  stroke="#6b7280"
+                  strokeWidth="2"
+                />
+              );
+            })}
+            {/* Draw dots */}
+            {formData.slice(0, 5).map((game, index) => {
+              const x = 10 + (index * 25);
+              const y = game.result === 'Win' ? 10 : game.result === 'Draw' ? 20 : 30;
+              const color = game.result === 'Win' ? '#10b981' : 
+                           game.result === 'Draw' ? '#f59e0b' : '#ef4444';
+              
+              return (
+                <circle
+                  key={`dot-${index}`}
+                  cx={x}
+                  cy={y}
+                  r="3"
+                  fill={color}
+                  className="transition-all hover:r-4"
+                />
+              );
+            })}
+          </svg>
+        </div>
+      </div>
+
+      {/* Option 4: Performance Gauge/Meter */}
+      <div className="text-center mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+        <div className="flex justify-center items-center space-x-2 mb-3">
+          <span className="text-xs text-gray-500 font-medium">Form Strength</span>
+          {getTrendIcon()}
+        </div>
+        <div className="flex justify-center">
+          <svg width="80" height="50" viewBox="0 0 80 50">
+            {/* Background gauge arc */}
+            <path
+              d="M 15 40 A 25 25 0 0 1 65 40"
+              stroke="#e5e7eb"
+              strokeWidth="4"
+              fill="none"
+            />
+            {/* Performance gauge arc */}
+            <path
+              d="M 15 40 A 25 25 0 0 1 65 40"
+              stroke={winPercentage >= 60 ? '#10b981' : winPercentage >= 40 ? '#f59e0b' : '#ef4444'}
+              strokeWidth="4"
+              fill="none"
+              strokeDasharray="78.5"
+              strokeDashoffset={78.5 - (winPercentage / 100) * 78.5}
+              strokeLinecap="round"
+              className="transition-all duration-500"
+            />
+            {/* Needle */}
+            <line
+              x1="40"
+              y1="40"
+              x2={40 + 20 * Math.cos((Math.PI * winPercentage / 100) - Math.PI)}
+              y2={40 + 20 * Math.sin((Math.PI * winPercentage / 100) - Math.PI)}
+              stroke="#374151"
+              strokeWidth="2"
+              strokeLinecap="round"
+            />
+            {/* Center dot */}
+            <circle cx="40" cy="40" r="2" fill="#374151" />
+          </svg>
+        </div>
+        <p className="text-xs text-gray-600 mt-1">{winPercentage}% Win Rate</p>
+      </div>
+
+      {/* Option 5: Stacked Mini Bars (Goals For/Against) */}
+      <div className="text-center mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+        <div className="flex justify-center items-center space-x-2 mb-3">
+          <span className="text-xs text-gray-500 font-medium">Goal Ratio Bars</span>
+          {getTrendIcon()}
+        </div>
+        <div className="space-y-1">
+          {formData.slice(0, 5).reverse().map((game, index) => (
+            <div key={game.id} className="flex items-center justify-center">
+              <span className="text-xs w-12 text-gray-600 truncate">{game.opponent.slice(0, 8)}</span>
+              <div className="mx-2 relative h-4 w-20 bg-gray-200 rounded-full overflow-hidden">
+                <div 
+                  className="absolute left-0 top-0 h-full bg-blue-500"
+                  style={{ width: `${(game.teamScore / Math.max(game.teamScore + game.opponentScore, 1)) * 100}%` }}
+                />
+                <div 
+                  className="absolute right-0 top-0 h-full bg-red-400"
+                  style={{ width: `${(game.opponentScore / Math.max(game.teamScore + game.opponentScore, 1)) * 100}%` }}
+                />
+              </div>
+              <span className="text-xs w-8 text-gray-600">{game.teamScore}-{game.opponentScore}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Option 6: Performance Radar (Mini) */}
+      <div className="text-center mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+        <div className="flex justify-center items-center space-x-2 mb-3">
+          <span className="text-xs text-gray-500 font-medium">Performance Radar</span>
+          {getTrendIcon()}
+        </div>
+        <div className="flex justify-center">
+          <svg width="80" height="80" viewBox="0 0 80 80">
+            {/* Radar grid */}
+            <polygon
+              points="40,10 65,25 65,55 40,70 15,55 15,25"
+              stroke="#e5e7eb"
+              strokeWidth="1"
+              fill="none"
+            />
+            <polygon
+              points="40,25 55,32.5 55,47.5 40,55 25,47.5 25,32.5"
+              stroke="#e5e7eb"
+              strokeWidth="1"
+              fill="none"
+            />
+            {/* Performance area */}
+            <polygon
+              points={`40,${40 - winPercentage * 0.3} ${40 + (wins * 5)},${40 - (wins * 2.5)} ${40 + (wins * 5)},${40 + (wins * 2.5)} 40,${40 + winPercentage * 0.3} ${40 - (wins * 5)},${40 + (wins * 2.5)} ${40 - (wins * 5)},${40 - (wins * 2.5)}`}
+              stroke="#3b82f6"
+              strokeWidth="1.5"
+              fill="#3b82f6"
+              fillOpacity="0.3"
+            />
+          </svg>
         </div>
       </div>
 
