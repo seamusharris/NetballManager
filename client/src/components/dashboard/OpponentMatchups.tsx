@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { BaseWidget } from '@/components/ui/base-widget';
@@ -184,36 +185,83 @@ export default function OpponentMatchups({
       className={className}
       contentClassName="px-4 py-6 pb-2"
     >
-        {matchups.length === 0 ? (
-          <p className="text-gray-500 text-center py-4">
-            No completed games against opponents yet
-          </p>
-        ) : (
-          <div className="space-y-4">
-            {matchups.map(matchup => (
-              
-              <div key={matchup.opponent.id} className="flex items-center justify-between p-4 mb-4 mt-2 bg-gray-50 border-l-4 border-t border-r border-b border-gray-500 border-t-gray-500 border-r-gray-500 border-b-gray-500 rounded">
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-sm font-medium text-gray-800">{matchup.opponent.teamName}</span>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-lg font-bold text-gray-700 mb-1">{matchup.winRate}%</p>
-                  <div className="flex">{getFormDisplay(matchup.recentForm, matchup)}</div>
-                </div>
-              </div>
-            ))}
+      {matchups.length === 0 ? (
+        <p className="text-gray-500 text-center py-4">
+          No completed games against opponents yet
+        </p>
+      ) : (
+        <div className="space-y-4">
+          {/* Overall Stats */}
+          <div className="grid grid-cols-3 gap-4 mb-4">
+            <div className="text-center">
+              <p className="text-xs text-gray-500 mb-1">Opponents Faced</p>
+              <p className="text-lg font-bold text-gray-700">{matchups.length}</p>
+            </div>
+            <div className="text-center">
+              <p className="text-xs text-gray-500 mb-1">Overall Win Rate</p>
+              <p className="text-lg font-bold text-gray-700">{overallWinRate}%</p>
+            </div>
+            <div className="text-center">
+              <p className="text-xs text-gray-500 mb-1">Total Games</p>
+              <p className="text-lg font-bold text-gray-700">{totalGames}</p>
+            </div>
           </div>
-        )}
 
-        {matchups.length > 0 ? (
-          <ViewMoreButton href="/opponent-analysis">
-            View more →
-          </ViewMoreButton>
-        ) : (
-          <div className="mb-4" />
-        )}
+          {/* Best Matchup */}
+          {bestMatchup && (
+            <div className="flex items-center justify-between p-4 bg-green-50 border-l-4 border-green-500 rounded">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <Trophy className="h-4 w-4 text-green-600" />
+                  <span className="text-sm font-medium text-gray-800">{bestMatchup.opponent.teamName}</span>
+                  <Badge variant="outline" className="text-green-700 border-green-300">Best Matchup</Badge>
+                </div>
+                <p className="text-xs text-gray-600">
+                  {bestMatchup.wins}W-{bestMatchup.losses}L-{bestMatchup.draws}D
+                  {bestMatchup.scoreDifferential > 0 && (
+                    <span className="ml-2">+{bestMatchup.scoreDifferential} avg margin</span>
+                  )}
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="text-lg font-bold text-green-700 mb-1">{bestMatchup.winRate}%</p>
+                <div className="flex">{getFormDisplay(bestMatchup.recentForm, bestMatchup)}</div>
+              </div>
+            </div>
+          )}
+
+          {/* Worst Matchup */}
+          {worstMatchup && worstMatchup !== bestMatchup && (
+            <div className="flex items-center justify-between p-4 bg-red-50 border-l-4 border-red-500 rounded">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <AlertTriangle className="h-4 w-4 text-red-600" />
+                  <span className="text-sm font-medium text-gray-800">{worstMatchup.opponent.teamName}</span>
+                  <Badge variant="outline" className="text-red-700 border-red-300">Challenge</Badge>
+                </div>
+                <p className="text-xs text-gray-600">
+                  {worstMatchup.wins}W-{worstMatchup.losses}L-{worstMatchup.draws}D
+                  {worstMatchup.scoreDifferential < 0 && (
+                    <span className="ml-2">{worstMatchup.scoreDifferential} avg margin</span>
+                  )}
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="text-lg font-bold text-red-700 mb-1">{worstMatchup.winRate}%</p>
+                <div className="flex">{getFormDisplay(worstMatchup.recentForm, worstMatchup)}</div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {matchups.length > 0 ? (
+        <ViewMoreButton href="/opponent-analysis">
+          View more →
+        </ViewMoreButton>
+      ) : (
+        <div className="mb-4" />
+      )}
     </BaseWidget>
   );
 }
