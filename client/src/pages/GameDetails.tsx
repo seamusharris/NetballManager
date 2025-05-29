@@ -738,9 +738,7 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
                   position={position as Position}
                   playerName={playerName}
                   playerColor={playerColor}
-                  playerStats={the code you provided has been cut off.
-```jsx
-playerStats}
+                  playerStats={playerStats}
                 />
               </div>
             );
