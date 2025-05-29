@@ -292,13 +292,13 @@ export default function RecentGames({ games, opponents, className, seasonFilter,
           )}
         </div>
 
-        {games.filter(game => game.gameStatus?.isCompleted === true).length > 3 ? (
-          <ViewMoreButton href="/games?status=completed">
-            View more →
-          </ViewMoreButton>
-        ) : (
-          <div className="mb-4" />
-        )}
+        <div className="mt-4">
+          {games.filter(game => game.gameStatus?.isCompleted === true).length > 3 ? (
+            <ViewMoreButton href="/games?status=completed">
+              View more →
+            </ViewMoreButton>
+          ) : null}
+        </div>
     </BaseWidget>
   );
 }
