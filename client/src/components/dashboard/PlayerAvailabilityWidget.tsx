@@ -1,10 +1,9 @@
-
 import { useState, useEffect } from 'react';
 import { Link } from 'wouter';
 import { Users, Clock, AlertCircle, CheckCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import BaseWidget from '@/components/ui/base-widget';
+import { BaseWidget } from '@/components/ui/base-widget';
 import { Game, Opponent, Player } from '@shared/schema';
 import { formatShortDate } from '@/lib/utils';
 
@@ -47,7 +46,7 @@ export default function PlayerAvailabilityWidget({
   useEffect(() => {
     const fetchAvailability = async () => {
       if (upcomingGames.length === 0) return;
-      
+
       setLoading(true);
       const newAvailabilityData: Record<number, GameAvailability> = {};
 
@@ -133,7 +132,7 @@ export default function PlayerAvailabilityWidget({
                   {formatShortDate(game.date)}
                 </Badge>
               </div>
-              
+
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <Users className="h-4 w-4 text-gray-500" />
@@ -144,7 +143,7 @@ export default function PlayerAvailabilityWidget({
                     }
                   </span>
                 </div>
-                
+
                 <div className="flex items-center space-x-2">
                   <Badge 
                     variant="outline" 
