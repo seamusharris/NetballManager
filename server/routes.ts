@@ -30,6 +30,29 @@ import {
 } from "./auth-middleware";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Middleware to simulate authentication and set default club context
+  app.use((req: any, res, next) => {
+    // For development, simulate an authenticated user with default club
+    if (!req.user) {
+      req.user = {
+        id: 1,
+        username: 'dev-user',
+        clubs: [{
+          clubId: 1,
+          role: 'admin',
+          permissions: {
+            canManagePlayers: true,
+            canManageGames: true,
+            canManageStats: true,
+            canViewOtherTeams: true,
+          }
+        }],
+        currentClubId: 1
+      };
+    }
+    next();
+  });
+
   // put application routes here
   // prefix all routes with /api
 
@@ -392,29 +415,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error('Backup creation failed:', error);
       res.status(500).json({ message: "Failed to create backup" });
     }
-  });
-
-  // Middleware to simulate authentication and set default club context
-  app.use((req: any, res, next) => {
-    // For development, simulate an authenticated user with default club
-    if (!req.user) {
-      req.user = {
-        id: 1,
-        username: 'dev-user',
-        clubs: [{
-          clubId: 1,
-          role: 'admin',
-          permissions: {
-            canManagePlayers: true,
-            canManageGames: true,
-            canManageStats: true,
-            canViewOtherTeams: true,
-          }
-        }],
-        currentClubId: 1
-      };
-    }
-    next();
   });
 
   // ----- PLAYERS API -----

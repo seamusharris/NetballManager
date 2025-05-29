@@ -31,9 +31,21 @@ export function requireClubAccess(requiredPermission?: keyof AuthenticatedReques
       }
 
       // Extract club ID from request (URL param, query, or body), fallback to user's current club
-      const clubId = req.params.clubId || req.query.clubId || req.body.clubId || req.user?.currentClubId;
+      let clubId = req.params.clubId || req.query.clubId || req.body.clubId || req.user?.currentClubId;
+
+      // If still no club ID and user has clubs, use the first one
+      if (!clubId && req.user?.clubs && req.user.clubs.length > 0) {
+        clubId = req.user.clubs[0].clubId;
+        req.user.currentClubId = clubId;
+      }
 
       if (!clubId) {
+        console.error('Club access check failed - no club ID found', {
+          params: req.params,
+          query: req.query,
+          userClubs: req.user?.clubs,
+          currentClubId: req.user?.currentClubId
+        });
         return res.status(400).json({ error: 'Club ID required' });
       }
 
