@@ -141,31 +141,7 @@ export default function RecentFormWidget({
         </div>
       </div>
 
-      {/* Option 2: Mini Heatmap Grid */}
-      <div className="text-center mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
-        <div className="flex justify-center items-center space-x-2 mb-3">
-          <span className="text-xs text-gray-500 font-medium">Performance Heatmap</span>
-          {getTrendIcon()}
-        </div>
-        <div className="flex justify-center space-x-1">
-          {formData.slice(0, 5).map((game, index) => {
-            const intensity = game.result === 'Win' ? 100 : game.result === 'Draw' ? 50 : 20;
-            const bgColor = game.result === 'Win' ? 'bg-green-500' : 
-                           game.result === 'Draw' ? 'bg-yellow-400' : 'bg-red-500';
-            return (
-              <div key={game.id} className="relative group">
-                <div 
-                  className={`w-6 h-6 ${bgColor} rounded-sm transition-opacity hover:opacity-80`}
-                  style={{ opacity: intensity / 100 }}
-                />
-                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
-                  {game.opponent}: {game.teamScore}-{game.opponentScore}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
+      
 
       {/* Option 3: Trend Line with Dots */}
       <div className="text-center mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
@@ -261,64 +237,9 @@ export default function RecentFormWidget({
         <p className="text-xs text-gray-600 mt-1">{winPercentage}% Win Rate</p>
       </div>
 
-      {/* Option 5: Stacked Mini Bars (Goals For/Against) */}
-      <div className="text-center mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
-        <div className="flex justify-center items-center space-x-2 mb-3">
-          <span className="text-xs text-gray-500 font-medium">Goal Ratio Bars</span>
-          {getTrendIcon()}
-        </div>
-        <div className="space-y-1">
-          {formData.slice(0, 5).reverse().map((game, index) => (
-            <div key={game.id} className="flex items-center justify-center">
-              <span className="text-xs w-12 text-gray-600 truncate">{game.opponent.slice(0, 8)}</span>
-              <div className="mx-2 relative h-4 w-20 bg-gray-200 rounded-full overflow-hidden">
-                <div 
-                  className="absolute left-0 top-0 h-full bg-blue-500"
-                  style={{ width: `${(game.teamScore / Math.max(game.teamScore + game.opponentScore, 1)) * 100}%` }}
-                />
-                <div 
-                  className="absolute right-0 top-0 h-full bg-red-400"
-                  style={{ width: `${(game.opponentScore / Math.max(game.teamScore + game.opponentScore, 1)) * 100}%` }}
-                />
-              </div>
-              <span className="text-xs w-8 text-gray-600">{game.teamScore}-{game.opponentScore}</span>
-            </div>
-          ))}
-        </div>
-      </div>
+      
 
-      {/* Option 6: Performance Radar (Mini) */}
-      <div className="text-center mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
-        <div className="flex justify-center items-center space-x-2 mb-3">
-          <span className="text-xs text-gray-500 font-medium">Performance Radar</span>
-          {getTrendIcon()}
-        </div>
-        <div className="flex justify-center">
-          <svg width="80" height="80" viewBox="0 0 80 80">
-            {/* Radar grid */}
-            <polygon
-              points="40,10 65,25 65,55 40,70 15,55 15,25"
-              stroke="#e5e7eb"
-              strokeWidth="1"
-              fill="none"
-            />
-            <polygon
-              points="40,25 55,32.5 55,47.5 40,55 25,47.5 25,32.5"
-              stroke="#e5e7eb"
-              strokeWidth="1"
-              fill="none"
-            />
-            {/* Performance area */}
-            <polygon
-              points={`40,${40 - winPercentage * 0.3} ${40 + (wins * 5)},${40 - (wins * 2.5)} ${40 + (wins * 5)},${40 + (wins * 2.5)} 40,${40 + winPercentage * 0.3} ${40 - (wins * 5)},${40 + (wins * 2.5)} ${40 - (wins * 5)},${40 - (wins * 2.5)}`}
-              stroke="#3b82f6"
-              strokeWidth="1.5"
-              fill="#3b82f6"
-              fillOpacity="0.3"
-            />
-          </svg>
-        </div>
-      </div>
+      
 
       {/* Goals Breakdown - Full Width Row */}
       <div className="mt-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
