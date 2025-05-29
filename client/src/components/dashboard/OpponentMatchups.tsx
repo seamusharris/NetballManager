@@ -210,8 +210,8 @@ export default function OpponentMatchups({
           {bestMatchup && (
             <div className="flex items-center justify-between p-4 mb-4 mt-2 bg-green-50 border-l-4 border-green-500 border-t border-r border-b border-t-green-500 border-r-green-500 border-b-green-500 rounded">
               <div>
-                <p className="font-semibold text-gray-800">{bestMatchup.opponent.teamName}</p>
-                <Badge variant="outline" className="text-green-700 border-green-300">Best Matchup</Badge>
+                <p className="font-semibold text-gray-800 mb-2">{bestMatchup.opponent.teamName}</p>
+                <Badge variant="outline" className="text-green-700 border-green-300">Strength</Badge>
               </div>
               <div className="text-right">
                 <p className="text-lg font-bold text-green-700 mb-1">{bestMatchup.winRate}%</p>
@@ -224,7 +224,7 @@ export default function OpponentMatchups({
           {worstMatchup && worstMatchup !== bestMatchup && (
             <div className="flex items-center justify-between p-4 mb-4 mt-2 bg-red-50 border-l-4 border-red-500 border-t border-r border-b border-t-red-500 border-r-red-500 border-b-red-500 rounded">
               <div>
-                <p className="font-semibold text-gray-800">{worstMatchup.opponent.teamName}</p>
+                <p className="font-semibold text-gray-800 mb-2">{worstMatchup.opponent.teamName}</p>
                 <Badge variant="outline" className="text-red-700 border-red-300">Challenge</Badge>
               </div>
               <div className="text-right">
@@ -236,13 +236,15 @@ export default function OpponentMatchups({
         </div>
       )}
 
-      {matchups.length > 0 ? (
-        <ViewMoreButton href="/opponent-analysis">
-          View more →
-        </ViewMoreButton>
-      ) : (
-        <div className="mb-4" />
-      )}
+      <div className="mt-4">
+        {matchups.length > 0 ? (
+          <ViewMoreButton href="/opponent-analysis">
+            View more →
+          </ViewMoreButton>
+        ) : (
+          <div className="mb-4" />
+        )}
+      </div>
     </BaseWidget>
   );
 }
