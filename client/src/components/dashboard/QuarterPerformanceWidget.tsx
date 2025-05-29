@@ -212,6 +212,7 @@ export default function QuarterPerformanceWidget({
 
         {/* Visual Quarter Performance Chart */}
         <div className="mt-4">
+        </div>
 
         <div className="mb-4" />
 
