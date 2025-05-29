@@ -98,7 +98,7 @@ export class DatabaseStorage implements IStorage {
 
   async getPlayersByClub(clubId: number): Promise<Player[]> {
     console.log(`Fetching players for club ${clubId}`);
-    
+
     // First try to use the club_players table if it exists
     try {
       const directResult = await db.execute(sql`
@@ -109,12 +109,24 @@ export class DatabaseStorage implements IStorage {
         WHERE cp.club_id = ${clubId} AND cp.is_active = true
         ORDER BY p.display_name
       `);
-      
+
       console.log(`Direct club_players query returned ${directResult.rows.length} rows`);
-      
+
       if (directResult.rows.length > 0) {
-        console.log(`Found ${directResult.rows.length} players via club_players table for club ${clubId}`);
-        return directResult.rows as Player[];
+        const players = directResult.rows.map(row => ({
+          id: row.id,
+          displayName: row.display_name,
+          firstName: row.first_name,
+          lastName: row.last_name,
+          dateOfBirth: row.date_of_birth,
+          positionPreferences: typeof row.position_preferences === 'string' 
+            ? JSON.parse(row.position_preferences) 
+            : row.position_preferences,
+          active: row.active,
+          avatarColor: row.avatar_color
+        }));
+        console.log(`Returning ${players.length} players from club_players table`);
+        return players;
       }
     } catch (error) {
       // club_players table might not exist yet, fall back to team-based lookup
@@ -133,12 +145,25 @@ export class DatabaseStorage implements IStorage {
         WHERE t.club_id = ${clubId}
         ORDER BY p.display_name
       `);
-      
+
+      const players = result.rows.map(row => ({
+          id: row.id,
+          displayName: row.display_name,
+          firstName: row.first_name,
+          lastName: row.last_name,
+          dateOfBirth: row.date_of_birth,
+          positionPreferences: typeof row.position_preferences === 'string' 
+            ? JSON.parse(row.position_preferences) 
+            : row.position_preferences || [],
+          active: row.active,
+          avatarColor: row.avatar_color
+        }));
+
       console.log(`Found ${result.rows.length} players via team-based lookup for club ${clubId}`);
-      return result.rows as Player[];
+      return players;
     } catch (teamError) {
       console.error(`Team-based lookup also failed for club ${clubId}:`, teamError);
-      
+
       // Last resort: return all players (for backward compatibility)
       console.log(`Falling back to all players query`);
       const allPlayersResult = await db.select().from(players).orderBy(asc(players.displayName));
@@ -768,6 +793,7 @@ export class DatabaseStorage implements IStorage {
       return true;
     } catch (error) {
       console.error('Error adding player to club:', error);
+```text
       return false;
     }
   }

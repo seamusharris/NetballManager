@@ -445,7 +445,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           currentClubId: req.user?.currentClubId,
           clubs: req.user?.clubs
         });
-        return res.status(400).json({ message: "Club context required" });
+        return res.status(400).json({ 
+          error: "Club ID required",
+          message: "Club context required - please ensure you're properly authenticated" 
+        });
       }
       
       console.log(`Fetching players for club ${clubId}`);
