@@ -8,7 +8,7 @@ import {
   Settings, 
   Download 
 } from 'lucide-react';
-import BaseWidget from '@/components/ui/base-widget';
+import { BaseWidget } from '@/components/ui/base-widget';
 import { Button } from '@/components/ui/button';
 
 interface QuickActionsWidgetProps {
