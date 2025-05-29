@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet';
 import SimpleRosterManager from '@/components/roster/SimpleRosterManager';
 import PlayerAvailabilityManager from '@/components/roster/PlayerAvailabilityManager';
-import { useLocation, useParams } from 'wouter';
+import { useLocation, useParams, Link } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, Users } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
