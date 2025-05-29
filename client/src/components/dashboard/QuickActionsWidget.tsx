@@ -16,6 +16,7 @@ interface QuickActionsWidgetProps {
 }
 
 export default function QuickActionsWidget({ className }: QuickActionsWidgetProps) {
+  console.log('QuickActionsWidget rendering');
   const actions = [
     {
       icon: CalendarPlus,

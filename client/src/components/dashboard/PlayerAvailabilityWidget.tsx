@@ -36,6 +36,13 @@ export default function PlayerAvailabilityWidget({
     .sort((a, b) => a.date.localeCompare(b.date))
     .slice(0, 3);
 
+  console.log('PlayerAvailabilityWidget rendering:', {
+    totalGames: games.length,
+    upcomingGames: upcomingGames.length,
+    todayDate: new Date().toISOString().split('T')[0],
+    games: games.map(g => ({ id: g.id, date: g.date, completed: g.completed }))
+  });
+
   // Fetch availability data for upcoming games
   useEffect(() => {
     const fetchAvailability = async () => {
