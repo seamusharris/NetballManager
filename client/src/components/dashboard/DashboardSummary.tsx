@@ -252,7 +252,6 @@ export default function DashboardSummary({
               games={filteredGames} 
               seasonFilter={selectedSeasonId} 
               activeSeason={activeSeason}
-              centralizedStats={centralizedStats}
             />
             {/* Placeholder widgets for future expansion */}
             <div className="h-32 rounded-lg border-2 border-dashed border-gray-200 flex items-center justify-center text-gray-400 text-sm">
