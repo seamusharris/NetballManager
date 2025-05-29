@@ -16,6 +16,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Users } from "lucide-react"
 
 import OpponentMatchups from './OpponentMatchups';
+import TopPlayersWidget from './TopPlayersWidget';
 import { Player, Game, Opponent, Season } from '@shared/schema';
 import { sortByDate } from '@/lib/utils';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
@@ -203,10 +204,10 @@ export default function DashboardSummary({
         </Card>
       )}
 
-      {/* Performance Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+      {/* Performance Metrics - 12 widget grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-6">
         {isLoading || statsLoading ? (
-          Array.from({ length: 6 }).map((_, i) => (
+          Array.from({ length: 12 }).map((_, i) => (
             <Skeleton key={i} className="h-32 rounded-lg" />
           ))
         ) : (
@@ -246,24 +247,34 @@ export default function DashboardSummary({
               opponents={opponents}
               centralizedStats={centralizedStats}
             />
+            <TopPlayersWidget 
+              players={players} 
+              games={filteredGames} 
+              seasonFilter={selectedSeasonId} 
+              activeSeason={activeSeason}
+              centralizedStats={centralizedStats}
+            />
+            {/* Placeholder widgets for future expansion */}
+            <div className="h-32 rounded-lg border-2 border-dashed border-gray-200 flex items-center justify-center text-gray-400 text-sm">
+              Widget Slot 8
+            </div>
+            <div className="h-32 rounded-lg border-2 border-dashed border-gray-200 flex items-center justify-center text-gray-400 text-sm">
+              Widget Slot 9
+            </div>
+            <div className="h-32 rounded-lg border-2 border-dashed border-gray-200 flex items-center justify-center text-gray-400 text-sm">
+              Widget Slot 10
+            </div>
+            <div className="h-32 rounded-lg border-2 border-dashed border-gray-200 flex items-center justify-center text-gray-400 text-sm">
+              Widget Slot 11
+            </div>
+            <div className="h-32 rounded-lg border-2 border-dashed border-gray-200 flex items-center justify-center text-gray-400 text-sm">
+              Widget Slot 12
+            </div>
           </>
         )}
       </div>
 
-      {/* Player Performance */}
-      <div className="grid grid-cols-1 gap-6">
-        {isLoading || statsLoading ? (
-          <Skeleton className="h-[300px] w-full rounded-lg" />
-        ) : (
-          <TopPlayersWidget 
-            players={players} 
-            games={filteredGames} 
-            seasonFilter={selectedSeasonId} 
-            activeSeason={activeSeason}
-            centralizedStats={centralizedStats}
-          />
-        )}
-      </div>
+      
 
       {/* Games List */}
       <div className="grid grid-cols-1 gap-6">
