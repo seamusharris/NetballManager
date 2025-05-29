@@ -170,48 +170,8 @@ export default function QuarterPerformanceWidget({
       className={className}
       contentClassName="px-4 py-6"
     >
-        {/* Quarter breakdown grid */}
-        <div className="grid grid-cols-2 gap-3 mb-4">
-          {[1, 2, 3, 4].map(quarter => {
-            const teamScore = quarterPerformance.avgTeamScoreByQuarter[quarter];
-            const opponentScore = quarterPerformance.avgOpponentScoreByQuarter[quarter];
-            const diff = teamScore - opponentScore;
-            const isStrongest = quarter === strongestQuarter.quarter;
-            const isWeakest = quarter === weakestQuarter.quarter;
-
-            return (
-              <div 
-                key={quarter} 
-                className={`p-3 rounded-lg border-2 ${
-                  isStrongest ? 'bg-green-50 border-green-200' : 
-                  isWeakest ? 'bg-red-50 border-red-200' : 
-                  'bg-gray-50 border-gray-200'
-                }`}
-              >
-                <div className="flex justify-between items-center mb-1">
-                  <span className="text-sm font-medium text-gray-600">Q{quarter}</span>
-                  {isStrongest && <Badge variant="outline" className="text-xs px-1 py-0 bg-green-100 text-green-700">Best</Badge>}
-                  {isWeakest && <Badge variant="outline" className="text-xs px-1 py-0 bg-red-100 text-red-700">Weak</Badge>}
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-lg font-bold text-primary">{teamScore.toFixed(1)}</span>
-                  <span className="text-sm text-gray-500">vs</span>
-                  <span className="text-lg font-bold text-gray-600">{opponentScore.toFixed(1)}</span>
-                </div>
-                <div className="text-center mt-1">
-                  <span className={`text-xs font-medium ${
-                    diff > 0 ? 'text-green-600' : diff < 0 ? 'text-red-600' : 'text-gray-500'
-                  }`}>
-                    {diff > 0 ? '+' : ''}{diff.toFixed(1)}
-                  </span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
         {/* Visual Quarter Performance Chart */}
-        <div className="mt-4 space-y-4">
+        <div className="space-y-4">
           {/* Option 1: Quarter Comparison Bars */}
           <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
             <div className="flex justify-center items-center space-x-2 mb-3">
