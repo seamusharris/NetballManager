@@ -110,7 +110,7 @@ export default function RecentFormWidget({
     >
       {/* Enhanced Form Display with Trend */}
       <div className="text-center mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
-        <div className="flex justify-center items-center space-x-2 mb-1">
+        <div className="flex justify-center items-center space-x-2 mb-4">
           <span className="text-xs text-gray-500 font-medium">Last 5 Games</span>
           {getTrendIcon()}
         </div>
@@ -209,3 +209,4 @@ export default function RecentFormWidget({
     </BaseWidget>
   );
 }
+```
