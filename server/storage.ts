@@ -100,7 +100,8 @@ export class DatabaseStorage implements IStorage {
     // First try to use the club_players table if it exists
     try {
       const directResult = await db.execute(sql`
-        SELECT p.* 
+        SELECT p.id, p.display_name, p.first_name, p.last_name, p.date_of_birth, 
+               p.position_preferences, p.active, p.avatar_color
         FROM players p
         JOIN club_players cp ON p.id = cp.player_id
         WHERE cp.club_id = ${clubId} AND cp.is_active = true
@@ -113,12 +114,13 @@ export class DatabaseStorage implements IStorage {
       }
     } catch (error) {
       // club_players table might not exist yet, fall back to team-based lookup
-      console.log(`club_players table not available, using team-based lookup for club ${clubId}`);
+      console.log(`club_players table not available, using team-based lookup for club ${clubId}:`, error);
     }
 
     // Fallback to team-based lookup
     const result = await db.execute(sql`
-      SELECT DISTINCT p.* 
+      SELECT DISTINCT p.id, p.display_name, p.first_name, p.last_name, p.date_of_birth, 
+             p.position_preferences, p.active, p.avatar_color
       FROM players p
       JOIN team_players tp ON p.id = tp.player_id
       JOIN teams t ON tp.team_id = t.id
