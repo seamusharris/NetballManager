@@ -108,22 +108,68 @@ export default function RecentFormWidget({
       title="Recent Form" 
       contentClassName="px-4 py-6"
     >
-      {/* Enhanced Form Display with Trend */}
+      {/* Enhanced Form Display with Sparklines */}
       <div className="text-center mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
-        <div className="flex justify-center items-center space-x-2 mb-4">
-          <span className="text-xs text-gray-500 font-medium">Last 5 Games</span>
+        <div className="flex justify-center items-center space-x-2 mb-3">
+          <span className="text-xs text-gray-500 font-medium">Last 5 Games Trend</span>
           {getTrendIcon()}
         </div>
-        <div className="flex justify-center space-x-1 mb-2">
-          {formData.slice(0, 5).map((game, index) => (
-            <div key={game.id} className="relative group">
-              <ResultBadge result={game.result as GameResult} size="md" />
-              {/* Tooltip on hover */}
-              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
-                {game.opponent}: {game.teamScore}-{game.opponentScore}
-              </div>
-            </div>
-          ))}
+        
+        {/* Goal Scoring Sparkline */}
+        <div className="mb-3">
+          <p className="text-xs text-gray-400 mb-1">Goals Scored</p>
+          <div className="flex justify-center items-end space-x-1 h-8">
+            {formData.slice(0, 5).map((game, index) => {
+              const maxGoals = Math.max(...formData.slice(0, 5).map(g => g.teamScore));
+              const height = Math.max(4, (game.teamScore / Math.max(maxGoals, 1)) * 24);
+              return (
+                <div key={game.id} className="relative group">
+                  <div 
+                    className="w-3 bg-blue-500 rounded-t-sm transition-opacity hover:opacity-80"
+                    style={{ height: `${height}px` }}
+                  />
+                  {/* Tooltip on hover */}
+                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
+                    {game.opponent}: {game.teamScore} goals
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Performance Momentum Arc */}
+        <div className="mb-2">
+          <p className="text-xs text-gray-400 mb-1">Momentum</p>
+          <div className="flex justify-center">
+            <svg width="60" height="30" viewBox="0 0 60 30">
+              {/* Background arc */}
+              <path
+                d="M 10 25 Q 30 5 50 25"
+                stroke="#e5e7eb"
+                strokeWidth="2"
+                fill="none"
+              />
+              {/* Momentum arc */}
+              <path
+                d="M 10 25 Q 30 5 50 25"
+                stroke={trend === 'up' ? '#10b981' : trend === 'down' ? '#ef4444' : '#6b7280'}
+                strokeWidth="2"
+                fill="none"
+                strokeDasharray="40"
+                strokeDashoffset={trend === 'up' ? 0 : trend === 'down' ? 20 : 10}
+                className="transition-all duration-500"
+              />
+              {/* Momentum indicator dot */}
+              <circle
+                cx={trend === 'up' ? 45 : trend === 'down' ? 15 : 30}
+                cy={trend === 'up' ? 15 : trend === 'down' ? 25 : 10}
+                r="2"
+                fill={trend === 'up' ? '#10b981' : trend === 'down' ? '#ef4444' : '#6b7280'}
+                className="transition-all duration-500"
+              />
+            </svg>
+          </div>
         </div>
       </div>
 
