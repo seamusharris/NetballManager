@@ -136,6 +136,26 @@ export default function OpponentMatchups({
   const totalWins = matchups.reduce((sum, matchup) => sum + matchup.wins, 0);
   const overallWinRate = totalGames > 0 ? Math.round((totalWins / totalGames) * 100) : 0;
 
+  const calculateStreak = (form: string[]) => {
+    if (form.length === 0) return { type: 'None', count: 0 };
+    
+    const mostRecent = form[0];
+    let count = 1;
+    
+    for (let i = 1; i < form.length; i++) {
+      if (form[i] === mostRecent) {
+        count++;
+      } else {
+        break;
+      }
+    }
+    
+    return {
+      type: mostRecent === 'W' ? 'Win' : mostRecent === 'L' ? 'Loss' : 'Draw',
+      count
+    };
+  };
+
   const getFormDisplay = (form: string[], matchup: OpponentMatchup) => {
     // Get the most recent 3 games for this opponent, but show in chronological order
     const recentGames = matchup.games
@@ -203,6 +223,146 @@ export default function OpponentMatchups({
             <div className="text-center">
               <p className="text-xs text-gray-500 mb-1">Total Games</p>
               <p className="text-lg font-bold text-gray-700">{totalGames}</p>
+            </div>
+          </div>
+
+          {/* Option 1: Head-to-Head Win/Loss Streaks */}
+          <div className="p-3 bg-gray-50 rounded-lg border border-gray-200 mb-4">
+            <div className="flex justify-center items-center space-x-2 mb-3">
+              <span className="text-xs text-gray-500 font-medium">Current Streaks</span>
+            </div>
+            <div className="space-y-2">
+              {matchups.slice(0, 3).map(matchup => {
+                const streak = calculateStreak(matchup.recentForm);
+                return (
+                  <div key={matchup.opponent.id} className="flex items-center justify-between text-xs">
+                    <span className="truncate max-w-20">{matchup.opponent.teamName.slice(0, 12)}</span>
+                    <div className={`px-2 py-1 rounded text-xs font-medium ${
+                      streak.type === 'Win' ? 'bg-green-100 text-green-700' :
+                      streak.type === 'Loss' ? 'bg-red-100 text-red-700' : 
+                      'bg-yellow-100 text-yellow-700'
+                    }`}>
+                      {streak.count}{streak.type.charAt(0)}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Option 2: Scoring Differential Chart */}
+          <div className="p-3 bg-gray-50 rounded-lg border border-gray-200 mb-4">
+            <div className="flex justify-center items-center space-x-2 mb-3">
+              <span className="text-xs text-gray-500 font-medium">Scoring Differential</span>
+            </div>
+            <div className="space-y-2">
+              {matchups.slice(0, 4).map(matchup => (
+                <div key={matchup.opponent.id} className="flex items-center space-x-2">
+                  <span className="text-xs w-16 truncate">{matchup.opponent.teamName.slice(0, 8)}</span>
+                  <div className="flex-1 relative h-4 bg-gray-200 rounded-full overflow-hidden">
+                    <div 
+                      className={`absolute left-1/2 top-0 h-full ${
+                        matchup.scoreDifferential >= 0 ? 'bg-blue-500' : 'bg-red-400'
+                      }`}
+                      style={{
+                        width: `${Math.min(50, Math.abs(matchup.scoreDifferential) * 5)}%`,
+                        [matchup.scoreDifferential >= 0 ? 'left' : 'right']: '50%'
+                      }}
+                    />
+                    <div className="absolute left-1/2 top-0 w-px h-full bg-gray-400 transform -translate-x-1/2" />
+                  </div>
+                  <span className="text-xs w-8">{matchup.scoreDifferential > 0 ? '+' : ''}{matchup.scoreDifferential}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Option 3: Matchup Difficulty Meter */}
+          <div className="p-3 bg-gray-50 rounded-lg border border-gray-200 mb-4">
+            <div className="flex justify-center items-center space-x-2 mb-3">
+              <span className="text-xs text-gray-500 font-medium">Difficulty Meters</span>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {matchups.slice(0, 4).map(matchup => {
+                const difficulty = 100 - matchup.winRate;
+                return (
+                  <div key={matchup.opponent.id} className="text-center">
+                    <div className="text-xs text-gray-600 mb-1 truncate">{matchup.opponent.teamName.slice(0, 10)}</div>
+                    <div className="relative w-16 h-16 mx-auto">
+                      <svg width="64" height="64" viewBox="0 0 64 64">
+                        <circle
+                          cx="32"
+                          cy="32"
+                          r="28"
+                          stroke="#e5e7eb"
+                          strokeWidth="4"
+                          fill="none"
+                        />
+                        <circle
+                          cx="32"
+                          cy="32"
+                          r="28"
+                          stroke={difficulty > 70 ? '#ef4444' : difficulty > 40 ? '#f59e0b' : '#10b981'}
+                          strokeWidth="4"
+                          fill="none"
+                          strokeDasharray={`${(difficulty / 100) * 175.93} 175.93`}
+                          strokeDashoffset="43.98"
+                          transform="rotate(-90 32 32)"
+                        />
+                      </svg>
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="text-xs font-bold">{difficulty}%</span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Option 4: Recent Form Timeline */}
+          <div className="p-3 bg-gray-50 rounded-lg border border-gray-200 mb-4">
+            <div className="flex justify-center items-center space-x-2 mb-3">
+              <span className="text-xs text-gray-500 font-medium">Recent Form Timeline</span>
+            </div>
+            <div className="space-y-2">
+              {matchups.slice(0, 3).map(matchup => (
+                <div key={matchup.opponent.id} className="flex items-center justify-between">
+                  <span className="text-xs w-20 truncate">{matchup.opponent.teamName.slice(0, 12)}</span>
+                  <div className="flex space-x-1">
+                    {/* Timeline line */}
+                    <div className="flex items-center space-x-0.5">
+                      {getFormDisplay(matchup.recentForm, matchup)}
+                    </div>
+                  </div>
+                  <span className="text-xs w-8 text-gray-500">{matchup.winRate}%</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Option 5: Performance vs Opponent Type */}
+          <div className="p-3 bg-gray-50 rounded-lg border border-gray-200 mb-4">
+            <div className="flex justify-center items-center space-x-2 mb-3">
+              <span className="text-xs text-gray-500 font-medium">Opponent Categories</span>
+            </div>
+            <div className="grid grid-cols-3 gap-2 text-center">
+              {(() => {
+                const strong = matchups.filter(m => m.winRate >= 70);
+                const balanced = matchups.filter(m => m.winRate >= 30 && m.winRate < 70);
+                const challenging = matchups.filter(m => m.winRate < 30);
+                
+                return [
+                  { label: 'Strong vs', count: strong.length, color: 'text-green-600' },
+                  { label: 'Balanced vs', count: balanced.length, color: 'text-yellow-600' },
+                  { label: 'Struggle vs', count: challenging.length, color: 'text-red-600' }
+                ].map((category, index) => (
+                  <div key={index} className="p-2 bg-white rounded border">
+                    <div className={`text-lg font-bold ${category.color}`}>{category.count}</div>
+                    <div className="text-xs text-gray-500">{category.label}</div>
+                  </div>
+                ));
+              })()}
             </div>
           </div>
 
