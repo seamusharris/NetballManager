@@ -23,6 +23,9 @@ import { Player, Game, Opponent, Season } from '@shared/schema';
 import { sortByDate } from '@/lib/utils';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { useGameStatuses } from '@/hooks/use-game-statuses';
+import { Suspense } from 'react'; // Import Suspense
+// Assuming PositionOpponentAnalysis is in the same directory, otherwise adjust path
+import PositionOpponentAnalysis from './PositionOpponentAnalysis';
 
 interface DashboardSummaryProps {
   players: Player[];
@@ -268,6 +271,10 @@ export default function DashboardSummary({
               activeSeason={activeSeason} 
               selectedSeason={selectedSeasonId === 'current' ? activeSeason : seasons.find(s => s.id.toString() === selectedSeasonId)} 
             />
+             {/* Position vs Opponent Analysis */}
+             <Suspense fallback={<Skeleton className="h-32 rounded-lg" />}>
+              <PositionOpponentAnalysis seasonId={selectedSeasonId} />
+            </Suspense>
           </>
         )}
       </div>
