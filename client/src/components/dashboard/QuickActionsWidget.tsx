@@ -15,7 +15,7 @@ interface QuickActionsWidgetProps {
   className?: string;
 }
 
-export default function QuickActionsWidget({ className }: QuickActionsWidgetProps) {
+export function QuickActionsWidget({ className }: QuickActionsWidgetProps) {
   console.log('QuickActionsWidget rendering');
   const actions = [
     {
@@ -96,3 +96,5 @@ export default function QuickActionsWidget({ className }: QuickActionsWidgetProp
     </BaseWidget>
   );
 }
+
+export default QuickActionsWidget;
