@@ -613,8 +613,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const playerId = parseInt(req.params.id, 10);
       const { clubIds = [] } = req.body;
 
+      console.log(`Updating clubs for player ${playerId}:`, clubIds);
+
       if (isNaN(playerId)) {
         return res.status(400).json({ message: "Invalid player ID" });
+      }
+
+      // Validate that clubIds is an array
+      if (!Array.isArray(clubIds)) {
+        return res.status(400).json({ message: "clubIds must be an array" });
       }
 
       const client = await pool.connect();
@@ -634,32 +641,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         // Remove existing club associations for this player
-        await client.query(
+        const deleteResult = await client.query(
           'DELETE FROM club_players WHERE player_id = $1',
           [playerId]
         );
+        console.log(`Deleted ${deleteResult.rowCount} existing club associations for player ${playerId}`);
 
         // Add new club associations
+        let insertedCount = 0;
         for (const clubId of clubIds) {
-          if (typeof clubId === 'number' && clubId > 0) {
+          const numericClubId = typeof clubId === 'string' ? parseInt(clubId, 10) : clubId;
+          if (typeof numericClubId === 'number' && numericClubId > 0) {
+            console.log(`Inserting club association: player ${playerId} -> club ${numericClubId}`);
             await client.query(`
               INSERT INTO club_players (club_id, player_id, is_active, joined_date)
               VALUES ($1, $2, true, CURRENT_DATE)
-            `, [clubId, playerId]);
+            `, [numericClubId, playerId]);
+            insertedCount++;
+          } else {
+            console.warn(`Skipping invalid club ID: ${clubId}`);
           }
         }
 
         await client.query('COMMIT');
-        res.json({ success: true, message: "Player clubs updated successfully" });
+        console.log(`Successfully updated player ${playerId} clubs: inserted ${insertedCount} associations`);
+        res.json({ 
+          success: true, 
+          message: "Player clubs updated successfully",
+          clubsAdded: insertedCount,
+          clubIds: clubIds
+        });
       } catch (error) {
         await client.query('ROLLBACK');
+        console.error("Database error updating player clubs:", error);
         throw error;
       } finally {
         client.release();
       }
     } catch (error) {
       console.error("Error updating player clubs:", error);
-      res.status(500).json({ message: "Failed to update player clubs" });
+      res.status(500).json({ 
+        message: "Failed to update player clubs",
+        error: error instanceof Error ? error.message : String(error)
+      });
     }
   });
 

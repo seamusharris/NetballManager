@@ -48,19 +48,27 @@ export default function PlayerClubsManager({
   
   // Update selected clubs when player clubs are loaded
   useEffect(() => {
-    if (playerClubs && playerClubs.length > 0) {
+    if (playerClubs) {
       console.log(`Setting selected clubs for player ${player.id}:`, playerClubs.map(c => c.id));
       setSelectedClubs(playerClubs.map(club => club.id));
+    } else {
+      // Reset to empty if no clubs
+      setSelectedClubs([]);
     }
   }, [playerClubs, player.id]);
 
   // Handler for club selection changes
   const handleClubToggle = (clubId: number) => {
     setSelectedClubs(current => {
+      console.log(`Toggling club ${clubId}, current clubs:`, current);
       if (current.includes(clubId)) {
-        return current.filter(id => id !== clubId);
+        const newClubs = current.filter(id => id !== clubId);
+        console.log(`Removing club ${clubId}, new clubs:`, newClubs);
+        return newClubs;
       } else {
-        return [...current, clubId];
+        const newClubs = [...current, clubId];
+        console.log(`Adding club ${clubId}, new clubs:`, newClubs);
+        return newClubs;
       }
     });
   };
@@ -71,6 +79,7 @@ export default function PlayerClubsManager({
     
     try {
       console.log(`Updating clubs for player ${player.id}:`, selectedClubs);
+      console.log('Current selected clubs state:', selectedClubs);
       
       const response = await fetch(`/api/players/${player.id}/clubs`, {
         method: 'POST',
@@ -79,9 +88,12 @@ export default function PlayerClubsManager({
       });
       
       if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Failed to update clubs: ${errorText}`);
+        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+        throw new Error(`Failed to update clubs: ${errorData.message || response.statusText}`);
       }
+      
+      const result = await response.json();
+      console.log('Save response:', result);
       
       // Success! Show a toast and refresh the data
       toast({
@@ -89,10 +101,10 @@ export default function PlayerClubsManager({
         description: "Player clubs updated successfully"
       });
       
-      // Invalidate relevant queries
-      queryClient.invalidateQueries({ queryKey: ['/api/players'] });
-      queryClient.invalidateQueries({ queryKey: [`/api/players/${player.id}`] });
-      queryClient.invalidateQueries({ queryKey: [`/api/players/${player.id}/clubs`] });
+      // Invalidate relevant queries to refresh the data
+      await queryClient.invalidateQueries({ queryKey: ['/api/players'] });
+      await queryClient.invalidateQueries({ queryKey: [`/api/players/${player.id}`] });
+      await queryClient.invalidateQueries({ queryKey: [`/api/players/${player.id}/clubs`] });
       
       // Close the dialog
       onClose();
@@ -180,25 +192,31 @@ export default function PlayerClubsManager({
                 </Button>
               </div>
               <div className="space-y-2">
-                {allClubs.map(club => (
-                  <div key={club.id} className="flex items-center space-x-2">
-                    <Checkbox 
-                      id={`club-${club.id}`}
-                      checked={selectedClubs.includes(club.id)}
-                      onCheckedChange={() => handleClubToggle(club.id)}
-                    />
-                    <Label htmlFor={`club-${club.id}`} className="cursor-pointer flex-1">
-                      <div>
-                        <div className="font-medium">{club.name}</div>
-                        <div className="text-xs text-gray-500">Code: {club.code}</div>
-                        {club.description && (
-                          <div className="text-xs text-gray-400">{club.description}</div>
-                        )}
-                      </div>
-                    </Label>
+                {isClubsLoading ? (
+                  <div className="text-sm text-gray-500 text-center py-2">
+                    Loading clubs...
                   </div>
-                ))}
-                {allClubs.length === 0 && (
+                ) : allClubs.length > 0 ? (
+                  allClubs.map(club => (
+                    <div key={club.id} className="flex items-center space-x-2">
+                      <Checkbox 
+                        id={`club-${club.id}`}
+                        checked={selectedClubs.includes(club.id)}
+                        onCheckedChange={() => handleClubToggle(club.id)}
+                        disabled={isSubmitting}
+                      />
+                      <Label htmlFor={`club-${club.id}`} className="cursor-pointer flex-1">
+                        <div>
+                          <div className="font-medium">{club.name}</div>
+                          <div className="text-xs text-gray-500">Code: {club.code}</div>
+                          {club.description && (
+                            <div className="text-xs text-gray-400">{club.description}</div>
+                          )}
+                        </div>
+                      </Label>
+                    </div>
+                  ))
+                ) : (
                   <div className="text-sm text-gray-500 text-center py-2">
                     No clubs available. Create one to get started.
                   </div>
