@@ -9,7 +9,7 @@ import {
   type Position
 } from "../shared/schema";
 import { db } from "./db";
-import { eq, desc, and, isNull, sql } from "drizzle-orm";
+import { eq, desc, and, isNull, sql, asc } from "drizzle-orm";
 
 // Storage interface
 export interface IStorage {
@@ -97,6 +97,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getPlayersByClub(clubId: number): Promise<Player[]> {
+    console.log(`Fetching players for club ${clubId}`);
+    
     // First try to use the club_players table if it exists
     try {
       const directResult = await db.execute(sql`
@@ -108,26 +110,41 @@ export class DatabaseStorage implements IStorage {
         ORDER BY p.display_name
       `);
       
+      console.log(`Direct club_players query returned ${directResult.rows.length} rows`);
+      
       if (directResult.rows.length > 0) {
         console.log(`Found ${directResult.rows.length} players via club_players table for club ${clubId}`);
         return directResult.rows as Player[];
       }
     } catch (error) {
       // club_players table might not exist yet, fall back to team-based lookup
-      console.log(`club_players table not available, using team-based lookup for club ${clubId}:`, error);
+      console.log(`club_players table query failed, using team-based lookup for club ${clubId}:`, error);
     }
 
-    // Fallback to team-based lookup
-    const result = await db.execute(sql`
-      SELECT DISTINCT p.id, p.display_name, p.first_name, p.last_name, p.date_of_birth, 
-             p.position_preferences, p.active, p.avatar_color
-      FROM players p
-      JOIN team_players tp ON p.id = tp.player_id
-      JOIN teams t ON tp.team_id = t.id
-      WHERE t.club_id = ${clubId}
-      ORDER BY p.display_name
-    `);
-    return result.rows as Player[];
+    // Fallback to team-based lookup - but first check if we have teams
+    try {
+      console.log(`Attempting team-based lookup for club ${clubId}`);
+      const result = await db.execute(sql`
+        SELECT DISTINCT p.id, p.display_name, p.first_name, p.last_name, p.date_of_birth, 
+               p.position_preferences, p.active, p.avatar_color
+        FROM players p
+        JOIN team_players tp ON p.id = tp.player_id
+        JOIN teams t ON tp.team_id = t.id
+        WHERE t.club_id = ${clubId}
+        ORDER BY p.display_name
+      `);
+      
+      console.log(`Found ${result.rows.length} players via team-based lookup for club ${clubId}`);
+      return result.rows as Player[];
+    } catch (teamError) {
+      console.error(`Team-based lookup also failed for club ${clubId}:`, teamError);
+      
+      // Last resort: return all players (for backward compatibility)
+      console.log(`Falling back to all players query`);
+      const allPlayersResult = await db.select().from(players).orderBy(asc(players.displayName));
+      console.log(`Returning all ${allPlayersResult.length} players as fallback`);
+      return allPlayersResult;
+    }
   }
 
   async getPlayer(id: number): Promise<Player | undefined> {
