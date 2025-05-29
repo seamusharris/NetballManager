@@ -74,7 +74,7 @@ export async function migrateExistingDataToMultiClub() {
       }
     }
 
-    // 5. Create default admin user for the club (only if users exist)
+    // 5. Create default admin user for the club
     const usersResult = await db.execute(sql`SELECT id FROM users LIMIT 1;`);
     if (usersResult.rows.length > 0) {
       const firstUserId = usersResult.rows[0].id;
@@ -85,7 +85,24 @@ export async function migrateExistingDataToMultiClub() {
       `);
       console.log(`Created club admin user relationship for user ${firstUserId}`);
     } else {
-      console.log('No users found, skipping club_users creation');
+      console.log('No users found, creating default user...');
+      
+      // Create a default user
+      const defaultUserResult = await db.execute(sql`
+        INSERT INTO users (username, password)
+        VALUES ('admin', 'admin123')
+        RETURNING id;
+      `);
+      
+      const defaultUserId = defaultUserResult.rows[0].id;
+      console.log(`Created default user with ID: ${defaultUserId}`);
+      
+      // Link the default user to the default club as admin
+      await db.execute(sql`
+        INSERT INTO club_users (club_id, user_id, role, can_manage_players, can_manage_games, can_manage_stats, can_view_other_teams)
+        VALUES (${defaultClubId}, ${defaultUserId}, 'admin', true, true, true, true);
+      `);
+      console.log(`Created club admin user relationship for default user ${defaultUserId}`);
     }
 
     console.log('Data migration completed successfully!');

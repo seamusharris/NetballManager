@@ -1,4 +1,3 @@
-
 import { Request, Response, NextFunction } from 'express';
 import { db } from './db';
 import { sql } from 'drizzle-orm';
@@ -33,14 +32,14 @@ export function requireClubAccess(requiredPermission?: keyof AuthenticatedReques
 
       // Extract club ID from request (URL param, query, or body), fallback to user's current club
       const clubId = req.params.clubId || req.query.clubId || req.body.clubId || req.user?.currentClubId;
-      
+
       if (!clubId) {
         return res.status(400).json({ error: 'Club ID required' });
       }
 
       // Check if user has access to this club
       const userClub = req.user.clubs.find(club => club.clubId === parseInt(clubId));
-      
+
       if (!userClub) {
         return res.status(403).json({ error: 'Access denied to this club' });
       }
@@ -67,7 +66,7 @@ export function requireTeamAccess() {
   return async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const teamId = req.params.teamId || req.query.teamId || req.body.teamId;
-      
+
       if (!teamId) {
         return res.status(400).json({ error: 'Team ID required' });
       }
@@ -104,7 +103,7 @@ export function requireGameAccess(requireEditAccess = false) {
   return async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const gameId = req.params.gameId || req.params.id || req.query.gameId;
-      
+
       if (!gameId) {
         return res.status(400).json({ error: 'Game ID required' });
       }
@@ -136,7 +135,7 @@ export function requireGameAccess(requireEditAccess = false) {
 
       const game = accessResult.rows[0];
       const userClubId = req.user.currentClubId;
-      
+
       // Check if user's club is involved in the game
       const hasDirectAccess = game.home_club_id === userClubId || game.away_club_id === userClubId;
       const hasPermissionAccess = game.can_view_detailed_stats || game.can_edit_stats;
@@ -192,4 +191,72 @@ export async function loadUserPermissions(userId: number) {
       canViewOtherTeams: row.can_view_other_teams,
     }
   }));
+}
+
+/**
+ * Middleware to load user permissions and set up default user context
+ * For now, this loads the first available user until proper authentication is implemented
+ */
+export async function loadUserPermissions(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+  try {
+    // For now, load the first available user from the database
+    // This will be replaced with proper authentication later
+    if (!req.user) {
+      const userResult = await db.execute(sql`
+        SELECT 
+          u.id,
+          u.username,
+          cu.club_id,
+          cu.role,
+          cu.can_manage_players,
+          cu.can_manage_games,
+          cu.can_manage_stats,
+          cu.can_view_other_teams
+        FROM users u
+        JOIN club_users cu ON u.id = cu.user_id
+        WHERE cu.is_active = true
+        LIMIT 1
+      `);
+
+      if (userResult.rows.length > 0) {
+        const user = userResult.rows[0];
+        req.user = {
+          id: user.id,
+          username: user.username,
+          clubs: [{
+            clubId: user.club_id,
+            role: user.role,
+            permissions: {
+              canManagePlayers: user.can_manage_players,
+              canManageGames: user.can_manage_games,
+              canManageStats: user.can_manage_stats,
+              canViewOtherTeams: user.can_view_other_teams,
+            }
+          }],
+          currentClubId: user.club_id
+        };
+      } else {
+        // Fallback if no users found
+        req.user = {
+          id: 1,
+          username: 'admin',
+          clubs: [{
+            clubId: 1,
+            role: 'admin',
+            permissions: {
+              canManagePlayers: true,
+              canManageGames: true,
+              canManageStats: true,
+              canViewOtherTeams: true,
+            }
+          }],
+          currentClubId: 1
+        };
+      }
+    }
+    next();
+  } catch (error) {
+    console.error('Error loading user permissions:', error);
+    res.status(500).json({ error: 'Failed to load user permissions' });
+  }
 }
