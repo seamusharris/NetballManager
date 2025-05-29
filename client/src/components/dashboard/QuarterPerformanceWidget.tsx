@@ -214,13 +214,6 @@ export default function QuarterPerformanceWidget({
         <div className="mt-4">
         </div>
 
-        <div className="mb-4" />
-
-    </BaseWidget>
-  );
-}
-```<div className="mb-4" />
-
     </BaseWidget>
   );
 }
