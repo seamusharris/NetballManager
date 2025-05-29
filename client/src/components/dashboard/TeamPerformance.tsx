@@ -306,52 +306,7 @@ export default function TeamPerformance({ games, className, activeSeason, select
             </div>
           </div>
 
-          {/* Games Progress - Timeline Style */}
-          <div className="bg-gradient-to-r from-purple-50 to-blue-50 p-4 rounded-xl border border-purple-100">
-            <p className="text-gray-600 text-sm font-medium mb-3">Season Progress</p>
-            <div className="flex items-center justify-between mb-2">
-              <div className="text-center">
-                <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center mb-1">
-                  <span className="text-white font-bold text-sm">{completedGamesCount}</span>
-                </div>
-                <span className="text-xs text-gray-600">Played</span>
-              </div>
-
-              <div className="flex-1 mx-4">
-                <div className="relative">
-                  <div className="h-2 bg-gray-200 rounded-full">
-                    <div 
-                      className="h-2 bg-gradient-to-r from-green-400 to-blue-500 rounded-full transition-all duration-1000"
-                      style={{ 
-                        width: `${totalGames > 0 ? (completedGamesCount / totalGames) * 100 : 0}%` 
-                      }}
-                    />
-                  </div>
-                  <div className="absolute -top-1 left-0 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>
-                  <div 
-                    className="absolute -top-1 bg-blue-500 rounded-full border-2 border-white w-4 h-4 transition-all duration-1000"
-                    style={{ 
-                      left: `${totalGames > 0 ? (completedGamesCount / totalGames) * 100 : 0}%`,
-                      transform: 'translateX(-50%)'
-                    }}
-                  ></div>
-                </div>
-                <div className="flex justify-between text-xs text-gray-500 mt-1">
-                  <span>Start</span>
-                  <span>{totalGames > 0 ? Math.round((completedGamesCount / totalGames) * 100) : 0}% Complete</span>
-                </div>
-              </div>
-
-              <div className="text-center">
-                <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center mb-1">
-                  <span className="text-white font-bold text-sm">
-                    {games.filter(game => game.gameStatus?.isCompleted !== true && !game.isBye).length}
-                  </span>
-                </div>
-                <span className="text-xs text-gray-600">Upcoming</span>
-              </div>
-            </div>
-          </div>
+          
         </div>
         {/* Enhanced Performance Analysis */}
         <div className="mt-4 space-y-4">
@@ -525,22 +480,22 @@ export default function TeamPerformance({ games, className, activeSeason, select
           </div>
 
           {/* Option 7: Performance Comparison Radar */}
-          <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
-            <div className="flex justify-center items-center space-x-2 mb-3">
-              <span className="text-xs text-gray-500 font-medium">Performance Radar</span>
+          <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+            <div className="flex justify-center items-center space-x-2 mb-4">
+              <span className="text-sm text-gray-500 font-medium">Performance Radar</span>
             </div>
             <div className="flex justify-center">
-              <svg width="120" height="120" viewBox="0 0 120 120">
+              <svg width="180" height="180" viewBox="0 0 180 180">
                 {/* Radar grid */}
-                <circle cx="60" cy="60" r="40" stroke="#e5e7eb" strokeWidth="1" fill="none" />
-                <circle cx="60" cy="60" r="25" stroke="#e5e7eb" strokeWidth="1" fill="none" />
-                <circle cx="60" cy="60" r="10" stroke="#e5e7eb" strokeWidth="1" fill="none" />
+                <circle cx="90" cy="90" r="60" stroke="#e5e7eb" strokeWidth="1" fill="none" />
+                <circle cx="90" cy="90" r="40" stroke="#e5e7eb" strokeWidth="1" fill="none" />
+                <circle cx="90" cy="90" r="20" stroke="#e5e7eb" strokeWidth="1" fill="none" />
 
                 {/* Axis lines */}
-                <line x1="60" y1="20" x2="60" y2="100" stroke="#e5e7eb" strokeWidth="1" />
-                <line x1="20" y1="60" x2="100" y2="60" stroke="#e5e7eb" strokeWidth="1" />
-                <line x1="31.8" y1="31.8" x2="88.2" y2="88.2" stroke="#e5e7eb" strokeWidth="1" />
-                <line x1="88.2" y1="31.8" x2="31.8" y2="88.2" stroke="#e5e7eb" strokeWidth="1" />
+                <line x1="90" y1="30" x2="90" y2="150" stroke="#e5e7eb" strokeWidth="1" />
+                <line x1="30" y1="90" x2="150" y2="90" stroke="#e5e7eb" strokeWidth="1" />
+                <line x1="47.7" y1="47.7" x2="132.3" y2="132.3" stroke="#e5e7eb" strokeWidth="1" />
+                <line x1="132.3" y1="47.7" x2="47.7" y2="132.3" stroke="#e5e7eb" strokeWidth="1" />
 
                 {/* Performance polygon */}
                 {(() => {
@@ -553,9 +508,9 @@ export default function TeamPerformance({ games, className, activeSeason, select
 
                   const points = metrics.map((value, index) => {
                     const angle = (index * 2 * Math.PI) / 4;
-                    const radius = value * 30;
-                    const x = 60 + radius * Math.cos(angle - Math.PI/2);
-                    const y = 60 + radius * Math.sin(angle - Math.PI/2);
+                    const radius = value * 45;
+                    const x = 90 + radius * Math.cos(angle - Math.PI/2);
+                    const y = 90 + radius * Math.sin(angle - Math.PI/2);
                     return `${x},${y}`;
                   }).join(' ');
 
@@ -564,16 +519,16 @@ export default function TeamPerformance({ games, className, activeSeason, select
                       points={points}
                       fill="rgba(59, 130, 246, 0.3)"
                       stroke="#3b82f6"
-                      strokeWidth="2"
+                      strokeWidth="3"
                     />
                   );
                 })()}
 
                 {/* Labels */}
-                <text x="60" y="15" textAnchor="middle" className="text-xs fill-current">Win%</text>
-                <text x="105" y="65" textAnchor="middle" className="text-xs fill-current">Goals</text>
-                <text x="60" y="110" textAnchor="middle" className="text-xs fill-current">Ratio</text>
-                <text x="15" y="65" textAnchor="middle" className="text-xs fill-current">Games</text>
+                <text x="90" y="20" textAnchor="middle" className="text-sm font-medium fill-current">Win%</text>
+                <text x="165" y="95" textAnchor="middle" className="text-sm font-medium fill-current">Goals</text>
+                <text x="90" y="170" textAnchor="middle" className="text-sm font-medium fill-current">Ratio</text>
+                <text x="15" y="95" textAnchor="middle" className="text-sm font-medium fill-current">Games</text>
               </svg>
             </div>
           </div>
