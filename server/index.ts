@@ -63,9 +63,11 @@ app.use((req, res, next) => {
     const { addMultiClubSupport } = await import('./migrations/addMultiClubSupport');
     await addMultiClubSupport();
 
-    // Ensure all required columns exist (handles partial migration failures)
     const { ensureRequiredColumns } = await import('./migrations/ensureRequiredColumns');
     await ensureRequiredColumns();
+
+    const { createClubPlayersTable } = await import('./migrations/createClubPlayersTable');
+    await createClubPlayersTable();
 
     const { migrateExistingDataToMultiClub } = await import('./migrations/migrateToMultiClub');
 

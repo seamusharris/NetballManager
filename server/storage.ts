@@ -97,6 +97,26 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getPlayersByClub(clubId: number): Promise<Player[]> {
+    // First try to use the club_players table if it exists
+    try {
+      const directResult = await db.execute(sql`
+        SELECT p.* 
+        FROM players p
+        JOIN club_players cp ON p.id = cp.player_id
+        WHERE cp.club_id = ${clubId} AND cp.is_active = true
+        ORDER BY p.display_name
+      `);
+      
+      if (directResult.rows.length > 0) {
+        console.log(`Found ${directResult.rows.length} players via club_players table for club ${clubId}`);
+        return directResult.rows as Player[];
+      }
+    } catch (error) {
+      // club_players table might not exist yet, fall back to team-based lookup
+      console.log(`club_players table not available, using team-based lookup for club ${clubId}`);
+    }
+
+    // Fallback to team-based lookup
     const result = await db.execute(sql`
       SELECT DISTINCT p.* 
       FROM players p
@@ -691,6 +711,81 @@ export class DatabaseStorage implements IStorage {
   // Games by season
   async getGamesBySeason(seasonId: number): Promise<Game[]> {
     return await db.select().from(games).where(eq(games.seasonId, seasonId));
+  }
+
+  // Club-player relationship methods
+  async getPlayerClubs(playerId: number): Promise<any[]> {
+    try {
+      const result = await db.execute(sql`
+        SELECT 
+          c.*,
+          cp.joined_date,
+          cp.left_date,
+          cp.is_active,
+          cp.notes
+        FROM clubs c
+        JOIN club_players cp ON c.id = cp.club_id
+        WHERE cp.player_id = ${playerId}
+        ORDER BY cp.is_active DESC, cp.joined_date DESC
+      `);
+      return result.rows;
+    } catch (error) {
+      console.log('club_players table not available, returning empty array');
+      return [];
+    }
+  }
+
+  async addPlayerToClub(playerId: number, clubId: number, notes?: string): Promise<boolean> {
+    try {
+      await db.execute(sql`
+        INSERT INTO club_players (player_id, club_id, notes)
+        VALUES (${playerId}, ${clubId}, ${notes || null})
+        ON CONFLICT (club_id, player_id) DO UPDATE SET
+          is_active = true,
+          left_date = null,
+          notes = EXCLUDED.notes,
+          updated_at = NOW()
+      `);
+      return true;
+    } catch (error) {
+      console.error('Error adding player to club:', error);
+      return false;
+    }
+  }
+
+  async removePlayerFromClub(playerId: number, clubId: number): Promise<boolean> {
+    try {
+      await db.execute(sql`
+        UPDATE club_players 
+        SET is_active = false, left_date = CURRENT_DATE, updated_at = NOW()
+        WHERE player_id = ${playerId} AND club_id = ${clubId}
+      `);
+      return true;
+    } catch (error) {
+      console.error('Error removing player from club:', error);
+      return false;
+    }
+  }
+
+  async getClubPlayers(clubId: number): Promise<any[]> {
+    try {
+      const result = await db.execute(sql`
+        SELECT 
+          p.*,
+          cp.joined_date,
+          cp.left_date,
+          cp.is_active as club_active,
+          cp.notes as club_notes
+        FROM players p
+        JOIN club_players cp ON p.id = cp.player_id
+        WHERE cp.club_id = ${clubId} AND cp.is_active = true
+        ORDER BY p.display_name
+      `);
+      return result.rows;
+    } catch (error) {
+      console.log('club_players table not available, falling back to team-based lookup');
+      return [];
+    }
   }
 }
 

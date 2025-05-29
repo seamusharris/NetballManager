@@ -1861,6 +1861,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register game permissions routes
   registerGamePermissionsRoutes(app);
 
+  // ----- CLUB-PLAYER RELATIONSHIPS API -----
+  
+  // Get all clubs for a specific player
+  app.get("/api/players/:playerId/clubs", async (req, res) => {
+    try {
+      const playerId = parseInt(req.params.playerId);
+      const clubs = await storage.getPlayerClubs(playerId);
+      res.json(clubs);
+    } catch (error) {
+      console.error('Error fetching player clubs:', error);
+      res.status(500).json({ error: 'Failed to fetch player clubs' });
+    }
+  });
+
+  // Add player to a club
+  app.post("/api/clubs/:clubId/players/:playerId", requireClubAccess('canManagePlayers'), async (req: AuthenticatedRequest, res) => {
+    try {
+      const clubId = parseInt(req.params.clubId);
+      const playerId = parseInt(req.params.playerId);
+      const { notes } = req.body;
+
+      const success = await storage.addPlayerToClub(playerId, clubId, notes);
+      
+      if (success) {
+        res.json({ message: 'Player added to club successfully' });
+      } else {
+        res.status(500).json({ error: 'Failed to add player to club' });
+      }
+    } catch (error) {
+      console.error('Error adding player to club:', error);
+      res.status(500).json({ error: 'Failed to add player to club' });
+    }
+  });
+
+  // Remove player from a club
+  app.delete("/api/clubs/:clubId/players/:playerId", requireClubAccess('canManagePlayers'), async (req: AuthenticatedRequest, res) => {
+    try {
+      const clubId = parseInt(req.params.clubId);
+      const playerId = parseInt(req.params.playerId);
+
+      const success = await storage.removePlayerFromClub(playerId, clubId);
+      
+      if (success) {
+        res.json({ message: 'Player removed from club successfully' });
+      } else {
+        res.status(500).json({ error: 'Failed to remove player from club' });
+      }
+    } catch (error) {
+      console.error('Error removing player from club:', error);
+      res.status(500).json({ error: 'Failed to remove player from club' });
+    }
+  });
+
+  // Get all players directly associated with a club
+  app.get("/api/clubs/:clubId/players", requireClubAccess(), async (req: AuthenticatedRequest, res) => {
+    try {
+      const clubId = parseInt(req.params.clubId);
+      const players = await storage.getClubPlayers(clubId);
+      res.json(players);
+    } catch (error) {
+      console.error('Error fetching club players:', error);
+      res.status(500).json({ error: 'Failed to fetch club players' });
+    }
+  });
+
   // Create HTTP server
   const httpServer = createServer(app);
   return httpServer;

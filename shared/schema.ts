@@ -283,6 +283,27 @@ export const insertGamePermissionSchema = createInsertSchema(gamePermissions).om
 export type InsertGamePermission = z.infer<typeof insertGamePermissionSchema>;
 export type GamePermission = typeof gamePermissions.$inferSelect;
 
+// Club-player direct relationships
+export const clubPlayers = pgTable("club_players", {
+  id: serial("id").primaryKey(),
+  clubId: integer("club_id").notNull().references(() => clubs.id, { onDelete: "cascade" }),
+  playerId: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
+  joinedDate: date("joined_date").defaultNow(),
+  leftDate: date("left_date"),
+  isActive: boolean("is_active").notNull().default(true),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => {
+  return {
+    clubPlayerUnique: unique().on(table.clubId, table.playerId)
+  };
+});
+
+export const insertClubPlayerSchema = createInsertSchema(clubPlayers).omit({ id: true });
+export type InsertClubPlayer = z.infer<typeof insertClubPlayerSchema>;
+export type ClubPlayer = typeof clubPlayers.$inferSelect;
+
 // User model (extending from existing model)
 // Player-season relationship (DEPRECATED - replaced by team_players)
 export const playerSeasons = pgTable("player_seasons", {
