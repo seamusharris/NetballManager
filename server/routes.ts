@@ -394,6 +394,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Middleware to simulate authentication and set default club context
+  app.use((req: any, res, next) => {
+    // For development, simulate an authenticated user with default club
+    if (!req.user) {
+      req.user = {
+        id: 1,
+        username: 'dev-user',
+        clubs: [{
+          clubId: 1,
+          role: 'admin',
+          permissions: {
+            canManagePlayers: true,
+            canManageGames: true,
+            canManageStats: true,
+            canViewOtherTeams: true,
+          }
+        }],
+        currentClubId: 1
+      };
+    }
+    next();
+  });
+
   // ----- PLAYERS API -----
   app.get("/api/players", requireClubAccess(), async (req: AuthenticatedRequest, res) => {
     try {

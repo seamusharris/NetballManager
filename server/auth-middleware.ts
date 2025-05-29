@@ -27,15 +27,15 @@ export interface AuthenticatedRequest extends Request {
 export function requireClubAccess(requiredPermission?: keyof AuthenticatedRequest['user']['clubs'][0]['permissions']) {
   return async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
-      // Extract club ID from request (URL param, query, or body)
+      if (!req.user) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+
+      // Extract club ID from request (URL param, query, or body), fallback to user's current club
       const clubId = req.params.clubId || req.query.clubId || req.body.clubId || req.user?.currentClubId;
       
       if (!clubId) {
         return res.status(400).json({ error: 'Club ID required' });
-      }
-
-      if (!req.user) {
-        return res.status(401).json({ error: 'Authentication required' });
       }
 
       // Check if user has access to this club
