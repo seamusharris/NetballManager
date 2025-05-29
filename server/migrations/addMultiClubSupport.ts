@@ -128,9 +128,10 @@ export async function addMultiClubSupport(): Promise<void> {
     // Add team references to games table
     await db.execute(sql`
       ALTER TABLE games 
-      ADD COLUMN home_team_id INTEGER REFERENCES teams(id),
-      ADD COLUMN away_team_id INTEGER REFERENCES teams(id),
-      ADD COLUMN is_inter_club BOOLEAN NOT NULL DEFAULT false
+      ADD COLUMN IF NOT EXISTS home_team_id INTEGER REFERENCES teams(id),
+      ADD COLUMN IF NOT EXISTS away_team_id INTEGER REFERENCES teams(id),
+      ADD COLUMN IF NOT EXISTS is_inter_club BOOLEAN NOT NULL DEFAULT false,
+      ADD COLUMN IF NOT EXISTS venue TEXT
     `);
     log("Added team columns to games table", "migration");
 
