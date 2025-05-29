@@ -3,7 +3,6 @@ import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { BaseWidget } from '@/components/ui/base-widget';
 import { Badge } from '@/components/ui/badge';
-import { TrendingUp, TrendingDown, Target, Trophy, AlertTriangle, ChevronRight } from 'lucide-react';
 import { Game, Opponent } from '@shared/schema';
 import { getWinLoseLabel, getWinLoseClass } from '@/lib/utils';
 import { GameResult } from '@/lib/resultUtils';
@@ -209,19 +208,10 @@ export default function OpponentMatchups({
 
           {/* Best Matchup */}
           {bestMatchup && (
-            <div className="flex items-center justify-between p-4 bg-green-50 border-l-4 border-green-500 rounded">
+            <div className="flex items-center justify-between p-4 mb-4 mt-2 bg-green-50 border-l-4 border-green-500 border-t border-r border-b border-t-green-500 border-r-green-500 border-b-green-500 rounded">
               <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <Trophy className="h-4 w-4 text-green-600" />
-                  <span className="text-sm font-medium text-gray-800">{bestMatchup.opponent.teamName}</span>
-                  <Badge variant="outline" className="text-green-700 border-green-300">Best Matchup</Badge>
-                </div>
-                <p className="text-xs text-gray-600">
-                  {bestMatchup.wins}W-{bestMatchup.losses}L-{bestMatchup.draws}D
-                  {bestMatchup.scoreDifferential > 0 && (
-                    <span className="ml-2">+{bestMatchup.scoreDifferential} avg margin</span>
-                  )}
-                </p>
+                <p className="font-semibold text-gray-800">{bestMatchup.opponent.teamName}</p>
+                <Badge variant="outline" className="text-green-700 border-green-300">Best Matchup</Badge>
               </div>
               <div className="text-right">
                 <p className="text-lg font-bold text-green-700 mb-1">{bestMatchup.winRate}%</p>
@@ -232,19 +222,10 @@ export default function OpponentMatchups({
 
           {/* Worst Matchup */}
           {worstMatchup && worstMatchup !== bestMatchup && (
-            <div className="flex items-center justify-between p-4 bg-red-50 border-l-4 border-red-500 rounded">
+            <div className="flex items-center justify-between p-4 mb-4 mt-2 bg-red-50 border-l-4 border-red-500 border-t border-r border-b border-t-red-500 border-r-red-500 border-b-red-500 rounded">
               <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <AlertTriangle className="h-4 w-4 text-red-600" />
-                  <span className="text-sm font-medium text-gray-800">{worstMatchup.opponent.teamName}</span>
-                  <Badge variant="outline" className="text-red-700 border-red-300">Challenge</Badge>
-                </div>
-                <p className="text-xs text-gray-600">
-                  {worstMatchup.wins}W-{worstMatchup.losses}L-{worstMatchup.draws}D
-                  {worstMatchup.scoreDifferential < 0 && (
-                    <span className="ml-2">{worstMatchup.scoreDifferential} avg margin</span>
-                  )}
-                </p>
+                <p className="font-semibold text-gray-800">{worstMatchup.opponent.teamName}</p>
+                <Badge variant="outline" className="text-red-700 border-red-300">Challenge</Badge>
               </div>
               <div className="text-right">
                 <p className="text-lg font-bold text-red-700 mb-1">{worstMatchup.winRate}%</p>
