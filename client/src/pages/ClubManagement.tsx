@@ -1,11 +1,24 @@
-
 import React from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { fetchApi } from '@/lib/apiClient';
-import { Building2, Users, Plus, Edit, Trash2 } from 'lucide-react';
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Users, Building2, Plus, Edit, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { queryClient } from "@/lib/queryClient";
+import ClubForm from "@/components/clubs/ClubForm";
+import { 
+  AlertDialog,
+  AlertDialogAction, 
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle 
+} from "@/components/ui/alert-dialog";
 import { useClub } from '@/contexts/ClubContext';
 
 interface Club {
@@ -26,6 +39,10 @@ interface ClubWithStats extends Club {
 }
 
 export default function ClubManagement() {
+  const { toast } = useToast();
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [editingClub, setEditingClub] = useState<any>(null);
+  const [deletingClub, setDeletingClub] = useState<any>(null);
   const { currentClub } = useClub();
   const queryClient = useQueryClient();
 
@@ -37,6 +54,119 @@ export default function ClubManagement() {
       return response as ClubWithStats[];
     }
   });
+
+  // Create club mutation
+  const createMutation = useMutation({
+    mutationFn: async (clubData: any) => {
+      const response = await fetch('/api/clubs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(clubData)
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(error);
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/clubs'] });
+      setIsCreateDialogOpen(false);
+      toast({
+        title: "Success",
+        description: "Club created successfully"
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create club",
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Update club mutation
+  const updateMutation = useMutation({
+    mutationFn: async (clubData: any) => {
+      const response = await fetch(`/api/clubs/${clubData.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(clubData)
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(error);
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/clubs'] });
+      setEditingClub(null);
+      toast({
+        title: "Success",
+        description: "Club updated successfully"
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update club",
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Delete club mutation
+  const deleteMutation = useMutation({
+    mutationFn: async (clubId: number) => {
+      const response = await fetch(`/api/clubs/${clubId}`, {
+        method: 'DELETE'
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(error);
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/clubs'] });
+      setDeletingClub(null);
+      toast({
+        title: "Success",
+        description: "Club deleted successfully"
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete club",
+        variant: "destructive"
+      });
+    }
+  });
+
+  const handleCreateClub = (clubData: any) => {
+    createMutation.mutate(clubData);
+  };
+
+  const handleUpdateClub = (clubData: any) => {
+    if (editingClub) {
+      updateMutation.mutate({ ...clubData, id: editingClub.id });
+    }
+  };
+
+  const handleDeleteClub = () => {
+    if (deletingClub) {
+      deleteMutation.mutate(deletingClub.id);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -70,7 +200,7 @@ export default function ClubManagement() {
           <h1 className="text-3xl font-bold">Club Management</h1>
           <p className="text-muted-foreground">Manage clubs and their settings</p>
         </div>
-        <Button>
+        <Button onClick={() => setIsCreateDialogOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />
           Add Club
         </Button>
@@ -102,10 +232,18 @@ export default function ClubManagement() {
                   </div>
                 </div>
                 <div className="flex space-x-2">
-                  <Button variant="outline" size="sm">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setEditingClub(club)}
+                  >
                     <Edit className="h-4 w-4" />
                   </Button>
-                  <Button variant="outline" size="sm">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setDeletingClub(club)}
+                  >
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
@@ -161,6 +299,81 @@ export default function ClubManagement() {
           </Card>
         ))}
       </div>
+
+      {/* Create Club Dialog */}
+      {isCreateDialogOpen && (
+        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center overflow-y-auto">
+          <div className="relative bg-white dark:bg-slate-900 p-6 rounded-lg max-w-lg w-full max-h-[90vh] overflow-y-auto">
+            <button 
+              className="absolute right-4 top-4 rounded-sm opacity-70 text-gray-600 hover:opacity-100" 
+              onClick={() => setIsCreateDialogOpen(false)}
+            >
+              ✕
+              <span className="sr-only">Close</span>
+            </button>
+
+            <h2 className="text-xl font-semibold mb-2">Create New Club</h2>
+            <p className="text-sm text-gray-500 mb-4">
+              Enter the details for the new club.
+            </p>
+
+            <ClubForm 
+              onSubmit={handleCreateClub}
+              onCancel={() => setIsCreateDialogOpen(false)}
+              isSubmitting={createMutation.isPending}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Edit Club Dialog */}
+      {editingClub && (
+        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center overflow-y-auto">
+          <div className="relative bg-white dark:bg-slate-900 p-6 rounded-lg max-w-lg w-full max-h-[90vh] overflow-y-auto">
+            <button 
+              className="absolute right-4 top-4 rounded-sm opacity-70 text-gray-600 hover:opacity-100" 
+              onClick={() => setEditingClub(null)}
+            >
+              ✕
+              <span className="sr-only">Close</span>
+            </button>
+
+            <h2 className="text-xl font-semibold mb-2">Edit Club</h2>
+            <p className="text-sm text-gray-500 mb-4">
+              Make changes to the club details below.
+            </p>
+
+            <ClubForm 
+              club={editingClub}
+              onSubmit={handleUpdateClub}
+              onCancel={() => setEditingClub(null)}
+              isSubmitting={updateMutation.isPending}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!deletingClub} onOpenChange={(open) => !open && setDeletingClub(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete the club "{deletingClub?.name}". 
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeleteClub}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

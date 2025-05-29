@@ -585,6 +585,207 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Player-club association routes
+  app.get("/api/players/:id/clubs", async (req, res) => {
+    try {
+      const playerId = parseInt(req.params.id, 10);
+      
+      if (isNaN(playerId)) {
+        return res.status(400).json({ message: "Invalid player ID" });
+      }
+
+      const result = await pool.query(`
+        SELECT c.id, c.name, c.code, c.description
+        FROM clubs c
+        JOIN club_players cp ON c.id = cp.club_id
+        WHERE cp.player_id = $1 AND cp.is_active = true
+      `, [playerId]);
+
+      res.json(result.rows);
+    } catch (error) {
+      console.error("Error fetching player clubs:", error);
+      res.status(500).json({ message: "Failed to fetch player clubs" });
+    }
+  });
+
+  app.post("/api/players/:id/clubs", async (req, res) => {
+    try {
+      const playerId = parseInt(req.params.id, 10);
+      const { clubIds = [] } = req.body;
+
+      if (isNaN(playerId)) {
+        return res.status(400).json({ message: "Invalid player ID" });
+      }
+
+      const client = await pool.connect();
+      
+      try {
+        await client.query('BEGIN');
+
+        // Check if player exists
+        const playerCheck = await client.query(
+          'SELECT id FROM players WHERE id = $1',
+          [playerId]
+        );
+
+        if (playerCheck.rowCount === 0) {
+          await client.query('ROLLBACK');
+          return res.status(404).json({ message: "Player not found" });
+        }
+
+        // Remove existing club associations for this player
+        await client.query(
+          'DELETE FROM club_players WHERE player_id = $1',
+          [playerId]
+        );
+
+        // Add new club associations
+        for (const clubId of clubIds) {
+          if (typeof clubId === 'number' && clubId > 0) {
+            await client.query(`
+              INSERT INTO club_players (club_id, player_id, is_active, joined_date)
+              VALUES ($1, $2, true, CURRENT_DATE)
+            `, [clubId, playerId]);
+          }
+        }
+
+        await client.query('COMMIT');
+        res.json({ success: true, message: "Player clubs updated successfully" });
+      } catch (error) {
+        await client.query('ROLLBACK');
+        throw error;
+      } finally {
+        client.release();
+      }
+    } catch (error) {
+      console.error("Error updating player clubs:", error);
+      res.status(500).json({ message: "Failed to update player clubs" });
+    }
+  });
+
+  // Club CRUD routes
+  app.get("/api/clubs", async (req, res) => {
+    try {
+      const result = await pool.query(`
+        SELECT id, name, code, description
+        FROM clubs
+        ORDER BY name
+      `);
+
+      res.json(result.rows);
+    } catch (error) {
+      console.error("Error fetching clubs:", error);
+      res.status(500).json({ message: "Failed to fetch clubs" });
+    }
+  });
+
+  app.post("/api/clubs", async (req, res) => {
+    try {
+      const { name, code, description } = req.body;
+
+      if (!name || !code) {
+        return res.status(400).json({ message: "Name and code are required" });
+      }
+
+      // Check if club code already exists
+      const codeCheck = await pool.query(
+        'SELECT id FROM clubs WHERE UPPER(code) = UPPER($1)',
+        [code]
+      );
+
+      if (codeCheck.rowCount > 0) {
+        return res.status(400).json({ message: "Club code already exists" });
+      }
+
+      const result = await pool.query(`
+        INSERT INTO clubs (name, code, description)
+        VALUES ($1, $2, $3)
+        RETURNING id, name, code, description
+      `, [name, code.toUpperCase(), description]);
+
+      res.status(201).json(result.rows[0]);
+    } catch (error) {
+      console.error("Error creating club:", error);
+      res.status(500).json({ message: "Failed to create club" });
+    }
+  });
+
+  app.patch("/api/clubs/:id", async (req, res) => {
+    try {
+      const clubId = parseInt(req.params.id, 10);
+      const { name, code, description } = req.body;
+
+      if (isNaN(clubId)) {
+        return res.status(400).json({ message: "Invalid club ID" });
+      }
+
+      if (!name || !code) {
+        return res.status(400).json({ message: "Name and code are required" });
+      }
+
+      // Check if club exists
+      const clubCheck = await pool.query('SELECT id FROM clubs WHERE id = $1', [clubId]);
+      if (clubCheck.rowCount === 0) {
+        return res.status(404).json({ message: "Club not found" });
+      }
+
+      // Check if code is taken by another club
+      const codeCheck = await pool.query(
+        'SELECT id FROM clubs WHERE UPPER(code) = UPPER($1) AND id != $2',
+        [code, clubId]
+      );
+
+      if (codeCheck.rowCount > 0) {
+        return res.status(400).json({ message: "Club code already exists" });
+      }
+
+      const result = await pool.query(`
+        UPDATE clubs 
+        SET name = $1, code = $2, description = $3
+        WHERE id = $4
+        RETURNING id, name, code, description
+      `, [name, code.toUpperCase(), description, clubId]);
+
+      res.json(result.rows[0]);
+    } catch (error) {
+      console.error("Error updating club:", error);
+      res.status(500).json({ message: "Failed to update club" });
+    }
+  });
+
+  app.delete("/api/clubs/:id", async (req, res) => {
+    try {
+      const clubId = parseInt(req.params.id, 10);
+
+      if (isNaN(clubId)) {
+        return res.status(400).json({ message: "Invalid club ID" });
+      }
+
+      // Check if club has any players
+      const playersCheck = await pool.query(
+        'SELECT COUNT(*) as count FROM club_players WHERE club_id = $1 AND is_active = true',
+        [clubId]
+      );
+
+      if (parseInt(playersCheck.rows[0].count) > 0) {
+        return res.status(400).json({ 
+          message: "Cannot delete club with active players. Please remove all players first." 
+        });
+      }
+
+      const result = await pool.query('DELETE FROM clubs WHERE id = $1', [clubId]);
+
+      if (result.rowCount === 0) {
+        return res.status(404).json({ message: "Club not found" });
+      }
+
+      res.json({ success: true, message: "Club deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting club:", error);
+      res.status(500).json({ message: "Failed to delete club" });
+    }
+  });
+
   app.get("/api/players/:id", async (req, res) => {
     try {
       const player = await storage.getPlayer(Number(req.params.id));

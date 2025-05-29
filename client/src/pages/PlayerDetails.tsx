@@ -25,6 +25,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import PlayerForm from "@/components/players/PlayerForm";
 import PlayerSeasonsManager from "@/components/players/PlayerSeasonsManager";
+import PlayerClubsManager from "@/components/players/PlayerClubsManager";
 import { isGameValidForStatistics } from '@/lib/gameFilters';
 
 export default function PlayerDetails() {
@@ -37,6 +38,7 @@ export default function PlayerDetails() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isSeasonManagerOpen, setIsSeasonManagerOpen] = useState(false);
+  const [isClubManagerOpen, setIsClubManagerOpen] = useState(false);
 
   // Fetch player data
   const { data: player, isLoading: isLoadingPlayer } = useQuery<Player>({
@@ -503,6 +505,14 @@ export default function PlayerDetails() {
               onClick={() => setIsSeasonManagerOpen(true)}
             >
               <Calendar className="h-4 w-4 mr-1" /> Manage Seasons
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="flex items-center" 
+              onClick={() => setIsClubManagerOpen(true)}
+            >
+              <Shield className="h-4 w-4 mr-1" /> Manage Clubs
             </Button>
             <Button 
               variant="outline" 
@@ -1137,6 +1147,31 @@ export default function PlayerDetails() {
               player={player}
               onSubmit={handleUpdatePlayer} 
               isSubmitting={updateMutation.isPending} 
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Club Manager Modal */}
+      {isClubManagerOpen && player && (
+        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center overflow-y-auto">
+          <div className="relative bg-white dark:bg-slate-900 p-6 rounded-lg max-w-lg w-full max-h-[90vh] overflow-y-auto">
+            <button 
+              className="absolute right-4 top-4 rounded-sm opacity-70 text-gray-600 hover:opacity-100" 
+              onClick={() => setIsClubManagerOpen(false)}
+            >
+              ✕
+              <span className="sr-only">Close</span>
+            </button>
+
+            <h2 className="text-xl font-semibold mb-2">Manage Clubs</h2>
+            <p className="text-sm text-gray-500 mb-4">
+              Select which clubs {player.displayName} is associated with.
+            </p>
+            <PlayerClubsManager 
+              player={player}
+              isOpen={isClubManagerOpen}
+              onClose={() => setIsClubManagerOpen(false)}
             />
           </div>
         </div>
