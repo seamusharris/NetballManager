@@ -1840,26 +1840,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all clubs with statistics
+  app.get('/api/clubs', async (req: any, res) => {
+    try {
+      const result = await db.execute(sql`
+        SELECT 
+          c.*,
+          COUNT(DISTINCT cp.player_id) as players_count,
+          COUNT(DISTINCT t.id) as teams_count
+        FROM clubs c
+        LEFT JOIN club_players cp ON c.id = cp.club_id AND cp.is_active = true
+        LEFT JOIN teams t ON c.id = t.club_id
+        GROUP BY c.id
+        ORDER BY c.name
+      `);
+
+      const clubs = result.rows.map(row => ({
+        id: row.id,
+        name: row.name,
+        code: row.code,
+        address: row.address,
+        contactEmail: row.contact_email,
+        contactPhone: row.contact_phone,
+        logoUrl: row.logo_url,
+        primaryColor: row.primary_color,
+        secondaryColor: row.secondary_color,
+        isActive: row.is_active,
+        playersCount: parseInt(row.players_count) || 0,
+        teamsCount: parseInt(row.teams_count) || 0,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at
+      }));
+
+      res.json(clubs);
+    } catch (error) {
+      console.error('Error fetching clubs:', error);
+      res.status(500).json({ error: 'Failed to fetch clubs' });
+    }
+  });
+
   // Club details endpoint
   app.get('/api/clubs/:clubId', async (req: any, res) => {
     try {
       const clubId = parseInt(req.params.clubId);
 
-      // For now, return default club data
-      // This will be replaced with proper database queries later
-      const defaultClub = {
-        id: 1,
-        name: "Default Club",
-        code: "DC",
-        primaryColor: "#007acc",
-        secondaryColor: "#ffffff"
-      };
+      // Fetch club from database
+      const result = await db.execute(sql`
+        SELECT * FROM clubs WHERE id = ${clubId}
+      `);
 
-      if (clubId === 1) {
-        res.json(defaultClub);
-      } else {
-        res.status(404).json({ error: 'Club not found' });
+      if (result.rows.length === 0) {
+        return res.status(404).json({ error: 'Club not found' });
       }
+
+      const club = result.rows[0];
+      res.json({
+        id: club.id,
+        name: club.name,
+        code: club.code,
+        address: club.address,
+        contactEmail: club.contact_email,
+        contactPhone: club.contact_phone,
+        logoUrl: club.logo_url,
+        primaryColor: club.primary_color,
+        secondaryColor: club.secondary_color,
+        isActive: club.is_active,
+        createdAt: club.created_at,
+        updatedAt: club.updated_at
+      });
     } catch (error) {
       console.error('Error fetching club details:', error);
       res.status(500).json({ error: 'Failed to fetch club details' });
