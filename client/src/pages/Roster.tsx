@@ -28,18 +28,13 @@ export default function Roster() {
 
   // Parse URL query parameters to get game ID
   useEffect(() => {
-    // Get gameId from URL path parameter or query parameter (for backwards compatibility)
-    const params = useParams();
-    const queryParams = new URLSearchParams(window.location.search);
-    const gameId = params.gameId || queryParams.get('game');
-
     if (gameId && !isNaN(Number(gameId))) {
       // Set the selected game ID and update the URL to remove the query parameter
       setSelectedGameId(Number(gameId));
       // Replace the URL without the query parameter for cleaner navigation
       navigate('/roster', { replace: true });
     }
-  }, [navigate]);
+  }, [gameId, navigate]);
 
   // Load available players from database when game changes
   useEffect(() => {
