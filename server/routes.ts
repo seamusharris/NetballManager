@@ -421,9 +421,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/players", requireClubAccess(), async (req: AuthenticatedRequest, res) => {
     try {
       const clubId = req.user?.currentClubId;
-      const players = await storage.getPlayersByClub(clubId!);
+      
+      if (!clubId) {
+        console.error('Players endpoint: No club ID found', {
+          user: req.user,
+          currentClubId: req.user?.currentClubId,
+          clubs: req.user?.clubs
+        });
+        return res.status(400).json({ message: "Club context required" });
+      }
+      
+      console.log(`Fetching players for club ${clubId}`);
+      const players = await storage.getPlayersByClub(clubId);
       res.json(players);
     } catch (error) {
+      console.error('Error fetching players:', error);
       res.status(500).json({ message: "Failed to fetch players" });
     }
   });
