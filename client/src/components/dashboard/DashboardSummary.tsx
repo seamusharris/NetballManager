@@ -1,18 +1,15 @@
-
 import { useState, useEffect } from 'react';
 import { Link } from 'wouter';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
-import TeamPerformance from './TeamPerformance';
-import PlayerPerformance from './PlayerPerformance';
-import RecentGames from './RecentGames';
-import GamesList from './GamesList';
-import UpcomingGames from './UpcomingGames';
-import PerformanceCharts from './PerformanceCharts';
-import QuarterPerformanceWidget from './QuarterPerformanceWidget';
-import RecentFormWidget from './RecentFormWidget';
+import TeamPerformance from '@/components/dashboard/TeamPerformance';
+import RecentGames from '@/components/dashboard/RecentGames';
+import UpcomingGames from '@/components/dashboard/UpcomingGames';
+import QuarterPerformanceWidget from '@/components/dashboard/QuarterPerformanceWidget';
+import RecentFormWidget from '@/components/dashboard/RecentFormWidget';
+import AdvancedTeamAnalytics from '@/components/dashboard/AdvancedTeamAnalytics';
 import { Card, CardContent } from "@/components/ui/card"
 import { Users } from "lucide-react"
 
@@ -254,9 +251,8 @@ export default function DashboardSummary({
             />
             <TopPlayersWidget 
               players={players} 
-              games={filteredGames} 
-              seasonFilter={selectedSeasonId} 
-              activeSeason={activeSeason}
+              games={filteredGames}
+              centralizedStats={centralizedStats}
             />
             <PlayerAvailabilityWidget 
               games={filteredGames}
@@ -264,6 +260,12 @@ export default function DashboardSummary({
               players={players}
             />
             <QuickActionsWidget />
+            <AdvancedTeamAnalytics 
+              games={filteredGames} 
+              opponents={opponents}
+              activeSeason={activeSeason} 
+              selectedSeason={selectedSeasonId === 'current' ? activeSeason : seasons.find(s => s.id.toString() === selectedSeasonId)} 
+            />
           </>
         )}
       </div>
