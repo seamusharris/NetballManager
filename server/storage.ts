@@ -9,7 +9,7 @@ import {
   type Position
 } from "../shared/schema";
 import { db } from "./db";
-import { eq, desc, and, isNull } from "drizzle-orm";
+import { eq, desc, and, isNull, sql } from "drizzle-orm";
 
 // Storage interface
 export interface IStorage {
@@ -298,12 +298,37 @@ export class DatabaseStorage implements IStorage {
     return game || undefined;
   }
 
-  async createGame(insertGame: InsertGame): Promise<Game> {
-    const [game] = await db
-      .insert(games)
-      .values(insertGame)
-      .returning();
-    return game;
+  async createGame(gameData: any): Promise<Game> {
+    try {
+      console.log("Creating game:", gameData);
+
+      // If no team IDs provided, try to assign to default team for the season
+      if (!gameData.homeTeamId && !gameData.awayTeamId && gameData.seasonId) {
+        try {
+          const defaultTeam = await db.execute(sql`
+            SELECT t.id FROM teams t
+            JOIN clubs c ON t.club_id = c.id
+            WHERE t.season_id = ${gameData.seasonId} AND c.code = 'DEFAULT'
+            LIMIT 1
+          `);
+
+          if (defaultTeam.rows.length > 0) {
+            gameData.homeTeamId = defaultTeam.rows[0].id;
+            console.log(`Assigned game to default team ID: ${gameData.homeTeamId}`);
+          }
+        } catch (error) {
+          console.warn("Could not assign default team to game:", error);
+        }
+      }
+
+      const [game] = await db.insert(games).values(gameData).returning();
+      console.log("Game created:", game);
+
+      return game;
+    } catch (error) {
+      console.error("Error creating game:", error);
+      throw error;
+    }
   }
 
   async updateGame(id: number, updateGame: Partial<InsertGame>): Promise<Game | undefined> {

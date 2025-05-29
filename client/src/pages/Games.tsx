@@ -54,6 +54,19 @@ export default function Games() {
   const handleCreate = async (game: Game) => {
     try {
       console.log('Creating game with data:', game);
+      
+      // Ensure game has season context - use active season if not specified
+      if (!game.seasonId) {
+        try {
+          const activeSeasonResponse = await apiRequest('GET', '/api/seasons/active');
+          const activeSeason = await activeSeasonResponse.json();
+          game.seasonId = activeSeason.id;
+          console.log(`Assigned game to active season: ${activeSeason.name} (ID: ${activeSeason.id})`);
+        } catch (error) {
+          console.warn('Could not get active season for new game:', error);
+        }
+      }
+      
       await apiRequest('POST', '/api/games', game);
       queryClient.invalidateQueries({ queryKey: ['games'] });
       setIsDialogOpen(false);

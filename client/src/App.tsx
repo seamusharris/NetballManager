@@ -14,6 +14,7 @@ import Games from "@/pages/Games";
 import Opponents from "@/pages/Opponents";
 import Statistics from "@/pages/Statistics";
 import PlayerDetails from "@/pages/PlayerDetails";
+import Teams from "@/pages/Teams";
 import LiveStats from "@/pages/LiveStats";
 import LiveStatsByPosition from "@/pages/LiveStatsByPosition";
 import DataManagement from "@/pages/DataManagement";

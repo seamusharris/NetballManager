@@ -1027,6 +1027,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Create fallback roster for a game
+  app.post("/api/games/:gameId/create-fallback-roster", async (req, res) => {
+    try {
+      const gameId = Number(req.params.gameId);
+      const { createFallbackRoster } = await import('./roster-fallback');
+      
+      await createFallbackRoster(gameId);
+      
+      res.json({ 
+        success: true, 
+        message: "Fallback roster created successfully" 
+      });
+    } catch (error) {
+      console.error('Failed to create fallback roster:', error);
+      res.status(500).json({ message: "Failed to create fallback roster" });
+    }
+  });
+
   app.post("/api/rosters", async (req, res) => {
     try {
       const parsedData = insertRosterSchema.safeParse(req.body);
@@ -1239,6 +1257,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!POSITIONS.includes(parsedData.data.position as any)) {
         console.error("Invalid position:", parsedData.data.position);
         return res.status(400).json({ message: "Invalid position value" });
+      }
+
+      // Ensure position context exists for this game/quarter/position
+      const { ensurePositionContext } = await import('./roster-fallback');
+      const playerId = await ensurePositionContext(gameId, parsedData.data.quarter, parsedData.data.position);
+      
+      if (!playerId) {
+        console.warn(`No position context available for Game ${gameId}, Q${parsedData.data.quarter}, ${parsedData.data.position}`);
       }
 
       try {
