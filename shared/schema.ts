@@ -155,8 +155,130 @@ export const importGameStatSchema = createInsertSchema(gameStats);
 export type InsertGameStat = z.infer<typeof insertGameStatSchema>;
 export type GameStat = typeof gameStats.$inferSelect;
 
+// Multi-club architecture tables
+
+// Club model
+export const clubs = pgTable("clubs", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().unique(),
+  code: text("code").notNull().unique(), // Short identifier
+  address: text("address"),
+  contactEmail: text("contact_email"),
+  contactPhone: text("contact_phone"),
+  logoUrl: text("logo_url"),
+  primaryColor: text("primary_color").notNull().default('#1f2937'),
+  secondaryColor: text("secondary_color").notNull().default('#ffffff'),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertClubSchema = createInsertSchema(clubs).omit({ id: true });
+export type InsertClub = z.infer<typeof insertClubSchema>;
+export type Club = typeof clubs.$inferSelect;
+
+// Team model (replaces single-team concept)
+export const teams = pgTable("teams", {
+  id: serial("id").primaryKey(),
+  clubId: integer("club_id").notNull().references(() => clubs.id, { onDelete: "cascade" }),
+  seasonId: integer("season_id").notNull().references(() => seasons.id, { onDelete: "cascade" }),
+  name: text("name").notNull(), // e.g., "Emeralds A"
+  division: text("division"), // e.g., "Division 1"
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => {
+  return {
+    clubSeasonNameUnique: unique().on(table.clubId, table.seasonId, table.name)
+  };
+});
+
+export const insertTeamSchema = createInsertSchema(teams).omit({ id: true });
+export type InsertTeam = z.infer<typeof insertTeamSchema>;
+export type Team = typeof teams.$inferSelect;
+
+// Team-player relationships (replaces player_seasons)
+export const teamPlayers = pgTable("team_players", {
+  id: serial("id").primaryKey(),
+  teamId: integer("team_id").notNull().references(() => teams.id, { onDelete: "cascade" }),
+  playerId: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
+  isRegular: boolean("is_regular").notNull().default(true),
+  jerseyNumber: integer("jersey_number"),
+  positionPreferences: json("position_preferences").$type<Position[]>(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => {
+  return {
+    teamPlayerUnique: unique().on(table.teamId, table.playerId)
+  };
+});
+
+export const insertTeamPlayerSchema = createInsertSchema(teamPlayers).omit({ id: true });
+export type InsertTeamPlayer = z.infer<typeof insertTeamPlayerSchema>;
+export type TeamPlayer = typeof teamPlayers.$inferSelect;
+
+// Club user access control
+export const clubUsers = pgTable("club_users", {
+  id: serial("id").primaryKey(),
+  clubId: integer("club_id").notNull().references(() => clubs.id, { onDelete: "cascade" }),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  role: text("role").notNull(), // 'admin', 'manager', 'coach', 'viewer'
+  canManagePlayers: boolean("can_manage_players").notNull().default(false),
+  canManageGames: boolean("can_manage_games").notNull().default(false),
+  canManageStats: boolean("can_manage_stats").notNull().default(false),
+  canViewOtherTeams: boolean("can_view_other_teams").notNull().default(false),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => {
+  return {
+    clubUserUnique: unique().on(table.clubId, table.userId)
+  };
+});
+
+export const insertClubUserSchema = createInsertSchema(clubUsers).omit({ id: true });
+export type InsertClubUser = z.infer<typeof insertClubUserSchema>;
+export type ClubUser = typeof clubUsers.$inferSelect;
+
+// Player borrowing for games
+export const playerBorrowing = pgTable("player_borrowing", {
+  id: serial("id").primaryKey(),
+  gameId: integer("game_id").notNull().references(() => games.id, { onDelete: "cascade" }),
+  playerId: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
+  borrowingTeamId: integer("borrowing_team_id").notNull().references(() => teams.id, { onDelete: "cascade" }),
+  lendingTeamId: integer("lending_team_id").notNull().references(() => teams.id, { onDelete: "cascade" }),
+  approvedByLendingClub: boolean("approved_by_lending_club").notNull().default(false),
+  approvedByBorrowingClub: boolean("approved_by_borrowing_club").notNull().default(false),
+  jerseyNumber: integer("jersey_number"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => {
+  return {
+    gamePlayerUnique: unique().on(table.gameId, table.playerId)
+  };
+});
+
+export const insertPlayerBorrowingSchema = createInsertSchema(playerBorrowing).omit({ id: true });
+export type InsertPlayerBorrowing = z.infer<typeof insertPlayerBorrowingSchema>;
+export type PlayerBorrowing = typeof playerBorrowing.$inferSelect;
+
+// Game permissions for cross-club access
+export const gamePermissions = pgTable("game_permissions", {
+  id: serial("id").primaryKey(),
+  gameId: integer("game_id").notNull().references(() => games.id, { onDelete: "cascade" }),
+  clubId: integer("club_id").notNull().references(() => clubs.id, { onDelete: "cascade" }),
+  canEditStats: boolean("can_edit_stats").notNull().default(false),
+  canViewDetailedStats: boolean("can_view_detailed_stats").notNull().default(true),
+}, (table) => {
+  return {
+    gameClubUnique: unique().on(table.gameId, table.clubId)
+  };
+});
+
+export const insertGamePermissionSchema = createInsertSchema(gamePermissions).omit({ id: true });
+export type InsertGamePermission = z.infer<typeof insertGamePermissionSchema>;
+export type GamePermission = typeof gamePermissions.$inferSelect;
+
 // User model (extending from existing model)
-// Player-season relationship
+// Player-season relationship (DEPRECATED - replaced by team_players)
 export const playerSeasons = pgTable("player_seasons", {
   id: serial("id").primaryKey(),
   playerId: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
