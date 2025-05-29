@@ -224,7 +224,7 @@ export default function TeamPerformance({ games, className, activeSeason, select
     <BaseWidget 
       title="Team Performance" 
       className={className}
-      contentClassName="p-6 pb-2"
+      contentClassName="px-4 py-6 pb-2"
     >
         {/* Key performance indicators - 3x2 grid for more statistics */}
         <div className="grid grid-cols-3 gap-4 mb-6">

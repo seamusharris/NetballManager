@@ -168,7 +168,7 @@ export default function QuarterPerformanceWidget({
     <BaseWidget 
       title="Quarter Performance" 
       className={className}
-      contentClassName="p-6"
+      contentClassName="px-4 py-6"
     >
         {/* Quarter breakdown grid */}
         <div className="grid grid-cols-2 gap-3 mb-4">

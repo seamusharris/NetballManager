@@ -182,7 +182,7 @@ export default function OpponentMatchups({
     <BaseWidget 
       title="Opponent Matchups" 
       className={className}
-      contentClassName="p-6 pb-2"
+      contentClassName="px-4 py-6 pb-2"
     >
         {matchups.length === 0 ? (
           <p className="text-gray-500 text-center py-4">
