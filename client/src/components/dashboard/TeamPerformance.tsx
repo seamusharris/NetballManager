@@ -226,32 +226,131 @@ export default function TeamPerformance({ games, className, activeSeason, select
       className={className}
       contentClassName="px-4 py-6 pb-2"
     >
-        {/* Key performance indicators - 3x2 grid for more statistics */}
-        <div className="grid grid-cols-3 gap-4 mb-6">
-          <div className="text-center bg-gray-50 p-3 rounded-lg">
-            <p className="text-gray-500 text-sm mb-1">Win Rate</p>
-            <p className="text-3xl font-bold text-primary">{quarterPerformance.teamWinRate}%</p>
-          </div>
-          <div className="text-center bg-gray-50 p-3 rounded-lg">
-            <p className="text-gray-500 text-sm mb-1">Percentage</p>
-            <p className="text-3xl font-bold text-primary">{quarterPerformance.goalsPercentage}%</p>
-          </div>
-          <div className="text-center bg-gray-50 p-3 rounded-lg">
-            <p className="text-gray-500 text-sm mb-1">Played</p>
-            <p className="text-3xl font-bold text-primary">{completedGamesCount}</p>
+        {/* Transformed Key Performance Indicators */}
+        <div className="space-y-4 mb-6">
+          {/* Win Rate - Circular Progress */}
+          <div className="bg-gradient-to-r from-blue-50 to-green-50 p-4 rounded-xl border border-blue-100">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-600 text-sm font-medium mb-1">Win Rate</p>
+                <p className="text-2xl font-bold text-green-700">{quarterPerformance.teamWinRate}%</p>
+              </div>
+              <div className="relative">
+                <svg width="60" height="60" className="transform -rotate-90">
+                  <circle
+                    cx="30"
+                    cy="30"
+                    r="25"
+                    stroke="#e5e7eb"
+                    strokeWidth="6"
+                    fill="none"
+                  />
+                  <circle
+                    cx="30"
+                    cy="30"
+                    r="25"
+                    stroke="#22c55e"
+                    strokeWidth="6"
+                    fill="none"
+                    strokeDasharray={`${(quarterPerformance.teamWinRate / 100) * 157} 157`}
+                    strokeLinecap="round"
+                  />
+                </svg>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-lg font-bold text-green-700">
+                    {quarterPerformance.teamWinRate}
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div className="text-center bg-gray-50 p-3 rounded-lg">
-            <p className="text-gray-500 text-sm mb-1">For</p>
-            <p className="text-3xl font-bold text-primary">{quarterPerformance.avgTeamScore}</p>
+          {/* Goals Performance - Horizontal Bars */}
+          <div className="bg-gradient-to-r from-orange-50 to-red-50 p-4 rounded-xl border border-orange-100">
+            <p className="text-gray-600 text-sm font-medium mb-3">Goals Performance</p>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600 min-w-[50px]">For</span>
+                <div className="flex-1 mx-3">
+                  <div className="bg-gray-200 rounded-full h-3 relative overflow-hidden">
+                    <div 
+                      className="bg-gradient-to-r from-green-400 to-green-600 h-full rounded-full transition-all duration-1000"
+                      style={{ width: `${Math.min(100, (quarterPerformance.avgTeamScore / 20) * 100)}%` }}
+                    />
+                  </div>
+                </div>
+                <span className="text-lg font-bold text-green-600 min-w-[40px] text-right">
+                  {quarterPerformance.avgTeamScore}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600 min-w-[50px]">Against</span>
+                <div className="flex-1 mx-3">
+                  <div className="bg-gray-200 rounded-full h-3 relative overflow-hidden">
+                    <div 
+                      className="bg-gradient-to-r from-red-400 to-red-600 h-full rounded-full transition-all duration-1000"
+                      style={{ width: `${Math.min(100, (quarterPerformance.avgOpponentScore / 20) * 100)}%` }}
+                    />
+                  </div>
+                </div>
+                <span className="text-lg font-bold text-red-600 min-w-[40px] text-right">
+                  {quarterPerformance.avgOpponentScore}
+                </span>
+              </div>
+              <div className="flex items-center justify-between pt-2 border-t border-orange-200">
+                <span className="text-sm text-gray-600">Goal Ratio</span>
+                <span className="text-lg font-bold text-orange-600">
+                  {quarterPerformance.goalsPercentage}%
+                </span>
+              </div>
+            </div>
           </div>
-          <div className="text-center bg-gray-50 p-3 rounded-lg">
-            <p className="text-gray-500 text-sm mb-1">Against</p>
-            <p className="text-3xl font-bold text-primary">{quarterPerformance.avgOpponentScore}</p>
-          </div>
-          <div className="text-center bg-gray-50 p-3 rounded-lg">
-            <p className="text-gray-500 text-sm mb-1">Upcoming</p>
-            <p className="text-3xl font-bold text-primary">{games.filter(game => game.gameStatus?.isCompleted !== true && !game.isBye).length}</p>
+
+          {/* Games Progress - Timeline Style */}
+          <div className="bg-gradient-to-r from-purple-50 to-blue-50 p-4 rounded-xl border border-purple-100">
+            <p className="text-gray-600 text-sm font-medium mb-3">Season Progress</p>
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-center">
+                <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center mb-1">
+                  <span className="text-white font-bold text-sm">{completedGamesCount}</span>
+                </div>
+                <span className="text-xs text-gray-600">Played</span>
+              </div>
+              
+              <div className="flex-1 mx-4">
+                <div className="relative">
+                  <div className="h-2 bg-gray-200 rounded-full">
+                    <div 
+                      className="h-2 bg-gradient-to-r from-green-400 to-blue-500 rounded-full transition-all duration-1000"
+                      style={{ 
+                        width: `${totalGames > 0 ? (completedGamesCount / totalGames) * 100 : 0}%` 
+                      }}
+                    />
+                  </div>
+                  <div className="absolute -top-1 left-0 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>
+                  <div 
+                    className="absolute -top-1 bg-blue-500 rounded-full border-2 border-white w-4 h-4 transition-all duration-1000"
+                    style={{ 
+                      left: `${totalGames > 0 ? (completedGamesCount / totalGames) * 100 : 0}%`,
+                      transform: 'translateX(-50%)'
+                    }}
+                  ></div>
+                </div>
+                <div className="flex justify-between text-xs text-gray-500 mt-1">
+                  <span>Start</span>
+                  <span>{totalGames > 0 ? Math.round((completedGamesCount / totalGames) * 100) : 0}% Complete</span>
+                </div>
+              </div>
+
+              <div className="text-center">
+                <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center mb-1">
+                  <span className="text-white font-bold text-sm">
+                    {games.filter(game => game.gameStatus?.isCompleted !== true && !game.isBye).length}
+                  </span>
+                </div>
+                <span className="text-xs text-gray-600">Upcoming</span>
+              </div>
+            </div>
           </div>
         </div>
         {/* Enhanced Performance Analysis */}
