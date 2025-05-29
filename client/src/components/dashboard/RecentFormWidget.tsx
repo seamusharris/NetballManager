@@ -127,8 +127,43 @@ export default function RecentFormWidget({
         </div>
       </div>
 
+      {/* Goals Breakdown - Full Width Row */}
+      <div className="mt-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+        <p className="text-xs text-gray-500 text-center mb-3 font-medium">Goals breakdown (last 5 games)</p>
+        <div className="space-y-2">
+          {formData.slice(0, 5).map((game, index) => (
+            <div key={game.id} className="flex items-center">
+              <div className="w-20 text-xs text-gray-600 truncate">{game.opponent}</div>
+              <div className="flex-1 mx-3 relative h-6 bg-gray-200 rounded-full overflow-hidden">
+                {/* Goals For (left side) */}
+                <div 
+                  className="absolute left-0 top-0 h-full bg-blue-500 flex items-center justify-start pl-2"
+                  style={{ 
+                    width: `${Math.max(15, (game.teamScore / Math.max(game.teamScore + game.opponentScore, 1)) * 100)}%` 
+                  }}
+                >
+                  <span className="text-xs text-white font-medium">{game.teamScore}</span>
+                </div>
+                {/* Goals Against (right side) */}
+                <div 
+                  className="absolute right-0 top-0 h-full bg-red-400 flex items-center justify-end pr-2"
+                  style={{ 
+                    width: `${Math.max(15, (game.opponentScore / Math.max(game.teamScore + game.opponentScore, 1)) * 100)}%` 
+                  }}
+                >
+                  <span className="text-xs text-white font-medium">{game.opponentScore}</span>
+                </div>
+              </div>
+              <div className="w-12 text-xs text-center">
+                <ResultBadge result={game.result as GameResult} size="sm" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Goal Margins and Stats */}
-      <div className="grid grid-cols-3 gap-4 mt-4">
+      <div className="grid grid-cols-3 gap-4 mt-4"></div>
         {/* Goal Difference Trend Chart - 2/3 width */}
         <div className="col-span-2 p-3 pb-2 bg-gray-50 rounded-lg border border-gray-200">
           <p className="text-xs text-gray-500 text-center mb-1 font-medium">Goal margins</p>
