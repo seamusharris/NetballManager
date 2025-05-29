@@ -90,6 +90,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ----- DATA MANAGEMENT APIs -----
 
+  // Populate club_players table
+  app.post("/api/populate-club-players", async (req, res) => {
+    try {
+      const { populateClubPlayersTable } = await import('./migrations/populateClubPlayers');
+      const success = await populateClubPlayersTable();
+      
+      if (success) {
+        res.json({ message: "Club-player relationships populated successfully" });
+      } else {
+        res.status(500).json({ message: "Failed to populate club-player relationships" });
+      }
+    } catch (error) {
+      console.error('Error in populate-club-players endpoint:', error);
+      res.status(500).json({ message: "Failed to populate club-player relationships" });
+    }
+  });
+
   // Clear all data for fresh import
   app.post("/api/clear-data", async (req, res) => {
     try {

@@ -126,7 +126,7 @@ export class DatabaseStorage implements IStorage {
       console.log(`Attempting team-based lookup for club ${clubId}`);
       const result = await db.execute(sql`
         SELECT DISTINCT p.id, p.display_name, p.first_name, p.last_name, p.date_of_birth, 
-               p.position_preferences, p.active, p.avatar_color
+               p.position_preferences::text as position_preferences, p.active, p.avatar_color
         FROM players p
         JOIN team_players tp ON p.id = tp.player_id
         JOIN teams t ON tp.team_id = t.id
