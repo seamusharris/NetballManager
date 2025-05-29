@@ -56,7 +56,7 @@ export default function PositionOpponentAnalysis({ seasonId }: PositionOpponentA
 
   // Filter games by season and completed status
   const completedGames = useMemo(() => {
-    return games.filter(game => {
+    const filtered = games.filter(game => {
       // Check if game is completed and allows statistics
       const isValidGame = game.status === 'completed';
       if (!isValidGame) return false;
@@ -64,6 +64,16 @@ export default function PositionOpponentAnalysis({ seasonId }: PositionOpponentA
       // Handle season filtering - seasonId is now always numeric or undefined
       return seasonId ? game.seasonId === seasonId : true;
     });
+    
+    console.log('PositionOpponentAnalysis - Debug info:', {
+      totalGames: games.length,
+      seasonId,
+      completedGames: filtered.length,
+      sampleCompletedGame: filtered[0],
+      allGames: games.slice(0, 3)
+    });
+    
+    return filtered;
   }, [games, seasonId]);
 
   const gameIds = completedGames.map(g => g.id);
@@ -88,10 +98,21 @@ export default function PositionOpponentAnalysis({ seasonId }: PositionOpponentA
   const positionOpponentStats = useMemo(() => {
     const statsMap = new Map<string, PositionOpponentStats>();
 
+    console.log('PositionOpponentAnalysis - Processing data:', {
+      completedGames: completedGames.length,
+      gameStatsMapKeys: Object.keys(gameStatsMap),
+      gameStatsMapSample: gameStatsMap[Object.keys(gameStatsMap)[0]]?.slice(0, 3),
+      opponents: opponents.length,
+      allRosters: allRosters.length
+    });
+
     completedGames.forEach(game => {
       const gameStats = gameStatsMap[game.id] || [];
       const opponent = opponents.find(o => o.id === game.opponentId);
-      if (!opponent) return;
+      if (!opponent) {
+        console.log('No opponent found for game:', game.id, 'opponentId:', game.opponentId);
+        return;
+      }
 
       // Group stats by position for this game
       const positionTotals: Record<Position, { goalsFor: number; goalsAgainst: number }> = {} as any;
@@ -106,6 +127,18 @@ export default function PositionOpponentAnalysis({ seasonId }: PositionOpponentA
           positionTotals[stat.position as Position].goalsAgainst += stat.goalsAgainst || 0;
         }
       });
+
+      // Log first game's processing for debugging
+      if (game.id === completedGames[0]?.id) {
+        console.log('First game processing:', {
+          gameId: game.id,
+          opponent: opponent.teamName,
+          gameStatsCount: gameStats.length,
+          positionTotals: Object.entries(positionTotals).filter(([_, totals]) => 
+            totals.goalsFor > 0 || totals.goalsAgainst > 0
+          )
+        });
+      }
 
       // Update cumulative stats for each position
       allPositions.forEach(position => {
@@ -138,7 +171,15 @@ export default function PositionOpponentAnalysis({ seasonId }: PositionOpponentA
       });
     });
 
-    return Array.from(statsMap.values());
+    const result = Array.from(statsMap.values());
+    
+    console.log('PositionOpponentAnalysis - Final results:', {
+      totalPositionOpponentStats: result.length,
+      sampleStats: result.slice(0, 3),
+      nonZeroStats: result.filter(s => s.goalsFor > 0 || s.goalsAgainst > 0).length
+    });
+    
+    return result;
   }, [completedGames, gameStatsMap, opponents]);
 
   // Calculate player-position vs opponent effectiveness
