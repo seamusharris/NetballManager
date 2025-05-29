@@ -3,7 +3,7 @@ import { Link, useLocation } from 'wouter';
 import { cn } from '@/lib/utils';
 import { 
   X, Menu, Home, Users, ClipboardList, Calendar, CalendarRange, Flag, 
-  BarChart, Database, Settings as SettingsIcon, Zap, Trophy
+  BarChart, Database, SettingsIcon, Zap, Trophy
 } from 'lucide-react';
 import { TEAM_NAME } from '@/lib/settings';
 

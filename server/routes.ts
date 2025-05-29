@@ -17,6 +17,7 @@ import {
 
 import { updatePlayerSeasonRelationships, getPlayerSeasons } from "./player-season-routes";
 import gameStatusRoutes from "./game-status-routes";
+import { registerTeamRoutes } from "./team-routes";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // put application routes here
@@ -1647,6 +1648,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Register game status routes
   app.use("/api/game-statuses", gameStatusRoutes);
+
+  // Register team routes
+  registerTeamRoutes(app);
 
   // Create HTTP server
   const httpServer = createServer(app);

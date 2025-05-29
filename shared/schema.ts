@@ -93,7 +93,13 @@ export const games = pgTable("games", {
   id: serial("id").primaryKey(),
   date: text("date").notNull(),
   time: text("time").notNull(),
-  opponentId: integer("opponent_id"), // Nullable for BYE games
+  // Legacy opponent support for backward compatibility
+  opponentId: integer("opponent_id"),
+  // New team-based system
+  homeTeamId: integer("home_team_id").references(() => teams.id),
+  awayTeamId: integer("away_team_id").references(() => teams.id),
+  venue: text("venue"),
+  isInterClub: boolean("is_inter_club").notNull().default(false), // Cross-club games
   statusId: integer("status_id").references(() => gameStatuses.id), // References game_statuses table
   round: text("round"), // Round number in the season or special values like "SF" or "GF"
   seasonId: integer("season_id").references(() => seasons.id), // Reference to season
