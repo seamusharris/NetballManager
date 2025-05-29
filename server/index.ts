@@ -43,28 +43,38 @@ app.use((req, res, next) => {
 
 (async () => {
   // Run migrations
+  log("Running database migrations...", "migration");
   try {
-    log("Running database migrations...", "migration");
-
-    // Run migrations in order
+    const { addSeasonsSupport } = await import('./migrations/addSeasonsSupport');
     await addSeasonsSupport();
-    await addPlayerSeasonsTable();
+
+    const { addPlayerSeasons } = await import('./migrations/addPlayerSeasons');
+    await addPlayerSeasons();
+
+    const { createGameStatusesTable } = await import('./migrations/createGameStatusesTable');
     await createGameStatusesTable();
+
+    const { addQueryIndexes } = await import('./migrations/addQueryIndexes');
     await addQueryIndexes();
+
+    const { cleanupLegacyGameColumns } = await import('./migrations/cleanupLegacyGameColumns');
     await cleanupLegacyGameColumns();
 
-    // Multi-club support migration
-    const { addMultiClubSupport } = await import("./migrations/addMultiClubSupport");
+    const { addMultiClubSupport } = await import('./migrations/addMultiClubSupport');
     await addMultiClubSupport();
 
-    // Multi-club data migration
-    const { migrateExistingDataToMultiClub } = await import("./migrations/migrateToMultiClub");
+    // Ensure all required columns exist (handles partial migration failures)
+    const { ensureRequiredColumns } = await import('./migrations/ensureRequiredColumns');
+    await ensureRequiredColumns();
+
+    const { migrateExistingDataToMultiClub } = await import('./migrations/migrateToMultiClub');
+
+    console.log("Starting data migration to multi-club...");
     await migrateExistingDataToMultiClub();
 
     log("Database migrations completed successfully!", "migration");
   } catch (error) {
-    log(`Error running migrations: ${error}`, "migration-error");
-    console.error("Error during database migrations:", error);
+    log(`Migration error: ${error}`, "migration");
   }
 
   const server = await registerRoutes(app);

@@ -130,10 +130,26 @@ export async function addMultiClubSupport(): Promise<void> {
       ALTER TABLE games 
       ADD COLUMN IF NOT EXISTS home_team_id INTEGER REFERENCES teams(id),
       ADD COLUMN IF NOT EXISTS away_team_id INTEGER REFERENCES teams(id),
-      ADD COLUMN IF NOT EXISTS is_inter_club BOOLEAN NOT NULL DEFAULT false,
-      ADD COLUMN IF NOT EXISTS venue TEXT
+      ADD COLUMN IF NOT EXISTS is_inter_club BOOLEAN NOT NULL DEFAULT false
     `);
     log("Added team columns to games table", "migration");
+
+    // Add venue column separately to handle any existing constraint issues
+    const venueExists = await db.execute(sql`
+      SELECT EXISTS (
+        SELECT FROM information_schema.columns 
+        WHERE table_schema = 'public'
+        AND table_name = 'games'
+        AND column_name = 'venue'
+      );
+    `);
+
+    if (!venueExists.rows[0].exists) {
+      await db.execute(sql`ALTER TABLE games ADD COLUMN venue TEXT;`);
+      log("Added venue column to games table", "migration");
+    } else {
+      log("venue column already exists in games table", "migration");
+    }
 
     log("Multi-club support migration completed successfully", "migration");
   } catch (error) {
