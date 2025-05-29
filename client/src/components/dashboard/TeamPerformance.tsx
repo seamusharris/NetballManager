@@ -223,7 +223,6 @@ export default function TeamPerformance({ games, className, activeSeason, select
   return (
     <BaseWidget 
       title="Team Performance" 
-      description="Overall team statistics and performance metrics"
       className={className}
       contentClassName="p-6 pb-2"
     >

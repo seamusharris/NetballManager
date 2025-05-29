@@ -33,7 +33,6 @@ export default function UpcomingGames({ games, opponents, className, seasonFilte
   return (
     <BaseWidget 
       title="Upcoming Games" 
-      description="Scheduled games and fixtures"
       className={className}
       contentClassName="p-6 pb-2"
     >

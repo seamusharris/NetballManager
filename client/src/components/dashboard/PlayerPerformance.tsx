@@ -546,7 +546,6 @@ export default function PlayerPerformance({ players, games, className, seasonFil
   return (
     <CustomHeaderWidget 
       title="Player Performance" 
-      description="Individual player statistics and performance"
       className={className}
       contentClassName="p-6 pb-2"
       headerContent={

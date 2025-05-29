@@ -173,7 +173,6 @@ export default function PerformanceCharts({ games, className, seasonFilter, acti
     return (
       <CustomHeaderWidget 
         title="Quarter-by-Quarter Performance" 
-        description="Performance trends across game quarters"
         className={className}
         contentClassName="p-6"
         headerContent={
@@ -197,7 +196,6 @@ export default function PerformanceCharts({ games, className, seasonFilter, acti
   return (
     <CustomHeaderWidget 
       title="Quarter-by-Quarter Performance" 
-      description="Performance trends across game quarters"
       className={className}
       contentClassName="p-6"
       headerContent={

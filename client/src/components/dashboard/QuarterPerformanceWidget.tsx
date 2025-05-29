@@ -167,7 +167,6 @@ export default function QuarterPerformanceWidget({
   return (
     <BaseWidget 
       title="Quarter Performance" 
-      description="Performance breakdown by quarter"
       className={className}
       contentClassName="p-6"
     >

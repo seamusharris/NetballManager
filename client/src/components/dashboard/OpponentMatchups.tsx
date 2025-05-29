@@ -181,7 +181,6 @@ export default function OpponentMatchups({
   return (
     <BaseWidget 
       title="Opponent Matchups" 
-      description="Performance against different opponents"
       className={className}
       contentClassName="p-6 pb-2"
     >
