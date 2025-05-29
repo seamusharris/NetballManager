@@ -255,10 +255,9 @@ export default function DashboardSummary({
         {isLoading || statsLoading ? (
           <Skeleton className="h-[300px] w-full rounded-lg" />
         ) : (
-          <PlayerPerformance 
+          <TopPlayersWidget 
             players={players} 
-            games={pastGames} 
-            className="w-full" 
+            games={filteredGames} 
             seasonFilter={selectedSeasonId} 
             activeSeason={activeSeason}
             centralizedStats={centralizedStats}
