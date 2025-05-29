@@ -163,7 +163,7 @@ export default function RecentFormWidget({
       </div>
 
       {/* Goal Margins and Stats */}
-      <div className="grid grid-cols-3 gap-4 mt-4"></div>
+      <div className="grid grid-cols-3 gap-4 mt-4">
         {/* Goal Difference Trend Chart - 2/3 width */}
         <div className="col-span-2 p-3 pb-2 bg-gray-50 rounded-lg border border-gray-200">
           <p className="text-xs text-gray-500 text-center mb-1 font-medium">Goal margins</p>
