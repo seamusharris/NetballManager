@@ -106,8 +106,7 @@ export default function RecentFormWidget({
   return (
     <BaseWidget 
       title="Recent Form" 
-      description="Performance in the last 5 completed games"
-      contentClassName="p-6"
+      contentClassName="px-4 py-6"
     >
       {/* Enhanced Form Display with Trend */}
       <div className="text-center mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">

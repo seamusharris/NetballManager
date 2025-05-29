@@ -34,7 +34,7 @@ export default function UpcomingGames({ games, opponents, className, seasonFilte
     <BaseWidget 
       title="Upcoming Games" 
       className={className}
-      contentClassName="p-6 pb-2"
+      contentClassName="px-4 py-6 pb-2"
     >
 
         {upcomingGames.length > 0 ? (

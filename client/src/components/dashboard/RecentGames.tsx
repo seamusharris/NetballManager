@@ -137,7 +137,7 @@ export default function RecentGames({ games, opponents, className, seasonFilter,
     <BaseWidget 
       className={className} 
       title="Recent Games"
-      contentClassName="p-6 pb-2"
+      contentClassName="px-4 py-6 pb-2"
     >
         <div className="space-y-8">
           {isLoading ? (

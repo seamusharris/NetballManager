@@ -24,7 +24,7 @@ export function BaseWidget({
 }: BaseWidgetProps) {
   return (
     <Card className={cn(showBorder && "border border-gray-200", className)}>
-      <CardHeader className={cn("pb-3", headerClassName)}>
+      <CardHeader className={cn("pb-2", headerClassName)}>
         <CardTitle className="text-lg font-semibold text-gray-800">
           {title}
         </CardTitle>
@@ -63,7 +63,7 @@ export function CustomHeaderWidget({
 }: CustomHeaderWidgetProps) {
   return (
     <Card className={cn(showBorder && "border border-gray-200", className)}>
-      <CardHeader className={cn("pb-3", headerClassName)}>
+      <CardHeader className={cn("pb-2", headerClassName)}>
         <div className="flex items-center justify-between">
           <div>
             <CardTitle className="text-lg font-semibold text-gray-800">
