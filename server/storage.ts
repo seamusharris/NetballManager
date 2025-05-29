@@ -92,7 +92,20 @@ export class DatabaseStorage implements IStorage {
 
   // Player methods
   async getPlayers(): Promise<Player[]> {
-    return await db.select().from(players);
+    const result = await db.select().from(players);
+    return result;
+  }
+
+  async getPlayersByClub(clubId: number): Promise<Player[]> {
+    const result = await db.execute(sql`
+      SELECT DISTINCT p.* 
+      FROM players p
+      JOIN team_players tp ON p.id = tp.player_id
+      JOIN teams t ON tp.team_id = t.id
+      WHERE t.club_id = ${clubId}
+      ORDER BY p.display_name
+    `);
+    return result.rows as Player[];
   }
 
   async getPlayer(id: number): Promise<Player | undefined> {
@@ -268,29 +281,192 @@ export class DatabaseStorage implements IStorage {
 
   // Game methods
   async getGames(): Promise<Game[]> {
-    const { gameStatuses, opponents, seasons } = await import("@shared/schema");
+    try {
+      const result = await db.execute(sql`
+        SELECT 
+          g.*,
+          gs.id as "gameStatus.id",
+          gs.name as "gameStatus.name",
+          gs.display_name as "gameStatus.displayName",
+          gs.points as "gameStatus.points",
+          gs.opponent_points as "gameStatus.opponentPoints",
+          gs.is_completed as "gameStatus.isCompleted",
+          gs.allows_statistics as "gameStatus.allowsStatistics",
+          gs.requires_opponent as "gameStatus.requiresOpponent",
+          gs.color_class as "gameStatus.colorClass",
+          gs.sort_order as "gameStatus.sortOrder",
+          gs.is_active as "gameStatus.isActive",
+          gs.created_at as "gameStatus.createdAt",
+          gs.updated_at as "gameStatus.updatedAt",
+          o.id as "opponent.id",
+          o.team_name as "opponent.teamName",
+          o.primary_contact as "opponent.primaryContact",
+          o.contact_info as "opponent.contactInfo",
+          s.id as "season.id",
+          s.name as "season.name",
+          s.start_date as "season.startDate",
+          s.end_date as "season.endDate",
+          s.is_active as "season.isActive",
+          s.type as "season.type",
+          s.year as "season.year",
+          s.display_order as "season.displayOrder"
+        FROM games g
+        LEFT JOIN game_statuses gs ON g.status_id = gs.id
+        LEFT JOIN opponents o ON g.opponent_id = o.id
+        LEFT JOIN seasons s ON g.season_id = s.id
+        ORDER BY g.date DESC, g.time DESC
+      `);
 
-    const results = await db
-      .select({
-        games: games,
-        gameStatus: gameStatuses,
-        opponent: opponents,
-        season: seasons
-      })
-      .from(games)
-      .leftJoin(gameStatuses, eq(games.statusId, gameStatuses.id))
-      .leftJoin(opponents, eq(games.opponentId, opponents.id))
-      .leftJoin(seasons, eq(games.seasonId, seasons.id));
+      return result.rows.map(row => ({
+        id: row.id,
+        date: row.date,
+        time: row.time,
+        opponentId: row.opponent_id,
+        homeTeamId: row.home_team_id,
+        awayTeamId: row.away_team_id,
+        venue: row.venue,
+        isInterClub: row.is_inter_club,
+        statusId: row.status_id,
+        round: row.round,
+        seasonId: row.season_id,
+        notes: row.notes,
+        awardWinnerId: row.award_winner_id,
+        gameStatus: row['gameStatus.id'] ? {
+          id: row['gameStatus.id'],
+          name: row['gameStatus.name'],
+          displayName: row['gameStatus.displayName'],
+          points: row['gameStatus.points'],
+          opponentPoints: row['gameStatus.opponentPoints'],
+          isCompleted: row['gameStatus.isCompleted'],
+          allowsStatistics: row['gameStatus.allowsStatistics'],
+          requiresOpponent: row['gameStatus.requiresOpponent'],
+          colorClass: row['gameStatus.colorClass'],
+          sortOrder: row['gameStatus.sortOrder'],
+          isActive: row['gameStatus.isActive'],
+          createdAt: row['gameStatus.createdAt'],
+          updatedAt: row['gameStatus.updatedAt']
+        } : null,
+        opponent: row['opponent.id'] ? {
+          id: row['opponent.id'],
+          teamName: row['opponent.teamName'],
+          primaryContact: row['opponent.primaryContact'],
+          contactInfo: row['opponent.contactInfo']
+        } : null,
+        season: row['season.id'] ? {
+          id: row['season.id'],
+          name: row['season.name'],
+          startDate: row['season.startDate'],
+          endDate: row['season.endDate'],
+          isActive: row['season.isActive'],
+          type: row['season.type'],
+          year: row['season.year'],
+          displayOrder: row['season.displayOrder']
+        } : null,
+        // Legacy fields for backward compatibility
+        isBye: false // This is now handled by game status
+      }));
+    } catch (error) {
+      console.error("Error fetching games:", error);
+      throw error;
+    }
+  }
 
-    const mappedResults = results.map(row => ({
-      ...row.games,
-      gameStatus: row.gameStatus || null,
-      opponent: row.opponent || null,
-      season: row.season || null,
-      isBye: row.games.opponentId === null
-    }));
+  async getGamesByClub(clubId: number): Promise<Game[]> {
+    try {
+      const result = await db.execute(sql`
+        SELECT 
+          g.*,
+          gs.id as "gameStatus.id",
+          gs.name as "gameStatus.name",
+          gs.display_name as "gameStatus.displayName",
+          gs.points as "gameStatus.points",
+          gs.opponent_points as "gameStatus.opponentPoints",
+          gs.is_completed as "gameStatus.isCompleted",
+          gs.allows_statistics as "gameStatus.allowsStatistics",
+          gs.requires_opponent as "gameStatus.requiresOpponent",
+          gs.color_class as "gameStatus.colorClass",
+          gs.sort_order as "gameStatus.sortOrder",
+          gs.is_active as "gameStatus.isActive",
+          gs.created_at as "gameStatus.createdAt",
+          gs.updated_at as "gameStatus.updatedAt",
+          o.id as "opponent.id",
+          o.team_name as "opponent.teamName",
+          o.primary_contact as "opponent.primaryContact",
+          o.contact_info as "opponent.contactInfo",
+          s.id as "season.id",
+          s.name as "season.name",
+          s.start_date as "season.startDate",
+          s.end_date as "season.endDate",
+          s.is_active as "season.isActive",
+          s.type as "season.type",
+          s.year as "season.year",
+          s.display_order as "season.displayOrder"
+        FROM games g
+        LEFT JOIN game_statuses gs ON g.status_id = gs.id
+        LEFT JOIN opponents o ON g.opponent_id = o.id
+        LEFT JOIN seasons s ON g.season_id = s.id
+        LEFT JOIN teams ht ON g.home_team_id = ht.id
+        LEFT JOIN teams at ON g.away_team_id = at.id
+        WHERE (ht.club_id = ${clubId} OR at.club_id = ${clubId})
+           OR EXISTS (
+             SELECT 1 FROM game_permissions gp 
+             WHERE gp.game_id = g.id AND gp.club_id = ${clubId}
+           )
+        ORDER BY g.date DESC, g.time DESC
+      `);
 
-    return mappedResults;
+      return result.rows.map(row => ({
+        id: row.id,
+        date: row.date,
+        time: row.time,
+        opponentId: row.opponent_id,
+        homeTeamId: row.home_team_id,
+        awayTeamId: row.away_team_id,
+        venue: row.venue,
+        isInterClub: row.is_inter_club,
+        statusId: row.status_id,
+        round: row.round,
+        seasonId: row.season_id,
+        notes: row.notes,
+        awardWinnerId: row.award_winner_id,
+        gameStatus: row['gameStatus.id'] ? {
+          id: row['gameStatus.id'],
+          name: row['gameStatus.name'],
+          displayName: row['gameStatus.displayName'],
+          points: row['gameStatus.points'],
+          opponentPoints: row['gameStatus.opponentPoints'],
+          isCompleted: row['gameStatus.isCompleted'],
+          allowsStatistics: row['gameStatus.allowsStatistics'],
+          requiresOpponent: row['gameStatus.requiresOpponent'],
+          colorClass: row['gameStatus.colorClass'],
+          sortOrder: row['gameStatus.sortOrder'],
+          isActive: row['gameStatus.isActive'],
+          createdAt: row['gameStatus.createdAt'],
+          updatedAt: row['gameStatus.updatedAt']
+        } : null,
+        opponent: row['opponent.id'] ? {
+          id: row['opponent.id'],
+          teamName: row['opponent.teamName'],
+          primaryContact: row['opponent.primaryContact'],
+          contactInfo: row['opponent.contactInfo']
+        } : null,
+        season: row['season.id'] ? {
+          id: row['season.id'],
+          name: row['season.name'],
+          startDate: row['season.startDate'],
+          endDate: row['season.endDate'],
+          isActive: row['season.isActive'],
+          type: row['season.type'],
+          year: row['season.year'],
+          displayOrder: row['season.displayOrder']
+        } : null,
+        // Legacy fields for backward compatibility
+        isBye: false // This is now handled by game status
+      }));
+    } catch (error) {
+      console.error("Error fetching games by club:", error);
+      throw error;
+    }
   }
 
   async getGame(id: number): Promise<Game | undefined> {

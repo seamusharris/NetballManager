@@ -18,6 +18,16 @@ import {
 import { updatePlayerSeasonRelationships, getPlayerSeasons } from "./player-season-routes";
 import gameStatusRoutes from "./game-status-routes";
 import { registerTeamRoutes } from "./team-routes";
+import { registerUserManagementRoutes } from "./user-management-routes";
+import { registerPlayerBorrowingRoutes } from "./player-borrowing-routes";
+import { registerGamePermissionsRoutes } from "./game-permissions-routes";
+import { 
+  AuthenticatedRequest, 
+  requireClubAccess, 
+  requireTeamAccess, 
+  requireGameAccess,
+  loadUserPermissions 
+} from "./auth-middleware";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // put application routes here
@@ -385,9 +395,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ----- PLAYERS API -----
-  app.get("/api/players", async (req, res) => {
+  app.get("/api/players", requireClubAccess(), async (req: AuthenticatedRequest, res) => {
     try {
-      const players = await storage.getPlayers();
+      const clubId = req.user?.currentClubId;
+      const players = await storage.getPlayersByClub(clubId!);
       res.json(players);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch players" });
@@ -808,14 +819,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ----- GAMES API -----
-  app.get("/api/games", async (req, res) => {
+  app.get("/api/games", requireClubAccess(), async (req: AuthenticatedRequest, res) => {
     try {
       // Add cache-busting headers
       res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
       res.set('Pragma', 'no-cache');
       res.set('Expires', '0');
 
-      const games = await storage.getGames();
+      const clubId = req.user?.currentClubId;
+      const games = await storage.getGamesByClub(clubId!);
 
       // Ensure gameStatus field is properly included in each game object
       const gamesWithStatus = games.map((game) => ({
@@ -1735,6 +1747,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Register team routes
   registerTeamRoutes(app);
+
+  // Register user management routes
+  registerUserManagementRoutes(app);
+
+  // Register player borrowing routes
+  registerPlayerBorrowingRoutes(app);
+
+  // Register game permissions routes
+  registerGamePermissionsRoutes(app);
 
   // Create HTTP server
   const httpServer = createServer(app);
