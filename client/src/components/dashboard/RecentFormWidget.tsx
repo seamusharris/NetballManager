@@ -129,9 +129,9 @@ export default function RecentFormWidget({
 
       {/* Goals Breakdown - Full Width Row */}
       <div className="mt-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
-        <p className="text-xs text-gray-500 text-center mb-3 font-medium">Goals breakdown (last 5 games)</p>
+        <p className="text-xs text-gray-500 text-center mb-3 font-medium">Goals breakdown</p>
         <div className="space-y-2">
-          {formData.slice(0, 5).map((game, index) => (
+          {formData.slice(0, 5).reverse().map((game, index) => (
             <div key={game.id} className="flex items-center">
               <div className="w-20 text-xs text-gray-600 truncate">{game.opponent}</div>
               <div className="flex-1 mx-3 relative h-6 bg-gray-200 rounded-full overflow-hidden">
