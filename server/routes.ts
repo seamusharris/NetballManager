@@ -2276,8 +2276,8 @@ app.get('/api/teams', authenticateUser, async (req, res) => {
 
     const teams = await db.execute(sql`
       SELECT t.*, 
-             s.name as "seasonName", 
-             s.year as "seasonYear"
+             s.name as season_name, 
+             s.year as season_year
       FROM teams t
       LEFT JOIN seasons s ON t.season_id = s.id
       WHERE t.club_id = ${req.user.currentClubId}
@@ -2297,8 +2297,8 @@ app.get('/api/teams', authenticateUser, async (req, res) => {
       isActive: row.is_active,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
-      seasonName: row.seasonName,
-      seasonYear: row.seasonYear
+      seasonName: row.season_name,
+      seasonYear: row.season_year
     }));
 
     res.json(mappedTeams);
