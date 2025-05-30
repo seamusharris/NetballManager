@@ -128,21 +128,8 @@ async function runMigrations() {
   try {
     log("Running database migrations...", "migration");
 
-    // Import and run each migration
-    const { createSeasonsTable } = await import('./migrations/addSeasonsSupport');
-    await createSeasonsTable();
-
-    const { createPlayerSeasonsTable } = await import('./migrations/addPlayerSeasons');
-    await createPlayerSeasonsTable();
-
-    const { migrateByesToStatus } = await import('./migrations/migrateByesToStatus');
-    await migrateByesToStatus();
-
-    const { createGameStatusesTable } = await import('./migrations/createGameStatusesTable');
-    await createGameStatusesTable();
-
-    const { fixGameStatusesConstraints } = await import('./migrations/fixGameStatusesConstraints');
-    await fixGameStatusesConstraints();
+    // All previous migrations have been archived - they completed successfully
+    // Future migrations can be added here
 
     log("Database migrations completed successfully!", "migration");
   } catch (error) {

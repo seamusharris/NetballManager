@@ -54,26 +54,6 @@ app.use((req, res, next) => {
     const { createGameStatusesTable } = await import('./migrations/createGameStatusesTable');
     await createGameStatusesTable();
 
-    const { addQueryIndexes } = await import('./migrations/addQueryIndexes');
-    await addQueryIndexes();
-
-    const { cleanupLegacyGameColumns } = await import('./migrations/cleanupLegacyGameColumns');
-    await cleanupLegacyGameColumns();
-
-    const { addMultiClubSupport } = await import('./migrations/addMultiClubSupport');
-    await addMultiClubSupport();
-
-    const { ensureRequiredColumns } = await import('./migrations/ensureRequiredColumns');
-    await ensureRequiredColumns();
-
-    const { createClubPlayersTable } = await import('./migrations/createClubPlayersTable');
-    await createClubPlayersTable();
-
-    const { migrateExistingDataToMultiClub } = await import('./migrations/migrateToMultiClub');
-
-    console.log("Starting data migration to multi-club...");
-    await migrateExistingDataToMultiClub();
-
     log("Database migrations completed successfully!", "migration");
   } catch (error) {
     log(`Migration error: ${error}`, "migration");
