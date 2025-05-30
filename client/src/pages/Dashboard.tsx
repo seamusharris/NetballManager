@@ -3,29 +3,51 @@ import { Helmet } from 'react-helmet';
 import DashboardSummary from '@/components/dashboard/DashboardSummary';
 import BatchScoreDisplay from '@/components/dashboard/BatchScoreDisplay';
 import { TEAM_NAME } from '@/lib/settings';
+import { useClub } from '@/contexts/ClubContext';
 
 export default function Dashboard() {
+  const { currentClub } = useClub();
+  const currentClubId = currentClub?.id;
+
   const { data: players = [], isLoading: isLoadingPlayers, error: playersError } = useQuery<any[]>({
-    queryKey: ['/api/players'],
+    queryKey: ['/api/players', currentClubId],
+    enabled: !!currentClubId,
   });
 
   const { data: games = [], isLoading: isLoadingGames, error: gamesError } = useQuery<any[]>({
-    queryKey: ['/api/games'],
+    queryKey: ['/api/games', currentClubId],
+    enabled: !!currentClubId,
   });
 
   const { data: opponents = [], isLoading: isLoadingOpponents, error: opponentsError } = useQuery<any[]>({
-    queryKey: ['/api/opponents'],
+    queryKey: ['/api/opponents', currentClubId],
+    enabled: !!currentClubId,
   });
 
   // Fetch all seasons
   const { data: seasons = [], isLoading: isLoadingSeasons, error: seasonsError } = useQuery<any[]>({
-    queryKey: ['/api/seasons'],
+    queryKey: ['/api/seasons', currentClubId],
+    enabled: !!currentClubId,
   });
 
   // Fetch active season
   const { data: activeSeason, isLoading: isLoadingActiveSeason, error: activeSeasonError } = useQuery<any>({
-    queryKey: ['/api/seasons/active'],
+    queryKey: ['/api/seasons/active', currentClubId],
+    enabled: !!currentClubId,
   });
+
+  // Show loading state if no club is selected
+  if (!currentClub) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <h2 className="text-xl font-semibold mb-2">Loading Club</h2>
+          <p className="text-muted-foreground">Please wait while we load your club data...</p>
+        </div>
+      </div>
+    );
+  }
 
   const isLoading = isLoadingPlayers || isLoadingGames || isLoadingOpponents || isLoadingSeasons || isLoadingActiveSeason;
 
