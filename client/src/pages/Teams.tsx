@@ -20,10 +20,24 @@ export default function Teams() {
   const { currentClubId } = useClub();
 
   // Fetch teams for current club
-  const { data: teams = [], isLoading: isLoadingTeams } = useQuery<(Team & { seasonName?: string; seasonYear?: number })[]>({
+  const { data: teams = [], isLoading: isLoadingTeams, error } = useQuery<(Team & { seasonName?: string; seasonYear?: number })[]>({
     queryKey: ['teams'],
-    queryFn: () => apiRequest('GET', `/api/teams`),
+    queryFn: () => {
+      console.log(`Teams page: About to call /api/teams for club ${currentClubId}`);
+      return apiRequest('GET', `/api/teams`);
+    },
     enabled: !!currentClubId,
+    staleTime: 0, // Force fresh data
+    refetchOnMount: 'always', // Always refetch
+  });
+
+  // Debug logging
+  console.log('Teams query state:', {
+    currentClubId,
+    isLoading: isLoadingTeams,
+    teamsCount: teams.length,
+    error: error?.message,
+    enabled: !!currentClubId
   });
 
   // Fetch seasons for the form
