@@ -17,7 +17,7 @@ import {
 
 import { updatePlayerSeasonRelationships, getPlayerSeasons } from "./player-season-routes";
 import gameStatusRoutes from "./game-status-routes";
-import { registerTeamRoutes } from "./team-routes";
+import { getTeams, getTeamsByClub, createTeam, updateTeam, deleteTeam } from './team-routes';
 import { registerUserManagementRoutes } from "./user-management-routes";
 import { registerPlayerBorrowingRoutes } from "./player-borrowing-routes";
 import { registerGamePermissionsRoutes } from "./game-permissions-routes";
@@ -95,7 +95,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { populateClubPlayersTable } = await import('./migrations/populateClubPlayers');
       const success = await populateClubPlayersTable();
-      
+
       if (success) {
         res.json({ message: "Club-player relationships populated successfully" });
       } else {
@@ -438,7 +438,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/players", requireClubAccess(), async (req: AuthenticatedRequest, res) => {
     try {
       let clubId = req.user?.currentClubId;
-      
+
       // If no club ID from user context, try to get from query params or use default
       if (!clubId) {
         const queryClubId = req.query.clubId as string;
@@ -450,7 +450,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.log('Players endpoint: Using default club ID (1)');
         }
       }
-      
+
       console.log(`Fetching players for club ${clubId}`);
       const players = await storage.getPlayersByClub(clubId);
       res.json(players);
@@ -589,7 +589,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/players/:id/clubs", async (req, res) => {
     try {
       const playerId = parseInt(req.params.id, 10);
-      
+
       if (isNaN(playerId)) {
         return res.status(400).json({ message: "Invalid player ID" });
       }
@@ -625,7 +625,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const client = await pool.connect();
-      
+
       try {
         await client.query('BEGIN');
 
@@ -874,7 +874,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Import our specialized player-season function
       const { getPlayerSeasons } = await import('./player-season-routes');
 
-      // Use our function to get player seasons
+            // Use our function to get player seasons
       getPlayerSeasons(req, res);
     } catch (error) {
       console.error(`Error fetching seasons for player ${req.params.id}:`, error);
@@ -2189,8 +2189,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register game status routes
   app.use("/api/game-statuses", gameStatusRoutes);
 
-  // Register team routes
-  registerTeamRoutes(app);
+  // Teams routes
+  app.get('/api/teams', getTeams);
+  app.get('/api/clubs/:clubId/teams', getTeamsByClub);
+  app.post('/api/teams', createTeam);
+  app.put('/api/teams/:id', updateTeam);
+  app.delete('/api/teams/:id', deleteTeam);
 
   // Register user management routes
   registerUserManagementRoutes(app);
@@ -2202,7 +2206,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   registerGamePermissionsRoutes(app);
 
   // ----- CLUB-PLAYER RELATIONSHIPS API -----
-  
+
   // Get all clubs for a specific player
   app.get("/api/players/:playerId/clubs", async (req, res) => {
     try {
@@ -2223,7 +2227,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { notes } = req.body;
 
       const success = await storage.addPlayerToClub(playerId, clubId, notes);
-      
+
       if (success) {
         res.json({ message: 'Player added to club successfully' });
       } else {
@@ -2242,7 +2246,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const playerId = parseInt(req.params.playerId);
 
       const success = await storage.removePlayerFromClub(playerId, clubId);
-      
+
       if (success) {
         res.json({ message: 'Player removed from club successfully' });
       } else {
