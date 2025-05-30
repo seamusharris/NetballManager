@@ -164,11 +164,9 @@ export class DatabaseStorage implements IStorage {
     } catch (teamError) {
       console.error(`Team-based lookup also failed for club ${clubId}:`, teamError);
 
-      // Last resort: return all players (for backward compatibility)
-      console.log(`Falling back to all players query`);
-      const allPlayersResult = await db.select().from(players).orderBy(asc(players.displayName));
-      console.log(`Returning all ${allPlayersResult.length} players as fallback`);
-      return allPlayersResult;
+      // Return empty array if no players found for this club
+      console.log(`No players found for club ${clubId}, returning empty array`);
+      return [];
     }
   }
 
