@@ -35,7 +35,7 @@ export default function Teams() {
   const { createMutation, updateMutation, deleteMutation } = useCrudMutations({
     entityName: 'Team',
     baseEndpoint: '/api/teams',
-    invalidatePatterns: [`clubs.${currentClubId}.teams`],
+    invalidatePatterns: [['clubs', currentClubId, 'teams']],
     onSuccess: (data, variables, context) => {
       if (context === 'create') {
         setIsDialogOpen(false);
