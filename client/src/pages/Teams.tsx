@@ -23,14 +23,6 @@ export default function Teams() {
     endpoint: '/api/teams'
   });
 
-  // Debug logging
-  console.log('Teams query state:', {
-    currentClubId,
-    isLoading: isLoadingTeams,
-    teamsCount: teams.length,
-    error: error?.message
-  });
-
   // Fetch seasons for the form using same pattern
   const { data: seasons = [] } = useStandardQuery<Season[]>({
     endpoint: '/api/seasons'
