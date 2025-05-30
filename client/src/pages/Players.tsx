@@ -25,7 +25,7 @@ export default function Players() {
     queryKey: ['players', currentClub?.id],
     queryFn: async () => {
       if (!currentClub?.id) return [];
-      const response = await fetch(`/api/clubs/${currentClub.id}/players`);
+      const response = await fetch(`/api/players`);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
