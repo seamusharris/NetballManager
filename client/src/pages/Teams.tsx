@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -117,7 +116,7 @@ export default function Teams() {
         <BackButton fallbackPath="/dashboard" className="mb-4">
           Back to Dashboard
         </BackButton>
-        
+
         <Card>
           <CardHeader>
             <CardTitle>Teams</CardTitle>
@@ -132,7 +131,7 @@ export default function Teams() {
                 Add Team
               </Button>
             </div>
-            
+
             <TeamsList
               teams={teams}
               onEdit={setEditingTeam}
@@ -146,28 +145,28 @@ export default function Teams() {
 
       <CrudDialog
         isOpen={isDialogOpen}
-        setIsOpen={setIsDialogOpen}
+        onClose={() => setIsDialogOpen(false)}
         title="Create Team"
-        onSubmit={handleCreate}
       >
         <TeamForm
           seasons={seasons}
           clubId={currentClubId}
           onSubmit={handleCreate}
+          onCancel={() => setIsDialogOpen(false)}
         />
       </CrudDialog>
 
       <CrudDialog
         isOpen={!!editingTeam}
-        setIsOpen={() => setEditingTeam(null)}
+        onClose={() => setEditingTeam(null)}
         title="Edit Team"
-        onSubmit={handleUpdate}
       >
         <TeamForm
           team={editingTeam || undefined}
           seasons={seasons}
           clubId={currentClubId}
           onSubmit={handleUpdate}
+          onCancel={() => setEditingTeam(null)}
         />
       </CrudDialog>
     </>
