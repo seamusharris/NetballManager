@@ -2287,7 +2287,21 @@ app.get('/api/teams', authenticateUser, async (req, res) => {
     console.log(`Found ${teams.rows.length} teams for club ${req.user.currentClubId}`);
     console.log('Sample team data:', teams.rows[0]);
 
-    res.json(teams.rows);
+    // Map the response to include season information properly
+    const mappedTeams = teams.rows.map(row => ({
+      id: row.id,
+      name: row.name,
+      division: row.division,
+      clubId: row.club_id,
+      seasonId: row.season_id,
+      isActive: row.is_active,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+      seasonName: row.seasonName,
+      seasonYear: row.seasonYear
+    }));
+
+    res.json(mappedTeams);
   } catch (error) {
     console.error('Error fetching teams:', error);
     res.status(500).json({ error: 'Failed to fetch teams' });
