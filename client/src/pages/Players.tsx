@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Helmet } from "react-helmet-async";
+import { useQuery } from '@tanstack/react-query';
 import { useParams } from "wouter";
 import PlayersList from '@/components/players/PlayersList';
 import { useClub } from '@/contexts/ClubContext';

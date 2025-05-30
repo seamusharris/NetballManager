@@ -315,7 +315,7 @@ export default function ClubManagement() {
                   <Button 
                     variant="outline" 
                     size="sm"
-                    onClick={() => window.location.href = `/games/${club.id}`}
+                    onClick={() => window.location.href = `/games`}
                   >
                     View Games
                   </Button>
