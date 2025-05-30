@@ -1,6 +1,10 @@
 import type { Express } from "express";
 import { db } from "./db";
 import { sql } from "drizzle-orm";
+import { 
+  AuthenticatedRequest, 
+  requireClubAccess 
+} from "./auth-middleware";
 
 export function registerTeamRoutes(app: Express) {
   // Get all teams for a season
@@ -73,7 +77,7 @@ export function registerTeamRoutes(app: Express) {
   });
 
   // Get all teams for a club
-  app.get("/api/clubs/:clubId/teams", async (req, res) => {
+  app.get("/api/clubs/:clubId/teams", requireClubAccess(), async (req: AuthenticatedRequest, res) => {
     try {
       const clubId = parseInt(req.params.clubId);
       console.log(`Teams endpoint called for club ${clubId}`);
@@ -83,18 +87,51 @@ export function registerTeamRoutes(app: Express) {
         return res.status(400).json({ error: "Club ID required" });
       }
 
+      // Verify user has access to this club
+      if (!req.user?.clubs?.some(club => club.clubId === clubId)) {
+        console.log(`User does not have access to club ${clubId}`);
+        return res.status(403).json({ error: "Access denied to this club" });
+      }
+
       console.log(`Fetching teams for club ${clubId}`);
 
       const clubTeams = await db.execute(sql`
-        SELECT t.*, s.name as season_name, s.year as season_year
+        SELECT 
+          t.id,
+          t.name,
+          t.division,
+          t.is_active,
+          t.created_at,
+          t.updated_at,
+          s.id as season_id,
+          s.name as season_name, 
+          s.year as season_year,
+          s.start_date as season_start_date,
+          s.end_date as season_end_date
         FROM teams t
         LEFT JOIN seasons s ON t.season_id = s.id
-        WHERE t.club_id = ${clubId}
+        WHERE t.club_id = ${clubId} AND t.is_active = true
         ORDER BY s.start_date DESC, t.name
       `);
 
-      console.log(`Found ${clubTeams.rows.length} teams for club ${clubId}`);
-      res.json(clubTeams.rows);
+      const teams = clubTeams.rows.map(row => ({
+        id: row.id,
+        name: row.name,
+        division: row.division,
+        isActive: row.is_active,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at,
+        season: row.season_id ? {
+          id: row.season_id,
+          name: row.season_name,
+          year: row.season_year,
+          startDate: row.season_start_date,
+          endDate: row.season_end_date
+        } : null
+      }));
+
+      console.log(`Found ${teams.length} teams for club ${clubId}`);
+      res.json(teams);
     } catch (error) {
       console.error("Error fetching teams:", error);
       res.status(500).json({ message: "Failed to fetch teams" });
