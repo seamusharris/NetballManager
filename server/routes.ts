@@ -17,7 +17,7 @@ import {
 
 import { updatePlayerSeasonRelationships, getPlayerSeasons } from "./player-season-routes";
 import gameStatusRoutes from "./game-status-routes";
-import { getTeams, getTeamsByClub, createTeam, updateTeam, deleteTeam } from './team-routes';
+import { registerTeamRoutes } from './team-routes';
 import { registerUserManagementRoutes } from "./user-management-routes";
 import { registerPlayerBorrowingRoutes } from "./player-borrowing-routes";
 import { registerGamePermissionsRoutes } from "./game-permissions-routes";
@@ -2189,12 +2189,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register game status routes
   app.use("/api/game-statuses", gameStatusRoutes);
 
-  // Teams routes
-  app.get('/api/teams', getTeams);
-  app.get('/api/clubs/:clubId/teams', getTeamsByClub);
-  app.post('/api/teams', createTeam);
-  app.put('/api/teams/:id', updateTeam);
-  app.delete('/api/teams/:id', deleteTeam);
+  // Register team routes
+  registerTeamRoutes(app);
 
   // Register user management routes
   registerUserManagementRoutes(app);
