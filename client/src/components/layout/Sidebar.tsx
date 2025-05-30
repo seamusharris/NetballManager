@@ -25,6 +25,7 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen, isTablet }: Sid
   const navLinks = [
     { path: '/', label: 'Dashboard', icon: <Home className="w-5 h-5" /> },
     { path: '/players', label: 'Players', icon: <Users className="w-5 h-5" /> },
+    { path: '/teams', label: 'Teams', icon: <Users className="w-5 h-5" /> },
     { path: '/roster', label: 'Roster', icon: <ClipboardList className="w-5 h-5" /> },
     { path: '/games', label: 'Games', icon: <Calendar className="w-5 h-5" /> },
     { path: '/seasons', label: 'Seasons', icon: <CalendarRange className="w-5 h-5" /> },

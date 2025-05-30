@@ -12,9 +12,7 @@ import { Team, Season } from '@shared/schema';
 import { useToast } from '@/hooks/use-toast';
 import { useLocation } from 'wouter';
 import { BackButton } from '@/components/ui/back-button';
-
-// Temporary hardcoded club ID - this will come from ClubContext later
-const CURRENT_CLUB_ID = 1;
+import { useClub } from '@/contexts/ClubContext';
 
 export default function Teams() {
   const { toast } = useToast();
@@ -22,11 +20,13 @@ export default function Teams() {
   const [, setLocation] = useLocation();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTeam, setEditingTeam] = useState<Team | null>(null);
+  const { currentClubId } = useClub();
 
   // Fetch teams for current club
   const { data: teams = [], isLoading: isLoadingTeams } = useQuery<(Team & { seasonName?: string; seasonYear?: number })[]>({
-    queryKey: ['clubs', CURRENT_CLUB_ID, 'teams'],
-    queryFn: () => apiRequest('GET', `/api/clubs/${CURRENT_CLUB_ID}/teams`),
+    queryKey: ['clubs', currentClubId, 'teams'],
+    queryFn: () => apiRequest('GET', `/api/clubs/${currentClubId}/teams`),
+    enabled: !!currentClubId,
   });
 
   // Fetch seasons for the form
@@ -38,7 +38,7 @@ export default function Teams() {
   const createTeam = useMutation({
     mutationFn: (teamData: any) => apiRequest('POST', '/api/teams', teamData),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['clubs', CURRENT_CLUB_ID, 'teams'] });
+      queryClient.invalidateQueries({ queryKey: ['clubs', currentClubId, 'teams'] });
       setIsDialogOpen(false);
       toast({
         title: 'Success',
@@ -58,7 +58,7 @@ export default function Teams() {
     mutationFn: ({ id, data }: { id: number; data: any }) =>
       apiRequest('PATCH', `/api/teams/${id}`, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['clubs', CURRENT_CLUB_ID, 'teams'] });
+      queryClient.invalidateQueries({ queryKey: ['clubs', currentClubId, 'teams'] });
       setEditingTeam(null);
       toast({
         title: 'Success',
@@ -77,7 +77,7 @@ export default function Teams() {
   const deleteTeam = useMutation({
     mutationFn: (teamId: number) => apiRequest('DELETE', `/api/teams/${teamId}`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['clubs', CURRENT_CLUB_ID, 'teams'] });
+      queryClient.invalidateQueries({ queryKey: ['clubs', currentClubId, 'teams'] });
       toast({
         title: 'Success',
         description: 'Team deleted successfully.',
@@ -152,7 +152,7 @@ export default function Teams() {
       >
         <TeamForm
           seasons={seasons}
-          clubId={CURRENT_CLUB_ID}
+          clubId={currentClubId}
           onSubmit={handleCreate}
         />
       </CrudDialog>
@@ -166,7 +166,7 @@ export default function Teams() {
         <TeamForm
           team={editingTeam || undefined}
           seasons={seasons}
-          clubId={CURRENT_CLUB_ID}
+          clubId={currentClubId}
           onSubmit={handleUpdate}
         />
       </CrudDialog>
