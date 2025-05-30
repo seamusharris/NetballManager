@@ -41,13 +41,35 @@ export function TeamForm({ team, seasons, clubId, onSubmit, onCancel }: TeamForm
 
   const handleSubmit = (data: TeamFormData) => {
     console.log('TeamForm handleSubmit called with:', data);
-    onSubmit(data);
+    console.log('Form validation state:', form.formState.errors);
+    console.log('Form is valid:', form.formState.isValid);
+    console.log('Form is submitting:', form.formState.isSubmitting);
+    
+    // Ensure all required fields are present
+    const submitData = {
+      ...data,
+      clubId: data.clubId || clubId, // Fallback to prop if not in form data
+    };
+    
+    console.log('Final submit data being passed to onSubmit:', submitData);
+    onSubmit(submitData);
   };
 
   return (
     <Form {...form}>
       <form 
-        onSubmit={form.handleSubmit(handleSubmit)} 
+        onSubmit={(e) => {
+          console.log('Form onSubmit event triggered');
+          console.log('Event:', e);
+          console.log('Form state before submit:', {
+            isValid: form.formState.isValid,
+            errors: form.formState.errors,
+            values: form.getValues()
+          });
+          
+          // Let React Hook Form handle the submission
+          form.handleSubmit(handleSubmit)(e);
+        }}
         className="space-y-4"
       >
         <FormField
@@ -109,7 +131,14 @@ export function TeamForm({ team, seasons, clubId, onSubmit, onCancel }: TeamForm
               Cancel
             </Button>
           )}
-          <Button type="submit">
+          <Button 
+            type="submit"
+            onClick={(e) => {
+              console.log('Submit button clicked');
+              console.log('Button event:', e);
+              // Don't prevent default here, let the form handle it
+            }}
+          >
             {team ? 'Update Team' : 'Create Team'}
           </Button>
         </div>
