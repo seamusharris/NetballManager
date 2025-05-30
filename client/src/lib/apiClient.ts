@@ -48,15 +48,17 @@ export class ApiClient {
                                !endpoint.includes('/seasons');
     const effectiveClubId = clubId || (shouldIncludeClubId ? this.getCurrentClubId() : null);
 
-    // Add club context to headers or query params
+    // Add club context to headers for all requests
     if (effectiveClubId) {
-      if (method === 'GET') {
-        const urlObj = new URL(url, window.location.origin);
-        urlObj.searchParams.set('clubId', effectiveClubId.toString());
-        endpoint = urlObj.pathname + urlObj.search;
-      } else if (data && typeof data === 'object') {
+      config.headers = {
+        ...config.headers,
+        'X-Club-ID': effectiveClubId.toString()
+      };
+
+      // For non-GET requests, also include in body if needed
+      if (method !== 'GET' && data && typeof data === 'object') {
         data.clubId = effectiveClubId;
-      } else {
+      } else if (method !== 'GET' && !data) {
         data = { clubId: effectiveClubId };
       }
     }

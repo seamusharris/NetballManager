@@ -30,8 +30,8 @@ export function requireClubAccess(requiredPermission?: keyof AuthenticatedReques
         return res.status(401).json({ error: 'Authentication required' });
       }
 
-      // Extract club ID from request (URL param, query, or body), fallback to user's current club
-      let clubId = req.params.clubId || req.query.clubId || req.body.clubId || req.user?.currentClubId;
+      // Extract club ID from request (URL param, header, query, or body), fallback to user's current club
+      let clubId = req.params.clubId || req.headers['x-club-id'] || req.query.clubId || req.body.clubId || req.user?.currentClubId;
 
       // If still no club ID and user has clubs, use the first one
       if (!clubId && req.user?.clubs && req.user.clubs.length > 0) {
