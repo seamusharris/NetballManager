@@ -102,10 +102,8 @@ export default function Teams() {
 
   const handleCreate = (teamData: any) => {
     console.log('handleCreate called with:', teamData);
-    console.log('Current club ID:', currentClubId);
-    
+
     if (!currentClubId) {
-      console.error('No current club ID available');
       toast({
         title: 'Error',
         description: 'No club selected. Please select a club first.',
@@ -113,14 +111,12 @@ export default function Teams() {
       });
       return;
     }
-    
-    // Ensure clubId is included
+
     const teamDataWithClub = {
       ...teamData,
       clubId: currentClubId
     };
-    
-    console.log('Submitting team data:', teamDataWithClub);
+
     createTeam.mutate(teamDataWithClub);
   };
 

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -33,23 +32,17 @@ export function TeamForm({ team, seasons, clubId, onSubmit, onCancel }: TeamForm
     defaultValues: {
       name: team?.name || '',
       division: team?.division || '',
-      clubId,
-      seasonId: team?.seasonId || seasons.find(s => s.isActive)?.id || seasons[0]?.id,
+      clubId: clubId || 0,
+      seasonId: team?.seasonId || seasons.find(s => s.isActive)?.id || seasons[0]?.id || 0,
       isActive: team?.isActive ?? true,
     },
   });
 
   const handleSubmit = (data: TeamFormData) => {
     console.log('TeamForm handleSubmit called with:', data);
-    
-    // Ensure all required fields are present
-    const submitData = {
-      ...data,
-      clubId: data.clubId || clubId, // Fallback to prop if not in form data
-    };
-    
-    console.log('Final submit data being passed to onSubmit:', submitData);
-    onSubmit(submitData);
+    console.log('Form validation errors:', form.formState.errors);
+
+    onSubmit(data);
   };
 
   return (
