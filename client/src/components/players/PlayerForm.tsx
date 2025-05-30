@@ -40,9 +40,10 @@ interface PlayerFormProps {
   player?: Player;
   onSubmit: (data: any) => void;
   isSubmitting: boolean;
+  onCancel?: () => void;
 }
 
-export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFormProps) {
+export default function PlayerForm({ player, onSubmit, isSubmitting, onCancel }: PlayerFormProps) {
   const isEditing = !!player;
 
   // Extract position preferences for default values
@@ -182,53 +183,11 @@ export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFor
 
   // Season management is now handled on the player details page
 
-  // Function to handle manual form submission
-  const onFormSubmit = () => {
-    // Get the current form values
-    const values = form.getValues();
-
-    // Validate form manually
-    if (!values.displayName || !values.firstName || !values.lastName || !values.position1) {
-      if (!values.displayName) {
-        form.setError("displayName", { type: "required", message: "Display name is required" });
-      }
-      if (!values.firstName) {
-        form.setError("firstName", { type: "required", message: "First name is required" });
-      }
-      if (!values.lastName) {
-        form.setError("lastName", { type: "required", message: "Last name is required" });
-      }
-      if (!values.position1) {
-        form.setError("position1", { type: "required", message: "Primary position is required" });
-      }
-      return;
-    }
-
-    // Build position preferences array
-    const positionPreferences: Position[] = [values.position1 as Position];
-    if (values.position2 !== "none") positionPreferences.push(values.position2 as Position);
-    if (values.position3 !== "none") positionPreferences.push(values.position3 as Position);
-    if (values.position4 !== "none") positionPreferences.push(values.position4 as Position);
-
-    // Build player data object without seasons
-    const playerData = {
-      displayName: values.displayName,
-      firstName: values.firstName,
-      lastName: values.lastName,
-      dateOfBirth: values.dateOfBirth || null,
-      positionPreferences,
-      active: values.active,
-    };
-
-    console.log("Submitting player data:", playerData);
-
-    // Call the onSubmit handler passed from parent
-    onSubmit(playerData);
-  };
+  
 
   return (
     <Form {...form}>
-      <div className="space-y-6">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             control={form.control}
@@ -424,39 +383,16 @@ export default function PlayerForm({ player, onSubmit, isSubmitting }: PlayerFor
         </div>
 
         <div className="flex justify-end space-x-2">
-          <Button 
-            type="button" 
-            variant="outline" 
-            onClick={() => {
-              // Get original values to properly reset
-              const originalValues = {
-                displayName: player?.displayName || "",
-                firstName: player?.firstName || "",
-                lastName: player?.lastName || "",
-                dateOfBirth: player?.dateOfBirth || "",
-                position1: positionDefaults.position1,
-                position2: positionDefaults.position2,
-                position3: positionDefaults.position3,
-                position4: positionDefaults.position4,
-                active: player?.active !== undefined ? player.active : true,
-              };
-
-              // Reset form to original values
-              form.reset(originalValues);
-            }}
-          >
-            Reset
-          </Button>
-          <Button 
-            type="button" 
-            className="bg-primary text-white" 
-            disabled={isSubmitting}
-            onClick={onFormSubmit}
-          >
+          {onCancel && (
+            <Button type="button" variant="outline" onClick={onCancel}>
+              Cancel
+            </Button>
+          )}
+          <Button type="submit" className="bg-primary text-white" disabled={isSubmitting}>
             {isSubmitting ? 'Saving...' : isEditing ? 'Update Player' : 'Add Player'}
           </Button>
         </div>
-      </div>
+      </form>
     </Form>
   );
 }

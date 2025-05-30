@@ -23,9 +23,10 @@ interface OpponentFormProps {
   opponent?: Opponent;
   onSubmit: (data: FormValues) => void;
   isSubmitting: boolean;
+  onCancel?: () => void;
 }
 
-export default function OpponentForm({ opponent, onSubmit, isSubmitting }: OpponentFormProps) {
+export default function OpponentForm({ opponent, onSubmit, isSubmitting, onCancel }: OpponentFormProps) {
   const isEditing = !!opponent;
   
   const form = useForm<FormValues>({
@@ -93,9 +94,11 @@ export default function OpponentForm({ opponent, onSubmit, isSubmitting }: Oppon
         />
         
         <div className="flex justify-end space-x-2">
-          <Button type="button" variant="outline" onClick={() => form.reset()}>
-            Reset
-          </Button>
+          {onCancel && (
+            <Button type="button" variant="outline" onClick={onCancel}>
+              Cancel
+            </Button>
+          )}
           <Button type="submit" className="bg-primary text-white" disabled={isSubmitting}>
             {isSubmitting ? 'Saving...' : isEditing ? 'Update Opponent' : 'Add Opponent'}
           </Button>

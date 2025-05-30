@@ -59,9 +59,10 @@ interface GameFormProps {
   activeSeason?: Season;
   onSubmit: (data: any) => void;
   isSubmitting: boolean;
+  onCancel?: () => void;
 }
 
-export function GameForm({ game, opponents, seasons, activeSeason, onSubmit, isSubmitting }: GameFormProps) {
+export function GameForm({ game, opponents, seasons, activeSeason, onSubmit, isSubmitting, onCancel }: GameFormProps) {
   const isEditing = !!game;
 
   const form = useForm<FormValues>({
@@ -275,9 +276,11 @@ export function GameForm({ game, opponents, seasons, activeSeason, onSubmit, isS
         />
 
         <div className="flex justify-end space-x-2">
-          <Button type="button" variant="outline" onClick={() => form.reset()}>
-            Reset
-          </Button>
+          {onCancel && (
+            <Button type="button" variant="outline" onClick={onCancel}>
+              Cancel
+            </Button>
+          )}
           <Button type="submit" className="bg-primary text-white" disabled={isSubmitting}>
             {isSubmitting ? 'Saving...' : isEditing ? 'Update Game' : 'Schedule Game'}
           </Button>
