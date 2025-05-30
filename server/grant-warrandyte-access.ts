@@ -83,7 +83,7 @@ async function grantWarrandyteAccessToAllGames() {
 export { grantWarrandyteAccessToAllGames };
 
 // If running directly, execute the function
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (import.meta.url.startsWith('file:') && process.argv[1] && import.meta.url.endsWith(process.argv[1])) {
   grantWarrandyteAccessToAllGames()
     .then(() => {
       console.log('Script completed');
