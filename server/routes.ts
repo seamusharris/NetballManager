@@ -37,7 +37,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         // Get all clubs from database for dev user
         const allClubs = await db.execute(sql`SELECT id, name, code FROM clubs WHERE is_active = true`);
-        
+
         const userClubs = allClubs.rows.map(club => ({
           clubId: club.id,
           role: 'admin',
@@ -866,7 +866,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const playerId = Number(req.params.id);
 
       // Import our specialized player-season function
-      const { getPlayerSeasons } = await import('./player-season-routes');
+      const { getPlayerSeasons }The teams endpoint is modified to correctly include season information.```text
+= await import('./player-season-routes');
 
             // Use our function to get player seasons
       getPlayerSeasons(req, res);
@@ -2259,6 +2260,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: 'Failed to fetch club players' });
     }
   });
+
+  // Teams routes
+  const { authenticateUser } = await import('./auth-middleware');
+app.get('/api/teams', authenticateUser, async (req, res) => {
+  try {
+    console.log(`Teams endpoint called for club ${req.user.currentClubId}`);
+    console.log('User context:', req.user.clubs);
+
+    if (!req.user.currentClubId) {
+      return res.status(400).json({ error: 'No current club selected' });
+    }
+
+    console.log(`Fetching teams for club ${req.user.currentClubId}`);
+
+    const teams = await db.execute(sql`
+      SELECT t.*, 
+             s.name as "seasonName", 
+             s.year as "seasonYear"
+      FROM teams t
+      LEFT JOIN seasons s ON t.season_id = s.id
+      WHERE t.club_id = ${req.user.currentClubId}
+      ORDER BY t.name
+    `);
+
+    console.log(`Found ${teams.rows.length} teams for club ${req.user.currentClubId}`);
+    console.log('Sample team data:', teams.rows[0]);
+
+    res.json(teams.rows);
+  } catch (error) {
+    console.error('Error fetching teams:', error);
+    res.status(500).json({ error: 'Failed to fetch teams' });
+  }
+});
 
   // Create HTTP server
   const httpServer = createServer(app);

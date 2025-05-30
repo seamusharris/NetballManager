@@ -20,7 +20,8 @@ export default function Teams() {
 
   // Fetch teams for current club using same pattern as players
   const { data: teams = [], isLoading: isLoadingTeams, error } = useStandardQuery<(Team & { seasonName?: string; seasonYear?: number })[]>({
-    endpoint: '/api/teams'
+    endpoint: '/api/teams',
+    queryKey: ['teams', currentClubId]
   });
 
   // Fetch seasons for the form using same pattern

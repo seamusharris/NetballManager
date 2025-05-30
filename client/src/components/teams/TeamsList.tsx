@@ -60,7 +60,7 @@ export function TeamsList({ teams, onEdit, onDelete, onManagePlayers, isLoading 
           <CardContent>
             <div className="space-y-2">
               <p className="text-sm text-gray-600">
-                Season: {team.seasonName} ({team.seasonYear})
+                Season: {team.seasonName || 'No Season'} ({team.seasonYear || 'N/A'})
               </p>
               
               <div className="flex space-x-2">
