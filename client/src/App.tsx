@@ -72,7 +72,7 @@ function Router() {
         <Route path="/opponent-analysis/detailed/:opponentId" component={OpponentDetailed} />
         <Route path="/opponents" component={Opponents} />
         <Route path="/statistics" component={withErrorBoundary(Statistics, 'Statistics')} />
-        <Route path="/clubs" component={withErrorBoundary(ClubManagement, 'ClubManagement')} />
+        <Route path="/club-management" component={withErrorBoundary(ClubManagement, 'ClubManagement')} />
         <Route path="/data-management" component={withErrorBoundary(DataManagement, 'DataManagement')} />
         <Route path="/settings" component={withErrorBoundary(Settings, 'Settings')} />
         <Route path="/seasons" component={withErrorBoundary(Seasons, 'Seasons')} />

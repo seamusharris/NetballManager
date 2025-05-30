@@ -63,7 +63,7 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
   }, [userClubs, currentClubId]);
 
   const switchClub = async (clubId: number) => {
-    console.log('Switching to club:', clubId);
+    console.log('Switching to club:', clubId, 'Current club:', currentClubId);
     
     // Verify user has access to this club
     const hasAccess = userClubs.some(club => club.clubId === clubId);
@@ -72,8 +72,15 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
       return;
     }
     
+    // Don't switch if already on this club
+    if (currentClubId === clubId) {
+      console.log('Already on club:', clubId);
+      return;
+    }
+    
     setCurrentClubId(clubId);
     localStorage.setItem('currentClubId', clubId.toString());
+    console.log('Club switched in context to:', clubId);
 
     // Invalidate all club-dependent queries to refetch with new club context
     await queryClient.invalidateQueries({
@@ -95,6 +102,7 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
     
     // Also invalidate club-specific queries by exact match
     await queryClient.invalidateQueries({ queryKey: ['club', clubId] });
+    console.log('Queries invalidated for club:', clubId);
   };
 
   const hasPermission = (permission: keyof UserClubAccess['permissions']) => {

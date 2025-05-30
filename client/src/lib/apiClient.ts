@@ -31,7 +31,11 @@ export class ApiClient {
     };
 
     // Auto-include current club ID if not provided and not for club-management endpoints
-    const effectiveClubId = clubId || (!endpoint.includes('/clubs') && !endpoint.includes('/user/clubs') ? this.getCurrentClubId() : null);
+    const shouldIncludeClubId = !endpoint.includes('/clubs') && 
+                               !endpoint.includes('/user/clubs') && 
+                               !endpoint.includes('/game-statuses') &&
+                               !endpoint.includes('/seasons');
+    const effectiveClubId = clubId || (shouldIncludeClubId ? this.getCurrentClubId() : null);
 
     // Add club context to headers or query params
     if (effectiveClubId) {
@@ -39,7 +43,7 @@ export class ApiClient {
         const urlObj = new URL(url, window.location.origin);
         urlObj.searchParams.set('clubId', effectiveClubId.toString());
         endpoint = urlObj.pathname + urlObj.search;
-      } else if (data) {
+      } else if (data && typeof data === 'object') {
         data.clubId = effectiveClubId;
       } else {
         data = { clubId: effectiveClubId };

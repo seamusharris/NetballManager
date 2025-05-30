@@ -34,8 +34,13 @@ export function ClubSwitcher() {
     );
   }
 
-  // If no current club is set, use the first available club
-  const displayClub = currentClub || {
+  // Find the current club from userClubs data or fall back to first club
+  const currentUserClub = userClubs.find(club => club.clubId === currentClub?.id);
+  const displayClub = currentUserClub ? {
+    id: currentUserClub.clubId,
+    name: currentUserClub.clubName,
+    code: currentUserClub.clubCode
+  } : {
     id: userClubs[0]?.clubId,
     name: userClubs[0]?.clubName,
     code: userClubs[0]?.clubCode
