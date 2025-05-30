@@ -8,8 +8,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
 import { useQuery } from "@tanstack/react-query";
-import { Plus } from "lucide-react";
-import ClubForm from "@/components/clubs/ClubForm";
+
 
 interface Club {
   id: number;
@@ -31,7 +30,6 @@ export default function PlayerClubsManager({
 }: PlayerClubsManagerProps) {
   const { toast } = useToast();
   const [selectedClubs, setSelectedClubs] = useState<number[]>([]);
-  const [isCreateClubOpen, setIsCreateClubOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Fetch all clubs
@@ -120,37 +118,7 @@ export default function PlayerClubsManager({
     }
   };
 
-  // Handle creating a new club
-  const handleCreateClub = async (clubData: any) => {
-    try {
-      const response = await fetch('/api/clubs', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(clubData)
-      });
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Failed to create club: ${errorText}`);
-      }
-      
-      // Success! Refresh clubs list and close create dialog
-      queryClient.invalidateQueries({ queryKey: ['/api/clubs'] });
-      setIsCreateClubOpen(false);
-      
-      toast({
-        title: "Success",
-        description: "Club created successfully"
-      });
-    } catch (error: any) {
-      console.error("Error creating club:", error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to create club",
-        variant: "destructive"
-      });
-    }
-  };
+  
 
   return (
     <>
@@ -182,14 +150,6 @@ export default function PlayerClubsManager({
             <div className="border rounded-md p-3">
               <div className="flex items-center justify-between mb-2">
                 <h3 className="text-sm font-medium">Available clubs:</h3>
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  onClick={() => setIsCreateClubOpen(true)}
-                  className="text-xs"
-                >
-                  <Plus className="h-3 w-3 mr-1" /> New Club
-                </Button>
               </div>
               <div className="space-y-2">
                 {isClubsLoading ? (
@@ -236,30 +196,7 @@ export default function PlayerClubsManager({
         </DialogContent>
       </Dialog>
 
-      {/* Create Club Dialog */}
-      {isCreateClubOpen && (
-        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center overflow-y-auto">
-          <div className="relative bg-white dark:bg-slate-900 p-6 rounded-lg max-w-lg w-full max-h-[90vh] overflow-y-auto">
-            <button 
-              className="absolute right-4 top-4 rounded-sm opacity-70 text-gray-600 hover:opacity-100" 
-              onClick={() => setIsCreateClubOpen(false)}
-            >
-              ✕
-              <span className="sr-only">Close</span>
-            </button>
-
-            <h2 className="text-xl font-semibold mb-2">Create New Club</h2>
-            <p className="text-sm text-gray-500 mb-4">
-              Enter the details for the new club.
-            </p>
-
-            <ClubForm 
-              onSubmit={handleCreateClub}
-              onCancel={() => setIsCreateClubOpen(false)}
-            />
-          </div>
-        </div>
-      )}
+      
     </>
   );
 }
