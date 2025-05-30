@@ -21,7 +21,7 @@ export default function Teams() {
 
   // Fetch teams for current club
   const { data: teams = [], isLoading: isLoadingTeams, error } = useQuery<(Team & { seasonName?: string; seasonYear?: number })[]>({
-    queryKey: ['teams'],
+    queryKey: ['teams', 'club', currentClubId],
     queryFn: () => {
       console.log(`Teams page: About to call /api/teams for club ${currentClubId}`);
       return apiRequest('GET', `/api/teams`);
