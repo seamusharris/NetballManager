@@ -2322,7 +2322,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 });
 
   // Admin endpoint to add all players to Warrandyte
-  app.post("/api/admin/add-warrandyte-players", async (req: Request, res: Response) => {
+  app.post("/api/admin/add-warrandyte-players", async (req: any, res: any) => {
     try {
       const { addPlayersToWarrandyte } = await import('./add-warrandyte-players');
       const result = await addPlayersToWarrandyte();
