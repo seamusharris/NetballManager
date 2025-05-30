@@ -698,24 +698,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Club CRUD routes
-  app.get("/api/clubs", async (req, res) => {
-    try {
-      const result = await pool.query(`
-        SELECT id, name, code, description, is_active, 
-               primary_color, secondary_color, address, 
-               contact_email, contact_phone, logo_url
-        FROM clubs
-        WHERE is_active = true
-        ORDER BY name
-      `);
-
-      res.json(result.rows);
-    } catch (error) {
-      console.error("Error fetching clubs:", error);
-      res.status(500).json({ message: "Failed to fetch clubs" });
-    }
-  });
+  // Club CRUD routes - removed duplicate endpoint (enhanced version below includes statistics)
 
   app.post("/api/clubs", async (req, res) => {
     try {
