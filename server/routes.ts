@@ -866,8 +866,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const playerId = Number(req.params.id);
 
       // Import our specialized player-season function
-      const { getPlayerSeasons }The teams endpoint is modified to correctly include season information.```text
-= await import('./player-season-routes');
+      const { getPlayerSeasons } = await import('./player-season-routes');
 
             // Use our function to get player seasons
       getPlayerSeasons(req, res);
