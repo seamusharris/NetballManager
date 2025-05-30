@@ -2195,6 +2195,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register game permissions routes
   registerGamePermissionsRoutes(app);
 
+  // Grant Warrandyte access to all games endpoint
+  app.post('/api/admin/grant-warrandyte-access', async (req, res) => {
+    try {
+      const { grantWarrandyteAccessToAllGames } = await import('./grant-warrandyte-access');
+      await grantWarrandyteAccessToAllGames();
+      res.json({ message: 'Successfully granted Warrandyte access to all games' });
+    } catch (error) {
+      console.error('Error granting Warrandyte access:', error);
+      res.status(500).json({ error: 'Failed to grant Warrandyte access to games' });
+    }
+  });
+
   // ----- CLUB-PLAYER RELATIONSHIPS API -----
 
   // Get all clubs for a specific player
