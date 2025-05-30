@@ -76,6 +76,12 @@ export function registerTeamRoutes(app: Express) {
   app.get("/api/clubs/:clubId/teams", async (req, res) => {
     try {
       const clubId = parseInt(req.params.clubId);
+      console.log(`Teams endpoint called for club ${clubId}`);
+
+      if (!clubId || isNaN(clubId)) {
+        console.log('Invalid club ID provided:', req.params.clubId);
+        return res.status(400).json({ error: "Club ID required" });
+      }
 
       const clubTeams = await db.execute(sql`
         SELECT t.*, s.name as season_name, s.year as season_year
