@@ -301,21 +301,45 @@ export default function ClubManagement() {
                   <Button 
                     variant="outline" 
                     size="sm"
-                    onClick={() => window.location.href = `/players/${club.id}`}
+                    onClick={() => {
+                      if (currentClub?.id !== club.id) {
+                        // Switch club context first, then navigate
+                        localStorage.setItem('currentClubId', club.id.toString());
+                        window.location.href = `/players`;
+                      } else {
+                        window.location.href = `/players`;
+                      }
+                    }}
                   >
                     Manage Players
                   </Button>
                   <Button 
                     variant="outline" 
                     size="sm"
-                    onClick={() => window.location.href = `/teams/${club.id}`}
+                    onClick={() => {
+                      if (currentClub?.id !== club.id) {
+                        // Switch club context first, then navigate
+                        localStorage.setItem('currentClubId', club.id.toString());
+                        window.location.href = `/teams`;
+                      } else {
+                        window.location.href = `/teams`;
+                      }
+                    }}
                   >
                     Manage Teams
                   </Button>
                   <Button 
                     variant="outline" 
                     size="sm"
-                    onClick={() => window.location.href = `/games`}
+                    onClick={() => {
+                      if (currentClub?.id !== club.id) {
+                        // Switch club context first, then navigate
+                        localStorage.setItem('currentClubId', club.id.toString());
+                        window.location.href = `/games`;
+                      } else {
+                        window.location.href = `/games`;
+                      }
+                    }}
                   >
                     View Games
                   </Button>
