@@ -291,13 +291,25 @@ export default function ClubManagement() {
               </div>
               <div className="mt-4 pt-4 border-t">
                 <div className="flex space-x-2">
-                  <Button variant="outline" size="sm">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => window.location.href = `/players?club=${club.id}`}
+                  >
                     Manage Players
                   </Button>
-                  <Button variant="outline" size="sm">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => window.location.href = `/teams?club=${club.id}`}
+                  >
                     Manage Teams
                   </Button>
-                  <Button variant="outline" size="sm">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => window.location.href = `/games?club=${club.id}`}
+                  >
                     View Games
                   </Button>
                 </div>
