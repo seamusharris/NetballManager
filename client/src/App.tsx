@@ -62,8 +62,10 @@ function Router() {
         <Route path="/" component={withErrorBoundary(Dashboard, 'Dashboard')} />
         <Route path="/dashboard" component={withErrorBoundary(Dashboard, 'Dashboard')} />
         <Route path="/players" component={withErrorBoundary(Players, 'Players')} />
+        <Route path="/players/:clubId" component={withErrorBoundary(Players, 'Players')} />
         <Route path="/player/:id" component={withErrorBoundary(PlayerDetails, 'PlayerDetails')} />
         <Route path="/teams" component={withErrorBoundary(Teams, 'Teams')} />
+        <Route path="/teams/:clubId" component={withErrorBoundary(Teams, 'Teams')} />
         <Route path="/roster" component={withErrorBoundary(Roster, 'Roster')} />
         <Route path="/roster/:gameId" component={withErrorBoundary(Roster, 'Roster')} />
         <Route path="/games" component={withErrorBoundary(Games, 'Games')} />

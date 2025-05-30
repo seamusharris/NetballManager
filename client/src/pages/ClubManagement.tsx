@@ -301,21 +301,21 @@ export default function ClubManagement() {
                   <Button 
                     variant="outline" 
                     size="sm"
-                    onClick={() => window.location.href = `/players?club=${club.id}`}
+                    onClick={() => window.location.href = `/players/${club.id}`}
                   >
                     Manage Players
                   </Button>
                   <Button 
                     variant="outline" 
                     size="sm"
-                    onClick={() => window.location.href = `/teams?club=${club.id}`}
+                    onClick={() => window.location.href = `/teams/${club.id}`}
                   >
                     Manage Teams
                   </Button>
                   <Button 
                     variant="outline" 
                     size="sm"
-                    onClick={() => window.location.href = `/games?club=${club.id}`}
+                    onClick={() => window.location.href = `/games/${club.id}`}
                   >
                     View Games
                   </Button>
