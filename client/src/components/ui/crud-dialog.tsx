@@ -1,4 +1,3 @@
-
 import { ReactNode } from 'react';
 import { Button } from './button';
 
@@ -31,12 +30,12 @@ export function CrudDialog({
           ✕
           <span className="sr-only">Close</span>
         </button>
-        
+
         <h2 className="text-xl font-semibold mb-2">{title}</h2>
         {description && (
           <p className="text-sm text-gray-500 mb-4">{description}</p>
         )}
-        
+
         {children}
       </div>
     </div>
