@@ -81,16 +81,11 @@ export function registerTeamRoutes(app: Express) {
     try {
       const clubId = parseInt(req.params.clubId);
       console.log(`Teams endpoint called for club ${clubId}`);
+      console.log(`User context:`, req.user?.clubs?.map(c => c.clubId));
 
       if (isNaN(clubId) || clubId <= 0) {
         console.log('Invalid club ID provided:', req.params.clubId);
         return res.status(400).json({ error: "Club ID required" });
-      }
-
-      // Verify user has access to this club
-      if (!req.user?.clubs?.some(club => club.clubId === clubId)) {
-        console.log(`User does not have access to club ${clubId}`);
-        return res.status(403).json({ error: "Access denied to this club" });
       }
 
       console.log(`Fetching teams for club ${clubId}`);
