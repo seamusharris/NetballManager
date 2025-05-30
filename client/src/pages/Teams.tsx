@@ -21,8 +21,8 @@ export default function Teams() {
 
   // Fetch teams for current club
   const { data: teams = [], isLoading: isLoadingTeams } = useQuery<(Team & { seasonName?: string; seasonYear?: number })[]>({
-    queryKey: ['clubs', currentClubId, 'teams'],
-    queryFn: () => apiRequest('GET', `/api/clubs/${currentClubId}/teams`),
+    queryKey: ['teams'],
+    queryFn: () => apiRequest('GET', `/api/teams`),
     enabled: !!currentClubId,
   });
 
@@ -35,7 +35,7 @@ export default function Teams() {
   const { createMutation, updateMutation, deleteMutation } = useCrudMutations({
     entityName: 'Team',
     baseEndpoint: '/api/teams',
-    invalidatePatterns: [['clubs', currentClubId, 'teams']],
+    invalidatePatterns: [['teams']],
     onSuccess: (data, variables, context) => {
       if (context === 'create') {
         setIsDialogOpen(false);
