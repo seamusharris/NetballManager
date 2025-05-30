@@ -1148,6 +1148,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Filter to include only games that this club has access to
       if (req.user?.currentClubId) {
+        console.log(`Fetching games for club ${clubId}`);
+        
         const result = await db.execute(sql`
         SELECT 
           g.*,
@@ -1162,13 +1164,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         LEFT JOIN seasons s ON g.season_id = s.id
         LEFT JOIN teams ht ON g.home_team_id = ht.id
         LEFT JOIN teams at ON g.away_team_id = at.id
-        WHERE (ht.club_id = ${clubId} OR at.club_id = ${clubId})
-           OR EXISTS (
-             SELECT 1 FROM game_permissions gp 
-             WHERE gp.game_id = g.id AND gp.club_id = ${clubId}
-           )
+        LEFT JOIN game_permissions gp ON g.id = gp.game_id AND gp.club_id = ${clubId}
+        WHERE (ht.club_id = ${clubId} OR at.club_id = ${clubId} OR gp.game_id IS NOT NULL)
         ORDER BY g.date DESC, g.time DESC
       `);
+      
+      console.log(`Found ${result.rows.length} games for club ${clubId}`);
 
       const games = result.rows.map(row => ({
         id: row.id,
