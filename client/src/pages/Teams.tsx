@@ -1,21 +1,18 @@
 import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
+import { useFormMutations } from '@/hooks/use-form-mutations';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { CrudDialog } from '@/components/ui/crud-dialog';
 import { TeamForm } from '@/components/teams/TeamForm';
 import { TeamsList } from '@/components/teams/TeamsList';
 import { Plus } from 'lucide-react';
-import { apiRequest } from '@/lib/apiClient';
 import { Team, Season } from '@shared/schema';
-import { useToast } from '@/hooks/use-toast';
 import { useLocation } from 'wouter';
 import { BackButton } from '@/components/ui/back-button';
 import { useClub } from '@/contexts/ClubContext';
 
 export default function Teams() {
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTeam, setEditingTeam] = useState<Team | null>(null);
@@ -34,102 +31,19 @@ export default function Teams() {
     queryFn: () => apiRequest('GET', '/api/seasons'),
   });
 
-  const createTeam = useMutation({
-    mutationFn: (teamData: any) => {
-      console.log('Creating team with data:', teamData);
-      return apiRequest('POST', '/api/teams', teamData);
-    },
-    onSuccess: (data) => {
-      console.log('Team created successfully:', data);
-      queryClient.invalidateQueries({ queryKey: ['clubs', currentClubId, 'teams'] });
-      setIsDialogOpen(false);
-      toast({
-        title: 'Success',
-        description: 'Team created successfully.',
-      });
-    },
-    onError: (error) => {
-      console.error('Error creating team:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to create team.',
-        variant: 'destructive',
-      });
-    },
+  const { createMutation, updateMutation, deleteMutation } = useFormMutations({
+    entityName: 'team',
+    createEndpoint: '/api/teams',
+    updateEndpoint: (id: number) => `/api/teams/${id}`,
+    deleteEndpoint: (id: number) => `/api/teams/${id}`,
+    queryKeys: [['clubs', currentClubId, 'teams']],
+    onCreateSuccess: () => setIsDialogOpen(false),
+    onUpdateSuccess: () => setEditingTeam(null),
   });
-
-  const updateTeam = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: any }) => {
-      console.log('Updating team with data:', { id, data });
-      return apiRequest('PATCH', `/api/teams/${id}`, data);
-    },
-    onSuccess: (data) => {
-      console.log('Team updated successfully:', data);
-      queryClient.invalidateQueries({ queryKey: ['clubs', currentClubId, 'teams'] });
-      setEditingTeam(null);
-      toast({
-        title: 'Success',
-        description: 'Team updated successfully.',
-      });
-    },
-    onError: (error) => {
-      console.error('Error updating team:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to update team.',
-        variant: 'destructive',
-      });
-    },
-  });
-
-  const deleteTeam = useMutation({
-    mutationFn: (teamId: number) => apiRequest('DELETE', `/api/teams/${teamId}`),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['clubs', currentClubId, 'teams'] });
-      toast({
-        title: 'Success',
-        description: 'Team deleted successfully.',
-      });
-    },
-    onError: () => {
-      toast({
-        title: 'Error',
-        description: 'Failed to delete team.',
-        variant: 'destructive',
-      });
-    },
-  });
-
-  const handleCreate = (teamData: any) => {
-    console.log('handleCreate called with:', teamData);
-    console.log('Current club ID from context:', currentClubId);
-
-    if (!currentClubId) {
-      console.error('No current club ID available');
-      toast({
-        title: 'Error',
-        description: 'No club selected. Please select a club first.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    const teamDataWithClub = {
-      ...teamData,
-      clubId: currentClubId
-    };
-
-    createTeam.mutate(teamDataWithClub);
-  };
-
-  const handleUpdate = (teamData: any) => {
-    if (!editingTeam) return;
-    updateTeam.mutate({ id: editingTeam.id, data: teamData });
-  };
 
   const handleDelete = (teamId: number) => {
     if (confirm('Are you sure you want to delete this team?')) {
-      deleteTeam.mutate(teamId);
+      deleteMutation.mutate(teamId);
     }
   };
 
