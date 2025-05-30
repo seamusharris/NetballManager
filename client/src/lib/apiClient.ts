@@ -7,15 +7,13 @@ export interface ApiResponse<T = any> {
 }
 
 export class ApiClient {
-  constructor() {}
+  private baseUrl = '';
 
   // Get current club ID from localStorage
   private getCurrentClubId(): number | null {
     const stored = localStorage.getItem('currentClubId');
     return stored ? parseInt(stored, 10) : null;
   }
-
-  private baseUrl = '';
 
   async request<T = any>(
     method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE',

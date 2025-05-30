@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/apiClient';
 
 interface Club {
@@ -35,6 +35,7 @@ const ClubContext = createContext<ClubContextType | undefined>(undefined);
 
 export function ClubProvider({ children }: { children: React.ReactNode }) {
   const [currentClubId, setCurrentClubId] = useState<number | null>(null);
+  const queryClient = useQueryClient();
 
   // Fetch user's club access
   const { data: userClubs = [], isLoading: isLoadingClubs } = useQuery<UserClubAccess[]>({
@@ -67,7 +68,6 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('currentClubId', clubId.toString());
 
     // Invalidate all club-dependent queries to refetch with new club context
-    const { queryClient } = await import('@/lib/queryClient');
     await queryClient.invalidateQueries({
       predicate: (query) => {
         const queryKey = query.queryKey[0];
@@ -84,6 +84,9 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
         return false;
       }
     });
+    
+    // Also invalidate club-specific queries by exact match
+    await queryClient.invalidateQueries({ queryKey: ['club', clubId] });
   };
 
   const hasPermission = (permission: keyof UserClubAccess['permissions']) => {

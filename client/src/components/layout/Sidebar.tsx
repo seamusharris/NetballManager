@@ -33,7 +33,7 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen, isTablet }: Sid
     { path: '/statistics', label: 'Statistics', icon: <BarChart className="w-5 h-5" /> },
     { path: '/data-management', label: 'Data Management', icon: <Database className="w-5 h-5" /> },
     { path: '/performance', label: 'Performance', icon: <Zap className="w-5 h-5" /> },
-    { path: '/clubs', label: 'Club Management', icon: <Building2 className="w-5 h-5" />, }, // Added Club Management link
+    { path: '/clubs', label: 'Club Management', icon: <Building2 className="w-5 h-5" /> },
     { path: '/settings', label: 'Settings', icon: <SettingsIcon className="w-5 h-5" /> },
   ];
 
