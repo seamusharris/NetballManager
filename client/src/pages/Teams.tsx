@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { useCrudMutations } from '@/hooks/use-crud-mutations';
+import { useStandardQuery } from '@/hooks/use-standard-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { CrudDialog } from '@/components/ui/crud-dialog';
@@ -11,7 +11,6 @@ import { Team, Season } from '@shared/schema';
 import { useLocation } from 'wouter';
 import { BackButton } from '@/components/ui/back-button';
 import { useClub } from '@/contexts/ClubContext';
-import { apiRequest } from '@/lib/apiClient';
 
 export default function Teams() {
   const [, setLocation] = useLocation();
@@ -19,16 +18,9 @@ export default function Teams() {
   const [editingTeam, setEditingTeam] = useState<Team | null>(null);
   const { currentClubId } = useClub();
 
-  // Fetch teams for current club
-  const { data: teams = [], isLoading: isLoadingTeams, error } = useQuery<(Team & { seasonName?: string; seasonYear?: number })[]>({
-    queryKey: ['teams', 'club', currentClubId],
-    queryFn: () => {
-      console.log(`Teams page: About to call /api/teams for club ${currentClubId}`);
-      return apiRequest('GET', `/api/teams`);
-    },
-    enabled: !!currentClubId,
-    staleTime: 0, // Force fresh data
-    refetchOnMount: 'always', // Always refetch
+  // Fetch teams for current club using same pattern as players
+  const { data: teams = [], isLoading: isLoadingTeams, error } = useStandardQuery<(Team & { seasonName?: string; seasonYear?: number })[]>({
+    endpoint: '/api/teams'
   });
 
   // Debug logging
@@ -36,14 +28,12 @@ export default function Teams() {
     currentClubId,
     isLoading: isLoadingTeams,
     teamsCount: teams.length,
-    error: error?.message,
-    enabled: !!currentClubId
+    error: error?.message
   });
 
-  // Fetch seasons for the form
-  const { data: seasons = [] } = useQuery<Season[]>({
-    queryKey: ['seasons'],
-    queryFn: () => apiRequest('GET', '/api/seasons'),
+  // Fetch seasons for the form using same pattern
+  const { data: seasons = [] } = useStandardQuery<Season[]>({
+    endpoint: '/api/seasons'
   });
 
   const { createMutation, updateMutation, deleteMutation } = useCrudMutations({
