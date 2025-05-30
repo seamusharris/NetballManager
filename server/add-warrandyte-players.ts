@@ -2,7 +2,7 @@
 import { db } from './db';
 import { sql } from 'drizzle-orm';
 
-export async function addPlayersToWarrandyte(): Promise<boolean> {
+export async function addPlayersToWarrandyte(): Promise<{ success: boolean; message: string; playersAdded: number }> {
   try {
     console.log('Starting to add players to Warrandyte Netball Club...');
 
@@ -12,8 +12,9 @@ export async function addPlayersToWarrandyte(): Promise<boolean> {
     `);
 
     if (warrandyteResult.rows.length === 0) {
-      console.error('Warrandyte Netball Club not found');
-      return false;
+      const message = 'Warrandyte Netball Club not found';
+      console.error(message);
+      return { success: false, message, playersAdded: 0 };
     }
 
     const warrandyteClubId = warrandyteResult.rows[0].id;
@@ -27,15 +28,25 @@ export async function addPlayersToWarrandyte(): Promise<boolean> {
     console.log(`Found ${playersResult.rows.length} active players to associate with Warrandyte`);
 
     if (playersResult.rows.length === 0) {
-      console.log('No active players found');
-      return true;
+      const message = 'No active players found';
+      console.log(message);
+      return { success: true, message, playersAdded: 0 };
     }
+
+    // Check existing associations
+    const existingResult = await db.execute(sql`
+      SELECT COUNT(*) as count 
+      FROM club_players 
+      WHERE club_id = ${warrandyteClubId} AND is_active = true
+    `);
+    
+    console.log(`Warrandyte currently has ${existingResult.rows[0].count} associated players`);
 
     // Add each player to Warrandyte
     let addedCount = 0;
     for (const player of playersResult.rows) {
       try {
-        await db.execute(sql`
+        const result = await db.execute(sql`
           INSERT INTO club_players (club_id, player_id, joined_date, is_active)
           VALUES (${warrandyteClubId}, ${player.id}, CURRENT_DATE, true)
           ON CONFLICT (club_id, player_id) DO UPDATE SET
@@ -43,14 +54,14 @@ export async function addPlayersToWarrandyte(): Promise<boolean> {
             left_date = null,
             updated_at = NOW()
         `);
-        console.log(`Added player ${player.display_name} (ID: ${player.id}) to Warrandyte`);
+        console.log(`Added/Updated player ${player.display_name} (ID: ${player.id}) to Warrandyte`);
         addedCount++;
       } catch (error) {
         console.error(`Error adding player ${player.display_name}:`, error);
       }
     }
 
-    console.log(`Successfully added ${addedCount} players to Warrandyte Netball Club`);
+    console.log(`Successfully processed ${addedCount} players for Warrandyte Netball Club`);
 
     // Verify the associations were created
     const verificationResult = await db.execute(sql`
@@ -62,9 +73,11 @@ export async function addPlayersToWarrandyte(): Promise<boolean> {
     const associatedPlayers = verificationResult.rows[0].count;
     console.log(`Verification: Warrandyte now has ${associatedPlayers} associated players`);
 
-    return addedCount > 0;
+    const message = `Successfully associated ${addedCount} players with Warrandyte. Total active players: ${associatedPlayers}`;
+    return { success: true, message, playersAdded: addedCount };
   } catch (error) {
-    console.error('Error in addPlayersToWarrandyte:', error);
-    return false;
+    const message = `Error in addPlayersToWarrandyte: ${error}`;
+    console.error(message);
+    return { success: false, message, playersAdded: 0 };
   }
 }

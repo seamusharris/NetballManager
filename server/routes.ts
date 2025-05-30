@@ -865,7 +865,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const playerId = Number(req.params.id);
 
-      // Import our specialized player-season function
+      // Import our specialized player-season function<previous_generation>```text
+
       const { getPlayerSeasons } = await import('./player-season-routes');
 
             // Use our function to get player seasons
@@ -1149,7 +1150,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Filter to include only games that this club has access to
       if (req.user?.currentClubId) {
         console.log(`Fetching games for club ${clubId}`);
-        
+
         const result = await db.execute(sql`
         SELECT 
           g.*,
@@ -1168,7 +1169,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         WHERE (ht.club_id = ${clubId} OR at.club_id = ${clubId} OR gp.game_id IS NOT NULL)
         ORDER BY g.date DESC, g.time DESC
       `);
-      
+
       console.log(`Found ${result.rows.length} games for club ${clubId}`);
 
       const games = result.rows.map(row => ({
@@ -1650,6 +1651,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Validate quarter (1-4)
       if (parsedData.data.quarter < 1 || parsedData.data.quarter > 4) {
+        ```text
         return res.status(400).json({ message: "Quarter must be between 1 and 4" });
       }
 
@@ -2318,6 +2320,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.status(500).json({ error: 'Failed to fetch teams' });
   }
 });
+
+  // Admin endpoint to add all players to Warrandyte
+  app.post("/api/admin/add-warrandyte-players", async (req: Request, res: Response) => {
+    try {
+      const { addPlayersToWarrandyte } = await import('./add-warrandyte-players');
+      const result = await addPlayersToWarrandyte();
+
+      if (result.success) {
+        res.json({ 
+          message: result.message,
+          playersAdded: result.playersAdded,
+          success: true
+        });
+      } else {
+        res.status(500).json({ 
+          message: result.message,
+          success: false
+        });
+      }
+    } catch (error) {
+      console.error("Error adding players to Warrandyte:", error);
+      res.status(500).json({ message: "Error adding players to Warrandyte" });
+    }
+  });
 
   // Create HTTP server
   const httpServer = createServer(app);
