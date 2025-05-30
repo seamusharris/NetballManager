@@ -107,7 +107,9 @@ export function getTailwindColorClass(hexColor: string): string | undefined {
 export const convertTailwindToHex = tailwindToHex;
 
 export function getInitials(firstName: string, lastName: string): string {
-  return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
+  const firstInitial = firstName?.charAt(0) || '';
+  const lastInitial = lastName?.charAt(0) || '';
+  return `${firstInitial}${lastInitial}`.toUpperCase();
 }
 
 export function formatDate(dateStr: string | null | undefined): string {
