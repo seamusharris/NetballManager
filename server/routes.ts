@@ -456,18 +456,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ----- PLAYERS API -----
   app.get("/api/players", requireClubAccess(), async (req: AuthenticatedRequest, res) => {
     try {
-      let clubId = req.user?.currentClubId;
+      const clubId = req.user?.currentClubId;
 
-      // If no club ID from user context, try to get from query params or use default
       if (!clubId) {
-        const queryClubId = req.query.clubId as string;
-        if (queryClubId && !isNaN(parseInt(queryClubId))) {
-          clubId = parseInt(queryClubId);
-        } else {
-          // Fallback to default club (ID: 1)
-          clubId = 1;
-          console.log('Players endpoint: Using default club ID (1)');
-        }
+        return res.status(400).json({ message: "Club context not available" });
       }
 
       console.log(`Fetching players for club ${clubId}`);
