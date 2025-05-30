@@ -186,7 +186,7 @@ export default function SimpleStatForm({
   );
 }
 
-// Helper function to get player initials
+
 function getPlayerInitials(playerId: number) {
   const player = players.find(p => p.id === playerId);
   if (!player) return '??';

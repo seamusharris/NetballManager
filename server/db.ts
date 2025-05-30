@@ -123,17 +123,4 @@ export async function checkPoolHealth() {
   }
 }
 
-// Run all migrations in sequence
-async function runMigrations() {
-  try {
-    log("Running database migrations...", "migration");
-
-    // All previous migrations have been archived - they completed successfully
-    // Future migrations can be added here
-
-    log("Database migrations completed successfully!", "migration");
-  } catch (error) {
-    log(`Migration failed: ${error}`, "migration");
-    throw error;
-  }
-}
+// Future migrations can be added here when needed

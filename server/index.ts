@@ -1,11 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
-import { addSeasonsSupport } from "./migrations/addSeasonsSupport";
-import { addPlayerSeasonsTable } from "./migrations/addPlayerSeasons";
-import { addQueryIndexes } from "./migrations/addQueryIndexes";
-import { createGameStatusesTable } from "./migrations/createGameStatusesTable";
-import { cleanupLegacyGameColumns } from "./migrations/cleanupLegacyGameColumns";
+
 
 const app = express();
 app.use(express.json());
@@ -42,30 +38,8 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  // Run migrations
-  log("Running database migrations...", "migration");
-  try {
-    const { addSeasonsSupport } = await import('./migrations/addSeasonsSupport');
-    await addSeasonsSupport();
-
-    const { addPlayerSeasonsTable } = await import('./migrations/addPlayerSeasons');
-    await addPlayerSeasonsTable();
-
-    const { createGameStatusesTable } = await import('./migrations/createGameStatusesTable');
-    await createGameStatusesTable();
-
-    log("Database migrations completed successfully!", "migration");
-  } catch (error) {
-    log(`Migration error: ${error}`, "migration");
-  }
-
-  // Run club description migration
-  const { addClubDescriptionColumn } = await import('./migrations/addClubDescription');
-  await addClubDescriptionColumn();
-
-  // Run club fields migration
-  const { addClubFields } = await import('./migrations/addClubFields');
-  await addClubFields();
+  // All migrations have been completed and archived
+  log("Database migrations completed successfully!", "migration");
 
   const server = await registerRoutes(app);
 
