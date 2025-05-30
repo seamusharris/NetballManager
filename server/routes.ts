@@ -865,9 +865,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const playerId = Number(req.params.id);
 
-      // Import our specialized player-season function<previous_generation>```text
-
-      const { getPlayerSeasons } = await import('./player-season-routes');
+      // Import our specialized player-season function<previous_generation>```      const { getPlayerSeasons } = await import('./player-season-routes');
 
             // Use our function to get player seasons
       getPlayerSeasons(req, res);
@@ -1651,8 +1649,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Validate quarter (1-4)
       if (parsedData.data.quarter < 1 || parsedData.data.quarter > 4) {
-        ```text
-        return res.status(400).json({ message: "Quarter must be between 1 and 4" });
+        return res.status(400        .json({ message: "Quarter must be between 1 and 4" });
       }
 
       // Validate position is from allowed set
@@ -2322,29 +2319,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 });
 
   // Admin endpoint to add all players to Warrandyte
-  app.post("/api/admin/add-warrandyte-players", async (req: any, res: any) => {
-    try {
-      const { addPlayersToWarrandyte } = await import('./add-warrandyte-players');
-      const result = await addPlayersToWarrandyte();
-
-      if (result.success) {
-        res.json({ 
-          message: result.message,
-          playersAdded: result.playersAdded,
-          success: true
-        });
-      } else {
-        res.status(500).json({ 
-          message: result.message,
-          success: false
-        });
-      }
-    } catch (error) {
-      console.error("Error adding players to Warrandyte:", error);
-      res.status(500).json({ message: "Error adding players to Warrandyte" });
-    }
-  });
-
+  
   // Create HTTP server
   const httpServer = createServer(app);
   return httpServer;
