@@ -33,26 +33,36 @@ export function requireClubAccess(requiredPermission?: keyof AuthenticatedReques
       // Extract club ID from request (URL param, header, query, or body), fallback to user's current club
       let clubId = req.params.clubId || req.headers['x-club-id'] || req.query.clubId || req.body.clubId || req.user?.currentClubId;
 
+      // Convert to number if it's a string
+      if (typeof clubId === 'string') {
+        clubId = parseInt(clubId);
+      }
+
       // If still no club ID and user has clubs, use the first one
       if (!clubId && req.user?.clubs && req.user.clubs.length > 0) {
         clubId = req.user.clubs[0].clubId;
         req.user.currentClubId = clubId;
       }
 
-      if (!clubId) {
-        console.error('Club access check failed - no club ID found', {
+      if (!clubId || isNaN(clubId)) {
+        console.error('Club access check failed - no valid club ID found', {
           params: req.params,
           query: req.query,
-          userClubs: req.user?.clubs,
-          currentClubId: req.user?.currentClubId
+          userClubs: req.user?.clubs?.map(c => c.clubId),
+          currentClubId: req.user?.currentClubId,
+          extractedClubId: clubId
         });
         return res.status(400).json({ error: 'Club ID required' });
       }
 
       // Check if user has access to this club
-      const userClub = req.user.clubs.find(club => club.clubId === parseInt(clubId));
+      const userClub = req.user.clubs.find(club => club.clubId === clubId);
 
       if (!userClub) {
+        console.error('Club access denied', {
+          requestedClubId: clubId,
+          userClubs: req.user.clubs?.map(c => c.clubId)
+        });
         return res.status(403).json({ error: 'Access denied to this club' });
       }
 
@@ -62,7 +72,7 @@ export function requireClubAccess(requiredPermission?: keyof AuthenticatedReques
       }
 
       // Add club context to request
-      req.user.currentClubId = parseInt(clubId);
+      req.user.currentClubId = clubId;
       next();
     } catch (error) {
       console.error('Club access check error:', error);

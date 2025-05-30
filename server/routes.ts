@@ -31,14 +31,15 @@ import {
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Middleware to simulate authentication and set default club context
-  app.use((req: any, res, next) => {
-    // For development, simulate an authenticated user with default club
+  app.use(async (req: any, res, next) => {
+    // For development, simulate an authenticated user with access to all clubs
     if (!req.user) {
-      req.user = {
-        id: 1,
-        username: 'dev-user',
-        clubs: [{
-          clubId: 1,
+      try {
+        // Get all clubs from database for dev user
+        const allClubs = await db.execute(sql`SELECT id, name, code FROM clubs WHERE is_active = true`);
+        
+        const userClubs = allClubs.rows.map(club => ({
+          clubId: club.id,
           role: 'admin',
           permissions: {
             canManagePlayers: true,
@@ -46,9 +47,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
             canManageStats: true,
             canViewOtherTeams: true,
           }
-        }],
-        currentClubId: 1
-      };
+        }));
+
+        req.user = {
+          id: 1,
+          username: 'dev-user',
+          clubs: userClubs,
+          currentClubId: userClubs.length > 0 ? userClubs[0].clubId : 1
+        };
+      } catch (error) {
+        console.error('Error loading clubs for dev user:', error);
+        // Fallback to basic setup
+        req.user = {
+          id: 1,
+          username: 'dev-user',
+          clubs: [
+            { clubId: 1, role: 'admin', permissions: { canManagePlayers: true, canManageGames: true, canManageStats: true, canViewOtherTeams: true } },
+            { clubId: 15, role: 'admin', permissions: { canManagePlayers: true, canManageGames: true, canManageStats: true, canViewOtherTeams: true } }
+          ],
+          currentClubId: 1
+        };
+      }
     }
     next();
   });
