@@ -35,16 +35,32 @@ export function ClubSwitcher() {
   }
 
   // Find the current club from userClubs data or fall back to first club
-  const currentUserClub = userClubs.find(club => club.clubId === currentClub?.id);
+  // Use the currentClubId from context to find the right club
+  const currentClubId = localStorage.getItem('currentClubId');
+  const currentClubIdNum = currentClubId ? parseInt(currentClubId) : null;
+  
+  const currentUserClub = userClubs.find(club => 
+    club.clubId === (currentClub?.id || currentClubIdNum)
+  );
+  
   const displayClub = currentUserClub ? {
     id: currentUserClub.clubId,
     name: currentUserClub.clubName,
     code: currentUserClub.clubCode
-  } : {
-    id: userClubs[0]?.clubId,
-    name: userClubs[0]?.clubName,
-    code: userClubs[0]?.clubCode
-  };
+  } : userClubs.length > 0 ? {
+    id: userClubs[0].clubId,
+    name: userClubs[0].clubName,
+    code: userClubs[0].clubCode
+  } : null;
+  
+  if (!displayClub) {
+    return (
+      <Button variant="outline" size="sm" disabled>
+        <Building2 className="w-4 h-4 mr-2" />
+        No clubs
+      </Button>
+    );
+  }
 
   return (
     <DropdownMenu>

@@ -11,8 +11,15 @@ export class ApiClient {
 
   // Get current club ID from localStorage
   private getCurrentClubId(): number | null {
+    // Try to get from localStorage first
     const stored = localStorage.getItem('currentClubId');
-    return stored ? parseInt(stored, 10) : null;
+    if (stored && !isNaN(parseInt(stored, 10))) {
+      return parseInt(stored, 10);
+    }
+
+    // Return null if no valid club ID is found
+    // This will be handled by the server with a fallback
+    return null;
   }
 
   async request<T = any>(

@@ -58,7 +58,11 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
 
       // Verify user has access to stored club
       const hasAccess = userClubs.some(club => club.clubId === clubId);
-      setCurrentClubId(hasAccess ? clubId : userClubs[0].clubId);
+      const finalClubId = hasAccess ? clubId : userClubs[0].clubId;
+      
+      console.log('Setting initial club ID:', finalClubId, 'from userClubs:', userClubs);
+      setCurrentClubId(finalClubId);
+      localStorage.setItem('currentClubId', finalClubId.toString());
     }
   }, [userClubs, currentClubId]);
 

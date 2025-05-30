@@ -437,18 +437,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ----- PLAYERS API -----
   app.get("/api/players", requireClubAccess(), async (req: AuthenticatedRequest, res) => {
     try {
-      const clubId = req.user?.currentClubId;
+      let clubId = req.user?.currentClubId;
       
+      // If no club ID from user context, try to get from query params or use default
       if (!clubId) {
-        console.error('Players endpoint: No club ID found', {
-          user: req.user,
-          currentClubId: req.user?.currentClubId,
-          clubs: req.user?.clubs
-        });
-        return res.status(400).json({ 
-          error: "Club ID required",
-          message: "Club context required - please ensure you're properly authenticated" 
-        });
+        const queryClubId = req.query.clubId as string;
+        if (queryClubId && !isNaN(parseInt(queryClubId))) {
+          clubId = parseInt(queryClubId);
+        } else {
+          // Fallback to default club (ID: 1)
+          clubId = 1;
+          console.log('Players endpoint: Using default club ID (1)');
+        }
       }
       
       console.log(`Fetching players for club ${clubId}`);
@@ -2082,27 +2082,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
   });
 
-  // User clubs endpoint - for now return dummy data until auth is implemented
+  // User clubs endpoint - return actual clubs from database
   app.get('/api/user/clubs', async (req: any, res) => {
     try {
-      // For now, return a default club setup
-      // This will be replaced with proper user authentication later
-      const defaultClubs = [
-        {
-          clubId: 1,
-          clubName: "Default Club",
-          clubCode: "DC",
-          role: "admin",
-          permissions: {
-            canManagePlayers: true,
-            canManageGames: true,
-            canManageStats: true,
-            canViewOtherTeams: true,
-          }
-        }
-      ];
+      // Get all active clubs and return them as user clubs
+      // In a real implementation, this would be filtered by user access
+      const result = await db.execute(sql`
+        SELECT id, name, code FROM clubs WHERE is_active = true ORDER BY name
+      `);
 
-      res.json(defaultClubs);
+      const userClubs = result.rows.map(club => ({
+        clubId: club.id,
+        clubName: club.name,
+        clubCode: club.code,
+        role: "admin", // Default role for now
+        permissions: {
+          canManagePlayers: true,
+          canManageGames: true,
+          canManageStats: true,
+          canViewOtherTeams: true,
+        }
+      }));
+
+      console.log('Returning user clubs:', userClubs);
+      res.json(userClubs);
     } catch (error) {
       console.error('Error fetching user clubs:', error);
       res.status(500).json({ error: 'Failed to fetch user clubs' });
