@@ -2261,8 +2261,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Teams routes
-  const { authenticateUser } = await import('./auth-middleware');
-app.get('/api/teams', authenticateUser, async (req, res) => {
+  app.get('/api/teams', loadUserPermissions, async (req, res) => {
   try {
     console.log(`Teams endpoint called for club ${req.user.currentClubId}`);
     console.log('User context:', req.user.clubs);
