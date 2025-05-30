@@ -382,10 +382,12 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
 
       // Handle name sorting separately
       if (field === 'name') {
+        const aName = a.displayName || '';
+        const bName = b.displayName || '';
         if (direction === 'asc') {
-          return a.displayName.localeCompare(b.displayName);
+          return aName.localeCompare(bName);
         } else {
-          return b.displayName.localeCompare(a.displayName);
+          return bName.localeCompare(aName);
         }
       }
 
