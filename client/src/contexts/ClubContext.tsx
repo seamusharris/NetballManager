@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/apiClient';
@@ -55,16 +54,36 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
     if (Array.isArray(userClubs) && userClubs.length > 0 && !currentClubId) {
       const storedClubId = localStorage.getItem('currentClubId');
       const clubId = storedClubId ? parseInt(storedClubId) : userClubs[0].clubId;
-      
+
       // Verify user has access to stored club
       const hasAccess = userClubs.some(club => club.clubId === clubId);
       setCurrentClubId(hasAccess ? clubId : userClubs[0].clubId);
     }
   }, [userClubs, currentClubId]);
 
-  const switchClub = (clubId: number) => {
+  const switchClub = async (clubId: number) => {
+    console.log('Switching to club:', clubId);
     setCurrentClubId(clubId);
     localStorage.setItem('currentClubId', clubId.toString());
+
+    // Invalidate all club-dependent queries to refetch with new club context
+    const { queryClient } = await import('@/lib/queryClient');
+    await queryClient.invalidateQueries({
+      predicate: (query) => {
+        const queryKey = query.queryKey[0];
+        if (typeof queryKey === 'string') {
+          // Invalidate queries that depend on club context
+          return queryKey.includes('/api/players') ||
+                 queryKey.includes('/api/games') ||
+                 queryKey.includes('/api/teams') ||
+                 queryKey.includes('/api/opponents') ||
+                 queryKey.includes('/api/stats') ||
+                 queryKey.includes('/api/rosters') ||
+                 queryKey.includes('/api/availability');
+        }
+        return false;
+      }
+    });
   };
 
   const hasPermission = (permission: keyof UserClubAccess['permissions']) => {
