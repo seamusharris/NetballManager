@@ -16,7 +16,7 @@ export default function Teams() {
   const [, setLocation] = useLocation();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTeam, setEditingTeam] = useState<Team | null>(null);
-  const { currentClubId } = useClub();
+  const { currentClubId, currentClub } = useClub();
 
   // Fetch teams for current club using same pattern as players
   const { data: teams = [], isLoading: isLoadingTeams, error } = useStandardQuery<(Team & { seasonName?: string; seasonYear?: number })[]>({
@@ -91,7 +91,7 @@ export default function Teams() {
       >
         <TeamForm
           seasons={seasons}
-          clubId={currentClubId}
+          clubId={currentClub?.id}
           onSuccess={() => setIsDialogOpen(false)}
           onCancel={() => setIsDialogOpen(false)}
         />
@@ -105,7 +105,7 @@ export default function Teams() {
         <TeamForm
           team={editingTeam || undefined}
           seasons={seasons}
-          clubId={currentClubId}
+          clubId={currentClub?.id}
           onSuccess={() => setEditingTeam(null)}
           onCancel={() => setEditingTeam(null)}
         />
