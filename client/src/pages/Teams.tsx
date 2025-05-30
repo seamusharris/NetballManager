@@ -103,7 +103,6 @@ export default function Teams() {
   const handleCreate = (teamData: any) => {
     console.log('handleCreate called with:', teamData);
     console.log('Current club ID from context:', currentClubId);
-    console.log('Current club ID from localStorage:', localStorage.getItem('currentClubId'));
 
     if (!currentClubId) {
       console.error('No current club ID available');
@@ -179,7 +178,7 @@ export default function Teams() {
         <TeamForm
           seasons={seasons}
           clubId={currentClubId}
-          onSubmit={handleCreate}
+          onSuccess={() => setIsDialogOpen(false)}
           onCancel={() => setIsDialogOpen(false)}
         />
       </CrudDialog>
@@ -193,7 +192,7 @@ export default function Teams() {
           team={editingTeam || undefined}
           seasons={seasons}
           clubId={currentClubId}
-          onSubmit={handleUpdate}
+          onSuccess={() => setEditingTeam(null)}
           onCancel={() => setEditingTeam(null)}
         />
       </CrudDialog>

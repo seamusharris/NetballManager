@@ -54,14 +54,21 @@ export function TeamForm({ team, seasons, clubId, onSuccess, onCancel }: TeamFor
   });
 
   const handleSubmit = (data: TeamFormData) => {
-    const mutation = team ? updateMutation : createMutation;
-
-    mutation.mutate(data, {
-      onSuccess: () => {
-        form.reset();
-        onSuccess?.();
-      }
-    });
+    if (team) {
+      updateMutation.mutate(data, {
+        onSuccess: () => {
+          form.reset();
+          onSuccess?.();
+        }
+      });
+    } else {
+      createMutation.mutate(data, {
+        onSuccess: () => {
+          form.reset();
+          onSuccess?.();
+        }
+      });
+    }
   };
 
   return (
