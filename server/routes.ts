@@ -691,8 +691,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/clubs", async (req, res) => {
     try {
       const result = await pool.query(`
-        SELECT id, name, code, description
+        SELECT id, name, code, description, is_active, 
+               primary_color, secondary_color, address, 
+               contact_email, contact_phone, logo_url
         FROM clubs
+        WHERE is_active = true
         ORDER BY name
       `);
 

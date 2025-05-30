@@ -30,16 +30,19 @@ export class ApiClient {
       },
     };
 
+    // Auto-include current club ID if not provided and not for club-management endpoints
+    const effectiveClubId = clubId || (!endpoint.includes('/clubs') && !endpoint.includes('/user/clubs') ? this.getCurrentClubId() : null);
+
     // Add club context to headers or query params
-    if (clubId) {
+    if (effectiveClubId) {
       if (method === 'GET') {
         const urlObj = new URL(url, window.location.origin);
-        urlObj.searchParams.set('clubId', clubId.toString());
+        urlObj.searchParams.set('clubId', effectiveClubId.toString());
         endpoint = urlObj.pathname + urlObj.search;
       } else if (data) {
-        data.clubId = clubId;
+        data.clubId = effectiveClubId;
       } else {
-        data = { clubId };
+        data = { clubId: effectiveClubId };
       }
     }
 
