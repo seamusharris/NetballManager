@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Team, Season } from '@shared/schema';
+import { useCreateMutation, useUpdateMutation } from "@/hooks/use-form-mutations";
 
 const teamFormSchema = z.object({
   name: z.string().min(1, 'Team name is required'),
@@ -22,11 +23,25 @@ interface TeamFormProps {
   team?: Team;
   seasons: Season[];
   clubId: number;
-  onSubmit: (data: TeamFormData) => void;
+  onSuccess?: () => void;
   onCancel?: () => void;
 }
 
-export function TeamForm({ team, seasons, clubId, onSubmit, onCancel }: TeamFormProps) {
+export function TeamForm({ team, seasons, clubId, onSuccess, onCancel }: TeamFormProps) {
+  const createMutation = useCreateMutation(
+    '/api/teams',
+    ['/api/teams'],
+    'Team created successfully'
+  );
+
+  const updateMutation = useUpdateMutation(
+    team ? `/api/teams/${team.id}` : '',
+    ['/api/teams'],
+    'Team updated successfully'
+  );
+
+  const isSubmitting = createMutation.isPending || updateMutation.isPending;
+
   const form = useForm<TeamFormData>({
     resolver: zodResolver(teamFormSchema),
     defaultValues: {
@@ -39,10 +54,14 @@ export function TeamForm({ team, seasons, clubId, onSubmit, onCancel }: TeamForm
   });
 
   const handleSubmit = (data: TeamFormData) => {
-    console.log('TeamForm handleSubmit called with:', data);
-    console.log('Form validation errors:', form.formState.errors);
+    const mutation = team ? updateMutation : createMutation;
 
-    onSubmit(data);
+    mutation.mutate(data, {
+      onSuccess: () => {
+        form.reset();
+        onSuccess?.();
+      }
+    });
   };
 
   return (
@@ -110,8 +129,8 @@ export function TeamForm({ team, seasons, clubId, onSubmit, onCancel }: TeamForm
               Cancel
             </Button>
           )}
-          <Button type="submit">
-            {team ? 'Update Team' : 'Create Team'}
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? (team ? "Updating..." : "Creating...") : (team ? "Update Team" : "Create Team")}
           </Button>
         </div>
       </form>
