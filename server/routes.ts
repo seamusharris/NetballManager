@@ -2320,7 +2320,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
 });
 
   // Admin endpoint to add all players to Warrandyte
-  
+
+  // Get all players
+  app.get('/api/players', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const players = await storage.getPlayers();
+      res.json(players);
+    } catch (error) {
+      console.error('Error fetching players:', error);
+      res.status(500).json({ error: 'Failed to fetch players' });
+    }
+  });
+
+  // Get players by club
+  app.get('/api/clubs/:clubId/players', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const clubId = parseInt(req.params.clubId);
+      const players = await storage.getPlayersByClub(clubId);
+      res.json(players);
+    } catch (error) {
+      console.error('Error fetching club players:', error);
+      res.status(500).json({ error: 'Failed to fetch club players' });
+    }
+  });
+
   // Create HTTP server
   const httpServer = createServer(app);
   return httpServer;
