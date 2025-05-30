@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useFormMutations } from '@/hooks/use-form-mutations';
+import { useCrudMutations } from '@/hooks/use-form-mutations';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { CrudDialog } from '@/components/ui/crud-dialog';
@@ -31,14 +31,17 @@ export default function Teams() {
     queryFn: () => apiRequest('GET', '/api/seasons'),
   });
 
-  const { createMutation, updateMutation, deleteMutation } = useFormMutations({
-    entityName: 'team',
-    createEndpoint: '/api/teams',
-    updateEndpoint: (id: number) => `/api/teams/${id}`,
-    deleteEndpoint: (id: number) => `/api/teams/${id}`,
-    queryKeys: ['clubs', 'teams'],
-    onCreateSuccess: () => setIsDialogOpen(false),
-    onUpdateSuccess: () => setEditingTeam(null),
+  const { createMutation, updateMutation, deleteMutation } = useCrudMutations({
+    entityName: 'Team',
+    baseEndpoint: '/api/teams',
+    invalidatePatterns: ['clubs', 'teams'],
+    onSuccess: (data, variables, context) => {
+      if (context === 'create') {
+        setIsDialogOpen(false);
+      } else if (context === 'update') {
+        setEditingTeam(null);
+      }
+    },
   });
 
   const handleDelete = (teamId: number) => {
