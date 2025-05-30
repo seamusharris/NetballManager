@@ -13,6 +13,11 @@ const clubSchema = z.object({
   name: z.string().min(1, "Club name is required").max(100, "Name must be 100 characters or less"),
   code: z.string().min(1, "Club code is required").max(10, "Code must be 10 characters or less").regex(/^[A-Z0-9]+$/, "Code must contain only uppercase letters and numbers"),
   description: z.string().max(500, "Description must be 500 characters or less").optional(),
+  address: z.string().max(200, "Address must be 200 characters or less").optional(),
+  contactEmail: z.string().email("Invalid email address").optional().or(z.literal("")),
+  contactPhone: z.string().max(20, "Phone must be 20 characters or less").optional(),
+  primaryColor: z.string().regex(/^#[0-9A-F]{6}$/i, "Invalid color format").default("#1f2937"),
+  secondaryColor: z.string().regex(/^#[0-9A-F]{6}$/i, "Invalid color format").default("#ffffff"),
 });
 
 type ClubFormData = z.infer<typeof clubSchema>;
@@ -22,6 +27,11 @@ interface Club {
   name: string;
   code: string;
   description?: string;
+  address?: string;
+  contactEmail?: string;
+  contactPhone?: string;
+  primaryColor?: string;
+  secondaryColor?: string;
 }
 
 interface ClubFormProps {
@@ -43,6 +53,11 @@ export default function ClubForm({
       name: club?.name || "",
       code: club?.code || "",
       description: club?.description || "",
+      address: club?.address || "",
+      contactEmail: club?.contactEmail || "",
+      contactPhone: club?.contactPhone || "",
+      primaryColor: club?.primaryColor || "#1f2937",
+      secondaryColor: club?.secondaryColor || "#ffffff",
     },
   });
 
@@ -111,6 +126,116 @@ export default function ClubForm({
             </FormItem>
           )}
         />
+
+        <FormField
+          control={form.control}
+          name="address"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Address</FormLabel>
+              <FormControl>
+                <Textarea 
+                  placeholder="Club address (optional)..."
+                  rows={2}
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="contactEmail"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Contact Email</FormLabel>
+                <FormControl>
+                  <Input 
+                    type="email"
+                    placeholder="club@example.com"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="contactPhone"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Contact Phone</FormLabel>
+                <FormControl>
+                  <Input 
+                    type="tel"
+                    placeholder="+61 4XX XXX XXX"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="primaryColor"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Primary Color</FormLabel>
+                <FormControl>
+                  <div className="flex items-center gap-2">
+                    <Input 
+                      type="color"
+                      className="w-12 h-10 p-1 border"
+                      {...field}
+                    />
+                    <Input 
+                      type="text"
+                      placeholder="#1f2937"
+                      className="flex-1"
+                      {...field}
+                    />
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="secondaryColor"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Secondary Color</FormLabel>
+                <FormControl>
+                  <div className="flex items-center gap-2">
+                    <Input 
+                      type="color"
+                      className="w-12 h-10 p-1 border"
+                      {...field}
+                    />
+                    <Input 
+                      type="text"
+                      placeholder="#ffffff"
+                      className="flex-1"
+                      {...field}
+                    />
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
 
         <div className="flex justify-end gap-2 pt-4">
           {onCancel && (

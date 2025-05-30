@@ -79,13 +79,13 @@ app.use((req, res, next) => {
     log(`Migration error: ${error}`, "migration");
   }
 
-  // Add description column to clubs table
-  try {
-    const { addClubDescriptionColumn } = await import('./migrations/addClubDescription');
-    await addClubDescriptionColumn();
-  } catch (error) {
-    console.error('Failed to add club description column:', error);
-  }
+  // Run club description migration
+  const { addClubDescriptionColumn } = await import('./migrations/addClubDescription');
+  await addClubDescriptionColumn();
+
+  // Run club fields migration
+  const { addClubFields } = await import('./migrations/addClubFields');
+  await addClubFields();
 
   const server = await registerRoutes(app);
 

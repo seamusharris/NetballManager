@@ -1,5 +1,5 @@
 import React from 'react';
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -7,7 +7,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Users, Building2, Plus, Edit, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { queryClient } from "@/lib/queryClient";
 import ClubForm from "@/components/clubs/ClubForm";
 import { 
   AlertDialog,
@@ -36,6 +35,14 @@ interface Club {
 interface ClubWithStats extends Club {
   playersCount: number;
   teamsCount: number;
+}
+
+async function fetchApi(url: string) {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+  return response.json();
 }
 
 export default function ClubManagement() {
@@ -72,7 +79,7 @@ export default function ClubManagement() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/clubs'] });
+      queryClient.invalidateQueries({ queryKey: ['clubs'] });
       setIsCreateDialogOpen(false);
       toast({
         title: "Success",
@@ -105,7 +112,7 @@ export default function ClubManagement() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/clubs'] });
+      queryClient.invalidateQueries({ queryKey: ['clubs'] });
       setEditingClub(null);
       toast({
         title: "Success",
@@ -136,7 +143,7 @@ export default function ClubManagement() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/clubs'] });
+      queryClient.invalidateQueries({ queryKey: ['clubs'] });
       setDeletingClub(null);
       toast({
         title: "Success",

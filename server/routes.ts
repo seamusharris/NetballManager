@@ -705,7 +705,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/clubs", async (req, res) => {
     try {
-      const { name, code, description } = req.body;
+      const { 
+        name, 
+        code, 
+        description, 
+        address, 
+        contactEmail, 
+        contactPhone, 
+        primaryColor = '#1f2937', 
+        secondaryColor = '#ffffff' 
+      } = req.body;
 
       if (!name || !code) {
         return res.status(400).json({ message: "Name and code are required" });
@@ -722,12 +731,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const result = await pool.query(`
-        INSERT INTO clubs (name, code, description)
-        VALUES ($1, $2, $3)
-        RETURNING id, name, code, description
-      `, [name, code.toUpperCase(), description]);
+        INSERT INTO clubs (name, code, description, address, contact_email, contact_phone, primary_color, secondary_color)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        RETURNING id, name, code, description, address, contact_email, contact_phone, primary_color, secondary_color
+      `, [name, code.toUpperCase(), description, address, contactEmail, contactPhone, primaryColor, secondaryColor]);
 
-      res.status(201).json(result.rows[0]);
+      const club = result.rows[0];
+      res.status(201).json({
+        id: club.id,
+        name: club.name,
+        code: club.code,
+        description: club.description,
+        address: club.address,
+        contactEmail: club.contact_email,
+        contactPhone: club.contact_phone,
+        primaryColor: club.primary_color,
+        secondaryColor: club.secondary_color
+      });
     } catch (error) {
       console.error("Error creating club:", error);
       res.status(500).json({ message: "Failed to create club" });
@@ -737,7 +757,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch("/api/clubs/:id", async (req, res) => {
     try {
       const clubId = parseInt(req.params.id, 10);
-      const { name, code, description } = req.body;
+      const { 
+        name, 
+        code, 
+        description, 
+        address, 
+        contactEmail, 
+        contactPhone, 
+        primaryColor, 
+        secondaryColor 
+      } = req.body;
 
       if (isNaN(clubId)) {
         return res.status(400).json({ message: "Invalid club ID" });
@@ -765,12 +794,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const result = await pool.query(`
         UPDATE clubs 
-        SET name = $1, code = $2, description = $3
-        WHERE id = $4
-        RETURNING id, name, code, description
-      `, [name, code.toUpperCase(), description, clubId]);
+        SET name = $1, code = $2, description = $3, address = $4, 
+            contact_email = $5, contact_phone = $6, primary_color = $7, secondary_color = $8
+        WHERE id = $9
+        RETURNING id, name, code, description, address, contact_email, contact_phone, primary_color, secondary_color
+      `, [name, code.toUpperCase(), description, address, contactEmail, contactPhone, primaryColor, secondaryColor, clubId]);
 
-      res.json(result.rows[0]);
+      const club = result.rows[0];
+      res.json({
+        id: club.id,
+        name: club.name,
+        code: club.code,
+        description: club.description,
+        address: club.address,
+        contactEmail: club.contact_email,
+        contactPhone: club.contact_phone,
+        primaryColor: club.primary_color,
+        secondaryColor: club.secondary_color
+      });
     } catch (error) {
       console.error("Error updating club:", error);
       res.status(500).json({ message: "Failed to update club" });
