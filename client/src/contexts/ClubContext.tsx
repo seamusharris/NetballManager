@@ -64,6 +64,14 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
 
   const switchClub = async (clubId: number) => {
     console.log('Switching to club:', clubId);
+    
+    // Verify user has access to this club
+    const hasAccess = userClubs.some(club => club.clubId === clubId);
+    if (!hasAccess) {
+      console.error('User does not have access to club:', clubId);
+      return;
+    }
+    
     setCurrentClubId(clubId);
     localStorage.setItem('currentClubId', clubId.toString());
 

@@ -25,9 +25,21 @@ export function ClubSwitcher() {
     );
   }
 
-  if (!currentClub || userClubs.length === 0) {
-    return null;
+  if (!userClubs || userClubs.length === 0) {
+    return (
+      <Button variant="outline" size="sm" disabled>
+        <Building2 className="w-4 h-4 mr-2" />
+        No clubs
+      </Button>
+    );
   }
+
+  // If no current club is set, use the first available club
+  const displayClub = currentClub || {
+    id: userClubs[0]?.clubId,
+    name: userClubs[0]?.clubName,
+    code: userClubs[0]?.clubCode
+  };
 
   return (
     <DropdownMenu>
@@ -35,7 +47,7 @@ export function ClubSwitcher() {
         <Button variant="outline" size="sm" className="justify-between min-w-[200px]">
           <div className="flex items-center">
             <Building2 className="w-4 h-4 mr-2" />
-            <span className="truncate">{currentClub.name}</span>
+            <span className="truncate">{displayClub.name}</span>
           </div>
           <ChevronDown className="w-4 h-4 ml-2" />
         </Button>
@@ -46,7 +58,10 @@ export function ClubSwitcher() {
         {userClubs.map((club) => (
           <DropdownMenuItem
             key={club.clubId}
-            onClick={() => switchClub(club.clubId)}
+            onClick={() => {
+              console.log('Switching to club:', club.clubId, club.clubName);
+              switchClub(club.clubId);
+            }}
             className="flex items-center justify-between p-3"
           >
             <div className="flex flex-col">
@@ -54,10 +69,10 @@ export function ClubSwitcher() {
               <span className="text-sm text-muted-foreground">{club.clubCode}</span>
             </div>
             <div className="flex flex-col items-end gap-1">
-              <Badge variant={club.clubId === currentClub.id ? "default" : "secondary"}>
+              <Badge variant={club.clubId === displayClub.id ? "default" : "secondary"}>
                 {club.role}
               </Badge>
-              {club.clubId === currentClub.id && (
+              {club.clubId === displayClub.id && (
                 <span className="text-xs text-muted-foreground">Active</span>
               )}
             </div>
