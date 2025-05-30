@@ -40,12 +40,19 @@ export function TeamForm({ team, seasons, clubId, onSubmit, onCancel }: TeamForm
   });
 
   const handleSubmit = (data: TeamFormData) => {
+    console.log('TeamForm handleSubmit called with:', data);
     onSubmit(data);
   };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+      <form 
+        onSubmit={(e) => {
+          console.log('Form submit event triggered');
+          form.handleSubmit(handleSubmit)(e);
+        }} 
+        className="space-y-4"
+      >
         <FormField
           control={form.control}
           name="name"

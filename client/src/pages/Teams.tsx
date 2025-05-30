@@ -35,8 +35,12 @@ export default function Teams() {
   });
 
   const createTeam = useMutation({
-    mutationFn: (teamData: any) => apiRequest('POST', '/api/teams', teamData),
-    onSuccess: () => {
+    mutationFn: (teamData: any) => {
+      console.log('Creating team with data:', teamData);
+      return apiRequest('POST', '/api/teams', teamData);
+    },
+    onSuccess: (data) => {
+      console.log('Team created successfully:', data);
       queryClient.invalidateQueries({ queryKey: ['clubs', currentClubId, 'teams'] });
       setIsDialogOpen(false);
       toast({
@@ -44,7 +48,8 @@ export default function Teams() {
         description: 'Team created successfully.',
       });
     },
-    onError: () => {
+    onError: (error) => {
+      console.error('Error creating team:', error);
       toast({
         title: 'Error',
         description: 'Failed to create team.',
@@ -54,9 +59,12 @@ export default function Teams() {
   });
 
   const updateTeam = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: any }) =>
-      apiRequest('PATCH', `/api/teams/${id}`, data),
-    onSuccess: () => {
+    mutationFn: ({ id, data }: { id: number; data: any }) => {
+      console.log('Updating team with data:', { id, data });
+      return apiRequest('PATCH', `/api/teams/${id}`, data);
+    },
+    onSuccess: (data) => {
+      console.log('Team updated successfully:', data);
       queryClient.invalidateQueries({ queryKey: ['clubs', currentClubId, 'teams'] });
       setEditingTeam(null);
       toast({
@@ -64,7 +72,8 @@ export default function Teams() {
         description: 'Team updated successfully.',
       });
     },
-    onError: () => {
+    onError: (error) => {
+      console.error('Error updating team:', error);
       toast({
         title: 'Error',
         description: 'Failed to update team.',
