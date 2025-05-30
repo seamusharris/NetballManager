@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useParams } from "wouter";
+import { Helmet } from 'react-helmet';
 import PlayersList from '@/components/players/PlayersList';
 import { useClub } from '@/contexts/ClubContext';
 
