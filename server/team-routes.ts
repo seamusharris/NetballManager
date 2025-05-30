@@ -76,7 +76,63 @@ export function registerTeamRoutes(app: Express) {
     }
   });
 
-  // Get all teams for a club
+  // Get all teams for current user's club (matches players endpoint pattern)
+  app.get("/api/teams", requireClubAccess(), async (req: AuthenticatedRequest, res) => {
+    try {
+      const clubId = req.user?.currentClubId;
+      console.log(`Teams endpoint called for club ${clubId}`);
+      console.log(`User context:`, req.user?.clubs?.map(c => c.clubId));
+
+      if (!clubId) {
+        return res.status(400).json({ message: "Club context not available" });
+      }
+
+      console.log(`Fetching teams for club ${clubId}`);
+
+      const clubTeams = await db.execute(sql`
+        SELECT 
+          t.id,
+          t.name,
+          t.division,
+          t.is_active,
+          t.created_at,
+          t.updated_at,
+          s.id as season_id,
+          s.name as season_name, 
+          s.year as season_year,
+          s.start_date as season_start_date,
+          s.end_date as season_end_date
+        FROM teams t
+        LEFT JOIN seasons s ON t.season_id = s.id
+        WHERE t.club_id = ${clubId} AND t.is_active = true
+        ORDER BY s.start_date DESC, t.name
+      `);
+
+      const teams = clubTeams.rows.map(row => ({
+        id: row.id,
+        name: row.name,
+        division: row.division,
+        isActive: row.is_active,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at,
+        season: row.season_id ? {
+          id: row.season_id,
+          name: row.season_name,
+          year: row.season_year,
+          startDate: row.season_start_date,
+          endDate: row.season_end_date
+        } : null
+      }));
+
+      console.log(`Found ${teams.length} teams for club ${clubId}`);
+      res.json(teams);
+    } catch (error) {
+      console.error("Error fetching teams:", error);
+      res.status(500).json({ message: "Failed to fetch teams" });
+    }
+  });
+
+  // Get all teams for a club (keep the original endpoint for compatibility)
   app.get("/api/clubs/:clubId/teams", requireClubAccess(), async (req: AuthenticatedRequest, res) => {
     try {
       const clubId = parseInt(req.params.clubId);
