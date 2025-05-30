@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useCrudMutations } from '@/hooks/use-form-mutations';
+import { useCrudMutations } from '@/hooks/use-crud-mutations';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { CrudDialog } from '@/components/ui/crud-dialog';
