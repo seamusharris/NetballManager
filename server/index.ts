@@ -79,6 +79,14 @@ app.use((req, res, next) => {
     log(`Migration error: ${error}`, "migration");
   }
 
+  // Add description column to clubs table
+  try {
+    const { addClubDescriptionColumn } = await import('./migrations/addClubDescription');
+    await addClubDescriptionColumn();
+  } catch (error) {
+    console.error('Failed to add club description column:', error);
+  }
+
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {

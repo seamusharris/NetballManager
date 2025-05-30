@@ -163,11 +163,12 @@ export type GameStat = typeof gameStats.$inferSelect;
 
 // Multi-club architecture tables
 
-// Club model
+// Clubs table - organizations that contain teams
 export const clubs = pgTable("clubs", {
   id: serial("id").primaryKey(),
   name: text("name").notNull().unique(),
-  code: text("code").notNull().unique(), // Short identifier
+  code: text("code").notNull().unique(),
+  description: text("description"),
   address: text("address"),
   contactEmail: text("contact_email"),
   contactPhone: text("contact_phone"),
