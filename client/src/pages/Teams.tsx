@@ -11,6 +11,7 @@ import { Team, Season } from '@shared/schema';
 import { useLocation } from 'wouter';
 import { BackButton } from '@/components/ui/back-button';
 import { useClub } from '@/contexts/ClubContext';
+import { apiRequest } from '@/lib/apiClient';
 
 export default function Teams() {
   const [, setLocation] = useLocation();
@@ -34,7 +35,7 @@ export default function Teams() {
   const { createMutation, updateMutation, deleteMutation } = useCrudMutations({
     entityName: 'Team',
     baseEndpoint: '/api/teams',
-    invalidatePatterns: ['clubs', 'teams'],
+    invalidatePatterns: [`clubs.${currentClubId}.teams`],
     onSuccess: (data, variables, context) => {
       if (context === 'create') {
         setIsDialogOpen(false);
