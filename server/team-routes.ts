@@ -78,10 +78,12 @@ export function registerTeamRoutes(app: Express) {
       const clubId = parseInt(req.params.clubId);
       console.log(`Teams endpoint called for club ${clubId}`);
 
-      if (!clubId || isNaN(clubId)) {
+      if (isNaN(clubId) || clubId <= 0) {
         console.log('Invalid club ID provided:', req.params.clubId);
         return res.status(400).json({ error: "Club ID required" });
       }
+
+      console.log(`Fetching teams for club ${clubId}`);
 
       const clubTeams = await db.execute(sql`
         SELECT t.*, s.name as season_name, s.year as season_year
@@ -91,6 +93,7 @@ export function registerTeamRoutes(app: Express) {
         ORDER BY s.start_date DESC, t.name
       `);
 
+      console.log(`Found ${clubTeams.rows.length} teams for club ${clubId}`);
       res.json(clubTeams.rows);
     } catch (error) {
       console.error("Error fetching teams:", error);
