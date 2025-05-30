@@ -101,7 +101,17 @@ export default function Teams() {
   });
 
   const handleCreate = (teamData: any) => {
-    createTeam.mutate(teamData);
+    console.log('handleCreate called with:', teamData);
+    console.log('Current club ID:', currentClubId);
+    
+    // Ensure clubId is included
+    const teamDataWithClub = {
+      ...teamData,
+      clubId: currentClubId
+    };
+    
+    console.log('Submitting team data:', teamDataWithClub);
+    createTeam.mutate(teamDataWithClub);
   };
 
   const handleUpdate = (teamData: any) => {

@@ -95,15 +95,17 @@ export function registerTeamRoutes(app: Express) {
   // Create a new team
   app.post("/api/teams", async (req, res) => {
     try {
-      const { clubId, seasonId, name, division } = req.body;
+      console.log('Team creation request body:', req.body);
+      const { clubId, seasonId, name, division, isActive } = req.body;
 
       if (!clubId || !seasonId || !name) {
+        console.log('Validation failed:', { clubId, seasonId, name });
         return res.status(400).json({ message: "Club ID, season ID, and name are required" });
       }
 
       const result = await db.execute(sql`
-        INSERT INTO teams (club_id, season_id, name, division)
-        VALUES (${clubId}, ${seasonId}, ${name}, ${division || 'Division 1'})
+        INSERT INTO teams (club_id, season_id, name, division, is_active)
+        VALUES (${clubId}, ${seasonId}, ${name}, ${division || 'Division 1'}, ${isActive !== false})
         RETURNING *
       `);
 
