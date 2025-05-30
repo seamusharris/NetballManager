@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Link } from 'wouter';
 import { cn } from '@/lib/utils';
+import { ClubSwitcher } from './ClubSwitcher';
 
 interface HeaderProps {
   setIsMobileOpen: (open: boolean) => void;
@@ -97,6 +98,9 @@ export default function Header({ setIsMobileOpen, isTablet }: HeaderProps) {
         </div>
 
         <div className="flex items-center space-x-4">
+          {/* Club Switcher */}
+          <ClubSwitcher />
+          
           {/* Show search only on larger screens to save space on tablet */}
           <div className={`relative ${isTablet ? 'hidden md:block' : ''}`}>
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
