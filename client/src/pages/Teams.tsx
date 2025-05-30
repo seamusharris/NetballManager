@@ -102,8 +102,11 @@ export default function Teams() {
 
   const handleCreate = (teamData: any) => {
     console.log('handleCreate called with:', teamData);
+    console.log('Current club ID from context:', currentClubId);
+    console.log('Current club ID from localStorage:', localStorage.getItem('currentClubId'));
 
     if (!currentClubId) {
+      console.error('No current club ID available');
       toast({
         title: 'Error',
         description: 'No club selected. Please select a club first.',
