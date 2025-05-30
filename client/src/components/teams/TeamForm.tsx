@@ -41,9 +41,6 @@ export function TeamForm({ team, seasons, clubId, onSubmit, onCancel }: TeamForm
 
   const handleSubmit = (data: TeamFormData) => {
     console.log('TeamForm handleSubmit called with:', data);
-    console.log('Form validation state:', form.formState.errors);
-    console.log('Form is valid:', form.formState.isValid);
-    console.log('Form is submitting:', form.formState.isSubmitting);
     
     // Ensure all required fields are present
     const submitData = {
@@ -58,18 +55,7 @@ export function TeamForm({ team, seasons, clubId, onSubmit, onCancel }: TeamForm
   return (
     <Form {...form}>
       <form 
-        onSubmit={(e) => {
-          console.log('Form onSubmit event triggered');
-          console.log('Event:', e);
-          console.log('Form state before submit:', {
-            isValid: form.formState.isValid,
-            errors: form.formState.errors,
-            values: form.getValues()
-          });
-          
-          // Let React Hook Form handle the submission
-          form.handleSubmit(handleSubmit)(e);
-        }}
+        onSubmit={form.handleSubmit(handleSubmit)}
         className="space-y-4"
       >
         <FormField
@@ -131,14 +117,7 @@ export function TeamForm({ team, seasons, clubId, onSubmit, onCancel }: TeamForm
               Cancel
             </Button>
           )}
-          <Button 
-            type="submit"
-            onClick={(e) => {
-              console.log('Submit button clicked');
-              console.log('Button event:', e);
-              // Don't prevent default here, let the form handle it
-            }}
-          >
+          <Button type="submit">
             {team ? 'Update Team' : 'Create Team'}
           </Button>
         </div>
