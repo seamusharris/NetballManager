@@ -43,9 +43,8 @@ export default function Players() {
       <PlayersList
         players={players}
         isLoading={isLoading}
-        error={error}
-        selectedPlayerId={selectedPlayerId}
-        onSelectPlayer={setSelectedPlayerId}
+        onEdit={() => {}} // Placeholder function - edit functionality handled by navigation
+        onDelete={() => {}} // Placeholder function - delete functionality handled elsewhere
       />
     </>
   );
