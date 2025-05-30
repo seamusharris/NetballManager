@@ -36,7 +36,7 @@ export default function Teams() {
     createEndpoint: '/api/teams',
     updateEndpoint: (id: number) => `/api/teams/${id}`,
     deleteEndpoint: (id: number) => `/api/teams/${id}`,
-    queryKeys: [['clubs', currentClubId, 'teams']],
+    queryKeys: ['clubs', 'teams'],
     onCreateSuccess: () => setIsDialogOpen(false),
     onUpdateSuccess: () => setEditingTeam(null),
   });
