@@ -364,7 +364,7 @@ export default function Seasons() {
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Season Name</FormLabel>
+                    <FormLabel required>Season Name</FormLabel>
                     <FormControl>
                       <Input placeholder="e.g., Spring Season 2025" {...field} />
                     </FormControl>
@@ -566,7 +566,7 @@ export default function Seasons() {
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Season Name</FormLabel>
+                    <FormLabel required>Season Name</FormLabel>
                     <FormControl>
                       <Input {...field} />
                     </FormControl>

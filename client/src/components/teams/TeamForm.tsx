@@ -82,7 +82,7 @@ export function TeamForm({ team, seasons, clubId, onSuccess, onCancel }: TeamFor
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Team Name</FormLabel>
+              <FormLabel required>Team Name</FormLabel>
               <FormControl>
                 <Input placeholder="e.g., Emeralds A" {...field} />
               </FormControl>
@@ -110,7 +110,7 @@ export function TeamForm({ team, seasons, clubId, onSuccess, onCancel }: TeamFor
           name="seasonId"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Season</FormLabel>
+              <FormLabel required>Season</FormLabel>
               <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString()}>
                 <FormControl>
                   <SelectTrigger>

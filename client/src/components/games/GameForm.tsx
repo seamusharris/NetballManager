@@ -105,7 +105,7 @@ export function GameForm({ game, opponents, seasons, activeSeason, onSubmit, isS
           name="homeTeamId"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Home Team</FormLabel>
+              <FormLabel required>Home Team</FormLabel>
               <Select 
                 onValueChange={field.onChange} 
                 defaultValue={field.value}
@@ -136,7 +136,7 @@ export function GameForm({ game, opponents, seasons, activeSeason, onSubmit, isS
           name="opponentId"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Opponent</FormLabel>
+              <FormLabel required>Opponent</FormLabel>
               <Select 
                 onValueChange={field.onChange} 
                 defaultValue={field.value}
@@ -168,7 +168,7 @@ export function GameForm({ game, opponents, seasons, activeSeason, onSubmit, isS
             name="date"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Date</FormLabel>
+                <FormLabel required>Date</FormLabel>
                 <FormControl>
                   <Input type="date" {...field} />
                 </FormControl>
@@ -182,7 +182,7 @@ export function GameForm({ game, opponents, seasons, activeSeason, onSubmit, isS
             name="time"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Time</FormLabel>
+                <FormLabel required>Time</FormLabel>
                 <FormControl>
                   <Input type="time" {...field} />
                 </FormControl>

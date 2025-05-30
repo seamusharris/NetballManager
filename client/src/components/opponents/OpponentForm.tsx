@@ -46,7 +46,7 @@ export default function OpponentForm({ opponent, onSubmit, isSubmitting }: Oppon
           name="teamName"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Team Name</FormLabel>
+              <FormLabel required>Team Name</FormLabel>
               <FormControl>
                 <Input placeholder="Thunder Netball" {...field} />
               </FormControl>
