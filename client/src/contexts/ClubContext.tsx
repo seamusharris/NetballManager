@@ -63,6 +63,9 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
       console.log('Setting initial club ID:', finalClubId, 'from userClubs:', userClubs);
       setCurrentClubId(finalClubId);
       localStorage.setItem('currentClubId', finalClubId.toString());
+      
+      // Update the API client with the current club
+      apiClient.setCurrentClubId(finalClubId);
     }
   }, [userClubs, currentClubId]);
 

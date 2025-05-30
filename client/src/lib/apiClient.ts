@@ -22,6 +22,10 @@ export class ApiClient {
     return null;
   }
 
+  setCurrentClubId(clubId: number): void {
+    localStorage.setItem('currentClubId', clubId.toString());
+  }
+
   async request<T = any>(
     method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE',
     endpoint: string,

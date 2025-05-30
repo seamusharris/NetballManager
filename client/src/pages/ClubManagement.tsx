@@ -57,8 +57,15 @@ export default function ClubManagement() {
   const { data: clubs, isLoading } = useQuery({
     queryKey: ['clubs'],
     queryFn: async () => {
-      const response = await fetchApi('/api/clubs');
-      return response as ClubWithStats[];
+      const response = await fetch('/api/clubs', {
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+      if (!response.ok) {
+        throw new Error(`Failed to fetch clubs: ${response.status}`);
+      }
+      return response.json() as ClubWithStats[];
     }
   });
 
