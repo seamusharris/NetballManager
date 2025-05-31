@@ -1,3 +1,4 @@
+
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -19,7 +20,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import { insertGameSchema, Game, Opponent, Season, Team } from "@shared/schema";
 import { useGameStatuses } from "@/hooks/use-game-statuses";
 import { useTeams } from "@/hooks/use-teams";
@@ -37,7 +37,7 @@ const formSchema = insertGameSchema.extend({
 }).refine(
   (data) => {
     // For regular games, either opponent or away team is required
-    return (data.opponentId !== "" && data.opponentId !== "0") || (data.awayTeamId !== "" && data.awayTeamId !== "0");
+    return (data.opponentId !== "" && data.opponentId !== "none") || (data.awayTeamId !== "" && data.awayTeamId !== "none");
   },
   {
     message: "Either opponent or away team is required",
@@ -72,12 +72,12 @@ export function GameForm({ game, opponents, seasons, activeSeason, onSubmit, isS
     defaultValues: {
       date: game?.date || "",
       time: game?.time || "",
-      opponentId: game?.opponentId ? String(game.opponentId) : "",
+      opponentId: game?.opponentId ? String(game.opponentId) : "none",
       round: game?.round || "",
       statusId: game?.statusId ? String(game.statusId) : "1", // Default to first status (usually "upcoming")
       seasonId: game?.seasonId ? String(game.seasonId) : activeSeason ? String(activeSeason.id) : "",
       homeTeamId: game?.homeTeamId ? String(game.homeTeamId) : "",
-      awayTeamId: game?.awayTeamId ? String(game.awayTeamId) : ""
+      awayTeamId: game?.awayTeamId ? String(game.awayTeamId) : "none"
     },
   });
 
@@ -87,11 +87,11 @@ export function GameForm({ game, opponents, seasons, activeSeason, onSubmit, isS
       date: values.date,
       time: values.time,
       round: values.round,
-      opponentId: (values.opponentId && values.opponentId !== "0") ? parseInt(values.opponentId) : null,
+      opponentId: (values.opponentId && values.opponentId !== "none") ? parseInt(values.opponentId) : null,
       statusId: parseInt(values.statusId),
       seasonId: values.seasonId ? parseInt(values.seasonId) : (activeSeason ? activeSeason.id : undefined),
       homeTeamId: parseInt(values.homeTeamId),
-      awayTeamId: (values.awayTeamId && values.awayTeamId !== "0") ? parseInt(values.awayTeamId) : null
+      awayTeamId: (values.awayTeamId && values.awayTeamId !== "none") ? parseInt(values.awayTeamId) : null
     };
 
     console.log("Submitting game with statusId:", formattedValues);
@@ -103,7 +103,6 @@ export function GameForm({ game, opponents, seasons, activeSeason, onSubmit, isS
 
   return (
     <Form {...form}>
-      <h2 className="text-xl font-bold mb-6">{isEditing ? "Edit Game" : "Schedule New Game"}</h2>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
@@ -111,7 +110,7 @@ export function GameForm({ game, opponents, seasons, activeSeason, onSubmit, isS
             name="homeTeamId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel required>Home Team</FormLabel>
+                <FormLabel>Home Team *</FormLabel>
                 <Select 
                   onValueChange={field.onChange} 
                   defaultValue={field.value}
@@ -153,7 +152,7 @@ export function GameForm({ game, opponents, seasons, activeSeason, onSubmit, isS
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="0">No away team (vs opponent)</SelectItem>
+                    <SelectItem value="none">No away team (vs opponent)</SelectItem>
                     {teams?.map(team => (
                       <SelectItem key={team.id} value={team.id.toString()}>
                         {team.name}
@@ -175,7 +174,7 @@ export function GameForm({ game, opponents, seasons, activeSeason, onSubmit, isS
           name="opponentId"
           render={({ field }) => (
             <FormItem>
-              <FormLabel required>Opponent</FormLabel>
+              <FormLabel>Opponent *</FormLabel>
               <Select 
                 onValueChange={field.onChange} 
                 defaultValue={field.value}
@@ -186,7 +185,7 @@ export function GameForm({ game, opponents, seasons, activeSeason, onSubmit, isS
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="0">Select an opponent...</SelectItem>
+                  <SelectItem value="none">Select an opponent...</SelectItem>
                   {opponents.map(opponent => (
                     <SelectItem key={opponent.id} value={opponent.id.toString()}>
                       {opponent.teamName}
@@ -208,7 +207,7 @@ export function GameForm({ game, opponents, seasons, activeSeason, onSubmit, isS
             name="date"
             render={({ field }) => (
               <FormItem>
-                <FormLabel required>Date</FormLabel>
+                <FormLabel>Date *</FormLabel>
                 <FormControl>
                   <Input type="date" {...field} />
                 </FormControl>
@@ -222,7 +221,7 @@ export function GameForm({ game, opponents, seasons, activeSeason, onSubmit, isS
             name="time"
             render={({ field }) => (
               <FormItem>
-                <FormLabel required>Time</FormLabel>
+                <FormLabel>Time *</FormLabel>
                 <FormControl>
                   <Input type="time" {...field} />
                 </FormControl>
@@ -314,7 +313,7 @@ export function GameForm({ game, opponents, seasons, activeSeason, onSubmit, isS
           )}
         />
 
-        <div className="flex justify-end space-x-2">
+        <div className="flex justify-end space-x-2 mt-6">
           {onCancel && (
             <Button type="button" variant="outline" onClick={onCancel}>
               Cancel
