@@ -337,9 +337,9 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
   const filteredPlayers = players.filter(player => {
     const matchesSearch = 
       searchQuery === '' || 
-      player.displayName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      player.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      player.lastName.toLowerCase().includes(searchQuery.toLowerCase());
+      (player.displayName || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (player.firstName || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (player.lastName || '').toLowerCase().includes(searchQuery.toLowerCase());
 
     // Check if the filter is for a position group or individual position
     const matchesPosition = 
@@ -382,8 +382,8 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
 
       // Handle name sorting separately
       if (field === 'name') {
-        const aName = a.displayName || '';
-        const bName = b.displayName || '';
+        const aName = a.displayName || `${a.firstName || ''} ${a.lastName || ''}`.trim();
+        const bName = b.displayName || `${b.firstName || ''} ${b.lastName || ''}`.trim();
         if (direction === 'asc') {
           return aName.localeCompare(bName);
         } else {
