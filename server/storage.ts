@@ -797,8 +797,7 @@ export class DatabaseStorage implements IStorage {
 
   async removePlayerFromClub(playerId: number, clubId: number): Promise<boolean> {
     try {
-      await db.execute(sql`
-        UPDATE club_players 
+      await db.execute(sql`        UPDATE club_players 
         SET is_active = false, left_date = CURRENT_DATE, updated_at = NOW()
         WHERE player_id = ${playerId} AND club_id = ${clubId}
       `);
@@ -811,21 +810,45 @@ export class DatabaseStorage implements IStorage {
 
   async getClubPlayers(clubId: number): Promise<any[]> {
     try {
+      console.log(`Getting players for club ${clubId}`);
+
       const result = await db.execute(sql`
         SELECT 
-          p.*,
+          p.id,
+          p.display_name,
+          p.first_name, 
+          p.last_name,
+          p.date_of_birth,
+          p.position_preferences,
+          p.active,
+          p.avatar_color,
           cp.joined_date,
-          cp.left_date,
-          cp.is_active as club_active,
-          cp.notes as club_notes
+          cp.notes as club_notes,
+          cp.is_active as is_active_in_club
         FROM players p
-        JOIN club_players cp ON p.id = cp.player_id
+        JOIN club_players cp ON p.id = cp.player_id  
         WHERE cp.club_id = ${clubId} AND cp.is_active = true
-        ORDER BY p.display_name
+        ORDER BY p.display_name, p.first_name, p.last_name
       `);
-      return result.rows;
+
+      const players = result.rows.map(row => ({
+        id: row.id,
+        displayName: row.display_name,
+        firstName: row.first_name,
+        lastName: row.last_name,
+        dateOfBirth: row.date_of_birth,
+        positionPreferences: row.position_preferences,
+        active: row.active,
+        avatarColor: row.avatar_color,
+        joinedDate: row.joined_date,
+        clubNotes: row.club_notes,
+        isActiveInClub: row.is_active_in_club
+      }));
+
+      console.log(`Found ${players.length} players for club ${clubId}`);
+      return players;
     } catch (error) {
-      console.log('club_players table not available, falling back to team-based lookup');
+      console.error(`Error getting club players for club ${clubId}:`, error);
       return [];
     }
   }

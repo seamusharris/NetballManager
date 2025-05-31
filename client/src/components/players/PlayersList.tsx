@@ -616,12 +616,12 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
                         <div className="flex items-center">
                           <div className={cn("h-8 w-8 rounded-full flex items-center justify-center text-white", player.avatarColor || 'bg-gray-500')}>
                             <span className="text-xs font-semibold">
-                              {getInitials(player.firstName, player.lastName)}
+                              {getInitials(player.firstName || 'U', player.lastName || 'N')}
                             </span>
                           </div>
                           <div className="ml-2">
                             <span className="text-sm font-medium text-blue-600">
-                              {player.displayName}
+                              {player.displayName || `${player.firstName || 'Unknown'} ${player.lastName || 'Name'}`}
                             </span>
                           </div>
                         </div>
