@@ -1,3 +1,4 @@
+
 import { queryClient } from './queryClient';
 
 export interface ApiResponse<T = any> {
@@ -87,3 +88,6 @@ export class ApiClient {
 }
 
 export const apiClient = new ApiClient();
+
+// Legacy export for backward compatibility
+export const apiRequest = apiClient.request.bind(apiClient);
