@@ -1,4 +1,4 @@
-import type { Express } from "express";
+import type { Express, Response } from "express";
 import { db } from "./db";
 import { sql } from "drizzle-orm";
 import { 
@@ -310,35 +310,7 @@ export function registerTeamRoutes(app: Express) {
     }
   });
 
-  // Get team players (for multi-club support)
-  app.get("/api/teams/:teamId/players", async (req, res) => {
-    try {
-      const teamId = parseInt(req.params.teamId);
-
-      const teamPlayersList = await db.execute(sql`
-        SELECT 
-          tp.id,
-          p.id as player_id,
-          p.display_name,
-          p.first_name,
-          p.last_name,
-          p.position_preferences,
-          p.avatar_color,
-          tp.is_regular,
-          tp.jersey_number,
-          tp.position_preferences as team_position_preferences
-        FROM team_players tp
-        INNER JOIN players p ON tp.player_id = p.id
-        WHERE tp.team_id = ${teamId}
-        ORDER BY p.display_name
-      `);
-
-      res.json(teamPlayersList.rows);
-    } catch (error) {
-      console.error("Error fetching team players:", error);
-      res.status(500).json({ message: "Failed to fetch team players" });
-    }
-  });
+  
 
   // Add player to team
   app.post("/api/teams/:teamId/players", async (req, res) => {
