@@ -107,10 +107,10 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function useClub() {
+export const useClub = () => {
   const context = useContext(ClubContext);
   if (context === undefined) {
     throw new Error('useClub must be used within a ClubProvider');
   }
   return context;
-}
+};
