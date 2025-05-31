@@ -22,8 +22,22 @@ export class ApiClient {
     return null;
   }
 
+  // Public method to get current club ID
+  getCurrentClubId(): number | null {
+    return this.getCurrentClubId();
+  }
+
   setCurrentClubId(clubId: number): void {
     localStorage.setItem('currentClubId', clubId.toString());
+  }
+
+  // Public method to get current club ID
+  getCurrentClubId(): number | null {
+    const stored = localStorage.getItem('currentClubId');
+    if (stored && !isNaN(parseInt(stored, 10))) {
+      return parseInt(stored, 10);
+    }
+    return null;
   }
 
   async request<T = any>(

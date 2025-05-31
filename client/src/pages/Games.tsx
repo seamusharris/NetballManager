@@ -24,16 +24,21 @@ export default function Games() {
   const [editingGame, setEditingGame] = useState<Game | null>(null);
   const [, setLocation] = useLocation();
   
+  // Get current club context
+  const currentClubId = apiClient.getCurrentClubId ? apiClient.getCurrentClubId() : null;
 
   // Fetch games
   const { data: games = [], isLoading: isLoadingGames } = useQuery<Game[]>({
-    queryKey: ['games'],
+    queryKey: ['games', currentClubId],
     queryFn: () => apiRequest('GET', '/api/games') as Promise<Game[]>,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0, // Disable caching temporarily to debug
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
   
   // Debug logging
   console.log('Games page:', {
+    currentClubId,
     gamesCount: games.length,
     isLoading: isLoadingGames,
     sampleGame: games[0]
