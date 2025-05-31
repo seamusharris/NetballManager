@@ -805,7 +805,11 @@ export class DatabaseStorage implements IStorage {
 
   async removePlayerFromClub(playerId: number, clubId: number): Promise<boolean> {
     try {
-      await db.execute(sql`UPDATE club_players SET is_active = false, left_date = CURRENT_DATE, updated_at = NOW() WHERE player_id = ${playerId} AND club_id = ${clubId}`);
+      await db.execute(sql`
+        UPDATE club_players 
+        SET is_active = false, left_date = CURRENT_DATE, updated_at = NOW() 
+        WHERE player_id = ${playerId} AND club_id = ${clubId}
+      `);
       return true;
     } catch (error) {
       console.error('Error removing player from club:', error);
