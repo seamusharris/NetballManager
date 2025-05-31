@@ -461,24 +461,49 @@ export default function PlayerDetails() {
     return 'bg-error/20 text-error';
   };
 
-  if (isLoading) {
+  if (isNaN(playerId)) {
     return (
-      <div className="container mx-auto p-4">
-        <div className="flex items-center mb-4">
+      <div className="p-6">
+        <h1 className="text-2xl font-bold mb-4">Invalid Player ID</h1>
+        <p>The player ID provided is not valid.</p>
+        <Button onClick={() => navigate('/players')} className="mt-4">
+          Back to Players
+        </Button>
+      </div>
+    );
+  }
 
-          <h1 className="text-2xl font-bold">Loading player data...</h1>
+  if (isLoadingPlayer || isLoadingGames || isLoadingOpponents || isLoadingSeasons) {
+    return (
+      <div className="p-6">
+        <div className="flex items-center gap-2">
+          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>
+          Loading player details...
         </div>
+      </div>
+    );
+  }
+
+  if (playerError) {
+    return (
+      <div className="p-6">
+        <h1 className="text-2xl font-bold mb-4">Error Loading Player</h1>
+        <p>Failed to load player details: {playerError?.message || 'Unknown error'}</p>
+        <Button onClick={() => navigate('/players')} className="mt-4">
+          Back to Players
+        </Button>
       </div>
     );
   }
 
   if (!player) {
     return (
-      <div className="container mx-auto p-4">
-        <div className="flex items-center mb-4">
-
-          <h1 className="text-2xl font-bold">Player not found</h1>
-        </div>
+      <div className="p-6">
+        <h1 className="text-2xl font-bold mb-4">Player Not Found</h1>
+        <p>The requested player could not be found.</p>
+        <Button onClick={() => navigate('/players')} className="mt-4">
+          Back to Players
+        </Button>
       </div>
     );
   }
