@@ -37,7 +37,7 @@ const formSchema = insertGameSchema.extend({
 }).refine(
   (data) => {
     // For regular games, either opponent or away team is required
-    return data.opponentId !== "" || data.awayTeamId !== "";
+    return (data.opponentId !== "" && data.opponentId !== "0") || (data.awayTeamId !== "" && data.awayTeamId !== "0");
   },
   {
     message: "Either opponent or away team is required",
@@ -87,11 +87,11 @@ export function GameForm({ game, opponents, seasons, activeSeason, onSubmit, isS
       date: values.date,
       time: values.time,
       round: values.round,
-      opponentId: values.opponentId ? parseInt(values.opponentId) : null,
+      opponentId: (values.opponentId && values.opponentId !== "0") ? parseInt(values.opponentId) : null,
       statusId: parseInt(values.statusId),
       seasonId: values.seasonId ? parseInt(values.seasonId) : (activeSeason ? activeSeason.id : undefined),
       homeTeamId: parseInt(values.homeTeamId),
-      awayTeamId: values.awayTeamId ? parseInt(values.awayTeamId) : null
+      awayTeamId: (values.awayTeamId && values.awayTeamId !== "0") ? parseInt(values.awayTeamId) : null
     };
 
     console.log("Submitting game with statusId:", formattedValues);
@@ -153,7 +153,7 @@ export function GameForm({ game, opponents, seasons, activeSeason, onSubmit, isS
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="">No away team (vs opponent)</SelectItem>
+                    <SelectItem value="0">No away team (vs opponent)</SelectItem>
                     {teams?.map(team => (
                       <SelectItem key={team.id} value={team.id.toString()}>
                         {team.name}
@@ -186,6 +186,7 @@ export function GameForm({ game, opponents, seasons, activeSeason, onSubmit, isS
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
+                  <SelectItem value="0">Select an opponent...</SelectItem>
                   {opponents.map(opponent => (
                     <SelectItem key={opponent.id} value={opponent.id.toString()}>
                       {opponent.teamName}

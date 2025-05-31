@@ -113,10 +113,8 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <ClubProvider>
           <TooltipProvider>
-            <ErrorBoundary>
-              <Toaster />
-              <Router />
-            </ErrorBoundary>
+            <Toaster />
+            <Router />
           </TooltipProvider>
         </ClubProvider>
       </QueryClientProvider>

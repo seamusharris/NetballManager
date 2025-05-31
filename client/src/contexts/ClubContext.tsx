@@ -54,19 +54,26 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
   // Set default club on load
   useEffect(() => {
     if (Array.isArray(userClubs) && userClubs.length > 0 && !currentClubId) {
+      // Get stored club ID from localStorage
       const storedClubId = localStorage.getItem('currentClubId');
-      const clubId = storedClubId ? parseInt(storedClubId) : userClubs[0].clubId;
 
-      // Verify user has access to stored club
-      const hasAccess = userClubs.some(club => club.clubId === clubId);
-      const finalClubId = hasAccess ? clubId : userClubs[0].clubId;
+      let targetClubId: number;
 
-      console.log('Setting initial club ID:', finalClubId, 'from userClubs:', userClubs);
-      setCurrentClubId(finalClubId);
-      localStorage.setItem('currentClubId', finalClubId.toString());
+      if (storedClubId) {
+        const storedId = parseInt(storedClubId, 10);
+        // Check if the stored club ID is valid
+        const isValidClub = userClubs.some(club => club.clubId === storedId);
+        targetClubId = isValidClub ? storedId : userClubs[0].clubId;
+      } else {
+        // Prefer Warrandyte (54) if available, otherwise default to first club
+        const warrandyteClub = userClubs.find(club => club.clubId === 54);
+        targetClubId = warrandyteClub ? 54 : userClubs[0].clubId;
+      }
 
-      // Update the API client with the current club
-      apiClient.setCurrentClubId(finalClubId);
+      console.log('Setting initial club ID:', targetClubId, 'from userClubs:', userClubs);
+      setCurrentClubId(targetClubId);
+      localStorage.setItem('currentClubId', targetClubId.toString());
+      apiClient.setCurrentClubId(targetClubId);
     }
   }, [userClubs, currentClubId]);
 
