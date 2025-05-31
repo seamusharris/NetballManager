@@ -241,8 +241,8 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
 
     switch (sortConfig.field) {
       case 'name':
-        aValue = a.displayName.toLowerCase();
-        bValue = b.displayName.toLowerCase();
+        aValue = (a.displayName || '').toLowerCase();
+        bValue = (b.displayName || '').toLowerCase();
         break;
       case 'position':
         aValue = aStats?.primaryPosition || '';
@@ -265,8 +265,8 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
         bValue = b.active ? 1 : 0;
         break;
       default:
-        aValue = a.displayName.toLowerCase();
-        bValue = b.displayName.toLowerCase();
+        aValue = (a.displayName || '').toLowerCase();
+        bValue = (b.displayName || '').toLowerCase();
     }
 
     if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
