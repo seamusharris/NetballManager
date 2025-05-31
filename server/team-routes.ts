@@ -115,6 +115,9 @@ export function registerTeamRoutes(app: Express) {
         isActive: row.is_active,
         createdAt: row.created_at,
         updatedAt: row.updated_at,
+        seasonId: row.season_id,
+        seasonName: row.season_name,
+        seasonYear: row.season_year,
         season: row.season_id ? {
           id: row.season_id,
           name: row.season_name,
@@ -172,6 +175,9 @@ export function registerTeamRoutes(app: Express) {
         isActive: row.is_active,
         createdAt: row.created_at,
         updatedAt: row.updated_at,
+        seasonId: row.season_id,
+        seasonName: row.season_name,
+        seasonYear: row.season_year,
         season: row.season_id ? {
           id: row.season_id,
           name: row.season_name,
