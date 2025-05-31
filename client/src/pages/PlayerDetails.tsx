@@ -41,7 +41,7 @@ export default function PlayerDetails() {
   const [isClubManagerOpen, setIsClubManagerOpen] = useState(false);
 
   // Fetch player data
-  const { data: player, isLoading: isLoadingPlayer, error: playerError } = useQuery<Player>({
+  const { data: player, isLoading: isLoadingPlayer } = useQuery<Player>({
     queryKey: [`/api/players/${playerId}`],
     enabled: !isNaN(playerId),
   });
@@ -461,49 +461,24 @@ export default function PlayerDetails() {
     return 'bg-error/20 text-error';
   };
 
-  if (isNaN(playerId)) {
+  if (isLoading) {
     return (
-      <div className="p-6">
-        <h1 className="text-2xl font-bold mb-4">Invalid Player ID</h1>
-        <p>The player ID provided is not valid.</p>
-        <Button onClick={() => navigate('/players')} className="mt-4">
-          Back to Players
-        </Button>
-      </div>
-    );
-  }
+      <div className="container mx-auto p-4">
+        <div className="flex items-center mb-4">
 
-  if (isLoadingPlayer || isLoadingGames || isLoadingOpponents || isLoadingSeasons) {
-    return (
-      <div className="p-6">
-        <div className="flex items-center gap-2">
-          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>
-          Loading player details...
+          <h1 className="text-2xl font-bold">Loading player data...</h1>
         </div>
-      </div>
-    );
-  }
-
-  if (playerError) {
-    return (
-      <div className="p-6">
-        <h1 className="text-2xl font-bold mb-4">Error Loading Player</h1>
-        <p>Failed to load player details: {playerError?.message || 'Unknown error'}</p>
-        <Button onClick={() => navigate('/players')} className="mt-4">
-          Back to Players
-        </Button>
       </div>
     );
   }
 
   if (!player) {
     return (
-      <div className="p-6">
-        <h1 className="text-2xl font-bold mb-4">Player Not Found</h1>
-        <p>The requested player could not be found.</p>
-        <Button onClick={() => navigate('/players')} className="mt-4">
-          Back to Players
-        </Button>
+      <div className="container mx-auto p-4">
+        <div className="flex items-center mb-4">
+
+          <h1 className="text-2xl font-bold">Player not found</h1>
+        </div>
       </div>
     );
   }
