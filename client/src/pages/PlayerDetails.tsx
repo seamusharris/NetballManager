@@ -41,7 +41,7 @@ export default function PlayerDetails() {
   const [isClubManagerOpen, setIsClubManagerOpen] = useState(false);
 
   // Fetch player data
-  const { data: player, isLoading: isLoadingPlayer } = useQuery<Player>({
+  const { data: player, isLoading: isLoadingPlayer, error: playerError } = useQuery<Player>({
     queryKey: [`/api/players/${playerId}`],
     enabled: !isNaN(playerId),
   });
