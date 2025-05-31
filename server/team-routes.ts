@@ -310,7 +310,7 @@ export function registerTeamRoutes(app: Express) {
     }
   });
 
-  
+
 
   // Add player to team
   app.post("/api/teams/:teamId/players", async (req, res) => {
@@ -403,22 +403,45 @@ export function registerTeamRoutes(app: Express) {
   });
 
   // Get players for a specific team
-  app.get('/api/teams/:teamId/players', requireClubAccess(), async (req: AuthenticatedRequest, res: Response) => {
+  app.get("/api/teams/:teamId/players", async (req, res) => {
     try {
       const teamId = parseInt(req.params.teamId);
-      
+
       const result = await db.execute(sql`
         SELECT 
-          p.*,
+          p.id,
+          p.display_name,
+          p.first_name,
+          p.last_name,
+          p.date_of_birth,
+          p.position_preferences,
+          p.active,
+          p.avatar_color,
           tp.is_regular,
-          tp.position_preferences
+          tp.position_preferences as team_position_preferences
         FROM players p
         JOIN team_players tp ON p.id = tp.player_id
         WHERE tp.team_id = ${teamId}
         ORDER BY p.display_name, p.first_name, p.last_name
       `);
 
-      res.json(result.rows);
+      // Transform the data to match the expected camelCase format consistently with storage layer
+      const players = result.rows.map(row => ({
+        id: row.id,
+        displayName: row.display_name,
+        firstName: row.first_name,
+        lastName: row.last_name,
+        dateOfBirth: row.date_of_birth,
+        positionPreferences: typeof row.position_preferences === 'string' 
+          ? JSON.parse(row.position_preferences) 
+          : row.position_preferences || [],
+        active: row.active,
+        avatarColor: row.avatar_color,
+        isRegular: row.is_regular,
+        teamPositionPreferences: row.team_position_preferences ? JSON.parse(row.team_position_preferences) : []
+      }));
+
+      res.json(players);
     } catch (error) {
       console.error("Error fetching team players:", error);
       res.status(500).json({ message: "Failed to fetch team players" });
