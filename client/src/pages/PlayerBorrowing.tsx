@@ -227,15 +227,7 @@ export default function PlayerBorrowing() {
                     </Select>
                   </div>
 
-                  <div>
-                    <Label>Jersey Number (Optional)</Label>
-                    <Input
-                      type="number"
-                      placeholder="Jersey number"
-                      value={borrowForm.jerseyNumber}
-                      onChange={(e) => setBorrowForm({...borrowForm, jerseyNumber: e.target.value})}
-                    />
-                  </div>
+                  
 
                   <div>
                     <Label>Notes (Optional)</Label>

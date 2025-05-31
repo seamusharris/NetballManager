@@ -391,7 +391,7 @@ export function registerTeamRoutes(app: Express) {
     try {
       const teamId = parseInt(req.params.teamId);
       const playerId = parseInt(req.params.playerId);
-      const { isRegular, jerseyNumber, positionPreferences } = req.body;
+      const { isRegular, positionPreferences } = req.body;
 
       const updates = [];
       const values = [];
@@ -400,10 +400,6 @@ export function registerTeamRoutes(app: Express) {
       if (isRegular !== undefined) {
         updates.push(`is_regular = $${paramCount++}`);
         values.push(isRegular);
-      }
-      if (jerseyNumber !== undefined) {
-        updates.push(`jersey_number = $${paramCount++}`);
-        values.push(jerseyNumber);
       }
       if (positionPreferences !== undefined) {
         updates.push(`position_preferences = $${paramCount++}`);
@@ -431,6 +427,29 @@ export function registerTeamRoutes(app: Express) {
     } catch (error) {
       console.error("Error updating team player:", error);
       res.status(500).json({ message: "Failed to update team player" });
+    }
+  });
+
+  // Get players for a specific team
+  app.get('/api/teams/:teamId/players', requireClubAccess(), async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const teamId = parseInt(req.params.teamId);
+      
+      const result = await db.execute(sql`
+        SELECT 
+          p.*,
+          tp.is_regular,
+          tp.position_preferences
+        FROM players p
+        JOIN team_players tp ON p.id = tp.player_id
+        WHERE tp.team_id = ${teamId}
+        ORDER BY p.display_name, p.first_name, p.last_name
+      `);
+
+      res.json(result.rows);
+    } catch (error) {
+      console.error("Error fetching team players:", error);
+      res.status(500).json({ message: "Failed to fetch team players" });
     }
   });
 }

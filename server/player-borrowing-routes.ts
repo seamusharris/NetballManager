@@ -141,7 +141,7 @@ export function registerPlayerBorrowingRoutes(app: Express) {
     try {
       const clubId = parseInt(req.params.clubId);
       const borrowingId = parseInt(req.params.borrowingId);
-      const { jerseyNumber, notes } = req.body;
+      const { notes } = req.body;
       
       // Verify the borrowing request belongs to this club
       const borrowingResult = await db.execute(sql`
@@ -165,7 +165,7 @@ export function registerPlayerBorrowingRoutes(app: Express) {
       // Update the borrowing request
       await db.execute(sql`
         UPDATE player_borrowing 
-        SET jersey_number = ${jerseyNumber || null}, notes = ${notes || null}
+        SET notes = ${notes || null}
         WHERE id = ${borrowingId}
       `);
 

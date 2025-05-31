@@ -210,7 +210,6 @@ export const teamPlayers = pgTable("team_players", {
   teamId: integer("team_id").notNull().references(() => teams.id, { onDelete: "cascade" }),
   playerId: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
   isRegular: boolean("is_regular").notNull().default(true),
-  jerseyNumber: integer("jersey_number"),
   positionPreferences: json("position_preferences").$type<Position[]>(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => {

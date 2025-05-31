@@ -21,17 +21,23 @@ export default function Players() {
     }
   }, [params.clubId, currentClub?.id, switchToClub]);
 
+  // Determine if this is team-specific or club-wide players
+  const teamId = params.teamId ? parseInt(params.teamId) : null;
+  const endpoint = teamId 
+    ? `/api/teams/${teamId}/players`
+    : `/api/clubs/${currentClub?.id}/players`;
+
   const { data: players = [], isLoading, error } = useQuery({
-    queryKey: ['players', currentClub?.id],
+    queryKey: teamId ? ['team-players', teamId] : ['players', currentClub?.id],
     queryFn: async () => {
-      if (!currentClub?.id) return [];
-      const response = await fetch(`/api/clubs/${currentClub.id}/players`);
+      if (!currentClub?.id && !teamId) return [];
+      const response = await fetch(endpoint);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       return response.json();
     },
-    enabled: !!currentClub?.id,
+    enabled: !!(currentClub?.id || teamId),
   });
 
   return (
