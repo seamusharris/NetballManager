@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -31,19 +30,19 @@ export default function PlayerClubsManager({
   const { toast } = useToast();
   const [selectedClubs, setSelectedClubs] = useState<number[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   // Fetch all clubs
   const { data: allClubs = [], isLoading: isClubsLoading } = useQuery<Club[]>({
     queryKey: ['/api/clubs'],
     enabled: !!player?.id,
   });
-  
+
   // Fetch player's current clubs
   const { data: playerClubs = [], isLoading: isPlayerClubsLoading } = useQuery<Club[]>({
     queryKey: [`/api/players/${player.id}/clubs`],
     enabled: !!player?.id,
   });
-  
+
   // Update selected clubs when player clubs are loaded
   useEffect(() => {
     if (playerClubs) {
@@ -74,36 +73,51 @@ export default function PlayerClubsManager({
   // Save the selected clubs
   const handleSaveClubs = async () => {
     setIsSubmitting(true);
-    
+
     try {
       console.log(`Updating clubs for player ${player.id}:`, selectedClubs);
       console.log('Current selected clubs state:', selectedClubs);
-      
+
       const response = await fetch(`/api/players/${player.id}/clubs`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ clubIds: selectedClubs })
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
         throw new Error(`Failed to update clubs: ${errorData.message || response.statusText}`);
       }
-      
+
       const result = await response.json();
       console.log('Save response:', result);
-      
+
       // Success! Show a toast and refresh the data
       toast({
         title: "Success",
         description: "Player clubs updated successfully"
       });
-      
+
       // Invalidate relevant queries to refresh the data
       await queryClient.invalidateQueries({ queryKey: ['/api/players'] });
       await queryClient.invalidateQueries({ queryKey: [`/api/players/${player.id}`] });
       await queryClient.invalidateQueries({ queryKey: [`/api/players/${player.id}/clubs`] });
-      
+
+      // Invalidate related queries
+      queryClient.invalidateQueries({ queryKey: ['player', player.id] });
+      queryClient.invalidateQueries({ queryKey: ['players'] });
+
+      // Invalidate all club-specific player queries since club associations changed
+      queryClient.invalidateQueries({ 
+        predicate: (query) => {
+          const queryKey = query.queryKey[0];
+          return typeof queryKey === 'string' && 
+                 (queryKey.includes('/api/players') || 
+                  queryKey.includes('/api/clubs/') && queryKey.includes('/players') ||
+                  queryKey.includes(`/api/players/${player.id}/clubs`));
+        }
+      });
+
       // Close the dialog
       onClose();
     } catch (error: any) {
@@ -118,7 +132,7 @@ export default function PlayerClubsManager({
     }
   };
 
-  
+
 
   return (
     <>
@@ -130,7 +144,7 @@ export default function PlayerClubsManager({
               Select the clubs this player should be associated with.
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="py-4 space-y-4">
             <div className="flex flex-wrap gap-2 mb-4">
               <h3 className="text-sm font-medium mb-2 w-full">Currently associated with:</h3>
@@ -146,7 +160,7 @@ export default function PlayerClubsManager({
                 <span className="text-sm text-gray-500">No clubs assigned</span>
               )}
             </div>
-            
+
             <div className="border rounded-md p-3">
               <div className="flex items-center justify-between mb-2">
                 <h3 className="text-sm font-medium">Available clubs:</h3>
@@ -184,7 +198,7 @@ export default function PlayerClubsManager({
               </div>
             </div>
           </div>
-          
+
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={onClose} disabled={isSubmitting}>
               Cancel
@@ -196,7 +210,7 @@ export default function PlayerClubsManager({
         </DialogContent>
       </Dialog>
 
-      
+
     </>
   );
 }
