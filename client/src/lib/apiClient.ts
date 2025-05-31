@@ -1,10 +1,10 @@
-
 import { queryClient } from './queryClient';
 
 export interface ApiResponse<T = any> {
-  data: T;
   success: boolean;
+  data?: T;
   error?: string;
+  message?: string;
 }
 
 export class ApiClient {
@@ -23,108 +23,67 @@ export class ApiClient {
   }
 
   async request<T = any>(
-    method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE',
     endpoint: string,
-    data?: any,
-    clubId?: number
+    options: RequestInit = {}
   ): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
 
-    const config: RequestInit = {
-      method,
-      headers: {
-        'Content-Type': 'application/json',
-      },
+    // Add current club ID to headers if available
+    const currentClubId = this.getCurrentClubId();
+    const headers = {
+      'Content-Type': 'application/json',
+      ...(currentClubId && { 'X-Club-Id': currentClubId.toString() }),
+      ...options.headers,
     };
 
-    // Auto-include current club ID if not provided and not for club-management endpoints
-    const shouldIncludeClubId = !endpoint.includes('/clubs') && 
-                               !endpoint.includes('/user/clubs') && 
-                               !endpoint.includes('/game-statuses') &&
-                               !endpoint.includes('/seasons');
-    const effectiveClubId = clubId || (shouldIncludeClubId ? this.getCurrentClubId() : null);
+    const config: RequestInit = {
+      ...options,
+      headers,
+    };
 
-    // Add club context to headers for all requests
-    if (effectiveClubId) {
-      config.headers = {
-        ...config.headers,
-        'X-Club-ID': effectiveClubId.toString()
-      };
+    try {
+      const response = await fetch(url, config);
 
-      // For non-GET requests, also include in body if needed
-      if (method !== 'GET' && data && typeof data === 'object') {
-        data.clubId = effectiveClubId;
-      } else if (method !== 'GET' && !data) {
-        data = { clubId: effectiveClubId };
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('API request failed:', error);
+      throw error;
     }
-
-    if (data && method !== 'GET') {
-      config.body = JSON.stringify(data);
-    }
-
-    const response = await fetch(url, config);
-
-    if (method === 'DELETE' && response.status === 204) {
-      return true as T;
-    }
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(errorText || `HTTP ${response.status}: ${response.statusText}`);
-    }
-
-    const contentType = response.headers.get('content-type');
-    if (contentType && contentType.includes('application/json')) {
-      return await response.json();
-    }
-
-    return await response.text() as T;
   }
 
-  // Convenience methods
-  get<T>(endpoint: string, clubId?: number): Promise<T> {
-    return this.request<T>('GET', endpoint, undefined, clubId);
+  async get<T = any>(endpoint: string): Promise<T> {
+    return this.request<T>(endpoint, { method: 'GET' });
   }
 
-  post<T>(endpoint: string, data?: any, clubId?: number): Promise<T> {
-    return this.request<T>('POST', endpoint, data, clubId);
+  async post<T = any>(endpoint: string, data?: any): Promise<T> {
+    return this.request<T>(endpoint, {
+      method: 'POST',
+      body: data ? JSON.stringify(data) : undefined,
+    });
   }
 
-  put<T>(endpoint: string, data?: any, clubId?: number): Promise<T> {
-    return this.request<T>('PUT', endpoint, data, clubId);
+  async put<T = any>(endpoint: string, data?: any): Promise<T> {
+    return this.request<T>(endpoint, {
+      method: 'PUT',
+      body: data ? JSON.stringify(data) : undefined,
+    });
   }
 
-  patch<T>(endpoint: string, data?: any, clubId?: number): Promise<T> {
-    return this.request<T>('PATCH', endpoint, data, clubId);
+  async delete<T = any>(endpoint: string): Promise<T> {
+    return this.request<T>(endpoint, { method: 'DELETE' });
   }
 
-  delete<T>(endpoint: string, clubId?: number): Promise<T> {
-    return this.request<T>('DELETE', endpoint, undefined, clubId);
+  async patch<T = any>(endpoint: string, data?: any): Promise<T> {
+    return this.request<T>(endpoint, {
+      method: 'PATCH',
+      body: data ? JSON.stringify(data) : undefined,
+    });
   }
 }
 
 export const apiClient = new ApiClient();
-
-// Helper function for mutations with automatic cache invalidation
-export async function mutateWithInvalidation<T>(
-  mutationFn: () => Promise<T>,
-  invalidatePatterns: string[]
-): Promise<T> {
-  const result = await mutationFn();
-
-  // Invalidate related queries
-  invalidatePatterns.forEach(pattern => {
-    queryClient.invalidateQueries({
-      predicate: (query) => {
-        const queryKey = query.queryKey[0];
-        return typeof queryKey === 'string' && queryKey.includes(pattern);
-      }
-    });
-  });
-
-  return result;
-}
-
-// Legacy export for backward compatibility
-export const apiRequest = apiClient.request.bind(apiClient);
