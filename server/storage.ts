@@ -770,7 +770,21 @@ export class DatabaseStorage implements IStorage {
         WHERE cp.player_id = ${playerId}
         ORDER BY cp.is_active DESC, cp.joined_date DESC
       `);
-      return result.rows;
+      
+      return result.rows.map(row => ({
+        id: row.id,
+        name: row.name,
+        code: row.code,
+        address: row.address,
+        contactInfo: row.contact_info,
+        description: row.description,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at,
+        joinedDate: row.joined_date,
+        leftDate: row.left_date,
+        isActive: row.is_active,
+        notes: row.notes
+      }));
     } catch (error) {
       console.log('club_players table not available, returning empty array');
       return [];
@@ -837,7 +851,9 @@ export class DatabaseStorage implements IStorage {
         firstName: row.first_name,
         lastName: row.last_name,
         dateOfBirth: row.date_of_birth,
-        positionPreferences: row.position_preferences,
+        positionPreferences: typeof row.position_preferences === 'string' 
+          ? JSON.parse(row.position_preferences) 
+          : row.position_preferences || [],
         active: row.active,
         avatarColor: row.avatar_color,
         joinedDate: row.joined_date,
