@@ -867,6 +867,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/players/:id", async (req, res) => {
     try {
+Apply the change by replacing `req.user?.currentClubId` with `clubId` in the condition for filtering games.```text
       const player = await storage.getPlayer(Number(req.params.id));
       if (!player) {
         return res.status(404).json({ message: "Player not found" });
@@ -1161,10 +1162,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.set('Pragma', 'no-cache');
       res.set('Expires', '0');
 
-      const clubId = req.user?.currentClubId;
+      // Use club ID from header if provided, otherwise fall back to user context
+      const headerClubId = req.headers['x-current-club-id'];
+      const clubId = headerClubId ? parseInt(headerClubId as string, 10) : req.user?.currentClubId;
+
+      console.log(`Games endpoint: Using club ID ${clubId} (from header: ${headerClubId}, from user: ${req.user?.currentClubId})`);
 
       // Filter to include only games that this club has access to
-      if (req.user?.currentClubId) {
+      if (clubId) {
         console.log(`Fetching games for club ${clubId}`);
 
         const result = await db.execute(sql`

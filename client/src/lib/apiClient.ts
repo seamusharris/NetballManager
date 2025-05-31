@@ -31,9 +31,10 @@ export class ApiClient {
 
     // Add current club ID to headers if available
     const currentClubId = this.getCurrentClubId();
-    const headers = {
+    const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       ...(currentClubId && { 'X-Club-Id': currentClubId.toString() }),
+      ...(currentClubId && { 'X-Current-Club-Id': currentClubId.toString() }),
       ...options.headers,
     };
 
