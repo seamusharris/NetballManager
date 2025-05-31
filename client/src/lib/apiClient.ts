@@ -13,7 +13,6 @@ export class ApiClient {
     localStorage.setItem('currentClubId', clubId.toString());
   }
 
-  // Public method to get current club ID
   getCurrentClubId(): number | null {
     const stored = localStorage.getItem('currentClubId');
     if (stored && !isNaN(parseInt(stored, 10))) {
