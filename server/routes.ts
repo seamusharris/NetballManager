@@ -1724,7 +1724,8 @@ Apply the change by replacing `req.user?.currentClubId` with `clubId` in the con
       }
 
       // Validate quarter (1-4)
-      if (parsedData.data.quarter < 1 || parsedData.data.quarter > 4) {        return resstatus(400).json({ message: "Quarter must be between 1 and 4" });
+      if (parsedData.data.quarter < 1 || parsedData.data.quarter > 4) {
+        return res.status(400).json({ message: "Quarter must be between 1 and 4" });
       }
 
       // Validate position is from allowed set
