@@ -9,19 +9,6 @@ export interface ApiResponse<T = any> {
 export class ApiClient {
   private baseUrl = '';
 
-  // Get current club ID from localStorage
-  private getCurrentClubId(): number | null {
-    // Try to get from localStorage first
-    const stored = localStorage.getItem('currentClubId');
-    if (stored && !isNaN(parseInt(stored, 10))) {
-      return parseInt(stored, 10);
-    }
-
-    // Return null if no valid club ID is found
-    // This will be handled by the server with a fallback
-    return null;
-  }
-
   setCurrentClubId(clubId: number): void {
     localStorage.setItem('currentClubId', clubId.toString());
   }
