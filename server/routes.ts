@@ -867,7 +867,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/players/:id", async (req, res) => {
     try {
-Apply the change by replacing `req.user?.currentClubId` with `clubId` in the condition for filtering games.```text
       const player = await storage.getPlayer(Number(req.params.id));
       if (!player) {
         return res.status(404).json({ message: "Player not found" });
