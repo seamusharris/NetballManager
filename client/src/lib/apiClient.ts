@@ -89,5 +89,25 @@ export class ApiClient {
 
 export const apiClient = new ApiClient();
 
+// Helper function for mutations with automatic cache invalidation
+export async function mutateWithInvalidation<T>(
+  mutationFn: () => Promise<T>,
+  invalidatePatterns: string[]
+): Promise<T> {
+  const result = await mutationFn();
+
+  // Invalidate related queries
+  invalidatePatterns.forEach(pattern => {
+    queryClient.invalidateQueries({
+      predicate: (query) => {
+        const queryKey = query.queryKey[0];
+        return typeof queryKey === 'string' && queryKey.includes(pattern);
+      }
+    });
+  });
+
+  return result;
+}
+
 // Legacy export for backward compatibility
 export const apiRequest = apiClient.request.bind(apiClient);
