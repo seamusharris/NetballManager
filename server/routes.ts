@@ -2263,8 +2263,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Get all players directly associated with a club
   app.get("/api/clubs/:clubId/players", requireClubAccess(), async (req: AuthenticatedRequest, res) => {
-    
-```python
     try {
       const clubId = parseInt(req.params.clubId);
       const players = await storage.getPlayersByClub(clubId);
