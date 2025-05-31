@@ -214,9 +214,9 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
     const stats = playerStatsMap[player.id];
 
     // Search filter
-    const matchesSearch = player.displayName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         player.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         player.lastName.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = (player.displayName || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         (player.firstName || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         (player.lastName || '').toLowerCase().includes(searchQuery.toLowerCase());
 
     // Position filter
     const matchesPosition = positionFilter === 'all' || 
