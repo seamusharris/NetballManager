@@ -316,11 +316,11 @@ export function registerTeamRoutes(app: Express) {
   app.post("/api/teams/:teamId/players", async (req, res) => {
     try {
       const teamId = parseInt(req.params.teamId);
-      const { playerId, isRegular, jerseyNumber, positionPreferences } = req.body;
+      const { playerId, isRegular } = req.body;
 
       const result = await db.execute(sql`
-        INSERT INTO team_players (team_id, player_id, is_regular, jersey_number, position_preferences)
-        VALUES (${teamId}, ${playerId}, ${isRegular || true}, ${jerseyNumber}, ${JSON.stringify(positionPreferences)})
+        INSERT INTO team_players (team_id, player_id, is_regular)
+        VALUES (${teamId}, ${playerId}, ${isRegular || true})
         RETURNING *
       `);
 
