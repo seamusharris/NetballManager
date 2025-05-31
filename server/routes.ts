@@ -26,7 +26,8 @@ import {
   requireClubAccess, 
   requireTeamAccess, 
   requireGameAccess,
-  loadUserPermissions 
+  loadUserPermissions,
+  requireAuth
 } from "./auth-middleware";
 
 export async function registerRoutes(app: Express): Promise<Server> {

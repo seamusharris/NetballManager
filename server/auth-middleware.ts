@@ -183,6 +183,23 @@ export function requireGameAccess(requireEditAccess = false) {
 }
 
 /**
+ * Basic authentication middleware - ensures user is authenticated
+ */
+export function requireAuth() {
+  return async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+      next();
+    } catch (error) {
+      console.error('Authentication check error:', error);
+      res.status(500).json({ error: 'Authentication check failed' });
+    }
+  };
+}
+
+/**
  * Load user's club permissions
  */
 export async function loadUserClubPermissions(userId: number) {
