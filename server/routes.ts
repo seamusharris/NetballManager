@@ -31,7 +31,7 @@ import {
 } from "./auth-middleware";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Middleware to simulate authentication and set default club context
+  // Middleware to simulate authentication and set club context from request
   app.use(async (req: any, res, next) => {
     // For development, simulate an authenticated user with access to all clubs
     if (!req.user) {
@@ -50,23 +50,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         }));
 
+        // Get current club ID from header (set by frontend) or default to first available club
+        const headerClubId = req.headers['x-current-club-id'];
+        const currentClubId = headerClubId ? parseInt(headerClubId as string, 10) : 
+                             (userClubs.length > 0 ? userClubs[0].clubId : null);
+
         req.user = {
           id: 1,
           username: 'dev-user',
           clubs: userClubs,
-          currentClubId: userClubs.length > 0 ? userClubs[0].clubId : 1
+          currentClubId: currentClubId
         };
+
+        console.log(`Auth middleware: Set currentClubId to ${currentClubId} (from header: ${headerClubId})`);
       } catch (error) {
         console.error('Error loading clubs for dev user:', error);
-        // Fallback to basic setup
+        // Fallback to basic setup without default club
         req.user = {
           id: 1,
           username: 'dev-user',
-          clubs: [
-            { clubId: 1, role: 'admin', permissions: { canManagePlayers: true, canManageGames: true, canManageStats: true, canViewOtherTeams: true } },
-            { clubId: 15, role: 'admin', permissions: { canManagePlayers: true, canManageGames: true, canManageStats: true, canViewOtherTeams: true } }
-          ],
-          currentClubId: 1
+          clubs: [],
+          currentClubId: null
         };
       }
     }
@@ -1161,11 +1165,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.set('Pragma', 'no-cache');
       res.set('Expires', '0');
 
-      // Use club ID from header if provided, otherwise fall back to user context
-      const headerClubId = req.headers['x-current-club-id'];
-      const clubId = headerClubId ? parseInt(headerClubId as string, 10) : req.user?.currentClubId;
+      // Use club ID from user context (same as teams endpoint)
+      const clubId = req.user?.currentClubId;
 
-      console.log(`Games endpoint: Using club ID ${clubId} (from header: ${headerClubId}, from user: ${req.user?.currentClubId})`);
+      console.log(`Games endpoint: Using club ID ${clubId} from user context`);
 
       // Filter to include only games that this club has access to
       if (clubId) {

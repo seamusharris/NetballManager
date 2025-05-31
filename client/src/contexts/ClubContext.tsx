@@ -73,9 +73,10 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
   const switchClub = useCallback((clubId: number) => {
     console.log('Switching to club:', clubId, 'Current club:', currentClubId);
     setCurrentClubId(clubId);
+    localStorage.setItem('currentClubId', clubId.toString());
     apiClient.setCurrentClubId(clubId);
 
-    console.log('Club switched in context to:', clubId);
+    console.log('Club switched in context to:', clubId, 'localStorage updated');
 
     // Invalidate all queries when switching clubs to ensure fresh data
     queryClient.invalidateQueries();
