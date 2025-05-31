@@ -866,7 +866,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const playerId = Number(req.params.id);
 
-      // Import our specialized player-season function
+      //      // Import our specialized player-season function
       const { getPlayerSeasons } = await import('./player-season-routes');
 
             // Use our function to get player seasons
@@ -1650,8 +1650,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Validate quarter (1-4)
-      if (parsedData.data.quarter < 1 || parsedData.data.quarter > 4) {
-        return res.status(400).json({ message: "Quarter must be between 1 and 4" });
+      if (parsedData.data.quarter < 1 || parsedData.data.quarter > 4) {        return res.status(400).json({ message: "Quarter must be between 1 and 4" });
       }
 
       // Validate position is from allowed set
