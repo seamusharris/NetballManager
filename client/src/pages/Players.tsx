@@ -1,14 +1,20 @@
 import { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams } from "wouter";
 import { Helmet } from 'react-helmet';
 import PlayersList from '@/components/players/PlayersList';
 import { useClub } from '@/contexts/ClubContext';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { UserPlus, UserMinus } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 export default function Players() {
   const { currentClub, switchToClub } = useClub();
   const params = useParams();
-  const [selectedPlayerId, setSelectedPlayerId] = useState<number | null>(null);
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   // Handle club ID from URL parameter
   useEffect(() => {
@@ -23,23 +29,194 @@ export default function Players() {
 
   // Determine if this is team-specific or club-wide players
   const teamId = params.teamId ? parseInt(params.teamId) : null;
-  const endpoint = teamId 
-    ? `/api/teams/${teamId}/players`
-    : `/api/clubs/${currentClub?.id}/players`;
-
-  const { data: players = [], isLoading, error } = useQuery({
-    queryKey: teamId ? ['team-players', teamId] : ['players', currentClub?.id],
+  
+  // Get team players if viewing a specific team
+  const { data: teamPlayers = [], isLoading: isLoadingTeamPlayers } = useQuery({
+    queryKey: ['team-players', teamId],
     queryFn: async () => {
-      if (!currentClub?.id && !teamId) return [];
-      const response = await fetch(endpoint);
+      const response = await fetch(`/api/teams/${teamId}/players`);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       return response.json();
     },
-    enabled: !!(currentClub?.id || teamId),
+    enabled: !!teamId,
   });
 
+  // Get all club players if viewing a team (to show available players)
+  const { data: allClubPlayers = [], isLoading: isLoadingClubPlayers } = useQuery({
+    queryKey: ['players', currentClub?.id],
+    queryFn: async () => {
+      if (!currentClub?.id) return [];
+      const response = await fetch(`/api/clubs/${currentClub.id}/players`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    },
+    enabled: !!currentClub?.id && !!teamId,
+  });
+
+  // Get players for non-team view
+  const { data: players = [], isLoading: isLoadingPlayers } = useQuery({
+    queryKey: ['players', currentClub?.id],
+    queryFn: async () => {
+      if (!currentClub?.id) return [];
+      const response = await fetch(`/api/clubs/${currentClub.id}/players`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    },
+    enabled: !!currentClub?.id && !teamId,
+  });
+
+  // Add player to team mutation
+  const addPlayerToTeam = useMutation({
+    mutationFn: async (playerId: number) => {
+      const response = await fetch(`/api/teams/${teamId}/players`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ playerId, isRegular: true }),
+      });
+      if (!response.ok) throw new Error('Failed to add player to team');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['team-players', teamId] });
+      toast({ title: 'Success', description: 'Player added to team' });
+    },
+    onError: () => {
+      toast({ title: 'Error', description: 'Failed to add player to team', variant: 'destructive' });
+    },
+  });
+
+  // Remove player from team mutation
+  const removePlayerFromTeam = useMutation({
+    mutationFn: async (playerId: number) => {
+      const response = await fetch(`/api/teams/${teamId}/players/${playerId}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) throw new Error('Failed to remove player from team');
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['team-players', teamId] });
+      toast({ title: 'Success', description: 'Player removed from team' });
+    },
+    onError: () => {
+      toast({ title: 'Error', description: 'Failed to remove player from team', variant: 'destructive' });
+    },
+  });
+
+  const isLoading = teamId 
+    ? isLoadingTeamPlayers || isLoadingClubPlayers
+    : isLoadingPlayers;
+
+  if (teamId) {
+    // Team-specific view with management capabilities
+    const teamPlayerIds = new Set(teamPlayers.map(p => p.id));
+    const availablePlayers = allClubPlayers.filter(p => !teamPlayerIds.has(p.id) && p.active);
+
+    return (
+      <>
+        <Helmet>
+          <title>Team Players | Team Manager</title>
+        </Helmet>
+
+        <div className="space-y-6">
+          {/* Current Team Players */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <span>Current Team Players</span>
+                <Badge variant="secondary">{teamPlayers.length} players</Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {teamPlayers.length === 0 ? (
+                <p className="text-gray-500 text-center py-4">No players assigned to this team yet.</p>
+              ) : (
+                <div className="grid gap-3">
+                  {teamPlayers.map((player) => (
+                    <div key={player.id} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div className="flex items-center space-x-3">
+                        <div className={`h-8 w-8 rounded-full flex items-center justify-center text-white text-sm ${player.avatarColor || 'bg-gray-500'}`}>
+                          {player.firstName?.[0]}{player.lastName?.[0]}
+                        </div>
+                        <div>
+                          <div className="font-medium">{player.displayName}</div>
+                          <div className="text-sm text-gray-500">
+                            {Array.isArray(player.positionPreferences) && player.positionPreferences.length > 0 
+                              ? player.positionPreferences.join(', ') 
+                              : 'No position preferences'}
+                          </div>
+                        </div>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => removePlayerFromTeam.mutate(player.id)}
+                        disabled={removePlayerFromTeam.isPending}
+                      >
+                        <UserMinus className="h-4 w-4 mr-1" />
+                        Remove
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Available Players */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <span>Available Club Players</span>
+                <Badge variant="outline">{availablePlayers.length} available</Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {availablePlayers.length === 0 ? (
+                <p className="text-gray-500 text-center py-4">All active club players are already on this team.</p>
+              ) : (
+                <div className="grid gap-3">
+                  {availablePlayers.map((player) => (
+                    <div key={player.id} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div className="flex items-center space-x-3">
+                        <div className={`h-8 w-8 rounded-full flex items-center justify-center text-white text-sm ${player.avatarColor || 'bg-gray-500'}`}>
+                          {player.firstName?.[0]}{player.lastName?.[0]}
+                        </div>
+                        <div>
+                          <div className="font-medium">{player.displayName}</div>
+                          <div className="text-sm text-gray-500">
+                            {Array.isArray(player.positionPreferences) && player.positionPreferences.length > 0 
+                              ? player.positionPreferences.join(', ') 
+                              : 'No position preferences'}
+                          </div>
+                        </div>
+                      </div>
+                      <Button
+                        variant="default"
+                        size="sm"
+                        onClick={() => addPlayerToTeam.mutate(player.id)}
+                        disabled={addPlayerToTeam.isPending}
+                      >
+                        <UserPlus className="h-4 w-4 mr-1" />
+                        Add to Team
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </>
+    );
+  }
+
+  // Regular club players view
   return (
     <>
       <Helmet>
