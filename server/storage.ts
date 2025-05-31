@@ -393,37 +393,34 @@ export class DatabaseStorage implements IStorage {
         seasonId: row.season_id,
         notes: row.notes,
         awardWinnerId: row.award_winner_id,
-        gameStatus: row['gameStatus.id'] ? {
-          id: row['gameStatus.id'],
-          name: row['gameStatus.name'],
-          displayName: row['gameStatus.displayName'],
-          points: row['gameStatus.points'],
-          opponentPoints: row['gameStatus.opponentPoints'],
-          isCompleted: row['gameStatus.isCompleted'],
-          allowsStatistics: row['gameStatus.allowsStatistics'],
-          requiresOpponent: row['gameStatus.requiresOpponent'],
-          colorClass: row['gameStatus.colorClass'],
-          sortOrder: row['gameStatus.sortOrder'],
-          isActive: row['gameStatus.isActive'],
-          createdAt: row['gameStatus.createdAt'],
-          updatedAt: row['gameStatus.updatedAt']
-        } : null,
-        opponent: row['opponent.id'] ? {
-          id: row['opponent.id'],
-          teamName: row['opponent.teamName'],
-          primaryContact: row['opponent.primaryContact'],
-          contactInfo: row['opponent.contactInfo']
-        } : null,
-        season: row['season.id'] ? {
-          id: row['season.id'],
-          name: row['season.name'],
-          startDate: row['season.startDate'],
-          endDate: row['season.endDate'],
-          isActive: row['season.isActive'],
-          type: row['season.type'],
-          year: row['season.year'],
-          displayOrder: row['season.displayOrder']
-        } : null,
+        // Game Status fields
+        statusId: row['gameStatus.id'],
+        statusName: row['gameStatus.name'],
+        statusDisplayName: row['gameStatus.displayName'],
+        statusPoints: row['gameStatus.points'],
+        statusOpponentPoints: row['gameStatus.opponentPoints'],
+        statusIsCompleted: row['gameStatus.isCompleted'],
+        statusAllowsStatistics: row['gameStatus.allowsStatistics'],
+        statusRequiresOpponent: row['gameStatus.requiresOpponent'],
+        statusColorClass: row['gameStatus.colorClass'],
+        statusSortOrder: row['gameStatus.sortOrder'],
+        statusIsActive: row['gameStatus.isActive'],
+        statusCreatedAt: row['gameStatus.createdAt'],
+        statusUpdatedAt: row['gameStatus.updatedAt'],
+
+        // Opponent fields
+        opponentTeamName: row['opponent.teamName'],
+        opponentPrimaryContact: row['opponent.primaryContact'],
+        opponentContactInfo: row['opponent.contactInfo'],
+
+        // Season fields
+        seasonName: row['season.name'],
+        seasonStartDate: row['season.startDate'],
+        seasonEndDate: row['season.endDate'],
+        seasonIsActive: row['season.isActive'],
+        seasonType: row['season.type'],
+        seasonYear: row['season.year'],
+        seasonDisplayOrder: row['season.displayOrder'],
         // Legacy fields for backward compatibility
         isBye: false // This is now handled by game status
       }));
@@ -491,37 +488,34 @@ export class DatabaseStorage implements IStorage {
         seasonId: row.season_id,
         notes: row.notes,
         awardWinnerId: row.award_winner_id,
-        gameStatus: row['gameStatus.id'] ? {
-          id: row['gameStatus.id'],
-          name: row['gameStatus.name'],
-          displayName: row['gameStatus.displayName'],
-          points: row['gameStatus.points'],
-          opponentPoints: row['gameStatus.opponentPoints'],
-          isCompleted: row['gameStatus.isCompleted'],
-          allowsStatistics: row['gameStatus.allowsStatistics'],
-          requiresOpponent: row['gameStatus.requiresOpponent'],
-          colorClass: row['gameStatus.colorClass'],
-          sortOrder: row['gameStatus.sortOrder'],
-          isActive: row['gameStatus.isActive'],
-          createdAt: row['gameStatus.createdAt'],
-          updatedAt: row['gameStatus.updatedAt']
-        } : null,
-        opponent: row['opponent.id'] ? {
-          id: row['opponent.id'],
-          teamName: row['opponent.teamName'],
-          primaryContact: row['opponent.primaryContact'],
-          contactInfo: row['opponent.contactInfo']
-        } : null,
-        season: row['season.id'] ? {
-          id: row['season.id'],
-          name: row['season.name'],
-          startDate: row['season.startDate'],
-          endDate: row['season.endDate'],
-          isActive: row['season.isActive'],
-          type: row['season.type'],
-          year: row['season.year'],
-          displayOrder: row['season.displayOrder']
-        } : null,
+        // Game Status fields
+        statusId: row['gameStatus.id'],
+        statusName: row['gameStatus.name'],
+        statusDisplayName: row['gameStatus.displayName'],
+        statusPoints: row['gameStatus.points'],
+        statusOpponentPoints: row['gameStatus.opponentPoints'],
+        statusIsCompleted: row['gameStatus.isCompleted'],
+        statusAllowsStatistics: row['gameStatus.allowsStatistics'],
+        statusRequiresOpponent: row['gameStatus.requiresOpponent'],
+        statusColorClass: row['gameStatus.colorClass'],
+        statusSortOrder: row['gameStatus.sortOrder'],
+        statusIsActive: row['gameStatus.isActive'],
+        statusCreatedAt: row['gameStatus.createdAt'],
+        statusUpdatedAt: row['gameStatus.updatedAt'],
+
+        // Opponent fields
+        opponentTeamName: row['opponent.teamName'],
+        opponentPrimaryContact: row['opponent.primaryContact'],
+        opponentContactInfo: row['opponent.contactInfo'],
+
+        // Season fields
+        seasonName: row['season.name'],
+        seasonStartDate: row['season.startDate'],
+        seasonEndDate: row['season.endDate'],
+        seasonIsActive: row['season.isActive'],
+        seasonType: row['season.type'],
+        seasonYear: row['season.year'],
+        seasonDisplayOrder: row['season.displayOrder'],
         // Legacy fields for backward compatibility
         isBye: false // This is now handled by game status
       }));
@@ -770,7 +764,7 @@ export class DatabaseStorage implements IStorage {
         WHERE cp.player_id = ${playerId}
         ORDER BY cp.is_active DESC, cp.joined_date DESC
       `);
-      
+
       return result.rows.map(row => ({
         id: row.id,
         name: row.name,
@@ -804,7 +798,7 @@ export class DatabaseStorage implements IStorage {
       `);
       return true;
     } catch (error) {
-      console.error('Error adding player to club:', error);
+      console.error(`Error adding player to club:', error);
       return false;
     }
   }

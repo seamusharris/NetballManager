@@ -1202,36 +1202,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
         seasonId: row.season_id,
         notes: row.notes,
         awardWinnerId: row.award_winner_id,
-        gameStatus: row.status ? {
-          id: row.status_id,
-          name: row.status,
-          displayName: row.status_display_name,
-          isCompleted: row.is_completed,
-          allowsStatistics: row.allows_statistics
-        } : null,
-        opponent: row.opponent_team_name ? {
-          id: row.opponent_id,
-          teamName: row.opponent_team_name,
-          primaryContact: row.primary_contact,
-          contactInfo: row.contact_info
-        } : null,
-        season: row.season_name ? {
-          id: row.season_id,
-          name: row.season_name,
-          startDate: row.season_start,
-          endDate: row.season_end,
-          isActive: row.season_active
-        } : null,
-        homeTeam: row.home_team_name ? {
-          id: row.home_team_id,
-          name: row.home_team_name,
-          division: row.home_team_division
-        } : null,
-        awayTeam: row.away_team_name ? {
-          id: row.away_team_id,
-          name: row.away_team_name,
-          division: row.away_team_division
-        } : null,
+        // Game Status fields
+        statusId: row.status_id,
+        statusName: row.status,
+        statusDisplayName: row.status_display_name,
+        statusIsCompleted: row.is_completed,
+        statusAllowsStatistics: row.allows_statistics,
+        
+        // Opponent fields
+        opponentTeamName: row.opponent_team_name,
+        opponentPrimaryContact: row.primary_contact,
+        opponentContactInfo: row.contact_info,
+        
+        // Season fields
+        seasonName: row.season_name,
+        seasonStartDate: row.season_start,
+        seasonEndDate: row.season_end,
+        seasonIsActive: row.season_active,
+        
+        // Home Team fields
+        homeTeamName: row.home_team_name,
+        homeTeamDivision: row.home_team_division,
+        
+        // Away Team fields
+        awayTeamName: row.away_team_name,
+        awayTeamDivision: row.away_team_division,
         isBye: false // Legacy support
       }));
 
