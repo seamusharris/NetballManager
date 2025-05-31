@@ -1,4 +1,3 @@
-
 import { queryClient } from './queryClient';
 
 export interface ApiResponse<T = any> {
@@ -30,11 +29,11 @@ export class ApiClient {
     const url = `${this.baseUrl}${endpoint}`;
 
     // Add current club ID to headers if available
-    const currentClubId = this.getCurrentClubId();
+    const currentClubId = localStorage.getItem('currentClubId');
+
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      ...(currentClubId && { 'X-Club-Id': currentClubId.toString() }),
-      ...(currentClubId && { 'X-Current-Club-Id': currentClubId.toString() }),
+      ...(currentClubId && { 'x-current-club-id': currentClubId }),
       ...options.headers,
     };
 
