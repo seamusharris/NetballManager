@@ -7,7 +7,7 @@ import { GameForm } from '@/components/games/GameForm';
 import { GamesList } from '@/components/games/GamesList';
 import { CrudDialog } from '@/components/ui/crud-dialog';
 import { Plus } from 'lucide-react';
-import { apiRequest } from '@/lib/apiClient';
+import { apiRequest, apiClient } from '@/lib/apiClient';
 import { Game, Opponent, Player } from '@shared/schema';
 import { useToast } from '@/hooks/use-toast';
 import { useLocation } from 'wouter';

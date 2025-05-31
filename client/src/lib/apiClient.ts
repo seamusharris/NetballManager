@@ -22,11 +22,6 @@ export class ApiClient {
     return null;
   }
 
-  // Public method to get current club ID
-  getCurrentClubId(): number | null {
-    return this.getCurrentClubId();
-  }
-
   setCurrentClubId(clubId: number): void {
     localStorage.setItem('currentClubId', clubId.toString());
   }
