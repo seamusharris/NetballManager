@@ -2265,7 +2265,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/clubs/:clubId/players", requireClubAccess(), async (req: AuthenticatedRequest, res) => {
     try {
       const clubId = parseInt(req.params.clubId);
-      const players = await storage.getClubPlayers(clubId);
+      const players = await storage.getPlayersByClub(clubId);
       res.json(players);
     } catch (error) {
       console.error('Error fetching club players:', error);
