@@ -78,6 +78,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ----- DIAGNOSTIC APIs -----
 
+  // Debug stats relationships
+  app.get('/api/debug/stats-relationships', async (req, res) => {
+    try {
+      const { debugStatsRelationships } = await import('./debug-stats-relationships');
+      await debugStatsRelationships();
+      res.json({ message: "Debug output sent to console" });
+    } catch (error) {
+      console.error("Error in stats relationships debug:", error);
+      res.status(500).json({
+        success: false,
+        message: "Debug failed",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
   // Direct player update endpoint
   app.patch('/api/direct/players/:id', async (req, res) => {
     try {
