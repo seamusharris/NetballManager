@@ -32,14 +32,15 @@ const formSchema = insertGameSchema.extend({
   round: z.string().optional(),
   statusId: z.string().optional(), // Use statusId instead of status
   seasonId: z.string().optional(), // Season ID as string for form handling
-  homeTeamId: z.string() // Team ID as string for form handling
+  homeTeamId: z.string(), // Team ID as string for form handling
+  awayTeamId: z.string().optional() // Away team ID as string for form handling
 }).refine(
   (data) => {
-    // For regular games, opponent is required (we'll handle BYE logic differently)
-    return data.opponentId !== "";
+    // For regular games, either opponent or away team is required
+    return data.opponentId !== "" || data.awayTeamId !== "";
   },
   {
-    message: "Opponent is required for games",
+    message: "Either opponent or away team is required",
     path: ["opponentId"]
   }
 );
@@ -50,6 +51,7 @@ type FormValues = z.infer<typeof formSchema> & {
   statusId: string;
   seasonId: string;
   homeTeamId: string;
+  awayTeamId: string;
 };
 
 interface GameFormProps {
@@ -74,7 +76,8 @@ export function GameForm({ game, opponents, seasons, activeSeason, onSubmit, isS
       round: game?.round || "",
       statusId: game?.statusId ? String(game.statusId) : "1", // Default to first status (usually "upcoming")
       seasonId: game?.seasonId ? String(game.seasonId) : activeSeason ? String(activeSeason.id) : "",
-      homeTeamId: game?.homeTeamId ? String(game.homeTeamId) : ""
+      homeTeamId: game?.homeTeamId ? String(game.homeTeamId) : "",
+      awayTeamId: game?.awayTeamId ? String(game.awayTeamId) : ""
     },
   });
 
@@ -84,10 +87,11 @@ export function GameForm({ game, opponents, seasons, activeSeason, onSubmit, isS
       date: values.date,
       time: values.time,
       round: values.round,
-      opponentId: parseInt(values.opponentId),
+      opponentId: values.opponentId ? parseInt(values.opponentId) : null,
       statusId: parseInt(values.statusId),
       seasonId: values.seasonId ? parseInt(values.seasonId) : (activeSeason ? activeSeason.id : undefined),
-      homeTeamId: parseInt(values.homeTeamId)
+      homeTeamId: parseInt(values.homeTeamId),
+      awayTeamId: values.awayTeamId ? parseInt(values.awayTeamId) : null
     };
 
     console.log("Submitting game with statusId:", formattedValues);
@@ -101,36 +105,70 @@ export function GameForm({ game, opponents, seasons, activeSeason, onSubmit, isS
     <Form {...form}>
       <h2 className="text-xl font-bold mb-6">{isEditing ? "Edit Game" : "Schedule New Game"}</h2>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-        <FormField
-          control={form.control}
-          name="homeTeamId"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel required>Home Team</FormLabel>
-              <Select 
-                onValueChange={field.onChange} 
-                defaultValue={field.value}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select home team" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {teams?.map(team => (
-                    <SelectItem key={team.id} value={team.id.toString()}>
-                      {team.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormDescription>
-                Select the team playing at home
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="homeTeamId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel required>Home Team</FormLabel>
+                <Select 
+                  onValueChange={field.onChange} 
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select home team" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {teams?.map(team => (
+                      <SelectItem key={team.id} value={team.id.toString()}>
+                        {team.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormDescription>
+                  Select the team playing at home
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="awayTeamId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Away Team</FormLabel>
+                <Select 
+                  onValueChange={field.onChange} 
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select away team (optional)" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="">No away team (vs opponent)</SelectItem>
+                    {teams?.map(team => (
+                      <SelectItem key={team.id} value={team.id.toString()}>
+                        {team.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormDescription>
+                  Select away team for inter-club games
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
 
         <FormField
           control={form.control}

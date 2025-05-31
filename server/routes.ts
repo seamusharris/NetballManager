@@ -1181,8 +1181,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         LEFT JOIN seasons s ON g.season_id = s.id
         LEFT JOIN teams ht ON g.home_team_id = ht.id
         LEFT JOIN teams at ON g.away_team_id = at.id
-        LEFT JOIN game_permissions gp ON g.id = gp.game_id AND gp.club_id = ${clubId}
-        WHERE (ht.club_id = ${clubId} OR at.club_id = ${clubId} OR gp.game_id IS NOT NULL)
+        WHERE (ht.club_id = ${clubId} OR at.club_id = ${clubId} OR EXISTS (
+          SELECT 1 FROM game_permissions gp 
+          WHERE gp.game_id = g.id AND gp.club_id = ${clubId}
+        ))
         ORDER BY g.date DESC, g.time DESC
       `);
 
