@@ -118,13 +118,8 @@ export function registerTeamRoutes(app: Express) {
         seasonId: row.season_id,
         seasonName: row.season_name,
         seasonYear: row.season_year,
-        season: row.season_id ? {
-          id: row.season_id,
-          name: row.season_name,
-          year: row.season_year,
-          startDate: row.season_start_date,
-          endDate: row.season_end_date
-        } : null
+        seasonStartDate: row.season_start_date,
+        seasonEndDate: row.season_end_date
       }));
 
       console.log(`Found ${teams.length} teams for club ${clubId}`);
@@ -178,13 +173,8 @@ export function registerTeamRoutes(app: Express) {
         seasonId: row.season_id,
         seasonName: row.season_name,
         seasonYear: row.season_year,
-        season: row.season_id ? {
-          id: row.season_id,
-          name: row.season_name,
-          year: row.season_year,
-          startDate: row.season_start_date,
-          endDate: row.season_end_date
-        } : null
+        seasonStartDate: row.season_start_date,
+        seasonEndDate: row.season_end_date
       }));
 
       console.log(`Found ${teams.length} teams for club ${clubId}`);
