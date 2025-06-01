@@ -11,7 +11,7 @@ import { UserPlus, UserMinus, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 export default function Players() {
-  const { currentClub, hasPermission, isLoading: clubLoading } = useClub();
+  const { currentClub, hasPermission, isLoading: clubLoading, switchToClub } = useClub();
 
   // Don't render anything until club context is fully loaded
   if (clubLoading || !currentClub) {

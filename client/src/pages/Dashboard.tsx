@@ -6,6 +6,7 @@ import { TEAM_NAME } from '@/lib/settings';
 import { useClub } from '@/contexts/ClubContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
+import { apiClient } from '@/lib/apiClient';
 
 export default function Dashboard() {
   const { currentClub, isLoading: clubLoading } = useClub();

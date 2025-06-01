@@ -5,11 +5,12 @@ import { Button } from '@/components/ui/button';
 import { GameForm } from '@/components/games/GameForm';
 import { GamesList } from '@/components/games/GamesList';
 import { CrudDialog } from '@/components/ui/crud-dialog';
-import { Plus } from 'lucide-react';
+import { Plus, Loader2 } from 'lucide-react';
 import { apiRequest, apiClient } from '@/lib/apiClient';
 import { Game, Opponent, Player } from '@shared/schema';
 import { useToast } from '@/hooks/use-toast';
 import { useLocation } from 'wouter';
+import { useClub } from '@/contexts/ClubContext';
 
 interface QueryParams {
   status?: string;
