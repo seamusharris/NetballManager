@@ -28,14 +28,21 @@ export class ApiClient {
   ): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
 
-    // Add current club ID to headers if available
+    // Always get the current club ID from localStorage
     const currentClubId = localStorage.getItem('currentClubId');
+    
+    // Log for debugging
+    console.log(`API Request to ${endpoint} with club ID: ${currentClubId}`);
 
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      ...(currentClubId && { 'x-current-club-id': currentClubId }),
       ...options.headers,
     };
+
+    // Always include the club ID header if available
+    if (currentClubId) {
+      headers['x-current-club-id'] = currentClubId;
+    }
 
     const config: RequestInit = {
       ...options,
@@ -46,7 +53,16 @@ export class ApiClient {
       const response = await fetch(url, config);
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        // Better error handling with response details
+        let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+        try {
+          const errorData = await response.json();
+          console.log('API Error Response (JSON):', errorData);
+          errorMessage = errorData.error || errorData.message || errorMessage;
+        } catch (parseError) {
+          console.log('Error parsing error response:', parseError);
+        }
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();

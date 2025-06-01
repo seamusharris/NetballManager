@@ -1,0 +1,34 @@
+> rest-express@1.0.0 dev
+9:58:57 AM [migration] Database migrations completed successfully!
+9:58:57 AM [express] serving on port 5000
+Auth middleware: No x-current-club-id header for GET /
+Auth middleware: No x-current-club-id header for GET /@vite/client
+Auth middleware: No x-current-club-id header for GET /src/main.tsx?v=9yB0aOMEnQpE-BZaa_r28
+Auth middleware: No x-current-club-id header for GET /@react-refresh
+Auth middleware: No x-current-club-id header for GET /src/App.tsx?v=9yB0aOMEnQpE-BZaa_r28
+Auth middleware: No x-current-club-id header for GET /src/lib/queryClient.ts
+Auth middleware: No x-current-club-id header for GET /src/components/ui/tooltip.tsx
+Auth middleware: No x-current-club-id header for GET /@fs/home/runner/workspace/node_modules/vite/dist/client/env.mjs
+Auth middleware: No x-current-club-id header for GET /src/index.css?v=9yB0aOMEnQpE-BZaa_r28
+Auth middleware: No x-current-club-id header for GET /src/components/ui/ErrorBoundary.tsx
+Auth middleware: No x-current-club-id header for GET /src/pages/Dashboard.tsx
+Auth middleware: No x-current-club-id header for GET /src/components/layout/Layout.tsx
+Auth middleware: No x-current-club-id header for GET /src/components/ui/toaster.tsx
+Auth middleware: No x-current-club-id header for GET /src/pages/Players.tsx
+Auth middleware: No x-current-club-id header for GET /src/pages/Games.tsx
+Auth middleware: No x-current-club-id header for GET /src/pages/Roster.tsx
+Auth middleware: No x-current-club-id header for GET /src/pages/Opponents.tsx
+Auth middleware: No x-current-club-id header for GET /src/pages/Statistics.tsx
+Auth middleware: No x-current-club-id header for GET /src/pages/PlayerDetails.tsx
+Auth middleware: No x-current-club-id header for GET /src/pages/Teams.tsx
+Auth middleware: No x-current-club-id header for GET /src/pages/ClubManagement.tsx
+Auth middleware: No x-current-club-id header for GET /src/pages/LiveStats.tsx
+Auth middleware: No x-current-club-id header for GET /src/pages/DataManagement.tsx
+Auth middleware: No x-current-club-id header for GET /src/pages/Settings.tsx
+Auth middleware: No x-current-club-id header for GET /src/pages/Seasons.tsx
+Auth middleware: No x-current-club-id header for GET /src/pages/not-found.tsx
+Auth middleware: No x-current-club-id header for GET /src/pages/GameDetails.tsx
+Auth middleware: No x-current-club-id header for GET /src/pages/OpponentAnalysis.tsx
+Auth middleware: No x-current-club-id header for GET /src/pages/OpponentDetailed.tsx
+Auth middleware: No x-current-club-id header for GET /src/lib/utils.ts
+Auth middleware: No x-current-club-id header for GET /src/components/ui/button.tsx

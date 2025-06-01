@@ -74,8 +74,11 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
       setCurrentClubId(targetClubId);
       localStorage.setItem('currentClubId', targetClubId.toString());
       apiClient.setCurrentClubId(targetClubId);
+      
+      // Force invalidate all queries to ensure they use the new club context
+      queryClient.invalidateQueries();
     }
-  }, [userClubs, currentClubId]);
+  }, [userClubs, currentClubId, queryClient]);
 
   const switchClub = useCallback((clubId: number) => {
     console.log('Switching to club:', clubId, 'Current club:', currentClubId);

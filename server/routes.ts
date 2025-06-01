@@ -68,7 +68,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     }
 
-    // ALWAYS require the header for club context - no defaults
+    // Check for club ID header and set it if present
     const headerClubId = req.headers['x-current-club-id'];
     if (headerClubId) {
       const clubId = parseInt(headerClubId as string, 10);
@@ -80,7 +80,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         req.user.currentClubId = null;
       }
     } else {
-      console.log('Auth middleware: No x-current-club-id header found');
+      // Log only once per request type to avoid spam
+      if (!req.url.includes('user/clubs') && !req.url.includes('seasons')) {
+        console.log(`Auth middleware: No x-current-club-id header for ${req.method} ${req.url}`);
+      }
       req.user.currentClubId = null;
     }
 
