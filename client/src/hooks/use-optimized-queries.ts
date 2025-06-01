@@ -1,23 +1,24 @@
 import { useQuery, QueryKey, UseQueryOptions } from '@tanstack/react-query';
 import { queryClient } from '@/lib/queryClient';
+import { apiClient } from '@/lib/apiClient';
 
 // Define optimized stale times (in milliseconds) based on data type
 const STALE_TIMES = {
   // Player data changes infrequently
   PLAYERS: 1000 * 60 * 60, // 1 hour
-  
+
   // Game details change infrequently once created
   GAMES: 1000 * 60 * 30, // 30 minutes
-  
+
   // Game stats might change during active games
   GAME_STATS: 1000 * 60 * 5, // 5 minutes
-  
+
   // Rosters are usually set once per game
   ROSTERS: 1000 * 60 * 15, // 15 minutes
-  
+
   // Opponents data changes very infrequently
   OPPONENTS: 1000 * 60 * 60 * 24, // 24 hours
-  
+
   // Default stale time for other data
   DEFAULT: 1000 * 60 * 10 // 10 minutes
 };
@@ -37,7 +38,7 @@ function getStaleTime(endpoint: string): number {
   } else if (endpoint.includes('/opponents')) {
     return STALE_TIMES.OPPONENTS;
   }
-  
+
   return STALE_TIMES.DEFAULT;
 }
 
@@ -50,21 +51,7 @@ export function useOptimizedQuery<TData = unknown>(
 ) {
   return useQuery<TData, Error>({
     queryKey: [endpoint],
-    queryFn: async () => {
-      try {
-        const response = await fetch(endpoint);
-        
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(`API error (${response.status}): ${errorText}`);
-        }
-        
-        return response.json();
-      } catch (error) {
-        console.error(`Error fetching from ${endpoint}:`, error);
-        throw error;
-      }
-    },
+    queryFn: () => apiClient.get<TData>(endpoint),
     staleTime: getStaleTime(endpoint),
     retry: (failureCount, error) => {
       // Only retry network errors, not 4xx/5xx responses

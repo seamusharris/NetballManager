@@ -29,7 +29,7 @@ export default function Players() {
 
   // Determine if this is team-specific or club-wide players
   const teamId = params.teamId ? parseInt(params.teamId) : null;
-  
+
   // Get team players if viewing a specific team
   const { data: teamPlayers = [], isLoading: isLoadingTeamPlayers } = useQuery({
     queryKey: ['team-players', teamId],

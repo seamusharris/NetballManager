@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,19 +22,23 @@ export default function Games() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingGame, setEditingGame] = useState<Game | null>(null);
   const [, setLocation] = useLocation();
-  
+
   // Get current club context
   const currentClubId = apiClient.getCurrentClubId ? apiClient.getCurrentClubId() : null;
 
   // Fetch games
   const { data: games = [], isLoading: isLoadingGames } = useQuery<Game[]>({
     queryKey: ['games', currentClubId],
-    queryFn: () => apiRequest('GET', '/api/games') as Promise<Game[]>,
+    queryFn: () => {
+      console.log('Fetching games for club:', currentClubId);
+      return apiClient.get('/api/games');
+    },
+    enabled: !!currentClubId, // Only fetch when we have a club ID
     staleTime: 0, // Disable caching temporarily to debug
     refetchOnMount: true,
     refetchOnWindowFocus: true,
   });
-  
+
   // Debug logging
   console.log('Games page:', {
     currentClubId,
@@ -77,7 +80,7 @@ export default function Games() {
   const handleCreate = async (game: Game) => {
     try {
       console.log('Creating game with data:', game);
-      
+
       // Ensure game has season context - use active season if not specified
       if (!game.seasonId) {
         try {
@@ -88,7 +91,7 @@ export default function Games() {
           console.warn('Could not get active season for new game:', error);
         }
       }
-      
+
       await apiRequest('POST', '/api/games', game);
       queryClient.invalidateQueries({ queryKey: ['games'] });
       setIsDialogOpen(false);
