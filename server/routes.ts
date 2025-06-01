@@ -50,19 +50,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         }));
 
-        // Get current club ID from header (set by frontend) or default to first available club
-        const headerClubId = req.headers['x-current-club-id'];
-        const currentClubId = headerClubId ? parseInt(headerClubId as string, 10) : 
-                             (userClubs.length > 0 ? userClubs[0].clubId : null);
-
         req.user = {
           id: 1,
           username: 'dev-user',
           clubs: userClubs,
-          currentClubId: currentClubId
+          currentClubId: null // Will be set below
         };
-
-        console.log(`Auth middleware: Set currentClubId to ${currentClubId} (from header: ${headerClubId})`);
       } catch (error) {
         console.error('Error loading clubs for dev user:', error);
         // Fallback to basic setup without default club
@@ -74,6 +67,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         };
       }
     }
+
+    // Always update currentClubId based on header if present
+    const headerClubId = req.headers['x-current-club-id'];
+    if (headerClubId) {
+      const clubId = parseInt(headerClubId as string, 10);
+      if (!isNaN(clubId)) {
+        req.user.currentClubId = clubId;
+        console.log(`Auth middleware: Set currentClubId to ${clubId} (from header: ${headerClubId})`);
+      }
+    } else if (!req.user.currentClubId && req.user.clubs && req.user.clubs.length > 0) {
+      // Only set default if no header and no current club
+      req.user.currentClubId = req.user.clubs[0].clubId;
+      console.log(`Auth middleware: Set currentClubId to ${req.user.currentClubId} (default from first club)`);
+    }
+
     next();
   });
 
