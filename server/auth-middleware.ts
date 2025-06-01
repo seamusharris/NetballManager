@@ -31,7 +31,7 @@ export function requireClubAccess(requiredPermission?: keyof AuthenticatedReques
       }
 
       // Extract club ID from request (URL param, header, query, or body), fallback to user's current club
-      let clubId = req.params.clubId || req.headers['x-club-id'] || req.query.clubId || req.body.clubId || req.user?.currentClubId;
+      let clubId = req.params.clubId || req.headers['x-current-club-id'] || req.query.clubId || req.body.clubId || req.user?.currentClubId;
 
       // Convert to number if it's a string
       if (typeof clubId === 'string') {
