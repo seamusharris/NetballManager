@@ -1,4 +1,3 @@
-
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -37,7 +36,7 @@ const formSchema = insertGameSchema.extend({
 }).refine(
   (data) => {
     // For regular games, either opponent or away team is required
-    return (data.opponentId !== "" && data.opponentId !== "none") || (data.awayTeamId !== "" && data.awayTeamId !== "none");
+    return (data.opponentId !== "none" && data.opponentId !== "") || (data.awayTeamId !== "none" && data.awayTeamId !== "");
   },
   {
     message: "Either opponent or away team is required",
@@ -96,6 +95,11 @@ export function GameForm({ game, opponents, seasons, activeSeason, onSubmit, isS
 
     console.log("Submitting game with statusId:", formattedValues);
     onSubmit(formattedValues);
+
+    // Close the form after submitting if onCancel is provided
+    if (onCancel) {
+      onCancel();
+    }
   };
 
   const { data: allGameStatuses } = useGameStatuses();
@@ -111,9 +115,10 @@ export function GameForm({ game, opponents, seasons, activeSeason, onSubmit, isS
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Home Team *</FormLabel>
-                <Select 
-                  onValueChange={field.onChange} 
+                <Select
+                  onValueChange={field.onChange}
                   defaultValue={field.value}
+                  required
                 >
                   <FormControl>
                     <SelectTrigger>
@@ -142,8 +147,8 @@ export function GameForm({ game, opponents, seasons, activeSeason, onSubmit, isS
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Away Team</FormLabel>
-                <Select 
-                  onValueChange={field.onChange} 
+                <Select
+                  onValueChange={field.onChange}
                   defaultValue={field.value}
                 >
                   <FormControl>
@@ -175,8 +180,8 @@ export function GameForm({ game, opponents, seasons, activeSeason, onSubmit, isS
           render={({ field }) => (
             <FormItem>
               <FormLabel>Opponent *</FormLabel>
-              <Select 
-                onValueChange={field.onChange} 
+              <Select
+                onValueChange={field.onChange}
                 defaultValue={field.value}
               >
                 <FormControl>
@@ -209,7 +214,7 @@ export function GameForm({ game, opponents, seasons, activeSeason, onSubmit, isS
               <FormItem>
                 <FormLabel>Date *</FormLabel>
                 <FormControl>
-                  <Input type="date" {...field} />
+                  <Input type="date" {...field} required />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -223,7 +228,7 @@ export function GameForm({ game, opponents, seasons, activeSeason, onSubmit, isS
               <FormItem>
                 <FormLabel>Time *</FormLabel>
                 <FormControl>
-                  <Input type="time" {...field} />
+                  <Input type="time" {...field} required />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -238,9 +243,9 @@ export function GameForm({ game, opponents, seasons, activeSeason, onSubmit, isS
             <FormItem>
               <FormLabel>Round</FormLabel>
               <FormControl>
-                <Input 
-                  placeholder="Enter round number (e.g., 1, 2, SF, GF)" 
-                  {...field} 
+                <Input
+                  placeholder="Enter round number (e.g., 1, 2, SF, GF)"
+                  {...field}
                 />
               </FormControl>
               <FormDescription>
@@ -257,8 +262,8 @@ export function GameForm({ game, opponents, seasons, activeSeason, onSubmit, isS
           render={({ field }) => (
             <FormItem>
               <FormLabel>Game Status</FormLabel>
-              <Select 
-                onValueChange={field.onChange} 
+              <Select
+                onValueChange={field.onChange}
                 defaultValue={field.value}
               >
                 <FormControl>
@@ -288,8 +293,8 @@ export function GameForm({ game, opponents, seasons, activeSeason, onSubmit, isS
           render={({ field }) => (
             <FormItem>
               <FormLabel>Season</FormLabel>
-              <Select 
-                onValueChange={field.onChange} 
+              <Select
+                onValueChange={field.onChange}
                 defaultValue={field.value}
               >
                 <FormControl>
