@@ -30,7 +30,7 @@ export class ApiClient {
 
     // Always get the current club ID from localStorage for each request
     const currentClubId = localStorage.getItem('currentClubId');
-    
+
     // Log for debugging
     console.log(`API Request to ${endpoint} with club ID: ${currentClubId}`);
 
@@ -42,7 +42,7 @@ export class ApiClient {
     // Always include the club ID header if available and not excluded routes
     const excludedRoutes = ['/api/user/clubs', '/api/seasons', '/api/opponents'];
     const shouldIncludeClubId = currentClubId && !excludedRoutes.some(route => endpoint.includes(route));
-    
+
     if (shouldIncludeClubId) {
       headers['x-current-club-id'] = currentClubId;
     }
