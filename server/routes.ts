@@ -74,9 +74,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const clubId = parseInt(headerClubId as string, 10);
       if (!isNaN(clubId)) {
         req.user.currentClubId = clubId;
+        console.log(`Auth middleware: Set currentClubId to ${clubId} from header`);
+      } else {
+        console.log(`Auth middleware: Invalid header club ID: ${headerClubId}`);
+        req.user.currentClubId = null;
       }
     } else {
-      // No header means no club context
+      console.log('Auth middleware: No x-current-club-id header found');
       req.user.currentClubId = null;
     }
 
@@ -1171,15 +1175,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.set('Pragma', 'no-cache');
       res.set('Expires', '0');
 
+      // Debug all headers
+      console.log('Games endpoint headers:', {
+        'x-current-club-id': req.headers['x-current-club-id'],
+        'user-agent': req.headers['user-agent']?.substring(0, 50),
+        'all-headers': Object.keys(req.headers)
+      });
+
       // Use club ID from user context (same as teams endpoint)
       const clubId = req.user?.currentClubId;
+
+      console.log(`Games endpoint: currentClubId=${clubId}, user clubs:`, req.user?.clubs?.map(c => c.clubId));
 
       if (!clubId) {
         console.log('Games endpoint: No club ID in request - header missing');
         return res.status(400).json({ error: 'Club context required - please refresh the page' });
       }
 
-      console.log(`Games endpoint: Using club ID ${clubId} from header`);
+      console.log(`Games endpoint: Using club ID ${clubId} from user context`);
 
       // Filter to include only games that this club has access to
       if (clubId) {

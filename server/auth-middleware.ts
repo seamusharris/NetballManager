@@ -38,12 +38,6 @@ export function requireClubAccess(requiredPermission?: keyof AuthenticatedReques
         clubId = parseInt(clubId);
       }
 
-      // If still no club ID and user has clubs, use the first one
-      if (!clubId && req.user?.clubs && req.user.clubs.length > 0) {
-        clubId = req.user.clubs[0].clubId;
-        req.user.currentClubId = clubId;
-      }
-
       if (!clubId || isNaN(clubId)) {
         console.error('Club access check failed - no valid club ID found', {
           params: req.params,
