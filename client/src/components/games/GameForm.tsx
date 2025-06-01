@@ -1,4 +1,3 @@
-
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -98,16 +97,30 @@ export function GameForm({
     defaultValues: {
       date: game?.date || "",
       time: game?.time || "",
-      opponentId: game?.opponentId ? String(game.opponentId) : "",
+      opponentId: game?.opponentId ? String(game.opponentId) : "placeholder",
       round: game?.round || "",
       statusId: game?.statusId ? String(game.statusId) : "1",
-      seasonId: game?.seasonId ? String(game.seasonId) : activeSeason ? String(activeSeason.id) : "",
-      homeTeamId: game?.homeTeamId ? String(game.homeTeamId) : "",
-      awayTeamId: game?.awayTeamId ? String(game.awayTeamId) : ""
+      seasonId: game?.seasonId ? String(game.seasonId) : activeSeason ? String(activeSeason.id) : "placeholder",
+      homeTeamId: game?.homeTeamId ? String(game.homeTeamId) : "placeholder",
+      awayTeamId: game?.awayTeamId ? String(game.awayTeamId) : "none"
     },
   });
 
   const handleSubmit = (values: FormValues) => {
+    // Validate required fields
+    if (values.opponentId === "placeholder" || !values.opponentId) {
+      form.setError("opponentId", { message: "Please select an opponent" });
+      return;
+    }
+    if (values.homeTeamId === "placeholder" || !values.homeTeamId) {
+      form.setError("homeTeamId", { message: "Please select a home team" });
+      return;
+    }
+    if (values.seasonId === "placeholder" || !values.seasonId) {
+      form.setError("seasonId", { message: "Please select a season" });
+      return;
+    }
+
     const formattedValues = {
       date: values.date,
       time: values.time,
@@ -116,7 +129,7 @@ export function GameForm({
       statusId: parseInt(values.statusId),
       seasonId: parseInt(values.seasonId),
       homeTeamId: parseInt(values.homeTeamId),
-      awayTeamId: values.awayTeamId ? parseInt(values.awayTeamId) : null
+      awayTeamId: values.awayTeamId && values.awayTeamId !== "none" ? parseInt(values.awayTeamId) : null
     };
 
     onSubmit(formattedValues);
@@ -178,7 +191,7 @@ export function GameForm({
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="">No away team</SelectItem>
+                    <SelectItem value="none">No away team</SelectItem>
                     {teams.map(team => (
                       <SelectItem key={team.id} value={team.id.toString()}>
                         {team.name}
