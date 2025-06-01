@@ -201,11 +201,11 @@ export default function Games() {
       >
         <GameForm 
           opponents={opponents} 
-          players={players} 
           seasons={seasons}
           activeSeason={activeSeason}
           onSubmit={handleCreate}
           isSubmitting={false}
+          onCancel={() => setIsDialogOpen(false)}
         />
       </CrudDialog>
 
@@ -218,11 +218,11 @@ export default function Games() {
         <GameForm 
           game={editingGame} 
           opponents={opponents} 
-          players={players} 
           seasons={seasons}
           activeSeason={activeSeason}
           onSubmit={handleUpdate}
           isSubmitting={false}
+          onCancel={() => setEditingGame(null)}
         />
       </CrudDialog>
     </>

@@ -99,8 +99,40 @@ export function GameForm({ game, opponents, seasons, activeSeason, onSubmit, isS
     // Don't auto-close here, let the parent handle it after successful submission
   };
 
-  const { data: allGameStatuses = [] } = useGameStatuses();
-  const { data: teams = [] } = useTeams();
+  const { data: allGameStatuses = [], isLoading: statusesLoading, error: statusesError } = useGameStatuses();
+  const { data: teams = [], isLoading: teamsLoading, error: teamsError } = useTeams();
+
+  // Debug logging
+  console.log('GameForm data:', {
+    statusesCount: allGameStatuses?.length,
+    teamsCount: teams?.length,
+    statusesLoading,
+    teamsLoading,
+    statusesError,
+    teamsError
+  });
+
+  if (statusesLoading || teamsLoading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-2 text-sm text-muted-foreground">Loading form data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (statusesError || teamsError) {
+    return (
+      <div className="p-4 border rounded-md bg-destructive/10 text-destructive">
+        <p className="font-medium">Error loading form data</p>
+        <p className="text-sm mt-1">
+          {statusesError?.message || teamsError?.message || 'Failed to load required data'}
+        </p>
+      </div>
+    );
+  }
 
   return (
     <Form {...form}>
