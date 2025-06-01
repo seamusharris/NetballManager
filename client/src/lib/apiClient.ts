@@ -28,7 +28,7 @@ export class ApiClient {
   ): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
 
-    // Always get the current club ID from localStorage
+    // Always get the current club ID from localStorage for each request
     const currentClubId = localStorage.getItem('currentClubId');
     
     // Log for debugging
@@ -39,8 +39,11 @@ export class ApiClient {
       ...options.headers,
     };
 
-    // Always include the club ID header if available
-    if (currentClubId) {
+    // Always include the club ID header if available and not excluded routes
+    const excludedRoutes = ['/api/user/clubs', '/api/seasons', '/api/opponents'];
+    const shouldIncludeClubId = currentClubId && !excludedRoutes.some(route => endpoint.includes(route));
+    
+    if (shouldIncludeClubId) {
       headers['x-current-club-id'] = currentClubId;
     }
 

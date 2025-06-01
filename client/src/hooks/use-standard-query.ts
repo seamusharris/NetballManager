@@ -49,8 +49,10 @@ export function useGameRosterQuery(gameId: number) {
 }
 
 export function usePlayersQuery() {
+  const currentClubId = localStorage.getItem('currentClubId');
   return useStandardQuery({
-    endpoint: '/api/players'
+    endpoint: '/api/players',
+    enabled: !!currentClubId
   });
 }
 
@@ -61,7 +63,9 @@ export function useOpponentsQuery() {
 }
 
 export function useGamesQuery() {
+  const currentClubId = localStorage.getItem('currentClubId');
   return useStandardQuery({
-    endpoint: '/api/games'
+    endpoint: '/api/games',
+    enabled: !!currentClubId
   });
 }
