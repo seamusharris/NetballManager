@@ -1,5 +1,6 @@
+
 import { useQuery } from '@tanstack/react-query';
-import { apiClient } from '@/lib/apiClient';
+import { apiRequest } from '@/lib/apiClient';
 
 export interface GameStatus {
   id: number;
@@ -18,20 +19,6 @@ export interface GameStatus {
 export function useGameStatuses() {
   return useQuery<GameStatus[]>({
     queryKey: ['game-statuses'],
-    queryFn: () => apiClient.get('/api/game-statuses') as Promise<GameStatus[]>,
+    queryFn: () => apiRequest('GET', '/api/game-statuses') as Promise<GameStatus[]>,
   });
-}
-
-// Helper function to get status by name
-export function useGameStatusByName(statusName: string) {
-  const { data: statuses = [], ...query } = useGameStatuses();
-  const status = statuses.find(s => s.name === statusName);
-  return { status, ...query };
-}
-
-// Helper function to get all active status names
-export function useActiveGameStatusNames() {
-  const { data: statuses = [], ...query } = useGameStatuses();
-  const statusNames = statuses.filter(s => s.isActive).map(s => s.name);
-  return { statusNames, ...query };
 }
