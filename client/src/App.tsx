@@ -105,7 +105,7 @@ function Router() {
   );
 }
 
-import { ClubProvider } from '@/contexts/ClubContext'; // Adding this line based on the instructions in <thinking>.
+import { ClubProvider } from '@/contexts/ClubContext';
 
 function App() {
   return (

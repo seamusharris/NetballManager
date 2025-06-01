@@ -36,6 +36,7 @@ const ClubContext = createContext<ClubContextType | undefined>(undefined);
 
 export function ClubProvider({ children }: { children: React.ReactNode }) {
   const [currentClubId, setCurrentClubId] = useState<number | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
   const queryClient = useQueryClient();
 
   // Fetch user's club access
@@ -53,7 +54,7 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
 
   // Set default club on load
   useEffect(() => {
-    if (Array.isArray(userClubs) && userClubs.length > 0 && !currentClubId) {
+    if (Array.isArray(userClubs) && userClubs.length > 0 && !currentClubId && !isInitialized) {
       // Get stored club ID from localStorage
       const storedClubId = localStorage.getItem('currentClubId');
 
@@ -74,11 +75,12 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
       setCurrentClubId(targetClubId);
       localStorage.setItem('currentClubId', targetClubId.toString());
       apiClient.setCurrentClubId(targetClubId);
+      setIsInitialized(true);
       
       // Force invalidate all queries to ensure they use the new club context
       queryClient.invalidateQueries();
     }
-  }, [userClubs, currentClubId, queryClient]);
+  }, [userClubs, currentClubId, isInitialized, queryClient]);
 
   const switchClub = useCallback((clubId: number) => {
     console.log('Switching to club:', clubId, 'Current club:', currentClubId);
@@ -110,7 +112,7 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
         userClubs,
         switchClub,
         hasPermission,
-        isLoading: isLoadingClubs || isLoadingClub,
+        isLoading: isLoadingClubs || isLoadingClub || !isInitialized,
       }}
     >
       {children}
@@ -121,6 +123,8 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
 export const useClub = () => {
   const context = useContext(ClubContext);
   if (context === undefined) {
+    // More helpful error message with debugging info
+    console.error('useClub called outside ClubProvider. Check component hierarchy.');
     throw new Error('useClub must be used within a ClubProvider');
   }
   return context;
