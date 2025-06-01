@@ -25,12 +25,14 @@ export default function Dashboard() {
   const currentClubId = currentClub?.id;
 
   const { data: players = [], isLoading: isLoadingPlayers, error: playersError } = useQuery<any[]>({
-    queryKey: ['/api/players', currentClubId],
+    queryKey: ['players', currentClubId],
+    queryFn: () => apiClient.get('/api/players'),
     enabled: !!currentClubId,
   });
 
   const { data: games = [], isLoading: isLoadingGames, error: gamesError } = useQuery<any[]>({
-    queryKey: ['/api/games', currentClubId],
+    queryKey: ['games', currentClubId],
+    queryFn: () => apiClient.get('/api/games'),
     enabled: !!currentClubId,
   });
 

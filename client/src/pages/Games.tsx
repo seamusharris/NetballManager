@@ -42,12 +42,12 @@ export default function Games() {
 
   // Fetch games
   const { data: games = [], isLoading: isLoadingGames } = useQuery<Game[]>({
-    queryKey: ['games', currentClubId],
+    queryKey: ['games', currentClub?.id],
     queryFn: () => {
       console.log('Fetching games for club:', currentClubId);
       return apiClient.get('/api/games');
     },
-    enabled: !!currentClubId, // Only fetch when we have a club ID
+    enabled: !!currentClub?.id, // Only fetch when we have a club ID
     staleTime: 0, // Disable caching temporarily to debug
     refetchOnMount: true,
     refetchOnWindowFocus: true,

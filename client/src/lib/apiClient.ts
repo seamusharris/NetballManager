@@ -29,7 +29,16 @@ export class ApiClient {
     const url = `${this.baseUrl}${endpoint}`;
 
     // Always get the current club ID from localStorage for each request
-    const currentClubId = localStorage.getItem('currentClubId');
+    let currentClubId = localStorage.getItem('currentClubId');
+
+    // For API endpoints that require club ID, wait a bit if club ID is not available yet
+    const requiresClubId = ['/api/players', '/api/games', '/api/teams'].some(route => endpoint.includes(route));
+    
+    if (requiresClubId && !currentClubId) {
+      // Wait a short time for club context to initialize, then try again
+      await new Promise(resolve => setTimeout(resolve, 100));
+      currentClubId = localStorage.getItem('currentClubId');
+    }
 
     // Log for debugging
     console.log(`API Request to ${endpoint} with club ID: ${currentClubId}`);
