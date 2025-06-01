@@ -96,14 +96,11 @@ export function GameForm({ game, opponents, seasons, activeSeason, onSubmit, isS
     console.log("Submitting game with statusId:", formattedValues);
     onSubmit(formattedValues);
 
-    // Close the form after submitting if onCancel is provided
-    if (onCancel) {
-      onCancel();
-    }
+    // Don't auto-close here, let the parent handle it after successful submission
   };
 
-  const { data: allGameStatuses } = useGameStatuses();
-  const { data: teams } = useTeams();
+  const { data: allGameStatuses = [] } = useGameStatuses();
+  const { data: teams = [] } = useTeams();
 
   return (
     <Form {...form}>

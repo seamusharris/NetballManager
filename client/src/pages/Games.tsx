@@ -125,22 +125,21 @@ export default function Games() {
   };
 
   const handleUpdate = async (game: Game) => {
-    if (!editingGame) return;
     try {
-      console.log('Updating game with data:', game);
+      console.log('Updating game with ID:', editingGame?.id, 'and data:', game);
       await apiRequest('PATCH', `/api/games/${editingGame.id}`, game);
       queryClient.invalidateQueries({ queryKey: ['games'] });
-      setEditingGame(null);
       toast({
-        title: 'Success',
-        description: 'Game updated successfully.',
+        title: "Success",
+        description: "Game updated successfully",
       });
+      setEditingGame(null); // Close the dialog after successful update
     } catch (error) {
       console.error('Failed to update game:', error);
       toast({
-        title: 'Error',
-        description: 'Failed to update game.',
-        variant: 'destructive',
+        title: "Error",
+        description: "Failed to update game",
+        variant: "destructive",
       });
     }
   };
