@@ -7,11 +7,23 @@ import { useClub } from '@/contexts/ClubContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { UserPlus, UserMinus } from 'lucide-react';
+import { UserPlus, UserMinus, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 export default function Players() {
-  const { currentClub, switchToClub } = useClub();
+  const { currentClub, hasPermission, isLoading: clubLoading } = useClub();
+
+  // Don't render anything until club context is fully loaded
+  if (clubLoading || !currentClub) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <Loader2 className="mx-auto h-8 w-8 animate-spin" />
+          <p className="mt-2 text-sm text-muted-foreground">Loading club data...</p>
+        </div>
+      </div>
+    );
+  }
   const params = useParams();
   const queryClient = useQueryClient();
   const { toast } = useToast();

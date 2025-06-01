@@ -4,9 +4,24 @@ import DashboardSummary from '@/components/dashboard/DashboardSummary';
 import BatchScoreDisplay from '@/components/dashboard/BatchScoreDisplay';
 import { TEAM_NAME } from '@/lib/settings';
 import { useClub } from '@/contexts/ClubContext';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Loader2 } from 'lucide-react';
 
 export default function Dashboard() {
-  const { currentClub } = useClub();
+  const { currentClub, isLoading: clubLoading } = useClub();
+
+  // Don't render anything until club context is fully loaded
+  if (clubLoading || !currentClub) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <Loader2 className="mx-auto h-8 w-8 animate-spin" />
+          <p className="mt-2 text-sm text-muted-foreground">Loading club data...</p>
+        </div>
+      </div>
+    );
+  }
+
   const currentClubId = currentClub?.id;
 
   const { data: players = [], isLoading: isLoadingPlayers, error: playersError } = useQuery<any[]>({

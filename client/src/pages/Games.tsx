@@ -17,6 +17,20 @@ interface QueryParams {
 }
 
 export default function Games() {
+  const { currentClub, hasPermission, isLoading: clubLoading } = useClub();
+
+  // Don't render anything until club context is fully loaded
+  if (clubLoading || !currentClub) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <Loader2 className="mx-auto h-8 w-8 animate-spin" />
+          <p className="mt-2 text-sm text-muted-foreground">Loading club data...</p>
+        </div>
+      </div>
+    );
+  }
+
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
