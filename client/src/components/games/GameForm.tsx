@@ -185,7 +185,7 @@ export function GameForm({
     }
   }, [game, activeSeason, form, gameStatuses.length, teams.length]);
 
-  const handleSubmit = (values: FormValues) => {
+  const handleSubmit = async (values: FormValues) => {
     // Validate required fields
     if (!values.opponentId) {
       form.setError("opponentId", { message: "Please select an opponent" });
@@ -211,7 +211,24 @@ export function GameForm({
       awayTeamId: values.awayTeamId && values.awayTeamId !== "none" && values.awayTeamId !== "" ? parseInt(values.awayTeamId) : null
     };
 
-    onSubmit(formattedValues);
+    try {
+      let response;
+      if (isEditing && game) {
+        response = await apiClient.patch(`/api/games/${game.id}`, formattedValues);
+      } else {
+        response = await apiClient.post('/api/games', formattedValues);
+      }
+
+      if (response.status === 200) {
+        onSubmit(formattedValues);
+      } else {
+        console.error('Game submission failed:', response.status, response.data);
+        form.setError("root", { message: "Failed to submit game. Please try again." });
+      }
+    } catch (error: any) {
+      console.error('Game submission error:', error);
+      form.setError("root", { message: "An unexpected error occurred. Please check the console." });
+    }
   };
 
   // Check for club context issues
