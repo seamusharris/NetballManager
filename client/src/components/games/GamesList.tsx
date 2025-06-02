@@ -62,7 +62,7 @@ interface GamesListProps {
 }
 
 // Shared function for filtering games by status and search query
-const filterGamesByStatus = (games: any[], statusFilter: string, searchQuery: string) => {
+const filterGamesByStatus = (games: any[], statusFilter: string, searchQuery: string, getGameStatus: (game: any) => any) => {
   return games.filter(game => {
     const matchesSearch = searchQuery === '' || 
       game.opponent?.teamName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -78,7 +78,7 @@ const filterGamesByStatus = (games: any[], statusFilter: string, searchQuery: st
       return matchesSearch && gameStatus.isCompleted === true;
     }
     if (statusFilter === 'upcoming') {
-      return matchesSearch && gameStatus.isCompleted !== true;
+      return matchesSearch && gameStatus.isCompleted !== true && gameStatus.name !== 'bye';
     }
 
     // Match exact status name from database
@@ -289,7 +289,7 @@ export default function GamesList({
   }));
 
   // Filter games using shared filtering logic
-  let filteredGames = filterGamesByStatus(gamesWithOpponents, statusFilter, searchQuery);
+  let filteredGames = filterGamesByStatus(gamesWithOpponents, statusFilter, searchQuery, getGameStatus);
 
   // Apply opponent filter if set
   if (opponentFilter !== null) {
@@ -551,7 +551,7 @@ export default function GamesList({
                       )}
                     </TableCell>
                     <TableCell className={`px-6 py-4 whitespace-nowrap ${isDashboard ? 'border-r' : ''}`}>
-                      {game.isBye ? (
+                      {getGameStatus(game).name === 'bye' ? (
                         <div className="font-medium text-gray-500">⸺</div>
                       ) : (
                         <div className="font-medium">{getOpponentName(game)}</div>
@@ -559,7 +559,7 @@ export default function GamesList({
                     </TableCell>
                     <TableCell className={`px-6 py-4 whitespace-nowrap ${isDashboard ? 'border-r text-center' : ''}`}>
                       <div className="flex items-center gap-2">
-                        {game.isBye ? (
+                        {getGameStatus(game).name === 'bye' ? (
                           <Badge
                             variant="outline"
                             className="px-2 py-1 text-xs rounded-full font-semibold bg-gray-200 text-gray-700"
@@ -578,7 +578,7 @@ export default function GamesList({
                       </div>
                     </TableCell>
                     <TableCell className={`px-6 py-4 whitespace-nowrap ${isDashboard ? 'text-center' : ''}`}>
-                      {game.isBye ? (
+                      {getGameStatus(game).name === 'bye' ? (
                         <div className="font-medium text-gray-500">⸺</div>
                       ) : getGameStatus(game).isCompleted ? (
                         <div className="text-center">
