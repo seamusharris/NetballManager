@@ -31,13 +31,23 @@ export class ApiClient {
     // Always get the current club ID from localStorage for each request
     let currentClubId = localStorage.getItem('currentClubId');
 
-    // For API endpoints that require club ID, wait a bit if club ID is not available yet
-    const requiresClubId = ['/api/players', '/api/games', '/api/teams'].some(route => endpoint.includes(route));
-    
-    if (requiresClubId && !currentClubId) {
-      // Wait a short time for club context to initialize, then try again
-      await new Promise(resolve => setTimeout(resolve, 100));
-      currentClubId = localStorage.getItem('currentClubId');
+    // Define routes that explicitly don't need club ID
+    const excludedRoutes = ['/api/user/clubs', '/api/seasons'];
+    const isExcludedRoute = excludedRoutes.some(route => endpoint.includes(route));
+
+    // For most API endpoints, wait for club ID if not available yet
+    if (!isExcludedRoute && !currentClubId) {
+      // Wait longer for club context to initialize, with retries
+      for (let i = 0; i < 10; i++) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        currentClubId = localStorage.getItem('currentClubId');
+        if (currentClubId) break;
+      }
+
+      // If still no club ID and it's not an excluded route, throw an error
+      if (!currentClubId) {
+        throw new Error('Club context not available - please refresh the page');
+      }
     }
 
     // Log for debugging
@@ -48,11 +58,8 @@ export class ApiClient {
       ...options.headers,
     };
 
-    // Always include the club ID header if available and not excluded routes
-    const excludedRoutes = ['/api/user/clubs', '/api/seasons', '/api/opponents'];
-    const shouldIncludeClubId = currentClubId && !excludedRoutes.some(route => endpoint.includes(route));
-
-    if (shouldIncludeClubId) {
+    // Include club ID header for all routes except explicitly excluded ones
+    if (currentClubId && !isExcludedRoute) {
       headers['x-current-club-id'] = currentClubId;
     }
 
