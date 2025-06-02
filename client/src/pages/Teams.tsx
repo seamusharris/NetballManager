@@ -12,7 +12,7 @@ import { useLocation } from 'wouter';
 import { BackButton } from '@/components/ui/back-button';
 import { useClub } from '@/contexts/ClubContext';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiRequest } from '@shared/api-request';
+import { apiRequest } from '@/lib/queryClient';
 import { toast } from '@/components/ui/use-toast';
 
 export default function Teams() {
