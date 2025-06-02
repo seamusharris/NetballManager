@@ -1323,7 +1323,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         awayClubCode: row.away_club_code,
         
         // Legacy fields for backward compatibility
-        isBye: row.away_team_name === 'BYE',
+        isBye: row.away_team_name === 'Bye',
         opponentId: null, // No longer used
         opponentTeamName: row.away_team_name || null,
         opponentPrimaryContact: null,
@@ -1384,13 +1384,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
             SELECT id FROM teams 
             WHERE club_id = ${club_id} 
             AND season_id = ${season_id} 
-            AND name = 'BYE'
+            AND name = 'Bye'
             LIMIT 1
           `);
 
           if (byeTeam.rows.length === 0) {
             return res.status(400).json({ 
-              message: "BYE team not found for this club and season" 
+              message: "Bye team not found for this club and season" 
             });
           }
 
@@ -1500,8 +1500,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             SELECT name FROM teams WHERE id = ${req.body.awayTeamId}
           `);
           
-          if (awayTeam.rows.length > 0 && awayTeam.rows[0].name !== 'BYE') {
-            // Find the correct BYE team for the home team's club and season
+          if (awayTeam.rows.length > 0 && awayTeam.rows[0].name !== 'Bye') {
+            // Find the correct Bye team for the home team's club and season
             const homeTeam = await db.execute(sql`
               SELECT club_id, season_id FROM teams WHERE id = ${req.body.homeTeamId}
             `);
@@ -1511,7 +1511,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 SELECT id FROM teams 
                 WHERE club_id = ${homeTeam.rows[0].club_id} 
                 AND season_id = ${homeTeam.rows[0].season_id} 
-                AND name = 'BYE'
+                AND name = 'Bye'
                 LIMIT 1
               `);
               

@@ -102,7 +102,7 @@ export default function Teams() {
             </div>
 
             <TeamsList
-              teams={teams}
+              teams={teams.filter(team => team.name !== 'BYE')}
               onEdit={setEditingTeam}
               onDelete={handleDelete}
               onManagePlayers={handleManagePlayers}

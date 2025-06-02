@@ -1,4 +1,3 @@
-
 /**
  * Migration to remove the opponent system and use BYE teams for each club
  * This migration creates a special "BYE" team for each club to handle BYE games
@@ -14,33 +13,33 @@ export async function removeOpponentSystem(): Promise<void> {
 
     // Step 1: Create BYE teams for each club that doesn't already have one
     log("Creating BYE teams for each club...", "migration");
-    
+
     const clubs = await db.execute(sql`
       SELECT id, name, code FROM clubs WHERE is_active = true
     `);
 
     for (const club of clubs.rows) {
-      // Check if BYE team already exists for this club
-      const existingByeTeam = await db.execute(sql`
-        SELECT id FROM teams 
-        WHERE club_id = ${club.id} AND name = 'BYE'
-      `);
-
-      if (existingByeTeam.rows.length === 0) {
-        // Create BYE team for each active season
-        const activeSeasons = await db.execute(sql`
-          SELECT id, name FROM seasons WHERE is_active = true
+      // Check if Bye team already exists for this club
+        const existingByeTeam = await db.execute(sql`
+          SELECT id FROM teams 
+          WHERE club_id = ${club.id} AND name = 'Bye'
         `);
 
-        for (const season of activeSeasons.rows) {
-          await db.execute(sql`
-            INSERT INTO teams (club_id, season_id, name, division, is_active)
-            VALUES (${club.id}, ${season.id}, 'BYE', 'BYE', true)
-            ON CONFLICT (club_id, season_id, name) DO NOTHING
+        if (existingByeTeam.rows.length === 0) {
+          // Create Bye team for each active season
+          const activeSeasons = await db.execute(sql`
+            SELECT id, name FROM seasons WHERE is_active = true
           `);
-          log(`Created BYE team for club ${club.name} in season ${season.name}`, "migration");
+
+          for (const season of activeSeasons.rows) {
+            await db.execute(sql`
+              INSERT INTO teams (club_id, season_id, name, division, is_active)
+              VALUES (${club.id}, ${season.id}, 'Bye', 'Bye', true)
+              ON CONFLICT (club_id, season_id, name) DO NOTHING
+            `);
+            log(`Created Bye team for club ${club.name} in season ${season.name}`, "migration");
+          }
         }
-      }
     }
 
     // Step 2: Convert existing games that use opponents to use BYE teams where appropriate
@@ -135,7 +134,7 @@ export async function removeOpponentSystem(): Promise<void> {
 
     // Step 4: Make home_team_id and away_team_id required
     log("Making team columns required...", "migration");
-    
+
     await db.execute(sql`
       ALTER TABLE games 
       ALTER COLUMN home_team_id SET NOT NULL,
@@ -144,7 +143,7 @@ export async function removeOpponentSystem(): Promise<void> {
 
     // Step 5: Remove opponent-related columns
     log("Removing opponent system columns...", "migration");
-    
+
     // Remove foreign key constraint first if it exists
     try {
       await db.execute(sql`
@@ -161,7 +160,7 @@ export async function removeOpponentSystem(): Promise<void> {
 
     // Step 6: Clean up scoring columns (optional - remove legacy team_score/opponent_score)
     log("Removing legacy scoring columns...", "migration");
-    
+
     await db.execute(sql`
       ALTER TABLE games 
       DROP COLUMN IF EXISTS team_score,
@@ -169,14 +168,14 @@ export async function removeOpponentSystem(): Promise<void> {
     `);
 
     log("Successfully completed opponent system removal migration", "migration");
-    
+
     // Report summary
     const totalGames = await db.execute(sql`SELECT COUNT(*) as count FROM games`);
     const teamGames = await db.execute(sql`
       SELECT COUNT(*) as count FROM games 
       WHERE home_team_id IS NOT NULL AND away_team_id IS NOT NULL
     `);
-    
+
     log(`Migration summary: ${teamGames.rows[0].count}/${totalGames.rows[0].count} games now use team-based system`, "migration");
 
   } catch (error) {
