@@ -105,6 +105,16 @@ export function GameForm({
       homeTeamId: game?.homeTeamId ? String(game.homeTeamId) : "",
       awayTeamId: game?.awayTeamId ? String(game.awayTeamId) : ""
     },
+    values: game ? {
+      date: game.date || "",
+      time: game.time || "",
+      opponentId: game.opponentId ? String(game.opponentId) : "",
+      round: game.round || "",
+      statusId: game.statusId ? String(game.statusId) : "1",
+      seasonId: game.seasonId ? String(game.seasonId) : activeSeason ? String(activeSeason.id) : "",
+      homeTeamId: game.homeTeamId ? String(game.homeTeamId) : "",
+      awayTeamId: game.awayTeamId ? String(game.awayTeamId) : ""
+    } : undefined,
   });
 
   const handleSubmit = (values: FormValues) => {

@@ -1,3 +1,4 @@
+
 import { ReactNode } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './dialog';
 import { Button } from "./button";
@@ -5,7 +6,7 @@ import { X } from 'lucide-react';
 
 interface CrudDialogProps {
   isOpen: boolean;
-  onClose: () => void;
+  setIsOpen: (open: boolean) => void;
   title: string;
   description?: string;
   children: ReactNode;
@@ -14,33 +15,24 @@ interface CrudDialogProps {
 
 export function CrudDialog({
   isOpen,
-  onClose,
+  setIsOpen,
   title,
   description,
   children,
   maxWidth = "max-w-lg"
 }: CrudDialogProps) {
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center">
-      <div className={`relative bg-white dark:bg-slate-900 p-6 rounded-lg ${maxWidth} w-full max-h-[90vh] overflow-y-auto`}>
-        <button 
-          className="absolute right-4 top-4 rounded-sm opacity-70 text-gray-600 hover:opacity-100" 
-          onClick={onClose}
-        >
-          ✕
-          <span className="sr-only">Close</span>
-        </button>
-
-        <h2 className="text-xl font-semibold mb-2">{title}</h2>
-        {description && (
-          <p className="text-sm text-gray-500 mb-4">{description}</p>
-        )}
-
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogContent className={`${maxWidth} max-h-[90vh] overflow-y-auto`}>
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+          {description && (
+            <p className="text-sm text-muted-foreground">{description}</p>
+          )}
+        </DialogHeader>
         {children}
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -53,7 +45,7 @@ interface FormDialogProps extends CrudDialogProps {
 
 export function FormDialog({
   isOpen,
-  onClose,
+  setIsOpen,
   title,
   description,
   children,
@@ -64,26 +56,28 @@ export function FormDialog({
   maxWidth = "max-w-lg"
 }: FormDialogProps) {
   return (
-    <CrudDialog
-      isOpen={isOpen}
-      onClose={onClose}
-      title={title}
-      description={description}
-      maxWidth={maxWidth}
-    >
-      <form onSubmit={onSubmit}>
-        {children}
-        <div className="flex justify-end space-x-2 mt-4">
-          {showCancel && (
-            <Button type="button" variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogContent className={`${maxWidth} max-h-[90vh] overflow-y-auto`}>
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+          {description && (
+            <p className="text-sm text-muted-foreground">{description}</p>
           )}
-          <Button type="submit" className="bg-primary text-white" disabled={isSubmitting}>
-            {isSubmitting ? 'Saving...' : submitText}
-          </Button>
-        </div>
-      </form>
-    </CrudDialog>
+        </DialogHeader>
+        <form onSubmit={onSubmit}>
+          {children}
+          <div className="flex justify-end space-x-2 mt-4">
+            {showCancel && (
+              <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
+                Cancel
+              </Button>
+            )}
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? 'Saving...' : submitText}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
