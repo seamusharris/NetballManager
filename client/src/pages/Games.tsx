@@ -124,17 +124,22 @@ export default function Games() {
     }
   };
 
-  const handleUpdate = async (game: Game) => {
-    try {
-      console.log('Updating game with ID:', editingGame?.id, 'and data:', game);
-      await apiRequest('PATCH', `/api/games/${editingGame.id}`, game);
+  // Update mutation
+  const updateMutation = useMutation({
+    mutationFn: async (game: Game) => {
+      if (!editingGame?.id) throw new Error('No game selected for update');
+      console.log('Updating game with ID:', editingGame.id, 'and data:', game);
+      return await apiRequest('PATCH', `/api/games/${editingGame.id}`, game);
+    },
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['games'] });
       toast({
         title: "Success",
         description: "Game updated successfully",
       });
-      setEditingGame(null); // Close the dialog after successful update
-    } catch (error) {
+      setEditingGame(null);
+    },
+    onError: (error) => {
       console.error('Failed to update game:', error);
       toast({
         title: "Error",
@@ -142,6 +147,10 @@ export default function Games() {
         variant: "destructive",
       });
     }
+  });
+
+  const handleUpdate = async (game: Game) => {
+    updateMutation.mutate(game);
   };
 
   const handleDelete = async (id: number) => {
