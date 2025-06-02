@@ -737,8 +737,7 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
                 <PositionBox 
                   position={position as Position}
                   playerName={playerName}
-                  playerColor={playerColor}
-                  playerStats={playerStats}
+                  playerColor={playerColor                  playerStats={playerStats}
                 />
               </div>
             );
@@ -1323,6 +1322,7 @@ export default function GameDetails() {
                         });
                       }
                     }}
+                    onCancel={() => setIsEditDialogOpen(false)}
                   />
                 )}
               </DialogContent>
@@ -1632,7 +1632,7 @@ export default function GameDetails() {
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-xl font-bold">Game Notes</CardTitle>
-                  {!isEditingNotes ? (
+                                    {!isEditingNotes ? (
                     <Button 
                       variant="outline" 
                       size="sm" 
