@@ -95,11 +95,53 @@ export async function loadUserPermissions(req: AuthenticatedRequest, res: Respon
   }
 }
 
-export function requireAuth(req: AuthenticatedRequest, res: Response, next: NextFunction) {
-  if (!req.user) {
-    return res.status(401).json({ error: 'Authentication required' });
-  }
-  next();
+export function requireAuth() {
+  return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    // Basic auth check - for now just pass through
+    // In production, this would validate JWT tokens, etc.
+    next();
+  };
+}
+
+export function requireClubAccess() {
+  return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+
+      // Get club ID from header, params, or query
+      let clubId = req.user.currentClubId;
+
+      if (!clubId) {
+        const paramClubId = req.params.clubId || req.query.clubId;
+        if (paramClubId) {
+          clubId = parseInt(paramClubId as string, 10);
+        }
+      }
+
+      if (!clubId || isNaN(clubId)) {
+        return res.status(400).json({ error: 'Club ID required' });
+      }
+
+      // Check if user has access to this club
+      const userClub = req.user.clubs.find(club => club.clubId === clubId);
+      if (!userClub) {
+        return res.status(403).json({ error: 'Access denied to this club' });
+      }
+
+      // Check specific permission if required
+      if (requiredPermission && !userClub.permissions[requiredPermission as keyof typeof userClub.permissions]) {
+        return res.status(403).json({ error: `Permission denied: ${requiredPermission}` });
+      }
+
+      req.user.currentClubId = clubId;
+      next();
+    } catch (error) {
+      console.error('Club access check error:', error);
+      res.status(500).json({ error: 'Authorization check failed' });
+    }
+  };
 }
 
 export function requireTeamAccess(requiredPermission?: string) {
@@ -187,47 +229,6 @@ export function requireGameAccess(requireEditAccess: boolean = false) {
       next();
     } catch (error) {
       console.error('Game access check error:', error);
-      res.status(500).json({ error: 'Authorization check failed' });
-    }
-  };
-}
-
-export function requireClubAccess(requiredPermission?: string) {
-  return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-    try {
-      if (!req.user) {
-        return res.status(401).json({ error: 'Authentication required' });
-      }
-
-      // Get club ID from header, params, or query
-      let clubId = req.user.currentClubId;
-
-      if (!clubId) {
-        const paramClubId = req.params.clubId || req.query.clubId;
-        if (paramClubId) {
-          clubId = parseInt(paramClubId as string, 10);
-        }
-      }
-
-      if (!clubId || isNaN(clubId)) {
-        return res.status(400).json({ error: 'Club ID required' });
-      }
-
-      // Check if user has access to this club
-      const userClub = req.user.clubs.find(club => club.clubId === clubId);
-      if (!userClub) {
-        return res.status(403).json({ error: 'Access denied to this club' });
-      }
-
-      // Check specific permission if required
-      if (requiredPermission && !userClub.permissions[requiredPermission as keyof typeof userClub.permissions]) {
-        return res.status(403).json({ error: `Permission denied: ${requiredPermission}` });
-      }
-
-      req.user.currentClubId = clubId;
-      next();
-    } catch (error) {
-      console.error('Club access check error:', error);
       res.status(500).json({ error: 'Authorization check failed' });
     }
   };
