@@ -81,20 +81,58 @@ export function GameForm({
 }: GameFormProps) {
   const isEditing = !!game;
 
+  // Get current club ID from localStorage to ensure we have club context
+  const currentClubId = React.useMemo(() => {
+    const stored = localStorage.getItem('currentClubId');
+    return stored ? parseInt(stored, 10) : null;
+  }, []);
+
   // Fetch game statuses
   const { data: gameStatuses = [], isLoading: statusesLoading, error: statusesError } = useQuery<GameStatus[]>({
     queryKey: ['game-statuses'],
-    queryFn: () => apiRequest('GET', '/api/game-statuses') as Promise<GameStatus[]>,
+    queryFn: async () => {
+      try {
+        const result = await apiRequest('GET', '/api/game-statuses');
+        return result as GameStatus[];
+      } catch (error) {
+        console.error('Error fetching game statuses:', error);
+        throw error;
+      }
+    },
     staleTime: 5 * 60 * 1000, // 5 minutes
-    retry: 3,
+    retry: (failureCount, error) => {
+      // Don't retry if we get HTML response (likely auth/context error)
+      if (error?.message?.includes('<!DOCTYPE') || error?.message?.includes('Unexpected token')) {
+        return false;
+      }
+      return failureCount < 3;
+    },
   });
 
-  // Fetch teams with club context
+  // Fetch teams with club context - only when we have a club ID
   const { data: teams = [], isLoading: teamsLoading, error: teamsError } = useQuery<Team[]>({
-    queryKey: ['teams'],
-    queryFn: () => apiRequest('GET', '/api/teams') as Promise<Team[]>,
+    queryKey: ['teams', currentClubId],
+    queryFn: async () => {
+      if (!currentClubId) {
+        throw new Error('No club context available');
+      }
+      try {
+        const result = await apiRequest('GET', '/api/teams');
+        return result as Team[];
+      } catch (error) {
+        console.error('Error fetching teams:', error);
+        throw error;
+      }
+    },
+    enabled: !!currentClubId, // Only run when we have a club ID
     staleTime: 5 * 60 * 1000, // 5 minutes
-    retry: 3,
+    retry: (failureCount, error) => {
+      // Don't retry if we get HTML response (likely auth/context error)
+      if (error?.message?.includes('<!DOCTYPE') || error?.message?.includes('Unexpected token')) {
+        return false;
+      }
+      return failureCount < 3;
+    },
   });
 
   const form = useForm<FormValues>({
@@ -176,6 +214,22 @@ export function GameForm({
     onSubmit(formattedValues);
   };
 
+  // Check for club context issues
+  if (!currentClubId) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="text-center">
+          <p className="text-amber-600 mb-4">
+            Please select a club to continue
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Refreshing the page may help establish club context
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   if (statusesLoading || teamsLoading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -192,14 +246,23 @@ export function GameForm({
   }
 
   if (statusesError || teamsError) {
+    const errorMessage = statusesError?.message || teamsError?.message || 'Unknown error';
+    const isContextError = errorMessage.includes('<!DOCTYPE') || 
+                          errorMessage.includes('Unexpected token') ||
+                          errorMessage.includes('Club context') ||
+                          errorMessage.includes('No club context');
+
     return (
       <div className="flex items-center justify-center p-8">
         <div className="text-center">
           <p className="text-red-600 mb-4">
-            Error loading form data: {statusesError?.message || teamsError?.message}
+            {isContextError 
+              ? 'Club context error - please refresh the page' 
+              : `Error loading form data: ${errorMessage}`
+            }
           </p>
           <Button variant="outline" onClick={() => window.location.reload()}>
-            Retry
+            Refresh Page
           </Button>
         </div>
       </div>
