@@ -215,15 +215,17 @@ export default function Games() {
         title="Edit Game"
         onSubmit={handleUpdate}
       >
-        <GameForm 
-          game={editingGame} 
-          opponents={opponents} 
-          seasons={seasons}
-          activeSeason={activeSeason}
-          onSubmit={handleUpdate}
-          isSubmitting={false}
-          onCancel={() => setEditingGame(null)}
-        />
+        {editingGame && (
+          <GameForm 
+            game={editingGame} 
+            opponents={opponents} 
+            seasons={seasons}
+            activeSeason={activeSeason}
+            onSubmit={handleUpdate}
+            isSubmitting={updateMutation.isPending}
+            onCancel={() => setEditingGame(null)}
+          />
+        )}
       </CrudDialog>
     </>
   );

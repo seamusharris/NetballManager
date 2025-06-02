@@ -86,10 +86,11 @@ export function GameForm({
     queryFn: () => apiRequest('GET', '/api/game-statuses') as Promise<GameStatus[]>,
   });
 
-  // Fetch teams
+  // Fetch teams with club context
   const { data: teams = [], isLoading: teamsLoading } = useQuery<Team[]>({
     queryKey: ['teams'],
     queryFn: () => apiRequest('GET', '/api/teams') as Promise<Team[]>,
+    enabled: true,
   });
 
   const form = useForm<FormValues>({
@@ -102,7 +103,7 @@ export function GameForm({
       statusId: game?.statusId ? String(game.statusId) : "1",
       seasonId: game?.seasonId ? String(game.seasonId) : activeSeason ? String(activeSeason.id) : "",
       homeTeamId: game?.homeTeamId ? String(game.homeTeamId) : "",
-      awayTeamId: game?.awayTeamId ? String(game.awayTeamId) : "none"
+      awayTeamId: game?.awayTeamId ? String(game.awayTeamId) : ""
     },
   });
 
@@ -129,7 +130,7 @@ export function GameForm({
       statusId: parseInt(values.statusId),
       seasonId: parseInt(values.seasonId),
       homeTeamId: parseInt(values.homeTeamId),
-      awayTeamId: values.awayTeamId && values.awayTeamId !== "none" ? parseInt(values.awayTeamId) : null
+      awayTeamId: values.awayTeamId && values.awayTeamId !== "none" && values.awayTeamId !== "" ? parseInt(values.awayTeamId) : null
     };
 
     onSubmit(formattedValues);
@@ -168,7 +169,7 @@ export function GameForm({
                   >
                     {teams.map(team => (
                       <SelectItem key={team.id} value={team.id.toString()}>
-                        {team.name}
+                        {team.name} {team.division && `(${team.division})`}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -187,7 +188,7 @@ export function GameForm({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Away Team</FormLabel>
-                <Select onValueChange={(value) => field.onChange(value === "none" ? "" : value)} value={field.value || "none"}>
+                <Select onValueChange={(value) => field.onChange(value === "none" ? null : value)} value={field.value || "none"}>
                   <FormControl>
                     <SelectTrigger className="bg-white border-blue-200 focus:border-blue-500 focus:ring-blue-500">
                       <SelectValue placeholder="Select away team (optional)" />
@@ -200,7 +201,7 @@ export function GameForm({
                     <SelectItem value="none">No away team</SelectItem>
                     {teams.map(team => (
                       <SelectItem key={team.id} value={team.id.toString()}>
-                        {team.name}
+                        {team.name} {team.division && `(${team.division})`}
                       </SelectItem>
                     ))}
                   </SelectContent>
