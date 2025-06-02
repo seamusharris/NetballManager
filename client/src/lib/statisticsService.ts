@@ -215,7 +215,7 @@ class UnifiedStatisticsService {
       const baseUrl = '/api/games/stats/batch';
       const queryParams = new URLSearchParams({ gameIds: idsParam });
       const url = `${baseUrl}?${queryParams.toString()}`;
-      const statsMap = await apiRequest('GET', url);
+      const statsMap = await apiClient.get(url);
       return statsMap || {};
     } catch (error) {
       console.warn('Batch fetch failed, falling back to individual requests:', error);
@@ -226,7 +226,7 @@ class UnifiedStatisticsService {
   private async fallbackIndividualFetch(gameIds: number[]): Promise<Record<number, GameStat[]>> {
     const statsMap: Record<number, GameStat[]> = {};
     const results = await Promise.allSettled(
-      gameIds.map(id => apiRequest('GET', `/api/games/${id}/stats`))
+      gameIds.map(id => apiClient.get(`/api/games/${id}/stats`))
     );
 
     results.forEach((result, index) => {
@@ -316,7 +316,7 @@ class UnifiedStatisticsService {
   async mapStatsToPlayers(gameId: number): Promise<Record<number, GameStat[]>> {
     const [statsMap, rosters] = await Promise.all([
       this.getBatchGameStats([gameId]),
-      apiRequest('GET', `/api/games/${gameId}/rosters`)
+      apiClient.get(`/api/games/${gameId}/rosters`)
     ]);
 
     const stats = statsMap[gameId] || [];
@@ -354,9 +354,9 @@ class UnifiedStatisticsService {
     const existingStat = stats.find(s => s.position === position && s.quarter === quarter);
 
     if (existingStat) {
-      return apiRequest('PATCH', `/api/games/${gameId}/stats/${existingStat.id}`, updates);
+      return apiClient.patch(`/api/games/${gameId}/stats/${existingStat.id}`, updates);
     } else {
-      return apiRequest('POST', `/api/games/${gameId}/stats`, {
+      return apiClient.post(`/api/games/${gameId}/stats`, {
         gameId,
         position,
         quarter,
@@ -371,8 +371,8 @@ class UnifiedStatisticsService {
   async calculatePlayerPerformance(playerId: number, gameIds?: number[]): Promise<PlayerPerformance> {
     // Get all games if not specified, filter out forfeits
     const allGames = gameIds 
-      ? await Promise.all(gameIds.map(id => apiRequest('GET', `/api/games/${id}`)))
-      : await apiRequest('GET', '/api/games');
+      ? await Promise.all(gameIds.map(id => apiClient.get(`/api/games/${id}`)))
+      : await apiClient.get('/api/games');
 
     const validGames = allGames.filter((g: Game) => !isForfeitGame(g));
     const validGameIds = validGames.map((g: Game) => g.id);
@@ -380,7 +380,7 @@ class UnifiedStatisticsService {
     // Get all stats and rosters in batch
     const [statsMap, ...rosterArrays] = await Promise.all([
       this.getBatchGameStats(validGameIds),
-      ...validGameIds.map(id => apiRequest('GET', `/api/games/${id}/rosters`))
+      ...validGameIds.map(id => apiClient.get(`/api/games/${id}/rosters`))
     ]);
 
     const performance: PlayerPerformance = {
