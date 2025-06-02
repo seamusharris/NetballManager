@@ -1,4 +1,4 @@
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient, mutateWithInvalidation } from '@/lib/apiClient';
 import { useToast } from '@/hooks/use-toast';
 
@@ -76,6 +76,9 @@ export function useUpdateMutation<T = any>(
   invalidatePatterns: string[],
   successMessage?: string
 ) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: async (data: any) => {
       return await apiClient.patch(endpoint, data);
