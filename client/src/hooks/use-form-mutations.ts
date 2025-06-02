@@ -1,4 +1,3 @@
-
 import { useMutation } from '@tanstack/react-query';
 import { apiClient, mutateWithInvalidation } from '@/lib/apiClient';
 import { useToast } from '@/hooks/use-toast';
@@ -39,11 +38,11 @@ export function useFormMutation<T = any>({
         () => Promise.resolve(data),
         invalidatePatterns
       );
-      
+
       if (successMessage) {
         toast({ title: successMessage });
       }
-      
+
       onSuccess?.(data);
     },
     onError: (error: Error) => {
@@ -52,7 +51,7 @@ export function useFormMutation<T = any>({
         description: error.message,
         variant: "destructive"
       });
-      
+
       onError?.(error);
     }
   });
@@ -77,10 +76,34 @@ export function useUpdateMutation<T = any>(
   invalidatePatterns: string[],
   successMessage?: string
 ) {
-  return useFormMutation<T>({
-    endpoint,
-    method: 'PUT',
-    invalidatePatterns,
-    successMessage: successMessage || 'Updated successfully'
+  return useMutation({
+    mutationFn: async (data: any) => {
+      return await apiClient.patch(endpoint, data);
+    },
+    onSuccess: () => {
+      // Invalidate related queries
+      invalidatePatterns.forEach(pattern => {
+        queryClient.invalidateQueries({
+          predicate: (query) => {
+            const queryKey = query.queryKey[0];
+            return typeof queryKey === 'string' && queryKey.includes(pattern);
+          }
+        });
+      });
+
+      if (successMessage) {
+        toast({
+          title: "Success",
+          description: successMessage,
+        });
+      }
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "An error occurred",
+        variant: "destructive",
+      });
+    },
   });
 }

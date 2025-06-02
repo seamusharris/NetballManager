@@ -213,7 +213,7 @@ export function registerTeamRoutes(app: Express) {
     }
   });
 
-  // Update team
+  // Update team (PATCH method)
   app.patch("/api/teams/:id", async (req, res) => {
     try {
       const teamId = parseInt(req.params.id);
