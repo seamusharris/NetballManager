@@ -219,36 +219,29 @@ export function registerTeamRoutes(app: Express) {
       const teamId = parseInt(req.params.id);
       const { name, division, isActive } = req.body;
 
-      // Build the SET clause dynamically using Drizzle SQL template
-      const updateFields = [];
-      const updateValues = [];
+      // Build update object only with provided fields
+      const updateData = {};
+      if (name !== undefined) updateData.name = name;
+      if (division !== undefined) updateData.division = division;
+      if (isActive !== undefined) updateData.is_active = isActive;
 
-      if (name !== undefined) {
-        updateFields.push('name = ?');
-        updateValues.push(name);
-      }
-      if (division !== undefined) {
-        updateFields.push('division = ?');
-        updateValues.push(division);
-      }
-      if (isActive !== undefined) {
-        updateFields.push('is_active = ?');
-        updateValues.push(isActive);
-      }
-
-      if (updateFields.length === 0) {
+      if (Object.keys(updateData).length === 0) {
         return res.status(400).json({ message: "No valid fields to update" });
       }
 
-      // Always update the updated_at timestamp
-      updateFields.push('updated_at = NOW()');
+      // Always update the timestamp
+      updateData.updated_at = new Date();
 
-      const result = await db.execute(sql`
+      // Simple SQL update with individual parameters
+      const updates = Object.keys(updateData).map(key => `${key} = ?`).join(', ');
+      const values = Object.values(updateData);
+      
+      const result = await db.execute(sql.raw(`
         UPDATE teams 
-        SET ${sql.raw(updateFields.join(', '))}
-        WHERE id = ${teamId}
+        SET ${updates}
+        WHERE id = ?
         RETURNING *
-      `.setParams(updateValues));
+      `, [...values, teamId]));
 
       if (result.rows.length === 0) {
         return res.status(404).json({ message: "Team not found" });
