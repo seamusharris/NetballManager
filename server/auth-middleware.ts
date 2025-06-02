@@ -95,6 +95,58 @@ export async function loadUserPermissions(req: AuthenticatedRequest, res: Respon
   }
 }
 
+export function requireGameAccess(requireEditAccess: boolean = false) {
+  return async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+
+      const gameId = parseInt(req.params.gameId);
+      if (!gameId || isNaN(gameId)) {
+        return res.status(400).json({ error: 'Game ID required' });
+      }
+
+      // Get the game details to check club involvement
+      const gameResult = await db.execute(sql`
+        SELECT 
+          g.id,
+          ht.club_id as home_club_id,
+          at.club_id as away_club_id
+        FROM games g
+        LEFT JOIN teams ht ON g.home_team_id = ht.id
+        LEFT JOIN teams at ON g.away_team_id = at.id
+        WHERE g.id = ${gameId}
+      `);
+
+      if (gameResult.rows.length === 0) {
+        return res.status(404).json({ error: 'Game not found' });
+      }
+
+      const game = gameResult.rows[0];
+      const userClubId = req.user.currentClubId;
+
+      // Check if user's club is involved in the game
+      if (game.home_club_id !== userClubId && game.away_club_id !== userClubId) {
+        return res.status(403).json({ error: 'Not authorized to access this game' });
+      }
+
+      // If edit access is required, check permissions
+      if (requireEditAccess) {
+        const userClub = req.user.clubs.find(club => club.clubId === userClubId);
+        if (!userClub || !userClub.permissions.canManageGames) {
+          return res.status(403).json({ error: 'Permission denied: canManageGames required' });
+        }
+      }
+
+      next();
+    } catch (error) {
+      console.error('Game access check error:', error);
+      res.status(500).json({ error: 'Authorization check failed' });
+    }
+  };
+}
+
 export function requireClubAccess(requiredPermission?: string) {
   return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
