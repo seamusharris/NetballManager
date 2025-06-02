@@ -276,14 +276,14 @@ const PlayerStatsByQuarter = ({ roster, players, gameStats }: { roster: any[], p
 
   // Helper function to get player name (moved from elsewhere in the file)
   function getPlayerName(players: any[], playerId: number) {
-    if (!players || !playerId) return null;
+    if (!Array.isArray(players) || !playerId) return null;
     const player = players.find(p => p.id === playerId);
     return player ? (player.displayName || `${player.firstName} ${player.lastName}`) : null;
   }
 
   // Helper function to get player color (moved from elsewhere in the file)
   function getPlayerColor(players: any[], playerId: number) {
-    if (!players || !playerId) return '#cccccc';
+    if (!Array.isArray(players) || !playerId) return '#cccccc';
     const player = players.find(p => p.id === playerId);
 
     // First, check if we need to use a default color
@@ -489,14 +489,14 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
 
   // Helper to get player display name
   const getPlayerName = (playerId) => {
-    if (!players || !playerId) return null;
+    if (!Array.isArray(players) || !playerId) return null;
     const player = players.find(p => p.id === playerId);
     return player ? (player.displayName || `${player.firstName} ${player.lastName}`) : null;
   };
 
   // Function to get player color, converting from Tailwind class names to hex
   const getPlayerColor = (playerId) => {
-    if (!players || !playerId) return '#cccccc';
+    if (!Array.isArray(players) || !playerId) return '#cccccc';
     const player = players.find(p => p.id === playerId);
 
     // If player doesn't exist or has no color, return a default gray
@@ -1057,20 +1057,22 @@ export default function GameDetails() {
 
   // Fetch players
   const { 
-    data: players,
+    data: players = [],
     isLoading: isLoadingPlayers
   } = useQuery({
     queryKey: ['/api/players'],
-    queryFn: () => fetch('/api/players').then(res => res.json())
+    queryFn: () => fetch('/api/players').then(res => res.json()),
+    select: (data) => Array.isArray(data) ? data : []
   });
 
   // Fetch opponents
   const { 
-    data: opponents,
+    data: opponents = [],
     isLoading: isLoadingOpponents
   } = useQuery({
     queryKey: ['/api/opponents'],
-    queryFn: () => fetch('/api/opponents').then(res => res.json())
+    queryFn: () => fetch('/api/opponents').then(res => res.json()),
+    select: (data) => Array.isArray(data) ? data : []
   });
 
   // Fetch roster for this game
@@ -1087,6 +1089,8 @@ export default function GameDetails() {
   // Fetch seasons data
   const { data: seasons = [], isLoading: isLoadingSeasons } = useQuery<any[]>({
     queryKey: ['/api/seasons'],
+    queryFn: () => fetch('/api/seasons').then(res => res.json()),
+    select: (data) => Array.isArray(data) ? data : []
   });
 
   // Fetch active season
@@ -1285,7 +1289,7 @@ export default function GameDetails() {
             <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
               <DialogContent className="sm:max-w-[550px]">
                 <DialogTitle>Edit Game Details</DialogTitle>
-                {opponents && game && seasons && (
+                {Array.isArray(opponents) && game && Array.isArray(seasons) ? (
                   <GameForm
                     game={game}
                     opponents={opponents}
@@ -1325,6 +1329,13 @@ export default function GameDetails() {
                     }}
                     onCancel={() => setIsEditDialogOpen(false)}
                   />
+                ) : (
+                  <div className="p-4 text-center">
+                    <p className="text-gray-500 mb-4">Loading form data...</p>
+                    <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                      Cancel
+                    </Button>
+                  </div>
                 )}
               </DialogContent>
             </Dialog>
