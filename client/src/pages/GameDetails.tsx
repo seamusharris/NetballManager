@@ -1173,12 +1173,12 @@ export default function GameDetails() {
           </div>
 
           <h1 className="text-2xl font-bold">
-            {game.opponentId ? (
-              <span>
-                {TEAM_NAME} vs {opponentName}
-              </span>
-            ) : (
+            {game.awayTeamName === 'Bye' ? (
               <span>BYE Round</span>
+            ) : (
+              <span>
+                {game.homeTeamName} vs {game.awayTeamName || opponentName}
+              </span>
             )}
           </h1>
 
