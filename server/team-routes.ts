@@ -261,12 +261,29 @@ export function registerTeamRoutes(app: Express) {
         WHERE home_team_id = ${teamId} OR away_team_id = ${teamId}
       `);
 
-      if (games.rows[0]?.count > 0) {
-        return res.status(400).json({ 
-          message: "Cannot delete team with existing games. Set as inactive instead." 
-        });
+      const gameCount = games.rows[0]?.count || 0;
+
+      // If team has games, update those games to remove team references
+      if (gameCount > 0) {
+        console.log(`Team ${teamId} has ${gameCount} games - updating game references before deletion`);
+        
+        // Update games to remove team references
+        await db.execute(sql`
+          UPDATE games 
+          SET home_team_id = NULL 
+          WHERE home_team_id = ${teamId}
+        `);
+
+        await db.execute(sql`
+          UPDATE games 
+          SET away_team_id = NULL 
+          WHERE away_team_id = ${teamId}
+        `);
+
+        console.log(`Updated ${gameCount} games to remove references to team ${teamId}`);
       }
 
+      // Delete the team
       const result = await db.execute(sql`
         DELETE FROM teams WHERE id = ${teamId} RETURNING id
       `);
@@ -275,7 +292,14 @@ export function registerTeamRoutes(app: Express) {
         return res.status(404).json({ message: "Team not found" });
       }
 
-      res.status(204).end();
+      // Return success with information about games that were updated
+      res.json({ 
+        success: true, 
+        message: gameCount > 0 
+          ? `Team deleted successfully. ${gameCount} games updated to remove team references.`
+          : "Team deleted successfully.",
+        gamesUpdated: gameCount
+      });
     } catch (error) {
       console.error("Error deleting team:", error);
       res.status(500).json({ message: "Failed to delete team" });

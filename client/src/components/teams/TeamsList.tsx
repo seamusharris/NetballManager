@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -62,7 +61,7 @@ export function TeamsList({ teams, onEdit, onDelete, onManagePlayers, isLoading 
               <p className="text-sm text-gray-600">
                 Season: {team.seasonName || 'No Season'} ({team.seasonYear || 'N/A'})
               </p>
-              
+
               <div className="flex space-x-2">
                 <Button
                   size="sm"
@@ -73,7 +72,7 @@ export function TeamsList({ teams, onEdit, onDelete, onManagePlayers, isLoading 
                   <Users className="w-4 h-4 mr-1" />
                   Players
                 </Button>
-                
+
                 <Button
                   size="sm"
                   variant="outline"
@@ -81,7 +80,7 @@ export function TeamsList({ teams, onEdit, onDelete, onManagePlayers, isLoading 
                 >
                   <Edit className="w-4 h-4" />
                 </Button>
-                
+
                 <Button
                   size="sm"
                   variant="outline"
