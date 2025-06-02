@@ -1236,5 +1236,3 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
     </>
   );
 }
-```
-The code is modified to update the mutation to use `apiClient.post`.

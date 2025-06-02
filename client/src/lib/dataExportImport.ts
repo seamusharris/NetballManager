@@ -34,17 +34,17 @@ export async function exportAllData(): Promise<ExportResult> {
     
     // Fetch all players
     console.log("Fetching players...");
-    const players = await apiClient.get<Player[]>('/api/players');
+    const players = await apiClient.get('/api/players') as Player[];
     console.log(`Exported ${players.length} players with their avatar colors`);
     
     // Fetch all opponents
     console.log("Fetching opponents...");
-    const opponents = await apiClient.get<Opponent[]>('/api/opponents');
+    const opponents = await apiClient.get('/api/opponents') as Opponent[];
     console.log(`Exported ${opponents.length} opponents`);
     
     // Fetch all games
     console.log("Fetching games...");
-    const games = await apiClient.get<Game[]>('/api/games');
+    const games = await apiClient.get('/api/games') as Game[];
     
     console.log(`Exported ${games.length} games`);
     

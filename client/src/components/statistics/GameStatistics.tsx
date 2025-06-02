@@ -440,12 +440,12 @@ export default function GameStatistics({
           if (existingStat) {
             // Update existing stats - position-based
             savePromises.push(
-              apiClient.patch(`/api/games/${gameId}/stats/${existingStat.id}`, quarterChanges)
+              apiClient.patch(`/api/games/${game.id}/stats/${existingStat.id}`, quarterChanges)
             );
           } else {
             // Create new stats with defaults - position-based
             savePromises.push(
-              apiClient.post(`/api/games/${gameId}/stats`, {
+              apiClient.post(`/api/games/${game.id}/stats`, {
                 gameId: game.id,
                 position, // Position is primary identifier, no player ID needed
                 quarter: quarterNum,
