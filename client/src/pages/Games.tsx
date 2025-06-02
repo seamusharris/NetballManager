@@ -206,7 +206,6 @@ export default function Games() {
         isOpen={isDialogOpen}
         setIsOpen={setIsDialogOpen}
         title="Add Game"
-        onSubmit={handleCreate}
       >
         <GameForm 
           opponents={opponents} 
@@ -222,7 +221,6 @@ export default function Games() {
         isOpen={!!editingGame}
         setIsOpen={(open) => !open && setEditingGame(null)}
         title="Edit Game"
-        onSubmit={handleUpdate}
       >
         {editingGame && (
           <GameForm 

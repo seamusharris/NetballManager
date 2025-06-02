@@ -1,7 +1,7 @@
 import { ReactNode } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from "./dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from './dialog';
 import { Button } from "./button";
-import { X } from "lucide-react";
+import { X } from 'lucide-react';
 
 interface CrudDialogProps {
   isOpen: boolean;
