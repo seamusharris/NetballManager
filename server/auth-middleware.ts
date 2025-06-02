@@ -95,6 +95,51 @@ export async function loadUserPermissions(req: AuthenticatedRequest, res: Respon
   }
 }
 
+export function requireAuth(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+  if (!req.user) {
+    return res.status(401).json({ error: 'Authentication required' });
+  }
+  next();
+}
+
+export function requireTeamAccess(requiredPermission?: string) {
+  return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+
+      // Get team ID from params
+      const teamId = parseInt(req.params.teamId);
+      if (!teamId || isNaN(teamId)) {
+        return res.status(400).json({ error: 'Team ID required' });
+      }
+
+      // For now, allow access if user has club access
+      // This could be enhanced to check specific team permissions
+      const clubId = req.user.currentClubId;
+      if (!clubId) {
+        return res.status(400).json({ error: 'Club context required' });
+      }
+
+      const userClub = req.user.clubs.find(club => club.clubId === clubId);
+      if (!userClub) {
+        return res.status(403).json({ error: 'Access denied to this club' });
+      }
+
+      // Check specific permission if required
+      if (requiredPermission && !userClub.permissions[requiredPermission as keyof typeof userClub.permissions]) {
+        return res.status(403).json({ error: `Permission denied: ${requiredPermission}` });
+      }
+
+      next();
+    } catch (error) {
+      console.error('Team access check error:', error);
+      res.status(500).json({ error: 'Authorization check failed' });
+    }
+  };
+}
+
 export function requireGameAccess(requireEditAccess: boolean = false) {
   return async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
