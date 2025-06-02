@@ -1,3 +1,4 @@
+import React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -96,26 +97,45 @@ export function GameForm({
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      date: game?.date || "",
-      time: game?.time || "",
-      opponentId: game?.opponentId ? String(game.opponentId) : "",
-      round: game?.round || "",
-      statusId: game?.statusId ? String(game.statusId) : "1",
-      seasonId: game?.seasonId ? String(game.seasonId) : activeSeason ? String(activeSeason.id) : "",
-      homeTeamId: game?.homeTeamId ? String(game.homeTeamId) : "",
-      awayTeamId: game?.awayTeamId ? String(game.awayTeamId) : ""
+      date: "",
+      time: "",
+      opponentId: "",
+      round: "",
+      statusId: "1",
+      seasonId: activeSeason ? String(activeSeason.id) : "",
+      homeTeamId: "",
+      awayTeamId: ""
     },
-    values: game ? {
-      date: game.date || "",
-      time: game.time || "",
-      opponentId: game.opponentId ? String(game.opponentId) : "",
-      round: game.round || "",
-      statusId: game.statusId ? String(game.statusId) : "1",
-      seasonId: game.seasonId ? String(game.seasonId) : activeSeason ? String(activeSeason.id) : "",
-      homeTeamId: game.homeTeamId ? String(game.homeTeamId) : "",
-      awayTeamId: game.awayTeamId ? String(game.awayTeamId) : ""
-    } : undefined,
   });
+
+  // Reset form when game data changes (for editing)
+  React.useEffect(() => {
+    if (game) {
+      console.log('Resetting form with game data:', game);
+      form.reset({
+        date: game.date || "",
+        time: game.time || "",
+        opponentId: game.opponentId ? String(game.opponentId) : "",
+        round: game.round || "",
+        statusId: game.statusId ? String(game.statusId) : "1",
+        seasonId: game.seasonId ? String(game.seasonId) : activeSeason ? String(activeSeason.id) : "",
+        homeTeamId: game.homeTeamId ? String(game.homeTeamId) : "",
+        awayTeamId: game.awayTeamId ? String(game.awayTeamId) : ""
+      });
+    } else {
+      // Reset to default values for new game
+      form.reset({
+        date: "",
+        time: "",
+        opponentId: "",
+        round: "",
+        statusId: "1",
+        seasonId: activeSeason ? String(activeSeason.id) : "",
+        homeTeamId: "",
+        awayTeamId: ""
+      });
+    }
+  }, [game, activeSeason, form]);
 
   const handleSubmit = (values: FormValues) => {
     // Validate required fields
