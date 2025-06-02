@@ -105,6 +105,23 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
     return clubAccess?.permissions[permission] || false;
   };
 
+  // Don't render children until the context is properly initialized
+  if (!isInitialized && isLoadingClubs) {
+    return (
+      <ClubContext.Provider
+        value={{
+          currentClub: null,
+          userClubs: [],
+          switchClub: () => {},
+          hasPermission: () => false,
+          isLoading: true,
+        }}
+      >
+        {children}
+      </ClubContext.Provider>
+    );
+  }
+
   return (
     <ClubContext.Provider
       value={{
@@ -125,6 +142,7 @@ export const useClub = () => {
   if (context === undefined) {
     // More helpful error message with debugging info
     console.error('useClub called outside ClubProvider. Check component hierarchy.');
+    console.error('Current component stack:', new Error().stack);
     throw new Error('useClub must be used within a ClubProvider');
   }
   return context;

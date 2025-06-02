@@ -14,7 +14,22 @@ import { Badge } from '@/components/ui/badge';
 import { Building2, ChevronDown } from 'lucide-react';
 
 export function ClubSwitcher() {
-  const { currentClub, userClubs, switchClub, isLoading } = useClub();
+  // Add safety check for context availability
+  let clubContext;
+  try {
+    clubContext = useClub();
+  } catch (error) {
+    // If ClubProvider is not available yet, show loading state
+    console.warn('ClubProvider not available yet in ClubSwitcher');
+    return (
+      <Button variant="outline" size="sm" disabled>
+        <Building2 className="w-4 h-4 mr-2" />
+        Loading...
+      </Button>
+    );
+  }
+
+  const { currentClub, userClubs, switchClub, isLoading } = clubContext;
 
   if (isLoading) {
     return (
