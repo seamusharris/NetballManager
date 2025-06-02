@@ -71,16 +71,18 @@ const filterGamesByStatus = (games: any[], statusFilter: string, searchQuery: st
 
     if (statusFilter === 'all') return matchesSearch;
 
-    // Handle special filters using gameStatus.isCompleted
+    const gameStatus = getGameStatus(game);
+
+    // Handle special filters using status.isCompleted
     if (statusFilter === 'completed') {
-      return matchesSearch && game.gameStatus?.isCompleted === true;
+      return matchesSearch && gameStatus.isCompleted === true;
     }
     if (statusFilter === 'upcoming') {
-      return matchesSearch && game.gameStatus?.isCompleted !== true;
+      return matchesSearch && gameStatus.isCompleted !== true;
     }
 
     // Match exact status name from database
-    return matchesSearch && game.gameStatus?.name === statusFilter;
+    return matchesSearch && gameStatus.name === statusFilter;
   });
 };
 
@@ -134,13 +136,17 @@ export default function GamesList({
   // Fetch game stats for all completed games (based on game status)
   const completedGameIds = games
     .filter(game => {
-      return game.gameStatus?.isCompleted === true;
+      const gameStatus = getGameStatus(game);
+      return gameStatus.isCompleted === true;
     })
     .map(game => game.id);
 
   // Get all non-BYE game IDs for checking roster status
   const nonByeGameIds = games
-    .filter(game => game.gameStatus?.name !== 'bye')
+    .filter(game => {
+      const gameStatus = getGameStatus(game);
+      return gameStatus.name !== 'bye';
+    })
     .map(game => game.id);
 
   // Use React Query to fetch roster data for all games to check if they're complete (only for non-dashboard)
@@ -264,6 +270,16 @@ export default function GamesList({
     if (!game.opponentId) return "TBA";
     const opponent = opponents.find(o => o.id === game.opponentId);
     return opponent ? opponent.teamName : "Unknown Opponent";
+  };
+
+  // Helper function to get game status
+  const getGameStatus = (game: any) => {
+    return {
+      name: game.statusName || game.gameStatus?.name || 'upcoming',
+      displayName: game.statusDisplayName || game.gameStatus?.displayName || 'Upcoming',
+      isCompleted: game.statusIsCompleted || game.gameStatus?.isCompleted || false,
+      allowsStatistics: game.statusAllowsStatistics || game.gameStatus?.allowsStatistics || false
+    };
   };
 
   // Enhance games with opponent data for search filtering
@@ -552,7 +568,10 @@ export default function GamesList({
                           </Badge>
                         ) : (
                           <GameStatusButton 
-                            game={game}
+                            game={{
+                              ...game,
+                              gameStatus: getGameStatus(game)
+                            }}
                             withDialog={false}
                           />
                         )}
@@ -561,7 +580,7 @@ export default function GamesList({
                     <TableCell className={`px-6 py-4 whitespace-nowrap ${isDashboard ? 'text-center' : ''}`}>
                       {game.isBye ? (
                         <div className="font-medium text-gray-500">⸺</div>
-                      ) : game.gameStatus?.isCompleted ? (
+                      ) : getGameStatus(game).isCompleted ? (
                         <div className="text-center">
                           {scoresMap && scoresMap[game.id] ? (
                             (() => {
@@ -614,7 +633,7 @@ export default function GamesList({
                               <Edit className="h-4 w-4" />
                             </Button>
                           )}
-                          {onViewStats && game.gameStatus?.isCompleted && (
+                          {onViewStats && getGameStatus(game).isCompleted && (
                             <Button
                               variant="ghost"
                               size="sm"
