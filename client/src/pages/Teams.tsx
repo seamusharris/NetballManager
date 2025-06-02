@@ -13,7 +13,7 @@ import { BackButton } from '@/components/ui/back-button';
 import { useClub } from '@/contexts/ClubContext';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
-import { toast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 
 export default function Teams() {
   const [, setLocation] = useLocation();
@@ -45,6 +45,8 @@ export default function Teams() {
       }
     },
   });
+
+  const { toast } = useToast();
 
   // Delete mutation
   const deleteMutation = useMutation({
