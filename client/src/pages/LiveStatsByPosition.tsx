@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useLocation } from 'wouter';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiRequest } from '@/lib/queryClient';
+import { apiClient } from '@/lib/apiClient';
 import { useToast } from '@/hooks/use-toast';
 import { GameStat, Position, allPositions, Opponent, Game, Player, Roster } from '@shared/schema';
 import { POSITION_NAMES, STAT_LABELS, STAT_COLORS, EMPTY_POSITION_STATS, COMMON_STATS } from '@/lib/constants';

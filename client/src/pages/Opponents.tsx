@@ -7,7 +7,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Plus } from 'lucide-react';
 import OpponentsList from '@/components/opponents/OpponentsList';
 import OpponentForm from '@/components/opponents/OpponentForm';
-import { apiRequest } from '@/lib/queryClient';
+import { apiClient } from '@/lib/apiClient';
 import { queryClient } from '@/lib/queryClient';
 import { Opponent } from '@shared/schema';
 

@@ -5,7 +5,7 @@ import { Game, GameStat, Opponent } from '@shared/schema';
 import { useEffect, useState } from 'react';
 import { getWinLoseLabel } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
-import { apiRequest } from '@/lib/queryClient';
+import { apiClient } from '@/lib/apiClient';
 import { BaseWidget } from '@/components/ui/base-widget';
 import { TrendingUp, TrendingDown, Target, Users, BarChart3, Zap } from 'lucide-react';
 

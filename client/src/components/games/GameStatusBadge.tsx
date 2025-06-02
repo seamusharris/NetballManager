@@ -3,7 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Game, GameStatus } from '@shared/schema';
 import { useGameStatuses } from '@/hooks/use-game-statuses';
 import { cn } from '@/lib/utils';
-import { apiRequest } from '@/lib/queryClient';
+import { apiClient } from '@/lib/apiClient';
 import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import {

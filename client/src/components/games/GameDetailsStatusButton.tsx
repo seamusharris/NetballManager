@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { apiRequest } from '@/lib/queryClient';
+import { apiClient } from '@/lib/apiClient';
 import { Game, GameStatus } from '@shared/schema';
 import { useGameStatuses } from '@/hooks/use-game-statuses';
 import { clearGameCache } from '@/lib/scoresCache';
