@@ -1323,11 +1323,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         awayClubCode: row.away_club_code,
         
         // Legacy fields for backward compatibility
-        isBye: row.away_team_name === 'Bye',
-        opponentId: null, // No longer used
-        opponentTeamName: row.away_team_name || null,
-        opponentPrimaryContact: null,
-        opponentContactInfo: null
+        isBye: row.away_team_name === 'Bye'
       }));
 
       res.json(games);
