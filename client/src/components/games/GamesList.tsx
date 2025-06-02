@@ -108,6 +108,16 @@ export default function GamesList({
   const [itemToDelete, setItemToDelete] = useState<number | null>(null);
   const [, setLocation] = useLocation();
 
+  // Helper function to get game status
+  const getGameStatus = (game: any) => {
+    return {
+      name: game.statusName || game.gameStatus?.name || 'upcoming',
+      displayName: game.statusDisplayName || game.gameStatus?.displayName || 'Upcoming',
+      isCompleted: game.statusIsCompleted || game.gameStatus?.isCompleted || false,
+      allowsStatistics: game.statusAllowsStatistics || game.gameStatus?.allowsStatistics || false
+    };
+  };
+
   // Check for status filter in URL parameters on component mount (only for non-dashboard)
   useEffect(() => {
     if (!isDashboard) {
@@ -270,16 +280,6 @@ export default function GamesList({
     if (!game.opponentId) return "TBA";
     const opponent = opponents.find(o => o.id === game.opponentId);
     return opponent ? opponent.teamName : "Unknown Opponent";
-  };
-
-  // Helper function to get game status
-  const getGameStatus = (game: any) => {
-    return {
-      name: game.statusName || game.gameStatus?.name || 'upcoming',
-      displayName: game.statusDisplayName || game.gameStatus?.displayName || 'Upcoming',
-      isCompleted: game.statusIsCompleted || game.gameStatus?.isCompleted || false,
-      allowsStatistics: game.statusAllowsStatistics || game.gameStatus?.allowsStatistics || false
-    };
   };
 
   // Enhance games with opponent data for search filtering
