@@ -4,7 +4,7 @@ import { useStandardQuery } from '@/hooks/use-standard-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { CrudDialog } from '@/components/ui/crud-dialog';
-import { TeamForm } from '@/components/teams/TeamForm';
+import TeamForm from '@/components/teams/TeamForm';
 import { TeamsList } from '@/components/teams/TeamsList';
 import { Plus } from 'lucide-react';
 import { Team, Season } from '@shared/schema';
