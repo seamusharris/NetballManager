@@ -162,7 +162,10 @@ export function GameForm({
                       <SelectValue placeholder="Select home team" />
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent className="bg-white border shadow-lg z-50">
+                  <SelectContent className="relative z-50 max-h-96 min-w-[8rem] overflow-y-auto overflow-x-hidden rounded-md border bg-white text-gray-900 shadow-lg"
+                    sideOffset={4}
+                    align="start"
+                  >
                     {teams.map(team => (
                       <SelectItem key={team.id} value={team.id.toString()}>
                         {team.name}
@@ -190,7 +193,10 @@ export function GameForm({
                       <SelectValue placeholder="Select away team (optional)" />
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent className="bg-white border shadow-lg z-50">
+                  <SelectContent className="relative z-50 max-h-96 min-w-[8rem] overflow-y-auto overflow-x-hidden rounded-md border bg-white text-gray-900 shadow-lg"
+                    sideOffset={4}
+                    align="start"
+                  >
                     <SelectItem value="none">No away team</SelectItem>
                     {teams.map(team => (
                       <SelectItem key={team.id} value={team.id.toString()}>
@@ -220,13 +226,16 @@ export function GameForm({
                     <SelectValue placeholder="Select opponent" />
                   </SelectTrigger>
                 </FormControl>
-                <SelectContent className="bg-white border shadow-lg z-50">
-                  {opponents.map(opponent => (
-                    <SelectItem key={opponent.id} value={opponent.id.toString()}>
-                      {opponent.teamName}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
+                <SelectContent className="relative z-50 max-h-96 min-w-[8rem] overflow-y-auto overflow-x-hidden rounded-md border bg-white text-gray-900 shadow-lg"
+                    sideOffset={4}
+                    align="start"
+                  >
+                    {opponents.map(opponent => (
+                      <SelectItem key={opponent.id} value={opponent.id.toString()}>
+                        {opponent.teamName}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
               </Select>
               <FormDescription>
                 Select the team your squad will be playing against
@@ -298,13 +307,16 @@ export function GameForm({
                     <SelectValue placeholder="Select game status" />
                   </SelectTrigger>
                 </FormControl>
-                <SelectContent className="bg-white border shadow-lg z-50">
-                  {gameStatuses.filter(s => s.isActive).map(status => (
-                    <SelectItem key={status.id} value={status.id.toString()}>
-                      {status.displayName}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
+                <SelectContent className="relative z-50 max-h-96 min-w-[8rem] overflow-y-auto overflow-x-hidden rounded-md border bg-white text-gray-900 shadow-lg"
+                    sideOffset={4}
+                    align="start"
+                  >
+                    {gameStatuses.filter(s => s.isActive).map(status => (
+                      <SelectItem key={status.id} value={status.id.toString()}>
+                        {status.displayName}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
               </Select>
               <FormDescription>
                 Set the current status of this game
@@ -326,13 +338,16 @@ export function GameForm({
                     <SelectValue placeholder="Select season" />
                   </SelectTrigger>
                 </FormControl>
-                <SelectContent className="bg-white border shadow-lg z-50">
-                  {seasons.map(season => (
-                    <SelectItem key={season.id} value={season.id.toString()}>
-                      {season.name} {season.isActive && '(Active)'}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
+                <SelectContent className="relative z-50 max-h-96 min-w-[8rem] overflow-y-auto overflow-x-hidden rounded-md border bg-white text-gray-900 shadow-lg"
+                    sideOffset={4}
+                    align="start"
+                  >
+                    {seasons.map(season => (
+                      <SelectItem key={season.id} value={season.id.toString()}>
+                        {season.name} {season.isActive && '(Active)'}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
               </Select>
               <FormDescription>
                 Select which season this game belongs to

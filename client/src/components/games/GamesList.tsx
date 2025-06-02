@@ -254,11 +254,16 @@ export default function GamesList({
     }
   };
 
-  // Get opponent name by ID
-  const getOpponentName = (opponentId: number | null) => {
-    if (opponentId === null) return '';
-    const opponent = opponents.find(o => o.id === opponentId);
-    return opponent ? opponent.teamName : 'Unknown Opponent';
+  const getOpponentName = (game: any) => {
+    // First try to use the pre-fetched opponent name from the game object
+    if (game.opponentTeamName) {
+      return game.opponentTeamName;
+    }
+
+    // Fallback to looking up in opponents array
+    if (!game.opponentId) return "TBA";
+    const opponent = opponents.find(o => o.id === game.opponentId);
+    return opponent ? opponent.teamName : "Unknown Opponent";
   };
 
   // Enhance games with opponent data for search filtering
@@ -533,7 +538,7 @@ export default function GamesList({
                       {game.isBye ? (
                         <div className="font-medium text-gray-500">⸺</div>
                       ) : (
-                        <div className="font-medium">{getOpponentName(game.opponentId)}</div>
+                        <div className="font-medium">{getOpponentName(game)}</div>
                       )}
                     </TableCell>
                     <TableCell className={`px-6 py-4 whitespace-nowrap ${isDashboard ? 'border-r text-center' : ''}`}>
