@@ -211,7 +211,7 @@ export default function Games() {
 
       <CrudDialog
         isOpen={!!editingGame}
-        setIsOpen={() => setEditingGame(null)}
+        setIsOpen={(open) => !open && setEditingGame(null)}
         title="Edit Game"
         onSubmit={handleUpdate}
       >
