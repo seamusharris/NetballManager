@@ -129,7 +129,7 @@ export default function Games() {
     mutationFn: async (game: Game) => {
       if (!editingGame?.id) throw new Error('No game selected for update');
       console.log('Updating game with ID:', editingGame.id, 'and data:', game);
-      return await apiRequest('PATCH', `/api/games/${editingGame.id}`, game);
+      return await apiClient.patch(`/api/games/${editingGame.id}`, game);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['games'] });
@@ -155,7 +155,7 @@ export default function Games() {
 
   const handleDelete = async (id: number) => {
     try {
-      await apiRequest('DELETE', `/api/games/${id}`);
+      await apiClient.delete(`/api/games/${id}`);
       queryClient.invalidateQueries({ queryKey: ['games'] });
       toast({
         title: 'Success',
