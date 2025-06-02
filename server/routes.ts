@@ -1205,16 +1205,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         SELECT 
           g.*,
           gs.name as status, gs.display_name as status_display_name, gs.is_completed, gs.allows_statistics,
-          o.team_name as opponent_team_name, o.primary_contact, o.contact_info,
           s.name as season_name, s.start_date as season_start, s.end_date as season_end, s.is_active as season_active,
-          ht.name as home_team_name, ht.division as home_team_division,
-          at.name as away_team_name, at.division as away_team_division
+          ht.name as home_team_name, ht.division as home_team_division, ht.club_id as home_club_id,
+          at.name as away_team_name, at.division as away_team_division, at.club_id as away_club_id,
+          hc.name as home_club_name, hc.code as home_club_code,
+          ac.name as away_club_name, ac.code as away_club_code
         FROM games g
         LEFT JOIN game_statuses gs ON g.status_id = gs.id
-        LEFT JOIN opponents o ON g.opponent_id = o.id
         LEFT JOIN seasons s ON g.season_id = s.id
         LEFT JOIN teams ht ON g.home_team_id = ht.id
         LEFT JOIN teams at ON g.away_team_id = at.id
+        LEFT JOIN clubs hc ON ht.club_id = hc.id
+        LEFT JOIN clubs ac ON at.club_id = ac.id
         WHERE (ht.club_id = ${clubId} OR at.club_id = ${clubId} OR EXISTS (
           SELECT 1 FROM game_permissions gp 
           WHERE gp.game_id = g.id AND gp.club_id = ${clubId}
@@ -1284,7 +1286,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         id: row.id,
         date: row.date,
         time: row.time,
-        opponentId: row.opponent_id,
         homeTeamId: row.home_team_id,
         awayTeamId: row.away_team_id,
         venue: row.venue,
@@ -1294,17 +1295,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         seasonId: row.season_id,
         notes: row.notes,
         awardWinnerId: row.award_winner_id,
+        
         // Game Status fields
-        statusId: row.status_id,
         statusName: row.status,
         statusDisplayName: row.status_display_name,
         statusIsCompleted: row.is_completed,
         statusAllowsStatistics: row.allows_statistics,
-
-        // Opponent fields
-        opponentTeamName: row.opponent_team_name,
-        opponentPrimaryContact: row.primary_contact,
-        opponentContactInfo: row.contact_info,
 
         // Season fields
         seasonName: row.season_name,
@@ -1315,11 +1311,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Home Team fields
         homeTeamName: row.home_team_name,
         homeTeamDivision: row.home_team_division,
+        homeClubId: row.home_club_id,
+        homeClubName: row.home_club_name,
+        homeClubCode: row.home_club_code,
 
-        // Away Team fields
+        // Away Team fields (null for BYE games)
         awayTeamName: row.away_team_name,
         awayTeamDivision: row.away_team_division,
-        isBye: false // Legacy support
+        awayClubId: row.away_club_id,
+        awayClubName: row.away_club_name,
+        awayClubCode: row.away_club_code,
+        
+        // Legacy fields for backward compatibility
+        isBye: row.away_team_name === 'BYE',
+        opponentId: null, // No longer used
+        opponentTeamName: row.away_team_name || null,
+        opponentPrimaryContact: null,
+        opponentContactInfo: null
       }));
 
       res.json(games);
@@ -1351,26 +1359,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log("Game creation request:", req.body);
 
-      // Direct database insert for BYE games to bypass schema validation
-      if (req.body.isBye === true) {
+      // Handle BYE games using BYE teams
+      if (req.body.isBye === true || req.body.statusId === 6) { // statusId 6 is 'bye'
         try {
-          // Use drizzle SQL to execute a direct insert for BYE games
-          const result = await db.execute(
-            sql`INSERT INTO "games" ("date", "time", "is_bye", "completed", "opponent_id") 
-                VALUES (${req.body.date}, ${req.body.time}, ${true}, ${false}, NULL) 
-                RETURNING *`
-          );
+          // Ensure we have a home team
+          if (!req.body.homeTeamId) {
+            return res.status(400).json({ 
+              message: "Home team is required for BYE games" 
+            });
+          }
 
-          // Map the result to match our expected format
-          const game = {
-            id: result.rows[0].id,
-            date: result.rows[0].date,
-            time: result.rows[0].time,
-            opponentId: null,
-            completed: result.rows[0].completed,
-            isBye: result.rows[0].is_bye
+          // Find the BYE team for the same club and season as the home team
+          const homeTeam = await db.execute(sql`
+            SELECT club_id, season_id FROM teams WHERE id = ${req.body.homeTeamId}
+          `);
+
+          if (homeTeam.rows.length === 0) {
+            return res.status(400).json({ message: "Invalid home team" });
+          }
+
+          const { club_id, season_id } = homeTeam.rows[0];
+
+          const byeTeam = await db.execute(sql`
+            SELECT id FROM teams 
+            WHERE club_id = ${club_id} 
+            AND season_id = ${season_id} 
+            AND name = 'BYE'
+            LIMIT 1
+          `);
+
+          if (byeTeam.rows.length === 0) {
+            return res.status(400).json({ 
+              message: "BYE team not found for this club and season" 
+            });
+          }
+
+          const gameData = {
+            date: req.body.date,
+            time: req.body.time,
+            homeTeamId: req.body.homeTeamId,
+            awayTeamId: byeTeam.rows[0].id,
+            statusId: 6, // BYE status
+            seasonId: season_id,
+            round: req.body.round || null,
+            venue: req.body.venue || null,
+            isInterClub: false,
+            notes: req.body.notes || 'BYE round'
           };
 
+          const game = await storage.createGame(gameData);
           console.log("Created BYE game:", game);
           return res.status(201).json(game);
         } catch (dbError) {
@@ -1381,11 +1418,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         }
       } else {
-        // For regular games, ensure we have an opponentId
-        if (!req.body.opponentId) {
+        // For regular games, ensure we have both home and away teams
+        if (!req.body.homeTeamId || !req.body.awayTeamId) {
           return res.status(400).json({ 
             message: "Invalid game data", 
-            errors: [{ message: "Opponent is required for regular games" }] 
+            errors: [{ message: "Both home and away teams are required for regular games" }] 
           });
         }
 
@@ -1393,15 +1430,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const gameData = {
           date: req.body.date,
           time: req.body.time,
-          opponentId: typeof req.body.opponentId === 'string' 
-            ? parseInt(req.body.opponentId, 10) 
-            : req.body.opponentId,
-          completed: req.body.completed || false,
-          isBye: false,
+          homeTeamId: typeof req.body.homeTeamId === 'string' 
+            ? parseInt(req.body.homeTeamId, 10) 
+            : req.body.homeTeamId,
+          awayTeamId: typeof req.body.awayTeamId === 'string' 
+            ? parseInt(req.body.awayTeamId, 10) 
+            : req.body.awayTeamId,
+          statusId: req.body.statusId || 1, // Default to 'upcoming'
+          seasonId: req.body.seasonId,
           round: req.body.round || null,
           venue: req.body.venue || null,
-          teamScore: req.body.teamScore || 0,
-          opponentScore: req.body.opponentScore || 0,
+          isInterClub: req.body.isInterClub || false,
           notes: req.body.notes || null
         };
 
@@ -1453,13 +1492,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('Updating game with ID:', id);
       console.log('Update payload:', req.body);
 
-      // If we're updating a game to be a BYE round, allow opponentId to be null
-      if (req.body.isBye === true) {
-        // Make opponentId null if updating to BYE game
-        req.body.opponentId = null;
-      } else if (req.body.isBye === false && req.body.opponentId === null) {
-        // Don't allow non-BYE games with null opponent
-        return res.status(400).json({ message: "Opponent is required for non-BYE games" });
+      // Handle BYE game updates using team-based system
+      if (req.body.statusId === 6) { // BYE status
+        // For BYE games, ensure away team is a BYE team
+        if (req.body.awayTeamId && req.body.homeTeamId) {
+          const awayTeam = await db.execute(sql`
+            SELECT name FROM teams WHERE id = ${req.body.awayTeamId}
+          `);
+          
+          if (awayTeam.rows.length > 0 && awayTeam.rows[0].name !== 'BYE') {
+            // Find the correct BYE team for the home team's club and season
+            const homeTeam = await db.execute(sql`
+              SELECT club_id, season_id FROM teams WHERE id = ${req.body.homeTeamId}
+            `);
+            
+            if (homeTeam.rows.length > 0) {
+              const byeTeam = await db.execute(sql`
+                SELECT id FROM teams 
+                WHERE club_id = ${homeTeam.rows[0].club_id} 
+                AND season_id = ${homeTeam.rows[0].season_id} 
+                AND name = 'BYE'
+                LIMIT 1
+              `);
+              
+              if (byeTeam.rows.length > 0) {
+                req.body.awayTeamId = byeTeam.rows[0].id;
+              }
+            }
+          }
+        }
+      } else if (req.body.statusId && req.body.statusId !== 6) {
+        // For non-BYE games, ensure both teams are set and neither is a BYE team
+        if (!req.body.homeTeamId || !req.body.awayTeamId) {
+          return res.status(400).json({ message: "Both home and away teams are required for regular games" });
+        }
       }
 
       // Handle statusId updates - ensure it's a valid number

@@ -797,7 +797,7 @@ export class DatabaseStorage implements IStorage {
           updated_at = NOW()
       `);
       return true;
-    } catch (error) {
+    } catch (error){
       console.error('Error adding player to club:', error);
       return false;
     }
@@ -862,6 +862,22 @@ export class DatabaseStorage implements IStorage {
       console.error(`Error getting club players for club ${clubId}:`, error);
       return [];
     }
+  }
+
+  async createGame(data: any): Promise<any> {
+    // Ensure required fields for team-based games
+    const gameData = {
+      ...data,
+      // Remove any legacy opponent fields
+      opponentId: undefined,
+      completed: undefined,
+      isBye: undefined,
+      teamScore: undefined,
+      opponentScore: undefined
+    };
+
+    const result = await db.insert(games).values(gameData).returning();
+    return result[0];
   }
 }
 
