@@ -7,7 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Target, TrendingUp, TrendingDown, Users } from 'lucide-react';
 import { Game, GameStat, Player, Opponent, Roster, Position, allPositions } from '@shared/schema';
 import { useBatchGameStats } from '@/hooks/use-game-stats';
-import { apiRequest } from '@/lib/apiClient';
+import { apiClient } from '@/lib/apiClient';
 
 interface PositionOpponentAnalysisProps {
   seasonId?: number;
@@ -41,17 +41,17 @@ export default function PositionOpponentAnalysis({ seasonId }: PositionOpponentA
   // Fetch all the data we need
   const { data: games = [] } = useQuery<Game[]>({
     queryKey: ['games'],
-    queryFn: () => apiRequest('GET', '/api/games') as Promise<Game[]>,
+    queryFn: () => apiClient.get('/api/games'),
   });
 
   const { data: opponents = [] } = useQuery<Opponent[]>({
     queryKey: ['opponents'], 
-    queryFn: () => apiRequest('GET', '/api/opponents') as Promise<Opponent[]>,
+    queryFn: () => apiClient.get('/api/opponents'),
   });
 
   const { data: players = [] } = useQuery<Player[]>({
     queryKey: ['players'],
-    queryFn: () => apiRequest('GET', '/api/players') as Promise<Player[]>,
+    queryFn: () => apiClient.get('/api/players'),
   });
 
   // Filter games by season and completed status
@@ -86,7 +86,7 @@ export default function PositionOpponentAnalysis({ seasonId }: PositionOpponentA
     queryKey: ['rosters-batch', gameIds],
     queryFn: async () => {
       const rosterPromises = gameIds.map(gameId => 
-        apiRequest('GET', `/api/games/${gameId}/rosters`).catch(() => [])
+        apiClient.get(`/api/games/${gameId}/rosters`).catch(() => [])
       );
       const results = await Promise.all(rosterPromises);
       return results.flat();

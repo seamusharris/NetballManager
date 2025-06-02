@@ -3,7 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Game } from '@shared/schema';
 import { useEffect, useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { apiRequest } from '@/lib/queryClient';
+import { apiClient } from '@/lib/apiClient';
 import { isGameValidForStatistics } from '@/lib/gameFilters';
 
 interface QuarterPerformanceWidgetProps {

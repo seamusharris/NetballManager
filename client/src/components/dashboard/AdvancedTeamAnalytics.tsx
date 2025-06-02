@@ -5,7 +5,7 @@ import { Game, GameStat, Opponent } from '@shared/schema';
 import { useEffect, useState } from 'react';
 import { getWinLoseLabel } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
-import { apiRequest } from '@/lib/queryClient';
+import { apiClient } from '@/lib/apiClient';
 import { BaseWidget } from '@/components/ui/base-widget';
 import { TrendingUp, TrendingDown, Target, Users, BarChart3, Zap } from 'lucide-react';
 
@@ -72,7 +72,7 @@ export default function AdvancedTeamAnalytics({
       if (gameIds.length === 0) return {};
 
       try {
-        const batchStats = await apiRequest('GET', `/api/games/stats/batch`, { gameIds: gameIds.join(',') });
+        const batchStats = await apiClient.get(`/api/games/stats/batch?gameIds=${gameIds.join(',')}`);
         if (batchStats && Object.keys(batchStats).length > 0) {
           return batchStats;
         }
@@ -83,7 +83,7 @@ export default function AdvancedTeamAnalytics({
       const statsMap: Record<number, any[]> = {};
       for (const gameId of gameIds) {
         try {
-          const stats = await apiRequest('GET', `/api/games/${gameId}/stats`);
+          const stats = await apiClient.get(`/api/games/${gameId}/stats`);
           statsMap[gameId] = stats;
         } catch (error) {
           console.error(`Error fetching stats for game ${gameId}:`, error);

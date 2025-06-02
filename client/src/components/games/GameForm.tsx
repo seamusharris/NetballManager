@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/select";
 import { insertGameSchema, Game, Opponent, Season } from "@shared/schema";
 import { useQuery } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/apiClient";
+import { apiClient } from "@/lib/apiClient";
 
 // Game statuses and teams interfaces
 interface GameStatus {
@@ -84,7 +84,7 @@ export function GameForm({
   // Fetch game statuses
   const { data: gameStatuses = [], isLoading: statusesLoading, error: statusesError } = useQuery<GameStatus[]>({
     queryKey: ['game-statuses'],
-    queryFn: () => apiRequest('GET', '/api/game-statuses') as Promise<GameStatus[]>,
+    queryFn: () => apiClient.get('/api/game-statuses'),
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: 3,
   });
@@ -92,7 +92,7 @@ export function GameForm({
   // Fetch teams with club context
   const { data: teams = [], isLoading: teamsLoading, error: teamsError } = useQuery<Team[]>({
     queryKey: ['teams'],
-    queryFn: () => apiRequest('GET', '/api/teams') as Promise<Team[]>,
+    queryFn: () => apiClient.get('/api/teams'),
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: 3,
   });
