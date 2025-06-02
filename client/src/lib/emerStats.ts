@@ -4,7 +4,7 @@
  * This is a specialized module for saving position-based statistics directly to the database
  * without relying on complex React Query or other abstractions that might be failing.
  */
-import { apiClient } from '@/lib/apiClient';
+import { apiRequest } from '@/lib/queryClient';
 
 /**
  * Validates and normalizes stats data
@@ -122,7 +122,7 @@ export async function savePositionStat(
     // Get all the current stats for this game to find the one we need
     let existingStats;
     try {
-      existingStats = await apiClient.get(`/api/games/${gameId}/stats`);
+      existingStats = await apiRequest('GET', `/api/games/${gameId}/stats`);
       if (!existingStats || !Array.isArray(existingStats)) {
         console.error(`Could not get existing stats for game ${gameId} or response is not an array`);
         return false;
@@ -146,9 +146,9 @@ export async function savePositionStat(
       // Additional log for debugging
       console.log(`Sending clean data to update ${positionName} Q${quarter}:`, cleanData);
       
-      // Use the correct endpoint with apiClient
+      // Use the correct endpoint with apiRequest
       try {
-        await apiClient.patch(`/api/games/stats/${targetStat.id}`, cleanData);
+        await apiRequest('PATCH', `/api/games/stats/${targetStat.id}`, cleanData);
         success = true;
         console.log(`Successfully updated ${positionName} Q${quarter} stats`);
       } catch (error) {
@@ -178,9 +178,9 @@ export async function savePositionStat(
       // Additional log for debugging
       console.log(`Sending new stat data for ${positionName} Q${quarter}:`, newStat);
       
-      // Use the correct endpoint with apiClient
+      // Use the correct endpoint with apiRequest
       try {
-        await apiClient.post('/api/games/stats', newStat);
+        await apiRequest('POST', '/api/games/stats', newStat);
         success = true;
         console.log(`Successfully created new ${positionName} Q${quarter} stats`);
       } catch (error) {

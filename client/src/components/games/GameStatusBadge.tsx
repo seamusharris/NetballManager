@@ -3,7 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Game, GameStatus } from '@shared/schema';
 import { useGameStatuses } from '@/hooks/use-game-statuses';
 import { cn } from '@/lib/utils';
-import { apiClient } from '@/lib/apiClient';
+import { apiRequest } from '@/lib/queryClient';
 import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -128,7 +128,7 @@ export function GameStatusButton({
     setIsSubmitting(true);
     try {
       // Send the update request
-      await apiClient('PATCH', `/api/games/${game.id}`, {
+      await apiRequest('PATCH', `/api/games/${game.id}`, {
         status: selectedStatus
       });
 

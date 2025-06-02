@@ -1,45 +1,59 @@
-// Simple, robust API client
-let currentClubId: number | null = null;
+import { queryClient } from './queryClient';
 
-export const apiClient = {
-  setCurrentClubId(clubId: number | null) {
-    currentClubId = clubId;
-    if (clubId) {
-      localStorage.setItem('currentClubId', clubId.toString());
-    }
-  },
+export interface ApiResponse<T = any> {
+  success: boolean;
+  data?: T;
+  error?: string;
+  message?: string;
+}
+
+export class ApiClient {
+  private baseUrl = '';
+
+  setCurrentClubId(clubId: number): void {
+    localStorage.setItem('currentClubId', clubId.toString());
+  }
 
   getCurrentClubId(): number | null {
-    if (currentClubId) return currentClubId;
-
     const stored = localStorage.getItem('currentClubId');
-    if (stored) {
-      currentClubId = parseInt(stored, 10);
-      return currentClubId;
+    if (stored && !isNaN(parseInt(stored, 10))) {
+      return parseInt(stored, 10);
+    }
+    return null;
+  }
+
+  async request<T = any>(
+    endpoint: string,
+    options: RequestInit = {}
+  ): Promise<T> {
+    const url = `${this.baseUrl}${endpoint}`;
+
+    // Always get the current club ID from localStorage for each request
+    let currentClubId = localStorage.getItem('currentClubId');
+
+    // For API endpoints that require club ID, wait a bit if club ID is not available yet
+    const requiresClubId = ['/api/players', '/api/games', '/api/teams'].some(route => endpoint.includes(route));
+    
+    if (requiresClubId && !currentClubId) {
+      // Wait a short time for club context to initialize, then try again
+      await new Promise(resolve => setTimeout(resolve, 100));
+      currentClubId = localStorage.getItem('currentClubId');
     }
 
-    return null;
-  },
-
-  async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-    // Routes that don't need club headers
-    const excludedRoutes = [
-      '/api/user/clubs',
-      '/api/auth',
-      '/api/seasons',
-    ];
-
-    const isExcludedRoute = excludedRoutes.some(route => endpoint.includes(route));
+    // Log for debugging
+    console.log(`API Request to ${endpoint} with club ID: ${currentClubId}`);
 
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      ...options.headers as Record<string, string>,
+      ...options.headers,
     };
 
-    // Add club ID header for non-excluded routes
-    const clubId = this.getCurrentClubId();
-    if (clubId && !isExcludedRoute) {
-      headers['x-current-club-id'] = clubId.toString();
+    // Always include the club ID header if available and not excluded routes
+    const excludedRoutes = ['/api/user/clubs', '/api/seasons', '/api/opponents'];
+    const shouldIncludeClubId = currentClubId && !excludedRoutes.some(route => endpoint.includes(route));
+
+    if (shouldIncludeClubId) {
+      headers['x-current-club-id'] = currentClubId;
     }
 
     const config: RequestInit = {
@@ -48,59 +62,80 @@ export const apiClient = {
     };
 
     try {
-      const response = await fetch(endpoint, config);
+      const response = await fetch(url, config);
 
       if (!response.ok) {
-        const errorText = await response.text();
-        let errorData;
+        // Better error handling with response details
+        let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
         try {
-          errorData = JSON.parse(errorText);
-        } catch {
-          errorData = { error: errorText };
+          const errorData = await response.json();
+          console.log('API Error Response (JSON):', errorData);
+          errorMessage = errorData.error || errorData.message || errorMessage;
+        } catch (parseError) {
+          console.log('Error parsing error response:', parseError);
         }
-        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+        throw new Error(errorMessage);
       }
 
-      const text = await response.text();
-      if (!text) return null as T;
-
-      try {
-        return JSON.parse(text);
-      } catch {
-        return text as T;
-      }
+      const data = await response.json();
+      return data;
     } catch (error) {
-      console.error(`API Error (${endpoint}):`, error);
+      console.error('API request failed:', error);
       throw error;
     }
-  },
+  }
 
-  async get<T>(endpoint: string): Promise<T> {
+  async get<T = any>(endpoint: string): Promise<T> {
     return this.request<T>(endpoint, { method: 'GET' });
-  },
+  }
 
-  async post<T>(endpoint: string, data?: unknown): Promise<T> {
+  async post<T = any>(endpoint: string, data?: any): Promise<T> {
     return this.request<T>(endpoint, {
       method: 'POST',
       body: data ? JSON.stringify(data) : undefined,
     });
-  },
+  }
 
-  async put<T>(endpoint: string, data?: unknown): Promise<T> {
+  async put<T = any>(endpoint: string, data?: any): Promise<T> {
     return this.request<T>(endpoint, {
       method: 'PUT',
       body: data ? JSON.stringify(data) : undefined,
     });
-  },
+  }
 
-  async patch<T>(endpoint: string, data?: unknown): Promise<T> {
+  async delete<T = any>(endpoint: string): Promise<T> {
+    return this.request<T>(endpoint, { method: 'DELETE' });
+  }
+
+  async patch<T = any>(endpoint: string, data?: any): Promise<T> {
     return this.request<T>(endpoint, {
       method: 'PATCH',
       body: data ? JSON.stringify(data) : undefined,
     });
-  },
+  }
+}
 
-  async delete<T>(endpoint: string): Promise<T> {
-    return this.request<T>(endpoint, { method: 'DELETE' });
-  },
-};
+export const apiClient = new ApiClient();
+
+// Helper function for mutations with automatic cache invalidation
+export async function mutateWithInvalidation<T>(
+  mutationFn: () => Promise<T>,
+  invalidatePatterns: string[]
+): Promise<T> {
+  const result = await mutationFn();
+
+  // Invalidate related queries
+  invalidatePatterns.forEach(pattern => {
+    queryClient.invalidateQueries({
+      predicate: (query) => {
+        const queryKey = query.queryKey[0];
+        return typeof queryKey === 'string' && queryKey.includes(pattern);
+      }
+    });
+  });
+
+  return result;
+}
+
+// Legacy export for backward compatibility
+export const apiRequest = apiClient.request.bind(apiClient);

@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Users, ArrowLeftRight, Plus, Trash2 } from 'lucide-react';
-import { apiClient } from '@/lib/apiClient';
+import { apiRequest } from '@/lib/apiClient';
 import { useToast } from '@/hooks/use-toast';
 import { useClub } from '@/contexts/ClubContext';
 

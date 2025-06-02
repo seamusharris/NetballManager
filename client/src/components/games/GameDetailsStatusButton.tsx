@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { apiClient } from '@/lib/apiClient';
+import { apiRequest } from '@/lib/queryClient';
 import { Game, GameStatus } from '@shared/schema';
 import { useGameStatuses } from '@/hooks/use-game-statuses';
 import { clearGameCache } from '@/lib/scoresCache';
@@ -88,7 +88,7 @@ export function GameDetailsStatusButton({
       const isCompleted = completedStatuses.includes(selectedStatus);
 
       // Send the update request with both status and completed field
-      const response = await apiClient('PATCH', `/api/games/${game.id}`, {
+      const response = await apiRequest('PATCH', `/api/games/${game.id}`, {
         status: selectedStatus,
         completed: isCompleted
       });
@@ -178,4 +178,3 @@ export function GameDetailsStatusButton({
     </Dialog>
   );
 }
-```

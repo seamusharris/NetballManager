@@ -1,12 +1,16 @@
 import { useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { GameStat } from '@shared/schema';
-import { apiClient } from '@/lib/apiClient';
 
 export function useGameStats(gameId: number | undefined) {
   return useQuery<GameStat[]>({
     queryKey: ['/api/games', gameId, 'stats'],
-    queryFn: () => apiClient.get<GameStat[]>(`/api/games/${gameId}/stats`),
+    queryFn: async () => {
+      if (!gameId) return [];
+      const response = await fetch(`/api/games/${gameId}/stats`);
+      if (!response.ok) throw new Error('Failed to fetch game stats');
+      return response.json();
+    },
     enabled: !!gameId,
   });
 }
@@ -20,7 +24,7 @@ export function useBatchGameStats(gameIds: number[]) {
     const filtered = gameIds.filter(id => id && typeof id === 'number' && id > 0 && !isNaN(id));
     return filtered.length > 0 ? filtered : [];
   }, [gameIds]);
-
+  
   // Fetch stats for multiple games efficiently
   return useQuery<Record<number, GameStat[]>>({
     queryKey: ['/api/games/stats/batch', validGameIds.sort()],
@@ -32,7 +36,7 @@ export function useBatchGameStats(gameIds: number[]) {
 
       const gameIdsParam = validGameIds.join(',');
       console.log(`Fetching batch stats for games: ${gameIdsParam}`);
-
+      
       if (!gameIdsParam || gameIdsParam === '') {
         console.log('Empty game IDs parameter, returning empty object');
         return {};
@@ -50,11 +54,11 @@ export function useBatchGameStats(gameIds: number[]) {
             'Content-Type': 'application/json',
           },
         });
-
+        
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-
+        
         return await response.json();
       } catch (error) {
         console.error('Batch fetch failed:', error);

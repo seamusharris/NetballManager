@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiClient } from "@/lib/apiClient";
+import { apiRequest } from "@/lib/queryClient";
 import { format } from "date-fns";
 import { 
   Card, 
@@ -92,7 +92,7 @@ export default function Seasons() {
   // Add new season mutation
   const addSeasonMutation = useMutation({
     mutationFn: async (seasonData: SeasonFormValues) => {
-      const res = await apiClient('POST', '/api/seasons', seasonData);
+      const res = await apiRequest('POST', '/api/seasons', seasonData);
       return res.json();
     },
     onSuccess: () => {
@@ -115,7 +115,7 @@ export default function Seasons() {
   // Update season mutation
   const updateSeasonMutation = useMutation({
     mutationFn: async (data: { id: number; seasonData: Partial<SeasonFormValues> }) => {
-      const res = await apiClient('PATCH', `/api/seasons/${data.id}`, data.seasonData);
+      const res = await apiRequest('PATCH', `/api/seasons/${data.id}`, data.seasonData);
       return res.json();
     },
     onSuccess: () => {
@@ -138,7 +138,7 @@ export default function Seasons() {
   // Delete season mutation
   const deleteSeasonMutation = useMutation({
     mutationFn: async (id: number) => {
-      const res = await apiClient('DELETE', `/api/seasons/${id}`);
+      const res = await apiRequest('DELETE', `/api/seasons/${id}`);
       return res.json();
     },
     onSuccess: () => {
@@ -161,7 +161,7 @@ export default function Seasons() {
   // Set active season mutation
   const setActiveSeasonMutation = useMutation({
     mutationFn: async (id: number) => {
-      const res = await apiClient('POST', `/api/seasons/${id}/activate`);
+      const res = await apiRequest('POST', `/api/seasons/${id}/activate`);
       return res.json();
     },
     onSuccess: () => {

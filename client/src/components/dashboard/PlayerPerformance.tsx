@@ -6,7 +6,7 @@ import { Game, Player, GameStat, Season } from '@shared/schema';
 import { cn, getInitials } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react';
-import { apiClient } from '@/lib/apiClient';
+import { apiRequest } from '@/lib/queryClient';
 import { useBatchGameStatistics } from '@/components/statistics/hooks/useBatchGameStatistics';
 import { isGameValidForStatistics } from '@/lib/gameFilters';
 import { ViewMoreButton } from '@/components/ui/view-more-button';

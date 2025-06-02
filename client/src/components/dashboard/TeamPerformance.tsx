@@ -4,7 +4,7 @@ import { Game, GameStat } from '@shared/schema';
 import { useEffect, useState } from 'react';
 import { getWinLoseLabel } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
-import { apiClient } from '@/lib/apiClient';
+import { apiRequest } from '@/lib/queryClient';
 import { BaseWidget } from '@/components/ui/base-widget';
 
 interface TeamPerformanceProps {
@@ -78,7 +78,7 @@ export default function TeamPerformance({ games, className, activeSeason, select
 
       // Try to use the batch endpoint first for better performance
       try {
-        const batchStats = await apiClient.get(`/api/games/stats/batch`, { gameIds: gameIdsKey });
+        const batchStats = await apiRequest('GET', `/api/games/stats/batch`, { gameIds: gameIdsKey });
         if (batchStats && Object.keys(batchStats).length > 0) {
           return batchStats;
         }
@@ -92,7 +92,7 @@ export default function TeamPerformance({ games, className, activeSeason, select
       for (const gameId of completedGameIds) {
         try {
           // Use the most efficient approach with 304 NOT MODIFIED responses
-          const stats = await apiClient.get(`/api/games/${gameId}/stats`);
+          const stats = await apiRequest('GET', `/api/games/${gameId}/stats`);
           statsMap[gameId] = stats;
         } catch (error) {
           console.error(`Error fetching stats for game ${gameId}:`, error);
@@ -306,11 +306,11 @@ export default function TeamPerformance({ games, className, activeSeason, select
             </div>
           </div>
 
-
+          
         </div>
         {/* Enhanced Performance Analysis */}
         <div className="mt-4 space-y-4">
-
+          
 
           {/* Option 3: Goals Distribution Chart */}
           <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">

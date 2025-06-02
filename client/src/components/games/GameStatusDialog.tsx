@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Game } from '@shared/schema';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '@/lib/apiClient';
+import { apiRequest } from '@/lib/queryClient';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -58,7 +58,7 @@ export function GameStatusDialog({
                   selectedStatus === 'forfeit-loss'
       };
 
-      return apiClient('PATCH', `/api/games/${game.id}`, updateData);
+      return apiRequest('PATCH', `/api/games/${game.id}`, updateData);
     },
     onSuccess: () => {
       // Invalidate relevant queries to refresh the data

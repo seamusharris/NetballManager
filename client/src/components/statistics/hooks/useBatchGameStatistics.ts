@@ -19,12 +19,12 @@ export function useBatchGameStatistics(gameIds: number[], forceFresh: boolean = 
     }
     return gameIds.filter(id => id && typeof id === 'number' && id > 0 && !isNaN(id));
   }, [gameIds]);
-
+  
   const sortedGameIds = useMemo(() => 
     [...validGameIds].sort((a, b) => a - b), 
     [validGameIds]
   );
-
+  
   const gameIdsKey = useMemo(() => 
     sortedGameIds.join(','), 
     [sortedGameIds]
@@ -47,8 +47,7 @@ export function useBatchGameStatistics(gameIds: number[], forceFresh: boolean = 
         return {};
       }
 
-      const data = await statisticsService.getBatchGameStats(sortedGameIds);
-      return data;
+      return await statisticsService.getBatchGameStats(sortedGameIds);
     },
     enabled: sortedGameIds.length > 0,
     staleTime: forceFresh ? 0 : CACHE_SETTINGS.BATCH_QUERY_STALE_TIME,

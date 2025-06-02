@@ -3,7 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '@/lib/apiClient';
+import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { 
   GameStat, 
@@ -47,7 +47,7 @@ const positionHasStat = (position: Position, stat: StatType): boolean => {
     pickUp: 'pickUp',
     infringement: 'infringement'
   };
-
+  
   const mappedStat = statMap[stat];
   return POSITION_STATS[position]?.includes(mappedStat) || false;
 };
@@ -67,12 +67,12 @@ const PositionBasedStats: React.FC<PositionBasedStatsProps> = ({
   const queryClient = useQueryClient();
   const [activeQuarter, setActiveQuarter] = useState<string>("1");
   const [isSaving, setIsSaving] = useState(false);
-
+  
   // Current stats organized by position and quarter
   const [positionStatsData, setPositionStatsData] = useState<
     Record<string, Record<string, Record<StatType, number>>>
   >({});
-
+  
   // Initialize position stats with existing data
   useEffect(() => {
     if (!existingStats || existingStats.length === 0) {
@@ -80,12 +80,12 @@ const PositionBasedStats: React.FC<PositionBasedStatsProps> = ({
       initializeEmptyStats();
       return;
     }
-
+    
     console.log(`Initializing with ${existingStats.length} existing stats`);
-
+    
     // Start with an empty structure
     const initialStats: Record<string, Record<string, Record<StatType, number>>> = {};
-
+    
     // Initialize all positions and quarters with empty stats
     allPositions.forEach(position => {
       initialStats[position] = {
@@ -95,31 +95,31 @@ const PositionBasedStats: React.FC<PositionBasedStatsProps> = ({
         "4": { ...emptyPositionStats }
       };
     });
-
+    
     // Group stats by position and quarter to handle duplicates
     const latestStats: Record<string, GameStat> = {};
-
+    
     // Process existing stats, keeping only the latest one for each position/quarter
     existingStats.forEach(stat => {
       if (!stat.position || !stat.quarter) {
         console.warn("Found stat without position or quarter:", stat);
         return;
       }
-
+      
       const key = `${stat.position}-${stat.quarter}`;
-
+      
       // Only keep the stat with the highest ID (most recent)
       if (!latestStats[key] || stat.id > latestStats[key].id) {
         latestStats[key] = stat;
       }
     });
-
+    
     // Apply the latest stats to our initial structure
     Object.values(latestStats).forEach(stat => {
       if (stat.position && stat.quarter) {
         const position = stat.position;
         const quarter = stat.quarter.toString();
-
+        
         // Make sure the position and quarter exist in our structure
         if (!initialStats[position]) {
           initialStats[position] = {
@@ -129,11 +129,11 @@ const PositionBasedStats: React.FC<PositionBasedStatsProps> = ({
             "4": { ...emptyPositionStats }
           };
         }
-
+        
         if (!initialStats[position][quarter]) {
           initialStats[position][quarter] = { ...emptyPositionStats };
         }
-
+        
         // Copy all stat values
         Object.keys(emptyPositionStats).forEach(key => {
           const statKey = key as StatType;
@@ -141,17 +141,17 @@ const PositionBasedStats: React.FC<PositionBasedStatsProps> = ({
             initialStats[position][quarter][statKey] = Number(stat[statKey]) || 0;
           }
         });
-
+        
         console.log(`Loaded stats for ${position} in Q${quarter}: Goals: ${initialStats[position][quarter].goalsFor}, Against: ${initialStats[position][quarter].goalsAgainst}`);
       }
     });
-
+    
     setPositionStatsData(initialStats);
   }, [existingStats]);
-
+  
   const initializeEmptyStats = () => {
     const emptyStats: Record<string, Record<string, Record<StatType, number>>> = {};
-
+    
     allPositions.forEach(position => {
       emptyStats[position] = {
         "1": { ...emptyPositionStats },
@@ -160,29 +160,29 @@ const PositionBasedStats: React.FC<PositionBasedStatsProps> = ({
         "4": { ...emptyPositionStats }
       };
     });
-
+    
     setPositionStatsData(emptyStats);
   };
-
+  
   // Mutation for saving game statistics
   const { mutate: saveGameStat } = useMutation({
     mutationFn: (gameStat: Partial<GameStat>) => 
-      apiClient(`/api/games/${gameId}/stats`, {
+      apiRequest(`/api/games/${gameId}/stats`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(gameStat)
       })
   });
-
+  
   // Update a stat value for a position in the current quarter
   const updateStat = (position: Position, statType: StatType, value: number) => {
     // Ensure we're working with a number
     const numericValue = Number(value);
-
+    
     setPositionStatsData(prev => {
       const newStats = { ...prev };
       const quarter = activeQuarter;
-
+      
       if (!newStats[position]) {
         newStats[position] = {
           "1": { ...emptyPositionStats },
@@ -191,24 +191,24 @@ const PositionBasedStats: React.FC<PositionBasedStatsProps> = ({
           "4": { ...emptyPositionStats }
         };
       }
-
+      
       if (!newStats[position][quarter]) {
         newStats[position][quarter] = { ...emptyPositionStats };
       }
-
+      
       // Update the specific stat value
       newStats[position][quarter][statType] = numericValue;
-
+      
       return newStats;
     });
   };
-
+  
   // Increment or decrement a stat value
   const adjustStat = (position: Position, statType: StatType, increment: number) => {
     setPositionStatsData(prev => {
       const newStats = { ...prev };
       const quarter = activeQuarter;
-
+      
       if (!newStats[position]) {
         newStats[position] = {
           "1": { ...emptyPositionStats },
@@ -217,40 +217,40 @@ const PositionBasedStats: React.FC<PositionBasedStatsProps> = ({
           "4": { ...emptyPositionStats }
         };
       }
-
+      
       if (!newStats[position][quarter]) {
         newStats[position][quarter] = { ...emptyPositionStats };
       }
-
+      
       const currentValue = newStats[position][quarter][statType] || 0;
       const newValue = Math.max(0, currentValue + increment); // Prevent negative values
-
+      
       newStats[position][quarter][statType] = newValue;
-
+      
       return newStats;
     });
   };
-
+  
   // Save all position stats for the current game
   const saveAllStats = async () => {
     if (isSaving) return;
-
+    
     try {
       setIsSaving(true);
-
+      
       // Create an array of all stats that need to be saved
       const statsToSave: Partial<GameStat>[] = [];
-
+      
       // Process all positions and quarters
       for (const position of allPositions) {
         for (let quarter = 1; quarter <= 4; quarter++) {
           const quarterStr = quarter.toString();
-
+          
           // Skip if position doesn't exist in our data
           if (!positionStatsData[position] || !positionStatsData[position][quarterStr]) {
             continue;
           }
-
+          
           // Create a stat object for this position and quarter
           const statObject: Partial<GameStat> = {
             gameId,
@@ -266,11 +266,11 @@ const PositionBasedStats: React.FC<PositionBasedStatsProps> = ({
             pickUp: positionStatsData[position][quarterStr].pickUp || 0,
             infringement: positionStatsData[position][quarterStr].infringement || 0
           };
-
+          
           statsToSave.push(statObject);
         }
       }
-
+      
       // Skip if nothing to save
       if (statsToSave.length === 0) {
         toast({
@@ -280,30 +280,30 @@ const PositionBasedStats: React.FC<PositionBasedStatsProps> = ({
         });
         return;
       }
-
+      
       console.log(`Saving ${statsToSave.length} position-based stats`);
-
+      
       // Save all stats in sequence
       for (const stat of statsToSave) {
         await saveGameStat(stat);
       }
-
+      
       // First, manually fetch the latest stats to update our local view without refreshing
       try {
         const freshStats = await fetch(`/api/games/${gameId}/stats?t=${Date.now()}`).then(res => res.json());
         console.log(`Manually fetched ${freshStats.length} fresh stats after saving in PositionBasedStats`);
-
+        
         // Silently update cache with fresh data in the background
         queryClient.setQueryData(['/api/games', gameId, 'stats'], freshStats);
       } catch (err) {
         console.error("Error refreshing stats after save:", err);
       }
-
+      
       toast({
         title: "Statistics saved",
         description: "All position statistics have been saved successfully."
       });
-
+      
       // Invalidate queries but with lower priority (happens in background)
       setTimeout(() => {
         queryClient.invalidateQueries({ queryKey: [`/api/games/${gameId}/stats`] });
@@ -311,7 +311,7 @@ const PositionBasedStats: React.FC<PositionBasedStatsProps> = ({
         queryClient.invalidateQueries({ queryKey: ['/api/games', gameId] });
         queryClient.invalidateQueries({ queryKey: ['/api/games'] });
       }, 500);
-
+      
       // Notify parent component if needed
       if (onStatsUpdated) {
         onStatsUpdated();
@@ -327,24 +327,24 @@ const PositionBasedStats: React.FC<PositionBasedStatsProps> = ({
       setIsSaving(false);
     }
   };
-
+  
   // Calculate quarter totals
   const getQuarterTotal = (statType: StatType): number => {
     let total = 0;
-
+    
     allPositions.forEach(position => {
       if (positionStatsData[position]?.[activeQuarter]?.[statType]) {
         total += positionStatsData[position][activeQuarter][statType];
       }
     });
-
+    
     return total;
   };
-
+  
   // Calculate game totals
   const getGameTotal = (statType: StatType): number => {
     let total = 0;
-
+    
     allPositions.forEach(position => {
       ["1", "2", "3", "4"].forEach(quarter => {
         if (positionStatsData[position]?.[quarter]?.[statType]) {
@@ -352,19 +352,19 @@ const PositionBasedStats: React.FC<PositionBasedStatsProps> = ({
         }
       });
     });
-
+    
     return total;
   };
-
+  
   // Render a button for adjusting a stat
   const renderStatAdjuster = (position: Position, statType: StatType) => {
     // Skip stats that don't apply to this position
     if (!positionHasStat(position, statType)) {
       return null;
     }
-
+    
     const currentValue = positionStatsData[position]?.[activeQuarter]?.[statType] || 0;
-
+    
     return (
       <div className="flex items-center gap-1 mb-1">
         <span className="text-xs font-medium w-24">{STAT_LABELS[statType]}</span>
@@ -391,7 +391,7 @@ const PositionBasedStats: React.FC<PositionBasedStatsProps> = ({
       </div>
     );
   };
-
+  
   // Render statistics for a position
   const renderPositionStats = (position: Position) => {
     return (
@@ -408,7 +408,7 @@ const PositionBasedStats: React.FC<PositionBasedStatsProps> = ({
       </Card>
     );
   };
-
+  
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center mb-4">
@@ -428,7 +428,7 @@ const PositionBasedStats: React.FC<PositionBasedStatsProps> = ({
           )}
         </Button>
       </div>
-
+      
       <div className="bg-white p-4 rounded-md shadow mb-4">
         <div className="flex justify-between items-center mb-2">
           <h3 className="text-lg font-semibold">Game Score</h3>
@@ -444,7 +444,7 @@ const PositionBasedStats: React.FC<PositionBasedStatsProps> = ({
           </div>
         </div>
       </div>
-
+      
       <Tabs 
         defaultValue="1" 
         value={activeQuarter}
@@ -457,7 +457,7 @@ const PositionBasedStats: React.FC<PositionBasedStatsProps> = ({
           <TabsTrigger value="3">Quarter 3</TabsTrigger>
           <TabsTrigger value="4">Quarter 4</TabsTrigger>
         </TabsList>
-
+        
         {/* All quarters share the same rendering, just with different data */}
         <TabsContent value={activeQuarter} className="mt-0">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -466,14 +466,14 @@ const PositionBasedStats: React.FC<PositionBasedStatsProps> = ({
               {renderPositionStats("GS")}
               {renderPositionStats("GA")}
             </div>
-
+            
             {/* Mid-court positions */}
             <div>
               {renderPositionStats("WA")}
               {renderPositionStats("C")}
               {renderPositionStats("WD")}
             </div>
-
+            
             {/* Defensive positions */}
             <div>
               {renderPositionStats("GD")}

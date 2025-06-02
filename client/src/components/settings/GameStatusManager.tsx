@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/apiClient';
@@ -11,7 +12,6 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { useToast } from '@/hooks/use-toast';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { apiClient } from "@/lib/apiClient";
 
 interface GameStatus {
   id: number;
@@ -69,7 +69,7 @@ export function GameStatusManager() {
   // Create mutation
   const createMutation = useMutation({
     mutationFn: (data: GameStatusFormData) => 
-      apiClient.post('/api/game-statuses', data),
+      apiRequest('POST', '/api/game-statuses', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/game-statuses'] });
       setIsCreateDialogOpen(false);
@@ -91,7 +91,7 @@ export function GameStatusManager() {
   // Update mutation
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: number; data: Partial<GameStatusFormData> }) =>
-      apiClient.put(`/api/game-statuses/${id}`, data),
+      apiRequest('PUT', `/api/game-statuses/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/game-statuses'] });
       setIsEditDialogOpen(false);

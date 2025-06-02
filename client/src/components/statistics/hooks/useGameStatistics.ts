@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { statisticsService, GameScores } from '@/lib/statisticsService';
 import { GameStat } from '@shared/schema';
 import { getCachedScores } from '@/lib/scoresCache';
-import { apiClient } from '@/lib/apiClient';
+import { apiRequest } from '@/lib/apiClient';
 
 /**
  * Custom hook to fetch game statistics with enhanced caching
@@ -27,10 +27,7 @@ export function useGameStatistics(gameId: number, forceFresh: boolean = false, p
     error: rawStatsError
   } = useQuery({
     queryKey: [`/api/games/${gameId}/stats`],
-    queryFn: async () => {
-      const data = await apiClient.get(`/api/games/${gameId}/stats`);
-      return data;
-    },
+    queryFn: () => apiRequest('GET', `/api/games/${gameId}/stats`),
     enabled: !!gameId && !hasPreloadedStats && (!hasCachedScores || forceFresh),
     staleTime: forceFresh ? 0 : 15 * 60 * 1000, // 0 for fresh, 15 minutes otherwise
     gcTime: 30 * 60 * 1000, // Keep in cache for 30 minutes
@@ -49,7 +46,7 @@ export function useGameStatistics(gameId: number, forceFresh: boolean = false, p
         console.log(`useGameStatistics: Using preloaded stats for game ${gameId} (${preloadedStats.length} stats)`);
         return Promise.resolve(statisticsService.calculateScoresFromStats(preloadedStats, gameId));
       }
-
+      
       // Fast path: check global cache first if we're not forcing fresh data
       if (!forceFresh) {
         const cached = getCachedScores(gameId);
@@ -107,7 +104,7 @@ export function useGameStatistics(gameId: number, forceFresh: boolean = false, p
   // Combine loading and error states - be more forgiving with errors when we have preloaded data
   const isLoading = isLoadingScores || isLoadingPositionStats || isLoadingPlayerStats || 
                    (isLoadingRawStats && !hasCachedScores && !hasPreloadedStats);
-
+  
   // Only report errors if we don't have any alternative data source
   const error = hasPreloadedStats ? null : (rawStatsError || scoresError || positionStatsError || playerStatsError);
 

@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/select";
 import { insertGameSchema, Game, Opponent, Season } from "@shared/schema";
 import { useQuery } from "@tanstack/react-query";
-import { apiClient } from "@/lib/apiClient";
+import { apiRequest } from "@/lib/apiClient";
 
 // Game statuses and teams interfaces
 interface GameStatus {
@@ -81,58 +81,20 @@ export function GameForm({
 }: GameFormProps) {
   const isEditing = !!game;
 
-  // Get current club ID from localStorage to ensure we have club context
-  const currentClubId = React.useMemo(() => {
-    const stored = localStorage.getItem('currentClubId');
-    return stored ? parseInt(stored, 10) : null;
-  }, []);
-
   // Fetch game statuses
   const { data: gameStatuses = [], isLoading: statusesLoading, error: statusesError } = useQuery<GameStatus[]>({
     queryKey: ['game-statuses'],
-    queryFn: async () => {
-      try {
-        const result = await apiClient.get<GameStatus[]>('/api/game-statuses');
-        return result;
-      } catch (error) {
-        console.error('Error fetching game statuses:', error);
-        throw error;
-      }
-    },
+    queryFn: () => apiRequest('GET', '/api/game-statuses') as Promise<GameStatus[]>,
     staleTime: 5 * 60 * 1000, // 5 minutes
-    retry: (failureCount, error) => {
-      // Don't retry if we get HTML response (likely auth/context error)
-      if (error?.message?.includes('<!DOCTYPE') || error?.message?.includes('Unexpected token')) {
-        return false;
-      }
-      return failureCount < 3;
-    },
+    retry: 3,
   });
 
-  // Fetch teams with club context - only when we have a club ID
+  // Fetch teams with club context
   const { data: teams = [], isLoading: teamsLoading, error: teamsError } = useQuery<Team[]>({
-    queryKey: ['teams', currentClubId],
-    queryFn: async () => {
-      if (!currentClubId) {
-        throw new Error('No club context available');
-      }
-      try {
-        const result = await apiClient.get<Team[]>('/api/teams');
-        return result;
-      } catch (error) {
-        console.error('Error fetching teams:', error);
-        throw error;
-      }
-    },
-    enabled: !!currentClubId, // Only run when we have a club ID
+    queryKey: ['teams'],
+    queryFn: () => apiRequest('GET', '/api/teams') as Promise<Team[]>,
     staleTime: 5 * 60 * 1000, // 5 minutes
-    retry: (failureCount, error) => {
-      // Don't retry if we get HTML response (likely auth/context error)
-      if (error?.message?.includes('<!DOCTYPE') || error?.message?.includes('Unexpected token')) {
-        return false;
-      }
-      return failureCount < 3;
-    },
+    retry: 3,
   });
 
   const form = useForm<FormValues>({
@@ -185,7 +147,7 @@ export function GameForm({
     }
   }, [game, activeSeason, form, gameStatuses.length, teams.length]);
 
-  const handleSubmit = async (values: FormValues) => {
+  const handleSubmit = (values: FormValues) => {
     // Validate required fields
     if (!values.opponentId) {
       form.setError("opponentId", { message: "Please select an opponent" });
@@ -211,41 +173,8 @@ export function GameForm({
       awayTeamId: values.awayTeamId && values.awayTeamId !== "none" && values.awayTeamId !== "" ? parseInt(values.awayTeamId) : null
     };
 
-    try {
-      let response;
-      if (isEditing && game) {
-        response = await apiClient.patch(`/api/games/${game.id}`, formattedValues);
-      } else {
-        response = await apiClient.post('/api/games', formattedValues);
-      }
-
-      if (response.status === 200) {
-        onSubmit(formattedValues);
-      } else {
-        console.error('Game submission failed:', response.status, response.data);
-        form.setError("root", { message: "Failed to submit game. Please try again." });
-      }
-    } catch (error: any) {
-      console.error('Game submission error:', error);
-      form.setError("root", { message: "An unexpected error occurred. Please check the console." });
-    }
+    onSubmit(formattedValues);
   };
-
-  // Check for club context issues
-  if (!currentClubId) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <div className="text-center">
-          <p className="text-amber-600 mb-4">
-            Please select a club to continue
-          </p>
-          <p className="text-sm text-muted-foreground">
-            Refreshing the page may help establish club context
-          </p>
-        </div>
-      </div>
-    );
-  }
 
   if (statusesLoading || teamsLoading) {
     return (
@@ -263,23 +192,14 @@ export function GameForm({
   }
 
   if (statusesError || teamsError) {
-    const errorMessage = statusesError?.message || teamsError?.message || 'Unknown error';
-    const isContextError = errorMessage.includes('<!DOCTYPE') || 
-                          errorMessage.includes('Unexpected token') ||
-                          errorMessage.includes('Club context') ||
-                          errorMessage.includes('No club context');
-
     return (
       <div className="flex items-center justify-center p-8">
         <div className="text-center">
           <p className="text-red-600 mb-4">
-            {isContextError 
-              ? 'Club context error - please refresh the page' 
-              : `Error loading form data: ${errorMessage}`
-            }
+            Error loading form data: {statusesError?.message || teamsError?.message}
           </p>
           <Button variant="outline" onClick={() => window.location.reload()}>
-            Refresh Page
+            Retry
           </Button>
         </div>
       </div>

@@ -1,5 +1,5 @@
 import { Player, Opponent, Game, Roster, GameStat } from '@shared/schema';
-import { apiClient } from './apiClient';
+import { apiRequest } from './queryClient';
 import { formatDate } from './utils';
 
 interface ExportResult {
@@ -34,18 +34,29 @@ export async function exportAllData(): Promise<ExportResult> {
     
     // Fetch all players
     console.log("Fetching players...");
-    const players = await apiClient.get('/api/players') as Player[];
+    const playersResponse = await fetch('/api/players');
+    if (!playersResponse.ok) {
+      throw new Error(`Failed to fetch players: ${playersResponse.statusText}`);
+    }
+    const players = await playersResponse.json() as Player[];
     console.log(`Exported ${players.length} players with their avatar colors`);
     
     // Fetch all opponents
     console.log("Fetching opponents...");
-    const opponents = await apiClient.get('/api/opponents') as Opponent[];
+    const opponentsResponse = await fetch('/api/opponents');
+    if (!opponentsResponse.ok) {
+      throw new Error(`Failed to fetch opponents: ${opponentsResponse.statusText}`);
+    }
+    const opponents = await opponentsResponse.json() as Opponent[];
     console.log(`Exported ${opponents.length} opponents`);
     
     // Fetch all games
     console.log("Fetching games...");
-    const games = await apiClient.get('/api/games') as Game[];
-    
+    const gamesResponse = await fetch('/api/games');
+    if (!gamesResponse.ok) {
+      throw new Error(`Failed to fetch games: ${gamesResponse.statusText}`);
+    }
+    const games = await gamesResponse.json() as Game[];
     console.log(`Exported ${games.length} games`);
     
     // Fetch rosters and stats for each game
