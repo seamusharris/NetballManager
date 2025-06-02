@@ -62,10 +62,10 @@ export default function Games() {
     sampleGame: games[0]
   });
 
-  // Fetch opponents
+  // Fetch opponents - no club context needed
   const { data: opponents = [] } = useQuery<Opponent[]>({
     queryKey: ['opponents'],
-    queryFn: () => apiRequest('GET', '/api/opponents') as Promise<Opponent[]>,
+    queryFn: () => apiClient.get('/api/opponents'),
   });
 
   // Fetch teams
@@ -74,16 +74,16 @@ export default function Games() {
     queryFn: () => apiRequest('GET', '/api/teams')
   });
 
-  // Fetch seasons
+  // Fetch seasons - no club context needed
   const { data: seasons = [] } = useQuery({
     queryKey: ['seasons'], 
-    queryFn: () => apiRequest('GET', '/api/seasons')
+    queryFn: () => apiClient.get('/api/seasons')
   });
 
-  // Fetch active season
+  // Fetch active season - no club context needed
   const { data: activeSeason } = useQuery({
     queryKey: ['seasons', 'active'],
-    queryFn: () => apiRequest('GET', '/api/seasons/active')
+    queryFn: () => apiClient.get('/api/seasons/active')
   });
 
   // Fetch players
