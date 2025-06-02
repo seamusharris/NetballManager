@@ -292,6 +292,57 @@ export function registerTeamRoutes(app: Express) {
     }
   });
 
+  // Get all teams across all clubs (for away team selection)
+  app.get("/api/teams/all", async (req, res) => {
+    try {
+      const teams = await db.execute(sql`
+        SELECT 
+          t.id,
+          t.name,
+          t.division,
+          t.club_id,
+          t.season_id,
+          t.is_active,
+          t.created_at,
+          t.updated_at,
+          c.name as club_name,
+          c.code as club_code,
+          s.id as season_id,
+          s.name as season_name, 
+          s.year as season_year,
+          s.start_date as season_start_date,
+          s.end_date as season_end_date
+        FROM teams t
+        LEFT JOIN clubs c ON t.club_id = c.id
+        LEFT JOIN seasons s ON t.season_id = s.id
+        WHERE t.is_active = true AND c.is_active = true
+        ORDER BY c.name, t.name
+      `);
+
+      const mappedTeams = teams.rows.map(row => ({
+        id: row.id,
+        name: row.name,
+        division: row.division,
+        clubId: row.club_id,
+        seasonId: row.season_id,
+        isActive: row.is_active,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at,
+        clubName: row.club_name,
+        clubCode: row.club_code,
+        seasonName: row.season_name,
+        seasonYear: row.season_year,
+        seasonStartDate: row.season_start_date,
+        seasonEndDate: row.season_end_date
+      }));
+
+      res.json(mappedTeams);
+    } catch (error) {
+      console.error("Error fetching all teams:", error);
+      res.status(500).json({ message: "Failed to fetch all teams" });
+    }
+  });
+
   // Get clubs
   app.get("/api/clubs", async (req, res) => {
     try {

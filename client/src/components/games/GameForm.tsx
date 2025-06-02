@@ -97,6 +97,14 @@ export function GameForm({
     retry: 3,
   });
 
+  // Fetch all teams for away team selection
+  const { data: allTeams = [], isLoading: isLoadingAllTeams } = useQuery<Team[]>({
+    queryKey: ['allTeams'],
+    queryFn: () => apiClient.get('/api/teams/all'),
+    staleTime: 5 * 60 * 1000,
+    retry: 3,
+  });
+
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -176,7 +184,7 @@ export function GameForm({
     onSubmit(formattedValues);
   };
 
-  if (statusesLoading || teamsLoading) {
+  if (statusesLoading || teamsLoading || isLoadingAllTeams) {
     return (
       <div className="flex items-center justify-center p-8">
         <div className="text-center">
@@ -185,6 +193,7 @@ export function GameForm({
             Loading form data... 
             {statusesLoading && " (game statuses)"}
             {teamsLoading && " (teams)"}
+            {isLoadingAllTeams && " (all teams)"}
           </p>
         </div>
       </div>
@@ -205,6 +214,12 @@ export function GameForm({
       </div>
     );
   }
+
+  // Filter teams for home team (current club only) and away team (other clubs only)
+  const homeTeams = teams; // Teams from current club
+  const awayTeams = allTeams.filter(team => 
+    team.clubId !== (teams[0]?.clubId || null) // Exclude teams from current club
+  );
 
   console.log('GameForm rendering with data:', {
     gameStatuses: gameStatuses.length,
@@ -235,7 +250,7 @@ export function GameForm({
                     sideOffset={4}
                     align="start"
                   >
-                    {teams.map(team => (
+                    {homeTeams.map(team => (
                       <SelectItem key={team.id} value={team.id.toString()}>
                         {team.name} {team.division && `(${team.division})`}
                       </SelectItem>
@@ -267,7 +282,7 @@ export function GameForm({
                     align="start"
                   >
                     <SelectItem value="none">No away team</SelectItem>
-                    {teams.map(team => (
+                    {awayTeams.map(team => (
                       <SelectItem key={team.id} value={team.id.toString()}>
                         {team.name} {team.division && `(${team.division})`}
                       </SelectItem>
