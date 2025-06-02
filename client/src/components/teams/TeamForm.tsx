@@ -7,7 +7,10 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Team, Season } from '@shared/schema';
-import { useCreateMutation, useUpdateMutation } from "@/hooks/use-form-mutations";
+import { useToast } from '@/hooks/use-toast';
+import { useCreateMutation } from '@/hooks/use-form-mutations';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { apiClient } from '@/lib/apiClient';
 
 const teamFormSchema = z.object({
   name: z.string().min(1, 'Team name is required'),
@@ -23,22 +26,46 @@ interface TeamFormProps {
   team?: Team;
   seasons: Season[];
   clubId: number;
-  onSuccess?: () => void;
+  onSuccess?: (data?: any) => void;
   onCancel?: () => void;
 }
 
-export function TeamForm({ team, seasons, clubId, onSuccess, onCancel }: TeamFormProps) {
+export default function TeamForm({ team, seasons, clubId, onSuccess, onCancel }: TeamFormProps) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
   const createMutation = useCreateMutation(
     '/api/teams',
     ['/api/teams'],
     'Team created successfully'
   );
 
-  const updateMutation = useUpdateMutation(
-    team ? `/api/teams/${team.id}` : '',
-    ['/api/teams'],
-    'Team updated successfully'
-  );
+  const updateMutation = useMutation({
+    mutationFn: async (data: any) => {
+      return await apiClient.patch(`/api/teams/${team?.id}`, data);
+    },
+    onSuccess: (data) => {
+      // Invalidate related queries
+      queryClient.invalidateQueries({ queryKey: ['teams'] });
+      queryClient.invalidateQueries({ queryKey: ['seasons'] });
+
+      toast({
+        title: "Success",
+        description: "Team updated successfully",
+      });
+
+      if (onSuccess) {
+        onSuccess(data);
+      }
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update team",
+        variant: "destructive",
+      });
+    },
+  });
 
   const isSubmitting = createMutation.isPending || updateMutation.isPending;
 
