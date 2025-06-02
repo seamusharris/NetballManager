@@ -1,5 +1,5 @@
 import { Player, Opponent, Game, Roster, GameStat } from '@shared/schema';
-import { apiRequest } from './queryClient';
+import { apiClient } from './apiClient';
 import { formatDate } from './utils';
 
 interface ExportResult {
