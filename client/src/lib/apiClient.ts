@@ -37,15 +37,21 @@ export class ApiClient {
 
     // For most API endpoints, wait for club ID if not available yet
     if (!isExcludedRoute && !currentClubId) {
+      console.warn('No club ID found for', endpoint, '- waiting for initialization...');
+      
       // Wait longer for club context to initialize, with retries
-      for (let i = 0; i < 10; i++) {
-        await new Promise(resolve => setTimeout(resolve, 100));
+      for (let i = 0; i < 15; i++) {
+        await new Promise(resolve => setTimeout(resolve, 150));
         currentClubId = localStorage.getItem('currentClubId');
-        if (currentClubId) break;
+        if (currentClubId) {
+          console.log('Club ID found after retry:', currentClubId);
+          break;
+        }
       }
 
       // If still no club ID and it's not an excluded route, throw an error
       if (!currentClubId) {
+        console.error('Failed to get club ID for:', endpoint);
         throw new Error('Club context not available - please refresh the page');
       }
     }
@@ -61,6 +67,9 @@ export class ApiClient {
     // Include club ID header for all routes except explicitly excluded ones
     if (currentClubId && !isExcludedRoute) {
       headers['x-current-club-id'] = currentClubId;
+      console.log(`API Request to ${endpoint} with club ID: ${currentClubId}`);
+    } else if (!isExcludedRoute) {
+      console.warn(`API Request to ${endpoint} WITHOUT club ID header`);
     }
 
     const config: RequestInit = {
