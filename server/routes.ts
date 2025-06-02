@@ -1315,7 +1315,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         homeClubName: row.home_club_name,
         homeClubCode: row.home_club_code,
 
-        // Away Team fields (null for BYE games)
+        // Away Team fields (null for Bye games)
         awayTeamName: row.away_team_name,
         awayTeamDivision: row.away_team_division,
         awayClubId: row.away_club_id,

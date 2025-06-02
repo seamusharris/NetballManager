@@ -27,14 +27,14 @@ export async function ensureByeTeamsExist(): Promise<void> {
           SELECT id FROM teams 
           WHERE club_id = ${club.id} 
           AND season_id = ${season.id} 
-          AND name = 'BYE'
+          AND name = 'Bye'
         `);
 
         if (existingByeTeam.rows.length === 0) {
           // Create BYE team
           await db.execute(sql`
             INSERT INTO teams (club_id, season_id, name, division, is_active)
-            VALUES (${club.id}, ${season.id}, 'BYE', 'BYE', true)
+            VALUES (${club.id}, ${season.id}, 'Bye', 'Bye', true)
           `);
           log(`Created BYE team for club ${club.name} in season ${season.name}`, "bye-teams");
         }
@@ -65,14 +65,14 @@ export async function createByeTeamsForClub(clubId: number): Promise<void> {
         SELECT id FROM teams 
         WHERE club_id = ${clubId} 
         AND season_id = ${season.id} 
-        AND name = 'BYE'
+        AND name = 'Bye'
       `);
 
       if (existingByeTeam.rows.length === 0) {
         // Create BYE team
         await db.execute(sql`
           INSERT INTO teams (club_id, season_id, name, division, is_active)
-          VALUES (${clubId}, ${season.id}, 'BYE', 'BYE', true)
+          VALUES (${clubId}, ${season.id}, 'Bye', 'Bye', true)
         `);
         log(`Created BYE team for club ${clubId} in season ${season.name}`, "bye-teams");
       }
@@ -100,14 +100,14 @@ export async function createByeTeamsForSeason(seasonId: number): Promise<void> {
         SELECT id FROM teams 
         WHERE club_id = ${club.id} 
         AND season_id = ${seasonId} 
-        AND name = 'BYE'
+        AND name = 'Bye'
       `);
 
       if (existingByeTeam.rows.length === 0) {
         // Create BYE team
         await db.execute(sql`
           INSERT INTO teams (club_id, season_id, name, division, is_active)
-          VALUES (${club.id}, ${seasonId}, 'BYE', 'BYE', true)
+          VALUES (${club.id}, ${seasonId}, 'Bye', 'Bye', true)
         `);
         log(`Created BYE team for club ${club.name} in season ${seasonId}`, "bye-teams");
       }
@@ -127,7 +127,7 @@ export async function isByeTeam(teamId: number): Promise<boolean> {
       SELECT name FROM teams WHERE id = ${teamId}
     `);
     
-    return result.rows.length > 0 && result.rows[0].name === 'BYE';
+    return result.rows.length > 0 && result.rows[0].name === 'Bye';
   } catch (error) {
     console.error("Error checking if team is BYE team:", error);
     return false;
