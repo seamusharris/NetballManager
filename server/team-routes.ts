@@ -219,35 +219,31 @@ export function registerTeamRoutes(app: Express) {
       const teamId = parseInt(req.params.id);
       const { name, division, isActive } = req.body;
 
-      const updates = [];
+      // Build dynamic update query using template literals for proper parameter binding
+      let updateQuery = `UPDATE teams SET updated_at = NOW()`;
       const values = [];
       let paramCount = 1;
 
       if (name !== undefined) {
-        updates.push(`name = $${paramCount++}`);
+        updateQuery += `, name = $${paramCount}`;
         values.push(name);
+        paramCount++;
       }
       if (division !== undefined) {
-        updates.push(`division = $${paramCount++}`);
+        updateQuery += `, division = $${paramCount}`;
         values.push(division);
+        paramCount++;
       }
       if (isActive !== undefined) {
-        updates.push(`is_active = $${paramCount++}`);
+        updateQuery += `, is_active = $${paramCount}`;
         values.push(isActive);
+        paramCount++;
       }
 
-      if (updates.length === 0) {
-        return res.status(400).json({ message: "No valid fields to update" });
-      }
-
+      updateQuery += ` WHERE id = $${paramCount} RETURNING *`;
       values.push(teamId);
 
-      const result = await db.execute(sql.raw(`
-        UPDATE teams 
-        SET ${updates.join(', ')}, updated_at = NOW()
-        WHERE id = $${paramCount}
-        RETURNING *
-      `, values));
+      const result = await db.execute(sql.raw(updateQuery, values));
 
       if (result.rows.length === 0) {
         return res.status(404).json({ message: "Team not found" });
