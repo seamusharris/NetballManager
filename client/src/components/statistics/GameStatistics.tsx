@@ -39,7 +39,7 @@ export default function GameStatistics({
   const [activeQuarter, setActiveQuarter] = useState('1');
   const { toast } = useToast();
   const pendingChangesRef = React.useRef<Record<number, Record<number, Record<string, any>>>>({});
-  
+
   // Transform rosters to more usable format
   const rosterByQuarterAndPosition: Record<string, Record<Position, number | null>> = {
     '1': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
@@ -47,11 +47,11 @@ export default function GameStatistics({
     '3': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
     '4': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null }
   };
-  
+
   // Process roster data to fill the positions
   if (Array.isArray(rosters)) {
     console.log("Processing roster data:", rosters);
-    
+
     // First check if we accidentally got a game object instead of roster entries
     // This happens sometimes due to API path confusion
     if (rosters.length > 0 && 'date' in rosters[0] && 'opponentId' in rosters[0]) {
@@ -65,7 +65,7 @@ export default function GameStatistics({
             'quarter' in roster && 
             'position' in roster && 
             'playerId' in roster) {
-          
+
           console.log("Found valid roster entry:", roster);
           const quarterKey = roster.quarter.toString();
           if (rosterByQuarterAndPosition[quarterKey]) {
@@ -74,26 +74,26 @@ export default function GameStatistics({
         }
       });
     }
-    
+
     console.log("Final quarter roster assignments:", rosterByQuarterAndPosition);
   }
-  
+
   // Helper function to get position for a player in a specific quarter
   const getPositionForPlayerInQuarter = (playerId: number, quarter: number): Position | undefined => {
     const quarterKey = quarter.toString();
     const quarterRoster = rosterByQuarterAndPosition[quarterKey];
-    
+
     // Find the position this player was assigned to in this quarter
     for (const [position, id] of Object.entries(quarterRoster)) {
       if (id === playerId) {
         return position as Position;
       }
     }
-    
-    // If not found in roster, return undefined
+
+    // If not found in roster, return undefined;
     return undefined;
   };
-  
+
   // Group stats by quarter and player
   const statsByQuarterAndPlayer: Record<string, Record<number, GameStat>> = {
     '1': {},
@@ -102,10 +102,10 @@ export default function GameStatistics({
     '4': {},
     'total': {}
   };
-  
+
   // Calculate totals for each player
   const playerTotals: Record<number, GameStat> = {};
-  
+
   // Initialize empty stats for all positions in the roster
   Object.entries(rosterByQuarterAndPosition).forEach(([quarter, positions]) => {
     Object.values(positions).forEach(playerId => {
@@ -128,7 +128,7 @@ export default function GameStatistics({
             rating: null
           };
         }
-        
+
         if (!playerTotals[playerId]) {
           playerTotals[playerId] = {
             id: 0,
@@ -150,14 +150,14 @@ export default function GameStatistics({
       }
     });
   });
-  
+
   // Fill in actual stats where they exist - using position-based approach
   gameStats.forEach(stat => {
     if (stat && stat.quarter !== undefined && stat.position) {
       const quarterKey = stat.quarter.toString();
       // Find player for this position and quarter from roster
       const playerId = rosterByQuarterAndPosition[quarterKey][stat.position as Position];
-      
+
       // Only process if we found a player in the roster for this position
       if (playerId !== null && quarterKey in statsByQuarterAndPlayer) {
         // Update the player's stats for this quarter
@@ -180,7 +180,7 @@ export default function GameStatistics({
             rating: null
           };
         }
-        
+
         // Set the stat values from the position-based record
         statsByQuarterAndPlayer[quarterKey][playerId] = {
           ...statsByQuarterAndPlayer[quarterKey][playerId],
@@ -195,7 +195,7 @@ export default function GameStatistics({
           infringement: stat.infringement,
           rating: stat.rating
         };
-        
+
         // Also accumulate player totals
         if (!playerTotals[playerId]) {
           playerTotals[playerId] = {
@@ -215,7 +215,7 @@ export default function GameStatistics({
             rating: null
           };
         }
-        
+
         // Add to player totals
         playerTotals[playerId].goalsFor += (stat.goalsFor || 0);
         playerTotals[playerId].goalsAgainst += (stat.goalsAgainst || 0);
@@ -229,9 +229,9 @@ export default function GameStatistics({
       }
     }
   });
-  
+
   statsByQuarterAndPlayer['total'] = playerTotals;
-  
+
   // Calculate quarter scores
   const quarterScores = {
     '1': { teamScore: 0, opponentScore: 0 },
@@ -240,32 +240,32 @@ export default function GameStatistics({
     '4': { teamScore: 0, opponentScore: 0 },
     'total': { teamScore: 0, opponentScore: 0 }
   };
-  
+
   // Sum goals for each quarter
   Object.entries(statsByQuarterAndPlayer).forEach(([quarter, playerStats]) => {
     if (quarter === 'total') return; // Skip totals for now
-    
+
     // Make sure quarterScores has this quarter defined
     if (quarterScores[quarter as '1'|'2'|'3'|'4']) {
       Object.values(playerStats).forEach(stat => {
         quarterScores[quarter as '1'|'2'|'3'|'4'].teamScore += stat.goalsFor;
         quarterScores[quarter as '1'|'2'|'3'|'4'].opponentScore += stat.goalsAgainst;
-        
+
         // Also add to totals
         quarterScores['total'].teamScore += stat.goalsFor;
         quarterScores['total'].opponentScore += stat.goalsAgainst;
       });
     }
   });
-  
+
   // Perform an additional check to ensure we have valid roster entries
   const hasValidRosterEntries = Array.isArray(rosters) && 
     rosters.length > 0 && 
     rosters.some(r => 'position' in r && 'playerId' in r && 'quarter' in r);
-  
+
   // Mark roster as complete if we have any valid entries
   const isRosterComplete = hasValidRosterEntries;
-  
+
   // Old individual save mutation - no longer used directly
   // Instead we now batch save changes only when the save button is clicked
   const saveStatsMutation = useMutation({
@@ -280,25 +280,25 @@ export default function GameStatistics({
     }) => {
       // Get the position for this player in this quarter
       const position = getPositionForPlayerInQuarter(playerId, quarter);
-      
+
       if (!position) {
         console.error(`No position found for player ${playerId} in quarter ${quarter}`);
         throw new Error(`No position found for player ${playerId} in quarter ${quarter}`);
       }
-      
+
       // Find if there's an existing stat entry for this position and quarter
       const existingStat = gameStats.find(s => 
         s.gameId === game.id && 
         s.position === position && 
         s.quarter === quarter
       );
-      
+
       if (existingStat) {
         // Update existing stats using standardized endpoint pattern
-        return await apiRequest('PATCH', `/api/games/${game.id}/stats/${existingStat.id}`, stats);
+        return await apiClient.patch(`/api/games/${game.id}/stats/${existingStat.id}`, stats);
       } else {
         // Create new stats using standardized endpoint pattern
-        return await apiRequest('POST', `/api/games/${game.id}/stats`, {
+        return await apiClient.post(`/api/games/${game.id}/stats`, {
           gameId: game.id,
           position,
           quarter,
@@ -319,7 +319,7 @@ export default function GameStatistics({
     onSuccess: (data) => {
       // Force immediate refresh of game stats
       queryClient.invalidateQueries({ queryKey: ['/api/games', game.id, 'stats'] });
-      
+
       // Show success toast after a short delay to ensure data is refreshed
       setTimeout(() => {
         toast({
@@ -336,7 +336,7 @@ export default function GameStatistics({
       });
     }
   });
-  
+
   // Store stat change in memory, don't save to backend yet
   const handleStatChange = (
     playerId: number, 
@@ -345,14 +345,14 @@ export default function GameStatistics({
     value: number
   ) => {
     console.log(`Updating stat: Player ${playerId}, Quarter ${quarter}, ${statName} = ${value}`);
-    
+
     // Get the position this player is playing in this quarter
     const position = getPositionForPlayerInQuarter(playerId, quarter);
     if (!position) {
       console.warn(`Player ${playerId} has no position assignment for quarter ${quarter}`);
       return;
     }
-    
+
     // Initialize nested objects if they don't exist
     if (!pendingChangesRef.current[playerId]) {
       pendingChangesRef.current[playerId] = {};
@@ -360,13 +360,13 @@ export default function GameStatistics({
     if (!pendingChangesRef.current[playerId][quarter]) {
       pendingChangesRef.current[playerId][quarter] = {};
     }
-    
+
     // Store the pending change
     pendingChangesRef.current[playerId][quarter][statName] = value;
-    
+
     // Make a deep copy of the current state
     const quarterStats = { ...statsByQuarterAndPlayer[quarter.toString()] };
-    
+
     // Create a new player stats object if it doesn't exist
     if (!quarterStats[playerId]) {
       quarterStats[playerId] = {
@@ -386,16 +386,16 @@ export default function GameStatistics({
         rating: null
       };
     }
-    
+
     // Update the stat value
     quarterStats[playerId] = {
       ...quarterStats[playerId],
       [statName]: value
     };
-    
+
     // Force update the UI state
     statsByQuarterAndPlayer[quarter.toString()] = quarterStats;
-    
+
     // Force a re-render by setting a state
     setActiveQuarter(prev => {
       // This is a trick to force re-render without changing the actual tab
@@ -405,81 +405,73 @@ export default function GameStatistics({
       return current;
     });
   };
-  
+
   // Mutation for batch saving stats using position-based approach
   const batchSaveStatsMutation = useMutation({
     mutationFn: async () => {
       const pendingChanges = pendingChangesRef.current;
       const savePromises = [];
-      
+
       // For each player that has changes
       for (const playerId in pendingChanges) {
         const playerQuarters = pendingChanges[playerId];
-        
+
         // For each quarter that has changes for this player
         for (const quarter in playerQuarters) {
           const quarterChanges = playerQuarters[quarter];
           const quarterNum = Number(quarter);
           const playerIdNum = Number(playerId);
-          
+
           // Get the position for this player in this quarter
           const position = getPositionForPlayerInQuarter(playerIdNum, quarterNum);
-          
+
           if (!position) {
             console.warn(`No position found for player ${playerId} in quarter ${quarter}`);
             continue; // Skip if no position assigned
           }
-          
+
           // Find if there's an existing stat entry for this position and quarter
           const existingStat = gameStats.find(s => 
             s.gameId === game.id && 
             s.position === position && 
             s.quarter === quarterNum
           );
-          
+
           if (existingStat) {
             // Update existing stats - position-based
             savePromises.push(
-              apiRequest(`/api/games/${gameId}/stats/${existingStat.id}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(quarterChanges)
-              })
+              apiClient.patch(`/api/games/${gameId}/stats/${existingStat.id}`, quarterChanges)
             );
           } else {
             // Create new stats with defaults - position-based
             savePromises.push(
-              apiRequest(`/api/games/${gameId}/stats`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  gameId: game.id,
-                  position, // Position is primary identifier, no player ID needed
-                  quarter: quarterNum,
-                  goalsFor: 0,
-                  goalsAgainst: 0,
-                  missedGoals: 0,
-                  rebounds: 0,
-                  intercepts: 0,
-                  badPass: 0,
-                  handlingError: 0,
-                  pickUp: 0,
-                  infringement: 0,
-                  rating: null,
-                  ...quarterChanges // Override with actual values being updated
-                })
+              apiClient.post(`/api/games/${gameId}/stats`, {
+                gameId: game.id,
+                position, // Position is primary identifier, no player ID needed
+                quarter: quarterNum,
+                goalsFor: 0,
+                goalsAgainst: 0,
+                missedGoals: 0,
+                rebounds: 0,
+                intercepts: 0,
+                badPass: 0,
+                handlingError: 0,
+                pickUp: 0,
+                infringement: 0,
+                rating: null,
+                ...quarterChanges // Override with actual values being updated
               })
             );
           }
         }
       }
-      
+
       // Execute all save promises
       await Promise.all(savePromises);
-      
+
       // Clear pending changes
       pendingChangesRef.current = {};
-      
+
       return { success: true, count: savePromises.length };
     },
     onSuccess: () => {
@@ -490,10 +482,10 @@ export default function GameStatistics({
       queryClient.invalidateQueries({ queryKey: ['positionStats', game.id] });
       queryClient.invalidateQueries({ queryKey: ['playerStats', game.id] });
       queryClient.invalidateQueries({ queryKey: ['allGameStats'] });
-      
+
       // Force refresh all game data
       queryClient.invalidateQueries({ queryKey: ['/api/games'] });
-      
+
       toast({
         title: "Statistics Saved",
         description: "All statistics have been saved successfully and scores updated",
@@ -507,12 +499,12 @@ export default function GameStatistics({
       });
     }
   });
-  
+
   // Bulk save all stats when save button is clicked
   const handleSaveAllStats = () => {
     // Check if there are any changes to save
     const hasChanges = Object.keys(pendingChangesRef.current).length > 0;
-    
+
     if (hasChanges) {
       batchSaveStatsMutation.mutate();
     } else {
@@ -522,7 +514,7 @@ export default function GameStatistics({
       });
     }
   };
-  
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -540,7 +532,7 @@ export default function GameStatistics({
           <Save className="w-4 h-4 mr-1" /> Save Stats
         </Button>
       </div>
-      
+
       {!isRosterComplete && (
         <Card className="bg-warning/10 border-warning">
           <CardContent className="p-4">
@@ -550,7 +542,7 @@ export default function GameStatistics({
           </CardContent>
         </Card>
       )}
-      
+
       {/* Score by Quarter */}
       <Card>
         <CardContent className="p-6">
@@ -575,7 +567,7 @@ export default function GameStatistics({
                 </div>
               </div>
             </div>
-            
+
             {['1', '2', '3', '4'].map(quarter => (
               <div key={quarter} className="bg-gray-50 p-4 rounded-lg text-center">
                 <h4 className="text-sm font-medium text-gray-500 mb-1">Q{quarter}</h4>
@@ -594,7 +586,7 @@ export default function GameStatistics({
               </div>
             ))}
           </div>
-          
+
           {/* Quarter tabs for stats */}
           <Tabs value={activeQuarter} onValueChange={setActiveQuarter}>
             <TabsList className="mb-4 w-full grid grid-cols-5">
@@ -604,7 +596,7 @@ export default function GameStatistics({
               <TabsTrigger value="4">Quarter 4</TabsTrigger>
               <TabsTrigger value="total">Game Totals</TabsTrigger>
             </TabsList>
-            
+
             {['1', '2', '3', '4', 'total'].map(quarter => (
               <TabsContent key={quarter} value={quarter}>
                 {/* Using inline component while we transition to position-based stats */}
@@ -636,12 +628,12 @@ export default function GameStatistics({
                             const position = posOrId as Position;
                             const playerId = playerIdOrStat as number | null;
                             if (playerId === null) return null;
-                            
+
                             const player = players.find(p => p.id === playerId);
                             if (!player) return null;
-                            
+
                             const stat = statsByQuarterAndPlayer[quarter]?.[playerId];
-                            
+
                             return (
                               <TableRow key={position}>
                                 <TableCell>{player.displayName}</TableCell>
@@ -690,9 +682,9 @@ export default function GameStatistics({
                             const playerId = parseInt(posOrId);
                             const player = players.find(p => p.id === playerId);
                             if (!player) return null;
-                            
+
                             const stat = playerTotals[playerId];
-                            
+
                             return (
                               <TableRow key={playerId}>
                                 <TableCell>{player.displayName}</TableCell>

@@ -27,7 +27,7 @@ export default function BasicStatForm({
   const [activeQuarter, setActiveQuarter] = useState('1');
   const [statValues, setStatValues] = useState<Record<string, Record<number, Record<string, string>>>>({});
   const { toast } = useToast();
-  
+
   // Group rosters by quarter
   const rosterByQuarter: Record<string, Record<Position, number | null>> = {
     '1': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
@@ -35,7 +35,7 @@ export default function BasicStatForm({
     '3': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
     '4': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
   };
-  
+
   // Populate roster data
   rosters.forEach(roster => {
     const quarterKey = roster.quarter.toString();
@@ -43,13 +43,13 @@ export default function BasicStatForm({
       rosterByQuarter[quarterKey][roster.position] = roster.playerId;
     }
   });
-  
+
   // Initialize stat values from existing stats
   useEffect(() => {
     const initialValues: Record<string, Record<number, Record<string, string>>> = {
       '1': {}, '2': {}, '3': {}, '4': {}
     };
-    
+
     // Initialize with zeros for all players in the roster
     Object.entries(rosterByQuarter).forEach(([quarterKey, positions]) => {
       Object.values(positions).forEach(playerId => {
@@ -67,18 +67,18 @@ export default function BasicStatForm({
         }
       });
     });
-    
+
     // Fill in existing stat values
     if (existingStats && existingStats.length > 0) {
       existingStats.forEach(stat => {
         if (!stat) return;
-        
+
         const quarterKey = stat.quarter?.toString() || '';
         const playerId = stat.playerId;
-        
+
         if (quarterKey && playerId && initialValues[quarterKey] && initialValues[quarterKey][playerId]) {
           const statRecord = initialValues[quarterKey][playerId];
-          
+
           // Update with actual values, safely converting to string
           if (stat.goalsFor !== undefined) statRecord.goalsFor = String(stat.goalsFor);
           if (stat.goalsAgainst !== undefined) statRecord.goalsAgainst = String(stat.goalsAgainst);
@@ -91,10 +91,10 @@ export default function BasicStatForm({
         }
       });
     }
-    
+
     setStatValues(initialValues);
   }, [rosters, existingStats]);
-  
+
   // Save stats mutation
   const saveMutation = useMutation({
     mutationFn: async (data: { 
@@ -104,21 +104,21 @@ export default function BasicStatForm({
       const { quarterKey, stats } = data;
       const quarter = parseInt(quarterKey);
       const savePromises = [];
-      
+
       console.log("Saving stats for quarter", quarter, stats);
-      
+
       // For each player in this quarter's stats
       for (const playerIdStr in stats) {
         const playerId = parseInt(playerIdStr);
         const playerStats = stats[playerId];
-        
+
         console.log(`Saving stats for player ${playerId}:`, playerStats);
-        
+
         // Find existing stat record
         const existingStat = existingStats.find(
           s => s.gameId === gameId && s.playerId === playerId && s.quarter === quarter
         );
-        
+
         // Make sure to include all required fields
         const completeStats = {
           gameId,
@@ -133,22 +133,22 @@ export default function BasicStatForm({
           handlingError: playerStats.handlingError || 0,
           infringement: playerStats.infringement || 0
         };
-        
+
         if (existingStat) {
           // Update existing stat
           console.log(`Updating existing stat ID ${existingStat.id}`);
           savePromises.push(
-            apiRequest('PATCH', `/api/games/${existingStat.gameId}/stats/${existingStat.id}`, completeStats)
+            apiClient.patch(`/api/games/${existingStat.gameId}/stats/${existingStat.id}`, completeStats)
           );
         } else {
           // Create new stat
           console.log(`Creating new stat for player ${playerId}`);
           savePromises.push(
-            apiRequest('POST', `/api/games/${completeStats.gameId}/stats`, completeStats)
+            apiClient.post(`/api/games/${completeStats.gameId}/stats`, completeStats)
           );
         }
       }
-      
+
       return Promise.all(savePromises);
     },
     onSuccess: () => {
@@ -156,7 +156,7 @@ export default function BasicStatForm({
         title: "Statistics saved",
         description: `Quarter ${activeQuarter} statistics updated successfully`,
       });
-      
+
       // Invalidate relevant queries
       queryClient.invalidateQueries({ queryKey: [`/api/games/${gameId}/stats`] });
       queryClient.invalidateQueries({ queryKey: [`/api/games/${gameId}/stats`] });
@@ -169,46 +169,46 @@ export default function BasicStatForm({
       });
     }
   });
-  
+
   // Handle input change
   const handleChange = (quarterKey: string, playerId: number, field: string, value: string) => {
     // Only allow numbers
     if (value !== '' && !/^\d+$/.test(value)) {
       return;
     }
-    
+
     setStatValues(prev => {
       const newValues = { ...prev };
-      
+
       if (!newValues[quarterKey]) {
         newValues[quarterKey] = {};
       }
-      
+
       if (!newValues[quarterKey][playerId]) {
         newValues[quarterKey][playerId] = {};
       }
-      
+
       newValues[quarterKey][playerId][field] = value;
       return newValues;
     });
   };
-  
+
   // Handle save
   const handleSave = () => {
     const quarter = activeQuarter;
     const quarterStats = statValues[quarter] || {};
-    
+
     console.log("Saving quarter", quarter, "with stats:", quarterStats);
-    
+
     // Convert string values to numbers
     const numericStats: Record<number, Record<string, number>> = {};
-    
+
     Object.entries(quarterStats).forEach(([playerIdStr, fields]) => {
       const playerId = parseInt(playerIdStr);
       if (isNaN(playerId)) return;
-      
+
       numericStats[playerId] = {};
-      
+
       Object.entries(fields).forEach(([field, value]) => {
         const numValue = value === '' ? 0 : parseInt(value, 10);
         if (!isNaN(numValue)) {
@@ -218,9 +218,9 @@ export default function BasicStatForm({
         }
       });
     });
-    
+
     console.log("Converted to numeric stats:", numericStats);
-    
+
     if (Object.keys(numericStats).length > 0) {
       saveMutation.mutate({ 
         quarterKey: quarter, 
@@ -233,17 +233,17 @@ export default function BasicStatForm({
       });
     }
   };
-  
+
   // Get player details
   const getPlayer = (playerId: number) => {
     return players.find(p => p.id === playerId);
   };
-  
+
   // Render quarter content
   const renderQuarterContent = (quarterKey: string) => {
     const quarterRoster = rosterByQuarter[quarterKey] || {};
     const assignedPlayerIds = Object.values(quarterRoster).filter(id => id !== null) as number[];
-    
+
     if (assignedPlayerIds.length === 0) {
       return (
         <Card>
@@ -255,19 +255,19 @@ export default function BasicStatForm({
         </Card>
       );
     }
-    
+
     return (
       <div className="space-y-4">
         {assignedPlayerIds.map(playerId => {
           const player = getPlayer(playerId);
           if (!player) return null;
-          
+
           // Find position
           const position = Object.entries(quarterRoster)
             .find(([_, id]) => id === playerId)?.[0] || '';
-          
+
           const playerStats = statValues[quarterKey]?.[playerId] || {};
-          
+
           return (
             <Card key={playerId} className="overflow-hidden">
               <CardContent className="p-4">
@@ -280,7 +280,7 @@ export default function BasicStatForm({
                     <p className="text-sm text-gray-500">{position}</p>
                   </div>
                 </div>
-                
+
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <StatField 
                     label="Goals For" 
@@ -338,7 +338,7 @@ export default function BasicStatForm({
       </div>
     );
   };
-  
+
   // Calculate quarter-by-quarter totals and game summary
   const calculateQuarterTotals = () => {
     const quarterTotals: Record<string, { goalsFor: number, goalsAgainst: number }> = {
@@ -347,12 +347,12 @@ export default function BasicStatForm({
       '3': { goalsFor: 0, goalsAgainst: 0 },
       '4': { goalsFor: 0, goalsAgainst: 0 },
     };
-    
+
     // Calculate from existing stats
     if (existingStats && existingStats.length > 0) {
       existingStats.forEach(stat => {
         if (!stat || stat.quarter === undefined) return;
-        
+
         const quarterKey = String(stat.quarter);
         if (quarterTotals[quarterKey]) {
           quarterTotals[quarterKey].goalsFor += (stat.goalsFor || 0);
@@ -360,53 +360,53 @@ export default function BasicStatForm({
         }
       });
     }
-    
+
     // Add any unsaved changes from the form
     Object.entries(statValues).forEach(([quarterKey, playerStats]) => {
       Object.values(playerStats).forEach(stats => {
         const goalsFor = parseInt(stats.goalsFor || '0');
         const goalsAgainst = parseInt(stats.goalsAgainst || '0');
-        
+
         if (!isNaN(goalsFor)) {
           quarterTotals[quarterKey].goalsFor += goalsFor;
         }
-        
+
         if (!isNaN(goalsAgainst)) {
           quarterTotals[quarterKey].goalsAgainst += goalsAgainst;
         }
       });
     });
-    
+
     // Calculate game totals
     const gameTotals = {
       goalsFor: 0,
       goalsAgainst: 0
     };
-    
+
     Object.values(quarterTotals).forEach(quarter => {
       gameTotals.goalsFor += quarter.goalsFor;
       gameTotals.goalsAgainst += quarter.goalsAgainst;
     });
-    
+
     return { quarterTotals, gameTotals };
   };
-  
+
   const { quarterTotals, gameTotals } = calculateQuarterTotals();
-  
+
   return (
     <div className="space-y-6">
       {/* Game score summary */}
       <Card className="overflow-hidden bg-gray-50">
         <CardContent className="p-4">
           <h3 className="text-lg font-semibold mb-4">Game Score Summary</h3>
-          
+
           <div className="grid grid-cols-5 gap-2 text-center mb-4">
             <div className="font-medium">Quarter</div>
             <div className="font-medium">Q1</div>
             <div className="font-medium">Q2</div>
             <div className="font-medium">Q3</div>
             <div className="font-medium">Q4</div>
-            
+
             <div className="font-medium">Our Team</div>
             <div className={quarterTotals['1'].goalsFor > quarterTotals['1'].goalsAgainst ? 'font-bold text-primary' : ''}>
               {quarterTotals['1'].goalsFor}
@@ -420,7 +420,7 @@ export default function BasicStatForm({
             <div className={quarterTotals['4'].goalsFor > quarterTotals['4'].goalsAgainst ? 'font-bold text-primary' : ''}>
               {quarterTotals['4'].goalsFor}
             </div>
-            
+
             <div className="font-medium">Opponent</div>
             <div className={quarterTotals['1'].goalsAgainst > quarterTotals['1'].goalsFor ? 'font-bold text-primary' : ''}>
               {quarterTotals['1'].goalsAgainst}
@@ -435,7 +435,7 @@ export default function BasicStatForm({
               {quarterTotals['4'].goalsAgainst}
             </div>
           </div>
-          
+
           <div className="flex justify-between items-center p-2 rounded-md bg-gray-100">
             <div className="font-medium">Final Score:</div>
             <div className="text-xl font-bold">
@@ -468,7 +468,7 @@ export default function BasicStatForm({
           <Save className="w-4 h-4 mr-2" /> Save Statistics
         </Button>
       </div>
-      
+
       <Tabs defaultValue="1" value={activeQuarter} onValueChange={setActiveQuarter}>
         <TabsList className="w-full grid grid-cols-4">
           <TabsTrigger value="1">Quarter 1</TabsTrigger>
@@ -476,19 +476,19 @@ export default function BasicStatForm({
           <TabsTrigger value="3">Quarter 3</TabsTrigger>
           <TabsTrigger value="4">Quarter 4</TabsTrigger>
         </TabsList>
-        
+
         <TabsContent value="1" className="mt-4">
           {renderQuarterContent('1')}
         </TabsContent>
-        
+
         <TabsContent value="2" className="mt-4">
           {renderQuarterContent('2')}
         </TabsContent>
-        
+
         <TabsContent value="3" className="mt-4">
           {renderQuarterContent('3')}
         </TabsContent>
-        
+
         <TabsContent value="4" className="mt-4">
           {renderQuarterContent('4')}
         </TabsContent>
@@ -522,3 +522,4 @@ function StatField({
     </div>
   );
 }
+```

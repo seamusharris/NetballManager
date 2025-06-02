@@ -34,29 +34,18 @@ export async function exportAllData(): Promise<ExportResult> {
     
     // Fetch all players
     console.log("Fetching players...");
-    const playersResponse = await fetch('/api/players');
-    if (!playersResponse.ok) {
-      throw new Error(`Failed to fetch players: ${playersResponse.statusText}`);
-    }
-    const players = await playersResponse.json() as Player[];
+    const players = await apiClient.get<Player[]>('/api/players');
     console.log(`Exported ${players.length} players with their avatar colors`);
     
     // Fetch all opponents
     console.log("Fetching opponents...");
-    const opponentsResponse = await fetch('/api/opponents');
-    if (!opponentsResponse.ok) {
-      throw new Error(`Failed to fetch opponents: ${opponentsResponse.statusText}`);
-    }
-    const opponents = await opponentsResponse.json() as Opponent[];
+    const opponents = await apiClient.get<Opponent[]>('/api/opponents');
     console.log(`Exported ${opponents.length} opponents`);
     
     // Fetch all games
     console.log("Fetching games...");
-    const gamesResponse = await fetch('/api/games');
-    if (!gamesResponse.ok) {
-      throw new Error(`Failed to fetch games: ${gamesResponse.statusText}`);
-    }
-    const games = await gamesResponse.json() as Game[];
+    const games = await apiClient.get<Game[]>('/api/games');
+    
     console.log(`Exported ${games.length} games`);
     
     // Fetch rosters and stats for each game
