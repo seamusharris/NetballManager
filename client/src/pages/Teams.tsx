@@ -11,12 +11,16 @@ import { Team, Season } from '@shared/schema';
 import { useLocation } from 'wouter';
 import { BackButton } from '@/components/ui/back-button';
 import { useClub } from '@/contexts/ClubContext';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { apiRequest } from '@shared/api-request';
+import { toast } from '@/components/ui/use-toast';
 
 export default function Teams() {
   const [, setLocation] = useLocation();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTeam, setEditingTeam] = useState<Team | null>(null);
   const { currentClubId, currentClub } = useClub();
+  const queryClient = useQueryClient();
 
   // Fetch teams for current club using same pattern as players
   const { data: teams = [], isLoading: isLoadingTeams, error } = useStandardQuery<(Team & { seasonName?: string; seasonYear?: number })[]>({
@@ -29,7 +33,7 @@ export default function Teams() {
     endpoint: '/api/seasons'
   });
 
-  const { createMutation, updateMutation, deleteMutation } = useCrudMutations({
+  const { createMutation, updateMutation } = useCrudMutations({
     entityName: 'Team',
     baseEndpoint: '/api/teams',
     invalidatePatterns: [['teams']],
@@ -39,6 +43,27 @@ export default function Teams() {
       } else if (context === 'update') {
         setEditingTeam(null);
       }
+    },
+  });
+
+  // Delete mutation
+  const deleteMutation = useMutation({
+    mutationFn: (teamId: number) => apiRequest('DELETE', `/api/teams/${teamId}`),
+    onSuccess: (data: any) => {
+      // Invalidate and refetch teams query to update the list
+      queryClient.invalidateQueries({ queryKey: ['teams', currentClubId] });
+
+      toast({
+        title: "Success",
+        description: data?.message || "Team deleted successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete team",
+        variant: "destructive",
+      });
     },
   });
 
@@ -114,3 +139,4 @@ export default function Teams() {
     </>
   );
 }
+```
