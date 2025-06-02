@@ -1,75 +1,45 @@
-import { queryClient } from './queryClient';
+// Simple, robust API client
+let currentClubId: number | null = null;
 
-export interface ApiResponse<T = any> {
-  success: boolean;
-  data?: T;
-  error?: string;
-  message?: string;
-}
-
-export class ApiClient {
-  private baseUrl = '';
-
-  setCurrentClubId(clubId: number): void {
-    localStorage.setItem('currentClubId', clubId.toString());
-  }
+export const apiClient = {
+  setCurrentClubId(clubId: number | null) {
+    currentClubId = clubId;
+    if (clubId) {
+      localStorage.setItem('currentClubId', clubId.toString());
+    }
+  },
 
   getCurrentClubId(): number | null {
+    if (currentClubId) return currentClubId;
+
     const stored = localStorage.getItem('currentClubId');
-    if (stored && !isNaN(parseInt(stored, 10))) {
-      return parseInt(stored, 10);
+    if (stored) {
+      currentClubId = parseInt(stored, 10);
+      return currentClubId;
     }
+
     return null;
-  }
+  },
 
-  async request<T = any>(
-    endpoint: string,
-    options: RequestInit = {}
-  ): Promise<T> {
-    const url = `${this.baseUrl}${endpoint}`;
+  async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+    // Routes that don't need club headers
+    const excludedRoutes = [
+      '/api/user/clubs',
+      '/api/auth',
+      '/api/seasons',
+    ];
 
-    // Always get the current club ID from localStorage for each request
-    let currentClubId = localStorage.getItem('currentClubId');
-
-    // Define routes that explicitly don't need club ID
-    const excludedRoutes = ['/api/user/clubs', '/api/seasons'];
     const isExcludedRoute = excludedRoutes.some(route => endpoint.includes(route));
-
-    // For most API endpoints, wait for club ID if not available yet
-    if (!isExcludedRoute && !currentClubId) {
-      console.warn('No club ID found for', endpoint, '- waiting for initialization...');
-      
-      // Wait longer for club context to initialize, with retries
-      for (let i = 0; i < 15; i++) {
-        await new Promise(resolve => setTimeout(resolve, 150));
-        currentClubId = localStorage.getItem('currentClubId');
-        if (currentClubId) {
-          console.log('Club ID found after retry:', currentClubId);
-          break;
-        }
-      }
-
-      // If still no club ID and it's not an excluded route, throw an error
-      if (!currentClubId) {
-        console.error('Failed to get club ID for:', endpoint);
-        throw new Error('Club context not available - please refresh the page');
-      }
-    }
-
-    // Log for debugging
-    console.log(`API Request to ${endpoint} with club ID: ${currentClubId}`);
 
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      ...options.headers,
+      ...options.headers as Record<string, string>,
     };
 
-    // Include club ID header for all routes except explicitly excluded ones
-    if (currentClubId && !isExcludedRoute) {
-      headers['x-current-club-id'] = currentClubId;
-      console.log(`API Request to ${endpoint} with club ID: ${currentClubId}`);
-    } else if (!isExcludedRoute) {
-      console.warn(`API Request to ${endpoint} WITHOUT club ID header`);
+    // Add club ID header for non-excluded routes
+    const clubId = this.getCurrentClubId();
+    if (clubId && !isExcludedRoute) {
+      headers['x-current-club-id'] = clubId.toString();
     }
 
     const config: RequestInit = {
@@ -78,80 +48,59 @@ export class ApiClient {
     };
 
     try {
-      const response = await fetch(url, config);
+      const response = await fetch(endpoint, config);
 
       if (!response.ok) {
-        // Better error handling with response details
-        let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+        const errorText = await response.text();
+        let errorData;
         try {
-          const errorData = await response.json();
-          console.log('API Error Response (JSON):', errorData);
-          errorMessage = errorData.error || errorData.message || errorMessage;
-        } catch (parseError) {
-          console.log('Error parsing error response:', parseError);
+          errorData = JSON.parse(errorText);
+        } catch {
+          errorData = { error: errorText };
         }
-        throw new Error(errorMessage);
+        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
       }
 
-      const data = await response.json();
-      return data;
+      const text = await response.text();
+      if (!text) return null as T;
+
+      try {
+        return JSON.parse(text);
+      } catch {
+        return text as T;
+      }
     } catch (error) {
-      console.error('API request failed:', error);
+      console.error(`API Error (${endpoint}):`, error);
       throw error;
     }
-  }
+  },
 
-  async get<T = any>(endpoint: string): Promise<T> {
+  async get<T>(endpoint: string): Promise<T> {
     return this.request<T>(endpoint, { method: 'GET' });
-  }
+  },
 
-  async post<T = any>(endpoint: string, data?: any): Promise<T> {
+  async post<T>(endpoint: string, data?: unknown): Promise<T> {
     return this.request<T>(endpoint, {
       method: 'POST',
       body: data ? JSON.stringify(data) : undefined,
     });
-  }
+  },
 
-  async put<T = any>(endpoint: string, data?: any): Promise<T> {
+  async put<T>(endpoint: string, data?: unknown): Promise<T> {
     return this.request<T>(endpoint, {
       method: 'PUT',
       body: data ? JSON.stringify(data) : undefined,
     });
-  }
+  },
 
-  async delete<T = any>(endpoint: string): Promise<T> {
-    return this.request<T>(endpoint, { method: 'DELETE' });
-  }
-
-  async patch<T = any>(endpoint: string, data?: any): Promise<T> {
+  async patch<T>(endpoint: string, data?: unknown): Promise<T> {
     return this.request<T>(endpoint, {
       method: 'PATCH',
       body: data ? JSON.stringify(data) : undefined,
     });
-  }
-}
+  },
 
-export const apiClient = new ApiClient();
-
-// Helper function for mutations with automatic cache invalidation
-export async function mutateWithInvalidation<T>(
-  mutationFn: () => Promise<T>,
-  invalidatePatterns: string[]
-): Promise<T> {
-  const result = await mutationFn();
-
-  // Invalidate related queries
-  invalidatePatterns.forEach(pattern => {
-    queryClient.invalidateQueries({
-      predicate: (query) => {
-        const queryKey = query.queryKey[0];
-        return typeof queryKey === 'string' && queryKey.includes(pattern);
-      }
-    });
-  });
-
-  return result;
-}
-
-// Legacy export for backward compatibility
-export const apiRequest = apiClient.request.bind(apiClient);
+  async delete<T>(endpoint: string): Promise<T> {
+    return this.request<T>(endpoint, { method: 'DELETE' });
+  },
+};
