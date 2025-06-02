@@ -105,31 +105,17 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
     return clubAccess?.permissions[permission] || false;
   };
 
-  // Don't render children until the context is properly initialized
-  if (!isInitialized && isLoadingClubs) {
-    return (
-      <ClubContext.Provider
-        value={{
-          currentClub: null,
-          userClubs: [],
-          switchClub: () => {},
-          hasPermission: () => false,
-          isLoading: true,
-        }}
-      >
-        {children}
-      </ClubContext.Provider>
-    );
-  }
+  // Always provide a valid context, but mark as loading until properly initialized
+  const isContextLoading = isLoadingClubs || isLoadingClub || !isInitialized;
 
   return (
     <ClubContext.Provider
       value={{
-        currentClub,
-        userClubs,
+        currentClub: isContextLoading ? null : currentClub,
+        userClubs: isContextLoading ? [] : userClubs,
         switchClub,
         hasPermission,
-        isLoading: isLoadingClubs || isLoadingClub || !isInitialized,
+        isLoading: isContextLoading,
       }}
     >
       {children}
