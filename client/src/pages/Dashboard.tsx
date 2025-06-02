@@ -1,3 +1,4 @@
+
 import { useQuery } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet';
 import DashboardSummary from '@/components/dashboard/DashboardSummary';
@@ -11,20 +12,9 @@ import { apiClient } from '@/lib/apiClient';
 export default function Dashboard() {
   const { currentClub, isLoading: clubLoading } = useClub();
 
-  // Don't render anything until club context is fully loaded
-  if (clubLoading || !currentClub) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <Loader2 className="mx-auto h-8 w-8 animate-spin" />
-          <p className="mt-2 text-sm text-muted-foreground">Loading club data...</p>
-        </div>
-      </div>
-    );
-  }
-
   const currentClubId = currentClub?.id;
 
+  // Call ALL hooks first, before any conditional returns
   const { data: players = [], isLoading: isLoadingPlayers, error: playersError } = useQuery<any[]>({
     queryKey: ['players', currentClubId],
     queryFn: () => apiClient.get('/api/players'),
@@ -39,29 +29,29 @@ export default function Dashboard() {
 
   const { data: opponents = [], isLoading: isLoadingOpponents, error: opponentsError } = useQuery<any[]>({
     queryKey: ['/api/opponents', currentClubId],
+    queryFn: () => apiClient.get('/api/opponents'),
     enabled: !!currentClubId,
   });
 
-  // Fetch all seasons
   const { data: seasons = [], isLoading: isLoadingSeasons, error: seasonsError } = useQuery<any[]>({
     queryKey: ['/api/seasons', currentClubId],
+    queryFn: () => apiClient.get('/api/seasons'),
     enabled: !!currentClubId,
   });
 
-  // Fetch active season
   const { data: activeSeason, isLoading: isLoadingActiveSeason, error: activeSeasonError } = useQuery<any>({
     queryKey: ['/api/seasons/active', currentClubId],
+    queryFn: () => apiClient.get('/api/seasons/active'),
     enabled: !!currentClubId,
   });
 
-  // Show loading state if no club is selected
-  if (!currentClub) {
+  // NOW we can do conditional returns after all hooks are called
+  if (clubLoading || !currentClub) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <div className="flex items-center justify-center h-64">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <h2 className="text-xl font-semibold mb-2">Loading Club</h2>
-          <p className="text-muted-foreground">Please wait while we load your club data...</p>
+          <Loader2 className="mx-auto h-8 w-8 animate-spin" />
+          <p className="mt-2 text-sm text-muted-foreground">Loading club data...</p>
         </div>
       </div>
     );
