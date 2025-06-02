@@ -97,26 +97,26 @@ export function GameForm({
     defaultValues: {
       date: game?.date || "",
       time: game?.time || "",
-      opponentId: game?.opponentId ? String(game.opponentId) : "placeholder",
+      opponentId: game?.opponentId ? String(game.opponentId) : "",
       round: game?.round || "",
       statusId: game?.statusId ? String(game.statusId) : "1",
-      seasonId: game?.seasonId ? String(game.seasonId) : activeSeason ? String(activeSeason.id) : "placeholder",
-      homeTeamId: game?.homeTeamId ? String(game.homeTeamId) : "placeholder",
+      seasonId: game?.seasonId ? String(game.seasonId) : activeSeason ? String(activeSeason.id) : "",
+      homeTeamId: game?.homeTeamId ? String(game.homeTeamId) : "",
       awayTeamId: game?.awayTeamId ? String(game.awayTeamId) : "none"
     },
   });
 
   const handleSubmit = (values: FormValues) => {
     // Validate required fields
-    if (values.opponentId === "placeholder" || !values.opponentId) {
+    if (!values.opponentId) {
       form.setError("opponentId", { message: "Please select an opponent" });
       return;
     }
-    if (values.homeTeamId === "placeholder" || !values.homeTeamId) {
+    if (!values.homeTeamId) {
       form.setError("homeTeamId", { message: "Please select a home team" });
       return;
     }
-    if (values.seasonId === "placeholder" || !values.seasonId) {
+    if (!values.seasonId) {
       form.setError("seasonId", { message: "Please select a season" });
       return;
     }
@@ -158,11 +158,11 @@ export function GameForm({
                 <FormLabel required>Home Team</FormLabel>
                 <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
-                    <SelectTrigger>
+                    <SelectTrigger className="bg-white border-blue-200 focus:border-blue-500 focus:ring-blue-500">
                       <SelectValue placeholder="Select home team" />
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent>
+                  <SelectContent className="bg-white border shadow-lg z-50">
                     {teams.map(team => (
                       <SelectItem key={team.id} value={team.id.toString()}>
                         {team.name}
@@ -184,13 +184,13 @@ export function GameForm({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Away Team</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
+                <Select onValueChange={(value) => field.onChange(value === "none" ? "" : value)} value={field.value || "none"}>
                   <FormControl>
-                    <SelectTrigger>
+                    <SelectTrigger className="bg-white border-blue-200 focus:border-blue-500 focus:ring-blue-500">
                       <SelectValue placeholder="Select away team (optional)" />
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent>
+                  <SelectContent className="bg-white border shadow-lg z-50">
                     <SelectItem value="none">No away team</SelectItem>
                     {teams.map(team => (
                       <SelectItem key={team.id} value={team.id.toString()}>
@@ -216,11 +216,11 @@ export function GameForm({
               <FormLabel required>Opponent</FormLabel>
               <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
-                  <SelectTrigger>
+                  <SelectTrigger className="bg-white border-blue-200 focus:border-blue-500 focus:ring-blue-500">
                     <SelectValue placeholder="Select opponent" />
                   </SelectTrigger>
                 </FormControl>
-                <SelectContent>
+                <SelectContent className="bg-white border shadow-lg z-50">
                   {opponents.map(opponent => (
                     <SelectItem key={opponent.id} value={opponent.id.toString()}>
                       {opponent.teamName}
@@ -294,11 +294,11 @@ export function GameForm({
               <FormLabel required>Game Status</FormLabel>
               <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
-                  <SelectTrigger>
+                  <SelectTrigger className="bg-white border-blue-200 focus:border-blue-500 focus:ring-blue-500">
                     <SelectValue placeholder="Select game status" />
                   </SelectTrigger>
                 </FormControl>
-                <SelectContent>
+                <SelectContent className="bg-white border shadow-lg z-50">
                   {gameStatuses.filter(s => s.isActive).map(status => (
                     <SelectItem key={status.id} value={status.id.toString()}>
                       {status.displayName}
@@ -322,11 +322,11 @@ export function GameForm({
               <FormLabel required>Season</FormLabel>
               <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
-                  <SelectTrigger>
+                  <SelectTrigger className="bg-white border-blue-200 focus:border-blue-500 focus:ring-blue-500">
                     <SelectValue placeholder="Select season" />
                   </SelectTrigger>
                 </FormControl>
-                <SelectContent>
+                <SelectContent className="bg-white border shadow-lg z-50">
                   {seasons.map(season => (
                     <SelectItem key={season.id} value={season.id.toString()}>
                       {season.name} {season.isActive && '(Active)'}
