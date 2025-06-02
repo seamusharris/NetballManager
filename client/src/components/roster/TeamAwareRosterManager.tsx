@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle, Users, UserCheck, Clock } from 'lucide-react';
-import { apiRequest } from '@/lib/apiClient';
+import { apiClient } from '@/lib/apiClient';
 import { Game, Player, Roster, Team, POSITIONS } from '@shared/schema';
 import type { Position } from '@shared/schema';
 import { useToast } from '@/hooks/use-toast';
