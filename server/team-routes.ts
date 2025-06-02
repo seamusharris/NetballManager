@@ -1,6 +1,7 @@
 import type { Express, Response } from "express";
 import { db } from "./db";
-import { sql } from "drizzle-orm";
+import { sql, eq } from "drizzle-orm";
+import { teams } from "@shared/schema";
 import { 
   AuthenticatedRequest, 
   requireClubAccess 
@@ -220,34 +221,29 @@ export function registerTeamRoutes(app: Express) {
       const { name, division, isActive } = req.body;
 
       // Build update object only with provided fields
-      const updateData = {};
+      const updateData: any = {};
       if (name !== undefined) updateData.name = name;
       if (division !== undefined) updateData.division = division;
-      if (isActive !== undefined) updateData.is_active = isActive;
+      if (isActive !== undefined) updateData.isActive = isActive;
 
       if (Object.keys(updateData).length === 0) {
         return res.status(400).json({ message: "No valid fields to update" });
       }
 
       // Always update the timestamp
-      updateData.updated_at = new Date();
+      updateData.updatedAt = new Date();
 
-      // Simple SQL update with individual parameters
-      const updates = Object.keys(updateData).map(key => `${key} = ?`).join(', ');
-      const values = Object.values(updateData);
-      
-      const result = await db.execute(sql.raw(`
-        UPDATE teams 
-        SET ${updates}
-        WHERE id = ?
-        RETURNING *
-      `, [...values, teamId]));
+      // Use proper Drizzle ORM update method
+      const result = await db.update(teams)
+        .set(updateData)
+        .where(eq(teams.id, teamId))
+        .returning();
 
-      if (result.rows.length === 0) {
+      if (result.length === 0) {
         return res.status(404).json({ message: "Team not found" });
       }
 
-      res.json(result.rows[0]);
+      res.json(result[0]);
     } catch (error) {
       console.error("Error updating team:", error);
       res.status(500).json({ message: "Failed to update team" });
