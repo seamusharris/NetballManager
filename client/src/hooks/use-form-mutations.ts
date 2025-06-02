@@ -1,6 +1,6 @@
 
 import { useMutation } from '@tanstack/react-query';
-import { apiClient, mutateWithInvalidation } from '@/lib/apiClient';
+import { apiClient } from '@/lib/apiClient';
 import { useToast } from '@/hooks/use-toast';
 
 interface FormMutationOptions<T = any> {
