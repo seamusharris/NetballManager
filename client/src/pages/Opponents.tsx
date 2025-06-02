@@ -15,14 +15,14 @@ export default function Opponents() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingOpponent, setEditingOpponent] = useState<Opponent | null>(null);
   const { toast } = useToast();
-  
+
   const { data: opponents = [], isLoading } = useQuery({
     queryKey: ['/api/opponents'],
   });
-  
+
   const createMutation = useMutation({
     mutationFn: async (newOpponent: any) => {
-      const res = await apiRequest('POST', '/api/opponents', newOpponent);
+      const res = await apiClient('POST', '/api/opponents', newOpponent);
       return res.json();
     },
     onSuccess: () => {
@@ -41,10 +41,10 @@ export default function Opponents() {
       });
     }
   });
-  
+
   const updateMutation = useMutation({
     mutationFn: async ({ id, opponent }: { id: number, opponent: any }) => {
-      const res = await apiRequest('PATCH', `/api/opponents/${id}`, opponent);
+      const res = await apiClient('PATCH', `/api/opponents/${id}`, opponent);
       return res.json();
     },
     onSuccess: () => {
@@ -63,10 +63,10 @@ export default function Opponents() {
       });
     }
   });
-  
+
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
-      await apiRequest('DELETE', `/api/opponents/${id}`);
+      await apiClient('DELETE', `/api/opponents/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/opponents'] });
@@ -83,28 +83,28 @@ export default function Opponents() {
       });
     }
   });
-  
+
   const handleCreateOpponent = (data: any) => {
     createMutation.mutate(data);
   };
-  
+
   const handleUpdateOpponent = (data: any) => {
     if (editingOpponent) {
       updateMutation.mutate({ id: editingOpponent.id, opponent: data });
     }
   };
-  
+
   const handleDeleteOpponent = (id: number) => {
     deleteMutation.mutate(id);
   };
-  
+
   return (
     <>
       <Helmet>
         <title>Opponents | NetballManager</title>
         <meta name="description" content="Manage your netball teams opponents, track teams and their contact information" />
       </Helmet>
-      
+
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-heading font-bold text-neutral-dark">Opponent Management</h2>
@@ -115,14 +115,14 @@ export default function Opponents() {
             <Plus className="w-4 h-4 mr-1" /> Add Opponent
           </Button>
         </div>
-        
+
         <OpponentsList 
           opponents={opponents} 
           isLoading={isLoading}
           onEdit={setEditingOpponent}
           onDelete={handleDeleteOpponent}
         />
-        
+
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogContent className="sm:max-w-[550px]">
             <OpponentForm 
@@ -131,7 +131,7 @@ export default function Opponents() {
             />
           </DialogContent>
         </Dialog>
-        
+
         <Dialog open={!!editingOpponent} onOpenChange={(open) => !open && setEditingOpponent(null)}>
           <DialogContent className="sm:max-w-[550px]">
             <OpponentForm 

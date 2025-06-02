@@ -88,7 +88,7 @@ export function GameDetailsStatusButton({
       const isCompleted = completedStatuses.includes(selectedStatus);
 
       // Send the update request with both status and completed field
-      const response = await apiRequest('PATCH', `/api/games/${game.id}`, {
+      const response = await apiClient('PATCH', `/api/games/${game.id}`, {
         status: selectedStatus,
         completed: isCompleted
       });
@@ -178,3 +178,4 @@ export function GameDetailsStatusButton({
     </Dialog>
   );
 }
+```

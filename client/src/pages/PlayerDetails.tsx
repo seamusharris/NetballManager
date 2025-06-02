@@ -366,7 +366,7 @@ export default function PlayerDetails() {
   const deletePlayerMutation = useMutation({
     mutationFn: async () => {
       try {
-        return await apiRequest('DELETE', `/api/players/${playerId}`);
+        return await apiClient('DELETE', `/api/players/${playerId}`);
       } catch (error) {
         // Check if the error indicates the player was not found (already deleted)
         // This is actually a success case for us since the player no longer exists
@@ -419,7 +419,7 @@ export default function PlayerDetails() {
     mutationFn: async (updatedPlayer: any) => {
       // Ensure we're using a consistent format
       console.log("Updating player in details page:", updatedPlayer);
-      const res = await apiRequest('PATCH', `/api/players/${playerId}`, updatedPlayer);
+      const res = await apiClient('PATCH', `/api/players/${playerId}`, updatedPlayer);
       return res.json();
     },
     onSuccess: () => {
@@ -780,7 +780,7 @@ export default function PlayerDetails() {
 
                           <TableBody className="bg-white divide-y divide-gray-200">
                             {stats.gameStats.map((game, index) => {
-                              // Find the game to get the round number
+                              //                              // Find the game to get the round number
                               const gameData = games.find(g => g.id === game.gameId);
                               const roundNumber = gameData?.round || '-';
 

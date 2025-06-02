@@ -306,11 +306,11 @@ export default function TeamPerformance({ games, className, activeSeason, select
             </div>
           </div>
 
-          
+
         </div>
         {/* Enhanced Performance Analysis */}
         <div className="mt-4 space-y-4">
-          
+
 
           {/* Option 3: Goals Distribution Chart */}
           <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
