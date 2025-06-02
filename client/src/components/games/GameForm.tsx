@@ -82,16 +82,19 @@ export function GameForm({
   const isEditing = !!game;
 
   // Fetch game statuses
-  const { data: gameStatuses = [], isLoading: statusesLoading } = useQuery<GameStatus[]>({
+  const { data: gameStatuses = [], isLoading: statusesLoading, error: statusesError } = useQuery<GameStatus[]>({
     queryKey: ['game-statuses'],
     queryFn: () => apiRequest('GET', '/api/game-statuses') as Promise<GameStatus[]>,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: 3,
   });
 
   // Fetch teams with club context
-  const { data: teams = [], isLoading: teamsLoading } = useQuery<Team[]>({
+  const { data: teams = [], isLoading: teamsLoading, error: teamsError } = useQuery<Team[]>({
     queryKey: ['teams'],
     queryFn: () => apiRequest('GET', '/api/teams') as Promise<Team[]>,
-    enabled: true,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: 3,
   });
 
   const form = useForm<FormValues>({
@@ -110,6 +113,13 @@ export function GameForm({
 
   // Reset form when game data changes (for editing)
   React.useEffect(() => {
+    console.log('GameForm useEffect triggered:', { 
+      game: game ? { id: game.id, statusId: game.statusId, homeTeamId: game.homeTeamId } : null,
+      activeSeason: activeSeason ? { id: activeSeason.id, name: activeSeason.name } : null,
+      gameStatuses: gameStatuses.length,
+      teams: teams.length
+    });
+
     if (game) {
       console.log('Resetting form with game data:', game);
       form.reset({
@@ -135,7 +145,7 @@ export function GameForm({
         awayTeamId: ""
       });
     }
-  }, [game, activeSeason, form]);
+  }, [game, activeSeason, form, gameStatuses.length, teams.length]);
 
   const handleSubmit = (values: FormValues) => {
     // Validate required fields
@@ -171,11 +181,39 @@ export function GameForm({
       <div className="flex items-center justify-center p-8">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-2 text-sm text-muted-foreground">Loading form data...</p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Loading form data... 
+            {statusesLoading && " (game statuses)"}
+            {teamsLoading && " (teams)"}
+          </p>
         </div>
       </div>
     );
   }
+
+  if (statusesError || teamsError) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="text-center">
+          <p className="text-red-600 mb-4">
+            Error loading form data: {statusesError?.message || teamsError?.message}
+          </p>
+          <Button variant="outline" onClick={() => window.location.reload()}>
+            Retry
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  console.log('GameForm rendering with data:', {
+    gameStatuses: gameStatuses.length,
+    teams: teams.length,
+    opponents: opponents.length,
+    seasons: seasons.length,
+    isEditing,
+    formValues: form.getValues()
+  });
 
   return (
     <Form {...form}>

@@ -223,15 +223,24 @@ export default function Games() {
         title="Edit Game"
       >
         {editingGame && (
-          <GameForm 
-            game={editingGame} 
-            opponents={opponents} 
-            seasons={seasons}
-            activeSeason={activeSeason}
-            onSubmit={handleUpdate}
-            isSubmitting={updateMutation.isPending}
-            onCancel={() => setEditingGame(null)}
-          />
+          <>
+            {console.log('Games page - EditingGame GameForm props:', {
+              game: editingGame,
+              opponents: opponents.length,
+              seasons: seasons.length,
+              activeSeason,
+              isSubmitting: updateMutation.isPending
+            })}
+            <GameForm 
+              game={editingGame} 
+              opponents={opponents} 
+              seasons={seasons}
+              activeSeason={activeSeason}
+              onSubmit={handleUpdate}
+              isSubmitting={updateMutation.isPending}
+              onCancel={() => setEditingGame(null)}
+            />
+          </>
         )}
       </CrudDialog>
     </>

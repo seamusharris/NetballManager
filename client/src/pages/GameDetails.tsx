@@ -734,8 +734,7 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
 
             return (
               <div key={position} className="col-span-1">
-                <PositionBox 
-                  position={position as Position}
+                <PositionBox                  position={position as Position}
                   playerName={playerName}
                   playerColor={playerColor}
                   playerStats={playerStats}
@@ -1290,45 +1289,47 @@ export default function GameDetails() {
               <DialogContent className="sm:max-w-[550px]">
                 <DialogTitle>Edit Game Details</DialogTitle>
                 {Array.isArray(opponents) && game && Array.isArray(seasons) ? (
-                  <GameForm
-                    game={game}
-                    opponents={opponents}
-                    seasons={seasons}
-                    activeSeason={activeSeason}
-                    isSubmitting={false}
-                    onSubmit={async (formData) => {
-                      try {
-                        await fetch(`/api/games/${gameId}`, {
-                          method: 'PATCH',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify(formData)
-                        });
+                  <>
+                    <GameForm
+                      game={game}
+                      opponents={opponents}
+                      seasons={seasons}
+                      activeSeason={activeSeason}
+                      isSubmitting={false}
+                      onSubmit={async (formData) => {
+                        try {
+                          await fetch(`/api/games/${gameId}`, {
+                            method: 'PATCH',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(formData)
+                          });
 
-                        // Invalidate queries to refresh data
-                        queryClient.invalidateQueries({
-                          queryKey: ['/api/games', gameId],
-                        });
-                        queryClient.invalidateQueries({
-                          queryKey: ['/api/games'],
-                        });
+                          // Invalidate queries to refresh data
+                          queryClient.invalidateQueries({
+                            queryKey: ['/api/games', gameId],
+                          });
+                          queryClient.invalidateQueries({
+                            queryKey: ['/api/games'],
+                          });
 
-                        toast({
-                          title: "Game updated",
-                          description: "Game details have been updated successfully",
-                        });
+                          toast({
+                            title: "Game updated",
+                            description: "Game details have been updated successfully",
+                          });
 
-                        setIsEditDialogOpen(false);
-                      } catch (error) {
-                        console.error("Error updating game:", error);
-                        toast({
-                          title: "Error",
-                          description: "Failed to update game details",
-                          variant: "destructive",
-                        });
-                      }
-                    }}
-                    onCancel={() => setIsEditDialogOpen(false)}
-                  />
+                          setIsEditDialogOpen(false);
+                        } catch (error) {
+                          console.error("Error updating game:", error);
+                          toast({
+                            title: "Error",
+                            description: "Failed to update game details",
+                            variant: "destructive",
+                          });
+                        }
+                      }}
+                      onCancel={() => setIsEditDialogOpen(false)}
+                    />
+                  </>
                 ) : (
                   <div className="p-4 text-center">
                     <p className="text-gray-500 mb-4">Loading form data...</p>
@@ -1394,7 +1395,7 @@ export default function GameDetails() {
                       <h3 className="text-lg font-medium mb-2">No roster assigned</h3>
                       <p className="text-gray-500 mb-4">There are no positions assigned for this game yet.</p>
                       <Button asChild>
-                        <Link to={`/game/${gameId}/roster`}>
+                        <Link to="/games">
                           <Edit className="mr-2 h-4 w-4" />
                           Set Up Roster
                         </Link>
@@ -1779,7 +1780,7 @@ export default function GameDetails() {
                 <h3 className="text-lg font-medium mb-2">No roster assigned</h3>
                 <p className="text-gray-500 mb-4">There are no positions assigned for this game yet.</p>
                 <Button asChild>
-                  <Link to={`/roster/${gameId}`}>
+                  <Link to="/games">
                     <Edit className="mr-2 h-4 w-4" />
                     Set Up Roster
                   </Link>
