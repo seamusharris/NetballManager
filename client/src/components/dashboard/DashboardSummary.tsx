@@ -107,7 +107,7 @@ export default function DashboardSummary({
 
   // Centralized stats fetching for completed games only
   const completedGameIds = filteredGames
-    .filter(game => game.gameStatus?.isCompleted && game.gameStatus?.allowsStatistics)
+    .filter(game => game.statusIsCompleted && game.statusAllowsStatistics)
     .map(game => game.id);
 
   const { data: centralizedStats, isLoading: statsLoading } = useQuery({

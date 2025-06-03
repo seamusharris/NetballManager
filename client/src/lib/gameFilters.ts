@@ -1,20 +1,41 @@
 /**
- * Check if a single game is valid for statistical analysis
+ * Check if a single game is valid for statistical analysis using the game status table
  */
 export function isGameValidForStatistics(game: Game): boolean {
-  // Must have a game status
-  if (!game.gameStatus) return false;
-
   // Must be completed
-  if (!game.gameStatus.isCompleted) return false;
+  if (!game.statusIsCompleted) return false;
 
   // Must allow statistics (this covers forfeit games, BYE games, etc.)
-  if (!game.gameStatus.allowsStatistics) return false;
+  if (!game.statusAllowsStatistics) return false;
 
   // Exclude abandoned games from statistics
-  if (game.gameStatus.name === 'abandoned') return false;
+  if (game.statusName === 'abandoned') return false;
 
   return true;
+}
+
+/**
+ * Dashboard-specific filters using the game status table
+ */
+export function getCompletedGamesForStats(games: Game[]): Game[] {
+  return games.filter(game => 
+    game.statusIsCompleted === true && 
+    game.statusAllowsStatistics === true &&
+    game.statusName !== 'abandoned'
+  );
+}
+
+export function getCompletedGamesForRecords(games: Game[]): Game[] {
+  return games.filter(game => 
+    game.statusIsCompleted === true &&
+    game.statusName !== 'abandoned'
+  );
+}
+
+export function getUpcomingGames(games: Game[]): Game[] {
+  return games.filter(game => 
+    game.statusIsCompleted !== true
+  );
 }
 
 /**

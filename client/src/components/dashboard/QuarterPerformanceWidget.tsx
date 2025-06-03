@@ -5,6 +5,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/apiClient';
 import { isGameValidForStatistics } from '@/lib/gameFilters';
+import { getCompletedGamesForStats } from '@/lib/gameFilters';
 
 interface QuarterPerformanceWidgetProps {
   games: Game[];
@@ -29,21 +30,8 @@ export default function QuarterPerformanceWidget({
 
   // Get games valid for statistics - memoize to prevent infinite re-renders
   const validGameIds = useMemo(() => {
-    const validGames = games.filter(game => {
-      // Must have a game status
-      if (!game.gameStatus) return false;
-
-      // Must be completed
-      if (!game.gameStatus.isCompleted) return false;
-
-      // Must allow statistics (this covers forfeit games, BYE games, etc.)
-      if (!game.gameStatus.allowsStatistics) return false;
-
-      // Exclude abandoned games from statistics
-      if (game.gameStatus.name === 'abandoned') return false;
-
-      return true;
-    });
+    // Filter for completed games that allow statistics
+  const validGames = getCompletedGamesForStats(games);
 
     console.log('QuarterPerformanceWidget valid games:', validGames.length, 'out of', games.length);
     return validGames.map(game => game.id);
@@ -182,7 +170,7 @@ export default function QuarterPerformanceWidget({
                 const teamScore = quarterPerformance.avgTeamScoreByQuarter[quarter];
                 const opponentScore = quarterPerformance.avgOpponentScoreByQuarter[quarter];
                 const maxScore = Math.max(teamScore, opponentScore, 5);
-                
+
                 return (
                   <div key={quarter} className="flex items-center space-x-2">
                     <span className="text-xs w-4 text-gray-600">Q{quarter}</span>
@@ -226,7 +214,7 @@ export default function QuarterPerformanceWidget({
                   const x = 20 + index * 53.33;
                   const diff = quarterPerformance.avgTeamScoreByQuarter[quarter] - quarterPerformance.avgOpponentScoreByQuarter[quarter];
                   const y = 30 - diff * 5;
-                  
+
                   return (
                     <g key={quarter}>
                       <circle cx={x} cy={Math.max(10, Math.min(50, y))} r="4" fill="#3b82f6" />
@@ -251,25 +239,25 @@ export default function QuarterPerformanceWidget({
                 <circle cx="60" cy="60" r="40" stroke="#e5e7eb" strokeWidth="1" fill="none" />
                 <circle cx="60" cy="60" r="25" stroke="#e5e7eb" strokeWidth="1" fill="none" />
                 <circle cx="60" cy="60" r="10" stroke="#e5e7eb" strokeWidth="1" fill="none" />
-                
+
                 {/* Quarter lines */}
                 <line x1="60" y1="20" x2="60" y2="100" stroke="#e5e7eb" strokeWidth="1" />
                 <line x1="20" y1="60" x2="100" y2="60" stroke="#e5e7eb" strokeWidth="1" />
-                
+
                 {/* Performance polygon */}
                 {(() => {
                   const getRadius = (quarter: number) => {
                     const diff = quarterPerformance.avgTeamScoreByQuarter[quarter] - quarterPerformance.avgOpponentScoreByQuarter[quarter];
                     return Math.max(5, Math.min(35, 20 + diff * 3));
                   };
-                  
+
                   const points = [
                     `60,${60 - getRadius(1)}`, // Q1 - top
                     `${60 + getRadius(2)},60`, // Q2 - right
                     `60,${60 + getRadius(3)}`, // Q3 - bottom
                     `${60 - getRadius(4)},60`  // Q4 - left
                   ];
-                  
+
                   return (
                     <polygon
                       points={points.join(' ')}
@@ -280,7 +268,7 @@ export default function QuarterPerformanceWidget({
                     />
                   );
                 })()}
-                
+
                 {/* Quarter labels */}
                 <text x="60" y="15" textAnchor="middle" className="text-xs fill-gray-600">Q1</text>
                 <text x="105" y="65" textAnchor="middle" className="text-xs fill-gray-600">Q2</text>
@@ -300,7 +288,7 @@ export default function QuarterPerformanceWidget({
                 const diff = quarterPerformance.avgTeamScoreByQuarter[quarter] - quarterPerformance.avgOpponentScoreByQuarter[quarter];
                 const intensity = Math.max(0.2, Math.min(1, 0.5 + diff * 0.1));
                 const bgColor = diff > 0 ? 'bg-green-500' : diff < 0 ? 'bg-red-500' : 'bg-yellow-400';
-                
+
                 return (
                   <div key={quarter} className="relative group">
                     <div 
@@ -329,7 +317,7 @@ export default function QuarterPerformanceWidget({
                 const prevQuarter = quarter > 1 ? quarter - 1 : 4;
                 const prevDiff = quarterPerformance.avgTeamScoreByQuarter[prevQuarter] - quarterPerformance.avgOpponentScoreByQuarter[prevQuarter];
                 const momentum = currentDiff - prevDiff;
-                
+
                 return (
                   <div key={quarter} className="text-center">
                     <div className="text-xs text-gray-500 mb-1">Q{quarter}</div>
