@@ -1,11 +1,11 @@
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Game, GameStatus } from '@shared/schema';
-import { useGameStatuses } from '@/hooks/use-game-statuses';
 import { cn } from '@/lib/utils';
 import { apiClient } from '@/lib/apiClient';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
+import { apiRequest } from '@/lib/queryClient';
 import {
   Dialog,
   DialogContent,
@@ -112,7 +112,11 @@ export function GameStatusButton({
   const [selectedStatus, setSelectedStatus] = React.useState<GameStatus>(game.gameStatus?.name as GameStatus || 'upcoming');
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const { data: gameStatuses } = useGameStatuses();
+  const { data: gameStatuses = [] } = useQuery({
+    queryKey: ['game-statuses'],
+    queryFn: () => apiClient.get('/api/game-statuses'),
+    staleTime: 5 * 60 * 1000,
+  });
 
   // Keep selectedStatus in sync with game.gameStatus when it changes
   React.useEffect(() => {
