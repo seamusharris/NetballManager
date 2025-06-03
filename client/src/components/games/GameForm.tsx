@@ -55,7 +55,7 @@ export default function GameForm({
   // Fetch all teams for inter-club games
   const { data: allClubTeams = [], isLoading: isLoadingAllTeams } = useQuery({
     queryKey: ['teams', 'all'],
-    queryFn: () => apiClient.get('/api/teams?includeAllClubs=true'),
+    queryFn: () => apiClient.get('/api/teams/all'),
     staleTime: 5 * 60 * 1000,
   });
 
