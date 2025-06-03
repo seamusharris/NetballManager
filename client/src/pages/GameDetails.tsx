@@ -1166,12 +1166,12 @@ export default function GameDetails() {
     if (game) {
       console.log('GameDetails - Game data:', {
         id: game.id,
-        homeTeamName: game.homeTeamName,
-        awayTeamName: game.awayTeamName,
-        homeTeamId: game.homeTeamId,
-        awayTeamId: game.awayTeamId,
-        statusName: game.statusName,
-        statusId: game.statusId
+        homeTeamName: game.home_team_name,
+        awayTeamName: game.away_team_name,
+        homeTeamId: game.home_team_id,
+        awayTeamId: game.away_team_id,
+        status: game.status,
+        statusId: game.status_id
       });
     }
   }, [game]);
@@ -1223,11 +1223,11 @@ export default function GameDetails() {
           </div>
 
           <h1 className="text-2xl font-bold">
-            {game.statusName === 'bye' ? (
+            {game.status === 'bye' ? (
               <span>BYE Round</span>
             ) : (
               <span>
-                {game.homeTeamName || 'Home Team'} vs {game.awayTeamName || 'Away Team'}
+                {game.home_team_name || 'Home Team'} vs {game.away_team_name || 'Away Team'}
               </span>
             )}
           </h1>
@@ -1292,7 +1292,7 @@ export default function GameDetails() {
                 <AlertDialogHeader>
                   <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
                   <AlertDialogDescription>
-                    Are you sure you want to delete this {game.isBye ? "BYE round" : `game against ${game.awayTeamName}`}? 
+                    Are you sure you want to delete this {game.status === 'bye' ? "BYE round" : `game against ${game.away_team_name}`}? 
                     This will also delete all roster assignments and statistics for this game.
                   </AlertDialogDescription>
                 </AlertDialogHeader>

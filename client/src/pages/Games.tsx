@@ -247,7 +247,7 @@ export default function Games() {
                 onCancel={() => setEditingGame(null)}
                 gameStatuses={gameStatuses}
                 teams={teams}
-                allTeams={teams}
+                allTeams={allTeams}
                 isEditing={true}
               />
             )}
