@@ -60,9 +60,16 @@ export default function PlayerAvailabilityManager({
   onComplete,
   onAvailabilityChange
 }: PlayerAvailabilityManagerProps) {
-  const { toast } = useToast();
   const [availablePlayerIds, setAvailablePlayerIds] = useState<number[]>([]);
-  const [isSaving, setIsSaving] = useState(false);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  console.log('PlayerAvailabilityManager props:', {
+    gameId,
+    playersCount: players.length,
+    gamesCount: games.length,
+    opponentsCount: opponents.length
+  });
 
   // Use centralized data loading for availability
   const { 
@@ -138,6 +145,7 @@ export default function PlayerAvailabilityManager({
 
   // Early return if no gameId - moved after ALL hooks
   if (!gameId) {
+    console.log('PlayerAvailabilityManager: No game ID provided');
     return (
       <Card className="mb-6">
         <CardContent className="pt-6 text-center">
@@ -146,6 +154,8 @@ export default function PlayerAvailabilityManager({
       </Card>
     );
   }
+
+  console.log('PlayerAvailabilityManager: Rendering with game ID:', gameId);
 
   const selectedGame = games.find(game => game.id === gameId);
   const opponent = selectedGame?.opponentId ? opponents.find(o => o.id === selectedGame.opponentId) : null;

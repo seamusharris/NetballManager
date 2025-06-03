@@ -215,9 +215,6 @@ export default function Roster() {
                 ))}
               </SelectContent>
             </Select>
-            <div className="mt-4 text-sm text-gray-500">
-              Current step: {currentStep}, Selected game: {selectedGameId}, Game from URL: {gameIdFromUrl}
-            </div>
           </CardContent>
         </Card>
       )}
