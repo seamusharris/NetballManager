@@ -100,25 +100,18 @@ export default function PlayerAvailabilityManager({
 
     // Handle successful availability data
     if (availabilityData && Array.isArray(availabilityData.availablePlayerIds)) {
-      // If we have an empty array, treat it as "no availability set yet" for upcoming games
-      // and default to all players being available
-      if (availabilityData.availablePlayerIds.length === 0) {
-        console.log('Empty availability array received - defaulting to all active players for new game');
-        const activePlayerIds = players.filter(p => p.active).map(p => p.id);
-        setAvailablePlayerIds(activePlayerIds);
-        onAvailabilityChange?.(activePlayerIds);
-      } else {
-        console.log('Setting available players from API:', availabilityData.availablePlayerIds);
-        setAvailablePlayerIds(availabilityData.availablePlayerIds);
-        onAvailabilityChange?.(availabilityData.availablePlayerIds);
-      }
-    } else {
-      // Fallback to all active players if no availability data
+      // Use the exact availability data from the API - respect whatever was previously saved
+      console.log('Setting available players from API:', availabilityData.availablePlayerIds);
+      setAvailablePlayerIds(availabilityData.availablePlayerIds);
+      onAvailabilityChange?.(availabilityData.availablePlayerIds);
+    } else if (availabilityError) {
+      // Only fallback to all active players if there's an actual error
       const activePlayerIds = players.filter(p => p.active).map(p => p.id);
-      console.log('Setting fallback available players (no availability data):', activePlayerIds);
+      console.log('Setting fallback available players (error case):', activePlayerIds);
       setAvailablePlayerIds(activePlayerIds);
       onAvailabilityChange?.(activePlayerIds);
     }
+    // If still loading, don't set anything - wait for the data
   }, [availabilityData, isLoading, availabilityError, players, gameId, onAvailabilityChange]);
 
   const [searchQuery, setSearchQuery] = useState('');
