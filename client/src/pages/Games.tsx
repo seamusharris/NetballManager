@@ -187,6 +187,7 @@ export default function Games() {
           </div>
           <GamesList 
             games={games} 
+            opponents={[]} // Legacy prop - no longer used but component expects it
             isLoading={isLoadingGames}
             onDelete={handleDelete} 
             onEdit={setEditingGame}

@@ -271,16 +271,21 @@ export default function GamesList({
   };
 
   const getOpponentName = (game: any) => {
-    // First try to use the pre-fetched opponent name from the game object
-    if (game.opponentTeamName) {
-      return game.opponentTeamName;
+    // Determine if we are home or away team and show the opponent
+    const currentClubId = 54; // TODO: Get from context
+    
+    // Check if this is our home game (we are the home team)
+    if (game.homeClubId === currentClubId && game.awayTeamName) {
+      return game.awayTeamName;
     }
-
-    // Fallback to looking up in opponents array
-    if (!game.opponentId) return "TBA";
-    if (!opponents || !Array.isArray(opponents)) return "Loading...";
-    const opponent = opponents.find(o => o.id === game.opponentId);
-    return opponent ? opponent.teamName : "Unknown Opponent";
+    
+    // Check if this is our away game (we are the away team)  
+    if (game.awayClubId === currentClubId && game.homeTeamName) {
+      return game.homeTeamName;
+    }
+    
+    // Fallback - if we can't determine, show away team name
+    return game.awayTeamName || "TBA";
   };
 
   // Enhance games with opponent data for search filtering

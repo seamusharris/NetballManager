@@ -71,18 +71,19 @@ export default function GameForm({
   });
 
   useEffect(() => {
-    if (game && gameStatuses.length > 0 && teams.length > 0 && activeSeason) {
+    if (game && activeSeason) {
       console.log("Resetting form with game data:", game);
       form.reset({
         date: game.date || "",
         time: game.time || "",
         round: game.round || "",
-        statusId: game.statusId ? game.statusId.toString() : "1",
-        seasonId: game.seasonId ? game.seasonId.toString() : activeSeason.id.toString(),
-        homeTeamId: game.homeTeamId ? game.homeTeamId.toString() : "",
-        awayTeamId: game.awayTeamId ? game.awayTeamId.toString() : "",
+        statusId: game.statusId?.toString() || "1",
+        seasonId: game.seasonId?.toString() || activeSeason.id.toString(),
+        homeTeamId: game.homeTeamId?.toString() || "",
+        awayTeamId: game.awayTeamId?.toString() || "",
       });
-    } else if (!game && activeSeason) {
+    } else if (activeSeason && !game) {
+      // Set defaults for new games
       form.reset({
         date: "",
         time: "",
@@ -93,7 +94,7 @@ export default function GameForm({
         awayTeamId: "",
       });
     }
-  }, [game, gameStatuses, teams, activeSeason, form]);
+  }, [game, activeSeason, form]);
 
   const formValues = form.watch();
   console.log("GameForm rendering with data:", {
@@ -147,72 +148,45 @@ export default function GameForm({
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
 
         <FormField
-          control={form.control}
-          name="seasonId"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel required>Season</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
-                <FormControl>
-                  <SelectTrigger className="bg-white border-blue-200 focus:border-blue-500 focus:ring-blue-500">
-                    <SelectValue placeholder="Select season" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {seasons.map(season => (
-                    <SelectItem key={season.id} value={season.id.toString()}>
-                      {season.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormDescription>
-                Select which season this game belongs to
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+              control={form.control}
+              name="date"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Date</FormLabel>
+                  <FormControl>
+                    <Input type="date" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-        <FormField
-          control={form.control}
-          name="statusId"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel required>Game Status</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
-                <FormControl>
-                  <SelectTrigger className="bg-white border-blue-200 focus:border-blue-500 focus:ring-blue-500">
-                    <SelectValue placeholder="Select game status" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {gameStatuses.map(status => (
-                    <SelectItem key={status.id} value={status.id.toString()}>
-                      {status.displayName}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormDescription>
-                Choose the current status of the game
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+            <FormField
+              control={form.control}
+              name="time"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Time</FormLabel>
+                  <FormControl>
+                    <Input type="time" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             control={form.control}
-            name="date"
+            name="round"
             render={({ field }) => (
               <FormItem>
-                <FormLabel required>Date</FormLabel>
+                <FormLabel>Round</FormLabel>
                 <FormControl>
-                  <Input
-                    type="date"
-                    className="bg-white border-blue-200 focus:border-blue-500 focus:ring-blue-500"
+                  <Input 
+                    type="number" 
+                    min="1" 
+                    placeholder="Enter round number"
                     {...field}
                   />
                 </FormControl>
@@ -223,105 +197,127 @@ export default function GameForm({
 
           <FormField
             control={form.control}
-            name="time"
+            name="seasonId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel required>Time</FormLabel>
-                <FormControl>
-                  <Input
-                    type="time"
-                    className="bg-white border-blue-200 focus:border-blue-500 focus:ring-blue-500"
-                    {...field}
-                  />
-                </FormControl>
+                <FormLabel>Season</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select season" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {seasons.map(season => (
+                      <SelectItem key={season.id} value={season.id.toString()}>
+                        {season.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormDescription>
+                  Which season this game belongs to
+                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
           />
-        </div>
 
-        <FormField
-          control={form.control}
-          name="round"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Round</FormLabel>
-              <FormControl>
-                <Input
-                  placeholder="e.g., 1, Semi Final, Grand Final"
-                  className="bg-white border-blue-200 focus:border-blue-500 focus:ring-blue-500"
-                  {...field}
-                />
-              </FormControl>
-              <FormDescription>
-                Enter the round number or name (e.g., "1", "Semi Final")
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+          <FormField
+            control={form.control}
+            name="homeTeamId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Home Team</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select home team" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {teams && teams.length > 0 ? (
+                      teams.map(team => (
+                        <SelectItem key={team.id} value={team.id.toString()}>
+                          {team.name}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="">Loading teams...</SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
+                <FormDescription>
+                  The home team for this game
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        <FormField
-          control={form.control}
-          name="homeTeamId"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel required>Home Team</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
-                <FormControl>
-                  <SelectTrigger className="bg-white border-blue-200 focus:border-blue-500 focus:ring-blue-500">
-                    <SelectValue placeholder="Select home team" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent className="relative z-50 max-h-96 min-w-[8rem] overflow-y-auto overflow-x-hidden rounded-md border bg-white text-gray-900 shadow-lg"
-                  sideOffset={4}
-                  align="start"
-                >
-                  {allTeams.map(team => (
-                    <SelectItem key={team.id} value={team.id.toString()}>
-                      {team.name} ({team.division}) - {team.clubName}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormDescription>
-                Select the home team for this game
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+          <FormField
+            control={form.control}
+            name="awayTeamId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Away Team</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select away team" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {teams && teams.length > 0 ? (
+                      teams.map(team => (
+                        <SelectItem key={team.id} value={team.id.toString()}>
+                          {team.name}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="">Loading teams...</SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
+                <FormDescription>
+                  The away team for this game
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        <FormField
-          control={form.control}
-          name="awayTeamId"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel required>Away Team</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
-                <FormControl>
-                  <SelectTrigger className="bg-white border-blue-200 focus:border-blue-500 focus:ring-blue-500">
-                    <SelectValue placeholder="Select away team" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent className="relative z-50 max-h-96 min-w-[8rem] overflow-y-auto overflow-x-hidden rounded-md border bg-white text-gray-900 shadow-lg"
-                  sideOffset={4}
-                  align="start"
-                >
-                  {allTeams.map(team => (
-                    <SelectItem key={team.id} value={team.id.toString()}>
-                      {team.name} ({team.division}) - {team.clubName}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormDescription>
-                Select the away team for this game
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+          <FormField
+            control={form.control}
+            name="statusId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Game Status</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select game status" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {gameStatuses && gameStatuses.length > 0 ? (
+                      gameStatuses.map(status => (
+                        <SelectItem key={status.id} value={status.id.toString()}>
+                          {status.displayName}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="1">Loading statuses...</SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
+                <FormDescription>
+                  Current status of the game
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
         <div className="flex justify-end space-x-2 pt-4">
           <Button type="button" variant="outline" onClick={onCancel}>
