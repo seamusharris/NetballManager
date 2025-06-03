@@ -1065,7 +1065,25 @@ export default function GameDetails() {
     select: (data) => Array.isArray(data) ? data : []
   });
 
-  // Fetch opponents - REMOVED
+  // Fetch game statuses
+  const { 
+    data: gameStatuses = [],
+    isLoading: isLoadingGameStatuses
+  } = useQuery({
+    queryKey: ['/api/game-statuses'],
+    queryFn: () => fetch('/api/game-statuses').then(res => res.json()),
+    select: (data) => Array.isArray(data) ? data : []
+  });
+
+  // Fetch teams
+  const { 
+    data: teams = [],
+    isLoading: isLoadingTeams
+  } = useQuery({
+    queryKey: ['/api/teams'],
+    queryFn: () => fetch('/api/teams').then(res => res.json()),
+    select: (data) => Array.isArray(data) ? data : []
+  });
 
   // Fetch roster for this game
   const { 
@@ -1120,7 +1138,7 @@ export default function GameDetails() {
   }, [gameStats, game]);
 
   // Loading state
-  if (isLoadingGame || isLoadingPlayers || isLoadingRoster) { // Removed isLoadingOpponents
+  if (isLoadingGame || isLoadingPlayers || isLoadingRoster || isLoadingGameStatuses || isLoadingTeams) { // Removed isLoadingOpponents
     return (
       <div className="py-10 text-center">
         <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mb-4"></div>
@@ -1286,8 +1304,12 @@ export default function GameDetails() {
                     <GameForm
                       game={game}
                       seasons={seasons}
+                      gameStatuses={gameStatuses}
+                      teams={teams}
+                      allTeams={teams}
                       activeSeason={activeSeason}
                       isSubmitting={false}
+                      isEditing={true}
                       onSubmit={async (formData) => {
                         try {
                           await fetch(`/api/games/${gameId}`, {
