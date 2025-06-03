@@ -84,9 +84,9 @@ export default function Roster() {
     );
   }
 
-  // Filter out completed games for roster management
+  // Filter out completed games and BYE games for roster management
   const availableGames = games.filter((game: Game) =>
-    !game.statusIsCompleted && !game.completed
+    !game.statusIsCompleted && !game.completed && !game.isBye
   );
 
   // Auto-select first available game if none selected and no URL parameter
@@ -166,11 +166,27 @@ export default function Roster() {
             <SelectValue placeholder="Select a game" />
           </SelectTrigger>
           <SelectContent>
-            {availableGames.map((game: Game) => (
-              <SelectItem key={game.id} value={game.id.toString()}>
-                {game.name} - {game.date}
-              </SelectItem>
-            ))}
+            {availableGames.map((game: Game) => {
+              // Get opponent team name (the team we're playing against)
+              const getOpponentName = (game: Game) => {
+                // Check if we have home/away team names
+                if (game.homeTeamName && game.awayTeamName) {
+                  // If we're the home team, opponent is away team, and vice versa
+                  // For now, we'll show both teams with "vs" format
+                  return `${game.homeTeamName} vs ${game.awayTeamName}`;
+                }
+                
+                // Fallback to legacy opponent lookup
+                const opponent = opponents.find(o => o.id === game.opponentId);
+                return opponent ? `vs ${opponent.teamName}` : 'TBD';
+              };
+
+              return (
+                <SelectItem key={game.id} value={game.id.toString()}>
+                  Round {game.round || 'TBD'} - {getOpponentName(game)} - {game.date}
+                </SelectItem>
+              );
+            })}
           </SelectContent>
         </Select>
 
