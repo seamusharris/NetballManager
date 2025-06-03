@@ -82,6 +82,7 @@ export default function GameForm({
   useEffect(() => {
     if (game && activeSeason) {
       console.log("Resetting form with game data:", game);
+      console.log("Available allClubTeams:", allClubTeams?.length);
       form.reset({
         date: game.date || "",
         time: game.time || "",
