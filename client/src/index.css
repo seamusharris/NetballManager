@@ -377,22 +377,37 @@ input[type=number] {
   }
 }
 
-/* Disable Radix Select animations while preserving positioning */
+/* Disable specific Radix Select slide animations while preserving positioning */
 [data-radix-select-content] {
   animation: none !important;
   transition: none !important;
-  /* Keep positioning transforms but disable transition animations */
 }
 
-[data-radix-select-content][data-state="open"] {
+/* Override Radix's built-in animation classes */
+[data-radix-select-content][data-side="bottom"] {
+  transform: none !important;
   animation: none !important;
-  transition: none !important;
 }
 
-[data-radix-select-content][data-state="closed"] {
+[data-radix-select-content][data-side="top"] {
+  transform: none !important;
+  animation: none !important;
+}
+
+[data-radix-select-content][data-side="left"] {
+  transform: none !important;
+  animation: none !important;
+}
+
+[data-radix-select-content][data-side="right"] {
+  transform: none !important;
+  animation: none !important;
+}
+
+/* Force immediate positioning without animation */
+[data-radix-popper-content-wrapper] {
   animation: none !important;
   transition: none !important;
-  /* Don't disable transform here as it's needed for positioning */
 }
 
 /* Enhanced tooltips */
