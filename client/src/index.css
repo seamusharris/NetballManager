@@ -377,37 +377,22 @@ input[type=number] {
   }
 }
 
-/* Disable Radix Select animations */
+/* Disable Radix Select animations while preserving positioning */
 [data-radix-select-content] {
   animation: none !important;
   transition: none !important;
-  transform: none !important;
+  /* Keep positioning transforms but disable transition animations */
 }
 
 [data-radix-select-content][data-state="open"] {
   animation: none !important;
   transition: none !important;
-  transform: none !important;
 }
 
 [data-radix-select-content][data-state="closed"] {
   animation: none !important;
   transition: none !important;
-  transform: none !important;
-}
-
-/* Disable all Radix Select portal animations */
-[data-radix-popper-content-wrapper] {
-  animation: none !important;
-  transition: none !important;
-  transform: none !important;
-}
-
-/* Disable SelectContent specific animations */
-.select-content {
-  animation: none !important;
-  transition: none !important;
-  transform: none !important;
+  /* Don't disable transform here as it's needed for positioning */
 }
 
 /* Enhanced tooltips */
