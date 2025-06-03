@@ -1269,26 +1269,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         notes: row.notes,
         awardWinnerId: row.award_winner_id,
 
-        // Game Status fields
+        // Game Status fields (consistent camelCase)
         statusName: row.status,
         statusDisplayName: row.status_display_name,
         statusIsCompleted: row.is_completed,
         statusAllowsStatistics: row.allows_statistics,
 
-        // Season fields
+        // Season fields (consistent camelCase)
         seasonName: row.season_name,
         seasonStartDate: row.season_start,
         seasonEndDate: row.season_end,
         seasonIsActive: row.season_active,
 
-        // Home Team fields
+        // Home Team fields (consistent camelCase)
         homeTeamName: row.home_team_name,
         homeTeamDivision: row.home_team_division,
         homeClubId: row.home_club_id,
         homeClubName: row.home_club_name,
         homeClubCode: row.home_club_code,
 
-        // Away Team fields (null for Bye games)
+        // Away Team fields (consistent camelCase, null for Bye games)
         awayTeamName: row.away_team_name,
         awayTeamDivision: row.away_team_division,
         awayClubId: row.away_club_id,
@@ -1313,12 +1313,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/games/:id", async (req, res) => {
     try {
-      const game = await storage.getGame(Number(req.params.id));
-      if (!game) {
+      const gameId = Number(req.params.id);
+      
+      // Use the same query structure as the games list to ensure consistency
+      const result = await db.execute(sql`
+        SELECT 
+          g.*,
+          gs.name as status, gs.display_name as status_display_name, gs.is_completed, gs.allows_statistics,
+          s.name as season_name, s.start_date as season_start, s.end_date as season_end, s.is_active as season_active,
+          ht.name as home_team_name, ht.division as home_team_division, ht.club_id as home_club_id,
+          at.name as away_team_name, at.division as away_team_division, at.club_id as away_club_id,
+          hc.name as home_club_name, hc.code as home_club_code,
+          ac.name as away_club_name, ac.code as away_club_code
+        FROM games g
+        LEFT JOIN game_statuses gs ON g.status_id = gs.id
+        LEFT JOIN seasons s ON g.season_id = s.id
+        LEFT JOIN teams ht ON g.home_team_id = ht.id
+        LEFT JOIN teams at ON g.away_team_id = at.id
+        LEFT JOIN clubs hc ON ht.club_id = hc.id
+        LEFT JOIN clubs ac ON at.club_id = ac.id
+        WHERE g.id = ${gameId}
+      `);
+
+      if (result.rows.length === 0) {
         return res.status(404).json({ message: "Game not found" });
       }
+
+      const row = result.rows[0];
+      const game = {
+        id: row.id,
+        date: row.date,
+        time: row.time,
+        homeTeamId: row.home_team_id,
+        awayTeamId: row.away_team_id,
+        venue: row.venue,
+        isInterClub: row.is_inter_club,
+        statusId: row.status_id,
+        round: row.round,
+        seasonId: row.season_id,
+        notes: row.notes,
+        awardWinnerId: row.award_winner_id,
+
+        // Game Status fields (consistent camelCase)
+        statusName: row.status,
+        statusDisplayName: row.status_display_name,
+        statusIsCompleted: row.is_completed,
+        statusAllowsStatistics: row.allows_statistics,
+
+        // Season fields (consistent camelCase)
+        seasonName: row.season_name,
+        seasonStartDate: row.season_start,
+        seasonEndDate: row.season_end,
+        seasonIsActive: row.season_active,
+
+        // Home Team fields (consistent camelCase)
+        homeTeamName: row.home_team_name,
+        homeTeamDivision: row.home_team_division,
+        homeClubId: row.home_club_id,
+        homeClubName: row.home_club_name,
+        homeClubCode: row.home_club_code,
+
+        // Away Team fields (consistent camelCase)
+        awayTeamName: row.away_team_name,
+        awayTeamDivision: row.away_team_division,
+        awayClubId: row.away_club_id,
+        awayClubName: row.away_club_name,
+        awayClubCode: row.away_club_code,
+
+        // Legacy fields for backward compatibility
+        isBye: row.away_team_name === 'Bye'
+      };
+
       res.json(game);
     } catch (error) {
+      console.error('Error fetching game:', error);
       res.status(500).json({ message: "Failed to fetch game" });
     }
   });

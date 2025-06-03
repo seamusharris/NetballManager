@@ -86,10 +86,10 @@ export default function GameForm({
         date: game.date || "",
         time: game.time || "",
         round: game.round || "",
-        statusId: (game.status_id || game.statusId)?.toString() || "1",
-        seasonId: (game.season_id || game.seasonId)?.toString() || activeSeason.id.toString(),
-        homeTeamId: (game.home_team_id || game.homeTeamId)?.toString() || "",
-        awayTeamId: (game.away_team_id || game.awayTeamId)?.toString() || "",
+        statusId: game.statusId?.toString() || "1",
+        seasonId: game.seasonId?.toString() || activeSeason.id.toString(),
+        homeTeamId: game.homeTeamId?.toString() || "",
+        awayTeamId: game.awayTeamId?.toString() || "",
       });
     } else if (activeSeason && !game) {
       // Set defaults for new games
