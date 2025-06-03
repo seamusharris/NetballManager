@@ -11,7 +11,7 @@ import { Game, Player } from '@shared/schema';
 import { useToast } from '@/hooks/use-toast';
 import { useLocation } from 'wouter';
 import { useClub } from '@/contexts/ClubContext';
-import { useGameStatuses } from '@/hooks/use-game-statuses';
+
 
 interface QueryParams {
   status?: string;
@@ -83,13 +83,16 @@ export default function Games() {
   });
 
   // Fetch game statuses
-  const { data: gameStatuses = [], isLoading: isLoadingGameStatuses, error: gameStatusesError } = useGameStatuses();
+  const { data: gameStatuses = [], isLoading: isLoadingGameStatuses } = useQuery({
+    queryKey: ['game-statuses'],
+    queryFn: () => apiClient.get('/api/game-statuses'),
+    staleTime: 5 * 60 * 1000,
+  });
 
   // Debug game statuses
   console.log('Games page - Game statuses:', {
     gameStatuses: gameStatuses.length,
     isLoading: isLoadingGameStatuses,
-    error: gameStatusesError,
     sampleStatus: gameStatuses[0]
   });
 
