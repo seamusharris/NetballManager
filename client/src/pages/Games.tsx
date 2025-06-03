@@ -63,10 +63,11 @@ export default function Games() {
     sampleGame: games[0]
   });
 
-  // Fetch teams
-  const { data: teams = [] } = useQuery({
-    queryKey: ['teams'],
-    queryFn: () => apiRequest('GET', '/api/teams')
+  // Fetch teams for current club
+  const { data: teams = [], isLoading: isLoadingTeams } = useQuery({
+    queryKey: ['teams', currentClub?.id],
+    queryFn: () => apiClient.get('/api/teams'),
+    enabled: !!currentClub?.id,
   });
 
   // Fetch seasons - no club context needed
@@ -210,16 +211,25 @@ export default function Games() {
         setIsOpen={setIsDialogOpen}
         title="Add Game"
       >
-        <GameForm 
-          seasons={seasons}
-          activeSeason={activeSeason}
-          onSubmit={handleCreate}
-          isSubmitting={false}
-          onCancel={() => setIsDialogOpen(false)}
-          gameStatuses={gameStatuses}
-          teams={teams}
-          allTeams={allTeams}
-        />
+        {isLoadingTeams ? (
+          <div className="p-4 text-center">
+            <p className="text-gray-500 mb-4">Loading teams data...</p>
+            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+              Cancel
+            </Button>
+          </div>
+        ) : (
+          <GameForm 
+            seasons={seasons}
+            activeSeason={activeSeason}
+            onSubmit={handleCreate}
+            isSubmitting={false}
+            onCancel={() => setIsDialogOpen(false)}
+            gameStatuses={gameStatuses}
+            teams={teams}
+            allTeams={allTeams}
+          />
+        )}
       </CrudDialog>
 
       <CrudDialog
