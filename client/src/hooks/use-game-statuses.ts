@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { apiRequest } from '@/lib/apiClient';
+import { apiClient } from '@/lib/apiClient';
 
 export interface GameStatus {
   id: number;
@@ -18,7 +18,7 @@ export interface GameStatus {
 export function useGameStatuses() {
   const query = useQuery({
     queryKey: ['gameStatuses'],
-    queryFn: () => apiRequest('GET', '/api/game-statuses') as Promise<GameStatus[]>,
+    queryFn: () => apiClient.get('/api/game-statuses') as Promise<GameStatus[]>,
     staleTime: 10 * 60 * 1000, // 10 minutes
   });
 
