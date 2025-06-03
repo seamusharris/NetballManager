@@ -846,7 +846,7 @@ export default function SimpleRosterManager({
                         .sort((a, b) => a.displayName.localeCompare(b.displayName)); // Sort alphabetically
 
                       return (
-                        <TableCell key={`off-${quarter}`} className=`"p-1 min-w-[160px]">
+                        <TableCell key={`off-${quarter}`} className="p-1 min-w-[160px]">
                           <div className="flex h-10 w-full rounded-md border border-input bg-slate-50 px-3 py-2 text-sm">
                             {playersNotInQuarter.length > 0 ? (
                               <div className="truncate my-auto">
