@@ -1,147 +1,90 @@
-import { useState } from 'react';
-import { useQuery, useMutation } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet';
-import { useToast } from '@/hooks/use-toast';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { Plus } from 'lucide-react';
-import OpponentsList from '@/components/opponents/OpponentsList';
-import OpponentForm from '@/components/opponents/OpponentForm';
-import { apiRequest } from '@/lib/queryClient';
-import { queryClient } from '@/lib/queryClient';
-import { Opponent } from '@shared/schema';
+import { useLocation } from 'wouter';
+import { ArrowRight, Users, Shield } from 'lucide-react';
 
 export default function Opponents() {
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [editingOpponent, setEditingOpponent] = useState<Opponent | null>(null);
-  const { toast } = useToast();
-  
-  const { data: opponents = [], isLoading } = useQuery({
-    queryKey: ['/api/opponents'],
-  });
-  
-  const createMutation = useMutation({
-    mutationFn: async (newOpponent: any) => {
-      const res = await apiRequest('POST', '/api/opponents', newOpponent);
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/opponents'] });
-      toast({
-        title: "Success",
-        description: "Opponent created successfully",
-      });
-      setIsAddDialogOpen(false);
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: `Failed to create opponent: ${error}`,
-        variant: "destructive",
-      });
-    }
-  });
-  
-  const updateMutation = useMutation({
-    mutationFn: async ({ id, opponent }: { id: number, opponent: any }) => {
-      const res = await apiRequest('PATCH', `/api/opponents/${id}`, opponent);
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/opponents'] });
-      toast({
-        title: "Success",
-        description: "Opponent updated successfully",
-      });
-      setEditingOpponent(null);
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: `Failed to update opponent: ${error}`,
-        variant: "destructive",
-      });
-    }
-  });
-  
-  const deleteMutation = useMutation({
-    mutationFn: async (id: number) => {
-      await apiRequest('DELETE', `/api/opponents/${id}`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/opponents'] });
-      toast({
-        title: "Success",
-        description: "Opponent deleted successfully",
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: `Failed to delete opponent: ${error}`,
-        variant: "destructive",
-      });
-    }
-  });
-  
-  const handleCreateOpponent = (data: any) => {
-    createMutation.mutate(data);
-  };
-  
-  const handleUpdateOpponent = (data: any) => {
-    if (editingOpponent) {
-      updateMutation.mutate({ id: editingOpponent.id, opponent: data });
-    }
-  };
-  
-  const handleDeleteOpponent = (id: number) => {
-    deleteMutation.mutate(id);
-  };
-  
+  const [, navigate] = useLocation();
+
   return (
-    <>
+    <div className="container py-6">
       <Helmet>
-        <title>Opponents | NetballManager</title>
-        <meta name="description" content="Manage your netball teams opponents, track teams and their contact information" />
+        <title>Opponents - Netball Club</title>
       </Helmet>
-      
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-heading font-bold text-neutral-dark">Opponent Management</h2>
-          <Button
-            onClick={() => setIsAddDialogOpen(true)}
-            className="bg-primary hover:bg-primary-light text-white"
-          >
-            <Plus className="w-4 h-4 mr-1" /> Add Opponent
-          </Button>
+
+      <div className="max-w-2xl mx-auto text-center space-y-6">
+        <div className="space-y-4">
+          <Shield className="h-16 w-16 mx-auto text-blue-600" />
+          <h1 className="text-3xl font-heading font-bold text-neutral-dark">
+            Opponent System Updated
+          </h1>
+          <p className="text-lg text-gray-600">
+            The opponent management system has been replaced with a comprehensive team-based system.
+          </p>
         </div>
-        
-        <OpponentsList 
-          opponents={opponents} 
-          isLoading={isLoading}
-          onEdit={setEditingOpponent}
-          onDelete={handleDeleteOpponent}
-        />
-        
-        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-          <DialogContent className="sm:max-w-[550px]">
-            <OpponentForm 
-              onSubmit={handleCreateOpponent} 
-              isSubmitting={createMutation.isPending} 
-            />
-          </DialogContent>
-        </Dialog>
-        
-        <Dialog open={!!editingOpponent} onOpenChange={(open) => !open && setEditingOpponent(null)}>
-          <DialogContent className="sm:max-w-[550px]">
-            <OpponentForm 
-              opponent={editingOpponent || undefined}
-              onSubmit={handleUpdateOpponent} 
-              isSubmitting={updateMutation.isPending} 
-            />
-          </DialogContent>
-        </Dialog>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              What's Changed?
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="text-left space-y-3">
+            <div className="space-y-2">
+              <p><strong>Before:</strong> Games were scheduled against "opponents" - external teams managed separately.</p>
+              <p><strong>Now:</strong> All teams are part of the multi-club system, allowing for:</p>
+              <ul className="list-disc list-inside ml-4 space-y-1 text-sm">
+                <li>Better tracking of inter-club games</li>
+                <li>Comprehensive team management across clubs</li>
+                <li>Unified statistics and analysis</li>
+                <li>Improved scheduling and coordination</li>
+              </ul>
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="space-y-4">
+          <h2 className="text-xl font-semibold">Where to go now?</h2>
+          <div className="grid gap-4">
+            <Button 
+              onClick={() => navigate('/teams')}
+              className="flex items-center justify-between p-4 h-auto"
+            >
+              <div className="text-left">
+                <div className="font-medium">Manage Teams</div>
+                <div className="text-sm opacity-90">View and manage all teams across clubs</div>
+              </div>
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+
+            <Button 
+              onClick={() => navigate('/games')}
+              variant="outline"
+              className="flex items-center justify-between p-4 h-auto"
+            >
+              <div className="text-left">
+                <div className="font-medium">Schedule Games</div>
+                <div className="text-sm opacity-90">Create games between teams</div>
+              </div>
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+
+            <Button 
+              onClick={() => navigate('/opponent-analysis')}
+              variant="outline"
+              className="flex items-center justify-between p-4 h-auto"
+            >
+              <div className="text-left">
+                <div className="font-medium">Team Analysis</div>
+                <div className="text-sm opacity-90">Analyze performance against other teams</div>
+              </div>
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
       </div>
-    </>
+    </div>
   );
 }
