@@ -1641,9 +1641,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create fallback roster for a game
   app.post("/api/games/:gameId/create-fallback-roster", async (req, res) => {
     try {
-      const gameId = Number(This commit removes the `includeAllClubs` logic from the `/api/teams` endpoint, which now only fetches teams for the current club.
-
-req.params.gameId);
+      const gameId = Number(req.params.params.gameId);
       const { createFallbackRoster } = await import('./roster-fallback');
 
       await createFallbackRoster(gameId);
@@ -2511,7 +2509,7 @@ req.params.gameId);
   app.get("/api/teams/all", loadUserPermissions, async (req, res) => {
     try {
       console.log('Fetching all teams across all clubs');
-      
+
       const teams = await db.execute(sql`
         SELECT t.*, 
                s.name as season_name, 
