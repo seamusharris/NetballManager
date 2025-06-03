@@ -228,10 +228,7 @@ export default function Games() {
               seasons: seasons.length,
               activeSeason,
               teams: teams.length,
-              allTeams: allTeams.length,
-              isSubmitting: updateMutation.isPending,
-              isLoadingTeams,
-              isLoadingAllTeams
+              isSubmitting: updateMutation.isPending
             })}
             {(isLoadingTeams || isLoadingAllTeams || teams.length === 0 || allTeams.length === 0) ? (
               <div className="p-4 text-center">
