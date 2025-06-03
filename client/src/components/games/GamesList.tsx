@@ -278,6 +278,7 @@ export default function GamesList({
 
     // Fallback to looking up in opponents array
     if (!game.opponentId) return "TBA";
+    if (!opponents || !Array.isArray(opponents)) return "Loading...";
     const opponent = opponents.find(o => o.id === game.opponentId);
     return opponent ? opponent.teamName : "Unknown Opponent";
   };
@@ -285,7 +286,7 @@ export default function GamesList({
   // Enhance games with opponent data for search filtering
   const gamesWithOpponents = games.map(game => ({
     ...game,
-    opponent: opponents.find(o => o.id === game.opponentId)
+    opponent: (opponents && Array.isArray(opponents)) ? opponents.find(o => o.id === game.opponentId) : null
   }));
 
   // Filter games using shared filtering logic
@@ -376,7 +377,7 @@ export default function GamesList({
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Opponents</SelectItem>
-                      {opponents
+                      {opponents && Array.isArray(opponents) && opponents
                         .filter(opp => games.some(game => game.opponentId === opp.id))
                         .sort((a, b) => a.teamName.localeCompare(b.teamName))
                         .map(opponent => (

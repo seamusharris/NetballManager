@@ -46,7 +46,8 @@ export default function OpponentAnalysis() {
     queryKey: ['opponents'],
     queryFn: async () => {
       try {
-        return await apiRequest('GET', '/api/opponents');
+        const result = await apiRequest('GET', '/api/opponents');
+        return Array.isArray(result) ? result : [];
       } catch (error) {
         console.warn('Opponents API not available (expected - system has been migrated to teams)');
         return [];
@@ -243,16 +244,9 @@ export default function OpponentAnalysis() {
           )[0]?.date
         });
       });
+      }
 
-      // Sort by total games played, then by win rate
-      opponentMatchups.sort((a, b) => {
-        if (a.totalGamesPlayed !== b.totalGamesPlayed) {
-          return b.totalGamesPlayed - a.totalGamesPlayed;
-        }
-        return b.winRate - a.winRate;
-      });
-
-      setMatchups(opponentMatchups);
+        setMatchups(opponentMatchups);
     };
 
     if (opponents.length > 0) {

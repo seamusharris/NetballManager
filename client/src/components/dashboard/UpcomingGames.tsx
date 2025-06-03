@@ -26,6 +26,7 @@ export default function UpcomingGames({ games, opponents, className, seasonFilte
 
   const getOpponentName = (opponentId: number | null) => {
     if (!opponentId) return 'Unknown Opponent';
+    if (!opponents || !Array.isArray(opponents)) return 'Loading...';
     const opponent = opponents.find(o => o.id === opponentId);
     return opponent ? opponent.teamName : 'Unknown Opponent';
   };

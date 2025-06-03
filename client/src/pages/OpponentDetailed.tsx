@@ -25,7 +25,8 @@ export default function OpponentDetailed() {
     queryKey: ['opponents'],
     queryFn: async () => {
       try {
-        return await apiRequest('GET', '/api/opponents');
+        const result = await apiRequest('GET', '/api/opponents');
+        return Array.isArray(result) ? result : [];
       } catch (error) {
         console.warn('Opponents API not available (expected - system has been migrated to teams)');
         return [];
@@ -55,11 +56,13 @@ export default function OpponentDetailed() {
     staleTime: 5 * 60 * 1000,
   });
 
-  const selectedOpponentData = opponents.find((opp: Opponent) => opp.id === parseInt(opponentId || '0'));
+  const selectedOpponentData = (opponents && Array.isArray(opponents)) 
+    ? opponents.find((opp: Opponent) => opp.id === parseInt(opponentId || '0'))
+    : null;
 
   // Calculate detailed stats for selected opponent
   const calculateDetailedStats = () => {
-    if (!selectedOpponentData) return null;
+    if (!selectedOpponentData || !Array.isArray(games)) return null;
 
     const opponentGames = games.filter((game: Game) => 
       game.opponentId === selectedOpponentData.id
