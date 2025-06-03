@@ -100,11 +100,16 @@ export default function TeamPerformance({ games, className, activeSeason, select
         const batchStats = await response.json();
         console.log('TeamPerformance: Received batch stats:', batchStats);
 
-        if (batchStats && typeof batchStats === 'object' && Object.keys(batchStats).length > 0) {
-          return batchStats;
-        } else {
-          console.warn('TeamPerformance: Batch endpoint returned empty or invalid data:', batchStats);
+        // Check if we got valid data - the batch endpoint returns an object where keys are game IDs
+        if (batchStats && typeof batchStats === 'object') {
+          const gameIds = Object.keys(batchStats);
+          if (gameIds.length > 0) {
+            console.log(`TeamPerformance: Successfully processed batch stats for ${gameIds.length} games`);
+            return batchStats;
+          }
         }
+        
+        console.warn('TeamPerformance: Batch endpoint returned empty data, using fallback');
       } catch (error) {
         console.warn("TeamPerformance: Batch endpoint failed, falling back to individual requests:", error);
       }

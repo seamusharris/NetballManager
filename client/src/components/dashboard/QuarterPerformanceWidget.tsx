@@ -71,11 +71,16 @@ export default function QuarterPerformanceWidget({
         const batchStats = await response.json();
         console.log('QuarterPerformanceWidget: Received batch stats:', batchStats);
 
-        if (batchStats && typeof batchStats === 'object' && Object.keys(batchStats).length > 0) {
-          return batchStats;
-        } else {
-          console.warn('QuarterPerformanceWidget: Batch endpoint returned empty or invalid data:', batchStats);
+        // Check if we got valid data - the batch endpoint returns an object where keys are game IDs
+        if (batchStats && typeof batchStats === 'object') {
+          const gameIds = Object.keys(batchStats);
+          if (gameIds.length > 0) {
+            console.log(`QuarterPerformanceWidget: Successfully processed batch stats for ${gameIds.length} games`);
+            return batchStats;
+          }
         }
+        
+        console.warn('QuarterPerformanceWidget: Batch endpoint returned empty data, using fallback');
       } catch (error) {
         console.warn("QuarterPerformanceWidget: Batch endpoint failed, falling back to individual requests:", error);
       }
@@ -110,6 +115,16 @@ export default function QuarterPerformanceWidget({
   useEffect(() => {
     if (!gameStatsMap || isLoading || validGameIds.length === 0) return;
 
+    console.log('QuarterPerformanceWidget: Processing stats map:', {
+      totalGames: validGameIds.length,
+      statsMapKeys: Object.keys(gameStatsMap),
+      sampleData: Object.keys(gameStatsMap).slice(0, 2).map(key => ({
+        gameId: key,
+        statsCount: gameStatsMap[key]?.length || 0,
+        firstStat: gameStatsMap[key]?.[0]
+      }))
+    });
+
     const quarterScores: Record<number, { team: number, opponent: number, count: number }> = {
       1: { team: 0, opponent: 0, count: 0 },
       2: { team: 0, opponent: 0, count: 0 },
@@ -119,7 +134,7 @@ export default function QuarterPerformanceWidget({
 
     validGameIds.forEach(gameId => {
       const gameStats = gameStatsMap[gameId];
-      console.log(`Processing game ${gameId}:`, gameStats ? gameStats.length + ' stats' : 'no stats');
+      console.log(`QuarterPerformanceWidget processing game ${gameId}:`, gameStats ? `${gameStats.length} stats` : 'no stats');
       if (!gameStats || gameStats.length === 0) return;
 
       const gameQuarterScores: Record<number, { team: number, opponent: number }> = {
