@@ -74,29 +74,58 @@ export default function TeamPerformance({ games, className, activeSeason, select
         return {};
       }
 
+      // Filter out any game IDs that are not valid numbers
+      const validGameIds = completedGameIds.filter(gameId => typeof gameId === 'number');
+
       console.log(`Team Performance loading stats for season: ${seasonId}, games: ${gameIdsKey}`);
 
-      // Try to use the batch endpoint first for better performance
       try {
-        const batchStats = await apiRequest('GET', `/api/games/stats/batch`, { gameIds: gameIdsKey });
-        if (batchStats && Object.keys(batchStats).length > 0) {
+        // Use direct fetch with proper URL construction that matches the working individual calls
+        const gameIdsParam = validGameIds.join(',');
+        const url = `/api/games/stats/batch?gameIds=${gameIdsParam}`;
+
+        console.log(`TeamPerformance: Fetching batch stats from ${url}`);
+
+        const response = await fetch(url, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch batch game stats: ${response.statusText}`);
+        }
+
+        const batchStats = await response.json();
+        console.log('TeamPerformance: Received batch stats:', batchStats);
+
+        if (batchStats && typeof batchStats === 'object' && Object.keys(batchStats).length > 0) {
           return batchStats;
+        } else {
+          console.warn('TeamPerformance: Batch endpoint returned empty or invalid data:', batchStats);
         }
       } catch (error) {
-        console.warn("Batch endpoint failed, falling back to individual requests:", error);
+        console.warn("TeamPerformance: Batch endpoint failed, falling back to individual requests:", error);
       }
 
-      // Fallback: fetch each game's stats individually if batch fails
+      // Fallback to individual requests using fetch (same as working calls)
+      console.log('TeamPerformance: Using fallback individual requests');
       const statsMap: Record<number, any[]> = {};
-
-      for (const gameId of completedGameIds) {
+      for (const gameId of validGameIds) {
         try {
-          // Use the most efficient approach with 304 NOT MODIFIED responses
-          const stats = await apiRequest('GET', `/api/games/${gameId}/stats`);
-          statsMap[gameId] = stats;
+          const response = await fetch(`/api/games/${gameId}/stats`);
+          if (response.ok) {
+            const stats = await response.json();
+            statsMap[gameId] = stats;
+            console.log(`TeamPerformance: Individual request for game ${gameId} returned ${stats.length} stats`);
+          } else {
+            statsMap[gameId] = [];
+            console.warn(`TeamPerformance: Individual request for game ${gameId} failed with status ${response.status}`);
+          }
         } catch (error) {
-          console.error(`Error fetching stats for game ${gameId}:`, error);
-          statsMap[gameId] = []; // Use empty array for failed fetches
+          console.error(`TeamPerformance: Error fetching stats for game ${gameId}:`, error);
+          statsMap[gameId] = [];
         }
       }
 
@@ -306,11 +335,11 @@ export default function TeamPerformance({ games, className, activeSeason, select
             </div>
           </div>
 
-          
+
         </div>
         {/* Enhanced Performance Analysis */}
         <div className="mt-4 space-y-4">
-          
+
 
           {/* Option 3: Goals Distribution Chart */}
           <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
