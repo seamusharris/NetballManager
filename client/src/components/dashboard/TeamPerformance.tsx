@@ -34,7 +34,9 @@ export default function TeamPerformance({ games, className, activeSeason, select
 
   // Calculate basic performance metrics
   const totalGames = games.length;
-  const completedGamesArray = games.filter(game => game.gameStatus?.isCompleted === true);
+  const completedGamesArray = games.filter(game => 
+    game.statusIsCompleted && game.statusAllowsStatistics
+  );
   const completedGamesCount = completedGamesArray.length;
 
   // Add a key to force refresh when seasons change
