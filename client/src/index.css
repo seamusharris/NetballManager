@@ -380,14 +380,34 @@ input[type=number] {
 /* Disable Radix Select animations */
 [data-radix-select-content] {
   animation: none !important;
+  transition: none !important;
+  transform: none !important;
 }
 
 [data-radix-select-content][data-state="open"] {
   animation: none !important;
+  transition: none !important;
+  transform: none !important;
 }
 
 [data-radix-select-content][data-state="closed"] {
   animation: none !important;
+  transition: none !important;
+  transform: none !important;
+}
+
+/* Disable all Radix Select portal animations */
+[data-radix-popper-content-wrapper] {
+  animation: none !important;
+  transition: none !important;
+  transform: none !important;
+}
+
+/* Disable SelectContent specific animations */
+.select-content {
+  animation: none !important;
+  transition: none !important;
+  transform: none !important;
 }
 
 /* Enhanced tooltips */
