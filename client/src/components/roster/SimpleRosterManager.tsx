@@ -608,17 +608,17 @@ export default function SimpleRosterManager({
               </SelectTrigger>
               <SelectContent>
                 {[...allGames]
-                  .sort((a, b) => {
-                    // Safely parse round numbers or default to 0
-                    const roundA = a.round ? parseInt(a.round.toString()) : 0;
-                    const roundB = b.round ? parseInt(b.round.toString()) : 0;
-                    return roundA - roundB;
-                  })
-                  .map((game) => (
-                    <SelectItem key={game.id} value={game.id.toString()}>
-                      Round {game.round} - {opponents.find(o => o.id === game.opponentId)?.teamName || "Unknown Opponent"}
-                    </SelectItem>
-                  ))}
+                  .map((game) => {
+                    // Get opponent name from the team-based system
+                    // If this is an inter-club game, show the away team as the opponent
+                    const opponentName = game.awayTeamName || "Unknown Opponent";
+
+                    return (
+                      <SelectItem key={game.id} value={game.id.toString()}>
+                        Round {game.round} - vs {opponentName}
+                      </SelectItem>
+                    );
+                  })}
               </SelectContent>
             </Select>
           </div>
