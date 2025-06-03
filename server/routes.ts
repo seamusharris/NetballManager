@@ -1826,6 +1826,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Also support GET with query parameters for backwards compatibility
+  app.get("/api/games/stats/batch", async (req, res) => {
+    try {
+      const gameIdsParam = req.query.gameIds as string;
+      console.log("Batch endpoint received query:", req.query);
+      console.log("Extracted gameIds parameter:", gameIdsParam);
+
+      if (!gameIdsParam) {
+        console.log("Batch stats endpoint: No game IDs provided, returning empty object");
+        return res.json({});
+      }
+
+      // Parse and validate game IDs from query parameter
+      const gameIds = gameIdsParam.split(',').map(id => parseInt(id.trim(), 10)).filter(id => !isNaN(id) && id > 0);
+
+      if (!gameIds.length) {
+        return res.status(400).json({ error: "No valid game IDs provided" });
+      }
+
+      console.log(`Batch fetching stats for ${gameIds.length} games: ${gameIds.join(',')}`);
+
+      // Process each game ID in parallel with error handling
+      const statsPromises = gameIds.map(async (gameId) => {
+        try {
+          const stats = await storage.getGameStatsByGame(gameId);
+          return { gameId, stats, success: true };
+        } catch (error) {
+          console.error(`Error fetching stats for game ${gameId}:`, error);
+          return { gameId, stats: [], success: false };
+        }
+      });
+
+      const results = await Promise.all(statsPromises);
+
+      // Create a map of gameId -> stats[]
+      const statsMap = results.reduce((acc, result) => {
+        acc[result.gameId] = result.stats;
+        return acc;
+      }, {} as Record<number, any[]>);
+
+      console.log(`Batch endpoint successfully returned stats for ${gameIds.length} games`);
+      res.json(statsMap);
+    } catch (error) {
+      console.error(`Error in batch game stats endpoint:`, error);
+      res.status(500).json({ error: "Failed to get batch game stats" });
+    }
+  });
+
   // Get all game stats for a specific game
   app.get("/api/games/:gameId/stats", async (req, res) => {
     try {
