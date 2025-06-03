@@ -50,7 +50,12 @@ export default function RecentFormWidget({
     });
 
     const result = getWinLoseLabel(teamScore, opponentScore);
-    const opponent = opponents.find(o => o.id === game.opponentId);
+    // Find opponent team information from the game's away_team data
+    // Since we no longer use the opponents table, we need to get team info differently
+    const opponent = {
+      teamName: game.awayTeamName || game.homeTeamName || 'Unknown Team',
+      name: game.awayTeamName || game.homeTeamName || 'Unknown Team'
+    };
 
     return {
       id: game.id,

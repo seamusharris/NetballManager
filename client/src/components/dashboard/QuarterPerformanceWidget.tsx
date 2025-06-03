@@ -73,14 +73,11 @@ export default function QuarterPerformanceWidget({
 
         // Check if we got valid data - the batch endpoint returns an object where keys are game IDs
         if (batchStats && typeof batchStats === 'object') {
-          const gameIds = Object.keys(batchStats);
-          if (gameIds.length > 0) {
-            console.log(`QuarterPerformanceWidget: Successfully processed batch stats for ${gameIds.length} games`);
-            return batchStats;
-          }
+          console.log(`QuarterPerformanceWidget: Successfully received batch stats:`, Object.keys(batchStats));
+          return batchStats;
         }
         
-        console.warn('QuarterPerformanceWidget: Batch endpoint returned empty data, using fallback');
+        console.warn('QuarterPerformanceWidget: Batch endpoint returned invalid data, using fallback');
       } catch (error) {
         console.warn("QuarterPerformanceWidget: Batch endpoint failed, falling back to individual requests:", error);
       }
