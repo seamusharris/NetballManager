@@ -35,26 +35,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
     // For development, simulate an authenticated user with access to all clubs
     if (!req.user) {
       try {
-        // Get all clubs from database for dev user
-        const allClubs = await db.execute(sql`SELECT id, name, code FROM clubs WHERE is_active = true`);
+        // Check database health first
+        const isHealthy = await checkPoolHealth();
+        if (!isHealthy) {
+          console.warn('Database connection unhealthy, using fallback user setup');
+          req.user = {
+            id: 1,
+            username: 'dev-user',
+            clubs: [],
+            currentClubId: null
+          };
+        } else {
+          // Get all clubs from database for dev user with retry logic
+          let allClubs;
+          let retryCount = 0;
+          const maxRetries = 3;
 
-        const userClubs = allClubs.rows.map(club => ({
-          clubId: club.id,
-          role: 'admin',
-          permissions: {
-            canManagePlayers: true,
-            canManageGames: true,
-            canManageStats: true,
-            canViewOtherTeams: true,
+          while (retryCount < maxRetries) {
+            try {
+              allClubs = await db.execute(sql`SELECT id, name, code FROM clubs WHERE is_active = true`);
+              break;
+            } catch (dbError: any) {
+              retryCount++;
+              console.warn(`Database query attempt ${retryCount} failed:`, dbError.message);
+              
+              if (retryCount >= maxRetries) {
+                throw dbError;
+              }
+              
+              // Wait before retry (exponential backoff)
+              await new Promise(resolve => setTimeout(resolve, Math.pow(2, retryCount) * 100));
+            }
           }
-        }));
 
-        req.user = {
-          id: 1,
-          username: 'dev-user',
-          clubs: userClubs,
-          currentClubId: null // Will be set below
-        };
+          const userClubs = allClubs.rows.map(club => ({
+            clubId: club.id,
+            role: 'admin',
+            permissions: {
+              canManagePlayers: true,
+              canManageGames: true,
+              canManageStats: true,
+              canViewOtherTeams: true,
+            }
+          }));
+
+          req.user = {
+            id: 1,
+            username: 'dev-user',
+            clubs: userClubs,
+            currentClubId: null // Will be set below
+          };
+        }
       } catch (error) {
         console.error('Error loading clubs for dev user:', error);
         // Fallback to basic setup without default club
@@ -2177,9 +2208,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // User clubs endpoint - return actual clubs from database
   app.get('/api/user/clubs', async (req: any, res) => {
     try {
+      // Import the safe database wrapper
+      const { safeExecute } = await import('./db-wrapper');
+      
       // Get all active clubs and return them as user clubs
       // In a real implementation, this would be filtered by user access
-      const result = await db.execute(sql`
+      const result = await safeExecute(sql`
         SELECT id, name, code FROM clubs WHERE is_active = true ORDER BY name
       `);
 
@@ -2200,7 +2234,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(userClubs);
     } catch (error) {
       console.error('Error fetching user clubs:', error);
-      res.status(500).json({ error: 'Failed to fetch user clubs' });
+      // Return empty array on error to prevent app crashes
+      res.json([]);
     }
   });
 

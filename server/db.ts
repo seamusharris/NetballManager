@@ -112,14 +112,39 @@ export async function getPlayerSeasons(playerId: number) {
 export async function checkPoolHealth() {
   let client;
   try {
+    // Set a shorter timeout for health checks
     client = await pool.connect();
-    await client.query('SELECT 1');
+    
+    // Simple query with timeout
+    const result = await Promise.race([
+      client.query('SELECT 1'),
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Health check timeout')), 3000)
+      )
+    ]);
+    
     return true;
-  } catch (error) {
-    console.error('Database connection check failed:', error);
+  } catch (error: any) {
+    console.error('Database connection check failed:', {
+      message: error.message,
+      code: error.code,
+      severity: error.severity
+    });
+    
+    // Check if it's a connection termination error
+    if (error.code === '57P01' || error.code === 'ECONNRESET') {
+      console.log('Database connection was terminated, will attempt reconnection on next request');
+    }
+    
     return false;
   } finally {
-    if (client) client.release();
+    if (client) {
+      try {
+        client.release();
+      } catch (releaseError) {
+        console.warn('Error releasing client:', releaseError);
+      }
+    }
   }
 }
 
