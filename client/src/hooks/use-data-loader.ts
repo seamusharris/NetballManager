@@ -68,20 +68,28 @@ export function useDataLoader<T>(
   });
   
   useEffect(() => {
-    if (query.isLoading) {
+    // Update status based on query state, but prioritize data availability
+    if (query.data && !query.error) {
+      setStatus('success');
+    } else if (query.isLoading && !query.data) {
       setStatus('loading');
+    } else if (query.error) {
+      setStatus('error');
     }
-  }, [query.isLoading]);
+  }, [query.isLoading, query.data, query.error]);
   
   // Apply transformation if provided
   const transformedData = transform && query.data
     ? transform(query.data)
     : query.data;
   
+  // Return loading as false if we have data, even if background refresh is happening
+  const isLoading = status === 'loading' && !query.data;
+  
   return {
     data: transformedData as T,
     status,
-    isLoading: status === 'loading',
+    isLoading,
     isError: status === 'error',
     error: query.error,
     refetch: query.refetch
