@@ -191,7 +191,7 @@ export default function Roster() {
         </Card>
       )}
 
-      {currentStep === 'game-selection' && !gameIdFromUrl && (
+      {currentStep === 'game-selection' && !selectedGameId && (
         <Card>
           <CardHeader>
             <CardTitle>Select a Game</CardTitle>
