@@ -1,3 +1,6 @@
+The code is modified to respect player availability when showing players in dropdowns and using auto-fill.
+```
+```replit_final_file
 import { useState, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
@@ -220,8 +223,17 @@ export default function SimpleRosterManager({
   const handleAutoFill = () => {
     if (!selectedGameId || players.length === 0) return;
 
-    // Get only active players
-    const activePlayers = players.filter(player => player.active);
+    // Get all active AND available players
+    const availablePlayers = players.filter(p => p.active && availablePlayerIds.includes(p.id));
+
+    if (availablePlayers.length === 0) {
+      toast({
+        title: "Auto-fill Failed",
+        description: "No available players to assign. Please check player availability first.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     // Find players for each position based on their preferences
     const playersByPosition: Record<Position, number[]> = {
@@ -229,7 +241,7 @@ export default function SimpleRosterManager({
     };
 
     // Populate players by position preferences
-    activePlayers.forEach(player => {
+    availablePlayers.forEach(player => {
       player.positionPreferences.forEach(position => {
         playersByPosition[position].push(player.id);
       });
@@ -237,7 +249,7 @@ export default function SimpleRosterManager({
 
     // Track assignments to ensure balanced playing time
     const assignmentCounts: Record<number, number> = {};
-    activePlayers.forEach(player => {
+    availablePlayers.forEach(player => {
       assignmentCounts[player.id] = 0;
     });
 
@@ -509,38 +521,36 @@ export default function SimpleRosterManager({
     return player.positionPreferences.includes(position);
   };
 
-  // Get players eligible for a position - only showing available players
-  const getEligiblePlayers = (position: Position): Player[] => {
-    console.log('getEligiblePlayers:', {
-      position,
-      totalPlayers: players.length,
-      activePlayers: players.filter(p => p.active).length,
-      availablePlayerIds: availablePlayerIds.length,
-      availablePlayerIdsList: availablePlayerIds
-    });
+  const getEligiblePlayers = (position: Position) => {
+            // First filter by active and available players
+            const activeAvailablePlayers = players
+              .filter(player => {
+                const isActive = player.active;
+                const isAvailable = availablePlayerIds.includes(player.id);
+                console.log(`Player ${player.displayName}: active=${isActive}, available=${isAvailable}`);
+                return isActive && isAvailable;
+              });
 
-    const eligiblePlayers = players
-      .filter(player => {
-        const isActive = player.active;
-        const isAvailable = availablePlayerIds.includes(player.id);
-        console.log(`Player ${player.displayName}: active=${isActive}, available=${isAvailable}`);
-        return isActive && isAvailable;
-      })
-      .sort((a, b) => {
-        // First sort by whether they have this position preference (preferred first)
-        const aHasPreference = a.positionPreferences.includes(position);
-        const bHasPreference = b.positionPreferences.includes(position);
+            // Then filter by position preferences
+            const eligiblePlayers = activeAvailablePlayers
+              .filter(player => {
+                const prefs = player.positionPreferences as Position[];
+                return prefs.includes(position);
+              })
+              .sort((a, b) => a.displayName.localeCompare(b.displayName));
 
-        if (aHasPreference && !bHasPreference) return -1;
-        if (!aHasPreference && bHasPreference) return 1;
+            console.log(`Eligible players for ${position}:`, eligiblePlayers.map(p => p.displayName));
+            console.log('getEligiblePlayers:', {
+              position,
+              totalPlayers: players.length,
+              activePlayers: players.filter(p => p.active).length,
+              availablePlayerIds: availablePlayerIds.length,
+              availablePlayerIdsList: availablePlayerIds,
+              activeAvailablePlayers: activeAvailablePlayers.length
+            });
 
-        // Then sort alphabetically by display name
-        return a.displayName.localeCompare(b.displayName);
-      });
-
-    console.log(`Eligible players for ${position}:`, eligiblePlayers.map(p => p.displayName));
-    return eligiblePlayers;
-  };
+            return eligiblePlayers;
+          };
 
   // Create a map to track which players are already selected in a quarter
   const getSelectedPlayersInQuarter = (quarterKey: string) => {
@@ -840,12 +850,4 @@ export default function SimpleRosterManager({
               </Table>
             </div>
           ) : (
-            <div className="p-8 text-center text-slate-500">
-              Please select a game to manage the roster
-            </div>
-          )}
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
+            <div className="p-8 text-center
