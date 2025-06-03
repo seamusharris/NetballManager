@@ -10,7 +10,7 @@ import { TrendingUp, TrendingDown, Target, Trophy } from 'lucide-react';
 import { Game, Opponent, Season } from '@shared/schema';
 import { getWinLoseLabel } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
-import { apiRequest } from '@/lib/apiClient';
+import { apiClient } from '@/lib/apiClient';
 import { GameResult } from '@/lib/resultUtils';
 
 interface OpponentMatchup {
@@ -39,14 +39,14 @@ export default function OpponentAnalysis() {
 
   const { data: games = [], isLoading: gamesLoading } = useQuery({
     queryKey: ['games'],
-    queryFn: () => apiRequest('GET', '/api/games')
+    queryFn: () => apiClient.get('/api/games')
   });
 
   const { data: opponents = [], isLoading: opponentsLoading } = useQuery({
     queryKey: ['opponents'],
     queryFn: async () => {
       try {
-        const result = await apiRequest('GET', '/api/opponents');
+        const result = await apiClient.get('/api/opponents');
         return Array.isArray(result) ? result : [];
       } catch (error) {
         console.warn('Opponents API not available (expected - system has been migrated to teams)');
@@ -57,12 +57,12 @@ export default function OpponentAnalysis() {
 
   const { data: seasons = [], isLoading: seasonsLoading } = useQuery({
     queryKey: ['seasons'],
-    queryFn: () => apiRequest('GET', '/api/seasons')
+    queryFn: () => apiClient.get('/api/seasons')
   });
 
   const { data: activeSeason } = useQuery({
     queryKey: ['activeSeason'],
-    queryFn: () => apiRequest('GET', '/api/seasons/active')
+    queryFn: () => apiClient.get('/api/seasons/active')
   });
 
   // Fetch centralized stats for all completed games that allow statistics
@@ -76,7 +76,7 @@ export default function OpponentAnalysis() {
       if (completedGameIds.length === 0) return {};
 
       try {
-        const response = await apiRequest('GET', `/api/games/stats/batch?gameIds=${completedGameIds.join(',')}`);
+        const response = await apiClient.get(`/api/games/stats/batch?gameIds=${completedGameIds.join(',')}`);
         return response;
       } catch (error) {
         console.error('Error fetching centralized stats:', error);
