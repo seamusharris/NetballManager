@@ -9,6 +9,8 @@ import { Player, Game, Opponent } from '@shared/schema';
 import { formatShortDate, cn, getInitials } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
+import { useDataLoader } from '@/hooks/use-data-loader';
+import { apiClient } from '@/lib/apiClient';
 
 // Define the PlayerAvatar component
 interface PlayerAvatarProps {
@@ -58,8 +60,33 @@ export default function PlayerAvailabilityManager({
 }: PlayerAvailabilityManagerProps) {
   const { toast } = useToast();
   const [availablePlayerIds, setAvailablePlayerIds] = useState<number[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+
+  // Use centralized data loading for availability
+  const { 
+    data: availabilityData, 
+    isLoading, 
+    error: availabilityError 
+  } = useDataLoader<{availablePlayerIds: number[]}>(`/api/games/${gameId}/availability`, {
+    enabled: !!gameId,
+    onError: () => {
+      // Fallback to all active players on error
+      const activePlayerIds = players.filter(p => p.active).map(p => p.id);
+      setAvailablePlayerIds(activePlayerIds);
+    }
+  });
+
+  // Update local state when data loads
+  useEffect(() => {
+    if (availabilityData?.availablePlayerIds) {
+      setAvailablePlayerIds(availabilityData.availablePlayerIds);
+    } else if (!isLoading && !availabilityError) {
+      // Fallback to all active players if no availability data
+      const activePlayerIds = players.filter(p => p.active).map(p => p.id);
+      setAvailablePlayerIds(activePlayerIds);
+    }
+  }, [availabilityData, isLoading, availabilityError, players]);
+
   const [searchQuery, setSearchQuery] = useState('');
 
   // Early return if no gameId - moved after ALL hooks
@@ -73,35 +100,6 @@ export default function PlayerAvailabilityManager({
 
   const selectedGame = games.find(game => game.id === gameId);
   const opponent = selectedGame?.opponentId ? opponents.find(o => o.id === selectedGame.opponentId) : null;
-
-  // Load existing availability data when component mounts or gameId changes
-  useEffect(() => {
-    const loadAvailability = async () => {
-      if (!gameId) return;
-
-      setIsLoading(true);
-      try {
-        const response = await fetch(`/api/games/${gameId}/availability`);
-        if (response.ok) {
-          const data = await response.json();
-          setAvailablePlayerIds(data.availablePlayerIds || []);
-        } else {
-          // If no availability data exists, assume all active players are available
-          const activePlayerIds = players.filter(p => p.active).map(p => p.id);
-          setAvailablePlayerIds(activePlayerIds);
-        }
-      } catch (error) {
-        console.error('Error loading availability:', error);
-        // Fallback to all active players
-        const activePlayerIds = players.filter(p => p.active).map(p => p.id);
-        setAvailablePlayerIds(activePlayerIds);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadAvailability();
-  }, [gameId, players]);
 
   // Handle availability change
   const handleAvailabilityChange = async (playerId: number, isAvailable: boolean) => {
@@ -120,16 +118,10 @@ export default function PlayerAvailabilityManager({
       duration: 2000,
     })
 
-    // Save to backend
+    // Save to backend using centralized API client
     try {
       setIsSaving(true);
-      await fetch(`/api/games/${gameId}/availability/${playerId}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ isAvailable }),
-      });
+      await apiClient.patch(`/api/games/${gameId}/availability/${playerId}`, { isAvailable });
     } catch (error) {
       console.error('Error updating availability:', error);
       toast({
