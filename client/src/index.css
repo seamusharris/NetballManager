@@ -377,6 +377,19 @@ input[type=number] {
   }
 }
 
+/* Disable Radix Select animations */
+[data-radix-select-content] {
+  animation: none !important;
+}
+
+[data-radix-select-content][data-state="open"] {
+  animation: none !important;
+}
+
+[data-radix-select-content][data-state="closed"] {
+  animation: none !important;
+}
+
 /* Enhanced tooltips */
 [title] {
   position: relative;
