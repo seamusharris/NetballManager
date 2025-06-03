@@ -82,12 +82,13 @@ export default function Games() {
     queryFn: () => apiClient.get('/api/seasons/active')
   });
 
-  const { data: gameStatuses = [], isLoading: gameStatusesLoading, error: gameStatusesError } = useGameStatuses();
+  // Fetch game statuses
+  const { data: gameStatuses = [], isLoading: isLoadingGameStatuses, error: gameStatusesError } = useGameStatuses();
 
   // Debug game statuses
   console.log('Games page - Game statuses:', {
     gameStatuses: gameStatuses.length,
-    isLoading: gameStatusesLoading,
+    isLoading: isLoadingGameStatuses,
     error: gameStatusesError,
     sampleStatus: gameStatuses[0]
   });
@@ -219,7 +220,7 @@ export default function Games() {
         setIsOpen={setIsDialogOpen}
         title="Add Game"
       >
-        {(isLoadingTeams || gameStatusesLoading) ? (
+        {(isLoadingTeams || isLoadingGameStatuses) ? (
           <div className="p-4 text-center">
             <p className="text-gray-500 mb-4">
               Loading {isLoadingTeams ? 'teams' : 'game status'} data...
