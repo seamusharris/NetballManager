@@ -1166,10 +1166,20 @@ export default function GameDetails() {
     if (game) {
       console.log("GameDetails - Game data:", game ? { 
     id: game.id, 
-    homeTeamName: game.home_team_name, 
-    awayTeamName: game.away_team_name,
+    homeTeamName: game.homeTeamName || game.home_team_name, 
+    awayTeamName: game.awayTeamName || game.away_team_name,
     homeClubName: game.homeClubName,
-    awayClubName: game.awayClubName
+    awayClubName: game.awayClubName,
+    statusName: game.statusName,
+    // Show both formats for debugging
+    camelCase: {
+      homeTeamName: game.homeTeamName,
+      awayTeamName: game.awayTeamName
+    },
+    snakeCase: {
+      home_team_name: game.home_team_name,
+      away_team_name: game.away_team_name
+    }
   } : null);
     }
   }, [game]);
@@ -1221,11 +1231,11 @@ export default function GameDetails() {
           </div>
 
           <h1 className="text-2xl font-bold">
-            {game.status === 'bye' ? (
+            {game.statusName === 'bye' || game.isBye ? (
               <span>BYE Round</span>
             ) : (
               <span>
-                {game.home_team_name || 'Home Team'} vs {game.away_team_name || 'Away Team'}
+                {game.homeTeamName || game.home_team_name || 'Home Team'} vs {game.awayTeamName || game.away_team_name || 'Away Team'}
               </span>
             )}
           </h1>
