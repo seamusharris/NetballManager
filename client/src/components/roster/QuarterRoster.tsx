@@ -71,11 +71,8 @@ export default function QuarterRoster({
       {positions.map(position => {
         const assignedPlayerId = assignments[position];
         const assignedPlayer = getPlayer(assignedPlayerId);
-        // Filter by position preference first, then by availability
-        const availablePlayers = filterPlayersByPosition(
-          availablePlayersForPosition(position, assignedPlayerId),
-          position
-        );
+        // Show all available players, not just those with position preferences
+        const availablePlayers = availablePlayersForPosition(position, assignedPlayerId);
         
         return (
           <div key={position} className="bg-gray-50 p-4 rounded-lg">
@@ -100,11 +97,18 @@ export default function QuarterRoster({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">Select player</SelectItem>
-                {availablePlayers.map(player => (
-                  <SelectItem key={player.id} value={player.id.toString()}>
-                    {player.displayName}
-                  </SelectItem>
-                ))}
+                {availablePlayers.map(player => {
+                  const preferenceRank = getPreferenceRank(player, position);
+                  const displayText = preferenceRank 
+                    ? `${player.displayName} (Pref: #${preferenceRank})`
+                    : `${player.displayName} (Not preferred)`;
+                  
+                  return (
+                    <SelectItem key={player.id} value={player.id.toString()}>
+                      {displayText}
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
             

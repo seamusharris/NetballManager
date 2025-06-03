@@ -546,7 +546,7 @@ export default function SimpleRosterManager({
               activeAvailablePlayers: activeAvailablePlayers.length
             });
 
-            return eligiblePlayers;
+            return activeAvailablePlayers.sort((a, b) => a.displayName.localeCompare(b.displayName));
           };
 
   // Create a map to track which players are already selected in a quarter
@@ -785,6 +785,18 @@ export default function SimpleRosterManager({
                           quarterKey === '3' ? localRosterState['3'][position] :
                           quarterKey === '4' ? localRosterState['4'][position] : null;
 
+                        // Filter available players by those not already selected in this quarter
+                        const availablePlayers = players.filter(player => 
+                          !selectedPlayers.has(player.id) || player.id === currentPlayerId
+                        );
+
+                        // Helper function to get preference rank for display
+                        const getPreferenceRank = (player: Player, pos: Position) => {
+                          const preferences = player.positionPreferences as Position[];
+                          const rank = preferences.indexOf(pos);
+                          return rank === -1 ? null : rank + 1;
+                        };
+
                         return (
                           <TableCell key={`${position}-${quarter}`} className="p-1 min-w-[160px]">
                             <Select
@@ -801,14 +813,18 @@ export default function SimpleRosterManager({
                               </SelectTrigger>
                               <SelectContent>
                                 <SelectItem value="0">-- None --</SelectItem>
-                                {getEligiblePlayers(position)
-                                  .filter(player => !selectedPlayers.has(player.id) || player.id === currentPlayerId)
-                                  .map(player => (
+                                {availablePlayers.map(player => {
+                                  const preferenceRank = getPreferenceRank(player, position);
+                                  const displayText = preferenceRank 
+                                    ? `${player.displayName} (Pref: #${preferenceRank})`
+                                    : `${player.displayName} (Not preferred)`;
+
+                                  return (
                                     <SelectItem key={player.id} value={player.id.toString()}>
-                                      {player.displayName}
+                                      {displayText}
                                     </SelectItem>
-                                  ))
-                                }
+                                  );
+                                })}
                               </SelectContent>
                             </Select>
                           </TableCell>
@@ -830,7 +846,7 @@ export default function SimpleRosterManager({
                         .sort((a, b) => a.displayName.localeCompare(b.displayName)); // Sort alphabetically
 
                       return (
-                        <TableCell key={`off-${quarter}`} className="p-1 min-w-[160px]">
+                        <TableCell key={`off-${quarter}`} className=`"p-1 min-w-[160px]">
                           <div className="flex h-10 w-full rounded-md border border-input bg-slate-50 px-3 py-2 text-sm">
                             {playersNotInQuarter.length > 0 ? (
                               <div className="truncate my-auto">
