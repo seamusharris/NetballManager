@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useParams, useLocation } from 'wouter';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { ResultBadge } from '@/components/ui/result-badge';
 import { GameResult } from '@/lib/resultUtils';
 import { BackButton } from '@/components/ui/back-button';
@@ -22,7 +23,14 @@ export default function OpponentDetailed() {
 
   const { data: opponents = [], isLoading: opponentsLoading } = useQuery({
     queryKey: ['opponents'],
-    queryFn: () => apiRequest('GET', '/api/opponents')
+    queryFn: async () => {
+      try {
+        return await apiRequest('GET', '/api/opponents');
+      } catch (error) {
+        console.warn('Opponents API not available (expected - system has been migrated to teams)');
+        return [];
+      }
+    }
   });
 
   // Fetch centralized stats for all completed games that allow statistics

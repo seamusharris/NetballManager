@@ -44,7 +44,14 @@ export default function OpponentAnalysis() {
 
   const { data: opponents = [], isLoading: opponentsLoading } = useQuery({
     queryKey: ['opponents'],
-    queryFn: () => apiRequest('GET', '/api/opponents')
+    queryFn: async () => {
+      try {
+        return await apiRequest('GET', '/api/opponents');
+      } catch (error) {
+        console.warn('Opponents API not available (expected - system has been migrated to teams)');
+        return [];
+      }
+    }
   });
 
   const { data: seasons = [], isLoading: seasonsLoading } = useQuery({
