@@ -45,7 +45,7 @@ interface PlayerAvailabilityManagerProps {
   players: Player[];
   games: Game[];
   opponents: Opponent[];
-  onComplete: () => void;
+  onComplete?: () => void;
 }
 
 export default function PlayerAvailabilityManager({
@@ -55,36 +55,46 @@ export default function PlayerAvailabilityManager({
   opponents,
   onComplete
 }: PlayerAvailabilityManagerProps) {
-  const [availablePlayers, setAvailablePlayers] = useState<number[]>([]);
-  const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
+  const [availablePlayerIds, setAvailablePlayerIds] = useState<number[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
 
-  // Get the selected game and opponent
-  const game = games.find(g => g.id === gameId);
-  const opponent = opponents.find(o => o.id === game?.opponentId);
+  // Early return if no gameId - moved after hooks
+  if (!gameId) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-gray-500">Please select a game to manage player availability.</p>
+      </div>
+    );
+  }
+
+  const selectedGame = games.find(game => game.id === gameId);
+  const opponent = selectedGame?.opponentId ? opponents.find(o => o.id === selectedGame.opponentId) : null;
 
   // Load existing availability data when component mounts or gameId changes
   useEffect(() => {
     const loadAvailability = async () => {
       if (!gameId) return;
 
-      setLoading(true);
+      setIsLoading(true);
       try {
         const response = await fetch(`/api/games/${gameId}/availability`);
         if (response.ok) {
           const data = await response.json();
-          setAvailablePlayers(data.availablePlayerIds || []);
+          setAvailablePlayerIds(data.availablePlayerIds || []);
         } else {
           // If no availability data exists, assume all active players are available
           const activePlayerIds = players.filter(p => p.active).map(p => p.id);
-          setAvailablePlayers(activePlayerIds);
+          setAvailablePlayerIds(activePlayerIds);
         }
       } catch (error) {
         console.error('Error loading availability:', error);
         // Fallback to all active players
         const activePlayerIds = players.filter(p => p.active).map(p => p.id);
-        setAvailablePlayers(activePlayerIds);
+        setAvailablePlayerIds(activePlayerIds);
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
     };
 
@@ -94,7 +104,7 @@ export default function PlayerAvailabilityManager({
   // Handle availability change
   const handleAvailabilityChange = async (playerId: number, isAvailable: boolean) => {
     // Update local state immediately for responsive UI
-    setAvailablePlayers(prev => {
+    setAvailablePlayerIds(prev => {
       if (isAvailable) {
         return prev.includes(playerId) ? prev : [...prev, playerId];
       } else {
@@ -102,8 +112,15 @@ export default function PlayerAvailabilityManager({
       }
     });
 
+    // Optimistically update
+    toast({
+      title: isAvailable ? "Player added to available list." : "Player removed from available list.",
+      duration: 2000,
+    })
+
     // Save to backend
     try {
+      setIsSaving(true);
       await fetch(`/api/games/${gameId}/availability/${playerId}`, {
         method: 'PATCH',
         headers: {
@@ -113,18 +130,24 @@ export default function PlayerAvailabilityManager({
       });
     } catch (error) {
       console.error('Error updating availability:', error);
+      toast({
+        title: "Failed to update availability. Reverting...",
+        variant: "destructive",
+      });
       // Revert local state on error
-      setAvailablePlayers(prev => {
+      setAvailablePlayerIds(prev => {
         if (!isAvailable) {
           return prev.includes(playerId) ? prev : [...prev, playerId];
         } else {
           return prev.filter(id => id !== playerId);
         }
       });
+    } finally {
+      setIsSaving(false);
     }
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <Card className="mb-6">
         <CardContent className="pt-6">
@@ -197,9 +220,9 @@ export default function PlayerAvailabilityManager({
       <CardHeader className="pb-3">
         <CardTitle className="text-xl">
           Player Availability 
-          {game && opponent && (
+          {selectedGame && opponent && (
             <span className="font-normal text-gray-600 ml-2">
-              for Round {game.round} vs {opponent.teamName}
+              for Round {selectedGame.round} vs {opponent.teamName}
             </span>
           )}
         </CardTitle>
@@ -217,13 +240,13 @@ export default function PlayerAvailabilityManager({
           <div className="flex items-center gap-2 ml-4">
             <Label className="text-sm font-medium">
               <Badge variant="outline" className="mr-1">
-                {availablePlayers.length}
+                {availablePlayerIds.length}
               </Badge>
               Available
             </Label>
             <Button 
               onClick={onComplete}
-              disabled={availablePlayers.length === 0}
+              disabled={availablePlayerIds.length === 0}
               className="ml-2"
             >
               <Check className="mr-2 h-4 w-4" />
@@ -237,7 +260,7 @@ export default function PlayerAvailabilityManager({
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-2">
           {filteredPlayers.length > 0 ? (
             filteredPlayers.map(player => {
-              const isAvailable = availablePlayers.includes(player.id);
+              const isAvailable = availablePlayerIds.includes(player.id);
               const playerColor = getPlayerColor(player);
               const colorHex = getColorHex(playerColor);
               const displayName = player.displayName || `${player.firstName} ${player.lastName}`;
@@ -279,6 +302,7 @@ export default function PlayerAvailabilityManager({
                         onCheckedChange={(checked) => {
                           handleAvailabilityChange(player.id, checked);
                         }}
+                        disabled={isSaving}
                       />
                     </div>
                   </div>
