@@ -136,6 +136,7 @@ import {
 } from '@/lib/statisticsService';
 import { GameStatusButton } from '@/components/games/GameStatusButton';
 import LiveStatsButton from '@/components/games/LiveStatsButton';
+import { apiClient } from '@/lib/apiClient';
 
 // Function to get opponent name
 const getOpponentName = (opponents: any[], opponentId: number | null) => {
@@ -734,7 +735,8 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
 
             return (
               <div key={position} className="col-span-1">
-```jsx                <PositionBox                  position={position as Position}
+                <PositionBox
+                  position={position as Position}
                   playerName={playerName}
                   playerColor={playerColor}
                   playerStats={playerStats}
@@ -1044,10 +1046,10 @@ export default function GameDetails() {
 
   const [activeTab, setActiveTab] = useState('overview');
 
-    // Fetch current club
+    // Fetch current club using apiClient
     const { data: currentClub } = useQuery({
       queryKey: ['/api/clubs/current'],
-      queryFn: () => fetch('/api/clubs/current').then(res => res.json()),
+      queryFn: () => apiClient.get('/api/clubs/current'),
     });
 
   // Fetch game data
@@ -1666,7 +1668,6 @@ export default function GameDetails() {
                                 </div>
                               </div>
                             </div>
-                          ```jsx
                           </div>
                         );
                       })()}

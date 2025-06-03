@@ -33,7 +33,7 @@ export class ApiClient {
 
     // For API endpoints that require club ID, wait a bit if club ID is not available yet
     const requiresClubId = ['/api/players', '/api/games', '/api/teams'].some(route => endpoint.includes(route));
-    
+
     if (requiresClubId && !currentClubId) {
       // Wait a short time for club context to initialize, then try again
       await new Promise(resolve => setTimeout(resolve, 100));
@@ -49,7 +49,7 @@ export class ApiClient {
     };
 
     // Always include the club ID header if available and not excluded routes
-    const excludedRoutes = ['/api/user/clubs', '/api/seasons', '/api/opponents'];
+    const excludedRoutes = ['/api/user/clubs', '/api/seasons', '/api/seasons/active'];
     const shouldIncludeClubId = currentClubId && !excludedRoutes.some(route => endpoint.includes(route));
 
     if (shouldIncludeClubId) {
