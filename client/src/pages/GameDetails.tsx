@@ -8,7 +8,7 @@ import { PositionStatsBox } from '@/components/games/PositionStatsBox';
 import { PositionBox } from '@/components/games/PositionBox';
 import { GamePositionStatsBox } from '@/components/games/GamePositionStatsBox';
 import AwardWinnerDisplay from '@/components/awards/AwardWinnerDisplay';
-import { GameForm } from '@/components/games/GameForm';
+import GameForm from '@/components/games/GameForm';
 import PrintableRosterSummary from '@/components/roster/PrintableRosterSummary';
 import PrintableStatsSheet from '@/components/stats/PrintableStatsSheet';
 import { 

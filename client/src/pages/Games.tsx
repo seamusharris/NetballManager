@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { GameForm } from '@/components/games/GameForm';
+import GameForm from '@/components/games/GameForm';
 import { GamesList } from '@/components/games/GamesList';
 import { CrudDialog } from '@/components/ui/crud-dialog';
 import { Plus, Loader2 } from 'lucide-react';
