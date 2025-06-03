@@ -88,14 +88,14 @@ export default function PlayerAvailabilityManager({
       gameId
     });
 
-    if (availabilityData?.availablePlayerIds) {
+    if (availabilityData?.availablePlayerIds && availabilityData.availablePlayerIds.length > 0) {
       console.log('Setting available players from API:', availabilityData.availablePlayerIds);
       setAvailablePlayerIds(availabilityData.availablePlayerIds);
       onAvailabilityChange?.(availabilityData.availablePlayerIds);
-    } else if (!isLoading && !availabilityError && players.length > 0) {
-      // Fallback to all active players if no availability data
+    } else if (!isLoading && players.length > 0) {
+      // Fallback to all active players if no availability data or empty array
       const activePlayerIds = players.filter(p => p.active).map(p => p.id);
-      console.log('Setting fallback available players:', activePlayerIds);
+      console.log('Setting fallback available players (no data or empty array):', activePlayerIds);
       setAvailablePlayerIds(activePlayerIds);
       onAvailabilityChange?.(activePlayerIds);
     }
