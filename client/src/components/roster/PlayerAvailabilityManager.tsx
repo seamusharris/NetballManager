@@ -117,9 +117,11 @@ export default function PlayerAvailabilityManager({
   // Early return if no gameId - moved after ALL hooks
   if (!gameId) {
     return (
-      <div className="text-center py-8">
-        <p className="text-gray-500">Please select a game to manage player availability.</p>
-      </div>
+      <Card className="mb-6">
+        <CardContent className="pt-6 text-center">
+          <p className="text-gray-500">Please select a game to manage player availability.</p>
+        </CardContent>
+      </Card>
     );
   }
 
@@ -271,7 +273,7 @@ export default function PlayerAvailabilityManager({
               className="ml-2"
             >
               <Check className="mr-2 h-4 w-4" />
-              Continue to Roster
+              Continue to Roster ({availablePlayerIds.length} available)
             </Button>
           </div>
         </div>

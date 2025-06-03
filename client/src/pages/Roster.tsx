@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { AlertCircle, Users, Calendar, Settings } from 'lucide-react';
+import { AlertCircle, Users, Calendar, Settings, ArrowRight, ClipboardList } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { apiRequest } from '@/lib/apiClient';
 import SimpleRosterManager from '@/components/roster/SimpleRosterManager';
@@ -17,10 +17,10 @@ export default function Roster() {
   const params = useParams();
   const gameIdFromUrl = params.gameId ? parseInt(params.gameId) : null;
   const [selectedGameId, setSelectedGameId] = useState<number | null>(gameIdFromUrl);
-  const [showPlayerAvailability, setShowPlayerAvailability] = useState(true); // Start with availability if coming from direct link
   const [availablePlayerIds, setAvailablePlayerIds] = useState<number[]>([]);
   const [, navigate] = useLocation();
   const { currentClub } = useClub();
+  const [currentStep, setCurrentStep] = useState<'game-selection' | 'availability' | 'roster'>('game-selection');
 
   // Fetch games
   const { data: games = [], isLoading: gamesLoading, error: gamesError } = useQuery({
@@ -31,23 +31,14 @@ export default function Roster() {
   });
 
   // Fetch players
-  const { data: players = [], isLoading: playersLoading } = useQuery({
+  const { data: players = [], isLoading: playersLoading, error: playersError } = useQuery({
     queryKey: ['players', currentClub?.id],
     queryFn: () => apiRequest('GET', '/api/players'),
     enabled: !!currentClub?.id
   });
 
-  // Initialize available players to all active players when players load
-  useEffect(() => {
-    if (players.length > 0 && availablePlayerIds.length === 0) {
-      const activePlayerIds = players.filter(p => p.active).map(p => p.id);
-      setAvailablePlayerIds(activePlayerIds);
-    }
-  }, [players, availablePlayerIds.length]);
-
-
   // Fetch opponents for legacy support
-  const { data: opponents = [] } = useQuery({
+  const { data: opponents = [], isLoading: opponentsLoading, error: opponentsError } = useQuery({
     queryKey: ['opponents'],
     queryFn: async () => {
       try {
@@ -60,180 +51,184 @@ export default function Roster() {
     }
   });
 
-  const isLoading = gamesLoading || playersLoading;
-
-  // Check if club context is available
-  if (!currentClub?.id) {
-    return (
-      <div className="container py-6">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No Club Selected</h3>
-              <p className="text-gray-500 mb-4">
-                Please select a club to manage rosters.
-              </p>
-              <Button onClick={() => navigate('/dashboard')}>
-                Go to Dashboard
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  // Filter out completed games and BYE games for roster management
-  const availableGames = games.filter((game: Game) =>
-    !game.statusIsCompleted && !game.completed && !game.isBye
-  );
-
-  // Auto-select first available game if none selected and no URL parameter
+  // Initialize available players to all active players when players load
   useEffect(() => {
-    if (!selectedGameId && availableGames.length > 0 && !gameIdFromUrl) {
-      setSelectedGameId(availableGames[0].id);
+    if (players.length > 0 && availablePlayerIds.length === 0) {
+      const activePlayerIds = players.filter(p => p.active).map(p => p.id);
+      setAvailablePlayerIds(activePlayerIds);
     }
-  }, [availableGames, selectedGameId, gameIdFromUrl]);
+  }, [players, availablePlayerIds.length]);
 
-  // If URL parameter provided, ensure it's valid
+  // Set selected game and step on mount if from URL
   useEffect(() => {
-    if (gameIdFromUrl && availableGames.length > 0) {
-      const gameExists = availableGames.find(game => game.id === gameIdFromUrl);
-      if (gameExists) {
-        setSelectedGameId(gameIdFromUrl);
-      } else {
-        // Game ID from URL is not valid, redirect to roster without game ID
-        navigate('/roster');
-      }
+    if (gameIdFromUrl && gameIdFromUrl !== selectedGameId) {
+      setSelectedGameId(gameIdFromUrl);
+      setCurrentStep('availability');
     }
-  }, [gameIdFromUrl, availableGames, navigate]);
+  }, [gameIdFromUrl, selectedGameId]);
 
-  const selectedGame = games.find((game: Game) => game.id === selectedGameId);
+  // Update step when game selection changes
+  const handleGameSelection = (gameId: number | null) => {
+    setSelectedGameId(gameId);
+    if (gameId) {
+      setCurrentStep('availability');
+    } else {
+      setCurrentStep('game-selection');
+    }
+  };
 
-  // Handle no games case
-  if (!isLoading && games.length === 0) {
+  const isLoading = playersLoading || gamesLoading || opponentsLoading;
+  const hasError = playersError || gamesError || opponentsError;
+
+  // Filter out BYE games since they don't have rosters
+  const gamesWithoutByes = games.filter(game => !game.isBye);
+
+  // Sort games by date (most recent first)
+  const sortedGames = gamesWithoutByes.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+  const selectedGame = games.find(game => game.id === selectedGameId);
+
+  if (isLoading) {
+    return <div className="flex items-center justify-center h-64">Loading...</div>;
+  }
+
+  if (hasError) {
     return (
-      <div className="container py-6">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No Games Available</h3>
-              <p className="text-gray-500 mb-4">
-                There are no games available for {currentClub.name}. Create your first game to start managing rosters.
-              </p>
-              <Button onClick={() => navigate('/games')}>
-                Go to Games
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <Alert variant="destructive">
+        <AlertCircle className="h-4 w-4" />
+        <AlertDescription>
+          Failed to load data. Please refresh the page.
+        </AlertDescription>
+      </Alert>
     );
   }
 
-  // Handle no available (non-completed) games case
-  if (!isLoading && games.length > 0 && availableGames.length === 0) {
-    return (
-      <div className="container py-6">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No Upcoming Games</h3>
-              <p className="text-gray-500 mb-4">
-                All games for {currentClub.name} have been completed. Rosters can only be managed for upcoming games.
-              </p>
-              <Button onClick={() => navigate('/games')}>
-                View All Games
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+  const renderStepIndicator = () => (
+    <div className="flex items-center gap-4 mb-6">
+      <div className={`flex items-center gap-2 px-3 py-2 rounded-lg ${
+        currentStep === 'game-selection' ? 'bg-blue-100 text-blue-800' : 
+        selectedGameId ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'
+      }`}>
+        <Calendar className="h-4 w-4" />
+        <span className="text-sm font-medium">Select Game</span>
       </div>
-    );
-  }
 
-  return (
-    <div className="container py-6">
-      <h1>Roster</h1>
-      <p>Club: {currentClub?.name}</p>
+      <ArrowRight className="h-4 w-4 text-gray-400" />
 
-      <div className="mb-4 flex gap-4 items-center">
-        <Select value={selectedGameId?.toString()} onValueChange={(value) => setSelectedGameId(parseInt(value))}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Select a game" />
-          </SelectTrigger>
-          <SelectContent>
-            {availableGames.map((game: Game) => {
-              // Get opponent team name (the team we're playing against)
-              const getOpponentName = (game: Game) => {
-                // Check if we have home/away team names
-                if (game.homeTeamName && game.awayTeamName) {
-                  // If we're the home team, opponent is away team, and vice versa
-                  // For now, we'll show both teams with "vs" format
-                  return `${game.homeTeamName} vs ${game.awayTeamName}`;
-                }
-                
-                // Fallback to legacy opponent lookup
-                const opponent = opponents.find(o => o.id === game.opponentId);
-                return opponent ? `vs ${opponent.teamName}` : 'TBD';
-              };
-
-              return (
-                <SelectItem key={game.id} value={game.id.toString()}>
-                  Round {game.round || 'TBD'} - {getOpponentName(game)} - {game.date}
-                </SelectItem>
-              );
-            })}
-          </SelectContent>
-        </Select>
-
-        {selectedGameId && (
-          <Button
-            variant="outline"
-            onClick={() => setShowPlayerAvailability(!showPlayerAvailability)}
-            className="flex items-center gap-2"
-          >
-            <Users className="h-4 w-4" />
-            {showPlayerAvailability ? 'Manage Roster' : 'Player Availability'}
-          </Button>
+      <div className={`flex items-center gap-2 px-3 py-2 rounded-lg ${
+        currentStep === 'availability' ? 'bg-blue-100 text-blue-800' : 
+        availablePlayerIds.length > 0 ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'
+      }`}>
+        <Users className="h-4 w-4" />
+        <span className="text-sm font-medium">Set Availability</span>
+        {availablePlayerIds.length > 0 && (
+          <Badge variant="secondary" className="ml-1 text-xs">
+            {availablePlayerIds.length}
+          </Badge>
         )}
       </div>
 
-      {gamesError && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            Failed to fetch games.
-          </AlertDescription>
-        </Alert>
-      )}
+      <ArrowRight className="h-4 w-4 text-gray-400" />
+
+      <div className={`flex items-center gap-2 px-3 py-2 rounded-lg ${
+        currentStep === 'roster' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-600'
+      }`}>
+        <ClipboardList className="h-4 w-4" />
+        <span className="text-sm font-medium">Manage Roster</span>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-heading font-bold text-neutral-dark">Roster Management</h1>
+
+        {selectedGameId && currentStep !== 'game-selection' && (
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setCurrentStep('availability')}
+              className="flex items-center gap-2"
+            >
+              <Users className="h-4 w-4" />
+              Availability
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setCurrentStep('roster')}
+              disabled={availablePlayerIds.length === 0}
+              className="flex items-center gap-2"
+            >
+              <ClipboardList className="h-4 w-4" />
+              Roster
+            </Button>
+          </div>
+        )}
+      </div>
+
+      {renderStepIndicator()}
 
       {selectedGame && (
-        <div className="mb-4">
-          <h2>{selectedGame.name}</h2>
-          <Badge variant="secondary">
-            <Calendar className="h-3 w-3 mr-1" />
-            {selectedGame.date}
-          </Badge>
-        </div>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-4">
+              <div>
+                <h3 className="font-semibold text-lg">{selectedGame.homeTeamName} vs {selectedGame.awayTeamName}</h3>
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <Calendar className="h-3 w-3" />
+                  {new Date(selectedGame.date).toLocaleDateString()} at {selectedGame.time}
+                  {selectedGame.round && <Badge variant="outline">Round {selectedGame.round}</Badge>}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       )}
 
-      {showPlayerAvailability ? (
+      {currentStep === 'game-selection' && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Select a Game</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Select 
+              value={selectedGameId?.toString() || ''} 
+              onValueChange={(value) => handleGameSelection(Number(value))}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Choose a game to manage roster" />
+              </SelectTrigger>
+              <SelectContent>
+                {sortedGames.map(game => (
+                  <SelectItem key={game.id} value={game.id.toString()}>
+                    Round {game.round} - {game.homeTeamName} vs {game.awayTeamName} 
+                    <span className="text-gray-500 ml-2">
+                      ({new Date(game.date).toLocaleDateString()})
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </CardContent>
+        </Card>
+      )}
+
+      {currentStep === 'availability' && selectedGameId && (
         <PlayerAvailabilityManager
-          gameId={selectedGameId!}
+          gameId={selectedGameId}
           players={players}
           games={games}
           opponents={opponents}
-          onComplete={() => setShowPlayerAvailability(false)}
+          onComplete={() => setCurrentStep('roster')}
           onAvailabilityChange={setAvailablePlayerIds}
         />
-      ) : (
+      )}
+
+      {currentStep === 'roster' && selectedGameId && (
         <SimpleRosterManager
           selectedGameId={selectedGameId}
-          setSelectedGameId={setSelectedGameId}
+          setSelectedGameId={handleGameSelection}
           players={players}
           games={games}
           opponents={opponents}
@@ -245,3 +240,4 @@ export default function Roster() {
     </div>
   );
 }
+`
