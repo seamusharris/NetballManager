@@ -633,30 +633,16 @@ export default function LiveStats() {
           const { clearAllStatisticsCaches } = await import('../lib/statisticsService');
           clearAllStatisticsCaches();
 
-          // Invalidate all React Query caches related to this game
-          await queryClient.invalidateQueries({ 
-            predicate: (query) => {
-              const key = query.queryKey;
-              return key.some(k => 
-                (typeof k === 'string' && (
-                  k.includes(`/api/games/${gameId}`) ||
-                  k.includes('/api/games/stats/batch') ||
-                  k.includes('allGameStats') ||
-                  k.includes('gameStats') ||
-                  k.includes('gameScores') ||
-                  k.includes('positionStats') ||
-                  k.includes('playerStats')
-                )) ||
-                (typeof k === 'number' && k === gameId)
-              );
-            }
-          });
-
-          // Also invalidate general game queries
-          queryClient.invalidateQueries({ queryKey: ['/api/games'] });
-          queryClient.invalidateQueries({ queryKey: ['/api/games', gameId] });
+          // Invalidate specific game stats queries without affecting the main game data
           queryClient.invalidateQueries({ queryKey: ['/api/games', gameId, 'stats'] });
-          queryClient.invalidateQueries({ queryKey: ['/api/games', gameId, 'rosters'] });
+          queryClient.invalidateQueries({ queryKey: [`/api/games/${gameId}/stats`] });
+          queryClient.invalidateQueries({ queryKey: ['/api/games/stats/batch'] });
+          
+          // Invalidate general games list (for scoreboard updates) but not the current game
+          queryClient.invalidateQueries({ 
+            queryKey: ['/api/games'],
+            exact: true 
+          });
 
           console.log(`Invalidated all caches for game ${gameId}`);
 
@@ -678,8 +664,8 @@ export default function LiveStats() {
           }`
         });
 
-        // We don't automatically mark the game as completed anymore
-        // This allows users to save stats throughout the game
+        // Don't navigate away after saving - stay on the LiveStats page
+        console.log(`Successfully saved ${savedCount} statistics for game ${gameId}`)
       } else if (errorCount > 0) {
         toast({
           title: "Failed to save statistics",
