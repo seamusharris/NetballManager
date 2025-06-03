@@ -1,7 +1,3 @@
-The code ensures available players data flows correctly between the availability and roster managers by initializing available players to all active players when players load.
-```
-
-```typescript
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -234,4 +230,3 @@ export default function Roster() {
     </div>
   );
 }
-`
