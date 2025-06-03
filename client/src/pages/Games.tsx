@@ -82,7 +82,15 @@ export default function Games() {
     queryFn: () => apiClient.get('/api/seasons/active')
   });
 
-  const { data: gameStatuses = [], isLoading: gameStatusesLoading } = useGameStatuses();
+  const { data: gameStatuses = [], isLoading: gameStatusesLoading, error: gameStatusesError } = useGameStatuses();
+
+  // Debug game statuses
+  console.log('Games page - Game statuses:', {
+    gameStatuses: gameStatuses.length,
+    isLoading: gameStatusesLoading,
+    error: gameStatusesError,
+    sampleStatus: gameStatuses[0]
+  });
 
   // Fetch players
   const { data: players = [] } = useQuery<Player[]>({
@@ -211,9 +219,11 @@ export default function Games() {
         setIsOpen={setIsDialogOpen}
         title="Add Game"
       >
-        {isLoadingTeams ? (
+        {(isLoadingTeams || gameStatusesLoading) ? (
           <div className="p-4 text-center">
-            <p className="text-gray-500 mb-4">Loading teams data...</p>
+            <p className="text-gray-500 mb-4">
+              Loading {isLoadingTeams ? 'teams' : 'game status'} data...
+            </p>
             <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
               Cancel
             </Button>
@@ -246,9 +256,11 @@ export default function Games() {
               teams: teams.length,
               isSubmitting: updateMutation.isPending
             })}
-            {teams.length === 0 ? (
+            {(teams.length === 0 || gameStatuses.length === 0) ? (
               <div className="p-4 text-center">
-                <p className="text-gray-500 mb-4">Loading teams data...</p>
+                <p className="text-gray-500 mb-4">
+                  Loading {teams.length === 0 ? 'teams' : 'game status'} data...
+                </p>
                 <Button variant="outline" onClick={() => setEditingGame(null)}>
                   Cancel
                 </Button>
