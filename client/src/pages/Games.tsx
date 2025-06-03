@@ -11,6 +11,7 @@ import { Game, Player } from '@shared/schema';
 import { useToast } from '@/hooks/use-toast';
 import { useLocation } from 'wouter';
 import { useClub } from '@/contexts/ClubContext';
+import { useGameStatuses } from '@/hooks/use-game-statuses';
 
 interface QueryParams {
   status?: string;
@@ -79,6 +80,8 @@ export default function Games() {
     queryKey: ['seasons', 'active'],
     queryFn: () => apiClient.get('/api/seasons/active')
   });
+
+  const { data: gameStatuses = [], isLoading: gameStatusesLoading } = useGameStatuses();
 
   // Fetch players
   const { data: players = [] } = useQuery<Player[]>({
@@ -206,6 +209,7 @@ export default function Games() {
           onSubmit={handleCreate}
           isSubmitting={false}
           onCancel={() => setIsDialogOpen(false)}
+          gameStatuses={gameStatuses}
         />
       </CrudDialog>
 
@@ -229,6 +233,7 @@ export default function Games() {
               onSubmit={handleUpdate}
               isSubmitting={updateMutation.isPending}
               onCancel={() => setEditingGame(null)}
+              gameStatuses={gameStatuses}
             />
           </>
         )}
