@@ -74,7 +74,10 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
       console.log('Setting initial club ID:', targetClubId, 'from userClubs:', userClubs);
       setCurrentClubId(targetClubId);
       localStorage.setItem('currentClubId', targetClubId.toString());
-      apiClient.setCurrentClubId(targetClubId);
+      
+      // Initialize API client with club context
+      apiClient.setClubContext({ currentClubId: targetClubId });
+      
       setIsInitialized(true);
       
       // Force invalidate all queries to ensure they use the new club context
@@ -86,7 +89,9 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
     console.log('Switching to club:', clubId, 'Current club:', currentClubId);
     setCurrentClubId(clubId);
     localStorage.setItem('currentClubId', clubId.toString());
-    apiClient.setCurrentClubId(clubId);
+    
+    // Update API client with new club context
+    apiClient.setClubContext({ currentClubId: clubId });
 
     console.log('Club switched in context to:', clubId, 'localStorage updated');
 
