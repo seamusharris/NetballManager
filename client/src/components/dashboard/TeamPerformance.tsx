@@ -4,7 +4,7 @@ import { Game, GameStat } from '@shared/schema';
 import { useEffect, useState } from 'react';
 import { getWinLoseLabel } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
-import { apiRequest } from '@/lib/apiClient';
+import { apiRequest } from '@/lib/queryClient';
 import { BaseWidget } from '@/components/ui/base-widget';
 
 interface TeamPerformanceProps {

@@ -6,7 +6,7 @@ import {
   invalidateGameCache, 
   clearGameCache 
 } from '@/lib/scoresCache';
-import { apiRequest } from '@/lib/apiClient';
+import { apiRequest } from '@/lib/queryClient';
 import { apiClient } from '@/lib/apiClient'; // Ensure apiClient is imported
 import { Game } from '@/components/GameCard'; // Ensure Game is imported
 

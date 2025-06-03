@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/apiClient";
+import { apiRequest } from "@/lib/queryClient";
 import { format } from "date-fns";
 import { 
   Card, 
