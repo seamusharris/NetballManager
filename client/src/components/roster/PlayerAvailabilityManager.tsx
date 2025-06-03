@@ -8,6 +8,7 @@ import { Check, Search, XCircle } from 'lucide-react';
 import { Player, Game, Opponent } from '@shared/schema';
 import { formatShortDate, cn, getInitials } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/hooks/use-toast';
 
 // Define the PlayerAvatar component
 interface PlayerAvatarProps {
