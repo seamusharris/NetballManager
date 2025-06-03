@@ -1,6 +1,3 @@
-Standardizing filtering logic across dashboard widgets to use the correct completion check and a shared filtering function.
-```
-```replit_final_file
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ResultBadge } from '@/components/ui/result-badge';
