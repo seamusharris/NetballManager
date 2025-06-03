@@ -99,14 +99,23 @@ export default function PlayerAvailabilityManager({
     }
 
     // Handle successful availability data
-    if (availabilityData?.availablePlayerIds && availabilityData.availablePlayerIds.length > 0) {
-      console.log('Setting available players from API:', availabilityData.availablePlayerIds);
-      setAvailablePlayerIds(availabilityData.availablePlayerIds);
-      onAvailabilityChange?.(availabilityData.availablePlayerIds);
+    if (availabilityData && Array.isArray(availabilityData.availablePlayerIds)) {
+      // If we have an empty array, treat it as "no availability set yet" for upcoming games
+      // and default to all players being available
+      if (availabilityData.availablePlayerIds.length === 0) {
+        console.log('Empty availability array received - defaulting to all active players for new game');
+        const activePlayerIds = players.filter(p => p.active).map(p => p.id);
+        setAvailablePlayerIds(activePlayerIds);
+        onAvailabilityChange?.(activePlayerIds);
+      } else {
+        console.log('Setting available players from API:', availabilityData.availablePlayerIds);
+        setAvailablePlayerIds(availabilityData.availablePlayerIds);
+        onAvailabilityChange?.(availabilityData.availablePlayerIds);
+      }
     } else {
-      // Fallback to all active players if no availability data or empty array
+      // Fallback to all active players if no availability data
       const activePlayerIds = players.filter(p => p.active).map(p => p.id);
-      console.log('Setting fallback available players (no data or empty array):', activePlayerIds);
+      console.log('Setting fallback available players (no availability data):', activePlayerIds);
       setAvailablePlayerIds(activePlayerIds);
       onAvailabilityChange?.(activePlayerIds);
     }
