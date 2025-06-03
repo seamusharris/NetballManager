@@ -230,7 +230,7 @@ export default function Games() {
               teams: teams.length,
               isSubmitting: updateMutation.isPending
             })}
-            {(isLoadingTeams || isLoadingAllTeams || teams.length === 0 || allTeams.length === 0) ? (
+            {teams.length === 0 ? (
               <div className="p-4 text-center">
                 <p className="text-gray-500 mb-4">Loading teams data...</p>
                 <Button variant="outline" onClick={() => setEditingGame(null)}>
@@ -247,7 +247,7 @@ export default function Games() {
                 onCancel={() => setEditingGame(null)}
                 gameStatuses={gameStatuses}
                 teams={teams}
-                allTeams={allTeams}
+                allTeams={teams}
                 isEditing={true}
               />
             )}
