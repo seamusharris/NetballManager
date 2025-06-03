@@ -618,6 +618,7 @@ export default function SimpleRosterManager({
   }
 
   return (
+    <div>
     <Card className="mb-6 shadow-md">
       <CardContent className="pt-6">
         {/* Game Selection and Actions */}
@@ -852,6 +853,7 @@ export default function SimpleRosterManager({
               <p>Please select a game from the dropdown above to manage your team roster.</p>
             </div>
           )}
+        </div>
         </CardContent>
       </Card>
     </div>
