@@ -1775,13 +1775,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Batch endpoint to get stats for multiple games at once
   app.post("/api/games/stats/batch", async (req, res) => {
     try {
-      console.log("Batch endpoint received body:", req.body);
+      console.log("POST Batch endpoint received body:", req.body);
       const { gameIds } = req.body;
-      console.log("Extracted gameIds from body:", gameIds);
+      console.log("Extracted gameIds from POST body:", gameIds);
 
       // More robust parameter validation - return empty object instead of error for empty requests
       if (!gameIds || !Array.isArray(gameIds) || gameIds.length === 0) {
-        console.log("Batch stats endpoint: No game IDs provided, returning empty object");
+        console.log("POST Batch stats endpoint: No game IDs provided, returning empty object");
         return res.json({});
       }
 
@@ -1797,7 +1797,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "No valid game IDs provided" });
       }
 
-      console.log(`Batch fetching stats for ${validGameIds.length} games: ${validGameIds.join(',')}`);
+      console.log(`POST Batch fetching stats for ${validGameIds.length} games: ${validGameIds.join(',')}`);
 
       // Process each game ID in parallel with error handling
       const statsPromises = validGameIds.map(async (gameId) => {
@@ -1818,10 +1818,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return acc;
       }, {} as Record<number, any[]>);
 
-      console.log(`Batch endpoint successfully returned stats for ${validGameIds.length} games`);
+      console.log(`POST Batch endpoint successfully returned stats for ${validGameIds.length} games`);
       res.json(statsMap);
     } catch (error) {
-      console.error(`Error in batch game stats endpoint:`, error);
+      console.error(`Error in POST batch game stats endpoint:`, error);
       res.status(500).json({ error: "Failed to get batch game stats" });
     }
   });
