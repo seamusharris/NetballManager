@@ -62,6 +62,7 @@ export default function Roster() {
   // Set selected game and step on mount if from URL
   useEffect(() => {
     if (gameIdFromUrl && gameIdFromUrl !== selectedGameId) {
+      console.log('Setting game from URL:', gameIdFromUrl);
       setSelectedGameId(gameIdFromUrl);
       // Go to availability step when coming from a direct link (e.g., from game details)
       setCurrentStep('availability');
@@ -112,13 +113,16 @@ export default function Roster() {
       }`}>
         <Calendar className="h-4 w-4" />
         <span className="text-sm font-medium">Select Game</span>
+        {selectedGameId && currentStep !== 'game-selection' && (
+          <Badge variant="secondary" className="ml-1 text-xs">✓</Badge>
+        )}
       </div>
 
       <ArrowRight className="h-4 w-4 text-gray-400" />
 
       <div className={`flex items-center gap-2 px-3 py-2 rounded-lg ${
         currentStep === 'availability' ? 'bg-blue-100 text-blue-800' : 
-        availablePlayerIds.length > 0 ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'
+        (currentStep === 'roster' && availablePlayerIds.length > 0) ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'
       }`}>
         <Users className="h-4 w-4" />
         <span className="text-sm font-medium">Set Availability</span>
@@ -187,7 +191,7 @@ export default function Roster() {
         </Card>
       )}
 
-      {currentStep === 'game-selection' && (
+      {currentStep === 'game-selection' && !gameIdFromUrl && (
         <Card>
           <CardHeader>
             <CardTitle>Select a Game</CardTitle>
@@ -211,6 +215,9 @@ export default function Roster() {
                 ))}
               </SelectContent>
             </Select>
+            <div className="mt-4 text-sm text-gray-500">
+              Current step: {currentStep}, Selected game: {selectedGameId}, Game from URL: {gameIdFromUrl}
+            </div>
           </CardContent>
         </Card>
       )}
