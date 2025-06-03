@@ -543,10 +543,11 @@ export default function SimpleRosterManager({
               activePlayers: players.filter(p => p.active).length,
               availablePlayerIds: availablePlayerIds.length,
               availablePlayerIdsList: availablePlayerIds,
-              activeAvailablePlayers: activeAvailablePlayers.length
+              activeAvailablePlayers: activeAvailablePlayers.length,
+              eligiblePlayers: eligiblePlayers.length
             });
 
-            return activeAvailablePlayers.sort((a, b) => a.displayName.localeCompare(b.displayName));
+            return eligiblePlayers;
           };
 
   // Create a map to track which players are already selected in a quarter
@@ -785,9 +786,11 @@ export default function SimpleRosterManager({
                           quarterKey === '3' ? localRosterState['3'][position] :
                           quarterKey === '4' ? localRosterState['4'][position] : null;
 
-                        // Filter available players by those not already selected in this quarter
+                        // Filter available players by those not already selected in this quarter and are active/available
                         const availablePlayers = players.filter(player => 
-                          !selectedPlayers.has(player.id) || player.id === currentPlayerId
+                          player.active && 
+                          availablePlayerIds.includes(player.id) &&
+                          (!selectedPlayers.has(player.id) || player.id === currentPlayerId)
                         );
 
                         // Helper function to get preference rank for display
