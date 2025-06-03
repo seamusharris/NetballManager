@@ -1,6 +1,3 @@
-The code is modified to respect player availability when showing players in dropdowns and using auto-fill.
-```
-```replit_final_file
 import { useState, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
