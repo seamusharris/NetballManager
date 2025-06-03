@@ -12,9 +12,10 @@ interface TeamPerformanceProps {
   className?: string;
   activeSeason?: any; // The current active season
   selectedSeason?: any; // The season selected in the dropdown
+  centralizedStats?: Record<number, GameStat[]>; // Centralized game stats
 }
 
-export default function TeamPerformance({ games, className, activeSeason, selectedSeason }: TeamPerformanceProps) {
+export default function TeamPerformance({ games, className, activeSeason, selectedSeason, centralizedStats }: TeamPerformanceProps) {
   const [quarterPerformance, setQuarterPerformance] = useState<{
     avgTeamScoreByQuarter: Record<number, number>;
     avgOpponentScoreByQuarter: Record<number, number>;
@@ -57,86 +58,15 @@ export default function TeamPerformance({ games, className, activeSeason, select
     console.log(`TeamPerformance refreshed with key ${newKey} for season: ${selectedSeason?.name || 'current'}`);
   }, [selectedSeason, activeSeason]);
 
-  // Get game IDs for completed games to fetch their stats
+  // Get game IDs for completed games 
   const completedGameIds = completedGamesArray.map(game => game.id);
-  const enableQuery = completedGameIds.length > 0;
 
-  // Create a static cache key that doesn't change with the statsKey
-  // This ensures we use the same cached data across season changes
-  const seasonId = selectedSeason?.id || 'current';
-  const gameIdsKey = completedGameIds.join(',');
+  // Use centralized stats if available, otherwise fall back to empty object
+  const gameStatsMap = centralizedStats || {};
+  const isLoading = false; // We don't need loading state when using centralized stats
 
-  // Fetch stats for all completed games individually since batch endpoint is unreliable
-  const { data: gameStatsMap, isLoading } = useQuery({
-    queryKey: ['teamPerformanceStats', gameIdsKey, seasonId],
-    queryFn: async () => {
-      if (completedGameIds.length === 0) {
-        return {};
-      }
-
-      // Filter out any game IDs that are not valid numbers
-      const validGameIds = completedGameIds.filter(gameId => typeof gameId === 'number');
-
-      console.log(`Team Performance loading stats for season: ${seasonId}, games: ${gameIdsKey}`);
-
-      try {
-        // Use direct fetch with proper URL construction that matches the working individual calls
-        const gameIdsParam = validGameIds.join(',');
-        const url = `/api/games/stats/batch?gameIds=${gameIdsParam}`;
-
-        console.log(`TeamPerformance: Fetching batch stats from ${url}`);
-
-        const response = await fetch(url, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error(`Failed to fetch batch game stats: ${response.statusText}`);
-        }
-
-        const batchStats = await response.json();
-        console.log('TeamPerformance: Received batch stats:', batchStats);
-
-        // Check if we got valid data - the batch endpoint returns an object where keys are game IDs
-        if (batchStats && typeof batchStats === 'object') {
-          console.log(`TeamPerformance: Successfully received batch stats:`, Object.keys(batchStats));
-          return batchStats;
-        }
-        
-        console.warn('TeamPerformance: Batch endpoint returned invalid data, using fallback');
-      } catch (error) {
-        console.warn("TeamPerformance: Batch endpoint failed, falling back to individual requests:", error);
-      }
-
-      // Fallback to individual requests using fetch (same as working calls)
-      console.log('TeamPerformance: Using fallback individual requests');
-      const statsMap: Record<number, any[]> = {};
-      for (const gameId of validGameIds) {
-        try {
-          const response = await fetch(`/api/games/${gameId}/stats`);
-          if (response.ok) {
-            const stats = await response.json();
-            statsMap[gameId] = stats;
-            console.log(`TeamPerformance: Individual request for game ${gameId} returned ${stats.length} stats`);
-          } else {
-            statsMap[gameId] = [];
-            console.warn(`TeamPerformance: Individual request for game ${gameId} failed with status ${response.status}`);
-          }
-        } catch (error) {
-          console.error(`TeamPerformance: Error fetching stats for game ${gameId}:`, error);
-          statsMap[gameId] = [];
-        }
-      }
-
-      return statsMap;
-    },
-    enabled: enableQuery,
-    staleTime: 60 * 60 * 1000, // 60 minutes - very aggressive caching
-    gcTime: 24 * 60 * 60 * 1000   // 24 hours cache time for better performance
-  });
+  console.log('TeamPerformance: Using centralized stats for games:', completedGameIds);
+  console.log('TeamPerformance: Available centralized stats for games:', Object.keys(gameStatsMap));
 
   // Calculate team performance metrics from game stats
   useEffect(() => {
@@ -161,6 +91,10 @@ export default function TeamPerformance({ games, className, activeSeason, select
 
     completedGameIds.forEach(gameId => {
       const gameStats = gameStatsMap[gameId];
+      console.log(`TeamPerformance processing game ${gameId}:`, gameStats ? `${gameStats.length} stats` : 'no stats');
+      if (gameStats && gameStats.length > 0) {
+        console.log(`TeamPerformance game ${gameId} sample stat:`, gameStats[0]);
+      }
       if (!gameStats || gameStats.length === 0) return;
 
       // Increment counter for games with actual stats
