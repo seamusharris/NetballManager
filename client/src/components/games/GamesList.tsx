@@ -371,29 +371,7 @@ export default function GamesList({
               </div>
 
               <div className="flex gap-3 items-center">
-                {/* Opponent Filter */}
-                <div className="w-[180px]">
-                  <Select 
-                    value={opponentFilter?.toString() || "all"}
-                    onValueChange={(value) => setOpponentFilter(value === "all" ? null : Number(value))}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="All Opponents" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Opponents</SelectItem>
-                      {opponents && Array.isArray(opponents) && opponents
-                        .filter(opp => games.some(game => game.opponentId === opp.id))
-                        .sort((a, b) => a.teamName.localeCompare(b.teamName))
-                        .map(opponent => (
-                          <SelectItem key={opponent.id} value={opponent.id.toString()}>
-                            {opponent.teamName}
-                          </SelectItem>
-                        ))
-                      }
-                    </SelectContent>
-                  </Select>
-                </div>
+                
 
                 {/* Status Filter */}
                 <div className="w-[140px]">

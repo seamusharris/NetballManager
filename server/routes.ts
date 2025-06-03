@@ -2336,17 +2336,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register player borrowing routes
   registerPlayerBorrowingRoutes(app);
 
-  // ----- OPPONENTS API (Legacy) -----
-  app.get("/api/opponents", async (req, res) => {
-    try {
-      // Return empty array since opponents system is deprecated
-      // This prevents the "<!DOCTYPE" HTML error in the dashboard
-      res.json([]);
-    } catch (error) {
-      console.error('Error fetching opponents:', error);
-      res.status(500).json({ message: "Failed to fetch opponents" });
-    }
-  });
+  
 
   // Register game permissions routes
   registerGamePermissionsRoutes(app);
