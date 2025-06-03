@@ -73,29 +73,14 @@ export const importPlayerSchema = createInsertSchema(players);
 export type InsertPlayer = z.infer<typeof insertPlayerSchema>;
 export type Player = typeof players.$inferSelect;
 
-// Opponent model
-export const opponents = pgTable("opponents", {
-  id: serial("id").primaryKey(),
-  teamName: text("team_name").notNull().unique(),
-  primaryContact: text("primary_contact"),
-  contactInfo: text("contact_info"),
-});
 
-// Default schema without ID for normal creation
-export const insertOpponentSchema = createInsertSchema(opponents).omit({ id: true });
-// Schema with ID for import operations
-export const importOpponentSchema = createInsertSchema(opponents);
-export type InsertOpponent = z.infer<typeof insertOpponentSchema>;
-export type Opponent = typeof opponents.$inferSelect;
 
 // Game model
 export const games = pgTable("games", {
   id: serial("id").primaryKey(),
   date: text("date").notNull(),
   time: text("time").notNull(),
-  // Legacy opponent support for backward compatibility
-  opponentId: integer("opponent_id"),
-  // New team-based system
+  // Team-based system
   homeTeamId: integer("home_team_id").references(() => teams.id),
   awayTeamId: integer("away_team_id").references(() => teams.id),
   venue: text("venue"),

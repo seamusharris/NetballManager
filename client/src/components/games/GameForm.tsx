@@ -20,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { insertGameSchema, Game, Opponent, Season } from "@shared/schema";
+import { insertGameSchema, Game, Season } from "@shared/schema";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/apiClient";
 
@@ -50,7 +50,6 @@ interface Team {
 const formSchema = insertGameSchema.extend({
   date: z.string().min(1, "Date is required"),
   time: z.string().min(1, "Time is required"),
-  opponentId: z.string().min(1, "Opponent is required"),
   round: z.string().optional(),
   statusId: z.string().min(1, "Game status is required"),
   seasonId: z.string().min(1, "Season is required"),
@@ -62,7 +61,6 @@ type FormValues = z.infer<typeof formSchema>;
 
 interface GameFormProps {
   game?: Game;
-  opponents: Opponent[];
   seasons: Season[];
   activeSeason?: Season;
   onSubmit: (data: any) => void;
@@ -72,7 +70,6 @@ interface GameFormProps {
 
 export function GameForm({ 
   game, 
-  opponents, 
   seasons, 
   activeSeason, 
   onSubmit, 
@@ -110,7 +107,6 @@ export function GameForm({
     defaultValues: {
       date: "",
       time: "",
-      opponentId: "",
       round: "",
       statusId: "1",
       seasonId: activeSeason ? String(activeSeason.id) : "",
@@ -133,7 +129,6 @@ export function GameForm({
       form.reset({
         date: game.date || "",
         time: game.time || "",
-        opponentId: game.opponentId ? String(game.opponentId) : "",
         round: game.round || "",
         statusId: game.statusId ? String(game.statusId) : "1",
         seasonId: game.seasonId ? String(game.seasonId) : activeSeason ? String(activeSeason.id) : "",
@@ -145,7 +140,6 @@ export function GameForm({
       form.reset({
         date: "",
         time: "",
-        opponentId: "",
         round: "",
         statusId: "1",
         seasonId: activeSeason ? String(activeSeason.id) : "",
@@ -157,10 +151,6 @@ export function GameForm({
 
   const handleSubmit = (values: FormValues) => {
     // Validate required fields
-    if (!values.opponentId) {
-      form.setError("opponentId", { message: "Please select an opponent" });
-      return;
-    }
     if (!values.homeTeamId) {
       form.setError("homeTeamId", { message: "Please select a home team" });
       return;
@@ -174,7 +164,6 @@ export function GameForm({
       date: values.date,
       time: values.time,
       round: values.round,
-      opponentId: parseInt(values.opponentId),
       statusId: parseInt(values.statusId),
       seasonId: parseInt(values.seasonId),
       homeTeamId: parseInt(values.homeTeamId),
@@ -224,7 +213,6 @@ export function GameForm({
   console.log('GameForm rendering with data:', {
     gameStatuses: gameStatuses.length,
     teams: teams.length,
-    opponents: opponents.length,
     seasons: seasons.length,
     isEditing,
     formValues: form.getValues()
@@ -297,37 +285,6 @@ export function GameForm({
             )}
           />
         </div>
-
-        <FormField
-          control={form.control}
-          name="opponentId"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel required>Opponent</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
-                <FormControl>
-                  <SelectTrigger className="bg-white border-blue-200 focus:border-blue-500 focus:ring-blue-500">
-                    <SelectValue placeholder="Select opponent" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent className="relative z-50 max-h-96 min-w-[8rem] overflow-y-auto overflow-x-hidden rounded-md border bg-white text-gray-900 shadow-lg"
-                    sideOffset={4}
-                    align="start"
-                  >
-                    {opponents.map(opponent => (
-                      <SelectItem key={opponent.id} value={opponent.id.toString()}>
-                        {opponent.teamName}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-              </Select>
-              <FormDescription>
-                Select the team your squad will be playing against
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField

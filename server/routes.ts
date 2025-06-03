@@ -6,12 +6,11 @@ import { sql } from "drizzle-orm";
 import { db, pool } from "./db";
 import { 
   insertPlayerSchema, importPlayerSchema,
-  insertOpponentSchema, importOpponentSchema,
   insertGameSchema, importGameSchema,
   insertRosterSchema, importRosterSchema,
   insertGameStatSchema, importGameStatSchema,
   insertSeasonSchema,
-  players, opponents, games, rosters, gameStats, seasons,
+  players, games, rosters, gameStats, seasons,
   POSITIONS
 } from "@shared/schema";
 
@@ -1100,75 +1099,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // ----- OPPONENTS API -----
-  app.get("/api/opponents", async (req, res) => {
-    try {
-      const opponents = await storage.getOpponents();
-      res.json(opponents);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch opponents" });
-    }
-  });
-
-  app.get("/api/opponents/:id", async (req, res) => {
-    try {
-      const opponent = await storage.getOpponent(Number(req.params.id));
-      if (!opponent) {
-        return res.status(404).json({ message: "Opponent not found" });
-      }
-      res.json(opponent);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch opponent" });
-    }
-  });
-
-  app.post("/api/opponents", async (req, res) => {
-    try {
-      // Check if we're doing an import operation (with ID) or regular create
-      const hasId = req.body.id !== undefined;
-
-      // Use the appropriate schema based on operation type
-      const schema = hasId ? importOpponentSchema : insertOpponentSchema;
-      const parsedData = schema.safeParse(req.body);
-
-      if (!parsedData.success) {
-        return res.status(400).json({ message: "Invalid opponent data", errors: parsedData.error.errors });
-      }
-
-      // Pass the parsed data to the storage layer
-      const opponent = await storage.createOpponent(parsedData.data);
-      res.status(201).json(opponent);
-    } catch (error) {
-      console.error("Failed to create opponent:", error);
-      res.status(500).json({ message: "Failed to create opponent" });
-    }
-  });
-
-  app.patch("/api/opponents/:id", async (req, res) => {
-    try {
-      const id = Number(req.params.id);
-      const updatedOpponent = await storage.updateOpponent(id, req.body);
-      if (!updatedOpponent) {
-        return res.status(404).json({ message: "Opponent not found" });
-      }
-      res.json(updatedOpponent);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to update opponent" });
-    }
-  });
-
-  app.delete("/api/opponents/:id", async (req, res) => {
-    try {
-      const id = Number(req.params.id);
-      const success = await storage.deleteOpponent(id);
-      if (!success) {
-        return res.status(404).json({ message: "Opponent not found" });
-      }
-      res.status(204).send();
-    } catch (error) {
-      res.status(500).json({ message: "Failed to delete opponent" });
-    }
-  });
+  
 
   // ----- GAMES API -----
   app.get("/api/games", requireClubAccess(), async (req: AuthenticatedRequest, res) => {

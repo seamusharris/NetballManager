@@ -1,7 +1,6 @@
 import {
   users, type User, type InsertUser,
   players, type Player, type InsertPlayer,
-  opponents, type Opponent, type InsertOpponent,
   games, type Game, type InsertGame,
   rosters, type Roster, type InsertRoster,
   gameStats, type GameStat, type InsertGameStat,
@@ -24,13 +23,6 @@ export interface IStorage {
   createPlayer(player: InsertPlayer): Promise<Player>;
   updatePlayer(id: number, player: Partial<InsertPlayer>): Promise<Player | undefined>;
   deletePlayer(id: number): Promise<boolean>;
-
-  // Opponent methods
-  getOpponents(): Promise<Opponent[]>;
-  getOpponent(id: number): Promise<Opponent | undefined>;
-  createOpponent(opponent: InsertOpponent): Promise<Opponent>;
-  updateOpponent(id: number, opponent: Partial<InsertOpponent>): Promise<Opponent | undefined>;
-  deleteOpponent(id: number): Promise<boolean>;
 
   // Game methods
   getGames(): Promise<Game[]>;
@@ -306,41 +298,6 @@ export class DatabaseStorage implements IStorage {
     return result.length > 0;
   }
 
-  // Opponent methods
-  async getOpponents(): Promise<Opponent[]> {
-    return await db.select().from(opponents);
-  }
-
-  async getOpponent(id: number): Promise<Opponent | undefined> {
-    const [opponent] = await db.select().from(opponents).where(eq(opponents.id, id));
-    return opponent || undefined;
-  }
-
-  async createOpponent(insertOpponent: InsertOpponent): Promise<Opponent> {
-    const [opponent] = await db
-      .insert(opponents)
-      .values(insertOpponent)
-      .returning();
-    return opponent;
-  }
-
-  async updateOpponent(id: number, updateOpponent: Partial<InsertOpponent>): Promise<Opponent | undefined> {
-    const [updated] = await db
-      .update(opponents)
-      .set(updateOpponent)
-      .where(eq(opponents.id, id))
-      .returning();
-    return updated || undefined;
-  }
-
-  async deleteOpponent(id: number): Promise<boolean> {
-    const result = await db
-      .delete(opponents)
-      .where(eq(opponents.id, id))
-      .returning({ id: opponents.id });
-    return result.length > 0;
-  }
-
   // Game methods
   async getGames(): Promise<Game[]> {
     try {
@@ -360,10 +317,6 @@ export class DatabaseStorage implements IStorage {
           gs.is_active as "gameStatus.isActive",
           gs.created_at as "gameStatus.createdAt",
           gs.updated_at as "gameStatus.updatedAt",
-          o.id as "opponent.id",
-          o.team_name as "opponent.teamName",
-          o.primary_contact as "opponent.primaryContact",
-          o.contact_info as "opponent.contactInfo",
           s.id as "season.id",
           s.name as "season.name",
           s.start_date as "season.startDate",
@@ -374,7 +327,6 @@ export class DatabaseStorage implements IStorage {
           s.display_order as "season.displayOrder"
         FROM games g
         LEFT JOIN game_statuses gs ON g.status_id = gs.id
-        LEFT JOIN opponents o ON g.opponent_id = o.id
         LEFT JOIN seasons s ON g.season_id = s.id
         ORDER BY g.date DESC, g.time DESC
       `);
@@ -407,11 +359,6 @@ export class DatabaseStorage implements IStorage {
         statusIsActive: row['gameStatus.isActive'],
         statusCreatedAt: row['gameStatus.createdAt'],
         statusUpdatedAt: row['gameStatus.updatedAt'],
-
-        // Opponent fields
-        opponentTeamName: row['opponent.teamName'],
-        opponentPrimaryContact: row['opponent.primaryContact'],
-        opponentContactInfo: row['opponent.contactInfo'],
 
         // Season fields
         seasonName: row['season.name'],
@@ -448,10 +395,6 @@ export class DatabaseStorage implements IStorage {
           gs.is_active as "gameStatus.isActive",
           gs.created_at as "gameStatus.createdAt",
           gs.updated_at as "gameStatus.updatedAt",
-          o.id as "opponent.id",
-          o.team_name as "opponent.teamName",
-          o.primary_contact as "opponent.primaryContact",
-          o.contact_info as "opponent.contactInfo",
           s.id as "season.id",
           s.name as "season.name",
           s.start_date as "season.startDate",
@@ -462,7 +405,6 @@ export class DatabaseStorage implements IStorage {
           s.display_order as "season.displayOrder"
         FROM games g
         LEFT JOIN game_statuses gs ON g.status_id = gs.id
-        LEFT JOIN opponents o ON g.opponent_id = o.id
         LEFT JOIN seasons s ON g.season_id = s.id
         LEFT JOIN teams ht ON g.home_team_id = ht.id
         LEFT JOIN teams at ON g.away_team_id = at.id
@@ -502,11 +444,6 @@ export class DatabaseStorage implements IStorage {
         statusIsActive: row['gameStatus.isActive'],
         statusCreatedAt: row['gameStatus.createdAt'],
         statusUpdatedAt: row['gameStatus.updatedAt'],
-
-        // Opponent fields
-        opponentTeamName: row['opponent.teamName'],
-        opponentPrimaryContact: row['opponent.primaryContact'],
-        opponentContactInfo: row['opponent.contactInfo'],
 
         // Season fields
         seasonName: row['season.name'],
@@ -886,29 +823,6 @@ export const storage = new DatabaseStorage();
 
 // Add some sample data for demonstration if none exists
 async function initSampleData() {
-  // Check if we have any opponents
-  const opponentList = await storage.getOpponents();
-
-  if (opponentList.length === 0) {
-    // Add sample opponents
-    await storage.createOpponent({
-      teamName: "Thunder Netball",
-      primaryContact: "Jane Smith",
-      contactInfo: "coach@thundernetball.com"
-    });
-
-    await storage.createOpponent({
-      teamName: "Lightning Strikers",
-      primaryContact: "Mike Johnson",
-      contactInfo: "mike@lightningstrikers.com"
-    });
-
-    await storage.createOpponent({
-      teamName: "Phoenix Jets",
-      primaryContact: "Sarah Williams",
-      contactInfo: "coach@phoenixjets.com"
-    });
-  }
 }
 
 // Initialize sample data
