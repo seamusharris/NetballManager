@@ -43,7 +43,6 @@ import { GameScoreDisplay } from '@/components/statistics/GameScoreDisplay';
 import { useGamesScores } from '@/components/statistics/hooks/useGamesScores';
 import { GameStatusButton } from './GameStatusBadge';
 import { GameStatusDialog } from './GameStatusDialog';
-import { useGameStatuses } from '@/hooks/use-game-statuses';
 
 interface GamesListProps {
   games: Game[];

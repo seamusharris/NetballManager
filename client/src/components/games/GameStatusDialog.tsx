@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Game } from '@shared/schema';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { Button } from '@/components/ui/button';
 import {
@@ -19,7 +19,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
-import { useGameStatuses } from '@/hooks/use-game-statuses';
+import { apiClient } from '@/lib/apiClient';
 
 interface GameStatusDialogProps {
   game: Game | null;
@@ -135,7 +135,11 @@ export function GameStatusDialog({
     }
   };
 
-  const { data: GAME_STATUSES } = useGameStatuses();
+  const { data: GAME_STATUSES = [] } = useQuery({
+    queryKey: ['game-statuses'],
+    queryFn: () => apiClient.get('/api/game-statuses'),
+    staleTime: 5 * 60 * 1000,
+  });
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

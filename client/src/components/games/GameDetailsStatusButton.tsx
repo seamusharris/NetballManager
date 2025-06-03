@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { 
@@ -19,7 +19,6 @@ import {
 } from '@/components/ui/select';
 import { apiClient } from '@/lib/apiClient';
 import { Game, GameStatus } from '@shared/schema';
-import { useGameStatuses } from '@/hooks/use-game-statuses';
 import { clearGameCache } from '@/lib/scoresCache';
 
 // Helper function to get appropriate styling for game status
@@ -69,7 +68,11 @@ export function GameDetailsStatusButton({
   const [dialogOpen, setDialogOpen] = useState(false);
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const { data: gameStatuses, isLoading } = useGameStatuses();
+  const { data: gameStatuses = [] } = useQuery({
+    queryKey: ['game-statuses'],
+    queryFn: () => apiClient.get('/api/game-statuses'),
+    staleTime: 5 * 60 * 1000,
+  });
 
   const handleSubmit = async () => {
     if (!selectedStatus) {
