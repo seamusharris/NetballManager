@@ -735,7 +735,8 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
 
             return (
               <div key={position} className="col-span-1">
-                <PositionBox
+                <Position```python
+Box
                   position={position as Position}
                   playerName={playerName}
                   playerColor={playerColor}
@@ -1094,6 +1095,18 @@ export default function GameDetails() {
     enabled: !!currentClub?.id
   });
 
+    // Fetch all teams
+    const {
+      data: allTeams = [],
+      isLoading: isLoadingAllTeams,
+      error: allTeamsError
+    } = useQuery({
+      queryKey: ['/api/teams/all'],
+      queryFn: () => apiClient.get('/api/teams/all'),
+      select: (data) => Array.isArray(data) ? data : [],
+      enabled: true
+    });
+
   // Fetch roster for this game
   const { 
     data: roster,
@@ -1331,7 +1344,7 @@ export default function GameDetails() {
                       seasons={seasons}
                       gameStatuses={gameStatuses}
                       teams={teams}
-                      allTeams={teams}
+                      allTeams={allTeams}
                       activeSeason={activeSeason}
                       isSubmitting={false}
                       isEditing={true}
@@ -1617,8 +1630,7 @@ export default function GameDetails() {
                                 </div>
                               </div>
 
-                              <div className="flex space-x-6">
-                                <div className="text-center">
+                              <div className="flex space-x-6"><div className="text-center">
                                   <div 
                                     className="text-2xl font-bold"
                                     style={{ color: awardWinner.avatarColor ? tailwindToHex(awardWinner.avatarColor) : '#7c3aed' }}

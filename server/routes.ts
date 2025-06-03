@@ -879,7 +879,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         code: club.code,
         description: club.description,
         address: club.address,
-        contactEmail: club.contact_email,
+        contactEmail: club.contact_email```text
+,
         contactPhone: club.contact_phone,
         primaryColor: club.primary_color,
         secondaryColor: club.secondary_color
@@ -2354,8 +2355,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register player borrowing routes
   registerPlayerBorrowingRoutes(app);
 
-
-
   // Register game permissions routes
   registerGamePermissionsRoutes(app);
 
@@ -2437,50 +2436,91 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Teams routes
-  app.get('/api/teams', loadUserPermissions, async (req, res) => {
-  try {
-    console.log(`Teams endpoint called for club ${req.user.currentClubId}`);
-    console.log('User context:', req.user.clubs);
+  app.get("/api/teams", loadUserPermissions, async (req, res) => {
+    try {
+      console.log(`Teams endpoint called for club ${req.user.currentClubId}`);
+      console.log('User context:', req.user.clubs);
+      console.log('Query params:', req.query);
 
-    if (!req.user.currentClubId) {
-      return res.status(400).json({ error: 'No current club selected' });
+      if (!req.user.currentClubId) {
+        return res.status(400).json({ error: "No current club selected" });
+      }
+
+      // Check if we need teams from all clubs (for inter-club games)
+      const includeAllClubs = req.query.includeAllClubs === 'true';
+
+      if (includeAllClubs) {
+        console.log('Fetching teams from all clubs for inter-club games');
+
+        const result = await db.execute(sql`
+          SELECT 
+            t.*,
+            s.name as season_name,
+            s.year as season_year,
+            c.name as club_name,
+            c.code as club_code
+          FROM teams t
+          LEFT JOIN seasons s ON t.season_id = s.id
+          LEFT JOIN clubs c ON t.club_id = c.id
+          WHERE t.is_active = true
+          AND c.is_active = true
+          ORDER BY c.name ASC, t.name ASC
+        `);
+
+        console.log(`Found ${result.rows.length} teams from all clubs`);
+
+        const mappedTeams = result.rows.map(row => ({
+          id: row.id,
+          name: row.name,
+          division: row.division,
+          clubId: row.club_id,
+          seasonId: row.season_id,
+          isActive: row.is_active,
+          createdAt: row.created_at,
+          updatedAt: row.updated_at,
+          seasonName: row.season_name,
+          seasonYear: row.season_year,
+          clubName: row.club_name,
+          clubCode: row.club_code
+        }));
+
+        res.json(mappedTeams);
+      } else {
+        console.log(`Fetching teams for club ${req.user.currentClubId}`);
+
+        const teams = await db.execute(sql`
+          SELECT t.*, 
+                 s.name as season_name, 
+                 s.year as season_year
+          FROM teams t
+          LEFT JOIN seasons s ON t.season_id = s.id
+          WHERE t.club_id = ${req.user.currentClubId}
+          ORDER BY t.name
+        `);
+
+        console.log(`Found ${teams.rows.length} teams for club ${req.user.currentClubId}`);
+
+        // Map the response to include season information properly
+        const mappedTeams = teams.rows.map(row => ({
+          id: row.id,
+          name: row.name,
+          division: row.division,
+          clubId: row.club_id,
+          seasonId: row.season_id,
+          isActive: row.is_active,
+          createdAt: row.created_at,
+          updatedAt: row.updated_at,
+          seasonName: row.season_name,
+          seasonYear: row.season_year
+        }));
+
+        res.json(mappedTeams);
+      }
+    } catch (error) {
+      console.error('Error fetching teams:', error);
+      res.status(500).json({ error: 'Failed to fetch teams' });
     }
-
-    console.log(`Fetching teams for club ${req.user.currentClubId}`);
-
-    const teams = await db.execute(sql`
-      SELECT t.*, 
-             s.name as season_name, 
-             s.year as season_year
-      FROM teams t
-      LEFT JOIN seasons s ON t.season_id = s.id
-      WHERE t.club_id = ${req.user.currentClubId}
-      ORDER BY t.name
-    `);
-
-    console.log(`Found ${teams.rows.length} teams for club ${req.user.currentClubId}`);
-    console.log('Sample team data:', teams.rows[0]);
-
-    // Map the response to include season information properly
-    const mappedTeams = teams.rows.map(row => ({
-      id: row.id,
-      name: row.name,
-      division: row.division,
-      clubId: row.club_id,
-      seasonId: row.season_id,
-      isActive: row.is_active,
-      createdAt: row.created_at,
-      updatedAt: row.updated_at,
-      seasonName: row.season_name,
-      seasonYear: row.season_year
-    }));
-
-    res.json(mappedTeams);
-  } catch (error) {
-    console.error('Error fetching teams:', error);
-    res.status(500).json({ error: 'Failed to fetch teams' });
-  }
-});
+  });
 
   // Admin endpoint to add all players to Warrandyte
 

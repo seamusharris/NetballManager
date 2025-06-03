@@ -9,6 +9,8 @@ import { Input } from '../ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { useToast } from '../../hooks/use-toast';
 import { useClub } from '../../contexts/ClubContext';
+import { useQuery } from '@tanstack/react-query';
+import { apiClient } from '../../lib/apiClient';
 
 const formSchema = insertGameSchema.extend({
   date: z.string().min(1, "Date is required"),
@@ -49,6 +51,13 @@ export default function GameForm({
 }: GameFormProps) {
   const { toast } = useToast();
   const { currentClubId } = useClub();
+
+  // Fetch all teams for inter-club games
+  const { data: allClubTeams = [], isLoading: isLoadingAllTeams } = useQuery({
+    queryKey: ['teams', 'all'],
+    queryFn: () => apiClient.get('/api/teams?includeAllClubs=true'),
+    staleTime: 5 * 60 * 1000,
+  });
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -248,7 +257,7 @@ export default function GameForm({
                   </SelectContent>
                 </Select>
                 <FormDescription>
-                  The home team for this game
+                  The home team for this game (your club's team)
                 </FormDescription>
                 <FormMessage />
               </FormItem>
@@ -268,10 +277,14 @@ export default function GameForm({
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {teams && teams.length > 0 ? (
-                      teams.map(team => (
+                    {isLoadingAllTeams ? (
+                      <SelectItem value="loading" disabled>Loading teams...</SelectItem>
+                    ) : allClubTeams && allClubTeams.length > 0 ? (
+                      allClubTeams.map(team => (
                         <SelectItem key={team.id} value={team.id.toString()}>
-                          {team.name}
+                          {team.clubName && team.clubName !== 'Warrandyte Netball Club' 
+                            ? `${team.clubName} - ${team.name}` 
+                            : team.name}
                         </SelectItem>
                       ))
                     ) : (
@@ -280,7 +293,7 @@ export default function GameForm({
                   </SelectContent>
                 </Select>
                 <FormDescription>
-                  The away team for this game
+                  The away team for this game (can be from any club)
                 </FormDescription>
                 <FormMessage />
               </FormItem>
