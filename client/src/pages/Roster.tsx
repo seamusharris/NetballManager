@@ -63,6 +63,7 @@ export default function Roster() {
   useEffect(() => {
     if (gameIdFromUrl && gameIdFromUrl !== selectedGameId) {
       setSelectedGameId(gameIdFromUrl);
+      // Skip directly to availability step when coming from a direct link
       setCurrentStep('availability');
     }
   }, [gameIdFromUrl, selectedGameId]);

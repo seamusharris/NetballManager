@@ -1453,7 +1453,7 @@ export default function GameDetails() {
                       <h3 className="text-lg font-medium mb-2">No roster assigned</h3>
                       <p className="text-gray-500 mb-4">There are no positions assigned for this game yet.</p>
                       <Button asChild>
-                        <Link to="/games">
+                        <Link to={`/roster/${gameId}`}>
                           <Edit className="mr-2 h-4 w-4" />
                           Set Up Roster
                         </Link>
@@ -1621,7 +1621,7 @@ export default function GameDetails() {
                             <div 
                               className="flex-1 flex items-center p-3 rounded-lg border-2"
                               style={{ 
-                                backgroundColor: awardWinner.avatarColor ? `${tailwindToHex(awardWinner.avatarColor)}10` : '#f5f3ff',
+                                backgroundColor: awardWinner.avatarColor ? `${tailwindToHex(awardWinner.avatarColor)}10` : '#f5ff3ff',
                                 borderColor: awardWinner.avatarColor ? tailwindToHex(awardWinner.avatarColor) : '#7c3aed'
                                                             }}
                             >
@@ -1797,7 +1797,7 @@ export default function GameDetails() {
                 </p>
                 <Button asChild>
                   <Link to={!roster || roster.length === 0 
-                    ? `/game/${gameId}/roster` 
+                    ? `/roster/${gameId}`
                     : `/games/${gameId}/stats`}>
                     <Edit className="mr-2 h-4 w-4" />
                     {!roster || roster.length === 0 
@@ -1822,7 +1822,7 @@ export default function GameDetails() {
                 <h3 className="text-lg font-medium mb-2">No roster assigned</h3>
                 <p className="text-gray-500 mb-4">There are no positions assigned for this game yet.</p>
                 <Button asChild>
-                  <Link to="/games">
+                  <Link to={`/roster/${gameId}`}>
                     <Edit className="mr-2 h-4 w-4" />
                     Set Up Roster
                   </Link>

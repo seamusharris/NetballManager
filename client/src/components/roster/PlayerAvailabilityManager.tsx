@@ -180,7 +180,7 @@ export default function PlayerAvailabilityManager({
     }
   };
 
-  if (isLoading) {
+  if (isLoading && players.length === 0) {
     return (
       <Card className="mb-6">
         <CardContent className="pt-6">
