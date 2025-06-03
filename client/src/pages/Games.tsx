@@ -210,6 +210,8 @@ export default function Games() {
           isSubmitting={false}
           onCancel={() => setIsDialogOpen(false)}
           gameStatuses={gameStatuses}
+          teams={teams}
+          allTeams={teams}
         />
       </CrudDialog>
 
@@ -234,6 +236,9 @@ export default function Games() {
               isSubmitting={updateMutation.isPending}
               onCancel={() => setEditingGame(null)}
               gameStatuses={gameStatuses}
+              teams={teams}
+              allTeams={teams}
+              isEditing={true}
             />
           </>
         )}
