@@ -243,7 +243,7 @@ export default function GameForm({
                         </SelectItem>
                       ))
                     ) : (
-                      <SelectItem value="">Loading teams...</SelectItem>
+                      <SelectItem value="loading" disabled>Loading teams...</SelectItem>
                     )}
                   </SelectContent>
                 </Select>
@@ -275,7 +275,7 @@ export default function GameForm({
                         </SelectItem>
                       ))
                     ) : (
-                      <SelectItem value="">Loading teams...</SelectItem>
+                      <SelectItem value="loading" disabled>Loading teams...</SelectItem>
                     )}
                   </SelectContent>
                 </Select>
