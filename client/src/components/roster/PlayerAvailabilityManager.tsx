@@ -99,7 +99,7 @@ export default function PlayerAvailabilityManager({
       setAvailablePlayerIds(activePlayerIds);
       onAvailabilityChange?.(activePlayerIds);
     }
-  }, [availabilityData, isLoading, availabilityError, players, gameId]);
+  }, [availabilityData, isLoading, availabilityError, players, gameId, onAvailabilityChange]);
 
   const [searchQuery, setSearchQuery] = useState('');
 

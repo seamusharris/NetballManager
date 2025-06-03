@@ -509,11 +509,23 @@ export default function SimpleRosterManager({
     return player.positionPreferences.includes(position);
   };
 
-  // Get players eligible for a position - now showing ALL active players
+  // Get players eligible for a position - only showing available players
   const getEligiblePlayers = (position: Position): Player[] => {
-    return players
-      .filter(player => player.active)
-      .filter(player => availablePlayerIds.includes(player.id))
+    console.log('getEligiblePlayers:', {
+      position,
+      totalPlayers: players.length,
+      activePlayers: players.filter(p => p.active).length,
+      availablePlayerIds: availablePlayerIds.length,
+      availablePlayerIdsList: availablePlayerIds
+    });
+
+    const eligiblePlayers = players
+      .filter(player => {
+        const isActive = player.active;
+        const isAvailable = availablePlayerIds.includes(player.id);
+        console.log(`Player ${player.displayName}: active=${isActive}, available=${isAvailable}`);
+        return isActive && isAvailable;
+      })
       .sort((a, b) => {
         // First sort by whether they have this position preference (preferred first)
         const aHasPreference = a.positionPreferences.includes(position);
@@ -525,6 +537,9 @@ export default function SimpleRosterManager({
         // Then sort alphabetically by display name
         return a.displayName.localeCompare(b.displayName);
       });
+
+    console.log(`Eligible players for ${position}:`, eligiblePlayers.map(p => p.displayName));
+    return eligiblePlayers;
   };
 
   // Create a map to track which players are already selected in a quarter

@@ -1,3 +1,7 @@
+The code ensures available players data flows correctly between the availability and roster managers by initializing available players to all active players when players load.
+```
+
+```typescript
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -19,8 +23,6 @@ export default function Roster() {
   const [selectedGameId, setSelectedGameId] = useState<number | null>(gameIdFromUrl);
   const [showPlayerAvailability, setShowPlayerAvailability] = useState(true); // Start with availability if coming from direct link
   const [availablePlayerIds, setAvailablePlayerIds] = useState<number[]>([]);
-  const [, navigate] = useLocation();
-  const { currentClub } = useClub();
 
   // Fetch games
   const { data: games = [], isLoading: gamesLoading, error: gamesError } = useQuery({
@@ -30,12 +32,24 @@ export default function Roster() {
     enabled: !!currentClub?.id
   });
 
-  // Fetch players  
+  // Fetch players
   const { data: players = [], isLoading: playersLoading } = useQuery({
     queryKey: ['players', currentClub?.id],
     queryFn: () => apiRequest('GET', '/api/players'),
     enabled: !!currentClub?.id
   });
+
+  // Initialize available players to all active players when players load
+  useEffect(() => {
+    if (players.length > 0 && availablePlayerIds.length === 0) {
+      const activePlayerIds = players.filter(p => p.active).map(p => p.id);
+      setAvailablePlayerIds(activePlayerIds);
+    }
+  }, [players, availablePlayerIds.length]);
+
+  const [, navigate] = useLocation();
+  const { currentClub } = useClub();
+
 
   // Fetch opponents for legacy support
   const { data: opponents = [] } = useQuery({
@@ -76,7 +90,7 @@ export default function Roster() {
   }
 
   // Filter out completed games for roster management
-  const availableGames = games.filter((game: Game) => 
+  const availableGames = games.filter((game: Game) =>
     !game.statusIsCompleted && !game.completed
   );
 
@@ -220,3 +234,4 @@ export default function Roster() {
     </div>
   );
 }
+`
