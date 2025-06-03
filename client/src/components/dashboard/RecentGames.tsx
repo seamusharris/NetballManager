@@ -19,10 +19,21 @@ interface RecentGamesProps {
 }
 
 export default function RecentGames({ games, opponents, className, seasonFilter, activeSeason, centralizedStats }: RecentGamesProps) {
-  // Filter for recent completed games using gameStatus
+  // Filter for recent completed games using the new status system
   const recentGames = games
     .filter(game => {
-      const isCompleted = game.gameStatus?.isCompleted ?? game.completed;
+      // Use the new status fields from the team-based system
+      const isCompleted = game.statusIsCompleted === true || 
+                         game.gameStatus?.isCompleted === true || 
+                         game.completed === true;
+      
+      console.log(`Game ${game.id} completion check:`, {
+        statusIsCompleted: game.statusIsCompleted,
+        gameStatusIsCompleted: game.gameStatus?.isCompleted,
+        completed: game.completed,
+        finalResult: isCompleted
+      });
+      
       return isCompleted;
     })
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
@@ -30,12 +41,25 @@ export default function RecentGames({ games, opponents, className, seasonFilter,
 
   // Use centralized stats if available, otherwise empty object
   const allGameStats = centralizedStats || {};
-  const isLoading = !centralizedStats;
+  const isLoading = !centralizedStats && recentGames.length > 0;
 
-  const getOpponentName = (opponentId: number | null) => {
-    if (!opponentId) return 'Unknown Opponent';
-    const opponent = opponents.find(o => o.id === opponentId);
-    return opponent ? opponent.teamName : 'Unknown Opponent';
+  // Updated to work with team-based system
+  const getOpponentName = (game: any) => {
+    // For team-based games, we need to determine which team is the opponent
+    // This assumes we're always the home team, but we should improve this logic
+    if (game.awayTeamName && game.awayTeamName !== 'Bye') {
+      return `vs ${game.awayTeamName}`;
+    } else if (game.homeTeamName) {
+      return `vs ${game.homeTeamName}`;
+    }
+    
+    // Fallback to old opponent system if available
+    if (game.opponentId) {
+      const opponent = opponents.find(o => o.id === game.opponentId);
+      return opponent ? opponent.teamName : 'Unknown Opponent';
+    }
+    
+    return 'Unknown Opponent';
   };
 
   // Calculate scores from game stats
@@ -152,7 +176,7 @@ export default function RecentGames({ games, opponents, className, seasonFilter,
                   className={`flex justify-between items-center p-4 mb-4 mt-2 border-l-4 border-t border-r border-b rounded ${getResultClass(game)} cursor-pointer ${getHoverClass(game)} transition-colors`}
                 >
                   <div>
-                    <p className="font-semibold text-gray-800">{getOpponentName(game.opponentId)}</p>
+                    <p className="font-semibold text-gray-800">{getOpponentName(game)}</p>
                     <div className="flex items-center gap-2">
                       <p className="text-xs text-gray-700">{formatShortDate(game.date)}</p>
                       {game.round && (

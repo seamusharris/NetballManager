@@ -17,18 +17,36 @@ interface UpcomingGamesProps {
 }
 
 export default function UpcomingGames({ games, opponents, className, seasonFilter, activeSeason }: UpcomingGamesProps) {
-  // Filter for upcoming games using the isCompleted flag from game_statuses table
+  // Filter for upcoming games using the new status system
   const upcomingGames = games
     .filter(game => {
-        const isCompleted = game.gameStatus?.isCompleted ?? game.completed;
-        return !isCompleted;
-      });
+      const isCompleted = game.statusIsCompleted === true || 
+                         game.gameStatus?.isCompleted === true || 
+                         game.completed === true;
+      return !isCompleted;
+    })
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+    .slice(0, 5); // Limit to next 5 upcoming games
 
-  const getOpponentName = (opponentId: number | null) => {
-    if (!opponentId) return 'Unknown Opponent';
-    if (!opponents || !Array.isArray(opponents)) return 'Loading...';
-    const opponent = opponents.find(o => o.id === opponentId);
-    return opponent ? opponent.teamName : 'Unknown Opponent';
+  // Updated to work with team-based system
+  const getOpponentName = (game: any) => {
+    // For team-based games, we need to determine which team is the opponent
+    if (game.awayTeamName && game.awayTeamName !== 'Bye') {
+      return `vs ${game.awayTeamName}`;
+    } else if (game.homeTeamName && game.awayTeamName === 'Bye') {
+      return 'BYE';
+    } else if (game.homeTeamName) {
+      return `vs ${game.homeTeamName}`;
+    }
+    
+    // Fallback to old opponent system if available
+    if (game.opponentId) {
+      if (!opponents || !Array.isArray(opponents)) return 'Loading...';
+      const opponent = opponents.find(o => o.id === game.opponentId);
+      return opponent ? opponent.teamName : 'Unknown Opponent';
+    }
+    
+    return 'Unknown Opponent';
   };
 
   return (
@@ -47,7 +65,7 @@ export default function UpcomingGames({ games, opponents, className, seasonFilte
                   }`}
                 >
                   <div>
-                    <p className="font-semibold text-gray-800">{getOpponentName(game.opponentId)}</p>
+                    <p className="font-semibold text-gray-800">{getOpponentName(game)}</p>
                     <div className="flex items-center gap-2">
                       <p className="text-xs text-gray-700">{formatShortDate(game.date)} • {game.time}</p>
                       {game.round && (
@@ -58,7 +76,7 @@ export default function UpcomingGames({ games, opponents, className, seasonFilte
                     </div>
                   </div>
                   <div className="text-right">
-                    {game.completed ? (
+                    {game.statusIsCompleted ? (
                       <GameScoreDisplay gameId={game.id} compact={true} fallback="—" />
                     ) : (
                       <span className="text-sm text-gray-500">—</span>
