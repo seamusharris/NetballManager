@@ -18,14 +18,24 @@ export interface GameStatus {
 export function useGameStatuses() {
   const query = useQuery({
     queryKey: ['gameStatuses'],
-    queryFn: () => apiClient.get('/api/game-statuses') as Promise<GameStatus[]>,
+    queryFn: async () => {
+      try {
+        const result = await apiClient.get('/api/game-statuses');
+        console.log('Game statuses API response:', result);
+        return result as GameStatus[];
+      } catch (error) {
+        console.error('Game statuses API error:', error);
+        throw error;
+      }
+    },
     staleTime: 10 * 60 * 1000, // 10 minutes
   });
 
   console.log('useGameStatuses result:', {
-    data: query.data,
     isLoading: query.isLoading,
-    error: query.error
+    error: query.error,
+    data: query.data,
+    dataLength: query.data?.length || 0
   });
 
   return {
