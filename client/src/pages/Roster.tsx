@@ -66,8 +66,21 @@ export default function Roster() {
       setSelectedGameId(gameIdFromUrl);
       // Go to availability step when coming from a direct link (e.g., from game details)
       setCurrentStep('availability');
+      console.log('Set current step to availability for game:', gameIdFromUrl);
     }
   }, [gameIdFromUrl, selectedGameId]);
+
+  // Debug logging for rendering conditions
+  useEffect(() => {
+    console.log('Roster rendering state:', {
+      currentStep,
+      selectedGameId,
+      gameIdFromUrl,
+      showingAvailability: selectedGameId && currentStep === 'availability',
+      showingRoster: selectedGameId && currentStep === 'roster',
+      showingGameSelection: currentStep === 'game-selection' && !selectedGameId
+    });
+  }, [currentStep, selectedGameId, gameIdFromUrl]);
 
   // Update step when game selection changes
   const handleGameSelection = (gameId: number | null) => {
@@ -219,7 +232,7 @@ export default function Roster() {
         </Card>
       )}
 
-      {currentStep === 'availability' && selectedGameId && (
+      {selectedGameId && currentStep === 'availability' && (
         <PlayerAvailabilityManager
           gameId={selectedGameId}
           players={players}
@@ -230,7 +243,7 @@ export default function Roster() {
         />
       )}
 
-      {currentStep === 'roster' && selectedGameId && (
+      {selectedGameId && currentStep === 'roster' && (
         <SimpleRosterManager
           selectedGameId={selectedGameId}
           setSelectedGameId={handleGameSelection}
