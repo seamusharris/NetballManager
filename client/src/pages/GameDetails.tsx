@@ -1724,20 +1724,17 @@ export default function GameDetails() {
                         size="sm" 
                         onClick={async () => {
                           try {
-                            const response = await apiClient.patch(`/api/games/${gameId}`, { notes: gameNotes });
+                            await apiClient.patch(`/api/games/${gameId}`, { notes: gameNotes });
 
-                            if (response.ok) {
-                              // Invalidate the game query to refresh the data
-                              queryClient.invalidateQueries({ queryKey: ['/api/games', gameId] });
-                              setIsEditingNotes(false);
-                              toast({
-                                title: "Notes saved",
-                                description: "Game notes have been updated successfully.",
-                              });
-                            } else {
-                              throw new Error('Failed to save notes');
-                            }
+                            // Invalidate the game query to refresh the data
+                            queryClient.invalidateQueries({ queryKey: ['/api/games', gameId] });
+                            setIsEditingNotes(false);
+                            toast({
+                              title: "Notes saved",
+                              description: "Game notes have been updated successfully.",
+                            });
                           } catch (error) {
+                            console.error('Error saving game notes:', error);
                             toast({
                               variant: "destructive",
                               title: "Error",
