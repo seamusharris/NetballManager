@@ -1058,7 +1058,7 @@ export default function GameDetails() {
     isLoading: isLoadingGame
   } = useQuery({
     queryKey: ['/api/games', gameId],
-    queryFn: () => fetch(`/api/games/${gameId}`).then(res => res.json()),
+    queryFn: () => apiClient.get(`/api/games/${gameId}`),
     enabled: !isNaN(gameId)
   });
 
@@ -1068,7 +1068,7 @@ export default function GameDetails() {
     isLoading: isLoadingPlayers
   } = useQuery({
     queryKey: ['/api/players'],
-    queryFn: () => fetch('/api/players').then(res => res.json()),
+    queryFn: () => apiClient.get('/api/players'),
     select: (data) => Array.isArray(data) ? data : []
   });
 
@@ -1078,7 +1078,7 @@ export default function GameDetails() {
     isLoading: isLoadingGameStatuses
   } = useQuery({
     queryKey: ['/api/game-statuses'],
-    queryFn: () => fetch('/api/game-statuses').then(res => res.json()),
+    queryFn: () => apiClient.get('/api/game-statuses'),
     select: (data) => Array.isArray(data) ? data : []
   });
 
@@ -1089,17 +1089,7 @@ export default function GameDetails() {
     error: teamsError
   } = useQuery({
     queryKey: ['/api/teams'],
-    queryFn: async () => {
-      const response = await fetch('/api/teams', {
-        headers: {
-          'x-current-club-id': currentClub?.id?.toString() || '54'
-        }
-      });
-      if (!response.ok) {
-        throw new Error('Failed to fetch teams');
-      }
-      return response.json();
-    },
+    queryFn: () => apiClient.get('/api/teams'),
     select: (data) => Array.isArray(data) ? data : [],
     enabled: !!currentClub?.id
   });
@@ -1111,20 +1101,21 @@ export default function GameDetails() {
     refetch: refetchRosters
   } = useQuery({
     queryKey: ['/api/games', gameId, 'rosters'],
-    queryFn: () => fetch(`/api/games/${gameId}/rosters`).then(res => res.json()),
+    queryFn: () => apiClient.get(`/api/games/${gameId}/rosters`),
     enabled: !isNaN(gameId)
   });
 
   // Fetch seasons data
   const { data: seasons = [], isLoading: isLoadingSeasons } = useQuery<any[]>({
     queryKey: ['/api/seasons'],
-    queryFn: () => fetch('/api/seasons').then(res => res.json()),
+    queryFn: () => apiClient.get('/api/seasons'),
     select: (data) => Array.isArray(data) ? data : []
   });
 
   // Fetch active season
   const { data: activeSeason, isLoading: isLoadingActiveSeason } = useQuery<any>({
     queryKey: ['/api/seasons/active'],
+    queryFn: () => apiClient.get('/api/seasons/active')
   });
 
   // Force refetch when component mounts or route changes
@@ -1145,7 +1136,7 @@ export default function GameDetails() {
     refetch: refetchGameStats
   } = useQuery({
     queryKey: ['/api/games', gameId, 'stats'],
-    queryFn: () => fetch(`/api/games/${gameId}/stats`).then(res => res.json()),
+    queryFn: () => apiClient.get(`/api/games/${gameId}/stats`),
     enabled: !isNaN(gameId),
     staleTime: 0, // Always consider stale to get fresh data
     refetchOnWindowFocus: true, // Refetch when window gains focus
@@ -1284,9 +1275,7 @@ export default function GameDetails() {
                     className="bg-red-500 hover:bg-red-600"
                     onClick={async () => {
                       try {
-                        await fetch(`/api/games/${gameId}`, {
-                          method: 'DELETE',
-                        });
+                        await apiClient.delete(`/api/games/${gameId}`);
 
                         // Invalidate queries
                         queryClient.invalidateQueries({
@@ -1333,11 +1322,7 @@ export default function GameDetails() {
                       isEditing={true}
                       onSubmit={async (formData) => {
                         try {
-                          await fetch(`/api/games/${gameId}`, {
-                            method: 'PATCH',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(formData)
-                          });
+                          await apiClient.patch(`/api/games/${gameId}`, formData);
 
                           // Invalidate queries to refresh data
                           queryClient.invalidateQueries({
@@ -1472,13 +1457,7 @@ export default function GameDetails() {
                         size="sm" 
                         onClick={async () => {
                           try {
-                            const response = await fetch(`/api/games/${gameId}`, {
-                              method: 'PATCH',
-                              headers: {
-                                'Content-Type': 'application/json',
-                              },
-                              body: JSON.stringify({ awardWinnerId: selectedAwardWinner }),
-                            });
+                            const response = await apiClient.patch(`/api/games/${gameId}`, { awardWinnerId: selectedAwardWinner });
 
                             if (response.ok) {
                               // Invalidate the game query to refresh the data
@@ -1708,13 +1687,7 @@ export default function GameDetails() {
                         size="sm" 
                         onClick={async () => {
                           try {
-                            const response = await fetch(`/api/games/${gameId}`, {
-                              method: 'PATCH',
-                              headers: {
-                                'Content-Type': 'application/json',
-                              },
-                              body: JSON.stringify({ notes: gameNotes }),
-                            });
+                            const response = await apiClient.patch(`/api/games/${gameId}`, { notes: gameNotes });
 
                             if (response.ok) {
                               // Invalidate the game query to refresh the data
