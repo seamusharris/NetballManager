@@ -19,6 +19,8 @@ export default function Roster() {
   const [selectedGameId, setSelectedGameId] = useState<number | null>(gameIdFromUrl);
   const [showPlayerAvailability, setShowPlayerAvailability] = useState(true); // Start with availability if coming from direct link
   const [availablePlayerIds, setAvailablePlayerIds] = useState<number[]>([]);
+  const [, navigate] = useLocation();
+  const { currentClub } = useClub();
 
   // Fetch games
   const { data: games = [], isLoading: gamesLoading, error: gamesError } = useQuery({
@@ -42,9 +44,6 @@ export default function Roster() {
       setAvailablePlayerIds(activePlayerIds);
     }
   }, [players, availablePlayerIds.length]);
-
-  const [, navigate] = useLocation();
-  const { currentClub } = useClub();
 
 
   // Fetch opponents for legacy support
