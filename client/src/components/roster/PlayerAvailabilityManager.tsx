@@ -41,22 +41,98 @@ function PlayerAvatar({ firstName, lastName, avatarColor, size }: PlayerAvatarPr
 }
 
 interface PlayerAvailabilityManagerProps {
+  gameId: number;
   players: Player[];
-  game: Game | undefined;
-  opponent: Opponent | undefined;
-  availablePlayers: number[];
-  onAvailabilityChange: (playerId: number, isAvailable: boolean) => void;
+  games: Game[];
+  opponents: Opponent[];
   onComplete: () => void;
 }
 
 export default function PlayerAvailabilityManager({
+  gameId,
   players,
-  game,
-  opponent,
-  availablePlayers,
-  onAvailabilityChange,
+  games,
+  opponents,
   onComplete
 }: PlayerAvailabilityManagerProps) {
+  const [availablePlayers, setAvailablePlayers] = useState<number[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  // Get the selected game and opponent
+  const game = games.find(g => g.id === gameId);
+  const opponent = opponents.find(o => o.id === game?.opponentId);
+
+  // Load existing availability data when component mounts or gameId changes
+  useEffect(() => {
+    const loadAvailability = async () => {
+      if (!gameId) return;
+
+      setLoading(true);
+      try {
+        const response = await fetch(`/api/games/${gameId}/availability`);
+        if (response.ok) {
+          const data = await response.json();
+          setAvailablePlayers(data.availablePlayerIds || []);
+        } else {
+          // If no availability data exists, assume all active players are available
+          const activePlayerIds = players.filter(p => p.active).map(p => p.id);
+          setAvailablePlayers(activePlayerIds);
+        }
+      } catch (error) {
+        console.error('Error loading availability:', error);
+        // Fallback to all active players
+        const activePlayerIds = players.filter(p => p.active).map(p => p.id);
+        setAvailablePlayers(activePlayerIds);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadAvailability();
+  }, [gameId, players]);
+
+  // Handle availability change
+  const handleAvailabilityChange = async (playerId: number, isAvailable: boolean) => {
+    // Update local state immediately for responsive UI
+    setAvailablePlayers(prev => {
+      if (isAvailable) {
+        return prev.includes(playerId) ? prev : [...prev, playerId];
+      } else {
+        return prev.filter(id => id !== playerId);
+      }
+    });
+
+    // Save to backend
+    try {
+      await fetch(`/api/games/${gameId}/availability/${playerId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ isAvailable }),
+      });
+    } catch (error) {
+      console.error('Error updating availability:', error);
+      // Revert local state on error
+      setAvailablePlayers(prev => {
+        if (!isAvailable) {
+          return prev.includes(playerId) ? prev : [...prev, playerId];
+        } else {
+          return prev.filter(id => id !== playerId);
+        }
+      });
+    }
+  };
+
+  if (loading) {
+    return (
+      <Card className="mb-6">
+        <CardContent className="pt-6">
+          <div className="text-center">Loading player availability...</div>
+        </CardContent>
+      </Card>
+    );
+  }
   const [searchQuery, setSearchQuery] = useState('');
 
   // Filter players by search query and sort by display name
@@ -201,7 +277,7 @@ export default function PlayerAvailabilityManager({
                       <Switch
                         checked={isAvailable}
                         onCheckedChange={(checked) => {
-                          onAvailabilityChange(player.id, checked);
+                          handleAvailabilityChange(player.id, checked);
                         }}
                       />
                     </div>
