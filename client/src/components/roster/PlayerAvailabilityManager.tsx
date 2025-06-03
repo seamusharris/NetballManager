@@ -78,7 +78,7 @@ export default function PlayerAvailabilityManager({
     }
   });
 
-  // Update local state when data loads
+  // Effect to load availability data and set fallbacks
   useEffect(() => {
     console.log('PlayerAvailabilityManager useEffect:', {
       availabilityData,
@@ -88,18 +88,29 @@ export default function PlayerAvailabilityManager({
       gameId
     });
 
+    // Only proceed if we have a valid gameId and players have loaded
+    if (!gameId || players.length === 0) {
+      return;
+    }
+
+    // Wait for loading to complete
+    if (isLoading) {
+      return;
+    }
+
+    // Handle successful availability data
     if (availabilityData?.availablePlayerIds && availabilityData.availablePlayerIds.length > 0) {
       console.log('Setting available players from API:', availabilityData.availablePlayerIds);
       setAvailablePlayerIds(availabilityData.availablePlayerIds);
       onAvailabilityChange?.(availabilityData.availablePlayerIds);
-    } else if (!isLoading && players.length > 0) {
+    } else {
       // Fallback to all active players if no availability data or empty array
       const activePlayerIds = players.filter(p => p.active).map(p => p.id);
       console.log('Setting fallback available players (no data or empty array):', activePlayerIds);
       setAvailablePlayerIds(activePlayerIds);
       onAvailabilityChange?.(activePlayerIds);
     }
-  }, [availabilityData, isLoading, availabilityError, players, gameId, onAvailabilityChange]);
+  }, [availabilityData, isLoading, availabilityError, players.length, gameId]);
 
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -122,10 +133,10 @@ export default function PlayerAvailabilityManager({
       const newIds = isAvailable
         ? prev.includes(playerId) ? prev : [...prev, playerId]
         : prev.filter(id => id !== playerId);
-      
+
       // Notify parent component of the change
       onAvailabilityChange?.(newIds);
-      
+
       return newIds;
     });
 
