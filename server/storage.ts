@@ -346,7 +346,6 @@ export class DatabaseStorage implements IStorage {
         notes: row.notes,
         awardWinnerId: row.award_winner_id,
         // Game Status fields
-        statusId: row['gameStatus.id'],
         statusName: row['gameStatus.name'],
         statusDisplayName: row['gameStatus.displayName'],
         statusPoints: row['gameStatus.points'],
@@ -431,7 +430,6 @@ export class DatabaseStorage implements IStorage {
         notes: row.notes,
         awardWinnerId: row.award_winner_id,
         // Game Status fields
-        statusId: row['gameStatus.id'],
         statusName: row['gameStatus.name'],
         statusDisplayName: row['gameStatus.displayName'],
         statusPoints: row['gameStatus.points'],

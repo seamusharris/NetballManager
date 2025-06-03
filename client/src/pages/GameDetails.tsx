@@ -735,9 +735,7 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
 
             return (
               <div
-This change replaces the use of the `includeAllClubs` parameter with a dedicated `/api/teams/all` endpoint when fetching all teams.
-```typescript
- key={position} className="col-span-1">
+ key={position} className`="col-span-1">
                 <PositionBox
                   position={position as Position}
                   playerName={playerName}

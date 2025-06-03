@@ -218,7 +218,7 @@ export default function Games() {
           onCancel={() => setIsDialogOpen(false)}
           gameStatuses={gameStatuses}
           teams={teams}
-          allTeams={teams}
+          allTeams={allTeams}
         />
       </CrudDialog>
 
@@ -253,7 +253,7 @@ export default function Games() {
                 onCancel={() => setEditingGame(null)}
                 gameStatuses={gameStatuses}
                 teams={teams}
-                allTeams={teams}
+                allTeams={allTeams}
                 isEditing={true}
               />
             )}

@@ -2508,6 +2508,48 @@ req.params.gameId);
     }
   });
 
+  // Get all teams across all clubs (for inter-club games)
+  app.get("/api/teams/all", loadUserPermissions, async (req, res) => {
+    try {
+      console.log('Fetching all teams across all clubs');
+      
+      const teams = await db.execute(sql`
+        SELECT t.*, 
+               s.name as season_name, 
+               s.year as season_year,
+               c.name as club_name,
+               c.code as club_code
+        FROM teams t
+        LEFT JOIN seasons s ON t.season_id = s.id
+        LEFT JOIN clubs c ON t.club_id = c.id
+        WHERE t.name != 'Bye'
+        ORDER BY c.name, t.name
+      `);
+
+      console.log(`Found ${teams.rows.length} teams across all clubs`);
+
+      const mappedTeams = teams.rows.map(row => ({
+        id: row.id,
+        name: row.name,
+        division: row.division,
+        clubId: row.club_id,
+        seasonId: row.season_id,
+        isActive: row.is_active,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at,
+        seasonName: row.season_name,
+        seasonYear: row.season_year,
+        clubName: row.club_name,
+        clubCode: row.club_code
+      }));
+
+      res.json(mappedTeams);
+    } catch (error) {
+      console.error('Error fetching all teams:', error);
+      res.status(500).json({ error: 'Failed to fetch all teams' });
+    }
+  });
+
   // Teams routes
   app.get("/api/teams", loadUserPermissions, async (req, res) => {
     try {
