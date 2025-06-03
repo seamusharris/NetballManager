@@ -151,5 +151,18 @@ export async function mutateWithInvalidation<T>(
   return result;
 }
 
-// Legacy export for backward compatibility
-export const apiRequest = apiClient.request.bind(apiClient);
+// Legacy export for backward compatibility - creating a unified request method
+export const apiRequest = async (method: string, url: string, data?: any) => {
+  switch (method.toUpperCase()) {
+    case 'GET':
+      return apiClient.get(url);
+    case 'POST':
+      return apiClient.post(url, data);
+    case 'PATCH':
+      return apiClient.patch(url, data);
+    case 'DELETE':
+      return apiClient.delete(url);
+    default:
+      throw new Error(`Unsupported HTTP method: ${method}`);
+  }
+};
