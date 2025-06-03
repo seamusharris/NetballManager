@@ -847,4 +847,13 @@ export default function SimpleRosterManager({
               </Table>
             </div>
           ) : (
-            <div className="p-8 text-center
+            <div className="p-8 text-center text-gray-500">
+              <h3 className="text-lg font-semibold mb-2">Select a Game</h3>
+              <p>Please select a game from the dropdown above to manage your team roster.</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
