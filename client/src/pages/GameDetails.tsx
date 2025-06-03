@@ -1172,15 +1172,17 @@ export default function GameDetails() {
             />
           </div>
 
-          <h1 className="text-2xl font-bold">
-            {game.awayTeamName === 'Bye' || game.statusName === 'bye' ? (
+          
+          
+          
+            {game.statusName === 'bye' ? (
               <span>BYE Round</span>
             ) : (
               <span>
                 {game.homeTeamName} vs {game.awayTeamName}
               </span>
             )}
-          </h1>
+          
 
           <div className="flex flex-wrap gap-2 mt-4 mb-4">
 
