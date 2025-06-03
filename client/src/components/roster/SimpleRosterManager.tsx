@@ -610,34 +610,8 @@ export default function SimpleRosterManager({
   return (
     <Card className="mb-6 shadow-md">
       <CardContent className="pt-6">
-        {/* Game Selection and Actions */}
-        <div className="flex flex-col md:flex-row gap-4 justify-between mb-6">
-          <div className="w-full md:w-1/3">
-            <label className="text-sm font-medium mb-2 block">Select Game</label>
-            <Select
-              value={selectedGameId?.toString() || ""}
-              onValueChange={handleGameChange}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select a game" />
-              </SelectTrigger>
-              <SelectContent>
-                {[...allGames]
-                  .map((game) => {
-                    // Get opponent name from the team-based system
-                    // If this is an inter-club game, show the away team as the opponent
-                    const opponentName = game.awayTeamName || "Unknown Opponent";
-
-                    return (
-                      <SelectItem key={game.id} value={game.id.toString()}>
-                        Round {game.round} - vs {opponentName}
-                      </SelectItem>
-                    );
-                  })}
-              </SelectContent>
-            </Select>
-          </div>
-
+        {/* Actions */}
+        <div className="flex gap-4 justify-end mb-6">
           <div className="flex gap-2 items-end">
             <Button 
               variant="outline" 
