@@ -1164,15 +1164,13 @@ export default function GameDetails() {
   // Debug game data
   useEffect(() => {
     if (game) {
-      console.log('GameDetails - Game data:', {
-        id: game.id,
-        homeTeamName: game.home_team_name,
-        awayTeamName: game.away_team_name,
-        homeTeamId: game.home_team_id,
-        awayTeamId: game.away_team_id,
-        status: game.status,
-        statusId: game.status_id
-      });
+      console.log("GameDetails - Game data:", game ? { 
+    id: game.id, 
+    homeTeamName: game.home_team_name, 
+    awayTeamName: game.away_team_name,
+    homeClubName: game.homeClubName,
+    awayClubName: game.awayClubName
+  } : null);
     }
   }, [game]);
 

@@ -228,9 +228,12 @@ export default function Games() {
               seasons: seasons.length,
               activeSeason,
               teams: teams.length,
-              isSubmitting: updateMutation.isPending
+              allTeams: allTeams.length,
+              isSubmitting: updateMutation.isPending,
+              isLoadingTeams,
+              isLoadingAllTeams
             })}
-            {teams.length === 0 ? (
+            {(isLoadingTeams || isLoadingAllTeams || teams.length === 0 || allTeams.length === 0) ? (
               <div className="p-4 text-center">
                 <p className="text-gray-500 mb-4">Loading teams data...</p>
                 <Button variant="outline" onClick={() => setEditingGame(null)}>
