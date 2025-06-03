@@ -60,8 +60,9 @@ export default function PlayerAvailabilityManager({
   const [availablePlayerIds, setAvailablePlayerIds] = useState<number[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  // Early return if no gameId - moved after hooks
+  // Early return if no gameId - moved after ALL hooks
   if (!gameId) {
     return (
       <div className="text-center py-8">
@@ -157,7 +158,6 @@ export default function PlayerAvailabilityManager({
       </Card>
     );
   }
-  const [searchQuery, setSearchQuery] = useState('');
 
   // Filter players by search query and sort by display name
   const filteredPlayers = players
