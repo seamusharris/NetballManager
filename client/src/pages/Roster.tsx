@@ -15,6 +15,7 @@ import { useClub } from '@/contexts/ClubContext';
 
 export default function Roster() {
   const [selectedGameId, setSelectedGameId] = useState<number | null>(null);
+  const [showPlayerAvailability, setShowPlayerAvailability] = useState(false);
   const [, navigate] = useLocation();
   const { currentClub } = useClub();
 
@@ -134,7 +135,7 @@ export default function Roster() {
       <h1>Roster</h1>
       <p>Club: {currentClub?.name}</p>
 
-      <div className="mb-4">
+      <div className="mb-4 flex gap-4 items-center">
         <Select value={selectedGameId?.toString()} onValueChange={(value) => setSelectedGameId(parseInt(value))}>
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Select a game" />
@@ -147,6 +148,17 @@ export default function Roster() {
             ))}
           </SelectContent>
         </Select>
+
+        {selectedGameId && (
+          <Button
+            variant="outline"
+            onClick={() => setShowPlayerAvailability(!showPlayerAvailability)}
+            className="flex items-center gap-2"
+          >
+            <Users className="h-4 w-4" />
+            {showPlayerAvailability ? 'Manage Roster' : 'Player Availability'}
+          </Button>
+        )}
       </div>
 
       {gamesError && (
@@ -168,13 +180,24 @@ export default function Roster() {
         </div>
       )}
 
-      <SimpleRosterManager
-        selectedGameId={selectedGameId}
-        players={players}
-        games={games}
-        opponents={opponents}
-        isLoading={isLoading}
-      />
+      {showPlayerAvailability ? (
+        <PlayerAvailabilityManager
+          gameId={selectedGameId!}
+          players={players}
+          games={games}
+          opponents={opponents}
+          onComplete={() => setShowPlayerAvailability(false)}
+        />
+      ) : (
+        <SimpleRosterManager
+          selectedGameId={selectedGameId}
+          setSelectedGameId={setSelectedGameId}
+          players={players}
+          games={games}
+          opponents={opponents}
+          isLoading={isLoading}
+        />
+      )}
 
     </div>
   );
