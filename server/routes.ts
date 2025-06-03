@@ -879,7 +879,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         code: club.code,
         description: club.description,
         address: club.address,
-        contactEmail: club.contact_email,
+        contactEmail:```
+ club.contact_email,
         contactPhone: club.contact_phone,
         primaryColor: club.primary_color,
         secondaryColor: club.secondary_color
@@ -1314,7 +1315,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/games/:id", async (req, res) => {
     try {
       const gameId = Number(req.params.id);
-      
+
       // Use the same query structure as the games list to ensure consistency
       const result = await db.execute(sql`
         SELECT 
@@ -1382,7 +1383,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // Legacy fields for backward compatibility - provide both formats
         isBye: row.away_team_name === 'Bye',
-        
+
         // Legacy snake_case fields for backward compatibility
         home_team_name: row.home_team_name,
         away_team_name: row.away_team_name
@@ -1641,7 +1642,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create fallback roster for a game
   app.post("/api/games/:gameId/create-fallback-roster", async (req, res) => {
     try {
-      const gameId = Number(req.params.gameId);
+      const gameId = Number(This commit removes the `includeAllClubs` logic from the `/api/teams` endpoint, which now only fetches teams for the current club.
+
+req.params.gameId);
       const { createFallbackRoster } = await import('./roster-fallback');
 
       await createFallbackRoster(gameId);
@@ -2452,8 +2455,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error fetching player clubs:', error);
       res.status(500).json({ error: 'Failed to fetch player clubs' });
-    }
-  });
+    }  });
 
   // Add player to a club
   app.post("/api/clubs/:clubId/players/:playerId", requireClubAccess('canManagePlayers'), async (req: AuthenticatedRequest, res) => {
@@ -2517,46 +2519,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "No current club selected" });
       }
 
-      // Check if we need teams from all clubs (for inter-club games)
-      const includeAllClubs = req.query.includeAllClubs === 'true';
-
-      if (includeAllClubs) {
-        console.log('Fetching teams from all clubs for inter-club games');
-
-        const result = await db.execute(sql`
-          SELECT 
-            t.*,
-            s.name as season_name,
-            s.year as season_year,
-            c.name as club_name,
-            c.code as club_code
-          FROM teams t
-          LEFT JOIN seasons s ON t.season_id = s.id
-          LEFT JOIN clubs c ON t.club_id = c.id
-          WHERE t.is_active = true
-          AND c.is_active = true
-          ORDER BY c.name ASC, t.name ASC
-        `);
-
-        console.log(`Found ${result.rows.length} teams from all clubs`);
-
-        const mappedTeams = result.rows.map(row => ({
-          id: row.id,
-          name: row.name,
-          division: row.division,
-          clubId: row.club_id,
-          seasonId: row.season_id,
-          isActive: row.is_active,
-          createdAt: row.created_at,
-          updatedAt: row.updated_at,
-          seasonName: row.season_name,
-          seasonYear: row.season_year,
-          clubName: row.club_name,
-          clubCode: row.club_code
-        }));
-
-        res.json(mappedTeams);
-      } else {
+// Fetch teams for current club only
+      {
         console.log(`Fetching teams for club ${req.user.currentClubId}`);
 
         const teams = await db.execute(sql`

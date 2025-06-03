@@ -171,6 +171,12 @@ export default function Games() {
     setLocation(`/game/${gameId}`);
   };
 
+  // Fetch all teams for inter-club games
+  const { data: allTeams = [] } = useQuery({
+    queryKey: ['teams', 'all'],
+    queryFn: () => apiRequest('GET', '/api/teams/all')
+  });
+
   return (
     <>
       <Card>

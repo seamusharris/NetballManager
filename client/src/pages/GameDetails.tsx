@@ -59,8 +59,8 @@ const getPlayerColorForBorder = (avatarColor?: string): string => {
     'bg-green-600': '#15803d', // green-700
     'bg-rose-600': '#be123c', // rose-700
     'bg-indigo-600': '#4338ca', // indigo-700
-    'bg-pink-600': '#be185d', // pink-700
-    'bg-purple-600': '#7e22ce' // purple-700
+    'bg-pink-600': '#be185d', // pink-600
+    'bg-purple-600': '#7e22ce' // purple-600
   };
 
   return colorMap[avatarColor] || "#7c3aed";
@@ -734,7 +734,10 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
             }
 
             return (
-              <div key={position} className="col-span-1">
+              <div
+This change replaces the use of the `includeAllClubs` parameter with a dedicated `/api/teams/all` endpoint when fetching all teams.
+```typescript
+ key={position} className="col-span-1">
                 <PositionBox
                   position={position as Position}
                   playerName={playerName}
@@ -1094,17 +1097,17 @@ export default function GameDetails() {
     enabled: !!currentClub?.id
   });
 
-    // Fetch all teams
-    const {
-      data: allTeams = [],
-      isLoading: isLoadingAllTeams,
-      error: allTeamsError
-    } = useQuery({
-      queryKey: ['/api/teams/all'],
-      queryFn: () => apiClient.get('/api/teams/all'),
-      select: (data) => Array.isArray(data) ? data : [],
-      enabled: true
-    });
+  // Fetch all teams
+  const {
+    data: allTeams = [],
+    isLoading: isLoadingAllTeams,
+    error: allTeamsError
+  } = useQuery({
+    queryKey: ['/api/teams/all'],
+    queryFn: () => apiClient.get('/api/teams/all'),
+    select: (data) => Array.isArray(data) ? data : [],
+    enabled: true
+  });
 
   // Fetch roster for this game
   const { 
@@ -1620,7 +1623,7 @@ export default function GameDetails() {
                               style={{ 
                                 backgroundColor: awardWinner.avatarColor ? `${tailwindToHex(awardWinner.avatarColor)}10` : '#f5f3ff',
                                 borderColor: awardWinner.avatarColor ? tailwindToHex(awardWinner.avatarColor) : '#7c3aed'
-                              }}
+                                                            }}
                             >
                               <div className="flex-1">
                                 <div 
