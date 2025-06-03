@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { useDataLoader } from '@/hooks/use-data-loader';
 import { apiClient } from '@/lib/apiClient';
+import { useQueryClient } from '@tanstack/react-query';
 
 // Define the PlayerAvatar component
 interface PlayerAvatarProps {
@@ -61,6 +62,7 @@ export default function PlayerAvailabilityManager({
   onAvailabilityChange
 }: PlayerAvailabilityManagerProps) {
   const [availablePlayerIds, setAvailablePlayerIds] = useState<number[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
