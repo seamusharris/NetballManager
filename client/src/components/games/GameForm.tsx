@@ -94,7 +94,7 @@ export default function GameForm({
         awayTeamId: "",
       });
     }
-  }, [game, activeSeason, form]);
+  }, [game, activeSeason, teams, form]);
 
   const formValues = form.watch();
   console.log("GameForm rendering with data:", {

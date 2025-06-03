@@ -227,20 +227,30 @@ export default function Games() {
               game: editingGame,
               seasons: seasons.length,
               activeSeason,
+              teams: teams.length,
               isSubmitting: updateMutation.isPending
             })}
-            <GameForm 
-              game={editingGame} 
-              seasons={seasons}
-              activeSeason={activeSeason}
-              onSubmit={handleUpdate}
-              isSubmitting={updateMutation.isPending}
-              onCancel={() => setEditingGame(null)}
-              gameStatuses={gameStatuses}
-              teams={teams}
-              allTeams={teams}
-              isEditing={true}
-            />
+            {teams.length === 0 ? (
+              <div className="p-4 text-center">
+                <p className="text-gray-500 mb-4">Loading teams data...</p>
+                <Button variant="outline" onClick={() => setEditingGame(null)}>
+                  Cancel
+                </Button>
+              </div>
+            ) : (
+              <GameForm 
+                game={editingGame} 
+                seasons={seasons}
+                activeSeason={activeSeason}
+                onSubmit={handleUpdate}
+                isSubmitting={updateMutation.isPending}
+                onCancel={() => setEditingGame(null)}
+                gameStatuses={gameStatuses}
+                teams={teams}
+                allTeams={teams}
+                isEditing={true}
+              />
+            )}
           </>
         )}
       </CrudDialog>

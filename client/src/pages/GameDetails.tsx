@@ -1149,6 +1149,21 @@ export default function GameDetails() {
     return calculateQuarterScores(gameStats, game);
   }, [gameStats, game]);
 
+  // Debug game data
+  useEffect(() => {
+    if (game) {
+      console.log('GameDetails - Game data:', {
+        id: game.id,
+        homeTeamName: game.homeTeamName,
+        awayTeamName: game.awayTeamName,
+        homeTeamId: game.homeTeamId,
+        awayTeamId: game.awayTeamId,
+        statusName: game.statusName,
+        statusId: game.statusId
+      });
+    }
+  }, [game]);
+
   // Loading state
   if (isLoadingGame || isLoadingPlayers || isLoadingRoster || isLoadingGameStatuses || isLoadingTeams) { // Removed isLoadingOpponents
     return (
@@ -1200,7 +1215,7 @@ export default function GameDetails() {
               <span>BYE Round</span>
             ) : (
               <span>
-                {game.homeTeamName} vs {game.awayTeamName}
+                {game.homeTeamName || 'Home Team'} vs {game.awayTeamName || 'Away Team'}
               </span>
             )}
           </h1>
