@@ -110,3 +110,5 @@ export const queryClient = new QueryClient({
     },
   },
 });
+
+// Legacy apiRequest has been replaced by apiClient
