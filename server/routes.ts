@@ -69,11 +69,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
             } catch (dbError: any) {
               retryCount++;
               console.warn(`Database query attempt ${retryCount} failed:`, dbError.message);
-              
+
               if (retryCount >= maxRetries) {
                 throw dbError;
               }
-              
+
               // Wait before retry (exponential backoff)
               await new Promise(resolve => setTimeout(resolve, Math.pow(2, retryCount) * 100));
             }
@@ -1141,7 +1141,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  
+
 
   // ----- GAMES API -----
   app.get("/api/games", requireClubAccess(), async (req: AuthenticatedRequest, res) => {
@@ -1268,7 +1268,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         seasonId: row.season_id,
         notes: row.notes,
         awardWinnerId: row.award_winner_id,
-        
+
         // Game Status fields
         statusName: row.status,
         statusDisplayName: row.status_display_name,
@@ -1294,7 +1294,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         awayClubId: row.away_club_id,
         awayClubName: row.away_club_name,
         awayClubCode: row.away_club_code,
-        
+
         // Legacy fields for backward compatibility
         isBye: row.away_team_name === 'Bye'
       }));
@@ -1468,13 +1468,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const awayTeam = await db.execute(sql`
             SELECT name FROM teams WHERE id = ${req.body.awayTeamId}
           `);
-          
+
           if (awayTeam.rows.length > 0 && awayTeam.rows[0].name !== 'Bye') {
             // Find the correct Bye team for the home team's club and season
             const homeTeam = await db.execute(sql`
               SELECT club_id, season_id FROM teams WHERE id = ${req.body.homeTeamId}
             `);
-            
+
             if (homeTeam.rows.length > 0) {
               const byeTeam = await db.execute(sql`
                 SELECT id FROM teams 
@@ -1483,7 +1483,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 AND name = 'Bye'
                 LIMIT 1
               `);
-              
+
               if (byeTeam.rows.length > 0) {
                 req.body.awayTeamId = byeTeam.rows[0].id;
               }
@@ -1656,7 +1656,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const gameId = Number(req.params.gameId);
       const { availablePlayerIds } = req.body;
 
-      if (!Array.isArray(availablePlayerIds)) {
+            if (!Array.isArray(availablePlayerIds)) {
         return res.status(400).json({ message: "availablePlayerIds must be an array" });
       }
 
@@ -2221,7 +2221,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Import the safe database wrapper
       const { safeExecute } = await import('./db-wrapper');
-      
+
       // Get all active clubs and return them as user clubs
       // In a real implementation, this would be filtered by user access
       const result = await safeExecute(sql`
@@ -2292,7 +2292,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Club details endpoint
   app.get('/api/clubs/:clubId', async (req: any, res) => {
     try {
-      const clubId = parseInt(req.params.clubId);
+      let clubId;
+
+      // Handle 'current' as a special case
+      if (req.params.clubId === 'current') {
+        clubId = req.user?.currentClubId;
+        console.log('Clubs/current endpoint: using currentClubId from user context:', clubId);
+        if (!clubId) {
+          console.log('Clubs/current endpoint: No current club ID available');
+          return res.status(400).json({ error: 'No current club selected' });
+        }
+      } else {
+        clubId = parseInt(req.params.clubId);
+        if (isNaN(clubId)) {
+          console.log('Clubs endpoint: Invalid club ID provided:', req.params.clubId);
+          return res.status(400).json({ error: 'Invalid club ID' });
+        }
+      }
+
+      console.log('Clubs endpoint: fetching club with ID:', clubId);
 
       // Fetch club from database
       const result = await db.execute(sql`
@@ -2336,7 +2354,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register player borrowing routes
   registerPlayerBorrowingRoutes(app);
 
-  
+
 
   // Register game permissions routes
   registerGamePermissionsRoutes(app);
