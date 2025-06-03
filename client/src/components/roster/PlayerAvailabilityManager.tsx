@@ -88,13 +88,13 @@ export default function PlayerAvailabilityManager({
       gameId
     });
 
-    // Only proceed if we have a valid gameId and players have loaded
-    if (!gameId || players.length === 0) {
+    // Only proceed if we have a valid gameId
+    if (!gameId) {
       return;
     }
 
-    // Wait for loading to complete
-    if (isLoading) {
+    // Wait for both availability loading to complete AND players to be loaded
+    if (isLoading || players.length === 0) {
       return;
     }
 
@@ -110,7 +110,7 @@ export default function PlayerAvailabilityManager({
       setAvailablePlayerIds(activePlayerIds);
       onAvailabilityChange?.(activePlayerIds);
     }
-  }, [availabilityData, isLoading, availabilityError, players.length, gameId]);
+  }, [availabilityData, isLoading, availabilityError, players, gameId, onAvailabilityChange]);
 
   const [searchQuery, setSearchQuery] = useState('');
 
