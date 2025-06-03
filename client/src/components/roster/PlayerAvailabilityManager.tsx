@@ -49,6 +49,7 @@ interface PlayerAvailabilityManagerProps {
   games: Game[];
   opponents: Opponent[];
   onComplete?: () => void;
+  onAvailabilityChange?: (availablePlayerIds: number[]) => void;
 }
 
 export default function PlayerAvailabilityManager({
@@ -56,7 +57,8 @@ export default function PlayerAvailabilityManager({
   players,
   games,
   opponents,
-  onComplete
+  onComplete,
+  onAvailabilityChange
 }: PlayerAvailabilityManagerProps) {
   const { toast } = useToast();
   const [availablePlayerIds, setAvailablePlayerIds] = useState<number[]>([]);
@@ -89,11 +91,13 @@ export default function PlayerAvailabilityManager({
     if (availabilityData?.availablePlayerIds) {
       console.log('Setting available players from API:', availabilityData.availablePlayerIds);
       setAvailablePlayerIds(availabilityData.availablePlayerIds);
+      onAvailabilityChange?.(availabilityData.availablePlayerIds);
     } else if (!isLoading && !availabilityError && players.length > 0) {
       // Fallback to all active players if no availability data
       const activePlayerIds = players.filter(p => p.active).map(p => p.id);
       console.log('Setting fallback available players:', activePlayerIds);
       setAvailablePlayerIds(activePlayerIds);
+      onAvailabilityChange?.(activePlayerIds);
     }
   }, [availabilityData, isLoading, availabilityError, players, gameId]);
 
@@ -115,11 +119,14 @@ export default function PlayerAvailabilityManager({
   const handleAvailabilityChange = async (playerId: number, isAvailable: boolean) => {
     // Update local state immediately for responsive UI
     setAvailablePlayerIds(prev => {
-      if (isAvailable) {
-        return prev.includes(playerId) ? prev : [...prev, playerId];
-      } else {
-        return prev.filter(id => id !== playerId);
-      }
+      const newIds = isAvailable
+        ? prev.includes(playerId) ? prev : [...prev, playerId]
+        : prev.filter(id => id !== playerId);
+      
+      // Notify parent component of the change
+      onAvailabilityChange?.(newIds);
+      
+      return newIds;
     });
 
     // Optimistically update

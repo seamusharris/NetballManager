@@ -16,24 +16,26 @@ import { Roster as RosterType } from '@shared/schema';
 import { apiClient } from '@/lib/apiClient';
 
 interface SimpleRosterManagerProps {
+  selectedGameId: number | null;
+  setSelectedGameId: (gameId: number | null) => void;
   players: Player[];
   games: Game[];
   opponents: Opponent[];
-  selectedGameId: number | null;
-  setSelectedGameId: (id: number | null) => void;
   isLoading: boolean;
+  availablePlayerIds?: number[];
   onRosterSaved?: () => void;
   onRosterChanged?: (quarter: string, position: string, playerId: number | null) => void;
   localRosterState?: Record<string, Record<string, number | null>>;
 }
 
 export default function SimpleRosterManager({
+  selectedGameId,
+  setSelectedGameId,
   players,
   games,
   opponents,
-  selectedGameId,
-  setSelectedGameId,
   isLoading,
+  availablePlayerIds = [],
   onRosterSaved,
   onRosterChanged,
   localRosterState: initialRosterState
@@ -511,6 +513,7 @@ export default function SimpleRosterManager({
   const getEligiblePlayers = (position: Position): Player[] => {
     return players
       .filter(player => player.active)
+      .filter(player => availablePlayerIds.includes(player.id))
       .sort((a, b) => {
         // First sort by whether they have this position preference (preferred first)
         const aHasPreference = a.positionPreferences.includes(position);
@@ -799,6 +802,7 @@ export default function SimpleRosterManager({
                       const quarterKey = quarter.toString() as '1'|'2'|'3'|'4';
                       const playersNotInQuarter = players
                         .filter(player => player.active)
+                        .filter(player => availablePlayerIds.includes(player.id))
                         .filter(player => !Object.values(localRosterState[quarterKey]).includes(player.id))
                         .sort((a, b) => a.displayName.localeCompare(b.displayName)); // Sort alphabetically
 

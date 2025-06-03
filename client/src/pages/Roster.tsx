@@ -18,6 +18,7 @@ export default function Roster() {
   const gameIdFromUrl = params.gameId ? parseInt(params.gameId) : null;
   const [selectedGameId, setSelectedGameId] = useState<number | null>(gameIdFromUrl);
   const [showPlayerAvailability, setShowPlayerAvailability] = useState(true); // Start with availability if coming from direct link
+  const [availablePlayerIds, setAvailablePlayerIds] = useState<number[]>([]);
   const [, navigate] = useLocation();
   const { currentClub } = useClub();
 
@@ -202,6 +203,7 @@ export default function Roster() {
           games={games}
           opponents={opponents}
           onComplete={() => setShowPlayerAvailability(false)}
+          onAvailabilityChange={setAvailablePlayerIds}
         />
       ) : (
         <SimpleRosterManager
@@ -211,6 +213,7 @@ export default function Roster() {
           games={games}
           opponents={opponents}
           isLoading={isLoading}
+          availablePlayerIds={availablePlayerIds}
         />
       )}
 
