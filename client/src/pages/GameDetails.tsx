@@ -735,7 +735,9 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
 
             return (
               <div
- key={position} className`="col-span-1">
+                key={position} 
+                className="col-span-1"
+              >
                 <PositionBox
                   position={position as Position}
                   playerName={playerName}
