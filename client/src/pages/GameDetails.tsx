@@ -734,8 +734,7 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
 
             return (
               <div key={position} className="col-span-1">
-```jsx
-                <PositionBox                  position={position as Position}
+```jsx                <PositionBox                  position={position as Position}
                   playerName={playerName}
                   playerColor={playerColor}
                   playerStats={playerStats}
@@ -1045,6 +1044,12 @@ export default function GameDetails() {
 
   const [activeTab, setActiveTab] = useState('overview');
 
+    // Fetch current club
+    const { data: currentClub } = useQuery({
+      queryKey: ['/api/clubs/current'],
+      queryFn: () => fetch('/api/clubs/current').then(res => res.json()),
+    });
+
   // Fetch game data
   const { 
     data: game,
@@ -1078,11 +1083,23 @@ export default function GameDetails() {
   // Fetch teams
   const { 
     data: teams = [],
-    isLoading: isLoadingTeams
+    isLoading: isLoadingTeams,
+    error: teamsError
   } = useQuery({
     queryKey: ['/api/teams'],
-    queryFn: () => fetch('/api/teams').then(res => res.json()),
-    select: (data) => Array.isArray(data) ? data : []
+    queryFn: async () => {
+      const response = await fetch('/api/teams', {
+        headers: {
+          'x-current-club-id': currentClub?.id?.toString() || '54'
+        }
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch teams');
+      }
+      return response.json();
+    },
+    select: (data) => Array.isArray(data) ? data : [],
+    enabled: !!currentClub?.id
   });
 
   // Fetch roster for this game
@@ -1112,10 +1129,12 @@ export default function GameDetails() {
   useEffect(() => {
     if (gameId && !isNaN(gameId)) {
       console.log("Loaded roster data:", roster);
+      console.log("Teams data:", { teams, isLoadingTeams, teamsLength: teams?.length });
+      console.log("Current club:", currentClub);
       // Always refetch roster data when navigating to this page
       refetchRosters();
     }
-  }, [gameId, refetchRosters]);
+  }, [gameId, refetchRosters, teams, isLoadingTeams, currentClub]);
 
   // Fetch game stats
   const { 

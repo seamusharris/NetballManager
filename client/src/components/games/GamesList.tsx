@@ -273,17 +273,17 @@ export default function GamesList({
   const getOpponentName = (game: any) => {
     // Determine if we are home or away team and show the opponent
     const currentClubId = 54; // TODO: Get from context
-    
+
     // Check if this is our home game (we are the home team)
     if (game.homeClubId === currentClubId && game.awayTeamName) {
       return game.awayTeamName;
     }
-    
+
     // Check if this is our away game (we are the away team)  
     if (game.awayClubId === currentClubId && game.homeTeamName) {
       return game.homeTeamName;
     }
-    
+
     // Fallback - if we can't determine, show away team name
     return game.awayTeamName || "TBA";
   };
