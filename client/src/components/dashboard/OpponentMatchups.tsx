@@ -3,15 +3,16 @@ import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { BaseWidget } from '@/components/ui/base-widget';
 import { Badge } from '@/components/ui/badge';
-import { Game, Opponent } from '@shared/schema';
+import { Game } from '@shared/schema';
 import { getWinLoseLabel, getWinLoseClass } from '@/lib/utils';
 import { GameResult } from '@/lib/resultUtils';
 import { ViewMoreButton } from '@/components/ui/view-more-button';
 import { ResultBadge } from '@/components/ui/result-badge';
 import { isGameValidForStatistics } from '@/lib/gameFilters';
 
-interface OpponentMatchup {
-  opponent: Opponent;
+interface TeamMatchup {
+  teamId: number;
+  teamName: string;
   games: Game[];
   wins: number;
   losses: number;
@@ -26,32 +27,73 @@ interface OpponentMatchup {
   trend: 'improving' | 'declining' | 'stable';
 }
 
-interface OpponentMatchupsProps {
+interface TeamMatchupsProps {
   games: Game[];
-  opponents: Opponent[];
+  currentClubId: number;
   centralizedStats?: Record<number, any[]>;
   className?: string;
 }
 
-export default function OpponentMatchups({ 
+export default function TeamMatchups({ 
   games, 
-  opponents, 
+  currentClubId,
   centralizedStats = {},
   className 
-}: OpponentMatchupsProps) {
-  const [matchups, setMatchups] = useState<OpponentMatchup[]>([]);
+}: TeamMatchupsProps) {
+  const [matchups, setMatchups] = useState<TeamMatchup[]>([]);
   const [, navigate] = useLocation();
 
   useEffect(() => {
     const calculateMatchups = () => {
-      const opponentMatchups: OpponentMatchup[] = [];
+      const teamMatchups: TeamMatchup[] = [];
+      
+      // Get all unique opposing teams from games
+      const opposingTeams = new Map<number, { id: number; name: string; division?: string }>();
+      
+      games.forEach(game => {
+        if (isGameValidForStatistics(game)) {
+          // Determine which team is the opposing team
+          let opposingTeamId: number | null = null;
+          let opposingTeamName = '';
+          
+          // Check if we're home or away team
+          if (game.homeTeamId && game.awayTeamId) {
+            // Find which team belongs to current club
+            const isHomeTeamOurs = game.homeTeamClubId === currentClubId;
+            
+            if (isHomeTeamOurs && game.awayTeamId) {
+              opposingTeamId = game.awayTeamId;
+              opposingTeamName = game.awayTeamName || `Team ${game.awayTeamId}`;
+            } else if (!isHomeTeamOurs && game.homeTeamId) {
+              opposingTeamId = game.homeTeamId;
+              opposingTeamName = game.homeTeamName || `Team ${game.homeTeamId}`;
+            }
+            
+            if (opposingTeamId && !opposingTeams.has(opposingTeamId)) {
+              opposingTeams.set(opposingTeamId, {
+                id: opposingTeamId,
+                name: opposingTeamName,
+                division: isHomeTeamOurs ? game.awayTeamDivision : game.homeTeamDivision
+              });
+            }
+          }
+        }
+      });
 
-      opponents.forEach(opponent => {
-        const opponentGames = games.filter(game => 
-          game.opponentId === opponent.id && isGameValidForStatistics(game)
-        );
+      opposingTeams.forEach(team => {
+        const teamGames = games.filter(game => {
+          if (!isGameValidForStatistics(game)) return false;
+          
+          // Check if this game involves the opposing team
+          const isHomeTeamOurs = game.homeTeamClubId === currentClubId;
+          
+          if (isHomeTeamOurs && game.awayTeamId === team.id) return true;
+          if (!isHomeTeamOurs && game.homeTeamId === team.id) return true;
+          
+          return false;
+        });
 
-        if (opponentGames.length === 0) return;
+        if (teamGames.length === 0) return;
 
         let wins = 0;
         let losses = 0;
@@ -61,21 +103,22 @@ export default function OpponentMatchups({
         const recentResults: string[] = [];
 
         // Sort games by date for recent form calculation
-        const sortedGames = [...opponentGames].sort((a, b) => 
+        const sortedGames = [...teamGames].sort((a, b) => 
           new Date(b.date).getTime() - new Date(a.date).getTime()
         );
 
         sortedGames.forEach((game, index) => {
           const gameStats = centralizedStats[game.id] || [];
+          const isHomeTeamOurs = game.homeTeamClubId === currentClubId;
 
-          // Calculate team and opponent scores from stats
-          const teamScore = gameStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
-          const opponentScore = gameStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
+          // Calculate our team and opposing team scores from stats
+          const ourScore = gameStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
+          const opposingScore = gameStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
 
-          totalScoreFor += teamScore;
-          totalScoreAgainst += opponentScore;
+          totalScoreFor += ourScore;
+          totalScoreAgainst += opposingScore;
 
-          const result = getWinLoseLabel(teamScore, opponentScore);
+          const result = getWinLoseLabel(ourScore, opposingScore);
 
           if (result === 'Win') wins++;
           else if (result === 'Loss') losses++;
@@ -87,7 +130,7 @@ export default function OpponentMatchups({
           }
         });
 
-        const totalGames = opponentGames.length;
+        const totalGames = teamGames.length;
         const winRate = totalGames > 0 ? Math.round((wins / totalGames) * 100) : 0;
         const avgScoreFor = totalGames > 0 ? Math.round(totalScoreFor / totalGames) : 0;
         const avgScoreAgainst = totalGames > 0 ? Math.round(totalScoreAgainst / totalGames) : 0;
@@ -104,9 +147,10 @@ export default function OpponentMatchups({
           else if (recentWinRate < winRate - 20) trend = 'declining';
         }
 
-        opponentMatchups.push({
-          opponent,
-          games: opponentGames,
+        teamMatchups.push({
+          teamId: team.id,
+          teamName: team.name,
+          games: teamGames,
           wins,
           losses,
           draws,
@@ -122,13 +166,13 @@ export default function OpponentMatchups({
       });
 
       // Sort by win rate by default
-      opponentMatchups.sort((a, b) => b.winRate - a.winRate);
+      teamMatchups.sort((a, b) => b.winRate - a.winRate);
 
-      setMatchups(opponentMatchups);
+      setMatchups(teamMatchups);
     };
 
     calculateMatchups();
-  }, [games, opponents, centralizedStats]);
+  }, [games, currentClubId, centralizedStats]);
 
   const bestMatchup = matchups.length > 0 ? matchups[0] : null;
   const worstMatchup = matchups.length > 0 ? matchups[matchups.length - 1] : null;
@@ -200,20 +244,20 @@ export default function OpponentMatchups({
 
   return (
     <BaseWidget 
-      title="Opponent Matchups" 
+      title="Team Matchups" 
       className={className}
       contentClassName="px-4 py-6 pb-2"
     >
       {matchups.length === 0 ? (
         <p className="text-gray-500 text-center py-4">
-          No completed games against opponents yet
+          No completed games against other teams yet
         </p>
       ) : (
         <div className="space-y-4">
           {/* Overall Stats */}
           <div className="grid grid-cols-3 gap-4 mb-4">
             <div className="text-center">
-              <p className="text-xs text-gray-500 mb-1">Opponents Faced</p>
+              <p className="text-xs text-gray-500 mb-1">Teams Faced</p>
               <p className="text-lg font-bold text-gray-700">{matchups.length}</p>
             </div>
             <div className="text-center">
@@ -235,8 +279,8 @@ export default function OpponentMatchups({
               {matchups.slice(0, 3).map(matchup => {
                 const streak = calculateStreak(matchup.recentForm);
                 return (
-                  <div key={matchup.opponent.id} className="flex items-center justify-between text-xs">
-                    <span className="truncate max-w-20">{matchup.opponent.teamName.slice(0, 12)}</span>
+                  <div key={matchup.teamId} className="flex items-center justify-between text-xs">
+                    <span className="truncate max-w-20">{matchup.teamName.slice(0, 12)}</span>
                     <div className={`px-2 py-1 rounded text-xs font-medium ${
                       streak.type === 'Win' ? 'bg-green-100 text-green-700' :
                       streak.type === 'Loss' ? 'bg-red-100 text-red-700' : 
@@ -257,8 +301,8 @@ export default function OpponentMatchups({
             </div>
             <div className="space-y-2">
               {matchups.slice(0, 4).map(matchup => (
-                <div key={matchup.opponent.id} className="flex items-center space-x-2">
-                  <span className="text-xs w-16 truncate">{matchup.opponent.teamName.slice(0, 8)}</span>
+                <div key={matchup.teamId} className="flex items-center space-x-2">
+                  <span className="text-xs w-16 truncate">{matchup.teamName.slice(0, 8)}</span>
                   <div className="flex-1 relative h-4 bg-gray-200 rounded-full overflow-hidden">
                     <div 
                       className={`absolute left-1/2 top-0 h-full ${
@@ -286,8 +330,8 @@ export default function OpponentMatchups({
               {matchups.slice(0, 4).map(matchup => {
                 const difficulty = 100 - matchup.winRate;
                 return (
-                  <div key={matchup.opponent.id} className="text-center">
-                    <div className="text-xs text-gray-600 mb-1 truncate">{matchup.opponent.teamName.slice(0, 10)}</div>
+                  <div key={matchup.teamId} className="text-center">
+                    <div className="text-xs text-gray-600 mb-1 truncate">{matchup.teamName.slice(0, 10)}</div>
                     <div className="relative w-16 h-16 mx-auto">
                       <svg width="64" height="64" viewBox="0 0 64 64">
                         <circle
@@ -327,8 +371,8 @@ export default function OpponentMatchups({
             </div>
             <div className="space-y-2">
               {matchups.slice(0, 3).map(matchup => (
-                <div key={matchup.opponent.id} className="flex items-center justify-between">
-                  <span className="text-xs w-20 truncate">{matchup.opponent.teamName.slice(0, 12)}</span>
+                <div key={matchup.teamId} className="flex items-center justify-between">
+                  <span className="text-xs w-20 truncate">{matchup.teamName.slice(0, 12)}</span>
                   <div className="flex space-x-1">
                     {/* Timeline line */}
                     <div className="flex items-center space-x-0.5">
@@ -370,7 +414,7 @@ export default function OpponentMatchups({
           {bestMatchup && (
             <div className="flex items-center justify-between p-4 mb-4 mt-2 bg-green-50 border-l-4 border-green-500 border-t border-r border-b border-t-green-500 border-r-green-500 border-b-green-500 rounded">
               <div>
-                <p className="font-semibold text-gray-800 mb-2">{bestMatchup.opponent.teamName}</p>
+                <p className="font-semibold text-gray-800 mb-2">{bestMatchup.teamName}</p>
                 <Badge variant="outline" className="text-green-700 border-green-300">Strength</Badge>
               </div>
               <div className="text-right">
@@ -384,7 +428,7 @@ export default function OpponentMatchups({
           {worstMatchup && worstMatchup !== bestMatchup && (
             <div className="flex items-center justify-between p-4 mb-4 mt-2 bg-red-50 border-l-4 border-red-500 border-t border-r border-b border-t-red-500 border-r-red-500 border-b-red-500 rounded">
               <div>
-                <p className="font-semibold text-gray-800 mb-2">{worstMatchup.opponent.teamName}</p>
+                <p className="font-semibold text-gray-800 mb-2">{worstMatchup.teamName}</p>
                 <Badge variant="outline" className="text-red-700 border-red-300">Challenge</Badge>
               </div>
               <div className="text-right">
@@ -398,7 +442,7 @@ export default function OpponentMatchups({
 
       <div className="mt-4">
         {matchups.length > 0 ? (
-          <ViewMoreButton href="/opponent-analysis">
+          <ViewMoreButton href="/team-analysis">
             View more →
           </ViewMoreButton>
         ) : (

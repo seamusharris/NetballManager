@@ -34,6 +34,7 @@ interface DashboardSummaryProps {
   seasons: Season[];
   activeSeason: Season | null;
   isLoading: boolean;
+  currentClubId: string | undefined;
 }
 
 export default function DashboardSummary({ 
@@ -42,7 +43,8 @@ export default function DashboardSummary({
   opponents, 
   seasons, 
   activeSeason, 
-  isLoading 
+  isLoading,
+  currentClubId 
 }: DashboardSummaryProps) {
   const [selectedSeasonId, setSelectedSeasonId] = useState<string>('current');
   const queryClient = useQueryClient();
@@ -284,7 +286,8 @@ export default function DashboardSummary({
             <PositionOpponentAnalysis 
               seasonId={selectedSeasonId === 'current' ? activeSeason?.id : 
                        selectedSeasonId === 'all' ? undefined : 
-                       parseInt(selectedSeasonId)} 
+                       parseInt(selectedSeasonId)}
+              currentClubId={currentClubId}
             />
           </Suspense>
         )}

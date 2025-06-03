@@ -5,12 +5,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useQuery } from '@tanstack/react-query';
 import { Target, TrendingUp, TrendingDown, Users } from 'lucide-react';
-import { Game, GameStat, Player, Opponent, Roster, Position, allPositions } from '@shared/schema';
+import { Game, GameStat, Player, Roster, Position, allPositions } from '@shared/schema';
 import { useBatchGameStats } from '@/hooks/use-game-stats';
 import { apiClient } from '@/lib/apiClient';
 
 interface PositionOpponentAnalysisProps {
   seasonId?: number;
+  currentClubId: number;
 }
 
 interface PositionOpponentStats {
@@ -37,16 +38,11 @@ interface PlayerPositionOpponentStats {
   efficiency: number;
 }
 
-export default function PositionOpponentAnalysis({ seasonId }: PositionOpponentAnalysisProps) {
+export default function PositionOpponentAnalysis({ seasonId, currentClubId }: PositionOpponentAnalysisProps) {
   // Fetch all the data we need
   const { data: games = [] } = useQuery<Game[]>({
     queryKey: ['games'],
     queryFn: () => apiClient.get('/api/games'),
-  });
-
-  const { data: opponents = [] } = useQuery<Opponent[]>({
-    queryKey: ['opponents'], 
-    queryFn: () => apiClient.get('/api/opponents'),
   });
 
   const { data: players = [] } = useQuery<Player[]>({
