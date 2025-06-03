@@ -1773,34 +1773,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ----- GAME STATS API -----
   // Batch endpoint to get stats for multiple games at once
-  app.get("/api/games/stats/batch", async (req, res) => {
+  app.post("/api/games/stats/batch", async (req, res) => {
     try {
-      console.log("Batch endpoint received query:", req.query);
-      const gameIdsParam = req.query.gameIds as string;
-      console.log("Extracted gameIds parameter:", gameIdsParam);
+      console.log("Batch endpoint received body:", req.body);
+      const { gameIds } = req.body;
+      console.log("Extracted gameIds from body:", gameIds);
 
       // More robust parameter validation - return empty object instead of error for empty requests
-      if (!gameIdsParam || typeof gameIdsParam !== 'string' || gameIdsParam.trim() === '') {
+      if (!gameIds || !Array.isArray(gameIds) || gameIds.length === 0) {
         console.log("Batch stats endpoint: No game IDs provided, returning empty object");
         return res.json({});
       }
 
       // Parse and validate game IDs
-      const gameIds = gameIdsParam.split(',')
+      const validGameIds = gameIds
         .map(id => {
-          const parsed = parseInt(id.trim(), 10);
+          const parsed = typeof id === 'number' ? id : parseInt(id, 10);
           return isNaN(parsed) ? null : parsed;
         })
         .filter((id): id is number => id !== null && id > 0);
 
-      if (!gameIds.length) {
+      if (!validGameIds.length) {
         return res.status(400).json({ error: "No valid game IDs provided" });
       }
 
-      console.log(`Batch fetching stats for ${gameIds.length} games: ${gameIds.join(',')}`);
+      console.log(`Batch fetching stats for ${validGameIds.length} games: ${validGameIds.join(',')}`);
 
       // Process each game ID in parallel with error handling
-      const statsPromises = gameIds.map(async (gameId) => {
+      const statsPromises = validGameIds.map(async (gameId) => {
         try {
           const stats = await storage.getGameStatsByGame(gameId);
           return { gameId, stats, success: true };
@@ -1818,7 +1818,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return acc;
       }, {} as Record<number, any[]>);
 
-      console.log(`Batch endpoint successfully returned stats for ${gameIds.length} games`);
+      console.log(`Batch endpoint successfully returned stats for ${validGameIds.length} games`);
       res.json(statsMap);
     } catch (error) {
       console.error(`Error in batch game stats endpoint:`, error);

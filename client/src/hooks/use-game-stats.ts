@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { GameStat } from '@shared/schema';
+import { apiClient } from '@shared/apiClient';
 
 export function useGameStats(gameId: number | undefined) {
   return useQuery<GameStat[]>({
@@ -24,7 +25,7 @@ export function useBatchGameStats(gameIds: number[]) {
     const filtered = gameIds.filter(id => id && typeof id === 'number' && id > 0 && !isNaN(id));
     return filtered.length > 0 ? filtered : [];
   }, [gameIds]);
-  
+
   // Fetch stats for multiple games efficiently
   return useQuery<Record<number, GameStat[]>>({
     queryKey: ['/api/games/stats/batch', validGameIds.sort()],
@@ -36,41 +37,24 @@ export function useBatchGameStats(gameIds: number[]) {
 
       const gameIdsParam = validGameIds.join(',');
       console.log(`Fetching batch stats for games: ${gameIdsParam}`);
-      
+
       if (!gameIdsParam || gameIdsParam === '') {
         console.log('Empty game IDs parameter, returning empty object');
         return {};
       }
 
       try {
-        // Construct URL with proper query parameter handling
-        const baseUrl = '/api/games/stats/batch';
-        const queryParams = new URLSearchParams({ gameIds: gameIdsParam });
-        const url = `${baseUrl}?${queryParams.toString()}`;
-        console.log(`Making fetch request to: ${url}`);
-        const response = await fetch(url, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        return await response.json();
+        const url = '/api/games/stats/batch';
+        console.log(`Making batch request to: ${url} with gameIds:`, validGameIds);
+
+        return await apiClient.post(url, { gameIds: validGameIds });
       } catch (error) {
         console.error('Batch fetch failed:', error);
         // Fallback to individual requests
         const statsMap: Record<number, GameStat[]> = {};
         const results = await Promise.allSettled(
           validGameIds.map(async (id) => {
-            const response = await fetch(`/api/games/${id}/stats`);
-            if (!response.ok) {
-              throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
+            return await apiClient.get(`/api/games/${id}/stats`);
           })
         );
 
