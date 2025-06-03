@@ -29,6 +29,17 @@ import {
   requireAuth
 } from "./auth-middleware";
 
+// Database health check function
+async function checkPoolHealth(): Promise<boolean> {
+  try {
+    await db.execute(sql`SELECT 1`);
+    return true;
+  } catch (error) {
+    console.error('Database health check failed:', error);
+    return false;
+  }
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Middleware to simulate authentication and set club context from request
   app.use(async (req: any, res, next) => {
