@@ -7,111 +7,125 @@ export interface ApiResponse<T = any> {
   message?: string;
 }
 
-export class ApiClient {
-  private baseUrl = '';
+import { useClub } from '../contexts/ClubContext';
 
-  setCurrentClubId(clubId: number): void {
-    localStorage.setItem('currentClubId', clubId.toString());
+// Create a singleton API client that can access club context
+class ApiClient {
+  private clubContextRef: { currentClubId: number | null } | null = null;
+
+  setClubContext(clubContext: { currentClubId: number | null }) {
+    this.clubContextRef = clubContext;
   }
 
-  getCurrentClubId(): number | null {
-    const stored = localStorage.getItem('currentClubId');
-    if (stored && !isNaN(parseInt(stored, 10))) {
-      return parseInt(stored, 10);
-    }
-    return null;
-  }
-
-  async request<T = any>(
-    endpoint: string,
-    options: RequestInit = {}
-  ): Promise<T> {
-    const url = `${this.baseUrl}${endpoint}`;
-
-    // Always get the current club ID from localStorage for each request
-    let currentClubId = localStorage.getItem('currentClubId');
-
-    // For API endpoints that require club ID, wait a bit if club ID is not available yet
-    const requiresClubId = ['/api/players', '/api/games', '/api/teams'].some(route => endpoint.includes(route));
-
-    if (requiresClubId && !currentClubId) {
-      // Wait a short time for club context to initialize, then try again
-      await new Promise(resolve => setTimeout(resolve, 100));
-      currentClubId = localStorage.getItem('currentClubId');
-    }
-
-    // Log for debugging
-    console.log(`API Request to ${endpoint} with club ID: ${currentClubId}`);
-
+  private getHeaders(): Record<string, string> {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      ...options.headers,
     };
 
-    // Always include the club ID header if available and not excluded routes
-    const excludedRoutes = ['/api/user/clubs', '/api/seasons', '/api/seasons/active'];
-    const shouldIncludeClubId = currentClubId && !excludedRoutes.some(route => endpoint.includes(route));
-
-    if (shouldIncludeClubId) {
-      headers['x-current-club-id'] = currentClubId;
+    // Add club ID header if available
+    if (this.clubContextRef?.currentClubId) {
+      headers['x-current-club-id'] = this.clubContextRef.currentClubId.toString();
+      console.log(`API Request adding club ID header: ${this.clubContextRef.currentClubId}`);
+    } else {
+      console.log('API Request: No club ID available for header');
     }
 
-    const config: RequestInit = {
-      ...options,
-      headers,
-    };
+    return headers;
+  }
+
+  async get(url: string): Promise<any> {
+    console.log(`API Request to ${url} with club ID: ${this.clubContextRef?.currentClubId}`);
 
     try {
-      const response = await fetch(url, config);
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: this.getHeaders(),
+      });
 
       if (!response.ok) {
-        // Better error handling with response details
-        let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
-        try {
-          const errorData = await response.json();
-          console.log('API Error Response (JSON):', errorData);
-          errorMessage = errorData.error || errorData.message || errorMessage;
-        } catch (parseError) {
-          console.log('Error parsing error response:', parseError);
-        }
-        throw new Error(errorMessage);
+        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+        console.error('API request failed:', errorData);
+        throw new Error(errorData.message || `HTTP ${response.status}`);
       }
 
-      const data = await response.json();
-      return data;
+      return response.json();
     } catch (error) {
       console.error('API request failed:', error);
       throw error;
     }
   }
 
-  async get<T = any>(endpoint: string): Promise<T> {
-    return this.request<T>(endpoint, { method: 'GET' });
+  async post(url: string, data?: any): Promise<any> {
+    console.log(`API Request to POST ${url} with club ID: ${this.clubContextRef?.currentClubId}`);
+    console.log('POST data:', data);
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: this.getHeaders(),
+        body: data ? JSON.stringify(data) : undefined,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+        console.error('API POST request failed:', errorData);
+        throw new Error(errorData.message || `HTTP ${response.status}`);
+      }
+
+      return response.json();
+    } catch (error) {
+      console.error('API POST request failed:', error);
+      throw error;
+    }
   }
 
-  async post<T = any>(endpoint: string, data?: any): Promise<T> {
-    return this.request<T>(endpoint, {
-      method: 'POST',
-      body: data ? JSON.stringify(data) : undefined,
-    });
+  async patch(url: string, data: any): Promise<any> {
+    console.log(`API Request to PATCH ${url} with club ID: ${this.clubContextRef?.currentClubId}`);
+
+    try {
+      const response = await fetch(url, {
+        method: 'PATCH',
+        headers: this.getHeaders(),
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+        console.error('API PATCH request failed:', errorData);
+        throw new Error(errorData.message || `HTTP ${response.status}`);
+      }
+
+      return response.json();
+    } catch (error) {
+      console.error('API PATCH request failed:', error);
+      throw error;
+    }
   }
 
-  async put<T = any>(endpoint: string, data?: any): Promise<T> {
-    return this.request<T>(endpoint, {
-      method: 'PUT',
-      body: data ? JSON.stringify(data) : undefined,
-    });
-  }
+  async delete(url: string): Promise<any> {
+    console.log(`API Request to DELETE ${url} with club ID: ${this.clubContextRef?.currentClubId}`);
 
-  async delete<T = any>(endpoint: string): Promise<T> {
-    return this.request<T>(endpoint, { method: 'DELETE' });
-  }
+    try {
+      const response = await fetch(url, {
+        method: 'DELETE',
+        headers: this.getHeaders(),
+      });
 
-  async patch<T = any>(endpoint: string, data?: any): Promise<T> {
-    return this.request<T>(endpoint, {
-      method: 'PATCH',
-      body: data ? JSON.stringify(data) : undefined,
-    });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+        console.error('API DELETE request failed:', errorData);
+        throw new Error(errorData.message || `HTTP ${response.status}`);
+      }
+
+      if (response.status === 204) {
+        return null; // No content
+      }
+
+      return response.json();
+    } catch (error) {
+      console.error('API DELETE request failed:', error);
+      throw error;
+    }
   }
 }
 
