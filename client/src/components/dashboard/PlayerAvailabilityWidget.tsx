@@ -45,36 +45,48 @@ export default function PlayerAvailabilityWidget({
   // Fetch availability data for upcoming games
   useEffect(() => {
     const fetchAvailability = async () => {
-      if (upcomingGames.length === 0) return;
+      if (upcomingGames.length === 0 || players.length === 0) return;
 
       setLoading(true);
       const newAvailabilityData: Record<number, GameAvailability> = {};
+      const totalActivePlayers = players.filter(p => p.active).length;
 
       try {
         for (const game of upcomingGames) {
           try {
             const response = await fetch(`/api/games/${game.id}/availability`);
             if (response.ok) {
-              const availablePlayerIds = await response.json();
+              const data = await response.json();
+              // Handle different response formats
+              const availablePlayerIds = Array.isArray(data) ? data : (data.availablePlayerIds || []);
+              
               newAvailabilityData[game.id] = {
                 gameId: game.id,
-                availableCount: availablePlayerIds.length,
-                totalPlayers: players.filter(p => p.active).length
+                availableCount: availablePlayerIds.length || totalActivePlayers,
+                totalPlayers: totalActivePlayers
+              };
+            } else if (response.status === 404) {
+              // No availability data exists yet, assume all players are available
+              newAvailabilityData[game.id] = {
+                gameId: game.id,
+                availableCount: totalActivePlayers,
+                totalPlayers: totalActivePlayers
               };
             } else {
-              // If no availability data exists, assume all players are available
+              // Other error, show as not set
               newAvailabilityData[game.id] = {
                 gameId: game.id,
-                availableCount: players.filter(p => p.active).length,
-                totalPlayers: players.filter(p => p.active).length
+                availableCount: 0,
+                totalPlayers: totalActivePlayers
               };
             }
           } catch (error) {
             console.error(`Error fetching availability for game ${game.id}:`, error);
+            // On error, assume all players are available
             newAvailabilityData[game.id] = {
               gameId: game.id,
-              availableCount: 0,
-              totalPlayers: players.filter(p => p.active).length
+              availableCount: totalActivePlayers,
+              totalPlayers: totalActivePlayers
             };
           }
         }
@@ -137,23 +149,25 @@ export default function PlayerAvailabilityWidget({
                 <div className="flex items-center space-x-2">
                   <Users className="h-4 w-4 text-gray-500" />
                   <span className="text-sm text-gray-600">
-                    {loading ? '...' : availability ? 
-                      `${availability.availableCount}/${availability.totalPlayers}` : 
+                    {loading ? 'Loading...' : availability ? 
+                      `${availability.availableCount}/${availability.totalPlayers} available` : 
                       'Not set'
                     }
                   </span>
                 </div>
 
                 <div className="flex items-center space-x-2">
-                  <Badge 
-                    variant="outline" 
-                    className={`text-xs ${color.replace('bg-', 'text-')} border-current`}
-                  >
-                    {status}
-                  </Badge>
+                  {!loading && availability && (
+                    <Badge 
+                      variant="outline" 
+                      className={`text-xs ${color.replace('bg-', 'text-')} border-current`}
+                    >
+                      {status}
+                    </Badge>
+                  )}
                   <Link href={`/roster/${game.id}`}>
                     <Button variant="outline" size="sm" className="text-xs px-2 py-1">
-                      Manage
+                      {availability && availability.availableCount > 0 ? 'Manage' : 'Set Availability'}
                     </Button>
                   </Link>
                 </div>
