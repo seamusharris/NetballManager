@@ -80,7 +80,7 @@ export default function GameForm({
   });
 
   useEffect(() => {
-    if (game && activeSeason) {
+    if (game && activeSeason && !isLoadingAllTeams) {
       console.log("Resetting form with game data:", game);
       form.reset({
         date: game.date || "",
@@ -91,7 +91,7 @@ export default function GameForm({
         homeTeamId: game.homeTeamId?.toString() || "",
         awayTeamId: game.awayTeamId?.toString() || "",
       });
-    } else if (activeSeason && !game) {
+    } else if (activeSeason && !game && !isLoadingAllTeams) {
       // Set defaults for new games
       form.reset({
         date: "",
@@ -103,7 +103,7 @@ export default function GameForm({
         awayTeamId: "",
       });
     }
-  }, [game, activeSeason, teams, form]);
+  }, [game, activeSeason, isLoadingAllTeams, form]);
 
   const formValues = form.watch();
   console.log("GameForm rendering with data:", {
