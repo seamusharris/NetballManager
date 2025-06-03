@@ -4,12 +4,11 @@ import { Users, Clock, AlertCircle, CheckCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { BaseWidget } from '@/components/ui/base-widget';
-import { Game, Opponent, Player } from '@shared/schema';
+import { Game, Player } from '@shared/schema';
 import { formatShortDate } from '@/lib/utils';
 
 interface PlayerAvailabilityWidgetProps {
   games: Game[];
-  opponents: Opponent[];
   players: Player[];
   className?: string;
 }
@@ -22,7 +21,6 @@ interface GameAvailability {
 
 export default function PlayerAvailabilityWidget({ 
   games, 
-  opponents, 
   players,
   className 
 }: PlayerAvailabilityWidgetProps) {
@@ -31,7 +29,7 @@ export default function PlayerAvailabilityWidget({
 
   // Get upcoming games (next 3 games)
   const upcomingGames = games
-    .filter(game => !game.completed && game.date >= new Date().toISOString().split('T')[0])
+    .filter(game => !game.gameStatus?.isCompleted && game.date >= new Date().toISOString().split('T')[0])
     .sort((a, b) => a.date.localeCompare(b.date))
     .slice(0, 3);
 
@@ -125,11 +123,20 @@ export default function PlayerAvailabilityWidget({
     <BaseWidget title="Player Availability" className={className}>
       <div className="space-y-3">
         {upcomingGames.map(game => {
-          const opponent = opponents.find(o => o.id === game.opponentId);
           const availability = availabilityData[game.id];
           const { color, status } = availability ? 
             getAvailabilityStatus(availability.availableCount, availability.totalPlayers) :
             { color: 'bg-gray-400', status: 'Unknown' };
+
+          // Get the opponent team name (the team we're playing against)
+          const getOpponentTeamName = (game: Game) => {
+            // If we're the home team, opponent is away team
+            if (game.homeTeamName && game.awayTeamName) {
+              // Assume we're usually the home team for now, but this could be made dynamic
+              return game.awayTeamName;
+            }
+            return 'Unknown Team';
+          };
 
           return (
             <div key={game.id} className="p-3 bg-gray-50 rounded-lg border border-gray-200">
@@ -137,7 +144,7 @@ export default function PlayerAvailabilityWidget({
                 <div className="flex items-center space-x-2">
                   <div className={`w-3 h-3 rounded-full ${color}`} />
                   <span className="text-sm font-medium">
-                    vs {opponent?.teamName || 'Unknown'}
+                    vs {getOpponentTeamName(game)}
                   </span>
                 </div>
                 <Badge variant="outline" className="text-xs">
