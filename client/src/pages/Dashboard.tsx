@@ -26,11 +26,10 @@ export default function Dashboard() {
     enabled: !!currentClubId,
   });
 
-  const { data: opponents = [], isLoading: isLoadingOpponents, error: opponentsError } = useQuery<any[]>({
-    queryKey: ['/api/opponents', currentClubId],
-    queryFn: () => apiClient.get('/api/opponents'),
-    enabled: !!currentClubId,
-  });
+  // Opponents system has been archived/migrated to teams
+  const opponents: any[] = [];
+  const isLoadingOpponents = false;
+  const opponentsError = null;
 
   const { data: seasons = [], isLoading: isLoadingSeasons, error: seasonsError } = useQuery<any[]>({
     queryKey: ['/api/seasons', currentClubId],
@@ -59,14 +58,13 @@ export default function Dashboard() {
   const isLoading = isLoadingPlayers || isLoadingGames || isLoadingOpponents || isLoadingSeasons || isLoadingActiveSeason;
 
   // Show error state if any query fails
-  if (playersError || gamesError || opponentsError || seasonsError || activeSeasonError) {
+  if (playersError || gamesError || seasonsError || activeSeasonError) {
     return (
       <div className="p-6">
         <h1 className="text-2xl font-bold text-red-600 mb-4">Dashboard Error</h1>
         <div className="space-y-2 text-red-500">
           {playersError && <p>Players error: {String(playersError)}</p>}
           {gamesError && <p>Games error: {String(gamesError)}</p>}
-          {opponentsError && <p>Opponents error: {String(opponentsError)}</p>}
           {seasonsError && <p>Seasons error: {String(seasonsError)}</p>}
           {activeSeasonError && <p>Active season error: {String(activeSeasonError)}</p>}
         </div>
