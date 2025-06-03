@@ -1,254 +1,181 @@
 import { useState, useEffect } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Helmet } from 'react-helmet';
+import { useQuery } from '@tanstack/react-query';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { AlertCircle, Users, Calendar, Settings } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { apiRequest } from '@/lib/apiClient';
 import SimpleRosterManager from '@/components/roster/SimpleRosterManager';
 import PlayerAvailabilityManager from '@/components/roster/PlayerAvailabilityManager';
-import { useLocation, useParams, Link } from 'wouter';
-import { Button } from '@/components/ui/button';
-import { ChevronLeft, Users } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useLocation } from 'wouter';
+import { Game, Player, Opponent } from '@shared/schema';
+import { useClub } from '@/contexts/ClubContext';
 
 export default function Roster() {
   const [selectedGameId, setSelectedGameId] = useState<number | null>(null);
-  const [showAvailability, setShowAvailability] = useState(true);
-  const [availablePlayers, setAvailablePlayers] = useState<number[]>([]);
-  const [_, navigate] = useLocation();
-  const queryClient = useQueryClient();
+  const [, navigate] = useLocation();
+  const { currentClub } = useClub();
 
-  // Load players data
-  const { data: players = [], isLoading: isLoadingPlayers } = useQuery({
-    queryKey: ['/api/players'],
+  // Fetch games
+  const { data: games = [], isLoading: gamesLoading, error: gamesError } = useQuery({
+    queryKey: ['games', currentClub?.id],
+    queryFn: () => apiRequest('GET', '/api/games'),
+    retry: 1,
+    enabled: !!currentClub?.id
   });
 
-  // Get gameId from URL path parameter or query parameter (for backwards compatibility)
-  const params = useParams();
-  const queryParams = new URLSearchParams(window.location.search);
-  const gameId = params.gameId || queryParams.get('game');
+  // Fetch players  
+  const { data: players = [], isLoading: playersLoading } = useQuery({
+    queryKey: ['players', currentClub?.id],
+    queryFn: () => apiRequest('GET', '/api/players'),
+    enabled: !!currentClub?.id
+  });
 
-  // Parse URL parameters to get game ID (both path and query for backwards compatibility)
-  useEffect(() => {
-    if (gameId && !isNaN(Number(gameId))) {
-      // Set the selected game ID
-      setSelectedGameId(Number(gameId));
-
-      // Only navigate away from query parameter format to maintain clean URLs
-      const queryParams = new URLSearchParams(window.location.search);
-      if (queryParams.get('game') && !params.gameId) {
-        // User came via query parameter, redirect to path parameter format
-        navigate(`/roster/${gameId}`, { replace: true });
+  // Fetch opponents for legacy support
+  const { data: opponents = [] } = useQuery({
+    queryKey: ['opponents'],
+    queryFn: async () => {
+      try {
+        const result = await apiRequest('GET', '/api/opponents');
+        return Array.isArray(result) ? result : [];
+      } catch (error) {
+        console.warn('Opponents API not available (expected)');
+        return [];
       }
     }
-  }, [gameId, navigate, params.gameId]);
+  });
 
-  // Load available players from database when game changes
+  const isLoading = gamesLoading || playersLoading;
+
+  // Check if club context is available
+  if (!currentClub?.id) {
+    return (
+      <div className="container py-6">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center">
+              <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold mb-2">No Club Selected</h3>
+              <p className="text-gray-500 mb-4">
+                Please select a club to manage rosters.
+              </p>
+              <Button onClick={() => navigate('/dashboard')}>
+                Go to Dashboard
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Filter out completed games for roster management
+  const availableGames = games.filter((game: Game) => 
+    !game.statusIsCompleted && !game.completed
+  );
+
+  // Auto-select first available game if none selected
   useEffect(() => {
-    if (selectedGameId && players && players.length > 0) {
-      const activePlayerIds = players.filter(p => p.active).map(p => p.id);
-
-      // Fetch availability from database
-      fetch(`/api/games/${selectedGameId}/availability`)
-        .then(response => response.json())
-        .then(data => {
-          if (data.availablePlayerIds && Array.isArray(data.availablePlayerIds)) {
-            // Validate that stored player IDs still exist in active players
-            const validPlayerIds = data.availablePlayerIds.filter(id => 
-              typeof id === 'number' && activePlayerIds.includes(id)
-            );
-
-            // If we have valid stored data, use it; otherwise default to all active
-            const finalPlayerIds = validPlayerIds.length > 0 ? [...new Set(validPlayerIds)] : activePlayerIds;
-            setAvailablePlayers(finalPlayerIds);
-          } else {
-            // No stored data, default to all active players
-            setAvailablePlayers(activePlayerIds);
-          }
-        })
-        .catch(error => {
-          console.warn('Failed to fetch player availability, using all active players:', error);
-          setAvailablePlayers(activePlayerIds);
-        });
+    if (!selectedGameId && availableGames.length > 0) {
+      setSelectedGameId(availableGames[0].id);
     }
-  }, [selectedGameId, players]);
+  }, [availableGames, selectedGameId]);
 
-  // Load games data
-  const { data: games = [], isLoading: isLoadingGames } = useQuery({
-    queryKey: ['/api/games'],
-  });
+  const selectedGame = games.find((game: Game) => game.id === selectedGameId);
 
-  // Load opponents data
-  const { data: opponents = [], isLoading: isLoadingOpponents } = useQuery({
-    queryKey: ['/api/opponents'],
-  });
+  // Handle no games case
+  if (!isLoading && games.length === 0) {
+    return (
+      <div className="container py-6">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center">
+              <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold mb-2">No Games Available</h3>
+              <p className="text-gray-500 mb-4">
+                There are no games available for {currentClub.name}. Create your first game to start managing rosters.
+              </p>
+              <Button onClick={() => navigate('/games')}>
+                Go to Games
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
-  // Get roster data for selected game
-  const { data: rosters = [], isLoading: isLoadingRosters } = useQuery({
-    queryKey: ['/api/games', selectedGameId, 'rosters'],
-    enabled: !!selectedGameId,
-  });
-
-  // Check if any data is still loading
-  const isLoading = isLoadingPlayers || isLoadingGames || isLoadingOpponents || 
-    (selectedGameId ? isLoadingRosters : false);
-
-  // Filter to only active players
-  const activePlayers = players.filter(player => player.active);
-
-  // Get the selected game
-  const selectedGame = selectedGameId ? games.find(game => game.id === selectedGameId) : undefined;
-
-  // Get the opponent for the selected game
-  const selectedOpponent = selectedGame?.opponentId 
-    ? opponents.find(opponent => opponent.id === selectedGame.opponentId) 
-    : undefined;
-
-  // Handle player availability change
-  const handleAvailabilityChange = (playerId: number, isAvailable: boolean) => {
-    // Create a new array to ensure we don't have duplicate IDs
-    let newAvailablePlayers;
-
-    if (isAvailable) {
-      // Only add the player if they're not already in the list
-      if (!availablePlayers.includes(playerId)) {
-        newAvailablePlayers = [...availablePlayers, playerId];
-      } else {
-        newAvailablePlayers = [...availablePlayers]; // No change needed
-      }
-    } else {
-      // Remove the player from the list
-      newAvailablePlayers = availablePlayers.filter(id => id !== playerId);
-    }
-
-    setAvailablePlayers(newAvailablePlayers);
-
-    // Save to database if we have a game selected
-    if (selectedGameId) {
-      fetch(`/api/games/${selectedGameId}/availability`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          availablePlayerIds: newAvailablePlayers
-        })
-      })
-      .then(response => response.json())
-      .then(data => {
-        console.log('Player availability saved to database:', data);
-      })
-      .catch(error => {
-        console.error('Failed to save player availability to database:', error);
-        // Could add user notification here
-      });
-    }
-  };
-
-  // Handle completion of availability selection
-  const handleAvailabilityComplete = () => {
-    setShowAvailability(false);
-  };
-
-  // Function to go back to availability selection
-  const handleBackToAvailability = () => {
-    setShowAvailability(true);
-  };
-
-  // Callback for when roster is saved to database
-  const handleRosterSaved = () => {
-    // Invalidate the roster query to refresh data
-    if (selectedGameId) {
-      // Invalidate both the roster data and the game data to ensure proper re-fetching
-      queryClient.invalidateQueries({ queryKey: ['/api/games', selectedGameId, 'rosters'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/games', selectedGameId] });
-
-      // Also invalidate the general games list to ensure consistency
-      queryClient.invalidateQueries({ queryKey: ['/api/games'] });
-    }
-  };
+  // Handle no available (non-completed) games case
+  if (!isLoading && games.length > 0 && availableGames.length === 0) {
+    return (
+      <div className="container py-6">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center">
+              <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold mb-2">No Upcoming Games</h3>
+              <p className="text-gray-500 mb-4">
+                All games for {currentClub.name} have been completed. Rosters can only be managed for upcoming games.
+              </p>
+              <Button onClick={() => navigate('/games')}>
+                View All Games
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="container py-6">
-      <Helmet>
-        <title>Roster | NetballManager</title>
-        <meta name="description" content="Manage your netball team roster, assign players to positions for each quarter" />
-      </Helmet>
+      <h1>Roster</h1>
+      <p>Club: {currentClub?.name}</p>
 
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Team Roster</h1>
-        {selectedGameId && (
-          <Button 
-            variant="outline" 
-            asChild
-          >
-            <Link to={`/game/${selectedGameId}`}>
-              <ChevronLeft className="mr-1 h-4 w-4" />
-              Back to Game Details
-            </Link>
-          </Button>
-        )}
+      <div className="mb-4">
+        <Select value={selectedGameId?.toString()} onValueChange={(value) => setSelectedGameId(parseInt(value))}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Select a game" />
+          </SelectTrigger>
+          <SelectContent>
+            {availableGames.map((game: Game) => (
+              <SelectItem key={game.id} value={game.id.toString()}>
+                {game.name} - {game.date}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
-      {!selectedGameId && (
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Select a Game</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Alert>
-              <Users className="h-4 w-4 mr-2" />
-              <AlertDescription>
-                Please select a game from the dropdown below to manage its roster.
-              </AlertDescription>
-            </Alert>
-          </CardContent>
-        </Card>
+      {gamesError && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Failed to fetch games.
+          </AlertDescription>
+        </Alert>
       )}
 
-      {selectedGameId && showAvailability && (
-        <PlayerAvailabilityManager
-          players={activePlayers}
-          game={selectedGame}
-          opponent={selectedOpponent}
-          availablePlayers={availablePlayers}
-          onAvailabilityChange={handleAvailabilityChange}
-          onComplete={handleAvailabilityComplete}
-        />
+      {selectedGame && (
+        <div className="mb-4">
+          <h2>{selectedGame.name}</h2>
+          <Badge variant="secondary">
+            <Calendar className="h-3 w-3 mr-1" />
+            {selectedGame.date}
+          </Badge>
+        </div>
       )}
 
-      {selectedGameId && !showAvailability && (
-        <>
-          <Button 
-            variant="outline" 
-            onClick={handleBackToAvailability} 
-            className="mb-4"
-          >
-            <ChevronLeft className="mr-1 h-4 w-4" />
-            Back to Player Availability
-          </Button>
+      <SimpleRosterManager
+        selectedGameId={selectedGameId}
+        players={players}
+        games={games}
+        opponents={opponents}
+        isLoading={isLoading}
+      />
 
-          <SimpleRosterManager 
-            players={activePlayers.filter(player => availablePlayers.includes(player.id))}
-            games={games}
-            opponents={opponents}
-            selectedGameId={selectedGameId}
-            setSelectedGameId={setSelectedGameId}
-            isLoading={isLoading}
-            onRosterSaved={handleRosterSaved}
-          />
-        </>
-      )}
-
-      {!selectedGameId && (
-        <SimpleRosterManager 
-          players={activePlayers}
-          games={games}
-          opponents={opponents}
-          selectedGameId={selectedGameId}
-          setSelectedGameId={setSelectedGameId}
-          isLoading={isLoading}
-          onRosterSaved={handleRosterSaved}
-        />
-      )}
     </div>
   );
 }
