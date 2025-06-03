@@ -9,13 +9,15 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { apiRequest } from '@/lib/apiClient';
 import SimpleRosterManager from '@/components/roster/SimpleRosterManager';
 import PlayerAvailabilityManager from '@/components/roster/PlayerAvailabilityManager';
-import { useLocation } from 'wouter';
+import { useLocation, useParams } from 'wouter';
 import { Game, Player, Opponent } from '@shared/schema';
 import { useClub } from '@/contexts/ClubContext';
 
 export default function Roster() {
-  const [selectedGameId, setSelectedGameId] = useState<number | null>(null);
-  const [showPlayerAvailability, setShowPlayerAvailability] = useState(false);
+  const params = useParams();
+  const gameIdFromUrl = params.gameId ? parseInt(params.gameId) : null;
+  const [selectedGameId, setSelectedGameId] = useState<number | null>(gameIdFromUrl);
+  const [showPlayerAvailability, setShowPlayerAvailability] = useState(true); // Start with availability if coming from direct link
   const [, navigate] = useLocation();
   const { currentClub } = useClub();
 
@@ -77,12 +79,25 @@ export default function Roster() {
     !game.statusIsCompleted && !game.completed
   );
 
-  // Auto-select first available game if none selected
+  // Auto-select first available game if none selected and no URL parameter
   useEffect(() => {
-    if (!selectedGameId && availableGames.length > 0) {
+    if (!selectedGameId && availableGames.length > 0 && !gameIdFromUrl) {
       setSelectedGameId(availableGames[0].id);
     }
-  }, [availableGames, selectedGameId]);
+  }, [availableGames, selectedGameId, gameIdFromUrl]);
+
+  // If URL parameter provided, ensure it's valid
+  useEffect(() => {
+    if (gameIdFromUrl && availableGames.length > 0) {
+      const gameExists = availableGames.find(game => game.id === gameIdFromUrl);
+      if (gameExists) {
+        setSelectedGameId(gameIdFromUrl);
+      } else {
+        // Game ID from URL is not valid, redirect to roster without game ID
+        navigate('/roster');
+      }
+    }
+  }, [gameIdFromUrl, availableGames, navigate]);
 
   const selectedGame = games.find((game: Game) => game.id === selectedGameId);
 

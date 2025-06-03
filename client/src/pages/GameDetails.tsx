@@ -1253,7 +1253,7 @@ export default function GameDetails() {
                 asChild
                 className="border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-900"
               >
-                <Link to={`/roster?game=${gameId}`}>
+                <Link to={`/roster/${gameId}`}>
                   <CalendarRange className="mr-2 h-4 w-4" />
                   Manage Roster
                 </Link>
