@@ -22,15 +22,11 @@ export default function RecentGames({ games, opponents, className, seasonFilter,
   // Filter for recent completed games using the new status system
   const recentGames = games
     .filter(game => {
-      // Use the new status fields from the team-based system
-      const isCompleted = game.statusIsCompleted === true || 
-                         game.gameStatus?.isCompleted === true || 
-                         game.completed === true;
+      // Use the primary status field from the team-based system
+      const isCompleted = game.statusIsCompleted === true;
       
       console.log(`Game ${game.id} completion check:`, {
         statusIsCompleted: game.statusIsCompleted,
-        gameStatusIsCompleted: game.gameStatus?.isCompleted,
-        completed: game.completed,
         finalResult: isCompleted
       });
       
@@ -41,7 +37,7 @@ export default function RecentGames({ games, opponents, className, seasonFilter,
 
   // Use centralized stats if available, otherwise empty object
   const allGameStats = centralizedStats || {};
-  const isLoading = !centralizedStats && recentGames.length > 0;
+  const isLoading = false; // Don't wait for stats to show the games
 
   // Updated to work with team-based system
   const getOpponentName = (game: any) => {
