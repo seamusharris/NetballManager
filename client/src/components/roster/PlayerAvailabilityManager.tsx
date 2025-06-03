@@ -109,17 +109,17 @@ export default function PlayerAvailabilityManager({
 
     // Handle successful availability data
     if (availabilityData && Array.isArray(availabilityData.availablePlayerIds)) {
-      // If we have an empty array, this could mean either:
-      // 1. No availability has been set yet (new game) - default to all active players
-      // 2. Availability was explicitly set to empty (rare case)
       // For new games (upcoming games), we default to all active players being available
       if (availabilityData.availablePlayerIds.length === 0) {
         const selectedGame = games.find(game => game.id === gameId);
+        console.log('Empty availability array received - checking game status:', selectedGame?.statusName);
+
         // For upcoming games, default to all active players
-        if (selectedGame && selectedGame.statusName === 'upcoming') {
+        if (selectedGame && (selectedGame.statusName === 'upcoming' || !selectedGame.statusName)) {
           const activePlayerIds = players.filter(p => p.active).map(p => p.id);
           console.log('Empty availability for upcoming game - defaulting to all active players:', activePlayerIds);
           setAvailablePlayerIds(activePlayerIds);
+          // Also notify parent component
           onAvailabilityChange?.(activePlayerIds);
         } else {
           // For completed games, respect the empty array
