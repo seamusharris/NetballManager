@@ -60,6 +60,9 @@ export default function SimpleRosterManager({
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // State for tracking available players for the selected game
+  const [availablePlayerIds, setAvailablePlayerIds] = useState<number[]>([]);
+
   // Filter out BYE games since they don't have rosters
   const gamesWithoutByes = games.filter(game => !game.isBye);
 
@@ -68,7 +71,7 @@ export default function SimpleRosterManager({
   const selectedGame = games.find(game => game.id === selectedGameId);
   const selectedOpponent = opponents.find(opponent => selectedGame?.opponentId === opponent.id);
 
-  // Effect to load existing roster when game selection changes
+  // Effect to load existing roster and availability when game selection changes
   useEffect(() => {
     // Reset the pending changes when game changes
     setPendingChanges([]);
@@ -82,13 +85,17 @@ export default function SimpleRosterManager({
       '4': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null }
     });
 
-    // If we have a selected game, fetch its roster and update local state
+    // Reset available players
+    setAvailablePlayerIds([]);
+
+    // If we have a selected game, fetch its roster and availability data
     if (selectedGameId) {
-      const fetchRoster = async () => {
+      const fetchData = async () => {
         try {
-          const response = await fetch(`/api/games/${selectedGameId}/rosters`);
-          if (response.ok) {
-            const rosters: RosterType[] = await response.json();
+          // Fetch roster data
+          const rosterResponse = await fetch(`/api/games/${selectedGameId}/rosters`);
+          if (rosterResponse.ok) {
+            const rosters: RosterType[] = await rosterResponse.json();
 
             // Update local state with fetched roster
             const newRosterState: RosterStateType = {
@@ -109,12 +116,20 @@ export default function SimpleRosterManager({
             setLocalRosterState(newRosterState);
             console.log("Loaded roster data:", newRosterState);
           }
+
+          // Fetch availability data
+          const availabilityResponse = await fetch(`/api/games/${selectedGameId}/availability`);
+          if (availabilityResponse.ok) {
+            const availabilityData = await availabilityResponse.json();
+            setAvailablePlayerIds(availabilityData.availablePlayerIds || []);
+            console.log("Loaded availability data:", availabilityData.availablePlayerIds);
+          }
         } catch (error) {
-          console.error("Error loading roster:", error);
+          console.error("Error loading roster/availability data:", error);
         }
       };
 
-      fetchRoster();
+      fetchData();
     }
   }, [selectedGameId]);
 
@@ -218,8 +233,8 @@ export default function SimpleRosterManager({
   const handleAutoFill = () => {
     if (!selectedGameId || players.length === 0) return;
 
-    // Get only active players
-    const activePlayers = players.filter(player => player.active);
+    // Get only active and available players
+    const activePlayers = players.filter(player => player.active && availablePlayerIds.includes(player.id));
 
     // Find players for each position based on their preferences
     const playersByPosition: Record<Position, number[]> = {
@@ -507,10 +522,10 @@ export default function SimpleRosterManager({
     return player.positionPreferences.includes(position);
   };
 
-  // Get players eligible for a position - now showing ALL active players
+  // Get players eligible for a position - only showing available players
   const getEligiblePlayers = (position: Position): Player[] => {
     return players
-      .filter(player => player.active)
+      .filter(player => player.active && availablePlayerIds.includes(player.id))
       .sort((a, b) => {
         // First sort by whether they have this position preference (preferred first)
         const aHasPreference = a.positionPreferences.includes(position);
@@ -798,7 +813,7 @@ export default function SimpleRosterManager({
                     {quarters.map(quarter => {
                       const quarterKey = quarter.toString() as '1'|'2'|'3'|'4';
                       const playersNotInQuarter = players
-                        .filter(player => player.active)
+                        .filter(player => player.active && availablePlayerIds.includes(player.id))
                         .filter(player => !Object.values(localRosterState[quarterKey]).includes(player.id))
                         .sort((a, b) => a.displayName.localeCompare(b.displayName)); // Sort alphabetically
 
