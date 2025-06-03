@@ -78,14 +78,24 @@ export default function PlayerAvailabilityManager({
 
   // Update local state when data loads
   useEffect(() => {
+    console.log('PlayerAvailabilityManager useEffect:', {
+      availabilityData,
+      isLoading,
+      availabilityError,
+      playersLength: players.length,
+      gameId
+    });
+
     if (availabilityData?.availablePlayerIds) {
+      console.log('Setting available players from API:', availabilityData.availablePlayerIds);
       setAvailablePlayerIds(availabilityData.availablePlayerIds);
-    } else if (!isLoading && !availabilityError) {
+    } else if (!isLoading && !availabilityError && players.length > 0) {
       // Fallback to all active players if no availability data
       const activePlayerIds = players.filter(p => p.active).map(p => p.id);
+      console.log('Setting fallback available players:', activePlayerIds);
       setAvailablePlayerIds(activePlayerIds);
     }
-  }, [availabilityData, isLoading, availabilityError, players]);
+  }, [availabilityData, isLoading, availabilityError, players, gameId]);
 
   const [searchQuery, setSearchQuery] = useState('');
 
