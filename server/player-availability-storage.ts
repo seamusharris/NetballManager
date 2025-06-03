@@ -66,13 +66,26 @@ export class PlayerAvailabilityStorage {
   
   async updatePlayerAvailability(gameId: number, playerId: number, isAvailable: boolean): Promise<boolean> {
     try {
-      // Always insert or update the record, maintaining both true and false states
-      await db.execute(sql`
-        INSERT INTO player_availability (game_id, player_id, is_available, created_at, updated_at)
-        VALUES (${gameId}, ${playerId}, ${isAvailable}, NOW(), NOW())
-        ON CONFLICT (game_id, player_id) 
-        DO UPDATE SET is_available = ${isAvailable}, updated_at = NOW()
+      // Check if record exists first, then update or insert accordingly
+      const existingRecord = await db.execute(sql`
+        SELECT id FROM player_availability 
+        WHERE game_id = ${gameId} AND player_id = ${playerId}
       `);
+      
+      if (existingRecord.rows.length > 0) {
+        // Update existing record
+        await db.execute(sql`
+          UPDATE player_availability 
+          SET is_available = ${isAvailable}, updated_at = NOW()
+          WHERE game_id = ${gameId} AND player_id = ${playerId}
+        `);
+      } else {
+        // Insert new record
+        await db.execute(sql`
+          INSERT INTO player_availability (game_id, player_id, is_available, created_at, updated_at)
+          VALUES (${gameId}, ${playerId}, ${isAvailable}, NOW(), NOW())
+        `);
+      }
       
       return true;
     } catch (error) {
