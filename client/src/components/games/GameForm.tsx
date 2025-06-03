@@ -228,7 +228,7 @@ export default function GameForm({
             name="homeTeamId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Home Team *</FormLabel>
+                <FormLabel required>Home Team</FormLabel>
                 <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
                     <SelectTrigger>
@@ -260,7 +260,7 @@ export default function GameForm({
             name="awayTeamId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Away Team *</FormLabel>
+                <FormLabel required>Away Team</FormLabel>
                 <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
                     <SelectTrigger>
@@ -292,7 +292,7 @@ export default function GameForm({
             name="statusId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Game Status *</FormLabel>
+                <FormLabel required>Game Status</FormLabel>
                 <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
                     <SelectTrigger>
