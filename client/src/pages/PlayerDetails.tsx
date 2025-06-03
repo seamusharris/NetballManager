@@ -22,7 +22,7 @@ import { BackButton } from "@/components/ui/back-button";
 import { Award, Target, Shield, Activity, Edit, Trash2, Calendar } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest } from "@/lib/apiClient";
 import PlayerForm from "@/components/players/PlayerForm";
 import PlayerSeasonsManager from "@/components/players/PlayerSeasonsManager";
 import PlayerClubsManager from "@/components/players/PlayerClubsManager";

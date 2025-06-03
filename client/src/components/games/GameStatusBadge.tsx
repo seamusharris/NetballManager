@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 import { apiClient } from '@/lib/apiClient';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
-import { apiRequest } from '@/lib/queryClient';
+import { apiRequest } from '@/lib/apiClient';
 import {
   Dialog,
   DialogContent,

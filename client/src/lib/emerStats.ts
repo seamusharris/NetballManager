@@ -4,7 +4,7 @@
  * This is a specialized module for saving position-based statistics directly to the database
  * without relying on complex React Query or other abstractions that might be failing.
  */
-import { apiRequest } from '@/lib/queryClient';
+import { apiRequest } from '@/lib/apiClient';
 
 /**
  * Validates and normalizes stats data
