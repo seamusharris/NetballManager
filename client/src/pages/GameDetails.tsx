@@ -734,6 +734,7 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
 
             return (
               <div key={position} className="col-span-1">
+```jsx
                 <PositionBox                  position={position as Position}
                   playerName={playerName}
                   playerColor={playerColor}
@@ -1064,15 +1065,7 @@ export default function GameDetails() {
     select: (data) => Array.isArray(data) ? data : []
   });
 
-  // Fetch opponents
-  const { 
-    data: opponents = [],
-    isLoading: isLoadingOpponents
-  } = useQuery({
-    queryKey: ['/api/opponents'],
-    queryFn: () => fetch('/api/opponents').then(res => res.json()),
-    select: (data) => Array.isArray(data) ? data : []
-  });
+  // Fetch opponents - REMOVED
 
   // Fetch roster for this game
   const { 
@@ -1127,7 +1120,7 @@ export default function GameDetails() {
   }, [gameStats, game]);
 
   // Loading state
-  if (isLoadingGame || isLoadingPlayers || isLoadingOpponents || isLoadingRoster) {
+  if (isLoadingGame || isLoadingPlayers || isLoadingRoster) { // Removed isLoadingOpponents
     return (
       <div className="py-10 text-center">
         <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mb-4"></div>
@@ -1153,7 +1146,7 @@ export default function GameDetails() {
 
   // Check if this is a forfeit game, which has special display and restrictions
   const isForfeitGame = game.status === 'forfeit-win' || game.status === 'forfeit-loss';
-  const opponentName = getOpponentName(opponents || [], game.opponentId);
+  //const opponentName = getOpponentName(opponents || [], game.opponentId); // Removed opponentName
 
   return (
     <div className="container py-8 mx-auto">
@@ -1242,7 +1235,7 @@ export default function GameDetails() {
                 <AlertDialogHeader>
                   <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
                   <AlertDialogDescription>
-                    Are you sure you want to delete this {game.isBye ? "BYE round" : `game against ${game.opponentId ? opponents?.find(o => o.id === game.opponentId)?.teamName : 'unknown opponent'}`}? 
+                    Are you sure you want to delete this {game.isBye ? "BYE round" : `game against ${game.awayTeamName}`}? 
                     This will also delete all roster assignments and statistics for this game.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
@@ -1288,11 +1281,10 @@ export default function GameDetails() {
             <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
               <DialogContent className="sm:max-w-[550px]">
                 <DialogTitle>Edit Game Details</DialogTitle>
-                {Array.isArray(opponents) && game && Array.isArray(seasons) ? (
+                {Array.isArray(seasons) ? ( //Removed opponents
                   <>
                     <GameForm
                       game={game}
-                      opponents={opponents}
                       seasons={seasons}
                       activeSeason={activeSeason}
                       isSubmitting={false}
@@ -1633,6 +1625,7 @@ export default function GameDetails() {
                                 </div>
                               </div>
                             </div>
+                          ```jsx
                           </div>
                         );
                       })()}
@@ -1771,7 +1764,7 @@ export default function GameDetails() {
             {roster && roster.length > 0 ? (
               <PrintableRosterSummary 
                 game={game} 
-                opponent={opponents?.find(o => o.id === game.opponentId) || null}
+                opponent={null} //Removed opponent
                 roster={roster}
                 players={players || []}
               />
@@ -1792,7 +1785,7 @@ export default function GameDetails() {
           <TabsContent value="statssheet" className="mt-6">
             <PrintableStatsSheet
               game={game}
-              opponent={opponents?.find(o => o.id === game.opponentId) || null}
+              opponent={null} //Removed opponent
             />
           </TabsContent>
 

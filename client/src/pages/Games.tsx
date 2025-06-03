@@ -7,7 +7,7 @@ import { GamesList } from '@/components/games/GamesList';
 import { CrudDialog } from '@/components/ui/crud-dialog';
 import { Plus, Loader2 } from 'lucide-react';
 import { apiRequest, apiClient } from '@/lib/apiClient';
-import { Game, Opponent, Player } from '@shared/schema';
+import { Game, Player } from '@shared/schema';
 import { useToast } from '@/hooks/use-toast';
 import { useLocation } from 'wouter';
 import { useClub } from '@/contexts/ClubContext';
@@ -60,12 +60,6 @@ export default function Games() {
     gamesCount: games.length,
     isLoading: isLoadingGames,
     sampleGame: games[0]
-  });
-
-  // Fetch opponents - no club context needed
-  const { data: opponents = [] } = useQuery<Opponent[]>({
-    queryKey: ['opponents'],
-    queryFn: () => apiClient.get('/api/opponents'),
   });
 
   // Fetch teams
@@ -190,7 +184,6 @@ export default function Games() {
           </div>
           <GamesList 
             games={games} 
-            opponents={opponents} 
             isLoading={isLoadingGames}
             onDelete={handleDelete} 
             onEdit={setEditingGame}
@@ -208,7 +201,6 @@ export default function Games() {
         title="Add Game"
       >
         <GameForm 
-          opponents={opponents} 
           seasons={seasons}
           activeSeason={activeSeason}
           onSubmit={handleCreate}
@@ -226,14 +218,12 @@ export default function Games() {
           <>
             {console.log('Games page - EditingGame GameForm props:', {
               game: editingGame,
-              opponents: opponents.length,
               seasons: seasons.length,
               activeSeason,
               isSubmitting: updateMutation.isPending
             })}
             <GameForm 
               game={editingGame} 
-              opponents={opponents} 
               seasons={seasons}
               activeSeason={activeSeason}
               onSubmit={handleUpdate}

@@ -1,52 +1,15 @@
-import React from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { insertGameSchema, Game, Season } from "@shared/schema";
-import { useQuery } from "@tanstack/react-query";
-import { apiClient } from "@/lib/apiClient";
+import React, { useState, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { insertGameSchema } from '../../../shared/schema';
+import { Button } from '../ui/button';
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '../ui/form';
+import { Input } from '../ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { useToast } from '../../hooks/use-toast';
+import { useClub } from '../../contexts/ClubContext';
 
-// Game statuses and teams interfaces
-interface GameStatus {
-  id: number;
-  name: string;
-  displayName: string;
-  points: number;
-  opponentPoints: number;
-  isCompleted: boolean;
-  allowsStatistics: boolean;
-  requiresOpponent: boolean;
-  colorClass: string;
-  sortOrder: number;
-  isActive: boolean;
-}
-
-interface Team {
-  id: number;
-  name: string;
-  division?: string;
-  clubId: number;
-}
-
-// Extend the schema for the form validation
 const formSchema = insertGameSchema.extend({
   date: z.string().min(1, "Date is required"),
   time: z.string().min(1, "Time is required"),
@@ -54,53 +17,38 @@ const formSchema = insertGameSchema.extend({
   statusId: z.string().min(1, "Game status is required"),
   seasonId: z.string().min(1, "Season is required"),
   homeTeamId: z.string().min(1, "Home team is required"),
-  awayTeamId: z.string().optional()
+  awayTeamId: z.string().min(1, "Away team is required"),
 });
 
 type FormValues = z.infer<typeof formSchema>;
 
 interface GameFormProps {
-  game?: Game;
-  seasons: Season[];
-  activeSeason?: Season;
+  game?: any;
+  seasons: any[];
+  gameStatuses: any[];
+  teams: any[];
+  allTeams: any[];
+  activeSeason: any;
   onSubmit: (data: any) => void;
-  isSubmitting: boolean;
-  onCancel?: () => void;
+  onCancel: () => void;
+  isSubmitting?: boolean;
+  isEditing?: boolean;
 }
 
-export function GameForm({ 
-  game, 
-  seasons, 
-  activeSeason, 
-  onSubmit, 
-  isSubmitting, 
-  onCancel 
+export default function GameForm({
+  game,
+  seasons,
+  gameStatuses,
+  teams,
+  allTeams = [],
+  activeSeason,
+  onSubmit,
+  onCancel,
+  isSubmitting = false,
+  isEditing = false,
 }: GameFormProps) {
-  const isEditing = !!game;
-
-  // Fetch game statuses
-  const { data: gameStatuses = [], isLoading: statusesLoading, error: statusesError } = useQuery<GameStatus[]>({
-    queryKey: ['game-statuses'],
-    queryFn: () => apiClient.get('/api/game-statuses'),
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    retry: 3,
-  });
-
-  // Fetch teams with club context
-  const { data: teams = [], isLoading: teamsLoading, error: teamsError } = useQuery<Team[]>({
-    queryKey: ['teams'],
-    queryFn: () => apiClient.get('/api/teams'),
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    retry: 3,
-  });
-
-  // Fetch all teams for away team selection
-  const { data: allTeams = [], isLoading: isLoadingAllTeams } = useQuery<Team[]>({
-    queryKey: ['allTeams'],
-    queryFn: () => apiClient.get('/api/teams/all'),
-    staleTime: 5 * 60 * 1000,
-    retry: 3,
-  });
+  const { toast } = useToast();
+  const { currentClubId } = useClub();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -108,46 +56,61 @@ export function GameForm({
       date: "",
       time: "",
       round: "",
-      statusId: "1",
-      seasonId: activeSeason ? String(activeSeason.id) : "",
+      statusId: activeSeason ? "1" : "",
+      seasonId: activeSeason ? activeSeason.id.toString() : "",
       homeTeamId: "",
-      awayTeamId: ""
+      awayTeamId: "",
     },
   });
 
-  // Reset form when game data changes (for editing)
-  React.useEffect(() => {
-    console.log('GameForm useEffect triggered:', { 
-      game: game ? { id: game.id, statusId: game.statusId, homeTeamId: game.homeTeamId } : null,
-      activeSeason: activeSeason ? { id: activeSeason.id, name: activeSeason.name } : null,
-      gameStatuses: gameStatuses.length,
-      teams: teams.length
-    });
+  console.log("GameForm useEffect triggered:", {
+    game: game ? { id: game.id, statusId: game.statusId, homeTeamId: game.homeTeamId } : null,
+    activeSeason: activeSeason ? { id: activeSeason.id, name: activeSeason.name } : null,
+    gameStatuses: gameStatuses?.length || 0,
+    teams: teams?.length || 0,
+  });
 
-    if (game) {
-      console.log('Resetting form with game data:', game);
+  useEffect(() => {
+    if (game && gameStatuses.length > 0 && activeSeason) {
+      console.log("Resetting form with game data:", game);
       form.reset({
         date: game.date || "",
         time: game.time || "",
         round: game.round || "",
-        statusId: game.statusId ? String(game.statusId) : "1",
-        seasonId: game.seasonId ? String(game.seasonId) : activeSeason ? String(activeSeason.id) : "",
-        homeTeamId: game.homeTeamId ? String(game.homeTeamId) : "",
-        awayTeamId: game.awayTeamId ? String(game.awayTeamId) : ""
+        statusId: game.statusId ? game.statusId.toString() : "1",
+        seasonId: game.seasonId ? game.seasonId.toString() : activeSeason.id.toString(),
+        homeTeamId: game.homeTeamId ? game.homeTeamId.toString() : "",
+        awayTeamId: game.awayTeamId ? game.awayTeamId.toString() : "",
       });
-    } else {
-      // Reset to default values for new game
+    } else if (!game && activeSeason) {
       form.reset({
         date: "",
         time: "",
         round: "",
         statusId: "1",
-        seasonId: activeSeason ? String(activeSeason.id) : "",
+        seasonId: activeSeason.id.toString(),
         homeTeamId: "",
-        awayTeamId: ""
+        awayTeamId: "",
       });
     }
-  }, [game, activeSeason, form, gameStatuses.length, teams.length]);
+  }, [game, gameStatuses, activeSeason, form]);
+
+  const formValues = form.watch();
+  console.log("GameForm rendering with data:", {
+    gameStatuses: gameStatuses?.length || 0,
+    teams: teams?.length || 0,
+    seasons: seasons?.length || 0,
+    isEditing,
+    formValues: {
+      date: formValues.date,
+      time: formValues.time,
+      round: formValues.round,
+      statusId: formValues.statusId,
+      seasonId: formValues.seasonId,
+      homeTeamId: formValues.homeTeamId,
+      awayTeamId: formValues.awayTeamId,
+    },
+  });
 
   const handleSubmit = (values: FormValues) => {
     // Validate required fields
@@ -155,137 +118,33 @@ export function GameForm({
       form.setError("homeTeamId", { message: "Please select a home team" });
       return;
     }
-    if (!values.seasonId) {
-      form.setError("seasonId", { message: "Please select a season" });
+    if (!values.awayTeamId) {
+      form.setError("awayTeamId", { message: "Please select an away team" });
       return;
     }
 
-    const formattedValues = {
+    const gameData = {
       date: values.date,
       time: values.time,
       round: values.round,
       statusId: parseInt(values.statusId),
       seasonId: parseInt(values.seasonId),
       homeTeamId: parseInt(values.homeTeamId),
-      awayTeamId: values.awayTeamId && values.awayTeamId !== "none" && values.awayTeamId !== "" ? parseInt(values.awayTeamId) : null
+      awayTeamId: parseInt(values.awayTeamId),
     };
 
-    onSubmit(formattedValues);
+    if (isEditing && game) {
+      console.log("Updating game with ID:", game.id, "and data:", gameData);
+    } else {
+      console.log("Creating new game with data:", gameData);
+    }
+
+    onSubmit(gameData);
   };
-
-  if (statusesLoading || teamsLoading || isLoadingAllTeams) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Loading form data... 
-            {statusesLoading && " (game statuses)"}
-            {teamsLoading && " (teams)"}
-            {isLoadingAllTeams && " (all teams)"}
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  if (statusesError || teamsError) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <div className="text-center">
-          <p className="text-red-600 mb-4">
-            Error loading form data: {statusesError?.message || teamsError?.message}
-          </p>
-          <Button variant="outline" onClick={() => window.location.reload()}>
-            Retry
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  // Filter teams for home team (current club only) and away team (other clubs only)
-  const homeTeams = teams; // Teams from current club
-  const awayTeams = allTeams.filter(team => 
-    team.clubId !== (teams[0]?.clubId || null) // Exclude teams from current club
-  );
-
-  console.log('GameForm rendering with data:', {
-    gameStatuses: gameStatuses.length,
-    teams: teams.length,
-    seasons: seasons.length,
-    isEditing,
-    formValues: form.getValues()
-  });
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="homeTeamId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel required>Home Team</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <FormControl>
-                    <SelectTrigger className="bg-white border-blue-200 focus:border-blue-500 focus:ring-blue-500">
-                      <SelectValue placeholder="Select home team" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent className="relative z-50 max-h-96 min-w-[8rem] overflow-y-auto overflow-x-hidden rounded-md border bg-white text-gray-900 shadow-lg"
-                    sideOffset={4}
-                    align="start"
-                  >
-                    {homeTeams.map(team => (
-                      <SelectItem key={team.id} value={team.id.toString()}>
-                        {team.name} {team.division && `(${team.division})`}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormDescription>
-                  Select the team playing at home
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="awayTeamId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Away Team</FormLabel>
-                <Select onValueChange={(value) => field.onChange(value === "none" ? null : value)} value={field.value || "none"}>
-                  <FormControl>
-                    <SelectTrigger className="bg-white border-blue-200 focus:border-blue-500 focus:ring-blue-500">
-                      <SelectValue placeholder="Select away team (optional)" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent className="relative z-50 max-h-96 min-w-[8rem] overflow-y-auto overflow-x-hidden rounded-md border bg-white text-gray-900 shadow-lg"
-                    sideOffset={4}
-                    align="start"
-                  >
-                    <SelectItem value="none">No away team</SelectItem>
-                    {awayTeams.map(team => (
-                      <SelectItem key={team.id} value={team.id.toString()}>
-                        {team.name} {team.division && `(${team.division})`}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormDescription>
-                  Select away team for inter-club games
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             control={form.control}
@@ -294,7 +153,11 @@ export function GameForm({
               <FormItem>
                 <FormLabel required>Date</FormLabel>
                 <FormControl>
-                  <Input type="date" {...field} />
+                  <Input
+                    type="date"
+                    className="bg-white border-blue-200 focus:border-blue-500 focus:ring-blue-500"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -308,7 +171,11 @@ export function GameForm({
               <FormItem>
                 <FormLabel required>Time</FormLabel>
                 <FormControl>
-                  <Input type="time" {...field} />
+                  <Input
+                    type="time"
+                    className="bg-white border-blue-200 focus:border-blue-500 focus:ring-blue-500"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -324,12 +191,13 @@ export function GameForm({
               <FormLabel>Round</FormLabel>
               <FormControl>
                 <Input
-                  placeholder="Enter round number (e.g., 1, 2, SF, GF)"
+                  placeholder="e.g., 1, Semi Final, Grand Final"
+                  className="bg-white border-blue-200 focus:border-blue-500 focus:ring-blue-500"
                   {...field}
                 />
               </FormControl>
               <FormDescription>
-                Specify the round number in the season
+                Enter the round number or name (e.g., "1", "Semi Final")
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -348,19 +216,16 @@ export function GameForm({
                     <SelectValue placeholder="Select game status" />
                   </SelectTrigger>
                 </FormControl>
-                <SelectContent className="relative z-50 max-h-96 min-w-[8rem] overflow-y-auto overflow-x-hidden rounded-md border bg-white text-gray-900 shadow-lg"
-                    sideOffset={4}
-                    align="start"
-                  >
-                    {gameStatuses.filter(s => s.isActive).map(status => (
-                      <SelectItem key={status.id} value={status.id.toString()}>
-                        {status.displayName}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
+                <SelectContent>
+                  {gameStatuses.map(status => (
+                    <SelectItem key={status.id} value={status.id.toString()}>
+                      {status.displayName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
               </Select>
               <FormDescription>
-                Set the current status of this game
+                Choose the current status of the game
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -379,16 +244,13 @@ export function GameForm({
                     <SelectValue placeholder="Select season" />
                   </SelectTrigger>
                 </FormControl>
-                <SelectContent className="relative z-50 max-h-96 min-w-[8rem] overflow-y-auto overflow-x-hidden rounded-md border bg-white text-gray-900 shadow-lg"
-                    sideOffset={4}
-                    align="start"
-                  >
-                    {seasons.map(season => (
-                      <SelectItem key={season.id} value={season.id.toString()}>
-                        {season.name} {season.isActive && '(Active)'}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
+                <SelectContent>
+                  {seasons.map(season => (
+                    <SelectItem key={season.id} value={season.id.toString()}>
+                      {season.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
               </Select>
               <FormDescription>
                 Select which season this game belongs to
@@ -398,19 +260,77 @@ export function GameForm({
           )}
         />
 
-        <div className="flex justify-end space-x-2 pt-4">
-          {onCancel && (
-            <Button type="button" variant="outline" onClick={onCancel}>
-              Cancel
-            </Button>
+        <FormField
+          control={form.control}
+          name="homeTeamId"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel required>Home Team</FormLabel>
+              <Select onValueChange={field.onChange} value={field.value}>
+                <FormControl>
+                  <SelectTrigger className="bg-white border-blue-200 focus:border-blue-500 focus:ring-blue-500">
+                    <SelectValue placeholder="Select home team" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent className="relative z-50 max-h-96 min-w-[8rem] overflow-y-auto overflow-x-hidden rounded-md border bg-white text-gray-900 shadow-lg"
+                  sideOffset={4}
+                  align="start"
+                >
+                  {allTeams.map(team => (
+                    <SelectItem key={team.id} value={team.id.toString()}>
+                      {team.name} ({team.division}) - {team.clubName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormDescription>
+                Select the home team for this game
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
           )}
+        />
+
+        <FormField
+          control={form.control}
+          name="awayTeamId"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel required>Away Team</FormLabel>
+              <Select onValueChange={field.onChange} value={field.value}>
+                <FormControl>
+                  <SelectTrigger className="bg-white border-blue-200 focus:border-blue-500 focus:ring-blue-500">
+                    <SelectValue placeholder="Select away team" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent className="relative z-50 max-h-96 min-w-[8rem] overflow-y-auto overflow-x-hidden rounded-md border bg-white text-gray-900 shadow-lg"
+                  sideOffset={4}
+                  align="start"
+                >
+                  {allTeams.map(team => (
+                    <SelectItem key={team.id} value={team.id.toString()}>
+                      {team.name} ({team.division}) - {team.clubName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormDescription>
+                Select the away team for this game
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <div className="flex justify-end space-x-2 pt-4">
+          <Button type="button" variant="outline" onClick={onCancel}>
+            Cancel
+          </Button>
           <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? 'Saving...' : isEditing ? 'Update Game' : 'Schedule Game'}
+            {isSubmitting ? "Saving..." : isEditing ? "Update Game" : "Create Game"}
           </Button>
         </div>
       </form>
     </Form>
   );
 }
-
-export default GameForm;
