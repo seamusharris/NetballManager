@@ -34,11 +34,29 @@ export class PlayerAvailabilityStorage {
         // Create availability records for all active players (default to available)
         // This applies to both upcoming and completed games that lack availability data
         for (const player of playersResult.rows) {
-          await db.execute(sql`
-            INSERT INTO player_availability (game_id, player_id, is_available, created_at, updated_at)
-            VALUES (${gameId}, ${player.id}, true, NOW(), NOW())
-            ON CONFLICT (game_id, player_id) DO NOTHING
-          `);
+          try {
+            // Check if record already exists first
+            const existingRecord = await db.execute(sql`
+              SELECT id FROM player_availability 
+              WHERE game_id = ${gameId} AND player_id = ${player.id}
+            `);
+
+            if (existingRecord.rows.length === 0) {
+              await db.execute(sql`
+                INSERT INTO player_availability (game_id, player_id, is_available, created_at, updated_at)
+                VALUES (${gameId}, ${player.id}, true, NOW(), NOW())
+              `);
+            }
+          } catch (error: any) {
+            // If it's a duplicate key error, just continue - record already exists
+            if (error.code === '23505') {
+              console.log(`Availability record already exists for game ${gameId}, player ${player.id}`);
+              continue;
+            }
+            // For other errors, log and continue to avoid hanging
+            console.error(`Error creating availability record for game ${gameId}, player ${player.id}:`, error.message);
+            continue;
+          }
         }
 
         console.log(`Created default availability records for game ${gameId}`);
