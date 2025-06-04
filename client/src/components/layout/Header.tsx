@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
-import { Bell, Search, ChevronDown, Home, Users, ClipboardList, Calendar, CalendarRange, Flag, BarChart, Database, Zap, Settings as SettingsIcon, Trophy, Menu } from 'lucide-react';
+import { Bell, Search, ChevronDown, Home, Users, ClipboardList, Calendar, CalendarRange, BarChart, Database, Zap, Settings as SettingsIcon, Trophy, Menu, Building2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar } from '@/components/ui/avatar';
@@ -35,7 +35,6 @@ export default function Header({ setIsMobileOpen, isTablet }: HeaderProps) {
     { path: '/roster', label: 'Roster', icon: <ClipboardList className="h-5 w-5" /> },
     { path: '/games', label: 'Games', icon: <Calendar className="h-5 w-5" /> },
     { path: '/seasons', label: 'Seasons', icon: <CalendarRange className="h-5 w-5" /> },
-    { path: '/opponents', label: 'Opponents', icon: <Flag className="h-5 w-5" /> },
     { path: '/opponent-analysis', label: 'Matchup Analysis', icon: <Trophy className="h-5 w-5" /> },
     { path: '/statistics', label: 'Statistics', icon: <BarChart className="h-5 w-5" /> },
     { path: '/data-management', label: 'Data Management', icon: <Database className="h-5 w-5" /> },
