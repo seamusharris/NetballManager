@@ -291,46 +291,28 @@ export function TeamPositionAnalysis({
     return <TrendingDown className="h-4 w-4" />;
   };
 
-  const renderFormation = (formation: Record<string, string>) => {
-    return (
-      <div className="grid grid-cols-3 gap-2 text-xs">
-        {/* Attack Line */}
-        <div className="text-center">
-          <div className="font-medium text-gray-600">GS</div>
-          <div className="text-green-600">{formation['GS'] || '-'}</div>
-        </div>
-        <div className="text-center">
-          <div className="font-medium text-gray-600">GA</div>
-          <div className="text-green-600">{formation['GA'] || '-'}</div>
-        </div>
-        <div></div>
+  const formatFormationForCourt = (formation: Record<string, string>) => {
+    return {
+      GK: formation['GK'] || null,
+      GD: formation['GD'] || null,
+      WD: formation['WD'] || null,
+      C: formation['C'] || null,
+      WA: formation['WA'] || null,
+      GA: formation['GA'] || null,
+      GS: formation['GS'] || null,
+    };
+  };
 
-        {/* Mid Court */}
-        <div className="text-center">
-          <div className="font-medium text-gray-600">WA</div>
-          <div className="text-blue-600">{formation['WA'] || '-'}</div>
-        </div>
-        <div className="text-center">
-          <div className="font-medium text-gray-600">C</div>
-          <div className="text-blue-600">{formation['C'] || '-'}</div>
-        </div>
-        <div className="text-center">
-          <div className="font-medium text-gray-600">WD</div>
-          <div className="text-blue-600">{formation['WD'] || '-'}</div>
-        </div>
-
-        {/* Defense Line */}
-        <div></div>
-        <div className="text-center">
-          <div className="font-medium text-gray-600">GD</div>
-          <div className="text-purple-600">{formation['GD'] || '-'}</div>
-        </div>
-        <div className="text-center">
-          <div className="font-medium text-gray-600">GK</div>
-          <div className="text-purple-600">{formation['GK'] || '-'}</div>
-        </div>
-      </div>
-    );
+  const formatPlayersForCourt = (formation: Record<string, string>) => {
+    const courtPlayers: Record<string, any> = {};
+    Object.keys(formation).forEach(position => {
+      const playerName = formation[position];
+      const player = players.find(p => p.displayName === playerName);
+      if (player) {
+        courtPlayers[playerName] = player;
+      }
+    });
+    return courtPlayers;
   };
 
   return (
@@ -415,7 +397,14 @@ export function TeamPositionAnalysis({
                     </div>
 
                     <div className="bg-gray-50 rounded-lg p-4">
-                      {renderFormation(lineup.formation)}
+                      <CourtDisplay
+                        roster={formatFormationForCourt(lineup.formation)}
+                        players={formatPlayersForCourt(lineup.formation)}
+                        quarter={1}
+                        layout="horizontal"
+                        showPositionLabels={true}
+                        className="max-w-2xl"
+                      />
                     </div>
                   </Card>
                 ))}
@@ -492,7 +481,14 @@ export function TeamPositionAnalysis({
                     </div>
 
                     <div className="bg-gray-50 rounded-lg p-4">
-                      {renderFormation(lineup.formation)}
+                      <CourtDisplay
+                        roster={formatFormationForCourt(lineup.formation)}
+                        players={formatPlayersForCourt(lineup.formation)}
+                        quarter={1}
+                        layout="horizontal"
+                        showPositionLabels={true}
+                        className="max-w-2xl"
+                      />
                     </div>
                   </Card>
                 ))}
