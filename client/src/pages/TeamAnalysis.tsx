@@ -892,8 +892,8 @@ export default function TeamAnalysis() {
                   teams: strongOpponents,
                   description: 'Teams we perform well against',
                   color: 'text-green-600',
-                  bgColor: 'bg-green-50',
-                  borderColor: 'border-green-300',
+                  bgColor: 'bg-green-100',
+                  borderColor: 'border-green-500',
                   icon: '💪'
                 },
                 {
@@ -901,8 +901,8 @@ export default function TeamAnalysis() {
                   teams: balancedOpponents,
                   description: 'Competitive matchups',
                   color: 'text-yellow-600',
-                  bgColor: 'bg-yellow-50',
-                  borderColor: 'border-yellow-300',
+                  bgColor: 'bg-yellow-100',
+                  borderColor: 'border-yellow-500',
                   icon: '⚖️'
                 },
                 {
@@ -910,8 +910,8 @@ export default function TeamAnalysis() {
                   teams: challengingOpponents,
                   description: 'Teams that challenge us',
                   color: 'text-red-600',
-                  bgColor: 'bg-red-50',
-                  borderColor: 'border-red-300',
+                  bgColor: 'bg-red-100',
+                  borderColor: 'border-red-500',
                   icon: '🔥'
                 }
               ];
