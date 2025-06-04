@@ -92,13 +92,13 @@ export default function Players() {
   });
 
   const { data: availablePlayersForTeam = [], isLoading: isLoadingAvailablePlayers } = useQuery({
-    queryKey: ['available-players', teamId, activeSeason?.id, currentClub?.id],
+    queryKey: ['unassigned-players', activeSeason?.id, currentClub?.id],
     queryFn: async () => {
-      if (!teamId || !activeSeason?.id || !currentClub?.id) return [];
-      const response = await apiClient.get(`/api/teams/${teamId}/available-players?seasonId=${activeSeason.id}`);
+      if (!activeSeason?.id || !currentClub?.id) return [];
+      const response = await apiClient.get(`/api/seasons/${activeSeason.id}/unassigned-players`);
       return response;
     },
-    enabled: !!teamId && !!activeSeason?.id && !!currentClub?.id,
+    enabled: !!activeSeason?.id && !!currentClub?.id,
   });
 
   // Get players for non-team view
@@ -120,7 +120,7 @@ export default function Players() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['team-players', teamId] });
-      queryClient.invalidateQueries({ queryKey: ['available-players', teamId, activeSeason?.id] });
+      queryClient.invalidateQueries({ queryKey: ['unassigned-players', activeSeason?.id] });
       toast({ title: 'Success', description: 'Player added to team' });
     },
     onError: () => {
@@ -136,7 +136,7 @@ export default function Players() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['team-players', teamId] });
-      queryClient.invalidateQueries({ queryKey: ['available-players', teamId, activeSeason?.id] });
+      queryClient.invalidateQueries({ queryKey: ['unassigned-players', activeSeason?.id] });
       toast({ title: 'Success', description: 'Player removed from team' });
     },
     onError: () => {
@@ -285,7 +285,7 @@ export default function Players() {
                             
                             // Invalidate all relevant queries to refresh the UI
                             queryClient.invalidateQueries({ queryKey: ['players'] });
-                            queryClient.invalidateQueries({ queryKey: ['available-players'] });
+                            queryClient.invalidateQueries({ queryKey: ['unassigned-players'] });
                             queryClient.invalidateQueries({ queryKey: ['clubs', currentClub?.id, 'players'] });
                             queryClient.invalidateQueries({ queryKey: ['team-players'] });
                             
