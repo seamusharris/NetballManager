@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -15,11 +15,22 @@ import { useClub } from '@/contexts/ClubContext';
 
 export default function Roster() {
   const params = useParams();
-  const gameIdFromUrl = params.gameId ? parseInt(params.gameId) : null;
-  const [selectedGameId, setSelectedGameId] = useState<number | null>(gameIdFromUrl);
-  const [availablePlayerIds, setAvailablePlayerIds] = useState<number[]>([]);
   const [, navigate] = useLocation();
   const { currentClub } = useClub();
+  
+  // Extract gameId from URL params more reliably
+  const gameIdFromUrl = React.useMemo(() => {
+    console.log('Roster URL params:', params);
+    if (params && 'gameId' in params && params.gameId) {
+      const id = parseInt(params.gameId as string);
+      console.log('Extracted gameId from URL:', id);
+      return isNaN(id) ? null : id;
+    }
+    return null;
+  }, [params]);
+  
+  const [selectedGameId, setSelectedGameId] = useState<number | null>(null);
+  const [availablePlayerIds, setAvailablePlayerIds] = useState<number[]>([]);
   const [currentStep, setCurrentStep] = useState<'game-selection' | 'availability' | 'roster'>('game-selection');
 
   // Fetch games
@@ -61,6 +72,7 @@ export default function Roster() {
 
   // Set selected game and step on mount if from URL
   useEffect(() => {
+    console.log('useEffect triggered - gameIdFromUrl:', gameIdFromUrl, 'selectedGameId:', selectedGameId);
     if (gameIdFromUrl && gameIdFromUrl !== selectedGameId) {
       console.log('Setting game from URL:', gameIdFromUrl);
       setSelectedGameId(gameIdFromUrl);
@@ -68,7 +80,7 @@ export default function Roster() {
       setCurrentStep('availability');
       console.log('Set current step to availability for game:', gameIdFromUrl);
     }
-  }, [gameIdFromUrl]); // Remove selectedGameId dependency to prevent reset loops
+  }, [gameIdFromUrl, selectedGameId]);
 
   // Debug logging for rendering conditions
   useEffect(() => {
