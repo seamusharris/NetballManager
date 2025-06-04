@@ -2348,6 +2348,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Admin endpoint to add all players to Warrandyte
 
+  // Get all unassigned players for a season (not assigned to any team)
+  app.get('/api/seasons/:seasonId/unassigned-players', standardAuth({ requireClub: true }), async (req: AuthenticatedRequest, res) => {
+    try {
+      const seasonId = parseInt(req.params.seasonId);
+      const clubId = req.user?.currentClubId;
+
+      if (!clubId) {
+        return res.status(400).json({ error: 'Club context required' });
+      }
+
+      if (isNaN(seasonId)) {
+        return res.status(400).json({ error: 'Invalid season ID' });
+      }
+
+      console.log(`Fetching unassigned players for season ${seasonId}, club ${clubId}`);
+
+      // Get players from the club who are assigned to this season but not assigned to any team
+      const unassignedPlayers = await db.execute(sql`
+        SELECT p.id, p.display_name, p.first_name, p.last_name, p.date_of_birth, 
+               p.position_preferences, p.active, p.avatar_color
+        FROM players p
+        JOIN club_players cp ON p.id = cp.player_id
+        JOIN player_seasons ps ON p.id = ps.player_id
+        WHERE cp.club_id = ${clubId} 
+          AND cp.is_active = true
+          AND p.active = true
+          AND ps.season_id = ${seasonId}
+          AND NOT EXISTS (
+            SELECT 1
+            FROM team_players tp
+            JOIN teams t ON tp.team_id = t.id
+            WHERE tp.player_id = p.id
+              AND t.season_id = ${seasonId}
+          )
+        ORDER BY p.display_name
+      `);
+
+      const mappedPlayers = unassignedPlayers.rows.map(row => ({
+        id: row.id,
+        displayName: row.display_name,
+        firstName: row.first_name,
+        lastName: row.last_name,
+        dateOfBirth: row.date_of_birth,
+        positionPreferences: typeof row.position_preferences === 'string'
+          ? JSON.parse(row.position_preferences)
+          : row.position_preferences || [],
+        active: row.active,
+        avatarColor: row.avatar_color
+      }));
+
+      console.log(`Found ${mappedPlayers.length} unassigned players for season ${seasonId}`);
+      res.json(mappedPlayers);
+    } catch (error) {
+      console.error('Error fetching unassigned players:', error);
+      res.status(500).json({ error: 'Failed to fetch unassigned players' });
+    }
+  });
+
   // Get all players
   app.get('/api/players', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
     try {
