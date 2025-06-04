@@ -6,6 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useBatchGameStatistics } from '@/components/statistics/hooks/useBatchGameStatistics';
 import { isGameValidForStatistics } from '@/lib/gameFilters';
 import { ViewMoreButton } from '@/components/ui/view-more-button';
+import { PlayerBox } from '@/components/player/player-box';
 
 interface TopPlayersWidgetProps {
   players: Player[];
@@ -275,24 +276,17 @@ export default function TopPlayersWidget({
       ) : (
         <div className="space-y-3">
           {topPlayers.map((player, index) => (
-            <div 
-              key={player.id} 
-              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors"
+            <PlayerBox
+              key={player.id}
+              playerId={player.id}
+              playerName={`${player.firstName} ${player.lastName}`}
+              playerColor={player.avatarColor}
+              displayName={player.displayName}
+              subtitle={`${player.stats.gamesPlayed} games`}
               onClick={() => window.location.href = `/player/${player.id}`}
+              className="flex items-center justify-between"
             >
-              <div className="flex items-center space-x-3">
-                <div className={cn("h-8 w-8 rounded-full flex items-center justify-center text-white", player.avatarColor || 'bg-gray-500')}>
-                  <span className="text-xs font-semibold">
-                    {getInitials(player.firstName, player.lastName)}
-                  </span>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-blue-600">{player.displayName}</p>
-                  <p className="text-xs text-gray-500">{player.stats.gamesPlayed} games</p>
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-4 text-xs">
+              <div className="flex items-center space-x-4 text-xs ml-auto">
                 <div className="text-center">
                   <p className="font-semibold text-gray-700">{player.stats.goals}</p>
                   <p className="text-gray-500">Goals</p>
@@ -311,7 +305,7 @@ export default function TopPlayersWidget({
                   </span>
                 </div>
               </div>
-            </div>
+            </PlayerBox>
           ))}
         </div>
       )}

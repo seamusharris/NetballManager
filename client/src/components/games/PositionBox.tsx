@@ -1,6 +1,7 @@
 import React from 'react';
-import { Position } from '../../../../shared/schema';
+import { Position } from '@shared/schema';
 import { PositionStatsBox } from './PositionStatsBox';
+import { PlayerBox } from '@/components/ui/player-box';
 
 interface PositionBoxProps {
   position: Position;
@@ -17,10 +18,10 @@ export const PositionBox: React.FC<PositionBoxProps> = ({
 }) => {
   // Always use red for unassigned positions
   const unassignedColor = '#e11d48'; // red-600
-  
+
   // Use player color if player assigned, otherwise use red for unassigned
   const displayColor = playerName ? playerColor : unassignedColor;
-  
+
   // Determine if this is an assigned or unassigned position
   const isAssigned = !!playerName;
 
@@ -42,7 +43,7 @@ export const PositionBox: React.FC<PositionBoxProps> = ({
           {playerName || 'Unassigned'}
         </div>
       </div>
-      
+
       {playerStats && playerStats.stats && (
         <PositionStatsBox 
           position={position} 
