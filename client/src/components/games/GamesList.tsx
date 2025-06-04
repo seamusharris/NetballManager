@@ -192,9 +192,9 @@ export function GamesList({
   });
 
   // Use the same efficient scores approach as the dashboard (only fetch if we have a club)
-  const { scoresMap, isLoading: isLoadingScores } = useGamesScores(
-    currentClub?.id ? completedGameIds : []
-  );
+  const scoresResult = currentClub?.id ? useGamesScores(completedGameIds) : null;
+  const scoresMap = scoresResult?.scoresMap || {};
+  const isLoadingScores = scoresResult?.isLoading || false;
 
   // Determine game stats status (only for non-dashboard)
   useEffect(() => {
