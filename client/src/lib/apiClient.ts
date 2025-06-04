@@ -54,6 +54,27 @@ class ApiClient {
 
     return response.json();
   }
+
+  // HTTP method helpers
+  async get<T>(endpoint: string): Promise<T> {
+    return this.request<T>('GET', endpoint);
+  }
+
+  async post<T>(endpoint: string, data?: any): Promise<T> {
+    return this.request<T>('POST', endpoint, data);
+  }
+
+  async put<T>(endpoint: string, data?: any): Promise<T> {
+    return this.request<T>('PUT', endpoint, data);
+  }
+
+  async patch<T>(endpoint: string, data?: any): Promise<T> {
+    return this.request<T>('PATCH', endpoint, data);
+  }
+
+  async delete<T>(endpoint: string): Promise<T> {
+    return this.request<T>('DELETE', endpoint);
+  }
 }
 
 export const apiClient = new ApiClient();
