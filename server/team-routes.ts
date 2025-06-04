@@ -586,48 +586,8 @@ export function registerTeamRoutes(app: Express) {
         teamPositionPreferences: row.team_position_preferences ? JSON.parse(row.team_position_preferences) : []
       }));
 
-      // Fetch players in the club who are not assigned to any team in that season
-      const availablePlayers = await db.execute(sql`
-        SELECT
-          p.id,
-          p.display_name,
-          p.first_name,
-          p.last_name,
-          p.date_of_birth,
-          p.position_preferences,
-          p.active,
-          p.avatar_color
-        FROM players p
-        JOIN clubs c ON p.club_id = c.id
-        WHERE c.id = ${teamClubId}
-          AND p.active = true
-          AND NOT EXISTS (
-            SELECT 1
-            FROM team_players tp
-            JOIN teams t ON tp.team_id = t.id
-            WHERE tp.player_id = p.id
-              AND t.season_id = ${parsedSeasonId}
-          )
-        ORDER BY p.display_name, p.first_name, p.last_name
-      `);
-
-      const mappedAvailablePlayers = availablePlayers.rows.map(row => ({
-        id: row.id,
-        displayName: row.display_name,
-        firstName: row.first_name,
-        lastName: row.last_name,
-        dateOfBirth: row.date_of_birth,
-        positionPreferences: typeof row.position_preferences === 'string'
-          ? JSON.parse(row.position_preferences)
-          : row.position_preferences || [],
-        active: row.active,
-        avatarColor: row.avatar_color
-      }));
-
-      res.json({
-        teamPlayers: players,
-        availablePlayers: mappedAvailablePlayers
-      });
+      // Return just the team players array (not wrapped in an object)
+      res.json(players);
     } catch (error) {
       console.error("Error fetching team players:", error);
       res.status(500).json({ message: "Failed to fetch team players" });
@@ -666,8 +626,8 @@ export function registerTeamRoutes(app: Express) {
         SELECT p.id, p.display_name, p.first_name, p.last_name, p.date_of_birth, 
                p.position_preferences, p.active, p.avatar_color
         FROM players p
-        JOIN clubs c ON p.club_id = c.id
-        WHERE c.id = ${teamClubId} 
+        JOIN club_players cp ON p.id = cp.player_id
+        WHERE cp.club_id = ${teamClubId} 
           AND p.active = true
           AND NOT EXISTS (
             SELECT 1
