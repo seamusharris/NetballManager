@@ -13,6 +13,7 @@ import { SimplePlayerForm } from '@/components/players/SimplePlayerForm';
 import { UserPlus, UserMinus, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useLocation } from 'wouter';
+import { apiClient } from '@/lib/apiClient';
 
 export default function Players() {
   const { currentClub, hasPermission, isLoading: clubLoading, switchToClub } = useClub();
@@ -72,27 +73,23 @@ export default function Players() {
   });
 
   // Get team details if viewing a specific team
-  const { data: teamData, isLoading: isLoadingTeam } = useQuery({
+  const { data: teamData, isLoading: isLoadingTeam, isError: teamError } = useQuery({
     queryKey: ['team', teamId],
     queryFn: async () => {
-      const response = await fetch(`/api/teams/${teamId}`);
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      return response.json();
+      const response = await apiClient.get(`/api/teams/${teamId}`);
+      return response;
     },
     enabled: !!teamId,
+    retry: 3,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
   // Get team players if viewing a specific team
-  const { data: teamPlayers = [], isLoading: isLoadingTeamPlayers } = useQuery({
+  const { data: teamPlayersData, isLoading: isLoadingTeamPlayers } = useQuery({
     queryKey: ['team-players', teamId],
     queryFn: async () => {
-      const response = await fetch(`/api/teams/${teamId}/players`);
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      return response.json();
+      const response = await apiClient.get(`/api/teams/${teamId}/players`);
+      return response;
     },
     enabled: !!teamId,
   });
@@ -166,6 +163,9 @@ export default function Players() {
   const isLoading = teamId 
     ? isLoadingTeamPlayers || isLoadingAvailablePlayers || isLoadingTeam
     : isLoadingPlayers;
+
+  // Rename the teamPlayersData to teamPlayers
+  const teamPlayers = teamPlayersData;
 
   if (teamId) {
     // Team-specific view with management capabilities
