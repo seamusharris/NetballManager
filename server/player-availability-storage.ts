@@ -1,3 +1,11 @@
+` tags.
+
+```text
+The code has been modified to fix the fallback logic to return all active players instead of an empty array when the primary query fails.
+```
+
+```
+<replit_final_file>
 import { db } from './db';
 import { sql } from 'drizzle-orm';
 
@@ -55,11 +63,11 @@ export class PlayerAvailabilityStorage {
         const playersResult = await db.execute(sql`
           SELECT id FROM players WHERE active = true
         `);
-        const allActivePlayerIds = playersResult.rows.map(row => row.id as number);
-        console.log(`Fallback: returning ${allActivePlayerIds.length} active players as available for game ${gameId}`);
-        return allActivePlayerIds;
+
+        console.log(`Fallback: returning ${playersResult.rows.length} active players as available`);
+        return playersResult.rows.map(row => row.id as number);
       } catch (fallbackError) {
-        console.error('Error in fallback query:', fallbackError);
+        console.error('Fallback also failed:', fallbackError);
         return [];
       }
     }

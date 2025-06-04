@@ -17,7 +17,7 @@ export default function Roster() {
   const params = useParams();
   const [, navigate] = useLocation();
   const { currentClub } = useClub();
-  
+
   // Extract gameId from URL params more reliably
   const gameIdFromUrl = React.useMemo(() => {
     console.log('Roster URL params:', params);
@@ -28,7 +28,7 @@ export default function Roster() {
     }
     return null;
   }, [params]);
-  
+
   const [selectedGameId, setSelectedGameId] = useState<number | null>(null);
   const [availablePlayerIds, setAvailablePlayerIds] = useState<number[]>([]);
   const [currentStep, setCurrentStep] = useState<'game-selection' | 'availability' | 'roster'>('game-selection');
@@ -80,7 +80,7 @@ export default function Roster() {
       setCurrentStep('availability');
       console.log('Set current step to availability for game:', gameIdFromUrl);
     }
-  }, [gameIdFromUrl, selectedGameId]);
+  }, [gameIdFromUrl, selectedGameId]); // Keep both dependencies but handle properly
 
   // Debug logging for rendering conditions
   useEffect(() => {
@@ -94,13 +94,13 @@ export default function Roster() {
     });
   }, [currentStep, selectedGameId, gameIdFromUrl]);
 
-  // Update step when game selection changes
-  const handleGameSelection = (gameId: number | null) => {
-    setSelectedGameId(gameId);
-    if (gameId) {
+  // Handle game selection
+  const handleGameSelection = (gameId: number) => {
+    console.log('Game selected:', gameId);
+    // Only update if different to prevent loops
+    if (gameId !== selectedGameId) {
+      setSelectedGameId(gameId);
       setCurrentStep('availability');
-    } else {
-      setCurrentStep('game-selection');
     }
   };
 
