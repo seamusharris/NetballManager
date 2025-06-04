@@ -18,9 +18,18 @@ import { useClub } from '@/contexts/ClubContext';
  * @param forceFresh - Whether to force fresh data (bypass cache)
  */
 export function useGamesScores(gameIds: number[], forceFresh = false) {
-  // Generate a fresh query key if we're forcing fresh data
-  const freshQueryKey = forceFresh ? Date.now() : 'cached';
   const { currentClub } = useClub();
+
+  // Early return if club context is not ready - prevents all hook execution
+  if (!currentClub?.id) {
+    return {
+      scoresMap: {},
+      isLoading: false,
+      hasError: false,
+      invalidateGame: () => {},
+      invalidateAll: () => {}
+    };
+  }
 
   // Stabilize gameIds to prevent unnecessary re-renders
   const stableGameIds = useMemo(() => {
@@ -52,7 +61,7 @@ export function useGamesScores(gameIds: number[], forceFresh = false) {
 
       try {
         console.log(`useGamesScores: Fetching batch stats for ${stableGameIds.length} games:`, stableGameIds);
-        
+
         // Use the batch endpoint to get stats for all games at once
         const response = await fetch('/api/games/stats/batch', {
           method: 'POST',
@@ -62,12 +71,12 @@ export function useGamesScores(gameIds: number[], forceFresh = false) {
           },
           body: JSON.stringify({ gameIds: stableGameIds }),
         });
-        
+
         if (!response.ok) {
           console.error(`Batch stats API error: ${response.status} ${response.statusText}`);
           throw new Error(`Failed to fetch batch stats: ${response.statusText}`);
         }
-        
+
         const data = await response.json();
         console.log(`useGamesScores: Fetched batch stats for games ${stableGameIds.join(',')}:`, data);
         return data || {};
@@ -96,7 +105,7 @@ export function useGamesScores(gameIds: number[], forceFresh = false) {
         console.log('useGamesScores: No club ID, returning empty games array');
         return [];
       }
-      
+
       try {
         const response = await fetch('/api/games', {
           headers: {
