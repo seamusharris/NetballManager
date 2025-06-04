@@ -691,7 +691,7 @@ export function registerTeamRoutes(app: Express) {
         active: row.active,
         avatarColor: row.avatar_color
       }));
-  
+
 
       res.json(mappedAvailablePlayers);
     } catch (error) {
