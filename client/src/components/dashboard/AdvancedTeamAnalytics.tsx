@@ -4,8 +4,6 @@ import { Badge } from '@/components/ui/badge';
 import { Game, GameStat, Opponent } from '@shared/schema';
 import { useEffect, useState } from 'react';
 import { getWinLoseLabel } from '@/lib/utils';
-import { useQuery } from '@tanstack/react-query';
-import { apiClient } from '@/lib/apiClient';
 import { BaseWidget } from '@/components/ui/base-widget';
 import { TrendingUp, TrendingDown, Target, Users, BarChart3, Zap } from 'lucide-react';
 
@@ -15,6 +13,7 @@ interface AdvancedTeamAnalyticsProps {
   className?: string;
   activeSeason?: any;
   selectedSeason?: any;
+  centralizedStats?: Record<number, GameStat[]>;
 }
 
 interface PerformanceMetrics {
@@ -48,7 +47,8 @@ export default function AdvancedTeamAnalytics({
   opponents, 
   className, 
   activeSeason, 
-  selectedSeason 
+  selectedSeason,
+  centralizedStats 
 }: AdvancedTeamAnalyticsProps) {
   
   const [analytics, setAnalytics] = useState<PerformanceMetrics>({
@@ -62,39 +62,16 @@ export default function AdvancedTeamAnalytics({
     }
   });
 
-  const completedGames = games.filter(game => game.gameStatus?.isCompleted === true);
-  const gameIds = completedGames.map(game => game.id);
-
-  // Fetch game stats
-  const { data: gameStatsMap, isLoading } = useQuery({
-    queryKey: ['advancedAnalytics', gameIds.join(',')],
-    queryFn: async () => {
-      if (gameIds.length === 0) return {};
-
-      try {
-        const batchStats = await apiClient.get(`/api/games/stats/batch?gameIds=${gameIds.join(',')}`);
-        if (batchStats && Object.keys(batchStats).length > 0) {
-          return batchStats;
-        }
-      } catch (error) {
-        console.warn("Batch endpoint failed, falling back to individual requests:", error);
-      }
-
-      const statsMap: Record<number, any[]> = {};
-      for (const gameId of gameIds) {
-        try {
-          const stats = await apiClient.get(`/api/games/${gameId}/stats`);
-          statsMap[gameId] = stats;
-        } catch (error) {
-          console.error(`Error fetching stats for game ${gameId}:`, error);
-          statsMap[gameId] = [];
-        }
-      }
-      return statsMap;
-    },
-    enabled: gameIds.length > 0,
-    staleTime: 60 * 60 * 1000,
-  });
+  const completedGames = games.filter(game => 
+    game.statusIsCompleted && game.statusAllowsStatistics
+  );
+  
+  // Use centralized stats instead of making individual API calls
+  const gameStatsMap = centralizedStats || {};
+  const isLoading = false; // No loading state needed with centralized stats
+  
+  console.log('AdvancedTeamAnalytics: Using centralized stats for', completedGames.length, 'completed games');
+  console.log('AdvancedTeamAnalytics: Available stats for games:', Object.keys(gameStatsMap));
 
   // Calculate advanced analytics
   useEffect(() => {

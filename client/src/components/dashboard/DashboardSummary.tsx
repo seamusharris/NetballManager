@@ -246,8 +246,10 @@ export default function DashboardSummary({
             <QuickActionsWidget />
             <AdvancedTeamAnalytics 
               games={filteredGames} 
+              opponents={[]}
               activeSeason={activeSeason} 
               selectedSeason={selectedSeasonId === 'current' ? activeSeason : seasons.find(s => s.id.toString() === selectedSeasonId)} 
+              centralizedStats={centralizedStats}
             />
           </>
         )}
