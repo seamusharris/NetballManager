@@ -30,7 +30,6 @@ import PositionOpponentAnalysis from './PositionOpponentAnalysis';
 interface DashboardSummaryProps {
   players: Player[];
   games: Game[];
-  opponents: Opponent[];
   seasons: Season[];
   activeSeason: Season | null;
   isLoading: boolean;
@@ -40,11 +39,9 @@ interface DashboardSummaryProps {
 export default function DashboardSummary({ 
   players, 
   games, 
-  opponents, 
-  seasons, 
-  activeSeason, 
-  isLoading,
-  currentClubId 
+  seasons,
+  activeSeason,
+  isLoading 
 }: DashboardSummaryProps) {
   const [selectedSeasonId, setSelectedSeasonId] = useState<string>('current');
   const queryClient = useQueryClient();
@@ -230,14 +227,12 @@ export default function DashboardSummary({
             />
             <RecentGames 
               games={pastGames} 
-              opponents={opponents} 
               seasonFilter={selectedSeasonId} 
               activeSeason={activeSeason}
               centralizedStats={centralizedStats}
             />
             <UpcomingGames 
               games={upcomingGames} 
-              opponents={opponents} 
               seasonFilter={selectedSeasonId} 
               activeSeason={activeSeason}
             />
@@ -248,12 +243,10 @@ export default function DashboardSummary({
             />
             <RecentFormWidget 
               games={filteredGames} 
-              opponents={opponents}
               centralizedStats={centralizedStats}
             />
             <OpponentMatchups 
               games={filteredGames} 
-              opponents={opponents}
               centralizedStats={centralizedStats}
             />
             <TopPlayersWidget 
@@ -263,13 +256,11 @@ export default function DashboardSummary({
             />
             <PlayerAvailabilityWidget 
               games={filteredGames}
-              opponents={opponents}
               players={players}
             />
             <QuickActionsWidget />
             <AdvancedTeamAnalytics 
               games={filteredGames} 
-              opponents={opponents}
               activeSeason={activeSeason} 
               selectedSeason={selectedSeasonId === 'current' ? activeSeason : seasons.find(s => s.id.toString() === selectedSeasonId)} 
             />
@@ -300,7 +291,6 @@ export default function DashboardSummary({
         ) : (
           <GamesList 
             games={filteredGames} 
-            opponents={opponents} 
             className="w-full" 
             centralizedStats={centralizedStats}
           />

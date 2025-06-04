@@ -26,10 +26,7 @@ export default function Dashboard() {
     enabled: !!currentClubId,
   });
 
-  // Opponents system has been archived/migrated to teams
-  const opponents: any[] = [];
-  const isLoadingOpponents = false;
-  const opponentsError = null;
+  // Opponents system has been completely removed
 
   const { data: seasons = [], isLoading: isLoadingSeasons, error: seasonsError } = useQuery<any[]>({
     queryKey: ['/api/seasons', currentClubId],
@@ -56,7 +53,7 @@ export default function Dashboard() {
     );
   }
 
-  const isLoading = isLoadingPlayers || isLoadingGames || isLoadingOpponents || isLoadingSeasons || isLoadingActiveSeason;
+  const isLoading = isLoadingPlayers || isLoadingGames || isLoadingSeasons || isLoadingActiveSeason;
 
   // Show error state if any query fails
   if (playersError || gamesError || seasonsError || activeSeasonError) {
@@ -99,7 +96,6 @@ export default function Dashboard() {
       <DashboardSummary 
         players={players || []} 
         games={games || []} 
-        opponents={opponents || []} 
         seasons={seasons || []}
         activeSeason={activeSeason}
         isLoading={isLoading} 
