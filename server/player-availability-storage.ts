@@ -35,18 +35,18 @@ export class PlayerAvailabilityStorage {
         // This applies to both upcoming and completed games that lack availability data
         for (const player of playersResult.rows) {
           try {
-            // Use INSERT with WHERE NOT EXISTS to avoid duplicates
-            const insertResult = await db.execute(sql`
-              INSERT INTO player_availability (game_id, player_id, is_available, created_at, updated_at)
-              SELECT ${gameId}, ${player.id}, true, NOW(), NOW()
-              WHERE NOT EXISTS (
-                SELECT 1 FROM player_availability 
-                WHERE game_id = ${gameId} AND player_id = ${player.id}
-              )
+            // First check if record already exists
+            const existingRecord = await db.execute(sql`
+              SELECT id FROM player_availability 
+              WHERE game_id = ${gameId} AND player_id = ${player.id}
             `);
-            
-            // Check if a row was actually inserted
-            if (insertResult.rowCount && insertResult.rowCount > 0) {
+
+            if (existingRecord.rows.length === 0) {
+              // Insert new record only if one doesn't exist
+              await db.execute(sql`
+                INSERT INTO player_availability (game_id, player_id, is_available, created_at, updated_at)
+                VALUES (${gameId}, ${player.id}, true, NOW(), NOW())
+              `);
               console.log(`Created availability record for game ${gameId}, player ${player.id} (available by default)`);
             } else {
               console.log(`Availability record already exists for game ${gameId}, player ${player.id}`);
@@ -119,22 +119,24 @@ export class PlayerAvailabilityStorage {
 
   async updatePlayerAvailability(gameId: number, playerId: number, isAvailable: boolean): Promise<boolean> {
     try {
-      // Try to update first
-      const updateResult = await db.execute(sql`
-        UPDATE player_availability 
-        SET is_available = ${isAvailable}, updated_at = NOW()
+      // Check if record exists first
+      const existingRecord = await db.execute(sql`
+        SELECT id FROM player_availability 
         WHERE game_id = ${gameId} AND player_id = ${playerId}
       `);
 
-      // If no rows were affected, insert a new record
-      if (updateResult.rowCount === 0) {
+      if (existingRecord.rows.length > 0) {
+        // Update existing record
+        await db.execute(sql`
+          UPDATE player_availability 
+          SET is_available = ${isAvailable}, updated_at = NOW()
+          WHERE game_id = ${gameId} AND player_id = ${playerId}
+        `);
+      } else {
+        // Insert new record
         await db.execute(sql`
           INSERT INTO player_availability (game_id, player_id, is_available, created_at, updated_at)
-          SELECT ${gameId}, ${playerId}, ${isAvailable}, NOW(), NOW()
-          WHERE NOT EXISTS (
-            SELECT 1 FROM player_availability 
-            WHERE game_id = ${gameId} AND player_id = ${playerId}
-          )
+          VALUES (${gameId}, ${playerId}, ${isAvailable}, NOW(), NOW())
         `);
       }
 
