@@ -3,13 +3,20 @@ import { Helmet } from 'react-helmet';
 import { useQuery } from '@tanstack/react-query';
 import { useClub } from '@/contexts/ClubContext';
 import { apiClient } from '@/lib/apiClient';
-import { Loader2, TrendingUp, Target, Award, BarChart3 } from 'lucide-react';
+import { Loader2, TrendingUp, Target, Award, BarChart3, ArrowLeft } from 'lucide-react';
 import { useBatchGameStatistics } from '@/components/statistics/hooks/useBatchGameStatistics';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Button } from '@/components/ui/button';
+import { useLocation } from 'wouter';
+import { getWinLoseLabel } from '@/lib/utils';
 
-interface TeamStats {
+interface OpponentTeamData {
+  teamId: number;
+  teamName: string;
+  clubName: string;
+  division: string;
   totalGames: number;
   wins: number;
   losses: number;
@@ -21,16 +28,100 @@ interface TeamStats {
   recentForm: string[];
 }
 
-interface OpponentTeamData {
-  teamId: number;
-  teamName: string;
-  clubName: string;
-  division: string;
-  stats: TeamStats;
+interface DetailedStats {
+  quarterAnalysis: {
+    byQuarter: Record<number, {
+      avgTeamScore: number;
+      avgOpponentScore: number;
+      gamesPlayed: number;
+    }>;
+    strongestQuarter: number;
+    weakestQuarter: number;
+  };
+  scoringTrends: {
+    homeAdvantage: number;
+    awayRecord: { wins: number; total: number };
+    homeRecord: { wins: number; total: number };
+  };
 }
+
+const calculateQuarterAnalysis = (gameResults: any[]) => {
+  const quarterData: Record<number, { teamScores: number[]; opponentScores: number[] }> = {
+    1: { teamScores: [], opponentScores: [] },
+    2: { teamScores: [], opponentScores: [] },
+    3: { teamScores: [], opponentScores: [] },
+    4: { teamScores: [], opponentScores: [] }
+  };
+
+  gameResults.forEach(result => {
+    if (result.gameStats && result.gameStats.length > 0) {
+      [1, 2, 3, 4].forEach(quarter => {
+        const quarterStats = result.gameStats.filter((stat: any) => stat.quarter === quarter);
+        const teamScore = quarterStats.reduce((sum: number, stat: any) => sum + (stat.goalsFor || 0), 0);
+        const opponentScore = quarterStats.reduce((sum: number, stat: any) => sum + (stat.goalsAgainst || 0), 0);
+        
+        quarterData[quarter].teamScores.push(teamScore);
+        quarterData[quarter].opponentScores.push(opponentScore);
+      });
+    }
+  });
+
+  const byQuarter: Record<number, any> = {};
+  let strongestQuarter = 1;
+  let weakestQuarter = 1;
+  let bestDifferential = -Infinity;
+  let worstDifferential = Infinity;
+
+  [1, 2, 3, 4].forEach(quarter => {
+    const data = quarterData[quarter];
+    const avgTeamScore = data.teamScores.length > 0 
+      ? data.teamScores.reduce((a, b) => a + b, 0) / data.teamScores.length 
+      : 0;
+    const avgOpponentScore = data.opponentScores.length > 0 
+      ? data.opponentScores.reduce((a, b) => a + b, 0) / data.opponentScores.length 
+      : 0;
+    
+    const differential = avgTeamScore - avgOpponentScore;
+    
+    if (differential > bestDifferential) {
+      bestDifferential = differential;
+      strongestQuarter = quarter;
+    }
+    
+    if (differential < worstDifferential) {
+      worstDifferential = differential;
+      weakestQuarter = quarter;
+    }
+
+    byQuarter[quarter] = {
+      avgTeamScore: Math.round(avgTeamScore * 10) / 10,
+      avgOpponentScore: Math.round(avgOpponentScore * 10) / 10,
+      gamesPlayed: data.teamScores.length
+    };
+  });
+
+  return { byQuarter, strongestQuarter, weakestQuarter };
+};
+
+const calculateScoringTrends = (gameResults: any[], currentClubId: number) => {
+  const homeGames = gameResults.filter(r => r.game.homeClubId === currentClubId);
+  const awayGames = gameResults.filter(r => r.game.awayClubId === currentClubId);
+  
+  const homeWins = homeGames.filter(g => g.result === 'Win').length;
+  const awayWins = awayGames.filter(g => g.result === 'Win').length;
+  
+  const homeAdvantage = homeGames.length > 0 ? (homeWins / homeGames.length) * 100 : 0;
+  
+  return {
+    homeAdvantage: Math.round(homeAdvantage),
+    homeRecord: { wins: homeWins, total: homeGames.length },
+    awayRecord: { wins: awayWins, total: awayGames.length }
+  };
+};
 
 export default function TeamAnalysis() {
   const { currentClub, currentClubId, isLoading: clubLoading } = useClub();
+  const [, navigate] = useLocation();
 
   const { data: games = [], isLoading: isLoadingGames } = useQuery<any[]>({
     queryKey: ['games', currentClubId],
@@ -45,7 +136,7 @@ export default function TeamAnalysis() {
   });
 
   // Get completed games for stats
-  const completedGames = games.filter(game => game.statusIsCompleted);
+  const completedGames = games.filter(game => game.statusIsCompleted && game.statusAllowsStatistics);
   const gameIds = completedGames.map(game => game.id);
 
   // Fetch batch statistics for all completed games
@@ -86,6 +177,7 @@ export default function TeamAnalysis() {
     const opponentTeamId = isHomeGame ? game.awayTeamId : game.homeTeamId;
     const opponentTeamName = isHomeGame ? game.awayTeamName : game.homeTeamName;
     const opponentClubName = isHomeGame ? game.awayClubName : game.homeClubName;
+    const opponentDivision = isHomeGame ? game.awayTeamDivision : game.homeTeamDivision;
     
     if (!processedTeams.has(opponentTeamId)) {
       processedTeams.add(opponentTeamId);
@@ -106,7 +198,7 @@ export default function TeamAnalysis() {
         let totalScoreAgainst = 0;
         const recentForm: string[] = [];
 
-        gamesVsOpponent.forEach(g => {
+        const gameResults = gamesVsOpponent.map(g => {
           const isHome = g.homeClubId === currentClubId;
           const gameStats = centralizedStats[g.id] || [];
           
@@ -128,20 +220,36 @@ export default function TeamAnalysis() {
           totalScoreFor += ourScore;
           totalScoreAgainst += theirScore;
           
-          if (ourScore > theirScore) {
+          const result = getWinLoseLabel(ourScore, theirScore);
+          
+          if (result === 'Win') {
             wins++;
             recentForm.push('W');
-          } else if (ourScore < theirScore) {
+          } else if (result === 'Loss') {
             losses++;
             recentForm.push('L');
           } else {
             draws++;
             recentForm.push('D');
           }
+
+          return {
+            game: g,
+            teamScore: ourScore,
+            opponentScore: theirScore,
+            result,
+            margin: ourScore - theirScore,
+            gameStats
+          };
         });
 
         const totalGamesVsOpponent = gamesVsOpponent.length;
-        const stats: TeamStats = {
+
+        opponentTeamsData.push({
+          teamId: opponentTeamId,
+          teamName: opponentTeamName,
+          clubName: opponentClubName,
+          division: opponentDivision || '',
           totalGames: totalGamesVsOpponent,
           wins,
           losses,
@@ -151,37 +259,74 @@ export default function TeamAnalysis() {
           avgScoreAgainst: totalGamesVsOpponent > 0 ? totalScoreAgainst / totalGamesVsOpponent : 0,
           scoreDifferential: totalGamesVsOpponent > 0 ? (totalScoreFor - totalScoreAgainst) / totalGamesVsOpponent : 0,
           recentForm: recentForm.slice(-5) // Last 5 games
-        };
-
-        opponentTeamsData.push({
-          teamId: opponentTeamId,
-          teamName: opponentTeamName,
-          clubName: opponentClubName,
-          division: '', // Could extract from team data if needed
-          stats
         });
       }
     }
   });
 
   // Sort by total games played (most frequent opponents first)
-  opponentTeamsData.sort((a, b) => b.stats.totalGames - a.stats.totalGames);
+  opponentTeamsData.sort((a, b) => b.totalGames - a.totalGames);
 
   // Calculate overall stats
   const totalGamesPlayed = completedGames.length;
-  const totalWins = opponentTeamsData.reduce((sum, team) => sum + team.stats.wins, 0);
-  const totalLosses = opponentTeamsData.reduce((sum, team) => sum + team.stats.losses, 0);
-  const totalDraws = opponentTeamsData.reduce((sum, team) => sum + team.stats.draws, 0);
+  const totalWins = opponentTeamsData.reduce((sum, team) => sum + team.wins, 0);
+  const totalLosses = opponentTeamsData.reduce((sum, team) => sum + team.losses, 0);
+  const totalDraws = opponentTeamsData.reduce((sum, team) => sum + team.draws, 0);
   const overallWinRate = totalGamesPlayed > 0 ? (totalWins / totalGamesPlayed) * 100 : 0;
-  const avgScoreFor = opponentTeamsData.length > 0 ? opponentTeamsData.reduce((sum, team) => sum + (team.stats.avgScoreFor * team.stats.totalGames), 0) / totalGamesPlayed : 0;
-  const avgScoreAgainst = opponentTeamsData.length > 0 ? opponentTeamsData.reduce((sum, team) => sum + (team.stats.avgScoreAgainst * team.stats.totalGames), 0) / totalGamesPlayed : 0;
+
+  // Calculate detailed analytics for the first opponent (most played against)
+  const selectedOpponentData = opponentTeamsData[0];
+  let detailedStats: DetailedStats | null = null;
+
+  if (selectedOpponentData) {
+    const opponentGames = completedGames.filter(g => {
+      const isHome = g.homeClubId === currentClubId;
+      const oppId = isHome ? g.awayTeamId : g.homeTeamId;
+      return oppId === selectedOpponentData.teamId;
+    });
+
+    const gameResults = opponentGames.map(g => {
+      const isHome = g.homeClubId === currentClubId;
+      const gameStats = centralizedStats[g.id] || [];
+      
+      let ourScore = 0;
+      let theirScore = 0;
+      
+      if (gameStats.length > 0) {
+        gameStats.forEach(stat => {
+          ourScore += stat.goalsFor || 0;
+          theirScore += stat.goalsAgainst || 0;
+        });
+      } else {
+        ourScore = isHome ? (g.statusTeamGoals || 0) : (g.statusOpponentGoals || 0);
+        theirScore = isHome ? (g.statusOpponentGoals || 0) : (g.statusTeamGoals || 0);
+      }
+
+      return {
+        game: g,
+        teamScore: ourScore,
+        opponentScore: theirScore,
+        result: getWinLoseLabel(ourScore, theirScore),
+        margin: ourScore - theirScore,
+        gameStats
+      };
+    });
+
+    const quarterAnalysis = calculateQuarterAnalysis(gameResults);
+    const scoringTrends = calculateScoringTrends(gameResults, currentClubId);
+
+    detailedStats = {
+      quarterAnalysis,
+      scoringTrends
+    };
+  }
 
   const getFormBadgeColor = (result: string) => {
     switch (result) {
-      case 'W': return 'bg-green-500';
-      case 'L': return 'bg-red-500';
-      case 'D': return 'bg-yellow-500';
-      default: return 'bg-gray-500';
+      case 'W': return 'bg-green-500 text-white';
+      case 'L': return 'bg-red-500 text-white';
+      case 'D': return 'bg-yellow-500 text-white';
+      default: return 'bg-gray-500 text-white';
     }
   };
 
@@ -200,7 +345,7 @@ export default function TeamAnalysis() {
               Team Analysis
             </h1>
             <p className="text-lg text-gray-600">
-              Performance analysis against all opposing teams
+              Detailed performance analysis against all opposing teams
             </p>
           </div>
         </div>
@@ -215,7 +360,7 @@ export default function TeamAnalysis() {
             <CardContent>
               <div className="text-2xl font-bold">{totalGamesPlayed}</div>
               <p className="text-xs text-muted-foreground">
-                Completed matches
+                Completed matches analyzed
               </p>
             </CardContent>
           </Card>
@@ -249,22 +394,94 @@ export default function TeamAnalysis() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Avg Score</CardTitle>
+              <CardTitle className="text-sm font-medium">Performance</CardTitle>
               <BarChart3 className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{avgScoreFor.toFixed(1)}</div>
+              <div className="text-2xl font-bold">
+                {totalGamesPlayed > 0 ? 
+                  Math.round((opponentTeamsData.reduce((sum, team) => sum + (team.avgScoreFor * team.totalGames), 0) / totalGamesPlayed) * 10) / 10 : 0}
+              </div>
               <p className="text-xs text-muted-foreground">
-                vs {avgScoreAgainst.toFixed(1)} against
+                Average goals per game
               </p>
             </CardContent>
           </Card>
         </div>
 
-        {/* Detailed Opponent Breakdown */}
+        {/* Most Played Opponent Analysis */}
+        {selectedOpponentData && detailedStats && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5" />
+                Detailed Analysis vs {selectedOpponentData.teamName}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Quarter Performance Analysis */}
+              <div>
+                <h4 className="font-semibold mb-3">Quarter Performance</h4>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {[1, 2, 3, 4].map(quarter => {
+                    const qData = detailedStats.quarterAnalysis.byQuarter[quarter];
+                    const diff = qData.avgTeamScore - qData.avgOpponentScore;
+                    const isStrongest = quarter === detailedStats.quarterAnalysis.strongestQuarter;
+                    const isWeakest = quarter === detailedStats.quarterAnalysis.weakestQuarter;
+                    
+                    return (
+                      <div key={quarter} className={`p-3 rounded-lg border-2 ${isStrongest ? 'border-green-500 bg-green-50' : isWeakest ? 'border-red-500 bg-red-50' : 'border-gray-200'}`}>
+                        <div className="text-center">
+                          <div className="text-sm font-medium text-gray-600">Q{quarter}</div>
+                          <div className="text-lg font-bold">
+                            {qData.avgTeamScore} - {qData.avgOpponentScore}
+                          </div>
+                          <div className={`text-sm ${diff >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                            {diff >= 0 ? '+' : ''}{diff.toFixed(1)}
+                          </div>
+                          {isStrongest && <Badge variant="secondary" className="text-xs bg-green-100 text-green-800">Strongest</Badge>}
+                          {isWeakest && <Badge variant="secondary" className="text-xs bg-red-100 text-red-800">Weakest</Badge>}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Home vs Away Performance */}
+              <div>
+                <h4 className="font-semibold mb-3">Home vs Away Performance</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="p-4 bg-blue-50 rounded-lg">
+                    <div className="text-center">
+                      <div className="text-lg font-bold text-blue-600">{detailedStats.scoringTrends.homeRecord.wins}-{detailedStats.scoringTrends.homeRecord.total - detailedStats.scoringTrends.homeRecord.wins}</div>
+                      <div className="text-sm text-blue-700">Home Record</div>
+                      <div className="text-xs text-blue-600">
+                        {detailedStats.scoringTrends.homeRecord.total > 0 ? 
+                          Math.round((detailedStats.scoringTrends.homeRecord.wins / detailedStats.scoringTrends.homeRecord.total) * 100) : 0}% Win Rate
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-4 bg-orange-50 rounded-lg">
+                    <div className="text-center">
+                      <div className="text-lg font-bold text-orange-600">{detailedStats.scoringTrends.awayRecord.wins}-{detailedStats.scoringTrends.awayRecord.total - detailedStats.scoringTrends.awayRecord.wins}</div>
+                      <div className="text-sm text-orange-700">Away Record</div>
+                      <div className="text-xs text-orange-600">
+                        {detailedStats.scoringTrends.awayRecord.total > 0 ? 
+                          Math.round((detailedStats.scoringTrends.awayRecord.wins / detailedStats.scoringTrends.awayRecord.total) * 100) : 0}% Win Rate
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* All Opponents Table */}
         <Card>
           <CardHeader>
-            <CardTitle>Opponent Performance Breakdown</CardTitle>
+            <CardTitle>All Opponents Performance</CardTitle>
           </CardHeader>
           <CardContent>
             {opponentTeamsData.length === 0 ? (
@@ -275,62 +492,67 @@ export default function TeamAnalysis() {
             ) : (
               <div className="space-y-4">
                 {opponentTeamsData.map((opponent) => (
-                  <div key={opponent.teamId} className="border rounded-lg p-4">
+                  <div key={opponent.teamId} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
                     <div className="flex items-center justify-between mb-3">
-                      <div>
+                      <div className="flex-1">
                         <h3 className="font-semibold text-lg">{opponent.teamName}</h3>
                         <p className="text-sm text-gray-600">{opponent.clubName}</p>
+                        {opponent.division && <p className="text-xs text-gray-500">{opponent.division}</p>}
                       </div>
                       <div className="text-right">
                         <div className="text-2xl font-bold">
-                          {opponent.stats.wins}-{opponent.stats.losses}
-                          {opponent.stats.draws > 0 && `-${opponent.stats.draws}`}
+                          {opponent.wins}-{opponent.losses}
+                          {opponent.draws > 0 && `-${opponent.draws}`}
                         </div>
-                        <div className="text-sm text-gray-600">W-L{opponent.stats.draws > 0 ? '-D' : ''} Record</div>
+                        <div className="text-sm text-gray-600">W-L{opponent.draws > 0 ? '-D' : ''} Record</div>
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-3">
+                    <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-3">
                       <div className="text-center">
-                        <div className="text-lg font-semibold">{opponent.stats.totalGames}</div>
+                        <div className="text-lg font-semibold">{opponent.totalGames}</div>
                         <div className="text-xs text-gray-600">Games</div>
                       </div>
                       <div className="text-center">
-                        <div className="text-lg font-semibold">{opponent.stats.winRate.toFixed(1)}%</div>
+                        <div className="text-lg font-semibold">{opponent.winRate.toFixed(1)}%</div>
                         <div className="text-xs text-gray-600">Win Rate</div>
                       </div>
                       <div className="text-center">
-                        <div className="text-lg font-semibold">{opponent.stats.avgScoreFor.toFixed(1)}</div>
+                        <div className="text-lg font-semibold">{opponent.avgScoreFor.toFixed(1)}</div>
                         <div className="text-xs text-gray-600">Avg For</div>
                       </div>
                       <div className="text-center">
-                        <div className="text-lg font-semibold">{opponent.stats.avgScoreAgainst.toFixed(1)}</div>
+                        <div className="text-lg font-semibold">{opponent.avgScoreAgainst.toFixed(1)}</div>
                         <div className="text-xs text-gray-600">Avg Against</div>
                       </div>
                       <div className="text-center">
-                        <div className={`text-lg font-semibold ${opponent.stats.scoreDifferential >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                          {opponent.stats.scoreDifferential >= 0 ? '+' : ''}{opponent.stats.scoreDifferential.toFixed(1)}
+                        <div className={`text-lg font-semibold ${opponent.scoreDifferential >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          {opponent.scoreDifferential >= 0 ? '+' : ''}{opponent.scoreDifferential.toFixed(1)}
                         </div>
                         <div className="text-xs text-gray-600">Score Diff</div>
                       </div>
+                      <div className="text-center">
+                        <Progress value={opponent.winRate} className="w-full" />
+                        <div className="text-xs text-gray-600 mt-1">Performance</div>
+                      </div>
                     </div>
 
-                    {opponent.stats.recentForm.length > 0 && (
+                    {opponent.recentForm.length > 0 && (
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-medium">Recent Form:</span>
                         <div className="flex gap-1">
-                          {opponent.stats.recentForm.map((result, index) => (
+                          {opponent.recentForm.map((result, index) => (
                             <Badge 
                               key={index} 
                               variant="secondary" 
-                              className={`w-6 h-6 p-0 flex items-center justify-center text-white ${getFormBadgeColor(result)}`}
+                              className={`w-6 h-6 p-0 flex items-center justify-center text-xs ${getFormBadgeColor(result)}`}
                             >
                               {result}
                             </Badge>
                           ))}
                         </div>
                         <span className="text-xs text-gray-600 ml-2">
-                          (Most recent {opponent.stats.recentForm.length} games)
+                          (Last {opponent.recentForm.length} games)
                         </span>
                       </div>
                     )}
