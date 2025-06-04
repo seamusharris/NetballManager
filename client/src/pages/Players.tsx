@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { SimplePlayerForm } from '@/components/players/SimplePlayerForm';
+import PlayerForm from '@/components/players/PlayerForm';
 import { UserPlus, UserMinus, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useLocation } from 'wouter';
@@ -261,12 +261,19 @@ export default function Players() {
                       <DialogHeader>
                         <DialogTitle>Add New Player</DialogTitle>
                       </DialogHeader>
-                      <SimplePlayerForm 
-                        clubId={currentClub?.id} 
-                        onSuccess={() => {
-                          queryClient.invalidateQueries({ queryKey: ['players', currentClub?.id] });
-                          queryClient.invalidateQueries({ queryKey: ['available-players', teamId, activeSeason?.id] });
+                      <PlayerForm
+                        onSubmit={async (playerData) => {
+                          try {
+                            const response = await apiClient.post('/api/players', playerData);
+                            queryClient.invalidateQueries({ queryKey: ['players', currentClub?.id] });
+                            queryClient.invalidateQueries({ queryKey: ['available-players', teamId, activeSeason?.id] });
+                            toast({ title: 'Success', description: 'Player created successfully' });
+                          } catch (error) {
+                            console.error('Error creating player:', error);
+                            toast({ title: 'Error', description: 'Failed to create player', variant: 'destructive' });
+                          }
                         }}
+                        isSubmitting={false}
                       />
                     </DialogContent>
                   </Dialog>
