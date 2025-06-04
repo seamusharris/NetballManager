@@ -26,6 +26,7 @@ interface UserClubAccess {
 
 interface ClubContextType {
   currentClub: Club | null;
+  currentClubId: number | null;
   userClubs: UserClubAccess[];
   switchClub: (clubId: number) => void;
   hasPermission: (permission: keyof UserClubAccess['permissions']) => boolean;
@@ -144,6 +145,7 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
 
   const contextValue = {
     currentClub,
+    currentClubId,
     userClubs,
     switchClub,
     hasPermission,
