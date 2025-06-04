@@ -2079,12 +2079,16 @@ Removing debug and logging statements to clean up the code.
         id: row.id,
         name: row.name,
         code: row.code,
-        address: row.address,
-        contactEmail: row.contact_email,
-        contactPhone: row.contact_phone,
-        logoUrl: row.logo_url,
-        primaryColor: row.primary_color,
-        secondaryColor: row.secondary_color,
+        address: club.address,
+        contactEmail: club.contact_email,
+        contactPhone: club.contact_phone,
+        primaryColor: club.primary_color,
+        secondaryColor: club.secondary_color
+      });
+    } catch (error) {
+      console.error("Error updating club:", error);
+      res.status(500).json({ message: "Failed to update club" });
+    }
         isActive: row.is_active,
         playersCount: parseInt(row.players_count) || 0,
         teamsCount: parseInt(row.teams_count) || 0,
