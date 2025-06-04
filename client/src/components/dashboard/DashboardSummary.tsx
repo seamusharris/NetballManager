@@ -23,6 +23,7 @@ import { Player, Game, Opponent, Season } from '@shared/schema';
 import { sortByDate } from '@/lib/utils';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { useGameStatuses } from '@/hooks/use-game-statuses';
+import { useClub } from '@/contexts/ClubContext';
 import { Suspense } from 'react'; // Import Suspense
 // Assuming PositionOpponentAnalysis is in the same directory, otherwise adjust path
 import PositionOpponentAnalysis from './PositionOpponentAnalysis';
@@ -33,7 +34,6 @@ interface DashboardSummaryProps {
   seasons: Season[];
   activeSeason: Season | null;
   isLoading: boolean;
-  currentClubId: string | undefined;
 }
 
 export default function DashboardSummary({ 
@@ -45,6 +45,7 @@ export default function DashboardSummary({
 }: DashboardSummaryProps) {
   const [selectedSeasonId, setSelectedSeasonId] = useState<string>('current');
   const queryClient = useQueryClient();
+  const { currentClub } = useClub();
 
   // Set active season as selected by default
   useEffect(() => {
@@ -247,6 +248,7 @@ export default function DashboardSummary({
             />
             <OpponentMatchups 
               games={filteredGames} 
+              currentClubId={currentClub?.id || 0}
               centralizedStats={centralizedStats}
             />
             <TopPlayersWidget 
@@ -278,7 +280,7 @@ export default function DashboardSummary({
               seasonId={selectedSeasonId === 'current' ? activeSeason?.id : 
                        selectedSeasonId === 'all' ? undefined : 
                        parseInt(selectedSeasonId)}
-              currentClubId={currentClubId}
+              currentClubId={currentClub?.id}
             />
           </Suspense>
         )}
