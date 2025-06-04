@@ -681,5 +681,3 @@ export function GamesList({
     </div>
   );
 }
-
-export { GamesList };
