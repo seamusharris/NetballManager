@@ -4,7 +4,6 @@ import { useQuery } from '@tanstack/react-query';
 import { useClub } from '@/contexts/ClubContext';
 import { apiClient } from '@/lib/apiClient';
 import { Loader2, TrendingUp, Target, Award, BarChart3 } from 'lucide-react';
-import TeamMatchups from '@/components/dashboard/OpponentMatchups';
 import { useBatchGameStatistics } from '@/components/statistics/hooks/useBatchGameStatistics';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -14,6 +13,7 @@ interface TeamStats {
   totalGames: number;
   wins: number;
   losses: number;
+  draws: number;
   winRate: number;
   avgScoreFor: number;
   avgScoreAgainst: number;
@@ -49,7 +49,7 @@ export default function TeamAnalysis() {
   const gameIds = completedGames.map(game => game.id);
 
   // Fetch batch statistics for all completed games
-  const { data: centralizedStats = {}, isLoading: isLoadingStats } = useBatchGameStatistics(gameIds);
+  const { statsMap: centralizedStats = {}, isLoading: isLoadingStats } = useBatchGameStatistics(gameIds);
 
   if (clubLoading || !currentClubId) {
     return (
@@ -98,40 +98,58 @@ export default function TeamAnalysis() {
       });
 
       if (gamesVsOpponent.length > 0) {
-        // Calculate stats
+        // Calculate stats using centralized statistics
         let wins = 0;
+        let losses = 0;
+        let draws = 0;
         let totalScoreFor = 0;
         let totalScoreAgainst = 0;
         const recentForm: string[] = [];
 
         gamesVsOpponent.forEach(g => {
           const isHome = g.homeClubId === currentClubId;
-          const ourScore = isHome ? g.statusTeamGoals : g.statusOpponentGoals;
-          const theirScore = isHome ? g.statusOpponentGoals : g.statusTeamGoals;
+          const gameStats = centralizedStats[g.id] || [];
           
-          if (ourScore !== null && theirScore !== null) {
-            totalScoreFor += ourScore;
-            totalScoreAgainst += theirScore;
-            
-            if (ourScore > theirScore) {
-              wins++;
-              recentForm.push('W');
-            } else if (ourScore < theirScore) {
-              recentForm.push('L');
-            } else {
-              recentForm.push('D');
-            }
+          // Calculate scores from game statistics
+          let ourScore = 0;
+          let theirScore = 0;
+          
+          if (gameStats.length > 0) {
+            gameStats.forEach(stat => {
+              ourScore += stat.goalsFor || 0;
+              theirScore += stat.goalsAgainst || 0;
+            });
+          } else {
+            // Fallback to game status scores if no stats available
+            ourScore = isHome ? (g.statusTeamGoals || 0) : (g.statusOpponentGoals || 0);
+            theirScore = isHome ? (g.statusOpponentGoals || 0) : (g.statusTeamGoals || 0);
+          }
+
+          totalScoreFor += ourScore;
+          totalScoreAgainst += theirScore;
+          
+          if (ourScore > theirScore) {
+            wins++;
+            recentForm.push('W');
+          } else if (ourScore < theirScore) {
+            losses++;
+            recentForm.push('L');
+          } else {
+            draws++;
+            recentForm.push('D');
           }
         });
 
+        const totalGamesVsOpponent = gamesVsOpponent.length;
         const stats: TeamStats = {
-          totalGames: gamesVsOpponent.length,
+          totalGames: totalGamesVsOpponent,
           wins,
-          losses: gamesVsOpponent.length - wins,
-          winRate: gamesVsOpponent.length > 0 ? (wins / gamesVsOpponent.length) * 100 : 0,
-          avgScoreFor: gamesVsOpponent.length > 0 ? totalScoreFor / gamesVsOpponent.length : 0,
-          avgScoreAgainst: gamesVsOpponent.length > 0 ? totalScoreAgainst / gamesVsOpponent.length : 0,
-          scoreDifferential: gamesVsOpponent.length > 0 ? (totalScoreFor - totalScoreAgainst) / gamesVsOpponent.length : 0,
+          losses,
+          draws,
+          winRate: totalGamesVsOpponent > 0 ? (wins / totalGamesVsOpponent) * 100 : 0,
+          avgScoreFor: totalGamesVsOpponent > 0 ? totalScoreFor / totalGamesVsOpponent : 0,
+          avgScoreAgainst: totalGamesVsOpponent > 0 ? totalScoreAgainst / totalGamesVsOpponent : 0,
+          scoreDifferential: totalGamesVsOpponent > 0 ? (totalScoreFor - totalScoreAgainst) / totalGamesVsOpponent : 0,
           recentForm: recentForm.slice(-5) // Last 5 games
         };
 
@@ -151,13 +169,12 @@ export default function TeamAnalysis() {
 
   // Calculate overall stats
   const totalGamesPlayed = completedGames.length;
-  const totalWins = completedGames.filter(game => {
-    const isHome = game.homeClubId === currentClubId;
-    const ourScore = isHome ? game.statusTeamGoals : game.statusOpponentGoals;
-    const theirScore = isHome ? game.statusOpponentGoals : game.statusTeamGoals;
-    return ourScore !== null && theirScore !== null && ourScore > theirScore;
-  }).length;
+  const totalWins = opponentTeamsData.reduce((sum, team) => sum + team.stats.wins, 0);
+  const totalLosses = opponentTeamsData.reduce((sum, team) => sum + team.stats.losses, 0);
+  const totalDraws = opponentTeamsData.reduce((sum, team) => sum + team.stats.draws, 0);
   const overallWinRate = totalGamesPlayed > 0 ? (totalWins / totalGamesPlayed) * 100 : 0;
+  const avgScoreFor = opponentTeamsData.length > 0 ? opponentTeamsData.reduce((sum, team) => sum + (team.stats.avgScoreFor * team.stats.totalGames), 0) / totalGamesPlayed : 0;
+  const avgScoreAgainst = opponentTeamsData.length > 0 ? opponentTeamsData.reduce((sum, team) => sum + (team.stats.avgScoreAgainst * team.stats.totalGames), 0) / totalGamesPlayed : 0;
 
   const getFormBadgeColor = (result: string) => {
     switch (result) {
@@ -211,6 +228,9 @@ export default function TeamAnalysis() {
             <CardContent>
               <div className="text-2xl font-bold">{overallWinRate.toFixed(1)}%</div>
               <Progress value={overallWinRate} className="mt-2" />
+              <p className="text-xs text-muted-foreground mt-1">
+                {totalWins}W - {totalLosses}L - {totalDraws}D
+              </p>
             </CardContent>
           </Card>
 
@@ -229,35 +249,17 @@ export default function TeamAnalysis() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Wins</CardTitle>
+              <CardTitle className="text-sm font-medium">Avg Score</CardTitle>
               <BarChart3 className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{totalWins}</div>
+              <div className="text-2xl font-bold">{avgScoreFor.toFixed(1)}</div>
               <p className="text-xs text-muted-foreground">
-                {totalGamesPlayed - totalWins} losses
+                vs {avgScoreAgainst.toFixed(1)} against
               </p>
             </CardContent>
           </Card>
         </div>
-
-        {/* Team Matchups */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Target className="h-5 w-5" />
-              Team Matchup Analysis
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            <TeamMatchups 
-              games={games}
-              currentClubId={currentClubId}
-              centralizedStats={centralizedStats}
-              className="border-0 shadow-none"
-            />
-          </CardContent>
-        </Card>
 
         {/* Detailed Opponent Breakdown */}
         <Card>
@@ -282,23 +284,28 @@ export default function TeamAnalysis() {
                       <div className="text-right">
                         <div className="text-2xl font-bold">
                           {opponent.stats.wins}-{opponent.stats.losses}
+                          {opponent.stats.draws > 0 && `-${opponent.stats.draws}`}
                         </div>
-                        <div className="text-sm text-gray-600">W-L Record</div>
+                        <div className="text-sm text-gray-600">W-L{opponent.stats.draws > 0 ? '-D' : ''} Record</div>
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-3">
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-3">
+                      <div className="text-center">
+                        <div className="text-lg font-semibold">{opponent.stats.totalGames}</div>
+                        <div className="text-xs text-gray-600">Games</div>
+                      </div>
                       <div className="text-center">
                         <div className="text-lg font-semibold">{opponent.stats.winRate.toFixed(1)}%</div>
                         <div className="text-xs text-gray-600">Win Rate</div>
                       </div>
                       <div className="text-center">
                         <div className="text-lg font-semibold">{opponent.stats.avgScoreFor.toFixed(1)}</div>
-                        <div className="text-xs text-gray-600">Avg Score For</div>
+                        <div className="text-xs text-gray-600">Avg For</div>
                       </div>
                       <div className="text-center">
                         <div className="text-lg font-semibold">{opponent.stats.avgScoreAgainst.toFixed(1)}</div>
-                        <div className="text-xs text-gray-600">Avg Score Against</div>
+                        <div className="text-xs text-gray-600">Avg Against</div>
                       </div>
                       <div className="text-center">
                         <div className={`text-lg font-semibold ${opponent.stats.scoreDifferential >= 0 ? 'text-green-600' : 'text-red-600'}`}>
@@ -322,6 +329,9 @@ export default function TeamAnalysis() {
                             </Badge>
                           ))}
                         </div>
+                        <span className="text-xs text-gray-600 ml-2">
+                          (Most recent {opponent.stats.recentForm.length} games)
+                        </span>
                       </div>
                     )}
                   </div>
