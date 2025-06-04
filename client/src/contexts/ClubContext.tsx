@@ -35,19 +35,18 @@ interface ClubContextType {
 const ClubContext = createContext<ClubContextType | undefined>(undefined);
 
 export function ClubProvider({ children }: { children: React.ReactNode }) {
+  // Initialize state synchronously and ensure API client is immediately in sync
   const [currentClubId, setCurrentClubId] = useState<number | null>(() => {
-    // Initialize immediately from localStorage if available
     const stored = localStorage.getItem('currentClubId');
     const clubId = stored ? parseInt(stored, 10) : null;
-    console.log('ClubProvider: Initial currentClubId from localStorage:', clubId);
+    console.log('ClubProvider: Initializing with stored club ID:', clubId);
     
-    // Set API client context immediately if we have a stored club ID
     if (clubId && !isNaN(clubId)) {
+      // Set API client context immediately during initialization
       apiClient.setClubContext({ currentClubId: clubId });
-      console.log('ClubProvider: Initialized React state with club ID:', clubId);
+      console.log('ClubProvider: API client initialized with club ID:', clubId);
       return clubId;
     }
-    console.log('ClubProvider: No valid stored club ID, initializing as null');
     return null;
   });
   
@@ -95,22 +94,23 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
 
       console.log('ClubContext: Setting initial club to:', targetClubId);
       
-      // Update localStorage first
+      // Update all three synchronously to prevent race conditions
       localStorage.setItem('currentClubId', targetClubId.toString());
-      
-      // Update API client immediately
       apiClient.setClubContext({ currentClubId: targetClubId });
       
-      // Update React state 
-      setCurrentClubId(targetClubId);
+      // Force immediate state update using React's synchronous state update
+      setCurrentClubId(() => {
+        console.log('ClubContext: React state updated to:', targetClubId);
+        return targetClubId;
+      });
       
-      // Invalidate queries to refresh data with new club context
+      // Invalidate queries after state is set
       setTimeout(() => {
         console.log('ClubContext: Invalidating queries for club:', targetClubId);
         queryClient.invalidateQueries();
-      }, 100);
+      }, 0);
     }
-  }, [userClubs, queryClient]); // Removed currentClubId from dependencies to prevent loops
+  }, [userClubs, queryClient]);
 
   // Keep API client in sync with currentClubId changes
   useEffect(() => {
@@ -121,9 +121,13 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
   const switchClub = useCallback((clubId: number) => {
     console.log('ClubContext: Switching club from', currentClubId, 'to', clubId);
     
-    setCurrentClubId(clubId);
+    // Update all three synchronously to prevent race conditions
     localStorage.setItem('currentClubId', clubId.toString());
     apiClient.setClubContext({ currentClubId: clubId });
+    setCurrentClubId(() => {
+      console.log('ClubContext: React state switched to:', clubId);
+      return clubId;
+    });
     
     // Invalidate and refetch queries
     queryClient.invalidateQueries();
