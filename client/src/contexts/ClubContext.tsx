@@ -44,8 +44,10 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
     // Set API client context immediately if we have a stored club ID
     if (clubId && !isNaN(clubId)) {
       apiClient.setClubContext({ currentClubId: clubId });
+      console.log('ClubProvider: Initialized React state with club ID:', clubId);
       return clubId;
     }
+    console.log('ClubProvider: No valid stored club ID, initializing as null');
     return null;
   });
   
@@ -93,12 +95,14 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
 
       console.log('ClubContext: Setting initial club to:', targetClubId);
       
-      // Update state and localStorage
-      setCurrentClubId(targetClubId);
+      // Update localStorage first
       localStorage.setItem('currentClubId', targetClubId.toString());
       
       // Update API client immediately
       apiClient.setClubContext({ currentClubId: targetClubId });
+      
+      // Update React state 
+      setCurrentClubId(targetClubId);
       
       // Invalidate queries to refresh data with new club context
       setTimeout(() => {
@@ -139,7 +143,7 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
     userClubs,
     switchClub,
     hasPermission,
-    isLoading: isLoadingClubs || isLoadingClub || (userClubs.length > 0 && currentClubId === null),
+    isLoading: isLoadingClubs || (!!currentClubId && isLoadingClub),
   };
 
   console.log('ClubContext: Rendering with:', {
