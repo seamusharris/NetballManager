@@ -22,6 +22,8 @@ export default function TeamPerformance({ games, className, activeSeason, select
     teamWinRate: number;
     avgTeamScore: number;
     avgOpponentScore: number;
+    totalTeamScore: number;
+    totalOpponentScore: number;
     goalsPercentage: number;
   }>({
     avgTeamScoreByQuarter: { 1: 0, 2: 0, 3: 0, 4: 0 },
@@ -29,6 +31,8 @@ export default function TeamPerformance({ games, className, activeSeason, select
     teamWinRate: 0,
     avgTeamScore: 0,
     avgOpponentScore: 0,
+    totalTeamScore: 0,
+    totalOpponentScore: 0,
     goalsPercentage: 0
   });
 
@@ -51,6 +55,8 @@ export default function TeamPerformance({ games, className, activeSeason, select
       teamWinRate: 0,
       avgTeamScore: 0,
       avgOpponentScore: 0,
+      totalTeamScore: 0,
+      totalOpponentScore: 0,
       goalsPercentage: 0
     });
 
@@ -181,6 +187,8 @@ export default function TeamPerformance({ games, className, activeSeason, select
       teamWinRate: winRate,
       avgTeamScore,
       avgOpponentScore,
+      totalTeamScore,
+      totalOpponentScore,
       goalsPercentage
     });
 
@@ -234,7 +242,7 @@ export default function TeamPerformance({ games, className, activeSeason, select
 
           {/* Goals Performance - Horizontal Bars */}
           <div className="bg-gradient-to-r from-orange-50 to-red-50 p-4 rounded-xl border border-orange-100">
-            <p className="text-gray-600 text-sm font-medium mb-3">Goals Performance</p>
+            <p className="text-gray-600 text-sm font-medium mb-3">Goals Performance (Average)</p>
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600 min-w-[50px]">For</span>
@@ -270,6 +278,31 @@ export default function TeamPerformance({ games, className, activeSeason, select
                   {quarterPerformance.goalsPercentage}%
                 </span>
               </div>
+            </div>
+          </div>
+
+          {/* Total Goals Performance */}
+          <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-xl border border-blue-100">
+            <p className="text-gray-600 text-sm font-medium mb-3">Total Goals This Season</p>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-green-600 mb-1">
+                  {quarterPerformance.totalTeamScore}
+                </div>
+                <div className="text-sm text-gray-600">Goals For</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-red-600 mb-1">
+                  {quarterPerformance.totalOpponentScore}
+                </div>
+                <div className="text-sm text-gray-600">Goals Against</div>
+              </div>
+            </div>
+            <div className="flex items-center justify-between pt-3 border-t border-blue-200 mt-3">
+              <span className="text-sm text-gray-600">Goal Difference</span>
+              <span className={`text-lg font-bold ${quarterPerformance.totalTeamScore >= quarterPerformance.totalOpponentScore ? 'text-green-600' : 'text-red-600'}`}>
+                {quarterPerformance.totalTeamScore >= quarterPerformance.totalOpponentScore ? '+' : ''}{quarterPerformance.totalTeamScore - quarterPerformance.totalOpponentScore}
+              </span>
             </div>
           </div>
 
