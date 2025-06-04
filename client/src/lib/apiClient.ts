@@ -11,121 +11,47 @@ import { useClub } from '../contexts/ClubContext';
 
 // Create a singleton API client that can access club context
 class ApiClient {
-  private clubContextRef: { currentClubId: number | null } | null = null;
+  private baseURL: string;
+  private clubContext: { currentClubId: number | null } = { currentClubId: null };
 
-  setClubContext(clubContext: { currentClubId: number | null }) {
-    this.clubContextRef = clubContext;
+  constructor() {
+    this.baseURL = import.meta.env.VITE_API_URL || '';
   }
 
-  private getHeaders(): Record<string, string> {
+  setClubContext(context: { currentClubId: number | null }) {
+    this.clubContext = context;
+  }
+
+  async request<T>(method: string, endpoint: string, data?: any): Promise<T> {
+    const url = `${this.baseURL}${endpoint}`;
+
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };
 
     // Add club ID header if available
-    if (this.clubContextRef?.currentClubId) {
-      headers['x-current-club-id'] = this.clubContextRef.currentClubId.toString();
-      console.log(`API Request adding club ID header: ${this.clubContextRef.currentClubId}`);
-    } else {
-      console.log('API Request: No club ID available for header');
+    if (this.clubContext.currentClubId) {
+      headers['x-current-club-id'] = this.clubContext.currentClubId.toString();
+      console.log(`API Request to ${endpoint} with club ID: ${this.clubContext.currentClubId}`);
     }
 
-    return headers;
-  }
+    const config: RequestInit = {
+      method,
+      headers,
+    };
 
-  async get(url: string): Promise<any> {
-    console.log(`API Request to ${url} with club ID: ${this.clubContextRef?.currentClubId}`);
-
-    try {
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: this.getHeaders(),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
-        console.error('API request failed:', errorData);
-        throw new Error(errorData.message || `HTTP ${response.status}`);
-      }
-
-      return response.json();
-    } catch (error) {
-      console.error('API request failed:', error);
-      throw error;
+    if (data && (method === 'POST' || method === 'PUT' || method === 'PATCH')) {
+      config.body = JSON.stringify(data);
     }
-  }
 
-  async post(url: string, data?: any): Promise<any> {
-    console.log(`API Request to POST ${url} with club ID: ${this.clubContextRef?.currentClubId}`);
-    console.log('POST data:', data);
+    console.log('API Request adding club ID header:', this.clubContext.currentClubId);
+    const response = await fetch(url, config);
 
-    try {
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: this.getHeaders(),
-        body: data ? JSON.stringify(data) : undefined,
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
-        console.error('API POST request failed:', errorData);
-        throw new Error(errorData.message || `HTTP ${response.status}`);
-      }
-
-      return response.json();
-    } catch (error) {
-      console.error('API POST request failed:', error);
-      throw error;
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-  }
 
-  async patch(url: string, data: any): Promise<any> {
-    console.log(`API Request to PATCH ${url} with club ID: ${this.clubContextRef?.currentClubId}`);
-
-    try {
-      const response = await fetch(url, {
-        method: 'PATCH',
-        headers: this.getHeaders(),
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
-        console.error('API PATCH request failed:', errorData);
-        throw new Error(errorData.message || `HTTP ${response.status}`);
-      }
-
-      return response.json();
-    } catch (error) {
-      console.error('API PATCH request failed:', error);
-      throw error;
-    }
-  }
-
-  async delete(url: string): Promise<any> {
-    console.log(`API Request to DELETE ${url} with club ID: ${this.clubContextRef?.currentClubId}`);
-
-    try {
-      const response = await fetch(url, {
-        method: 'DELETE',
-        headers: this.getHeaders(),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
-        console.error('API DELETE request failed:', errorData);
-        throw new Error(errorData.message || `HTTP ${response.status}`);
-      }
-
-      if (response.status === 204) {
-        return null; // No content
-      }
-
-      return response.json();
-    } catch (error) {
-      console.error('API DELETE request failed:', error);
-      throw error;
-    }
+    return response.json();
   }
 }
 
@@ -155,13 +81,13 @@ export async function mutateWithInvalidation<T>(
 export const apiRequest = async (method: string, url: string, data?: any) => {
   switch (method.toUpperCase()) {
     case 'GET':
-      return apiClient.get(url);
+      return apiClient.request(method, url);
     case 'POST':
-      return apiClient.post(url, data);
+      return apiClient.request(method, url, data);
     case 'PATCH':
-      return apiClient.patch(url, data);
+      return apiClient.request(method, url, data);
     case 'DELETE':
-      return apiClient.delete(url);
+      return apiClient.request(method, url);
     default:
       throw new Error(`Unsupported HTTP method: ${method}`);
   }

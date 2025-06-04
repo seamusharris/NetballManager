@@ -53,6 +53,7 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
 
   // Connect apiClient to club context
   useEffect(() => {
+    console.log('ClubContext: Setting apiClient club context to:', currentClubId);
     apiClient.setClubContext({ currentClubId });
   }, [currentClubId]);
 
