@@ -94,19 +94,28 @@ export default function TeamMatchups({
       });
 
       opposingTeams.forEach(team => {
+        console.log(`OpponentMatchups - Processing team: ${team.name} (ID: ${team.id})`);
+        
         const teamGames = games.filter(game => {
           if (!isGameValidForStatistics(game)) return false;
 
           // Check if this game involves the opposing team
-          const isHomeTeamOurs = game.homeTeamClubId === currentClubId;
-          const isAwayTeamOurs = game.awayTeamClubId === currentClubId;
+          const isHomeTeamOurs = game.homeClubId === currentClubId;
+          const isAwayTeamOurs = game.awayClubId === currentClubId;
 
-          if (isHomeTeamOurs && game.awayTeamId === team.id && !isAwayTeamOurs) return true;
-          if (isAwayTeamOurs && game.homeTeamId === team.id && !isHomeTeamOurs) return true;
+          const homeMatch = isHomeTeamOurs && game.awayTeamId === team.id && !isAwayTeamOurs;
+          const awayMatch = isAwayTeamOurs && game.homeTeamId === team.id && !isHomeTeamOurs;
+
+          if (homeMatch || awayMatch) {
+            console.log(`OpponentMatchups - Found match for team ${team.name}: Game ${game.id}`);
+            return true;
+          }
 
           return false;
         });
 
+        console.log(`OpponentMatchups - Team ${team.name} has ${teamGames.length} games`);
+        
         if (teamGames.length === 0) return;
 
         let wins = 0;
