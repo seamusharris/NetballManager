@@ -22,11 +22,12 @@ class GameScoreService {
       return this.createFixedScores(statusScores.teamGoals, statusScores.opponentGoals);
     }
 
-    // Handle legacy forfeit games
-    if (gameStatus === 'forfeit-win') {
+    // Handle legacy forfeit games - check for string format too
+    const statusString = typeof gameStatus === 'string' ? gameStatus : gameStatus?.toString();
+    if (statusString === 'forfeit-win') {
       return this.createForfeitScores(true);
     }
-    if (gameStatus === 'forfeit-loss') {
+    if (statusString === 'forfeit-loss') {
       return this.createForfeitScores(false);
     }
 

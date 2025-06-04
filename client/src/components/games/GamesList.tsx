@@ -569,7 +569,28 @@ export function GamesList({
                         <div className="font-medium text-gray-500">⸺</div>
                       ) : getGameStatus(game).isCompleted ? (
                         <div className="text-center">
-                          {scoresMap && scoresMap[game.id] ? (
+                          {/* Handle forfeit games with fixed scores */}
+                          {(game.statusTeamGoals !== null && game.statusOpponentGoals !== null) ? (
+                            (() => {
+                              const isWin = game.statusTeamGoals > game.statusOpponentGoals;
+                              const isLoss = game.statusTeamGoals < game.statusOpponentGoals;
+                              const bgColor = isWin 
+                                ? "bg-green-100 border-green-200" 
+                                : isLoss 
+                                  ? "bg-red-100 border-red-200" 
+                                  : "bg-amber-100 border-amber-200";
+
+                              return (
+                                <div className="font-semibold text-left">
+                                  <div className={`inline-flex items-center px-3 py-1 rounded border text-gray-900 ${bgColor}`}>
+                                    <span className={isWin ? "font-bold" : ""}>{game.statusTeamGoals}</span>
+                                    <span className="mx-2">-</span>
+                                    <span className={isLoss ? "font-bold" : ""}>{game.statusOpponentGoals}</span>
+                                  </div>
+                                </div>
+                              );
+                            })()
+                          ) : scoresMap && scoresMap[game.id] ? (
                             (() => {
                               const scores = scoresMap[game.id];
 
