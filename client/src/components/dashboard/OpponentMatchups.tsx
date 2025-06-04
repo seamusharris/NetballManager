@@ -332,12 +332,15 @@ export default function TeamMatchups({
                   <span className="text-xs w-16 truncate">{matchup.teamName.slice(0, 8)}</span>
                   <div className="flex-1 relative h-4 bg-gray-200 rounded-full overflow-hidden">
                     <div 
-                      className={`absolute left-1/2 top-0 h-full ${
+                      className={`absolute top-0 h-full ${
                         matchup.scoreDifferential >= 0 ? 'bg-blue-500' : 'bg-red-400'
                       }`}
                       style={{
                         width: `${Math.min(50, Math.abs(matchup.scoreDifferential) * 5)}%`,
-                        [matchup.scoreDifferential >= 0 ? 'left' : 'right']: '50%'
+                        ...(matchup.scoreDifferential >= 0 
+                          ? { left: '50%' }
+                          : { right: '50%' }
+                        )
                       }}
                     />
                     <div className="absolute left-1/2 top-0 w-px h-full bg-gray-400 transform -translate-x-1/2" />
