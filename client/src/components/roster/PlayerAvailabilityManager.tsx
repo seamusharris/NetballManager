@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Check, Search, XCircle } from 'lucide-react';
+import { Check, XCircle } from 'lucide-react';
 import { Player, Game, Opponent } from '@shared/schema';
 import { formatShortDate, cn, getInitials } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
@@ -158,7 +158,7 @@ export default function PlayerAvailabilityManager({
     // If still loading, don't set anything - wait for the data
   }, [availabilityData, isLoading, availabilityError, players, gameId, onAvailabilityChange]);
 
-  const [searchQuery, setSearchQuery] = useState('');
+  
 
   // Early return if no gameId - moved after ALL hooks
   if (!gameId) {
@@ -230,12 +230,8 @@ export default function PlayerAvailabilityManager({
     );
   }
 
-  // Filter players by search query and sort by display name
+  // Sort players by display name
   const filteredPlayers = players
-    .filter(player => {
-      const displayName = player.displayName || `${player.firstName} ${player.lastName}`;
-      return displayName.toLowerCase().includes(searchQuery.toLowerCase());
-    })
     .sort((a, b) => {
       const displayNameA = a.displayName || `${a.firstName} ${a.lastName}`;
       const displayNameB = b.displayName || `${b.firstName} ${b.lastName}`;
@@ -301,16 +297,6 @@ export default function PlayerAvailabilityManager({
 
         <div className="flex justify-between items-center mt-4">
           <div className="flex items-center gap-4">
-            <div className="relative w-full max-w-sm">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
-              <Input
-                placeholder="Search players..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9"
-              />
-            </div>
-            
             {/* Game selection dropdown */}
             <Select 
               value={gameId?.toString() || ''} 
@@ -320,7 +306,7 @@ export default function PlayerAvailabilityManager({
                 window.location.href = `/roster/${newGameId}`;
               }}
             >
-              <SelectTrigger className="w-[250px]">
+              <SelectTrigger className="w-[400px]">
                 <SelectValue placeholder="Switch Game" />
               </SelectTrigger>
               <SelectContent>
