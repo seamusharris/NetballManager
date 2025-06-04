@@ -200,7 +200,7 @@ export default function TeamMatchups({
     };
   };
 
-  const getFormDisplay = (form: string[], matchup: OpponentMatchup) => {
+  const getFormDisplay = (form: string[], matchup: TeamMatchup) => {
     // Get the most recent 3 games for this opponent, but show in chronological order
     const recentGames = matchup.games
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())

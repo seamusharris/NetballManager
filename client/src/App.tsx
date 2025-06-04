@@ -11,7 +11,6 @@ import Dashboard from "@/pages/Dashboard";
 import Players from "@/pages/Players";
 import Roster from "@/pages/Roster";
 import Games from "@/pages/Games";
-import Opponents from "@/pages/Opponents";
 import Statistics from "@/pages/Statistics";
 import PlayerDetails from "@/pages/PlayerDetails";
 import Teams from "@/pages/Teams";
