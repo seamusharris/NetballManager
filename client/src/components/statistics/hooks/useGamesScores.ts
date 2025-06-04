@@ -32,10 +32,13 @@ export function useGamesScores(gameIds: number[], forceFresh = false) {
 
       try {
         // Use the batch endpoint to get stats for all games at once
-        const response = await fetch(`/api/games/stats/batch?gameIds=${gameIds.join(',')}`, {
+        const response = await fetch('/api/games/stats/batch', {
+          method: 'POST',
           headers: {
+            'Content-Type': 'application/json',
             'x-current-club-id': currentClub.id.toString(),
           },
+          body: JSON.stringify({ gameIds }),
         });
         
         if (!response.ok) {
