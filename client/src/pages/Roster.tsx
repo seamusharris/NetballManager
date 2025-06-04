@@ -83,14 +83,7 @@ export default function Roster() {
 
   // Debug logging for rendering conditions
   useEffect(() => {
-    console.log('Roster rendering state:', {
-      currentStep,
-      selectedGameId,
-      gameIdFromUrl,
-      showingAvailability: selectedGameId && currentStep === 'availability',
-      showingRoster: selectedGameId && currentStep === 'roster',
-      showingGameSelection: currentStep === 'game-selection' && !selectedGameId
-    });
+
   }, [currentStep, selectedGameId, gameIdFromUrl]);
 
   // Handle game selection

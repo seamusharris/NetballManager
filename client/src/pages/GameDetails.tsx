@@ -58,7 +58,7 @@ const getPlayerColorForBorder = (avatarColor?: string): string => {
     'bg-orange-600': '#c2410c', // orange-700
     'bg-green-600': '#15803d', // green-700
     'bg-rose-600': '#be123c', // rose-700
-    'bg-indigo-600': '#4338ca', // indigo-700
+    'bg-indigo-600': '#4338ca', // indigo-600
     'bg-pink-600': '#be185d', // pink-600
     'bg-purple-600': '#7e22ce' // purple-600
   };
@@ -96,7 +96,7 @@ const getPlayerColorForBackground = (avatarColor?: string): string => {
     'bg-rose-600': '#fff1f2', // rose-50
     'bg-indigo-600': '#eef2ff', // indigo-50
     'bg-pink-600': '#fdf2f8', // pink-50
-    'bg-purple-600': '#faf5ff' // purple-50
+    'bg-purple-600': '#faf5ff' // purple-600
   };
 
   return colorMap[avatarColor] || "rgb(245, 243, 255)";
@@ -1167,23 +1167,7 @@ export default function GameDetails() {
   // Debug game data
   useEffect(() => {
     if (game) {
-      console.log("GameDetails - Game data:", game ? { 
-    id: game.id, 
-    homeTeamName: game.homeTeamName || game.home_team_name, 
-    awayTeamName: game.awayTeamName || game.away_team_name,
-    homeClubName: game.homeClubName,
-    awayClubName: game.awayClubName,
-    statusName: game.statusName,
-    // Show both formats for debugging
-    camelCase: {
-      homeTeamName: game.homeTeamName,
-      awayTeamName: game.awayTeamName
-    },
-    snakeCase: {
-      home_team_name: game.home_team_name,
-      away_team_name: game.away_team_name
-    }
-  } : null);
+      
     }
   }, [game]);
 

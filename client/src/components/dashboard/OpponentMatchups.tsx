@@ -94,8 +94,6 @@ export default function TeamMatchups({
       });
 
       opposingTeams.forEach(team => {
-        console.log(`OpponentMatchups - Processing team: ${team.name} (ID: ${team.id})`);
-        
         const teamGames = games.filter(game => {
           if (!isGameValidForStatistics(game)) return false;
 
@@ -106,15 +104,8 @@ export default function TeamMatchups({
           const homeMatch = isHomeTeamOurs && game.awayTeamId === team.id && !isAwayTeamOurs;
           const awayMatch = isAwayTeamOurs && game.homeTeamId === team.id && !isHomeTeamOurs;
 
-          if (homeMatch || awayMatch) {
-            console.log(`OpponentMatchups - Found match for team ${team.name}: Game ${game.id}`);
-            return true;
-          }
-
-          return false;
+          return homeMatch || awayMatch;
         });
-
-        console.log(`OpponentMatchups - Team ${team.name} has ${teamGames.length} games`);
         
         if (teamGames.length === 0) return;
 

@@ -66,7 +66,6 @@ export default function GameStatistics({
             'position' in roster && 
             'playerId' in roster) {
           
-          console.log("Found valid roster entry:", roster);
           const quarterKey = roster.quarter.toString();
           if (rosterByQuarterAndPosition[quarterKey]) {
             rosterByQuarterAndPosition[quarterKey][roster.position as Position] = roster.playerId;
@@ -74,8 +73,6 @@ export default function GameStatistics({
         }
       });
     }
-    
-    console.log("Final quarter roster assignments:", rosterByQuarterAndPosition);
   }
   
   // Helper function to get position for a player in a specific quarter

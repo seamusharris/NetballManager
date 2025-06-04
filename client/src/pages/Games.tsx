@@ -46,21 +46,12 @@ export default function Games() {
   const { data: games = [], isLoading: isLoadingGames } = useQuery<Game[]>({
     queryKey: ['games', currentClub?.id],
     queryFn: () => {
-      console.log('Fetching games for club:', currentClubId);
       return apiClient.get('/api/games');
     },
     enabled: !!currentClub?.id, // Only fetch when we have a club ID
     staleTime: 0, // Disable caching temporarily to debug
     refetchOnMount: true,
     refetchOnWindowFocus: true,
-  });
-
-  // Debug logging
-  console.log('Games page:', {
-    currentClubId,
-    gamesCount: games.length,
-    isLoading: isLoadingGames,
-    sampleGame: games[0]
   });
 
   // Fetch teams for current club
@@ -87,13 +78,6 @@ export default function Games() {
     queryKey: ['game-statuses'],
     queryFn: () => apiClient.get('/api/game-statuses'),
     staleTime: 5 * 60 * 1000,
-  });
-
-  // Debug game statuses
-  console.log('Games page - Game statuses:', {
-    gameStatuses: gameStatuses.length,
-    isLoading: isLoadingGameStatuses,
-    sampleStatus: gameStatuses[0]
   });
 
   // Fetch players
@@ -253,13 +237,6 @@ export default function Games() {
       >
         {editingGame && (
           <>
-            {console.log('Games page - EditingGame GameForm props:', {
-              game: editingGame,
-              seasons: seasons.length,
-              activeSeason,
-              teams: teams.length,
-              isSubmitting: updateMutation.isPending
-            })}
             {(teams.length === 0 || gameStatuses.length === 0) ? (
               <div className="p-4 text-center">
                 <p className="text-gray-500 mb-4">

@@ -89,7 +89,6 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getPlayersByClub(clubId: number): Promise<Player[]> {
-    console.log(`Fetching players for club ${clubId}`);
 
     // First try to use the club_players table if it exists
     try {
@@ -102,7 +101,7 @@ export class DatabaseStorage implements IStorage {
         ORDER BY p.display_name
       `);
 
-      console.log(`Direct club_players query returned ${directResult.rows.length} rows`);
+
 
       if (directResult.rows.length > 0) {
         const players = directResult.rows.map(row => ({
@@ -117,7 +116,7 @@ export class DatabaseStorage implements IStorage {
           active: row.active,
           avatarColor: row.avatar_color
         }));
-        console.log(`Returning ${players.length} players from club_players table`);
+
         return players;
       }
     } catch (error) {
@@ -754,7 +753,7 @@ export class DatabaseStorage implements IStorage {
 
   async getClubPlayers(clubId: number): Promise<any[]> {
     try {
-      console.log(`Getting players for club ${clubId}`);
+
 
       const result = await db.execute(sql`
         SELECT 
@@ -791,7 +790,7 @@ export class DatabaseStorage implements IStorage {
         isActiveInClub: row.is_active_in_club
       }));
 
-      console.log(`Found ${players.length} players for club ${clubId}`);
+
       return players;
     } catch (error) {
       console.error(`Error getting club players for club ${clubId}:`, error);

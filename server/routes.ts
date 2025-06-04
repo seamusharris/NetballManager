@@ -881,6 +881,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         description: club.description,
         address: club.address,
         contactEmail: club.contact_email,
+```
         contactPhone: club.contact_phone,
         primaryColor: club.primary_color,
         secondaryColor: club.secondary_color
@@ -1200,61 +1201,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`Found ${result.rows.length} games for club ${clubId}`);
 
-      // Debug logging for Warrandyte specifically
-      if (clubId === 54) {
-        const permissionsCheck = await db.execute(sql`
-          SELECT COUNT(*) as permission_count FROM game_permissions WHERE club_id = 54
-        `);
-        console.log(`Warrandyte has ${permissionsCheck.rows[0].permission_count} game permissions`);
 
-        const allGamesCheck = await db.execute(sql`
-          SELECT COUNT(*) as total_games FROM games
-        `);
-        console.log(`Total games in system: ${allGamesCheck.rows[0].total_games}`);
-
-        // Check what games have permissions for Warrandyte
-        const permissionGames = await db.execute(sql`
-          SELECT g.id, g.date, gp.club_id
-          FROM games g
-          JOIN game_permissions gp ON g.id = gp.game_id
-          WHERE gp.club_id = 54
-        `);
-        console.log(`Games with Warrandyte permissions:`, permissionGames.rows);
-
-        // Check all games to see structure
-        const allGames = await db.execute(sql`
-          SELECT g.id, g.date, g.home_team_id, g.away_team_id,
-                 ht.club_id as home_club_id, at.club_id as away_club_id
-          FROM games g
-          LEFT JOIN teams ht ON g.home_team_id = ht.id
-          LEFT JOIN teams at ON g.away_team_id = at.id
-          LIMIT 5
-        `);
-        console.log(`Sample games in system:`, allGames.rows);
-
-        // Test the exact query we're using
-        const testQuery = await db.execute(sql`
-          SELECT g.id, g.date,
-                 ht.club_id as home_club_id, at.club_id as away_club_id,
-                 gp.club_id as permission_club_id,
-                 CASE 
-                   WHEN ht.club_id = 54 THEN 'home_team'
-                   WHEN at.club_id = 54 THEN 'away_team' 
-                   WHEN gp.club_id = 54 THEN 'permission'
-                   ELSE 'none'
-                 END as access_type
-          FROM games g
-          LEFT JOIN teams ht ON g.home_team_id = ht.id
-          LEFT JOIN teams at ON g.away_team_id = at.id
-          LEFT JOIN game_permissions gp ON g.id = gp.game_id AND gp.club_id = 54
-          WHERE (ht.club_id = 54 OR at.club_id = 54 OR gp.club_id = 54)
-        `);
-        console.log(`Test query for Warrandyte access:`, testQuery.rows);
-
-        if (result.rows.length > 0) {
-          console.log(`Sample Warrandyte game:`, result.rows[0]);
-        }
-      }
 
       const games = result.rows.map(row => ({
         id: row.id,
@@ -1710,7 +1657,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ----- PLAYER AVAILABILITY API -----
 
   // Get player availability for a specific game
-  app.get("/api/games/:gameId/availability", async (req, res) => {
+  app.get("/api/games/:gameId/availability", async
+Removing debug and logging statements to clean up the code.
+(req, res) => {
     try {
       const gameId = Number(req.params.gameId);
       const { playerAvailabilityStorage } = await import('./player-availability-storage');

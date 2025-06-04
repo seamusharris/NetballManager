@@ -69,12 +69,7 @@ export default function PlayerAvailabilityManager({
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  console.log('PlayerAvailabilityManager props:', {
-    gameId,
-    playersCount: players.length,
-    gamesCount: games.length,
-    opponentsCount: opponents.length
-  });
+
 
   // Use centralized data loading for availability
   const { 
@@ -108,13 +103,7 @@ export default function PlayerAvailabilityManager({
 
   // Effect to load availability data and set fallbacks
   useEffect(() => {
-    console.log('PlayerAvailabilityManager useEffect:', {
-      availabilityData,
-      isLoading,
-      availabilityError,
-      playersLength: players.length,
-      gameId
-    });
+
 
     // Only proceed if we have a valid gameId
     if (!gameId) {
@@ -129,7 +118,6 @@ export default function PlayerAvailabilityManager({
     // Handle successful availability data
     if (availabilityData && Array.isArray(availabilityData.availablePlayerIds)) {
       // Always use the exact availability data from the API - don't override it
-      console.log('Setting available players from API:', availabilityData.availablePlayerIds);
       setAvailablePlayerIds(availabilityData.availablePlayerIds);
       onAvailabilityChange?.(availabilityData.availablePlayerIds);
     } else if (availabilityError) {
@@ -142,7 +130,7 @@ export default function PlayerAvailabilityManager({
     // If still loading, don't set anything - wait for the data
   }, [availabilityData, isLoading, availabilityError, players, gameId, onAvailabilityChange]);
 
-  
+
 
   // Early return if no gameId - moved after ALL hooks
   if (!gameId) {
@@ -156,7 +144,6 @@ export default function PlayerAvailabilityManager({
     );
   }
 
-  console.log('PlayerAvailabilityManager: Rendering with game ID:', gameId);
 
   const selectedGame = games.find(game => game.id === gameId);
   const opponent = selectedGame?.opponentId ? opponents.find(o => o.id === selectedGame.opponentId) : null;
@@ -185,12 +172,12 @@ export default function PlayerAvailabilityManager({
     try {
       setIsSaving(true);
       await apiClient.patch(`/api/games/${gameId}/availability/${playerId}`, { isAvailable });
-      
+
       // Invalidate the cache for this game's availability to ensure fresh data on next load
       queryClient.invalidateQueries({ 
         queryKey: [`/api/games/${gameId}/availability`] 
       });
-      
+
       console.log('Player availability updated and cache invalidated for game:', gameId, 'player:', playerId, 'available:', isAvailable);
     } catch (error) {
       console.error('Error updating availability:', error);
