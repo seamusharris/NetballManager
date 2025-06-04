@@ -272,6 +272,20 @@ export function TeamPositionAnalysis({
 
     setGeneralLineups(generalResults.slice(0, 15)); // Top 15
     setOpponentSpecificLineups(opponentSpecificResults.slice(0, 20)); // Top 20
+
+    // Extract all unique opponents from the lineup data
+    const allOpponents = new Set<string>();
+    lineupMap.forEach((data) => {
+      data.opponents.forEach((opponentData, opponentName) => {
+        if (opponentName && opponentName !== 'Bye') {
+          allOpponents.add(opponentName);
+        }
+      });
+    });
+
+    const sortedOpponents = Array.from(allOpponents).sort();
+    console.log('Setting opponents dropdown to:', sortedOpponents);
+    setOpponents(sortedOpponents);
   };
 
   const filteredOpponentSpecific = selectedOpponent === 'all' 
