@@ -728,7 +728,8 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
               playerStats = {
                 stats: {
                   goalsFor: positionStat.goalsFor || 0,
-                  goalsAgainst: positionStat.goalsAgainst || 0                  missedGoals: positionStat.missedGoals || 0,
+                  goalsAgainst: positionStat.goalsAgainst || 0,
+                  missedGoals: positionStat.missedGoals || 0,
                   rebounds: positionStat.rebounds || 0,
                   intercepts: positionStat.intercepts || 0,
                   badPass: positionStat.badPass || 0,
