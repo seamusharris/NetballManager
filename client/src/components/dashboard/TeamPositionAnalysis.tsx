@@ -292,15 +292,16 @@ export function TeamPositionAnalysis({
   };
 
   const formatFormationForCourt = (formation: Record<string, string>) => {
-    return {
-      GK: formation['GK'] || null,
-      GD: formation['GD'] || null,
-      WD: formation['WD'] || null,
-      C: formation['C'] || null,
-      WA: formation['WA'] || null,
-      GA: formation['GA'] || null,
-      GS: formation['GS'] || null,
-    };
+      const roster = Object.entries(formation).map(([position, playerName]) => {
+          const player = players.find(p => p.displayName === playerName);
+          return {
+              quarter: 1, // Assuming quarter 1 for all players in the formation
+              position: position,
+              playerId: player ? player.id : null, // Use player ID if available
+              playerName: playerName,
+          };
+      });
+      return roster;
   };
 
   const formatPlayersForCourt = (formation: Record<string, string>) => {
