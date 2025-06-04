@@ -76,7 +76,7 @@ export default function OpponentAnalysis() {
       if (completedGameIds.length === 0) return {};
 
       try {
-        const response = await apiRequest('GET', `/api/games/stats/batch?gameIds=${completedGameIds.join(',')}`);
+        const response = await apiRequest('POST', '/api/games/stats/batch', { gameIds: completedGameIds });
         return response;
       } catch (error) {
         console.error('Error fetching centralized stats:', error);
