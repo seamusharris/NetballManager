@@ -34,37 +34,55 @@ export default function TeamForm({ team, seasons, clubId, onSuccess, onCancel }:
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const createMutation = useCreateMutation(
-    '/api/teams',
-    ['/api/teams'],
-    'Team created successfully'
-  );
-
-  const updateMutation = useMutation({
-    mutationFn: async (data: any) => {
-      return await apiClient.patch(`/api/teams/${team?.id}`, data);
-    },
-    onSuccess: (data) => {
-      // Invalidate related queries
+  const createMutation = useMutation({
+    mutationFn: (data: any) => apiClient.post('/api/teams', data),
+    onSuccess: () => {
+      // Invalidate all team-related queries
+      queryClient.invalidateQueries({ queryKey: ['/api/teams'] });
       queryClient.invalidateQueries({ queryKey: ['teams'] });
-      queryClient.invalidateQueries({ queryKey: ['seasons'] });
-
-      toast({
-        title: "Success",
-        description: "Team updated successfully",
+      queryClient.invalidateQueries({ 
+        predicate: (query) => {
+          const queryKey = query.queryKey[0];
+          return typeof queryKey === 'string' && queryKey.includes('/api/teams');
+        }
       });
 
-      if (onSuccess) {
-        onSuccess(data);
-      }
+      toast({ title: "Team created successfully" });
+      onSuccess?.();
     },
     onError: (error: any) => {
       toast({
-        title: "Error",
-        description: error.message || "Failed to update team",
-        variant: "destructive",
+        title: "Error creating team",
+        description: error.message,
+        variant: "destructive"
       });
+    }
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: (data: any) => apiClient.patch(`/api/teams/${team?.id}`, data),
+    onSuccess: () => {
+      // Invalidate all team-related queries
+      queryClient.invalidateQueries({ queryKey: ['/api/teams'] });
+      queryClient.invalidateQueries({ queryKey: ['teams'] });
+      queryClient.invalidateQueries({ queryKey: [`/api/teams/${team?.id}`] });
+      queryClient.invalidateQueries({ 
+        predicate: (query) => {
+          const queryKey = query.queryKey[0];
+          return typeof queryKey === 'string' && queryKey.includes('/api/teams');
+        }
+      });
+
+      toast({ title: "Team updated successfully" });
+      onSuccess?.();
     },
+    onError: (error: any) => {
+      toast({
+        title: "Error updating team",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
   });
 
   const isSubmitting = createMutation.isPending || updateMutation.isPending;
