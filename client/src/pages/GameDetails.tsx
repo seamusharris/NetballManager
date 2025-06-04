@@ -57,7 +57,7 @@ const getPlayerColorForBorder = (avatarColor?: string): string => {
     'bg-violet-600': '#6d28d9', // violet-700
     'bg-orange-600': '#c2410c', // orange-700
     'bg-green-600': '#15803d', // green-700
-    'bg-rose-600': '#be123c', // rose-700
+    'bg-rose-600': '#be123c', // rose-50
     'bg-indigo-600': '#4338ca', // indigo-600
     'bg-pink-600': '#be185d', // pink-600
     'bg-purple-600': '#7e22ce' // purple-600
@@ -425,39 +425,47 @@ const PlayerStatsByQuarter = ({ roster, players, gameStats }: { roster: any[], p
 };
 
 // Calculate quarter by quarter scores
-const calculateQuarterScores = (gameStats: any[], game: any) => {
-  // Check if game status has fixed scores defined
-  if (game && game.statusTeamGoals !== null && game.statusTeamGoals !== undefined &&
-      game.statusOpponentGoals !== null && game.statusOpponentGoals !== undefined) {
+  const calculateQuarterScores = (gameStats: any[], game: any) => {
+    // Check for fixed scores from game status first
+    if (game && game.statusTeamGoals !== null && game.statusOpponentGoals !== null) {
+      return [
+        { quarter: 1, teamScore: game.statusTeamGoals, opponentScore: game.statusOpponentGoals },
+        { quarter: 2, teamScore: 0, opponentScore: 0 },
+        { quarter: 3, teamScore: 0, opponentScore: 0 },
+        { quarter: 4, teamScore: 0, opponentScore: 0 }
+      ];
+    }
 
-    // Use database-defined fixed scores (all goals in Q1)
-    return [
-      { quarter: 1, teamScore: game.statusTeamGoals, opponentScore: game.statusOpponentGoals },
-      { quarter: 2, teamScore: 0, opponentScore: 0 },
-      { quarter: 3, teamScore: 0, opponentScore: 0 },
-      { quarter: 4, teamScore: 0, opponentScore: 0 }
-    ];
-  }
+    // Special handling for forfeit games - use consistent scoring for forfeit games
+    if (game && game.statusName && game.statusName.startsWith('forfeit-')) {
+      const isWin = game.statusName === 'forfeit-win';
 
-  // For non-fixed-score games, calculate normally
-  const quarters = [1, 2, 3, 4];
+      // For forfeit-loss: 5 goals in Q1 against GK and 5 in Q1 against GD
+      // For forfeit-win: GS and GA score 5 goals each in Q1
+      return [
+        { quarter: 1, teamScore: isWin ? 10 : 0, opponentScore: isWin ? 0 : 10 },
+        { quarter: 2, teamScore: 0, opponentScore: 0 },
+        { quarter: 3, teamScore: 0, opponentScore: 0 },
+        { quarter: 4, teamScore: 0, opponentScore: 0 }
+      ];
+    }
 
-  return quarters.map(quarter => {
-    const quarterStats = gameStats.filter(stat => stat.quarter === quarter);
+    // Regular game calculation
+    const quarterScores = [];
+    for (let quarter = 1; quarter <= 4; quarter++) {
+      const quarterStats = gameStats.filter(stat => stat.quarter === quarter);
+      const teamScore = quarterStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
+      const opponentScore = quarterStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
 
-    const teamScore = quarterStats.reduce((total, stat) => 
-      total + (stat.goalsFor || 0), 0);
+      quarterScores.push({
+        quarter,
+        teamScore,
+        opponentScore
+      });
+    }
 
-    const opponentScore = quarterStats.reduce((total, stat) => 
-      total + (stat.goalsAgainst || 0), 0);
-
-    return {
-      quarter,
-      teamScore,
-      opponentScore
-    };
-  });
-};
+    return quarterScores;
+  };
 
 // Court position roster component
 const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuarter = 1 }) => {
@@ -720,8 +728,7 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
               playerStats = {
                 stats: {
                   goalsFor: positionStat.goalsFor || 0,
-                  goalsAgainst: positionStat.goalsAgainst || 0,
-                  missedGoals: positionStat.missedGoals || 0,
+                  goalsAgainst: positionStat.goalsAgainst || 0                  missedGoals: positionStat.missedGoals || 0,
                   rebounds: positionStat.rebounds || 0,
                   intercepts: positionStat.intercepts || 0,
                   badPass: positionStat.badPass || 0,
@@ -741,8 +748,7 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
                   position={position as Position}
                   playerName={playerName}
                   playerColor={playerColor}
-                  ```text
-playerStats={playerStats}
+                  playerStats={playerStats}
                 />
               </div>
             );
@@ -1615,8 +1621,7 @@ export default function GameDetails() {
                                   style={{ color: awardWinner.avatarColor ? tailwindToHex(awardWinner.avatarColor) : '#7c3aed' }}
                                 >
                                   {awardWinner.displayName || `${awardWinner.firstName} ${awardWinner.lastName}`}
-                                </div>
-                                <div 
+                                </div>                                <div 
                                   className="text-sm"
                                   style={{ color: awardWinner.avatarColor ? tailwindToHex(awardWinner.avatarColor) : '#7c3aed' }}
                                 >
@@ -1825,6 +1830,42 @@ export default function GameDetails() {
 
         </Tabs>
       </div>
+      {/* Final score summary */}
+      {game && (
+        <div className="mt-8">
+          <h2 className="text-2xl font-bold mb-4">Game Result</h2>
+          <div className="flex justify-center items-center">
+            <div className="text-4xl font-bold mr-4">{game.homeTeamName || game.home_team_name}</div>
+            <div className="text-2xl">vs</div>
+            <div className="text-4xl font-bold ml-4">{game.awayTeamName || game.away_team_name}</div>
+          </div>
+          <div className="flex justify-center items-center mt-4">
+            <div className="text-3xl font-bold">{getScoreDisplay()}</div>
+          </div>
+        </div>
+      )}
     </div>
   );
+    const finalTeamScore = quarterScores.reduce((sum, q) => sum + q.teamScore, 0);
+  const finalOpponentScore = quarterScores.reduce((sum, q) => sum + q.opponentScore, 0);
+
+  const result = finalTeamScore > finalOpponentScore ? 'Win' : 
+                 finalTeamScore < finalOpponentScore ? 'Loss' : 'Draw';
+
+  const getScoreDisplay = () => {
+    if (!game) return "- -";
+
+    // Show fixed scores from status if available
+    if (game.statusTeamGoals !== null && game.statusOpponentGoals !== null) {
+      return `${game.statusTeamGoals}-${game.statusOpponentGoals}`;
+    }
+
+    // Show actual scores for completed games
+    if (game.statusIsCompleted) {
+      return `${finalTeamScore}-${finalOpponentScore}`;
+    }
+
+    // Show dash for upcoming games or games without statistics
+    return "- -";
+  };
 }

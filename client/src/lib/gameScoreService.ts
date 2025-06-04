@@ -16,8 +16,13 @@ export interface GameScores {
 }
 
 class GameScoreService {
-  calculateGameScores(stats: GameStat[], gameStatus?: GameStatus): GameScores {
-    // Handle forfeit games
+  calculateGameScores(stats: GameStat[], gameStatus?: GameStatus, statusScores?: { teamGoals: number | null, opponentGoals: number | null }): GameScores {
+    // Handle games with fixed scores from status (forfeit, etc.)
+    if (statusScores && statusScores.teamGoals !== null && statusScores.opponentGoals !== null) {
+      return this.createFixedScores(statusScores.teamGoals, statusScores.opponentGoals);
+    }
+
+    // Handle legacy forfeit games
     if (gameStatus === 'forfeit-win') {
       return this.createForfeitScores(true);
     }
@@ -68,7 +73,25 @@ class GameScoreService {
     };
   }
 
-  async getGameScoresWithCache(gameId: number, stats?: GameStat[], gameStatus?: GameStatus): Promise<GameScores> {
+  private createFixedScores(teamGoals: number, opponentGoals: number): GameScores {
+    const quarterScores = Array.from({ length: 4 }, (_, i) => ({
+      quarter: i + 1,
+      teamScore: i === 0 ? teamGoals : 0,
+      opponentScore: i === 0 ? opponentGoals : 0
+    }));
+
+    const result = teamGoals > opponentGoals ? 'win' : 
+                   teamGoals < opponentGoals ? 'loss' : 'draw';
+
+    return {
+      quarterScores,
+      totalTeamScore: teamGoals,
+      totalOpponentScore: opponentGoals,
+      result
+    };
+  }
+
+  async getGameScoresWithCache(gameId: number, stats?: GameStat[], gameStatus?: GameStatus, statusScores?: { teamGoals: number | null, opponentGoals: number | null }): Promise<GameScores> {
     // Check cache first
     const cachedScores = getCachedScores(gameId, stats, gameStatus);
     if (cachedScores) {
@@ -76,7 +99,7 @@ class GameScoreService {
     }
 
     // Calculate new scores
-    const scores = this.calculateGameScores(stats || [], gameStatus);
+    const scores = this.calculateGameScores(stats || [], gameStatus, statusScores);
     
     // Cache the result
     const legacyFormat = this.convertToLegacyFormat(scores);

@@ -24,12 +24,12 @@ export default function RecentGames({ games, opponents, className, seasonFilter,
     .filter(game => {
       // Use the primary status field from the team-based system
       const isCompleted = game.statusIsCompleted === true;
-      
+
       console.log(`Game ${game.id} completion check:`, {
         statusIsCompleted: game.statusIsCompleted,
         finalResult: isCompleted
       });
-      
+
       return isCompleted;
     })
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
@@ -48,13 +48,13 @@ export default function RecentGames({ games, opponents, className, seasonFilter,
     } else if (game.homeTeamName) {
       return `vs ${game.homeTeamName}`;
     }
-    
+
     // Fallback to old opponent system if available
     if (game.opponentId) {
       const opponent = opponents.find(o => o.id === game.opponentId);
       return opponent ? opponent.teamName : 'Unknown Opponent';
     }
-    
+
     return 'Unknown Opponent';
   };
 

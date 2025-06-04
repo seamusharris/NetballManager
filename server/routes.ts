@@ -879,8 +879,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         name: club.name,
         code: club.code,
         description: club.description,
-        address: club.address,
-        contactEmail: club_email,
+        address: club.address,        contactEmail: club_email,
         contactPhone: club.contact_phone,
         primaryColor: club.primary_color,
         secondaryColor: club.secondary_color
@@ -1178,7 +1177,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const result = await db.execute(sql`
         SELECT 
           g.*,
-          gs.name as status, gs.display_name as status_display_name, gs.is_completed, gs.allows_statistics,
+          gs.name as status, gs.display_name as status_display_name, gs.is_completed, gs.allows_statistics, gs.team_goals, gs.opponent_goals,
           s.name as season_name, s.start_date as season_start, s.end_date as season_end, s.is_active as season_active,
           ht.name as home_team_name, ht.division as home_team_division, ht.club_id as home_club_id,
           at.name as away_team_name, at.division as away_team_division, at.club_id as away_club_id,
@@ -1221,6 +1220,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         statusDisplayName: row.status_display_name,
         statusIsCompleted: row.is_completed,
         statusAllowsStatistics: row.allows_statistics,
+        statusTeamGoals: row.team_goals,
+        statusOpponentGoals: row.opponent_goals,
 
         // Season fields (consistent camelCase)
         seasonName: row.season_name,
@@ -1258,7 +1259,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/games/:id", async (req, res) => {
+  app.get("/api/games/:id", standardAuth({ requireGameAccess: true }), async (req: AuthenticatedRequest, res) => {
     try {
       const gameId = Number(req.params.id);
 
@@ -1266,7 +1267,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const result = await db.execute(sql`
         SELECT 
           g.*,
-          gs.name as status, gs.display_name as status_display_name, gs.is_completed, gs.allows_statistics,
+          gs.name as status, gs.display_name as status_display_name, gs.is_completed, gs.allows_statistics, gs.team_goals, gs.opponent_goals,
           s.name as season_name, s.start_date as season_start, s.end_date as season_end, s.is_active as season_active,
           ht.name as home_team_name, ht.division as home_team_division, ht.club_id as home_club_id,
           at.name as away_team_name, at.division as away_team_division, at.club_id as away_club_id,
@@ -1306,6 +1307,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         statusDisplayName: row.status_display_name,
         statusIsCompleted: row.is_completed,
         statusAllowsStatistics: row.allows_statistics,
+        statusTeamGoals: row.team_goals,
+        statusOpponentGoals: row.opponent_goals,
 
         // Season fields (consistent camelCase)
         seasonName: row.season_name,
