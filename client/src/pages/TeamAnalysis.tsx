@@ -1,4 +1,3 @@
-
 import { Helmet } from 'react-helmet';
 import { useQuery } from '@tanstack/react-query';
 import { useClub } from '@/contexts/ClubContext';
@@ -87,7 +86,7 @@ const calculateQuarterAnalysis = (gameResults: any[]) => {
         const quarterStats = result.gameStats.filter((stat: any) => stat.quarter === quarter);
         const teamScore = quarterStats.reduce((sum: number, stat: any) => sum + (stat.goalsFor || 0), 0);
         const opponentScore = quarterStats.reduce((sum: number, stat: any) => sum + (stat.goalsAgainst || 0), 0);
-        
+
         quarterData[quarter].teamScores.push(teamScore);
         quarterData[quarter].opponentScores.push(opponentScore);
       });
@@ -108,14 +107,14 @@ const calculateQuarterAnalysis = (gameResults: any[]) => {
     const avgOpponentScore = data.opponentScores.length > 0 
       ? data.opponentScores.reduce((a, b) => a + b, 0) / data.opponentScores.length 
       : 0;
-    
+
     const differential = avgTeamScore - avgOpponentScore;
-    
+
     if (differential > bestDifferential) {
       bestDifferential = differential;
       strongestQuarter = quarter;
     }
-    
+
     if (differential < worstDifferential) {
       worstDifferential = differential;
       weakestQuarter = quarter;
@@ -134,12 +133,12 @@ const calculateQuarterAnalysis = (gameResults: any[]) => {
 const calculateScoringTrends = (gameResults: any[], currentClubId: number) => {
   const homeGames = gameResults.filter(r => r.game.homeClubId === currentClubId);
   const awayGames = gameResults.filter(r => r.game.awayClubId === currentClubId);
-  
+
   const homeWins = homeGames.filter(g => g.result === 'Win').length;
   const awayWins = awayGames.filter(g => g.result === 'Win').length;
-  
+
   const homeAdvantage = homeGames.length > 0 ? (homeWins / homeGames.length) * 100 : 0;
-  
+
   return {
     homeAdvantage: Math.round(homeAdvantage),
     homeRecord: { wins: homeWins, total: homeGames.length },
@@ -183,31 +182,6 @@ export default function TeamAnalysis() {
     teamPerformanceMatrix: {}
   });
 
-  if (clubLoading || !currentClubId) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <Loader2 className="mx-auto h-8 w-8 animate-spin" />
-          <p className="mt-2 text-sm text-muted-foreground">Loading club data...</p>
-        </div>
-      </div>
-    );
-  }
-
-  const isLoading = isLoadingGames || isLoadingStats || isLoadingTeams || isLoadingOpponents;
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <h2 className="text-xl font-semibold mb-2">Loading Team Analysis</h2>
-          <p className="text-muted-foreground">Analyzing matchups and performance data...</p>
-        </div>
-      </div>
-    );
-  }
-
   // Helper function to calculate momentum
   const calculateMomentum = (results: string[]) => {
     if (results.length === 0) return { trend: 'stable' as const, strength: 0, recentForm: [] };
@@ -225,7 +199,7 @@ export default function TeamAnalysis() {
     });
 
     const trend = momentum > 1 ? 'up' : momentum < -1 ? 'down' : 'stable';
-    
+
     return {
       trend,
       strength: Math.abs(momentum),
@@ -233,7 +207,8 @@ export default function TeamAnalysis() {
     };
   };
 
-  // Calculate advanced analytics
+  // Calculate advanced analytics (moved above conditional returns)
+  // useEffect moved above to fix hooks order
   useEffect(() => {
     if (!centralizedStats || Object.keys(centralizedStats).length === 0) return;
 
@@ -267,7 +242,7 @@ export default function TeamAnalysis() {
         if (stat.position && positions.includes(stat.position)) {
           const quarter = `quarter${stat.quarter}`;
           const countKey = `${quarter}Count`;
-          
+
           if (positionStats[stat.position][quarter] !== undefined) {
             // Calculate efficiency as goals scored minus goals conceded
             const efficiency = (stat.goalsFor || 0) - (stat.goalsAgainst || 0);
@@ -289,7 +264,7 @@ export default function TeamAnalysis() {
         quarter4: stats.quarter4Count > 0 ? stats.quarter4 / stats.quarter4Count : 0,
         overall: 0
       };
-      
+
       const totalQuarters = [1, 2, 3, 4].filter(q => stats[`quarter${q}Count`] > 0).length;
       if (totalQuarters > 0) {
         positionEfficiency[position].overall = 
@@ -308,7 +283,7 @@ export default function TeamAnalysis() {
     completedGames.forEach(game => {
       const gameStats = centralizedStats[game.id] || [];
       const quarterScores = { team: [0, 0, 0, 0], opponent: [0, 0, 0, 0] };
-      
+
       gameStats.forEach(stat => {
         if (stat.quarter >= 1 && stat.quarter <= 4) {
           quarterScores.team[stat.quarter - 1] += stat.goalsFor || 0;
@@ -320,15 +295,15 @@ export default function TeamAnalysis() {
       for (let q = 0; q < 3; q++) {
         const teamRunning = quarterScores.team.slice(0, q + 1).reduce((a, b) => a + b, 0);
         const opponentRunning = quarterScores.opponent.slice(0, q + 1).reduce((a, b) => a + b, 0);
-        
+
         if (teamRunning < opponentRunning) {
           totalDeficits++;
           totalDeficitSize += (opponentRunning - teamRunning);
-          
+
           // Check if they recovered by game end
           const finalTeam = quarterScores.team.reduce((a, b) => a + b, 0);
           const finalOpponent = quarterScores.opponent.reduce((a, b) => a + b, 0);
-          
+
           if (finalTeam >= finalOpponent) {
             deficitRecoveries++;
           }
@@ -351,7 +326,7 @@ export default function TeamAnalysis() {
       const gameStats = centralizedStats[game.id] || [];
       const teamScore = gameStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
       const opponentScore = gameStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
-      
+
       const opponentName = opponent ? opponent.teamName : (
         game.homeClubId === currentClubId ? game.awayTeamName : game.homeTeamName
       );
@@ -366,7 +341,7 @@ export default function TeamAnalysis() {
 
       teamPerformanceMatrix[opponentName].total++;
       teamPerformanceMatrix[opponentName].totalScore += teamScore;
-      
+
       if (getWinLoseLabel(teamScore, opponentScore) === 'Win') {
         teamPerformanceMatrix[opponentName].wins++;
       }
@@ -393,6 +368,32 @@ export default function TeamAnalysis() {
 
   }, [centralizedStats, completedGames, opponents, currentClubId]);
 
+  if (clubLoading || !currentClubId) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <Loader2 className="mx-auto h-8 w-8 animate-spin" />
+          <p className="mt-2 text-sm text-muted-foreground">Loading club data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const isLoading = isLoadingGames || isLoadingStats || isLoadingTeams || isLoadingOpponents;
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <h2 className="text-xl font-semibold mb-2">Loading Team Analysis</h2>
+          <p className="text-muted-foreground">Analyzing matchups and performance data...</p>
+        </div>
+      </div>
+    );
+  }
+
+
   // Calculate opponent team data
   const opponentTeamsData: OpponentTeamData[] = [];
   const processedTeams = new Set<number>();
@@ -404,10 +405,10 @@ export default function TeamAnalysis() {
     const opponentTeamName = isHomeGame ? game.awayTeamName : game.homeTeamName;
     const opponentClubName = isHomeGame ? game.awayClubName : game.homeClubName;
     const opponentDivision = isHomeGame ? game.awayTeamDivision : game.homeTeamDivision;
-    
+
     if (!processedTeams.has(opponentTeamId)) {
       processedTeams.add(opponentTeamId);
-      
+
       // Get all games against this opponent
       const gamesVsOpponent = completedGames.filter(g => {
         const isHome = g.homeClubId === currentClubId;
@@ -427,11 +428,11 @@ export default function TeamAnalysis() {
         const gameResults = gamesVsOpponent.map(g => {
           const isHome = g.homeClubId === currentClubId;
           const gameStats = centralizedStats[g.id] || [];
-          
+
           // Calculate scores from game statistics
           let ourScore = 0;
           let theirScore = 0;
-          
+
           if (gameStats.length > 0) {
             gameStats.forEach(stat => {
               ourScore += stat.goalsFor || 0;
@@ -445,9 +446,9 @@ export default function TeamAnalysis() {
 
           totalScoreFor += ourScore;
           totalScoreAgainst += theirScore;
-          
+
           const result = getWinLoseLabel(ourScore, theirScore);
-          
+
           if (result === 'Win') {
             wins++;
             recentForm.push('W');
@@ -514,10 +515,10 @@ export default function TeamAnalysis() {
     const gameResults = opponentGames.map(g => {
       const isHome = g.homeClubId === currentClubId;
       const gameStats = centralizedStats[g.id] || [];
-      
+
       let ourScore = 0;
       let theirScore = 0;
-      
+
       if (gameStats.length > 0) {
         gameStats.forEach(stat => {
           ourScore += stat.goalsFor || 0;
@@ -590,7 +591,7 @@ export default function TeamAnalysis() {
               </p>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Win Rate</CardTitle>
@@ -637,7 +638,7 @@ export default function TeamAnalysis() {
 
         {/* Advanced Analytics Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          
+
           {/* Performance Momentum Tracker */}
           <Card className="bg-gradient-to-r from-blue-50 to-purple-50">
             <CardHeader>
@@ -733,7 +734,7 @@ export default function TeamAnalysis() {
                 </div>
               ))}
             </div>
-            
+
             {['GS', 'GA', 'WA', 'C', 'WD', 'GD', 'GK'].map(position => (
               <div key={position} className="grid grid-cols-5 gap-2 mb-2">
                 <div className="text-sm font-medium text-gray-700 flex items-center">
@@ -743,7 +744,7 @@ export default function TeamAnalysis() {
                   const efficiency = analytics.positionEfficiency[position]?.[`quarter${quarter}`] || 0;
                   const intensity = Math.min(1, Math.max(0.1, Math.abs(efficiency) / 2));
                   const color = efficiency > 0 ? 'bg-green-500' : efficiency < 0 ? 'bg-red-500' : 'bg-gray-300';
-                  
+
                   return (
                     <div
                       key={quarter}
@@ -821,7 +822,7 @@ export default function TeamAnalysis() {
                     const diff = qData.avgTeamScore - qData.avgOpponentScore;
                     const isStrongest = quarter === detailedStats.quarterAnalysis.strongestQuarter;
                     const isWeakest = quarter === detailedStats.quarterAnalysis.weakestQuarter;
-                    
+
                     return (
                       <div key={quarter} className={`p-3 rounded-lg border-2 ${isStrongest ? 'border-green-500 bg-green-50' : isWeakest ? 'border-red-500 bg-red-50' : 'border-gray-200'}`}>
                         <div className="text-center">
