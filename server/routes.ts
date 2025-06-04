@@ -2398,7 +2398,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         avatarColor: row.avatar_color
       }));
 
-      console.log(`Found ${mappedPlayers.length} unassigned players for season ${seasonId}`);
+      console.log(`Found ${mappedPlayers.length} unassigned players for season ${seasonId}:`, mappedPlayers.map(p => ({ id: p.id, name: p.displayName })));
       res.json(mappedPlayers);
     } catch (error) {
       console.error('Error fetching unassigned players:', error);

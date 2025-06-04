@@ -153,7 +153,8 @@ export default function Players() {
 
   if (teamId) {
     // Team-specific view with management capabilities
-    const availablePlayers = availablePlayersForTeam;
+    // Display available players (for team view) - use unassigned players from new endpoint
+  const availablePlayers = teamId ? availablePlayersForTeam : [];
 
     return (
       <>
@@ -271,7 +272,7 @@ export default function Players() {
                               clubId: currentClub?.id // Include club ID in player creation
                             });
                             const newPlayer = response;
-                            
+
                             // Ensure the player is associated with the current club
                             if (currentClub?.id && newPlayer.id) {
                               try {
@@ -282,13 +283,13 @@ export default function Players() {
                                 // Don't fail the entire operation if club association fails
                               }
                             }
-                            
+
                             // Invalidate all relevant queries to refresh the UI
                             queryClient.invalidateQueries({ queryKey: ['players'] });
                             queryClient.invalidateQueries({ queryKey: ['unassigned-players'] });
                             queryClient.invalidateQueries({ queryKey: ['clubs', currentClub?.id, 'players'] });
                             queryClient.invalidateQueries({ queryKey: ['team-players'] });
-                            
+
                             toast({ title: 'Success', description: 'Player created successfully' });
                           } catch (error) {
                             console.error('Error creating player:', error);
