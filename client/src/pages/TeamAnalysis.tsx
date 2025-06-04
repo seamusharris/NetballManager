@@ -943,50 +943,55 @@ export default function TeamAnalysis() {
                           {category.teams
                             .sort((a, b) => b.winRate - a.winRate)
                             .map((team) => (
-                              <div key={team.teamId} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
-                                <div className="flex-1">
-                                  <div className="flex items-center justify-between">
-                                    <div>
-                                      <h4 className="font-semibold text-sm">{team.teamName}</h4>
-                                      <p className="text-xs text-gray-500">{team.clubName}</p>
-                                      {team.division && (
-                                        <p className="text-xs text-gray-400">{team.division}</p>
-                                      )}
-                                    </div>
-                                    <div className="text-right">
-                                      <div className={`text-lg font-bold ${category.color}`}>
-                                        {team.winRate.toFixed(0)}%
-                                      </div>
-                                      <div className="text-xs text-gray-500">
-                                        {team.wins}-{team.losses}{team.draws > 0 && `-${team.draws}`}
-                                      </div>
-                                    </div>
-                                  </div>
-                                  
-                                  <div className="flex items-center justify-between mt-2">
-                                    <div className="flex gap-4 text-xs text-gray-600">
-                                      <span>{team.totalGames} games</span>
-                                      <span>{team.avgScoreFor.toFixed(1)} avg</span>
-                                      <span className={team.scoreDifferential >= 0 ? 'text-green-600' : 'text-red-600'}>
-                                        {team.scoreDifferential >= 0 ? '+' : ''}{team.scoreDifferential.toFixed(1)} diff
-                                      </span>
-                                    </div>
-                                    
-                                    {team.recentForm.length > 0 && (
-                                      <div className="flex items-center gap-1">
-                                        <span className="text-xs text-gray-500">Form:</span>
-                                        {team.recentForm.slice(-3).map((result, formIndex) => (
-                                          <Badge 
-                                            key={formIndex} 
-                                            variant="secondary" 
-                                            className={`w-5 h-5 p-0 flex items-center justify-center text-xs ${getFormBadgeColor(result)}`}
-                                          >
-                                            {result}
-                                          </Badge>
-                                        ))}
-                                      </div>
+                              <div 
+                                key={team.teamId} 
+                                className={`p-3 rounded-lg border-2 ${category.bgColor} ${category.borderColor}`}
+                              >
+                                <div className="flex items-center justify-between">
+                                  <div className="flex-1">
+                                    <h4 className={`font-semibold text-sm ${category.color}`}>
+                                      {team.teamName}
+                                    </h4>
+                                    <p className="text-xs text-gray-600">{team.clubName}</p>
+                                    {team.division && (
+                                      <p className="text-xs text-gray-500">{team.division}</p>
                                     )}
                                   </div>
+                                  <div className="text-right">
+                                    <div className={`text-lg font-bold ${category.color}`}>
+                                      {team.winRate.toFixed(0)}%
+                                    </div>
+                                    <div className="text-xs text-gray-600">
+                                      {team.wins}-{team.losses}{team.draws > 0 && `-${team.draws}`}
+                                    </div>
+                                  </div>
+                                </div>
+                                
+                                <div className="flex items-center justify-between mt-2">
+                                  <div className="flex gap-3 text-xs text-gray-600">
+                                    <span>{team.totalGames} games</span>
+                                    <span>{team.avgScoreFor.toFixed(1)} avg</span>
+                                    <span className={team.scoreDifferential >= 0 ? 'text-green-600' : 'text-red-600'}>
+                                      {team.scoreDifferential >= 0 ? '+' : ''}{team.scoreDifferential.toFixed(1)}
+                                    </span>
+                                  </div>
+                                  
+                                  {team.recentForm.length > 0 && (
+                                    <div className="flex items-center gap-1">
+                                      <span className="text-xs text-gray-500">Form:</span>
+                                      {team.recentForm.slice(-3).map((result, formIndex) => (
+                                        <div
+                                          key={formIndex}
+                                          className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold text-white ${
+                                            result === 'W' ? 'bg-green-500' :
+                                            result === 'D' ? 'bg-yellow-500' : 'bg-red-500'
+                                          }`}
+                                        >
+                                          {result}
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
                                 </div>
                               </div>
                             ))}
