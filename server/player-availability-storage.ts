@@ -1,3 +1,4 @@
+
 import { db } from './db';
 import { sql } from 'drizzle-orm';
 
@@ -14,6 +15,8 @@ export class PlayerAvailabilityStorage {
 
   async getPlayerAvailabilityForGame(gameId: number): Promise<number[]> {
     try {
+      console.log(`Checking for existing availability records for game ${gameId}`);
+      
       // First check if any availability records exist for this game
       const existingRecords = await db.execute(sql`
         SELECT COUNT(*) as count FROM player_availability WHERE game_id = ${gameId}
@@ -32,10 +35,9 @@ export class PlayerAvailabilityStorage {
         console.log(`Found ${playersResult.rows.length} active players to create availability records for`);
 
         // Create availability records for all active players (default to available)
-        // This applies to both upcoming and completed games that lack availability data
         for (const player of playersResult.rows) {
           try {
-            // First check if record already exists
+            // Double-check if record already exists (race condition protection)
             const existingRecord = await db.execute(sql`
               SELECT id FROM player_availability 
               WHERE game_id = ${gameId} AND player_id = ${player.id}
@@ -52,14 +54,13 @@ export class PlayerAvailabilityStorage {
               console.log(`Availability record already exists for game ${gameId}, player ${player.id}`);
             }
           } catch (error: any) {
-            // Handle any remaining errors gracefully
-            console.error(`Error handling availability record for game ${gameId}, player ${player.id}:`, error.message);
+            console.error(`Error creating availability record for game ${gameId}, player ${player.id}:`, error.message);
             // Continue processing other players instead of stopping
             continue;
           }
         }
 
-        console.log(`Created default availability records for game ${gameId}`);
+        console.log(`Completed creating default availability records for game ${gameId}`);
 
         // Return all active player IDs as available
         return playersResult.rows.map(row => row.id as number);
@@ -74,7 +75,9 @@ export class PlayerAvailabilityStorage {
         WHERE game_id = ${gameId} AND is_available = true
       `);
 
+      console.log(`Returning ${result.rows.length} available players for game ${gameId}`);
       return result.rows.map(row => row.player_id as number);
+      
     } catch (error) {
       console.error('Error fetching player availability:', error);
       return [];
@@ -83,35 +86,47 @@ export class PlayerAvailabilityStorage {
 
   async setPlayerAvailabilityForGame(gameId: number, availablePlayerIds: number[]): Promise<boolean> {
     try {
+      console.log(`Setting availability for game ${gameId}: ${availablePlayerIds.length} players available`);
+      
       // Start transaction
       await db.execute(sql`BEGIN`);
 
-      // Get all active players to determine who should be marked as unavailable
-      const allPlayersResult = await db.execute(sql`
-        SELECT id FROM players WHERE active = true
-      `);
-      const allActivePlayerIds = allPlayersResult.rows.map(row => row.id as number);
-
-      // Clear existing availability for this game
-      await db.execute(sql`
-        DELETE FROM player_availability WHERE game_id = ${gameId}
-      `);
-
-      // Insert records for all active players
-      for (const playerId of allActivePlayerIds) {
-        const isAvailable = availablePlayerIds.includes(playerId);
-        await db.execute(sql`
-          INSERT INTO player_availability (game_id, player_id, is_available, created_at, updated_at)
-          VALUES (${gameId}, ${playerId}, ${isAvailable}, NOW(), NOW())
+      try {
+        // Get all active players to determine who should be marked as unavailable
+        const allPlayersResult = await db.execute(sql`
+          SELECT id FROM players WHERE active = true
         `);
-      }
+        const allActivePlayerIds = allPlayersResult.rows.map(row => row.id as number);
+        console.log(`Found ${allActivePlayerIds.length} active players total`);
 
-      // Commit transaction
-      await db.execute(sql`COMMIT`);
-      return true;
+        // Clear existing availability for this game
+        const deleteResult = await db.execute(sql`
+          DELETE FROM player_availability WHERE game_id = ${gameId}
+        `);
+        console.log(`Deleted ${deleteResult.rowCount || 0} existing availability records for game ${gameId}`);
+
+        // Insert records for all active players
+        let insertedCount = 0;
+        for (const playerId of allActivePlayerIds) {
+          const isAvailable = availablePlayerIds.includes(playerId);
+          await db.execute(sql`
+            INSERT INTO player_availability (game_id, player_id, is_available, created_at, updated_at)
+            VALUES (${gameId}, ${playerId}, ${isAvailable}, NOW(), NOW())
+          `);
+          insertedCount++;
+        }
+
+        console.log(`Inserted ${insertedCount} availability records for game ${gameId}`);
+
+        // Commit transaction
+        await db.execute(sql`COMMIT`);
+        return true;
+      } catch (error) {
+        // Rollback on error
+        await db.execute(sql`ROLLBACK`);
+        throw error;
+      }
     } catch (error) {
-      // Rollback on error
-      await db.execute(sql`ROLLBACK`);
       console.error('Error setting player availability:', error);
       return false;
     }
@@ -119,6 +134,8 @@ export class PlayerAvailabilityStorage {
 
   async updatePlayerAvailability(gameId: number, playerId: number, isAvailable: boolean): Promise<boolean> {
     try {
+      console.log(`Updating availability for game ${gameId}, player ${playerId}: ${isAvailable ? 'available' : 'unavailable'}`);
+      
       // Check if record exists first
       const existingRecord = await db.execute(sql`
         SELECT id FROM player_availability 
@@ -127,17 +144,19 @@ export class PlayerAvailabilityStorage {
 
       if (existingRecord.rows.length > 0) {
         // Update existing record
-        await db.execute(sql`
+        const updateResult = await db.execute(sql`
           UPDATE player_availability 
           SET is_available = ${isAvailable}, updated_at = NOW()
           WHERE game_id = ${gameId} AND player_id = ${playerId}
         `);
+        console.log(`Updated existing availability record: ${updateResult.rowCount || 0} rows affected`);
       } else {
         // Insert new record
         await db.execute(sql`
           INSERT INTO player_availability (game_id, player_id, is_available, created_at, updated_at)
           VALUES (${gameId}, ${playerId}, ${isAvailable}, NOW(), NOW())
         `);
+        console.log(`Created new availability record for game ${gameId}, player ${playerId}`);
       }
 
       return true;
@@ -149,9 +168,11 @@ export class PlayerAvailabilityStorage {
 
   async clearAvailabilityForGame(gameId: number): Promise<boolean> {
     try {
-      await db.execute(sql`
+      console.log(`Clearing all availability records for game ${gameId}`);
+      const result = await db.execute(sql`
         DELETE FROM player_availability WHERE game_id = ${gameId}
       `);
+      console.log(`Cleared ${result.rowCount || 0} availability records for game ${gameId}`);
       return true;
     } catch (error) {
       console.error('Error clearing game availability:', error);
