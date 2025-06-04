@@ -74,13 +74,15 @@ export default function Roster() {
   useEffect(() => {
     console.log('useEffect triggered - gameIdFromUrl:', gameIdFromUrl, 'selectedGameId:', selectedGameId);
     if (gameIdFromUrl && gameIdFromUrl !== selectedGameId) {
-      console.log('Setting game from URL:', gameIdFromUrl);
+      console.log('Setting game from URL parameter:', gameIdFromUrl);
       setSelectedGameId(gameIdFromUrl);
-      // Go to availability step when coming from a direct link (e.g., from game details)
       setCurrentStep('availability');
       console.log('Set current step to availability for game:', gameIdFromUrl);
+    } else if (!gameIdFromUrl && selectedGameId) {
+      // If there's no URL parameter but we have a selected game, show game selection
+      setCurrentStep('game-selection');
     }
-  }, [gameIdFromUrl, selectedGameId]); // Keep both dependencies but handle properly
+  }, [gameIdFromUrl, selectedGameId]);
 
   // Debug logging for rendering conditions
   useEffect(() => {

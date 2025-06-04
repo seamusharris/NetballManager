@@ -1,11 +1,4 @@
-` tags.
 
-```text
-The code has been modified to fix the fallback logic to return all active players instead of an empty array when the primary query fails.
-```
-
-```
-<replit_final_file>
 import { db } from './db';
 import { sql } from 'drizzle-orm';
 
