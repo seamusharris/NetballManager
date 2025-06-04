@@ -109,7 +109,7 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
         queryClient.invalidateQueries();
       }, 100); // Small delay to ensure state is updated
     }
-  }, [userClubs, queryClient, currentClubId]);
+  }, [userClubs, queryClient]);
 
   // Keep API client in sync with currentClubId changes
   useEffect(() => {
