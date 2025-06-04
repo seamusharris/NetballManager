@@ -1,4 +1,5 @@
 import { useQueries, useQueryClient, useQuery } from '@tanstack/react-query';
+import { useMemo } from 'react';
 import { statisticsService, GameScores, GameStat } from '@/lib/statisticsService';
 import { 
   getCachedScores, 
@@ -24,13 +25,31 @@ export function useGamesScores(gameIds: number[], forceFresh = false) {
   const freshQueryKey = forceFresh ? Date.now() : 'cached';
   const { currentClub } = useClub();
 
+  // Stabilize gameIds to prevent unnecessary re-renders
+  const stableGameIds = useMemo(() => {
+    return gameIds.length > 0 ? [...gameIds].sort((a, b) => a - b) : [];
+  }, [gameIds]);
+
+  // Create a stable query key that won't change unnecessarily
+  const queryKey = useMemo(() => [
+    'batchGameStats', 
+    stableGameIds.join(','), 
+    freshQueryKey, 
+    currentClub?.id || 'no-club'
+  ], [stableGameIds, freshQueryKey, currentClub?.id]);
+
   // Use a single query to fetch batch stats for all games
   const { data: batchStats, isLoading, error } = useQuery({
-    queryKey: ['batchGameStats', gameIds.sort().join(','), freshQueryKey, currentClub?.id],
+    queryKey,
     queryFn: async () => {
-      if (!gameIds.length || !currentClub?.id) return {};
+      if (!stableGameIds.length || !currentClub?.id) {
+        console.log('useGamesScores: Skipping fetch - no games or no club');
+        return {};
+      }
 
       try {
+        console.log(`useGamesScores: Fetching batch stats for ${stableGameIds.length} games:`, stableGameIds);
+        
         // Use the batch endpoint to get stats for all games at once
         const response = await fetch('/api/games/stats/batch', {
           method: 'POST',
@@ -38,7 +57,7 @@ export function useGamesScores(gameIds: number[], forceFresh = false) {
             'Content-Type': 'application/json',
             'x-current-club-id': currentClub.id.toString(),
           },
-          body: JSON.stringify({ gameIds }),
+          body: JSON.stringify({ gameIds: stableGameIds }),
         });
         
         if (!response.ok) {
@@ -47,43 +66,61 @@ export function useGamesScores(gameIds: number[], forceFresh = false) {
         }
         
         const data = await response.json();
-        console.log(`useGamesScores: Fetched batch stats for games ${gameIds.join(',')}:`, data);
+        console.log(`useGamesScores: Fetched batch stats for games ${stableGameIds.join(',')}:`, data);
         return data || {};
       } catch (error) {
         console.error('useGamesScores: Error fetching batch stats:', error);
         throw error;
       }
     },
-    enabled: gameIds.length > 0 && !!currentClub?.id,
+    enabled: stableGameIds.length > 0 && !!currentClub?.id,
     staleTime: forceFresh ? 0 : 15 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
+    refetchOnWindowFocus: false, // Prevent unnecessary refetches
+    refetchOnMount: false, // Use cache when possible
   });
 
   // Get games data to handle forfeit games properly
   const { data: games = [] } = useQuery({
-    queryKey: ['games', currentClub?.id],
+    queryKey: ['games', currentClub?.id || 'no-club'],
     queryFn: async () => {
-      if (!currentClub?.id) return [];
-      
-      const response = await fetch('/api/games', {
-        headers: {
-          'x-current-club-id': currentClub.id.toString(),
-        },
-      });
-      if (!response.ok) {
-        throw new Error(`Failed to fetch games: ${response.statusText}`);
+      if (!currentClub?.id) {
+        console.log('useGamesScores: No club ID, returning empty games array');
+        return [];
       }
-      return response.json();
+      
+      try {
+        const response = await fetch('/api/games', {
+          headers: {
+            'x-current-club-id': currentClub.id.toString(),
+          },
+        });
+        if (!response.ok) {
+          throw new Error(`Failed to fetch games: ${response.statusText}`);
+        }
+        const gamesData = await response.json();
+        console.log(`useGamesScores: Fetched ${gamesData.length} games for club ${currentClub.id}`);
+        return gamesData;
+      } catch (error) {
+        console.error('useGamesScores: Error fetching games:', error);
+        return [];
+      }
     },
     enabled: !!currentClub?.id,
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   // Calculate scores for each game using the batch stats
-  const scoresMap: Record<number, GameScores | undefined> = {};
+  const scoresMap: Record<number, GameScores | undefined> = useMemo(() => {
+    if (!batchStats || games.length === 0 || stableGameIds.length === 0) {
+      return {};
+    }
 
-  if (batchStats && games.length > 0) {
-    gameIds.forEach(gameId => {
+    const newScoresMap: Record<number, GameScores | undefined> = {};
+
+    stableGameIds.forEach(gameId => {
       const game = games.find(g => g.id === gameId);
       const stats = batchStats[gameId] || [];
 
@@ -92,7 +129,7 @@ export function useGamesScores(gameIds: number[], forceFresh = false) {
         if (!forceFresh) {
           const cached = getCachedScores(gameId, stats, game.status);
           if (cached) {
-            scoresMap[gameId] = cached;
+            newScoresMap[gameId] = cached;
             return;
           }
         }
@@ -133,10 +170,12 @@ export function useGamesScores(gameIds: number[], forceFresh = false) {
 
         // Cache the calculated scores
         cacheScores(gameId, scores, stats, game.status);
-        scoresMap[gameId] = scores;
+        newScoresMap[gameId] = scores;
       }
     });
-  }
+
+    return newScoresMap;
+  }, [batchStats, games, stableGameIds, forceFresh]);
   const queryClient = useQueryClient();
 
   return {
