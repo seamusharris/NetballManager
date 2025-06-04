@@ -8,9 +8,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SimplePlayerForm } from '@/components/players/SimplePlayerForm';
 import { UserPlus, UserMinus, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useLocation } from 'wouter';
 
 export default function Players() {
   const { currentClub, hasPermission, isLoading: clubLoading, switchToClub } = useClub();
@@ -29,6 +31,7 @@ export default function Players() {
   const params = useParams();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const [location, navigate] = useLocation();
 
   // Handle club ID from URL parameter
   useEffect(() => {
@@ -52,6 +55,20 @@ export default function Players() {
       if (!response.ok) throw new Error('Failed to fetch active season');
       return response.json();
     },
+  });
+
+  // Get all teams for the dropdown
+  const { data: allTeams = [] } = useQuery({
+    queryKey: ['teams', currentClub?.id],
+    queryFn: async () => {
+      if (!currentClub?.id) return [];
+      const response = await fetch(`/api/teams`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    },
+    enabled: !!currentClub?.id,
   });
 
   // Get team details if viewing a specific team
@@ -160,19 +177,48 @@ export default function Players() {
         </Helmet>
 
         <div className="space-y-6">
-          {/* Team Header */}
-          {teamData && (
-            <div className="mb-6">
-              <h1 className="text-2xl font-bold text-gray-900">
-                {teamData.name}
-              </h1>
-              {teamData.division && (
-                <p className="text-lg text-gray-600 mt-1">
-                  {teamData.division}
-                </p>
-              )}
+          {/* Team Header with Dropdown */}
+          <div className="mb-6">
+            <div className="flex items-center justify-between">
+              <div>
+                {teamData && (
+                  <>
+                    <h1 className="text-2xl font-bold text-gray-900">
+                      {teamData.name}
+                    </h1>
+                    {teamData.division && (
+                      <p className="text-lg text-gray-600 mt-1">
+                        {teamData.division}
+                      </p>
+                    )}
+                  </>
+                )}
+              </div>
+              {/* Team Switcher Dropdown */}
+              <div className="w-64">
+                <Select
+                  value={teamId?.toString() || ""}
+                  onValueChange={(value) => {
+                    const newTeamId = parseInt(value);
+                    navigate(`/clubs/${currentClub?.id}/teams/${newTeamId}/players`);
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Switch Team" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {allTeams
+                      .filter(team => team.name !== 'BYE') // Filter out BYE teams
+                      .map(team => (
+                        <SelectItem key={team.id} value={team.id.toString()}>
+                          {team.name} {team.division && `(${team.division})`}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-          )}
+          </div>
 
           {/* Current Team Players */}
           <Card>
