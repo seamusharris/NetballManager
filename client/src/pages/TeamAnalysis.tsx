@@ -13,6 +13,7 @@ import { useLocation } from 'wouter';
 import { getWinLoseLabel } from '@/lib/utils';
 import { useState, useEffect } from 'react';
 import { PlayerCombinationAnalysis } from '@/components/dashboard/PlayerCombinationAnalysis';
+import { TeamPositionAnalysis } from '@/components/dashboard/TeamPositionAnalysis';
 
 interface OpponentTeamData {
   teamId: number;
@@ -1018,6 +1019,15 @@ export default function TeamAnalysis() {
 
         {/* Player Combination Analysis */}
         <PlayerCombinationAnalysis 
+          games={completedGames}
+          players={players}
+          centralizedStats={centralizedStats}
+          centralizedRosters={centralizedRosters}
+          currentClubId={currentClubId}
+        />
+
+        {/* Team Position Analysis */}
+        <TeamPositionAnalysis 
           games={completedGames}
           players={players}
           centralizedStats={centralizedStats}
