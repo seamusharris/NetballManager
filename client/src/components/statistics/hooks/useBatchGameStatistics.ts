@@ -47,7 +47,7 @@ export function useBatchGameStatistics(gameIds: number[], forceFresh: boolean = 
         return {};
       }
 
-      return await statisticsService.postBatchGameStats(sortedGameIds);
+      return await statisticsService.getBatchGameStats(sortedGameIds);
     },
     enabled: sortedGameIds.length > 0,
     staleTime: forceFresh ? 0 : CACHE_SETTINGS.BATCH_QUERY_STALE_TIME,

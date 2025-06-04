@@ -173,24 +173,10 @@ class UnifiedStatisticsService {
       return {};
     }
 
-    // Use the same direct approach that works for GamesList
-    const gameIdsParam = validIds.join(',');
-    const url = `/api/games/stats/batch?gameIds=${encodeURIComponent(gameIdsParam)}`;
-
     try {
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch batch game stats: ${response.statusText}`);
-      }
-
-      const result = await response.json();
-      return result;
+      // Use POST method with proper authentication
+      const result = await apiRequest('POST', '/api/games/stats/batch', { gameIds: validIds });
+      return result || {};
     } catch (error) {
       console.error('getBatchGameStats: Error fetching batch stats:', error);
       // Fallback to individual requests
