@@ -80,7 +80,8 @@ export default function PlayerAvailabilityManager({
   const { 
     data: availabilityData, 
     isLoading, 
-    error: availabilityError 
+    error: availabilityError,
+    refetch: refetchAvailability
   } = useDataLoader<{availablePlayerIds: number[]}>(`/api/games/${gameId}/availability`, {
     enabled: !!gameId,
     onError: () => {
@@ -89,6 +90,19 @@ export default function PlayerAvailabilityManager({
       setAvailablePlayerIds(activePlayerIds);
     }
   });
+
+  // Invalidate and refetch availability data when gameId changes
+  useEffect(() => {
+    if (gameId) {
+      console.log('PlayerAvailabilityManager: gameId changed, refetching availability for game:', gameId);
+      // Invalidate the query cache for this specific game's availability
+      queryClient.invalidateQueries({ 
+        queryKey: [`/api/games/${gameId}/availability`] 
+      });
+      // Also trigger a fresh fetch
+      refetchAvailability();
+    }
+  }, [gameId, queryClient, refetchAvailability]);
 
   // Effect to load availability data and set fallbacks
   useEffect(() => {
@@ -203,6 +217,13 @@ export default function PlayerAvailabilityManager({
     try {
       setIsSaving(true);
       await apiClient.patch(`/api/games/${gameId}/availability/${playerId}`, { isAvailable });
+      
+      // Invalidate the cache for this game's availability to ensure fresh data on next load
+      queryClient.invalidateQueries({ 
+        queryKey: [`/api/games/${gameId}/availability`] 
+      });
+      
+      console.log('Player availability updated and cache invalidated for game:', gameId, 'player:', playerId, 'available:', isAvailable);
     } catch (error) {
       console.error('Error updating availability:', error);
       toast({
