@@ -2081,12 +2081,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // User clubs endpoint - return actual clubs from database
   app.get('/api/user/clubs', async (req: any, res) => {
     try {
-      // Import the safe database wrapper
-      const { safeExecute } = await import('./db-wrapper');
+      console.log('Fetching user clubs from database...');
 
       // Get all active clubs and return them as user clubs
       // In a real implementation, this would be filtered by user access
-      const result = await safeExecute(sql`
+      const result = await db.execute(sql`
         SELECT id, name, code FROM clubs WHERE is_active = true ORDER BY name
       `);
 
