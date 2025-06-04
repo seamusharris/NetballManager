@@ -206,11 +206,11 @@ export default function Players() {
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
                 <span>Current Team Players</span>
-                <Badge variant="secondary">{teamPlayers.length} players</Badge>
+                <Badge variant="secondary">{teamPlayers?.length || 0} players</Badge>
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {teamPlayers.length === 0 ? (
+              {!teamPlayers || teamPlayers.length === 0 ? (
                 <p className="text-gray-500 text-center py-4">No players assigned to this team yet.</p>
               ) : (
                 <div className="grid gap-3">
