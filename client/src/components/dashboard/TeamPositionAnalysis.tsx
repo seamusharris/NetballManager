@@ -78,7 +78,7 @@ export function TeamPositionAnalysis({
     }
 
     calculatePositionLineups();
-  }, [centralizedStats, centralizedRosters, selectedQuarter]);
+  }, [centralizedStats, centralizedRosters, selectedQuarter, currentClubId]);
 
   const calculatePositionLineups = () => {
     const completedGames = games.filter(game => 

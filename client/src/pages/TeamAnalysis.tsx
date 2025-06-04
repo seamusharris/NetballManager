@@ -222,10 +222,10 @@ export default function TeamAnalysis() {
   // Calculate advanced analytics (moved above conditional returns)
   // useEffect moved above to fix hooks order
   useEffect(() => {
-    if (!centralizedStats || Object.keys(centralizedStats).length === 0) return;
+    if (!centralizedStats || Object.keys(centralizedStats).length === 0 || completedGames.length === 0) return;
 
     // 1. Performance Momentum Analysis
-    const recentGames = completedGames
+    const recentGames = [...completedGames]
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
       .slice(-5); // Last 5 games
 
@@ -334,28 +334,36 @@ export default function TeamAnalysis() {
     const teamPerformanceMatrix: Record<string, any> = {};
 
     completedGames.forEach(game => {
-      const opponent = opponents.find(o => o.id === game.opponentId);
       const gameStats = centralizedStats[game.id] || [];
       const teamScore = gameStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
       const opponentScore = gameStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
 
-      const opponentName = opponent ? opponent.teamName : (
-        game.homeClubId === currentClubId ? game.awayTeamName : game.homeTeamName
-      );
-
-      if (!teamPerformanceMatrix[opponentName]) {
-        teamPerformanceMatrix[opponentName] = {
-          wins: 0,
-          total: 0,
-          totalScore: 0
-        };
+      // Determine opponent name using the same logic as other components
+      let opponentName = null;
+      const isHomeGame = game.homeClubId === currentClubId;
+      const isAwayGame = game.awayClubId === currentClubId;
+      
+      if (isHomeGame && !isAwayGame) {
+        opponentName = game.awayTeamName;
+      } else if (isAwayGame && !isHomeGame) {
+        opponentName = game.homeTeamName;
       }
 
-      teamPerformanceMatrix[opponentName].total++;
-      teamPerformanceMatrix[opponentName].totalScore += teamScore;
+      if (opponentName && opponentName !== 'Bye') {
+        if (!teamPerformanceMatrix[opponentName]) {
+          teamPerformanceMatrix[opponentName] = {
+            wins: 0,
+            total: 0,
+            totalScore: 0
+          };
+        }
 
-      if (getWinLoseLabel(teamScore, opponentScore) === 'Win') {
-        teamPerformanceMatrix[opponentName].wins++;
+        teamPerformanceMatrix[opponentName].total++;
+        teamPerformanceMatrix[opponentName].totalScore += teamScore;
+
+        if (getWinLoseLabel(teamScore, opponentScore) === 'Win') {
+          teamPerformanceMatrix[opponentName].wins++;
+        }
       }
     });
 
@@ -378,7 +386,7 @@ export default function TeamAnalysis() {
       teamPerformanceMatrix: finalTeamMatrix
     });
 
-  }, [centralizedStats, completedGames, opponents, currentClubId]);
+  }, [centralizedStats, gameIds.join(','), currentClubId]); // Use gameIds string to avoid array reference changes
 
   if (clubLoading || !currentClubId) {
     return (

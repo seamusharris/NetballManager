@@ -80,7 +80,7 @@ export function PlayerCombinationAnalysis({
     }
 
     calculateCombinations();
-  }, [centralizedStats, centralizedRosters, combinationSize, selectedPositions, selectedOpponent]);
+  }, [centralizedStats, centralizedRosters, combinationSize, selectedPositions, selectedOpponent, currentClubId]);
 
   const getPlayerCombinations = (playerIds: number[], size: number): number[][] => {
     if (size > playerIds.length) return [];
