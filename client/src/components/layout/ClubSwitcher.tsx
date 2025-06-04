@@ -13,9 +13,9 @@ import { Badge } from '@/components/ui/badge';
 import { Building2, ChevronDown } from 'lucide-react';
 
 export function ClubSwitcher() {
-  const { currentClub, currentClubId, userClubs, switchClub, isLoading } = useClub();
+  const { currentClub, currentClubId, userClubs, switchClub, isLoading, isInitialized } = useClub();
 
-  if (isLoading) {
+  if (isLoading || !isInitialized) {
     return (
       <Button variant="outline" size="sm" disabled>
         <Building2 className="w-4 h-4 mr-2" />
