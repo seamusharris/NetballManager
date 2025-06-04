@@ -200,7 +200,7 @@ export default function Players() {
                   value={teamId?.toString() || ""}
                   onValueChange={(value) => {
                     const newTeamId = parseInt(value);
-                    navigate(`/clubs/${currentClub?.id}/teams/${newTeamId}/players`);
+                    navigate(`/teams/${newTeamId}/players`);
                   }}
                 >
                   <SelectTrigger>
