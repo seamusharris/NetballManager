@@ -634,7 +634,8 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
       {/* Horizontal court layout with stats below */}
       <div className="flex flex-col gap-6 max-w-7xl mx-auto px-4">
         {/* Horizontal court diagram - significantly taller and more proportional to an actual netball court */}
-        <div className="relative w-full mx-auto h-96 bg-green-100 rounded-lg border border-green-300 shadow-md">
+        <div className="flex justify-center">
+          <div className="relative w-full max-w-4xl h-96 bg-green-100 rounded-lg border border-green-300 shadow-md">
           {/* Court markings - only the three equal vertical sections for horizontal layout */}
           <div className="absolute inset-0 flex flex-row">
             <div className="w-1/3 border-r border-green-500"></div>
@@ -705,6 +706,7 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
               </div>
             );
           })}
+          </div>
         </div>
 
         {/* Stats boxes in horizontal grid below the court */}
