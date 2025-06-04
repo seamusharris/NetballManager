@@ -152,10 +152,11 @@ export function useGamesScores(gameIds: number[], forceFresh = false) {
 
         let scores: GameScores;
 
-        if (game.status === 'forfeit-win' || game.status === 'forfeit-loss') {
-          const isWin = game.status === 'forfeit-win';
+        // Check if game has fixed scores from status (forfeit, etc.)
+        if (game.statusTeamGoals !== null && game.statusTeamGoals !== undefined &&
+            game.statusOpponentGoals !== null && game.statusOpponentGoals !== undefined) {
           const quarterScores = {
-            '1': { for: isWin ? 10 : 0, against: isWin ? 0 : 10 },
+            '1': { for: game.statusTeamGoals, against: game.statusOpponentGoals },
             '2': { for: 0, against: 0 },
             '3': { for: 0, against: 0 },
             '4': { for: 0, against: 0 }
@@ -164,8 +165,8 @@ export function useGamesScores(gameIds: number[], forceFresh = false) {
           scores = {
             quarterScores,
             finalScore: {
-              for: isWin ? 10 : 0,
-              against: isWin ? 0 : 10
+              for: game.statusTeamGoals,
+              against: game.statusOpponentGoals
             }
           };
         } else if (stats && stats.length > 0) {

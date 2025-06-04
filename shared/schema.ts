@@ -12,6 +12,8 @@ export const gameStatuses = pgTable("game_statuses", {
   displayName: text("display_name").notNull(), // User-friendly display name (e.g., 'Forfeit Win', 'BYE', 'Completed')
   points: integer("points").notNull().default(0), // Points awarded for this status
   opponentPoints: integer("opponent_points").notNull().default(0), // Points awarded to opponent
+  teamGoals: integer("team_goals"), // Fixed score for team (null if score comes from statistics)
+  opponentGoals: integer("opponent_goals"), // Fixed score for opponent (null if score comes from statistics)
   isCompleted: boolean("is_completed").notNull().default(false), // Whether this status marks a game as finished
   allowsStatistics: boolean("allows_statistics").notNull().default(true), // Whether stats can be recorded
   requiresOpponent: boolean("requires_opponent").notNull().default(true), // Whether this status requires an opponent

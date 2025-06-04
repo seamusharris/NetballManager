@@ -315,14 +315,14 @@ export function gameAllowsStatistics(game: { status?: string, isBye?: boolean } 
  * @param gameStatus The GameStatus object from the database
  * @returns The forfeit game scores by quarter and final
  */
-export function getForfeitGameScoreFromStatus(gameStatus: { name: string, points: number, opponentPoints: number }) {
-  const isWin = gameStatus.name === 'forfeit-win';
-  const teamScore = gameStatus.points;
-  const opponentScore = gameStatus.opponentPoints;
+export function getForfeitGameScoreFromStatus(gameStatus: { name: string, teamGoals?: number | null, opponentGoals?: number | null }) {
+  // Use the database-defined scores, with fallback to legacy values
+  const teamScore = gameStatus.teamGoals ?? (gameStatus.name === 'forfeit-win' ? 10 : 0);
+  const opponentScore = gameStatus.opponentGoals ?? (gameStatus.name === 'forfeit-win' ? 0 : 10);
 
   return {
     quarterScores: {
-      '1': { for: isWin ? teamScore : 0, against: isWin ? 0 : opponentScore },
+      '1': { for: teamScore, against: opponentScore },
       '2': { for: 0, against: 0 },
       '3': { for: 0, against: 0 },
       '4': { for: 0, against: 0 }
@@ -331,6 +331,16 @@ export function getForfeitGameScoreFromStatus(gameStatus: { name: string, points
     opponentScore,
     finalScore: { for: teamScore, against: opponentScore }
   };
+}
+
+/**
+ * Check if a game status has fixed scores defined
+ * @param gameStatus The GameStatus object from the database
+ * @returns true if the status has fixed team and opponent goals
+ */
+export function gameStatusHasFixedScore(gameStatus: { teamGoals?: number | null, opponentGoals?: number | null }): boolean {
+  return gameStatus.teamGoals !== null && gameStatus.teamGoals !== undefined &&
+         gameStatus.opponentGoals !== null && gameStatus.opponentGoals !== undefined;
 }
 
 /**

@@ -426,21 +426,20 @@ const PlayerStatsByQuarter = ({ roster, players, gameStats }: { roster: any[], p
 
 // Calculate quarter by quarter scores
 const calculateQuarterScores = (gameStats: any[], game: any) => {
-  // Special handling for forfeit games - use consistent scoring for forfeit games
-  if (game && game.statusName && game.statusName.startsWith('forfeit-')) {
-    const isWin = game.statusName === 'forfeit-win';
+  // Check if game status has fixed scores defined
+  if (game && game.statusTeamGoals !== null && game.statusTeamGoals !== undefined &&
+      game.statusOpponentGoals !== null && game.statusOpponentGoals !== undefined) {
 
-    // For forfeit-loss: 5 goals in Q1 against GK and 5 in Q1 against GD
-    // For forfeit-win: GS and GA score 5 goals each in Q1
+    // Use database-defined fixed scores (all goals in Q1)
     return [
-      { quarter: 1, teamScore: isWin ? 10 : 0, opponentScore: isWin ? 0 : 10 },
+      { quarter: 1, teamScore: game.statusTeamGoals, opponentScore: game.statusOpponentGoals },
       { quarter: 2, teamScore: 0, opponentScore: 0 },
       { quarter: 3, teamScore: 0, opponentScore: 0 },
       { quarter: 4, teamScore: 0, opponentScore: 0 }
     ];
   }
 
-  // For non-forfeit games, calculate normally
+  // For non-fixed-score games, calculate normally
   const quarters = [1, 2, 3, 4];
 
   return quarters.map(quarter => {
@@ -742,7 +741,8 @@ const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuart
                   position={position as Position}
                   playerName={playerName}
                   playerColor={playerColor}
-                  playerStats={playerStats}
+                  ```text
+playerStats={playerStats}
                 />
               </div>
             );
@@ -1167,7 +1167,7 @@ export default function GameDetails() {
   // Debug game data
   useEffect(() => {
     if (game) {
-      
+
     }
   }, [game]);
 
