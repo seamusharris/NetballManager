@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'wouter';
 import { cn } from '@/lib/utils';
 import { 
-  X, Menu, Home, Users, ClipboardList, Calendar, CalendarRange, Flag, 
+  X, Menu, Home, Users, ClipboardList, Calendar, CalendarRange, 
   BarChart, Database, SettingsIcon, Zap, Trophy, Building2
 } from 'lucide-react';
 import { TEAM_NAME } from '@/lib/settings';
@@ -23,7 +23,8 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen, isTablet }: Sid
   };
 
   const navLinks = [
-    { path: '/', label: 'Dashboard', icon: <Home className="w-5 h-5" /> },
+    { path: '/', label: 'Team Dashboard', icon: <Home className="w-5 h-5" /> },
+    { path: '/club-dashboard', label: 'Club Dashboard', icon: <Building2 className="w-5 h-5" /> },
     { path: '/players', label: 'Players', icon: <Users className="w-5 h-5" /> },
     { path: '/teams', label: 'Teams', icon: <Users className="w-5 h-5" /> },
     { path: '/roster', label: 'Roster', icon: <ClipboardList className="w-5 h-5" /> },
