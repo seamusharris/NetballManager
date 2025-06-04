@@ -6,7 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useBatchGameStatistics } from '@/components/statistics/hooks/useBatchGameStatistics';
 import { isGameValidForStatistics } from '@/lib/gameFilters';
 import { ViewMoreButton } from '@/components/ui/view-more-button';
-import { PlayerBox } from '@/components/player/player-box';
+import { PlayerBox } from '@/components/ui/player-box';
 
 interface TopPlayersWidgetProps {
   players: Player[];
