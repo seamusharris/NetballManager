@@ -39,6 +39,7 @@ export default function Header({ setIsMobileOpen, isTablet }: HeaderProps) {
     { path: '/data-management', label: 'Data Management', icon: <Database className="w-4 h-4" /> },
     { path: '/performance', label: 'Performance', icon: <Zap className="w-4 h-4" /> },
     { path: '/settings', label: 'Settings', icon: <SettingsIcon className="w-4 h-4" /> },
+    { path: '/club-dashboard', label: 'Club Dashboard', icon: <Trophy className="w-4 h-4" /> },
   ];
 
   return (

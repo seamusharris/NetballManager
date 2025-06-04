@@ -145,7 +145,7 @@ export default function Dashboard() {
   return (
     <>
       <Helmet>
-        <title>Dashboard | {TEAM_NAME} Stats Tracker</title>
+        <title>Team Dashboard | {TEAM_NAME} Stats Tracker</title>
         <meta name="description" content={`View ${TEAM_NAME} team's performance metrics, upcoming games, and player statistics`} />
       </Helmet>
 

@@ -12,6 +12,7 @@ import Players from "@/pages/Players";
 import Roster from "@/pages/Roster";
 import Games from "@/pages/Games";
 import Statistics from "@/pages/Statistics";
+import ClubDashboard from '@/pages/ClubDashboard';
 import PlayerDetails from "@/pages/PlayerDetails";
 import Teams from "@/pages/Teams";
 import ClubManagement from "./pages/ClubManagement";
@@ -71,6 +72,7 @@ function Router() {
         <Route path="/games" component={withErrorBoundary(Games, 'Games')} />
         <Route path="/games/edit/:id" component={withErrorBoundary(Games, 'GameEdit')} />
         <Route path="/game/:id" component={withErrorBoundary(GameDetails, 'GameDetails')} />
+        <Route path="/club-dashboard" component={withErrorBoundary(ClubDashboard, 'ClubDashboard')} />
 
         <Route path="/statistics" component={withErrorBoundary(Statistics, 'Statistics')} />
         <Route path="/clubs" component={withErrorBoundary(ClubManagement, 'ClubManagement')} />
