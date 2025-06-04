@@ -77,16 +77,16 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
       }
 
       console.log('Setting initial club ID:', targetClubId, 'from userClubs:', userClubs);
-      
+
       // Set both state and localStorage synchronously
       setCurrentClubId(targetClubId);
       localStorage.setItem('currentClubId', targetClubId.toString());
-      
+
       // Initialize API client with club context immediately
       apiClient.setClubContext({ currentClubId: targetClubId });
-      
+
       setIsInitialized(true);
-      
+
       // Use setTimeout to ensure state has updated before invalidating queries
       setTimeout(() => {
         console.log('Invalidating queries with club ID:', targetClubId);
@@ -99,7 +99,7 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
     console.log('Switching to club:', clubId, 'Current club:', currentClubId);
     setCurrentClubId(clubId);
     localStorage.setItem('currentClubId', clubId.toString());
-    
+
     // Update API client with new club context
     apiClient.setClubContext({ currentClubId: clubId });
 
