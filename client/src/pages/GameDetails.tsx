@@ -427,8 +427,8 @@ const PlayerStatsByQuarter = ({ roster, players, gameStats }: { roster: any[], p
 // Calculate quarter by quarter scores
 const calculateQuarterScores = (gameStats: any[], game: any) => {
   // Special handling for forfeit games - use consistent scoring for forfeit games
-  if (game && (game.status === 'forfeit-win' || game.status === 'forfeit-loss')) {
-    const isWin = game.status === 'forfeit-win';
+  if (game && game.statusName && game.statusName.startsWith('forfeit-')) {
+    const isWin = game.statusName === 'forfeit-win';
 
     // For forfeit-loss: 5 goals in Q1 against GK and 5 in Q1 against GD
     // For forfeit-win: GS and GA score 5 goals each in Q1
