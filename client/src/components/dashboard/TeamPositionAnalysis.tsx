@@ -399,7 +399,7 @@ export function TeamPositionAnalysis({
                     <div className="bg-gray-50 rounded-lg p-4">
                       <CourtDisplay
                         roster={formatFormationForCourt(lineup.formation)}
-                        players={formatPlayersForCourt(lineup.formation)}
+                        players={players}
                         quarter={1}
                         layout="horizontal"
                         showPositionLabels={true}
@@ -483,7 +483,7 @@ export function TeamPositionAnalysis({
                     <div className="bg-gray-50 rounded-lg p-4">
                       <CourtDisplay
                         roster={formatFormationForCourt(lineup.formation)}
-                        players={formatPlayersForCourt(lineup.formation)}
+                        players={players}
                         quarter={1}
                         layout="horizontal"
                         showPositionLabels={true}
