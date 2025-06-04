@@ -2364,6 +2364,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`Fetching unassigned players for season ${seasonId}, club ${clubId}`);
 
+      // First, let's see what players are in the club
+      const allClubPlayers = await db.execute(sql`
+        SELECT p.id, p.display_name, cp.is_active as club_active, p.active as player_active
+        FROM players p
+        JOIN club_players cp ON p.id = cp.player_id
+        WHERE cp.club_id = ${clubId}
+        ORDER BY p.display_name
+      `);
+      console.log(`All club ${clubId} players:`, allClubPlayers.rows.map(r => `${r.display_name} (club_active: ${r.club_active}, player_active: ${r.player_active})`));
+
+      // Check which players are assigned to this season
+      const seasonPlayers = await db.execute(sql`
+        SELECT p.id, p.display_name
+        FROM players p
+        JOIN club_players cp ON p.id = cp.player_id
+        JOIN player_seasons ps ON p.id = ps.player_id
+        WHERE cp.club_id = ${clubId} 
+          AND ps.season_id = ${seasonId}
+        ORDER BY p.display_name
+      `);
+      console.log(`Players assigned to season ${seasonId}:`, seasonPlayers.rows.map(r => r.display_name));
+
       // Get players from the club who are assigned to this season but not assigned to any team
       const unassignedPlayers = await db.execute(sql`
         SELECT p.id, p.display_name, p.first_name, p.last_name, p.date_of_birth, 
@@ -2384,6 +2406,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           )
         ORDER BY p.display_name
       `);
+      
+      console.log(`Unassigned players query returned ${unassignedPlayers.rows.length} players:`, unassignedPlayers.rows.map(r => r.display_name));
 
       const mappedPlayers = unassignedPlayers.rows.map(row => ({
         id: row.id,
