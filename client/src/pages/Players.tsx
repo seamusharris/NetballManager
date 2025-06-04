@@ -67,18 +67,16 @@ export default function Players() {
     enabled: !!teamId,
   });
 
-  // Get all club players if viewing a team (to show available players)
-  const { data: allClubPlayers = [], isLoading: isLoadingClubPlayers } = useQuery({
-    queryKey: ['players', currentClub?.id],
+  const { data: availablePlayersForTeam = [], isLoading: isLoadingAvailablePlayers } = useQuery({
+    queryKey: ['available-players', teamId, activeSeason?.id],
     queryFn: async () => {
-      if (!currentClub?.id) return [];
-      const response = await fetch(`/api/clubs/${currentClub.id}/players`);
+      const response = await fetch(`/api/teams/${teamId}/available-players?seasonId=${activeSeason?.id}`);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       return response.json();
     },
-    enabled: !!currentClub?.id && !!teamId,
+    enabled: !!teamId && !!activeSeason?.id,
   });
 
   // Get players for non-team view
@@ -108,6 +106,7 @@ export default function Players() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['team-players', teamId] });
+      queryClient.invalidateQueries({ queryKey: ['available-players', teamId, activeSeason?.id] });
       toast({ title: 'Success', description: 'Player added to team' });
     },
     onError: () => {
@@ -125,6 +124,7 @@ export default function Players() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['team-players', teamId] });
+      queryClient.invalidateQueries({ queryKey: ['available-players', teamId, activeSeason?.id] });
       toast({ title: 'Success', description: 'Player removed from team' });
     },
     onError: () => {
@@ -133,13 +133,12 @@ export default function Players() {
   });
 
   const isLoading = teamId 
-    ? isLoadingTeamPlayers || isLoadingClubPlayers
+    ? isLoadingTeamPlayers || isLoadingAvailablePlayers
     : isLoadingPlayers;
 
   if (teamId) {
     // Team-specific view with management capabilities
-    const teamPlayerIds = new Set(teamPlayers.map(p => p.id));
-    const availablePlayers = allClubPlayers.filter(p => !teamPlayerIds.has(p.id) && p.active);
+    const availablePlayers = availablePlayersForTeam;
 
     return (
       <>
@@ -213,6 +212,7 @@ export default function Players() {
                         clubId={currentClub?.id} 
                         onSuccess={() => {
                           queryClient.invalidateQueries({ queryKey: ['players', currentClub?.id] });
+                          queryClient.invalidateQueries({ queryKey: ['available-players', teamId, activeSeason?.id] });
                         }}
                       />
                     </DialogContent>

@@ -302,7 +302,7 @@ export function registerTeamRoutes(app: Express) {
       // If team has games, update those games to remove team references
       if (gameCount > 0) {
         console.log(`Team ${teamId} has ${gameCount} games - updating game references before deletion`);
-        
+
         // Update games to remove team references
         await db.execute(sql`
           UPDATE games 
@@ -503,6 +503,8 @@ export function registerTeamRoutes(app: Express) {
   app.get("/api/teams/:teamId/players", async (req, res) => {
     try {
       const teamId = parseInt(req.params.teamId);
+      const seasonId = await db.execute(sql`SELECT season_id FROM teams WHERE id = ${teamId}`);
+      const parsedSeasonId = seasonId.rows[0]?.season_id;
 
       const result = await db.execute(sql`
         SELECT 
@@ -538,7 +540,48 @@ export function registerTeamRoutes(app: Express) {
         teamPositionPreferences: row.team_position_preferences ? JSON.parse(row.team_position_preferences) : []
       }));
 
-      res.json(players);
+      // Fetch players in the club who are not assigned to any team in that season
+      const availablePlayers = await db.execute(sql`
+        SELECT
+          p.id,
+          p.display_name,
+          p.first_name,
+          p.last_name,
+          p.date_of_birth,
+          p.position_preferences,
+          p.active,
+          p.avatar_color
+        FROM players p
+        JOIN clubs c ON p.club_id = c.id
+        WHERE c.id = (SELECT club_id FROM teams WHERE id = ${teamId})
+          AND p.active = true
+          AND NOT EXISTS (
+            SELECT 1
+            FROM team_players tp
+            JOIN teams t ON tp.team_id = t.id
+            WHERE tp.player_id = p.id
+              AND t.season_id = ${parsedSeasonId}
+          )
+        ORDER BY p.display_name, p.first_name, p.last_name
+      `);
+
+      const mappedAvailablePlayers = availablePlayers.rows.map(row => ({
+        id: row.id,
+        displayName: row.display_name,
+        firstName: row.first_name,
+        lastName: row.last_name,
+        dateOfBirth: row.date_of_birth,
+        positionPreferences: typeof row.position_preferences === 'string'
+          ? JSON.parse(row.position_preferences)
+          : row.position_preferences || [],
+        active: row.active,
+        avatarColor: row.avatar_color
+      }));
+      
+      res.json({
+        teamPlayers: players,
+        availablePlayers: mappedAvailablePlayers
+      });
     } catch (error) {
       console.error("Error fetching team players:", error);
       res.status(500).json({ message: "Failed to fetch team players" });
