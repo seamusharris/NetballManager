@@ -144,11 +144,11 @@ export function GamesList({
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
   const [selectedGame, setSelectedGame] = useState<Game | null>(null);
 
-  // Fetch game stats for all completed games (based on game status)
+  // Fetch game stats for all completed games that allow statistics
   const completedGameIds = games
     .filter(game => {
       const gameStatus = getGameStatus(game);
-      return gameStatus.isCompleted === true;
+      return gameStatus.isCompleted === true && gameStatus.allowsStatistics === true;
     })
     .map(game => game.id);
 
@@ -572,7 +572,7 @@ export function GamesList({
                           {scoresMap && scoresMap[game.id] ? (
                             (() => {
                               const scores = scoresMap[game.id];
-                              
+
                               // Validate scores data structure
                               if (!scores.finalScore || typeof scores.finalScore.for !== 'number' || typeof scores.finalScore.against !== 'number') {
                                 console.error(`Invalid scores data for game ${game.id}:`, scores);
