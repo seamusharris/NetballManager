@@ -1827,8 +1827,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // GET endpoint removed - use POST /api/games/stats/batch instead
-
   // Get all game stats for a specific game
   app.get("/api/games/:gameId/stats", standardAuth({ requireGameAccess: true }), async (req, res) => {
     try {
