@@ -69,7 +69,7 @@ function Router() {
         <Route path="/games" component={withErrorBoundary(Games, 'Games')} />
         <Route path="/games/edit/:id" component={withErrorBoundary(Games, 'GameEdit')} />
         <Route path="/game/:id" component={withErrorBoundary(GameDetails, 'GameDetails')} />
-        
+
         <Route path="/statistics" component={withErrorBoundary(Statistics, 'Statistics')} />
         <Route path="/clubs" component={withErrorBoundary(ClubManagement, 'ClubManagement')} />
         <Route path="/data-management" component={withErrorBoundary(DataManagement, 'DataManagement')} />
@@ -105,16 +105,14 @@ import { apiClient } from '@/lib/apiClient';
 
 function App() {
   return (
-    <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <ClubProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Router />
-          </TooltipProvider>
-        </ClubProvider>
-      </QueryClientProvider>
-    </ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <ClubProvider>
+        <TooltipProvider>
+          <Router />
+          <Toaster />
+        </TooltipProvider>
+      </ClubProvider>
+    </QueryClientProvider>
   );
 }
 
