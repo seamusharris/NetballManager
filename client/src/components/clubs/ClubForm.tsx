@@ -74,7 +74,7 @@ export default function ClubForm({
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="required">Club Name</FormLabel>
+              <FormLabel required>Club Name</FormLabel>
               <FormControl>
                 <Input 
                   placeholder="e.g., Emeralds Netball Club"
@@ -91,7 +91,7 @@ export default function ClubForm({
           name="code"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="required">Club Code</FormLabel>
+              <FormLabel required>Club Code</FormLabel>
               <FormControl>
                 <Input 
                   placeholder="e.g., ENC"
