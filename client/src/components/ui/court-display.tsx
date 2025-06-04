@@ -106,7 +106,7 @@ export const CourtDisplay = ({
     ? getHorizontalPositionCoordinates 
     : getVerticalPositionCoordinates;
 
-  const courtAspectRatio = layout === 'horizontal' ? 'aspect-[3/1]' : 'aspect-[2/3]';
+  const courtAspectRatio = layout === 'horizontal' ? 'aspect-[2/1]' : 'aspect-[1/2]';
   const courtHeight = layout === 'horizontal' ? 'h-96' : 'h-auto';
 
   return (
