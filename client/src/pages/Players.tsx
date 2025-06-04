@@ -52,9 +52,8 @@ export default function Players() {
   const { data: activeSeason } = useQuery({
     queryKey: ['seasons', 'active'],
     queryFn: async () => {
-      const response = await fetch('/api/seasons/active');
-      if (!response.ok) throw new Error('Failed to fetch active season');
-      return response.json();
+      const response = await apiClient.get('/api/seasons/active');
+      return response;
     },
   });
 
@@ -63,11 +62,8 @@ export default function Players() {
     queryKey: ['teams', currentClub?.id],
     queryFn: async () => {
       if (!currentClub?.id) return [];
-      const response = await fetch(`/api/teams`);
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      return response.json();
+      const response = await apiClient.get(`/api/teams`);
+      return response;
     },
     enabled: !!currentClub?.id,
   });
@@ -98,11 +94,8 @@ export default function Players() {
     queryKey: ['available-players', teamId, activeSeason?.id],
     queryFn: async () => {
       if (!teamId || !activeSeason?.id) return [];
-      const response = await fetch(`/api/teams/${teamId}/available-players?seasonId=${activeSeason.id}`);
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      return response.json();
+      const response = await apiClient.get(`/api/teams/${teamId}/available-players?seasonId=${activeSeason.id}`);
+      return response;
     },
     enabled: !!teamId && !!activeSeason?.id,
   });
@@ -112,11 +105,8 @@ export default function Players() {
     queryKey: ['players', currentClub?.id],
     queryFn: async () => {
       if (!currentClub?.id) return [];
-      const response = await fetch(`/api/clubs/${currentClub.id}/players`);
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      return response.json();
+      const response = await apiClient.get(`/api/clubs/${currentClub.id}/players`);
+      return response;
     },
     enabled: !!currentClub?.id && !teamId,
   });
@@ -124,13 +114,8 @@ export default function Players() {
   // Add player to team mutation
   const addPlayerToTeam = useMutation({
     mutationFn: async (playerId: number) => {
-      const response = await fetch(`/api/teams/${teamId}/players`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ playerId, isRegular: true }),
-      });
-      if (!response.ok) throw new Error('Failed to add player to team');
-      return response.json();
+      const response = await apiClient.post(`/api/teams/${teamId}/players`, { playerId, isRegular: true });
+      return response;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['team-players', teamId] });
@@ -145,10 +130,8 @@ export default function Players() {
   // Remove player from team mutation
   const removePlayerFromTeam = useMutation({
     mutationFn: async (playerId: number) => {
-      const response = await fetch(`/api/teams/${teamId}/players/${playerId}`, {
-        method: 'DELETE',
-      });
-      if (!response.ok) throw new Error('Failed to remove player from team');
+      const response = await apiClient.delete(`/api/teams/${teamId}/players/${playerId}`);
+      return response;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['team-players', teamId] });
