@@ -104,6 +104,8 @@ export function GamesList({
   const [statusFilter, setStatusFilter] = useState('all');
   const [opponentFilter, setOpponentFilter] = useState<number | null>(null);
   const [itemToDelete, setItemToDelete] = useState<number | null>(null);
+  const [sortColumn, setSortColumn] = useState<string>('date');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [, setLocation] = useLocation();
   const { currentClub } = useClub();
 
