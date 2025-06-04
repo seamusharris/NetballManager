@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useContext } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useBatchGameStatistics } from '../statistics/hooks/useBatchGameStatistics';
 import { isForfeitGame, getForfeitGameScore } from '@/lib/utils';
 import { Game, GameStat } from '@shared/schema';
 import { getCachedScores, cacheScores } from '@/lib/scoresCache';
 import { statisticsService } from '@/lib/statisticsService';
-import { CurrentClubContext } from '@/contexts/CurrentClubContext';
+import { useClub } from '@/contexts/ClubContext';
 
 interface BatchScoreDisplayProps {
   games: Game[];
@@ -17,7 +17,7 @@ interface BatchScoreDisplayProps {
  */
 export default function BatchScoreDisplay({ games, className }: BatchScoreDisplayProps) {
   // Access the current club context
-  const { currentClub } = useContext(CurrentClubContext);
+  const { currentClub } = useClub();
 
   // Filter to only get completed games and ensure we have valid data
   const completedGames = useMemo(() => {
