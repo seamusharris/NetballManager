@@ -10,17 +10,17 @@ export interface ApiResponse<T = any> {
 import { useClub } from '../contexts/ClubContext';
 
 // Create a singleton API client that can access club context
-class ApiClient {
+export class ApiClient {
   private baseURL: string;
   private clubContext: { currentClubId: number | null } = { currentClubId: null };
 
-  constructor() {
-    this.baseURL = import.meta.env.VITE_API_URL || '';
+  constructor(baseURL: string = '') {
+    this.baseURL = baseURL;
   }
 
   setClubContext(context: { currentClubId: number | null }) {
     this.clubContext = context;
-    console.log('ApiClient: Club context set to:', context.currentClubId);
+    console.log('API Client: Club context set to:', context.currentClubId);
   }
 
   async request<T>(method: string, endpoint: string, data?: any): Promise<T> {
@@ -30,10 +30,13 @@ class ApiClient {
       'Content-Type': 'application/json',
     };
 
-    // Add club ID header if available
-    if (this.clubContext.currentClubId) {
+    // Always add club context header if available - ensure it's properly set
+    if (this.clubContext.currentClubId !== null && this.clubContext.currentClubId !== undefined) {
       headers['x-current-club-id'] = this.clubContext.currentClubId.toString();
       console.log(`API Request to ${endpoint} with club ID: ${this.clubContext.currentClubId}`);
+      console.log('API Request adding club ID header:', this.clubContext.currentClubId);
+    } else {
+      console.warn(`API Request to ${endpoint} without club ID - context:`, this.clubContext);
     }
 
     const config: RequestInit = {

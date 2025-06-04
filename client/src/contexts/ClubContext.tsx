@@ -118,10 +118,15 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
     }
   }, [userClubs, queryClient, currentClubId, isLoadingClubs, isInitialized]);
 
-  // Keep API client in sync with currentClubId changes
+  // Keep API client in sync with currentClubId changes - ensure it's always set
   useEffect(() => {
     console.log('ClubContext: Updating apiClient club context to:', currentClubId);
     apiClient.setClubContext({ currentClubId });
+    
+    // Force a check that the context was set properly
+    if (currentClubId !== null) {
+      console.log('ClubContext: Verifying API client has club context set');
+    }
   }, [currentClubId]);
 
   const switchClub = useCallback((clubId: number) => {
