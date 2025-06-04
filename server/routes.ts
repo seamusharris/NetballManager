@@ -26,7 +26,8 @@ import {
   requireTeamAccess, 
   requireGameAccess,
   loadUserPermissions,
-  requireAuth
+  requireAuth,
+  standardAuth
 } from "./auth-middleware";
 
 // Database health check function
@@ -529,7 +530,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ----- PLAYERS API -----
-  app.get("/api/players", requireClubAccess(), async (req: AuthenticatedRequest, res) => {
+  app.get("/api/players", standardAuth({ requireClub: true }), async (req: AuthenticatedRequest, res) => {
     try {
       const clubId = req.user?.currentClubId;
 
@@ -1144,7 +1145,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 
   // ----- GAMES API -----
-  app.get("/api/games", requireClubAccess(), async (req: AuthenticatedRequest, res) => {
+  app.get("/api/games", standardAuth({ requireClub: true }), async (req: AuthenticatedRequest, res) => {
     try {
       // Add cache-busting headers
       res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
@@ -1875,7 +1876,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get all game stats for a specific game
-  app.get("/api/games/:gameId/stats", async (req, res) => {
+  app.get("/api/games/:gameId/stats", standardAuth({ requireGameAccess: true }), async (req, res) => {
     try {
       const gameId = Number(req.params.gameId);
       const stats = await storage.getGameStatsByGame(gameId);
@@ -1886,7 +1887,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Create a new stat for a specific game (standardized endpoint)
-  app.post("/api/games/:gameId/stats", async (req, res) => {
+  app.post("/api/games/:gameId/stats", standardAuth({ requireGameAccess: true, permission: 'canManageStats' }), async (req, res) => {
     try {
       const gameId = Number(req.params.gameId);
 
@@ -1996,218 +1997,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Add a standard route without hyphens for game stats (for consistency)
-  app.get("/api/gamestats", async (req, res) => {
-    try {
-      // If no game ID is provided, return an empty array
-      if (!req.query.gameId) {
-        return res.json([]);
-      }
-
-      const gameId = Number(req.query.gameId);
-      const stats = await storage.getGameStatsByGame(gameId);
-      res.json(stats);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch game stats" });
-    }
-  });
-
-  // Batch endpoint to fetch stats for multiple games in a single request
-  app.get("/api/gamestats/batch", async (req, res) => {
-    try {
-      const gameIdsParam = req.query.gameIds as string;
-
-      if (!gameIdsParam) {
-        return res.status(400).json({ message: "gameIds query parameter is required" });
-      }
-
-      // Parse and validate game IDs
-      const gameIds = gameIdsParam.split(',').map(id => parseInt(id)).filter(id => !isNaN(id));
-
-      if (gameIds.length === 0) {
-        return res.status(400).json({ message: "No valid game IDs provided" });
-      }
-
-      console.log(`Batch fetching stats for ${gameIds.length} games:`, gameIds);
-
-      // Fetch stats for all games in parallel
-      const statsPromises = gameIds.map(id => storage.getGameStatsByGame(id));
-      const statsResults = await Promise.all(statsPromises);
-
-      // Flatten the array of arrays into a single array of all stats
-      const allStats = statsResults.flat();
-
-      console.log(`Returning batch of ${allStats.length} stats for ${gameIds.length} games`);
-      res.json(allStats);
-    } catch (error) {
-      console.error("Error in batch stats API:", error);
-      res.status(500).json({ message: "Failed to fetch batch game stats" });
-    }
-  });
-
-  app.post("/api/gamestats", async (req, res) => {
-    try {
-      // Log the request body to diagnose issues
-      console.log("Creating/updating game stat with data:", req.body);
-
-      // Ensure the rating is properly handled
-      if (req.body.rating === undefined || req.body.rating === '') {
-        req.body.rating = null;
-      }
-
-      const parsedData = insertGameStatSchema.safeParse(req.body);
-      if (!parsedData.success) {
-        console.error("Game stat validation error:", parsedData.error.errors);
-        return res.status(400).json({ message: "Invalid game stat data", errors: parsedData.error.errors });
-      }
-
-      // Validate quarter (1-4)
-      if (parsedData.data.quarter < 1 || parsedData.data.quarter > 4) {
-        return res.status(400).json({ message: "Quarter must be between 1 and 4" });
-      }
-
-      // Check if a stat already exists for this game/position/quarter
-      const existingStats = await storage.getGameStatsByGame(parsedData.data.gameId);
-      const existingStat = existingStats.find(s => 
-        s.position === parsedData.data.position && 
-        s.quarter === parsedData.data.quarter
-      );
-
-      // Validate position is from allowed set
-      if (!POSITIONS.includes(parsedData.data.position as any)) {
-        console.error("Invalid position:", parsedData.data.position);
-        return res.status(400).json({ message: "Invalid position value" });
-      }
-
-      try {
-        // First, try to find an existing stat record
-        const existingStats = await storage.getGameStatsByGame(parsedData.data.gameId);
-        console.log(`Found ${existingStats.length} existing stats for game ${parsedData.data.gameId}`);
-
-        const duplicate = existingStats.find(s => 
-          s.gameId === parsedData.data.gameId && 
-          s.position === parsedData.data.position && 
-          s.quarter === parsedData.data.quarter
-        );
-
-        let stat;
-
-        if (duplicate) {
-          // Update existing stat instead of creating new one to avoid unique constraint violation
-          console.log(`Updating existing stat ID ${duplicate.id} instead of creating duplicate`);
-          try {
-            stat = await storage.updateGameStat(duplicate.id, {
-              goalsFor: parsedData.data.goalsFor,
-              goalsAgainst: parsedData.data.goalsAgainst,
-              missedGoals: parsedData.data.missedGoals,
-              rebounds: parsedData.data.rebounds,
-              intercepts: parsedData.data.intercepts,
-              badPass: parsedData.data.badPass,
-              handlingError: parsedData.data.handlingError,
-              pickUp: parsedData.data.pickUp,
-              infringement: parsedData.data.infringement,
-              rating: parsedData.data.rating
-            });
-          } catch (updateError) {
-            console.error("Error updating existing stat:", updateError);
-            throw updateError;
-          }
-        } else {
-          // Try to insert directly via SQL query to avoid ORM issues
-          try {
-            console.log("Creating new game stat via direct SQL");
-            const result = await db.execute(sql`
-              INSERT INTO game_stats (
-                game_id, position, quarter, goals_for, goals_against, 
-                missed_goals, rebounds, intercepts, bad_pass, 
-                handling_error, pick_up, infringement, rating
-              ) 
-              VALUES (
-                ${parsedData.data.gameId}, 
-                ${parsedData.data.position}, 
-                ${parsedData.data.quarter}, 
-                ${parsedData.data.goalsFor || 0}, 
-                ${parsedData.data.goalsAgainst || 0}, 
-                ${parsedData.data.missedGoals || 0}, 
-                ${parsedData.data.rebounds || 0}, 
-                ${parsedData.data.intercepts || 0}, 
-                ${parsedData.data.badPass || 0}, 
-                ${parsedData.data.handlingError || 0}, 
-                ${parsedData.data.pickUp || 0}, 
-                ${parsedData.data.infringement || 0}, 
-                ${parsedData.data.rating === undefined ? null : parsedData.data.rating}
-              )
-              RETURNING *
-            `);
-            console.log("Insert result:", result);
-
-            // The result should contain the newly created record
-            if (result.length > 0) {
-              stat = result[0];
-            } else {
-              throw new Error("Failed to insert game stat - no rows returned");
-            }
-          } catch (insertError) {
-            console.error("Error creating new game stat via SQL:", insertError);
-
-            // Try one more time with the regular ORM method
-            try {
-              stat = await storage.createGameStat(parsedData.data);
-            } catch (ormError) {
-              console.error("ORM method also failed:", ormError);
-              throw ormError;
-            }
-          }
-        }
-
-        // Log the successfully created/updated stat
-        console.log("Game stat created/updated successfully:", stat);
-
-        // Invalidate any cached data for this game
-        // This ensures fresh data is fetched on next request
-        res.set('Cache-Control', 'no-cache');
-
-        res.status(201).json(stat);
-      } catch (innerError) {
-        console.error("Inner error handling game stats:", innerError);
-        throw innerError;
-      }
-    } catch (error) {
-      console.error("Failed to create game stat:", error);
-      res.status(500).json({ message: "Failed to create game stat" });
-    }
-  });
-
-  app.patch("/api/gamestats/:id", async (req, res) => {
-    try {
-      const id = Number(req.params.id);
-      const updatedStat = await storage.updateGameStat(id, req.body);
-      if (!updatedStat) {
-        return res.status(404).json({ message: "Game stat not found" });
-      }
-
-      // Invalidate cache for this game
-      res.set('Cache-Control', 'no-cache');
-      console.log(`Updated game stat for game ${updatedStat.gameId}, cache invalidated`);
-
-      res.json(updatedStat);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to update game stat" });
-    }
-  });
-
-  app.delete("/api/gamestats/:id", async (req, res) => {
-    try {
-      const id = Number(req.params.id);
-      const success = await storage.deleteGameStat(id);
-      if (!success) {
-        return res.status(404).json({ message: "Game stat not found" });
-      }
-      res.status(204).send();
-    } catch (error) {
-      res.status(500).json({ message: "Failed to delete game stat" });
-    }
-  });
+  // Legacy gamestats endpoints removed - use /api/games/:id/stats instead
 
   // ----- SEASONS API -----
 

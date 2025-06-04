@@ -8,9 +8,7 @@ export function useGameStats(gameId: number | undefined) {
     queryKey: ['/api/games', gameId, 'stats'],
     queryFn: async () => {
       if (!gameId) return [];
-      const response = await fetch(`/api/games/${gameId}/stats`);
-      if (!response.ok) throw new Error('Failed to fetch game stats');
-      return response.json();
+      return await apiClient.get(`/api/games/${gameId}/stats`);
     },
     enabled: !!gameId,
   });

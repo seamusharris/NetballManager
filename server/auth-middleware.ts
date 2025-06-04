@@ -293,3 +293,52 @@ export async function loadUserPermissions(req: AuthenticatedRequest, res: Respon
     res.status(500).json({ error: 'Failed to load user permissions' });
   }
 }
+
+/**
+ * Comprehensive authentication middleware that ensures consistent auth across all endpoints
+ */
+export function standardAuth(options: {
+  requireClub?: boolean;
+  permission?: keyof AuthenticatedRequest['user']['clubs'][0]['permissions'];
+  requireGameAccess?: boolean;
+  requireTeamAccess?: boolean;
+} = {}) {
+  return async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      // First ensure user is authenticated
+      if (!req.user) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+
+      // Check club access if required
+      if (options.requireClub || options.permission) {
+        const clubAccess = requireClubAccess(options.permission);
+        return clubAccess(req, res, (err) => {
+          if (err) return next(err);
+
+          // Continue with additional checks
+          if (options.requireGameAccess) {
+            return requireGameAccess()(req, res, next);
+          }
+          if (options.requireTeamAccess) {
+            return requireTeamAccess()(req, res, next);
+          }
+          next();
+        });
+      }
+
+      // Direct game or team access checks
+      if (options.requireGameAccess) {
+        return requireGameAccess()(req, res, next);
+      }
+      if (options.requireTeamAccess) {
+        return requireTeamAccess()(req, res, next);
+      }
+
+      next();
+    } catch (error) {
+      console.error('Standard auth middleware error:', error);
+      res.status(500).json({ error: 'Authentication failed' });
+    }
+  };
+}
