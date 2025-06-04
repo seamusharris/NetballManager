@@ -7,6 +7,9 @@ import { useClub } from '@/contexts/ClubContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
 import { apiClient } from '@/lib/apiClient';
+import { PlayerCombinationAnalysis } from '@/components/dashboard/PlayerCombinationAnalysis';
+import { TeamPositionAnalysis } from '@/components/dashboard/TeamPositionAnalysis';
+import { UpcomingGameRecommendations } from '@/components/dashboard/UpcomingGameRecommendations';
 
 export default function Dashboard() {
   const { currentClub, currentClubId, isLoading: clubLoading } = useClub();
@@ -43,7 +46,7 @@ export default function Dashboard() {
     queryKey: ['centralizedRosters', currentClubId, games?.map(g => g.id).join(',')],
     queryFn: async () => {
       if (!games || games.length === 0) return {};
-      
+
       console.log(`Dashboard centralizing roster fetch for ${games.length} games`);
       const rostersMap: Record<number, any[]> = {};
 
@@ -75,7 +78,7 @@ export default function Dashboard() {
     queryKey: ['centralizedStats', currentClubId, completedGameIds.join(',')],
     queryFn: async () => {
       if (completedGameIds.length === 0) return {};
-      
+
       console.log(`Dashboard centralizing stats fetch for ${completedGameIds.length} completed games`);
       const statsMap: Record<number, any[]> = {};
 
