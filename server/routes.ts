@@ -880,8 +880,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         code: club.code,
         description: club.description,
         address: club.address,
-        contactEmail: club.contact_email,
-```
+        contactEmail: club_email,
         contactPhone: club.contact_phone,
         primaryColor: club.primary_color,
         secondaryColor: club.secondary_color
@@ -1658,7 +1657,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Get player availability for a specific game
   app.get("/api/games/:gameId/availability", async
-Removing debug and logging statements to clean up the code.
 (req, res) => {
     try {
       const gameId = Number(req.params.gameId);
@@ -2079,20 +2077,12 @@ Removing debug and logging statements to clean up the code.
         id: row.id,
         name: row.name,
         code: row.code,
-        address: club.address,
-        contactEmail: club.contact_email,
-        contactPhone: club.contact_phone,
-        primaryColor: club.primary_color,
-        secondaryColor: club.secondary_color,
-        isActive: club.is_active,
-        createdAt: club.created_at,
-        updatedAt: club.updated_at
-      });
-    } catch (error) {
-      console.error("Error updating club:", error);
-      res.status(500).json({ message: "Failed to update club" });
-    }
-  });
+        address: row.address,
+        contactEmail: row.contact_email,
+        contactPhone: row.contact_phone,
+        primaryColor: row.primary_color,
+        secondaryColor: row.secondary_color,
+        isActive: row.is_active,
         createdAt: row.created_at,
         updatedAt: row.updated_at
       }));
