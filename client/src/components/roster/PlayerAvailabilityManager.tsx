@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Check, Search, XCircle } from 'lucide-react';
 import { Player, Game, Opponent } from '@shared/schema';
 import { formatShortDate, cn, getInitials } from '@/lib/utils';
@@ -299,16 +300,46 @@ export default function PlayerAvailabilityManager({
         </CardTitle>
 
         <div className="flex justify-between items-center mt-4">
-          <div className="relative w-full max-w-sm">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
-            <Input
-              placeholder="Search players..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9"
-            />
+          <div className="flex items-center gap-4">
+            <div className="relative w-full max-w-sm">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+              <Input
+                placeholder="Search players..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+            
+            {/* Game selection dropdown */}
+            <Select 
+              value={gameId?.toString() || ''} 
+              onValueChange={(value) => {
+                const newGameId = Number(value);
+                // You can add navigation logic here if needed
+                window.location.href = `/roster/${newGameId}`;
+              }}
+            >
+              <SelectTrigger className="w-[250px]">
+                <SelectValue placeholder="Switch Game" />
+              </SelectTrigger>
+              <SelectContent>
+                {games.length === 0 ? (
+                  <SelectItem value="no-games" disabled>No games available</SelectItem>
+                ) : (
+                  [...games]
+                    .filter(game => !game.isBye)
+                    .sort((a, b) => (a.round || 0) - (b.round || 0))
+                    .map(game => (
+                      <SelectItem key={game.id} value={game.id.toString()}>
+                        Round {game.round} - {game.homeTeamName} vs {game.awayTeamName} {game.statusIsCompleted ? "(Past)" : ""}
+                      </SelectItem>
+                    ))
+                )}
+              </SelectContent>
+            </Select>
           </div>
-          <div className="flex items-center gap-2 ml-4">
+          <div className="flex items-center gap-2">
             <Label className="text-sm font-medium">
               <Badge variant="outline" className="mr-1">
                 {availablePlayerIds.length}
