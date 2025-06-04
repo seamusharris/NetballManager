@@ -112,12 +112,26 @@ export default function PlayerAvailabilityManager({
       // For new games (upcoming games), we default to all active players being available
       if (availabilityData.availablePlayerIds.length === 0) {
         const selectedGame = games.find(game => game.id === gameId);
-        console.log('Empty availability array received - checking game status:', selectedGame?.statusName);
+        console.log('Empty availability array received - checking game status:', {
+          gameId,
+          statusName: selectedGame?.statusName,
+          statusIsCompleted: selectedGame?.statusIsCompleted,
+          gameData: selectedGame
+        });
 
-        // For upcoming games, default to all active players
-        if (selectedGame && (selectedGame.statusName === 'upcoming' || !selectedGame.statusName)) {
+        // Only default to all active players for truly upcoming games (not completed)
+        // Use the database-driven statusIsCompleted field as the source of truth
+        const isUpcomingGame = selectedGame && selectedGame.statusIsCompleted === false;
+
+        if (isUpcomingGame) {
           const activePlayerIds = players.filter(p => p.active).map(p => p.id);
-          console.log('Empty availability for upcoming game - defaulting to all active players:', activePlayerIds);
+          console.log('Empty availability for upcoming game - defaulting to all active players:', {
+            gameId,
+            activePlayerIds,
+            activePlayersCount: activePlayerIds.length,
+            gameStatus: selectedGame.statusName,
+            isCompleted: selectedGame.statusIsCompleted
+          });
           setAvailablePlayerIds(activePlayerIds);
           // Also notify parent component
           onAvailabilityChange?.(activePlayerIds);
