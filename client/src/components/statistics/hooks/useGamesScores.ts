@@ -28,19 +28,28 @@ export function useGamesScores(gameIds: number[], forceFresh = false) {
   const { data: batchStats, isLoading, error } = useQuery({
     queryKey: ['batchGameStats', gameIds.sort().join(','), freshQueryKey, currentClub?.id],
     queryFn: async () => {
-      if (!gameIds.length) return {};
+      if (!gameIds.length || !currentClub?.id) return {};
 
-      // Use the batch endpoint to get stats for all games at once
-      const response = await fetch(`/api/games/stats/batch?gameIds=${gameIds.join(',')}`, {
-        headers: {
-          'x-current-club-id': currentClub?.id?.toString() || '',
-        },
-      });
-      if (!response.ok) {
-        throw new Error(`Failed to fetch batch stats: ${response.statusText}`);
+      try {
+        // Use the batch endpoint to get stats for all games at once
+        const response = await fetch(`/api/games/stats/batch?gameIds=${gameIds.join(',')}`, {
+          headers: {
+            'x-current-club-id': currentClub.id.toString(),
+          },
+        });
+        
+        if (!response.ok) {
+          console.error(`Batch stats API error: ${response.status} ${response.statusText}`);
+          throw new Error(`Failed to fetch batch stats: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        console.log(`useGamesScores: Fetched batch stats for games ${gameIds.join(',')}:`, data);
+        return data || {};
+      } catch (error) {
+        console.error('useGamesScores: Error fetching batch stats:', error);
+        throw error;
       }
-      const data = await response.json();
-      return data || {};
     },
     enabled: gameIds.length > 0 && !!currentClub?.id,
     staleTime: forceFresh ? 0 : 15 * 60 * 1000,
@@ -49,14 +58,21 @@ export function useGamesScores(gameIds: number[], forceFresh = false) {
 
   // Get games data to handle forfeit games properly
   const { data: games = [] } = useQuery({
-    queryKey: ['games'],
+    queryKey: ['games', currentClub?.id],
     queryFn: async () => {
-      const response = await fetch('/api/games');
+      if (!currentClub?.id) return [];
+      
+      const response = await fetch('/api/games', {
+        headers: {
+          'x-current-club-id': currentClub.id.toString(),
+        },
+      });
       if (!response.ok) {
         throw new Error(`Failed to fetch games: ${response.statusText}`);
       }
       return response.json();
     },
+    enabled: !!currentClub?.id,
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 
@@ -98,9 +114,18 @@ export function useGamesScores(gameIds: number[], forceFresh = false) {
               against: isWin ? 0 : 10
             }
           };
+        } else if (stats && stats.length > 0) {
+          // Calculate regular game scores using the same method as dashboard
+          try {
+            scores = statisticsService.calculateScoresFromStats(stats, gameId);
+          } catch (error) {
+            console.error(`Error calculating scores for game ${gameId}:`, error);
+            return; // Skip this game if calculation fails
+          }
         } else {
-          // Calculate regular game scores
-          scores = statisticsService.calculateScoresFromStats(stats, gameId);
+          // No stats available for this completed game
+          console.warn(`No stats available for completed game ${gameId}`);
+          return;
         }
 
         // Cache the calculated scores

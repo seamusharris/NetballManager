@@ -572,6 +572,13 @@ export function GamesList({
                           {scoresMap && scoresMap[game.id] ? (
                             (() => {
                               const scores = scoresMap[game.id];
+                              
+                              // Validate scores data structure
+                              if (!scores.finalScore || typeof scores.finalScore.for !== 'number' || typeof scores.finalScore.against !== 'number') {
+                                console.error(`Invalid scores data for game ${game.id}:`, scores);
+                                return <span className="text-red-500 text-sm">Invalid Score Data</span>;
+                              }
+
                               const isWin = scores.finalScore.for > scores.finalScore.against;
                               const isLoss = scores.finalScore.for < scores.finalScore.against;
 
