@@ -1022,6 +1022,7 @@ export default function TeamAnalysis() {
           players={players}
           centralizedStats={centralizedStats}
           centralizedRosters={centralizedRosters}
+          currentClubId={currentClubId}
         />
 
         {/* All Opponents Table */}

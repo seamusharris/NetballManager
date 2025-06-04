@@ -13,6 +13,7 @@ interface PlayerCombinationAnalysisProps {
   players: any[];
   centralizedStats: Record<number, any[]>;
   centralizedRosters: Record<number, any[]>;
+  currentClubId?: number;
 }
 
 interface CombinationResult {
@@ -38,7 +39,8 @@ export function PlayerCombinationAnalysis({
   games, 
   players, 
   centralizedStats, 
-  centralizedRosters 
+  centralizedRosters,
+  currentClubId 
 }: PlayerCombinationAnalysisProps) {
   const [selectedOpponent, setSelectedOpponent] = useState<string>('all');
   const [selectedPositions, setSelectedPositions] = useState<string[]>([]);
@@ -49,16 +51,27 @@ export function PlayerCombinationAnalysis({
 
   const positions = ['GS', 'GA', 'WA', 'C', 'WD', 'GD', 'GK'];
 
-  // Get unique opponents from games
+  // Get unique opponents from games (exclude our own teams)
   useEffect(() => {
     const uniqueOpponents = Array.from(new Set(
       games
-        .filter(game => game.statusIsCompleted && game.awayTeamName !== 'Bye')
-        .map(game => game.awayTeamName || game.homeTeamName)
+        .filter(game => game.statusIsCompleted && game.statusAllowsStatistics)
+        .map(game => {
+          const isHomeGame = game.homeClubId === currentClubId;
+          const isAwayGame = game.awayClubId === currentClubId;
+          
+          if (isHomeGame && !isAwayGame) {
+            return game.awayTeamName;
+          } else if (isAwayGame && !isHomeGame) {
+            return game.homeTeamName;
+          }
+          return null; // Skip intra-club games
+        })
         .filter(Boolean)
+        .filter(teamName => teamName !== 'Bye')
     ));
     setOpponents(uniqueOpponents);
-  }, [games]);
+  }, [games, currentClubId]);
 
   // Calculate player combinations effectiveness
   useEffect(() => {
@@ -170,9 +183,19 @@ export function PlayerCombinationAnalysis({
           playerPositions.forEach(pos => combData.positions.add(pos));
         });
 
-        // Track opponent-specific performance
-        const opponent = game.awayTeamName === 'Bye' ? game.homeTeamName : 
-                        (game.homeClubId === game.currentClubId ? game.awayTeamName : game.homeTeamName);
+        // Track opponent-specific performance - determine which team is the opponent
+        let opponent = null;
+        const isHomeGame = game.homeClubId === currentClubId;
+        const isAwayGame = game.awayClubId === currentClubId;
+        
+        if (isHomeGame && !isAwayGame) {
+          // We are home team, opponent is away team
+          opponent = game.awayTeamName;
+        } else if (isAwayGame && !isHomeGame) {
+          // We are away team, opponent is home team  
+          opponent = game.homeTeamName;
+        }
+        // Skip intra-club games (both teams from same club)
         if (opponent && opponent !== 'Bye') {
           if (!combData.opponents.has(opponent)) {
             combData.opponents.set(opponent, []);
