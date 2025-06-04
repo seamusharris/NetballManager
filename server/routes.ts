@@ -2083,15 +2083,16 @@ Removing debug and logging statements to clean up the code.
         contactEmail: club.contact_email,
         contactPhone: club.contact_phone,
         primaryColor: club.primary_color,
-        secondaryColor: club.secondary_color
+        secondaryColor: club.secondary_color,
+        isActive: club.is_active,
+        createdAt: club.created_at,
+        updatedAt: club.updated_at
       });
     } catch (error) {
       console.error("Error updating club:", error);
       res.status(500).json({ message: "Failed to update club" });
     }
-        isActive: row.is_active,
-        playersCount: parseInt(row.players_count) || 0,
-        teamsCount: parseInt(row.teams_count) || 0,
+  });
         createdAt: row.created_at,
         updatedAt: row.updated_at
       }));
