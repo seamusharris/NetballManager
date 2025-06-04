@@ -78,11 +78,8 @@ export default function Roster() {
       setSelectedGameId(gameIdFromUrl);
       setCurrentStep('availability');
       console.log('Set current step to availability for game:', gameIdFromUrl);
-    } else if (!gameIdFromUrl && selectedGameId) {
-      // If there's no URL parameter but we have a selected game, show game selection
-      setCurrentStep('game-selection');
     }
-  }, [gameIdFromUrl, selectedGameId]);
+  }, [gameIdFromUrl]);
 
   // Debug logging for rendering conditions
   useEffect(() => {
