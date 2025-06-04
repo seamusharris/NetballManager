@@ -34,6 +34,8 @@ interface DashboardSummaryProps {
   seasons: Season[];
   activeSeason: Season | null;
   isLoading: boolean;
+  centralizedRosters?: Record<number, any[]>;
+  centralizedStats?: Record<number, any[]>;
 }
 
 export default function DashboardSummary({ 
@@ -41,7 +43,9 @@ export default function DashboardSummary({
   games, 
   seasons,
   activeSeason,
-  isLoading 
+  isLoading,
+  centralizedRosters = {},
+  centralizedStats = {}
 }: DashboardSummaryProps) {
   const [selectedSeasonId, setSelectedSeasonId] = useState<string>('current');
   const queryClient = useQueryClient();
@@ -117,40 +121,7 @@ export default function DashboardSummary({
     (game.date >= currentDate && !game.completed)
   ), true);
 
-  // Centralized stats fetching for completed games only
-  const completedGameIds = filteredGames
-    .filter(game => game.statusIsCompleted && game.statusAllowsStatistics)
-    .map(game => game.id);
-
-  const { data: centralizedStats, isLoading: statsLoading } = useQuery({
-    queryKey: ['dashboardStats', selectedSeasonId, completedGameIds.join(',')],
-    queryFn: async () => {
-      console.log(`Dashboard centralizing stats fetch for ${completedGameIds.length} games`);
-      const statsMap: Record<number, any[]> = {};
-
-      // Fetch stats for completed games only
-      for (const gameId of completedGameIds) {
-        try {
-          const response = await fetch(`/api/games/${gameId}/stats`);
-          if (response.ok) {
-            const stats = await response.json();
-            statsMap[gameId] = stats;
-          } else {
-            statsMap[gameId] = [];
-          }
-        } catch (error) {
-          console.error(`Error fetching stats for game ${gameId}:`, error);
-          statsMap[gameId] = [];
-        }
-      }
-
-      console.log(`Dashboard centralized fetch completed for ${Object.keys(statsMap).length} games`);
-      return statsMap;
-    },
-    enabled: completedGameIds.length > 0,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 15 * 60 * 1000 // 15 minutes
-  });
+  // Use centralized data passed from parent - no need to fetch again
 
   // Handle refresh button click - with added logging for debugging
   const handleRefresh = () => {
@@ -183,9 +154,6 @@ export default function DashboardSummary({
       </div>
     );
   }
-
-  // Ensure we have the necessary data
-  const statsMap = centralizedStats || {};
 
   console.log('Dashboard proceeding with render - core data loaded');
 
@@ -228,7 +196,7 @@ export default function DashboardSummary({
 
       {/* Performance Metrics - 9 widget grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-6">
-        {isLoading || statsLoading ? (
+        {isLoading ? (
           Array.from({ length: 9 }).map((_, i) => (
             <Skeleton key={i} className="h-32 rounded-lg" />
           ))
@@ -273,6 +241,7 @@ export default function DashboardSummary({
             <PlayerAvailabilityWidget 
               games={filteredGames}
               players={players}
+              centralizedRosters={centralizedRosters}
             />
             <QuickActionsWidget />
             <AdvancedTeamAnalytics 
@@ -286,7 +255,7 @@ export default function DashboardSummary({
 
       {/* Position vs Opponent Analysis - Full Width */}
       <div className="mb-6">
-        {isLoading || statsLoading ? (
+        {isLoading ? (
           <Skeleton className="h-[400px] w-full rounded-lg" />
         ) : (
           <Suspense fallback={<Skeleton className="h-[400px] w-full rounded-lg" />}>
@@ -302,19 +271,20 @@ export default function DashboardSummary({
 
       {/* Games List */}
       <div className="grid grid-cols-1 gap-6">
-        {isLoading || statsLoading ? (
+        {isLoading ? (
           <Skeleton className="h-[300px] w-full rounded-lg" />
         ) : (
           <GamesList 
             games={filteredGames} 
             className="w-full" 
             centralizedStats={centralizedStats}
+            centralizedRosters={centralizedRosters}
           />
         )}
       </div>
 
       {/* Performance Charts */}
-      {isLoading || statsLoading ? (
+      {isLoading ? (
         <Skeleton className="h-[400px] w-full rounded-lg" />
       ) : (
         <PerformanceCharts 

@@ -38,6 +38,66 @@ export default function Dashboard() {
     enabled: !!currentClubId,
   });
 
+  // Centralized roster fetching for all games
+  const { data: centralizedRosters = {}, isLoading: isLoadingRosters } = useQuery({
+    queryKey: ['centralizedRosters', currentClubId, games?.map(g => g.id).join(',')],
+    queryFn: async () => {
+      if (!games || games.length === 0) return {};
+      
+      console.log(`Dashboard centralizing roster fetch for ${games.length} games`);
+      const rostersMap: Record<number, any[]> = {};
+
+      // Fetch rosters for all games
+      for (const game of games) {
+        try {
+          const roster = await apiClient.get(`/api/games/${game.id}/rosters`);
+          rostersMap[game.id] = roster || [];
+        } catch (error) {
+          console.error(`Error fetching roster for game ${game.id}:`, error);
+          rostersMap[game.id] = [];
+        }
+      }
+
+      console.log(`Dashboard centralized roster fetch completed for ${Object.keys(rostersMap).length} games`);
+      return rostersMap;
+    },
+    enabled: !!currentClubId && !!games && games.length > 0,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 15 * 60 * 1000 // 15 minutes
+  });
+
+  // Centralized stats fetching for completed games only
+  const completedGameIds = games?.filter(game => 
+    game.statusIsCompleted && game.statusAllowsStatistics
+  ).map(game => game.id) || [];
+
+  const { data: centralizedStats = {}, isLoading: isLoadingStats } = useQuery({
+    queryKey: ['centralizedStats', currentClubId, completedGameIds.join(',')],
+    queryFn: async () => {
+      if (completedGameIds.length === 0) return {};
+      
+      console.log(`Dashboard centralizing stats fetch for ${completedGameIds.length} completed games`);
+      const statsMap: Record<number, any[]> = {};
+
+      // Fetch stats for completed games only
+      for (const gameId of completedGameIds) {
+        try {
+          const stats = await apiClient.get(`/api/games/${gameId}/stats`);
+          statsMap[gameId] = stats || [];
+        } catch (error) {
+          console.error(`Error fetching stats for game ${gameId}:`, error);
+          statsMap[gameId] = [];
+        }
+      }
+
+      console.log(`Dashboard centralized stats fetch completed for ${Object.keys(statsMap).length} games`);
+      return statsMap;
+    },
+    enabled: !!currentClubId && completedGameIds.length > 0,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 15 * 60 * 1000 // 15 minutes
+  });
+
   // NOW we can do conditional returns after all hooks are called
   if (clubLoading || !currentClubId) {
     console.log('Dashboard waiting for club context:', { clubLoading, hasCurrentClub: !!currentClub, currentClubId });
@@ -52,7 +112,7 @@ export default function Dashboard() {
     );
   }
 
-  const isLoading = isLoadingPlayers || isLoadingGames || isLoadingSeasons || isLoadingActiveSeason;
+  const isLoading = isLoadingPlayers || isLoadingGames || isLoadingSeasons || isLoadingActiveSeason || isLoadingRosters || isLoadingStats;
 
   // Show error state if any query fails
   if (playersError || gamesError || seasonsError || activeSeasonError) {
@@ -97,7 +157,9 @@ export default function Dashboard() {
         games={games || []} 
         seasons={seasons || []}
         activeSeason={activeSeason}
-        isLoading={isLoading} 
+        isLoading={isLoading}
+        centralizedRosters={centralizedRosters}
+        centralizedStats={centralizedStats}
       />
     </>
   );
