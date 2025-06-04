@@ -170,6 +170,12 @@ export default function TeamAnalysis() {
     enabled: !!currentClubId,
   });
 
+  const { data: players = [], isLoading: isLoadingPlayers } = useQuery<any[]>({
+    queryKey: ['players', currentClubId],
+    queryFn: () => apiClient.get('/api/players'),
+    enabled: !!currentClubId,
+  });
+
   // Get completed games for stats
   const completedGames = games.filter(game => game.statusIsCompleted && game.statusAllowsStatistics);
   const gameIds = completedGames.map(game => game.id);
@@ -384,7 +390,7 @@ export default function TeamAnalysis() {
     );
   }
 
-  const isLoading = isLoadingGames || isLoadingStats || isLoadingTeams || isLoadingOpponents || isLoadingRosters;
+  const isLoading = isLoadingGames || isLoadingStats || isLoadingTeams || isLoadingOpponents || isLoadingRosters || isLoadingPlayers;
 
   if (isLoading) {
     return (
