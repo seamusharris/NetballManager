@@ -43,7 +43,7 @@ export class PlayerAvailabilityStorage {
             `);
             console.log(`Created availability record for game ${gameId}, player ${player.id} (available by default)`);
           } catch (error: any) {
-            // Handle any remaining errors gracefully
+            // Handle any remaining errors gracefully - could be duplicate key or other issues
             console.error(`Error creating availability record for game ${gameId}, player ${player.id}:`, error.message);
             // Continue processing other players instead of stopping
             continue;
@@ -70,7 +70,19 @@ export class PlayerAvailabilityStorage {
 
     } catch (error) {
       console.error('Error fetching player availability:', error);
-      return [];
+      
+      // Fallback: return all active players as available
+      try {
+        const playersResult = await db.execute(sql`
+          SELECT id FROM players WHERE active = true
+        `);
+        const allActivePlayerIds = playersResult.rows.map(row => row.id as number);
+        console.log(`Fallback: returning ${allActivePlayerIds.length} active players as available for game ${gameId}`);
+        return allActivePlayerIds;
+      } catch (fallbackError) {
+        console.error('Error in fallback query:', fallbackError);
+        return [];
+      }
     }
   }
 

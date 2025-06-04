@@ -84,7 +84,9 @@ export default function PlayerAvailabilityManager({
     refetch: refetchAvailability
   } = useDataLoader<{availablePlayerIds: number[]}>(`/api/games/${gameId}/availability`, {
     enabled: !!gameId,
-    onError: () => {
+    retry: 1, // Only retry once to avoid long delays
+    onError: (error) => {
+      console.log('Player availability API error, falling back to all active players:', error);
       // Fallback to all active players on error
       const activePlayerIds = players.filter(p => p.active).map(p => p.id);
       setAvailablePlayerIds(activePlayerIds);

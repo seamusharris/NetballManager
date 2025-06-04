@@ -71,10 +71,10 @@ export default function PlayerAvailabilityWidget({
                 totalPlayers: totalActivePlayers
               };
             } else {
-              // Other error, show as not set
+              // Other error, fallback to showing all players as available
               newAvailabilityData[game.id] = {
                 gameId: game.id,
-                availableCount: 0,
+                availableCount: totalActivePlayers,
                 totalPlayers: totalActivePlayers
               };
             }
