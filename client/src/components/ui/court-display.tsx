@@ -110,7 +110,7 @@ export const CourtDisplay = ({
   const courtHeight = layout === 'horizontal' ? 'h-96' : 'h-auto';
 
   return (
-    <div className={`relative w-full max-w-md mx-auto ${courtAspectRatio} ${courtHeight} bg-green-100 rounded-lg border border-green-300 ${className}`}>
+    <div className={`relative w-full mx-auto ${courtAspectRatio} ${courtHeight} bg-green-100 rounded-lg border border-green-300 ${className}`}>
       {/* Court markings */}
       <div className="absolute inset-0 flex flex-col">
         {layout === 'horizontal' ? (
