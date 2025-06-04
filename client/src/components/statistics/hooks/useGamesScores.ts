@@ -1,4 +1,4 @@
-import { useQueries, useQueryClient, useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { statisticsService, GameScores, GameStat } from '@/lib/statisticsService';
 import { 
@@ -7,9 +7,6 @@ import {
   invalidateGameCache, 
   clearGameCache 
 } from '@/lib/scoresCache';
-import { apiRequest } from '@/lib/queryClient';
-import { apiClient } from '@/lib/apiClient'; // Ensure apiClient is imported
-import { Game } from '@/components/GameCard'; // Ensure Game is imported
 import { useClub } from '@/contexts/ClubContext';
 
 /**
@@ -39,7 +36,7 @@ export function useGamesScores(gameIds: number[], forceFresh = false) {
   ], [stableGameIds, freshQueryKey, currentClub?.id]);
 
   // Use a single query to fetch batch stats for all games
-  const { data: batchStats, isLoading, error } = useQuery({
+  const batchStatsQuery = useQuery({
     queryKey,
     queryFn: async () => {
       if (!stableGameIds.length || !currentClub?.id) {
@@ -80,8 +77,10 @@ export function useGamesScores(gameIds: number[], forceFresh = false) {
     refetchOnMount: false, // Use cache when possible
   });
 
+  const { data: batchStats, isLoading, error } = batchStatsQuery || {};
+
   // Get games data to handle forfeit games properly
-  const { data: games = [] } = useQuery({
+  const gamesQuery = useQuery({
     queryKey: ['games', currentClub?.id || 'no-club'],
     queryFn: async () => {
       if (!currentClub?.id) {
@@ -111,6 +110,8 @@ export function useGamesScores(gameIds: number[], forceFresh = false) {
     refetchOnWindowFocus: false,
     refetchOnMount: false,
   });
+
+  const { data: games = [] } = gamesQuery || {};
 
   // Calculate scores for each game using the batch stats
   const scoresMap: Record<number, GameScores | undefined> = useMemo(() => {
