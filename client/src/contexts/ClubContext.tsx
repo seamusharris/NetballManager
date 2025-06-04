@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/apiClient';
@@ -34,8 +35,20 @@ interface ClubContextType {
 const ClubContext = createContext<ClubContextType | undefined>(undefined);
 
 export function ClubProvider({ children }: { children: React.ReactNode }) {
-  const [currentClubId, setCurrentClubId] = useState<number | null>(null);
-  const [isInitialized, setIsInitialized] = useState(false);
+  const [currentClubId, setCurrentClubId] = useState<number | null>(() => {
+    // Initialize immediately from localStorage if available
+    const stored = localStorage.getItem('currentClubId');
+    const clubId = stored ? parseInt(stored, 10) : null;
+    console.log('ClubProvider: Initial currentClubId from localStorage:', clubId);
+    
+    // Set API client context immediately if we have a stored club ID
+    if (clubId && !isNaN(clubId)) {
+      apiClient.setClubContext({ currentClubId: clubId });
+      return clubId;
+    }
+    return null;
+  });
+  
   const queryClient = useQueryClient();
 
   // Fetch user's club access
@@ -51,67 +64,68 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
     enabled: !!currentClubId,
   });
 
-  // Connect apiClient to club context
+  // Initialize club context when userClubs are loaded and we don't have a currentClubId
   useEffect(() => {
-    console.log('ClubContext: Setting apiClient club context to:', currentClubId);
-    apiClient.setClubContext({ currentClubId });
-  }, [currentClubId]);
+    console.log('ClubContext initialization effect:', { 
+      hasUserClubs: Array.isArray(userClubs) && userClubs.length > 0,
+      currentClubId,
+      userClubsLength: userClubs.length 
+    });
 
-  // Set default club on load
-  useEffect(() => {
-    if (Array.isArray(userClubs) && userClubs.length > 0 && currentClubId === null && !isInitialized) {
-      // Get stored club ID from localStorage
+    if (Array.isArray(userClubs) && userClubs.length > 0 && currentClubId === null) {
+      console.log('ClubContext: Need to initialize club selection');
+      
+      // Try to get stored club ID
       const storedClubId = localStorage.getItem('currentClubId');
-
       let targetClubId: number;
 
       if (storedClubId) {
         const storedId = parseInt(storedClubId, 10);
-        // Check if the stored club ID is valid
         const isValidClub = userClubs.some(club => club.clubId === storedId);
         targetClubId = isValidClub ? storedId : userClubs[0].clubId;
+        console.log('ClubContext: Using stored club ID:', storedId, 'valid:', isValidClub);
       } else {
-        // Prefer Warrandyte (54) if available, otherwise default to first club
+        // Prefer Warrandyte (54) if available, otherwise use first club
         const warrandyteClub = userClubs.find(club => club.clubId === 54);
         targetClubId = warrandyteClub ? 54 : userClubs[0].clubId;
+        console.log('ClubContext: No stored club, selecting:', targetClubId);
       }
 
-      console.log('Setting initial club ID:', targetClubId, 'from userClubs:', userClubs);
-
-      // Set both state and localStorage synchronously
+      console.log('ClubContext: Setting initial club to:', targetClubId);
+      
+      // Update state and localStorage
       setCurrentClubId(targetClubId);
       localStorage.setItem('currentClubId', targetClubId.toString());
-
-      // Initialize API client with club context immediately
+      
+      // Update API client immediately
       apiClient.setClubContext({ currentClubId: targetClubId });
-
-      setIsInitialized(true);
-
-      // Use setTimeout to ensure state has updated before invalidating queries
+      
+      // Invalidate queries to refresh data with new club context
       setTimeout(() => {
-        console.log('Invalidating queries with club ID:', targetClubId);
+        console.log('ClubContext: Invalidating queries for club:', targetClubId);
         queryClient.invalidateQueries();
-      }, 0);
+      }, 100);
     }
-  }, [userClubs, isInitialized, queryClient]);
+  }, [userClubs, queryClient]); // Removed currentClubId from dependencies to prevent loops
+
+  // Keep API client in sync with currentClubId changes
+  useEffect(() => {
+    console.log('ClubContext: Updating apiClient club context to:', currentClubId);
+    apiClient.setClubContext({ currentClubId });
+  }, [currentClubId]);
 
   const switchClub = useCallback((clubId: number) => {
-    console.log('Switching to club:', clubId, 'Current club:', currentClubId);
+    console.log('ClubContext: Switching club from', currentClubId, 'to', clubId);
+    
     setCurrentClubId(clubId);
     localStorage.setItem('currentClubId', clubId.toString());
-
-    // Update API client with new club context
     apiClient.setClubContext({ currentClubId: clubId });
-
-    console.log('Club switched in context to:', clubId, 'localStorage updated');
-
-    // Invalidate all queries when switching clubs to ensure fresh data
+    
+    // Invalidate and refetch queries
     queryClient.invalidateQueries();
-
-    // Force refetch of games specifically
     queryClient.refetchQueries({ queryKey: ['games'] });
-
-    console.log('Queries invalidated and games refetched for club:', clubId);
+    
+    console.log('ClubContext: Club switch completed to:', clubId);
   }, [currentClubId, queryClient]);
 
   const hasPermission = (permission: keyof UserClubAccess['permissions']) => {
@@ -120,16 +134,23 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
     return clubAccess?.permissions[permission] || false;
   };
 
+  const contextValue = {
+    currentClub,
+    userClubs,
+    switchClub,
+    hasPermission,
+    isLoading: isLoadingClubs || isLoadingClub || (userClubs.length > 0 && currentClubId === null),
+  };
+
+  console.log('ClubContext: Rendering with:', {
+    currentClubId,
+    hasCurrentClub: !!currentClub,
+    userClubsCount: userClubs.length,
+    isLoading: contextValue.isLoading
+  });
+
   return (
-    <ClubContext.Provider
-      value={{
-        currentClub,
-        userClubs,
-        switchClub,
-        hasPermission,
-        isLoading: isLoadingClubs || isLoadingClub || !isInitialized,
-      }}
-    >
+    <ClubContext.Provider value={contextValue}>
       {children}
     </ClubContext.Provider>
   );
@@ -138,7 +159,6 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
 export const useClub = () => {
   const context = useContext(ClubContext);
   if (context === undefined) {
-    // More helpful error message with debugging info
     console.error('useClub called outside ClubProvider. Check component hierarchy.');
     throw new Error('useClub must be used within a ClubProvider');
   }
