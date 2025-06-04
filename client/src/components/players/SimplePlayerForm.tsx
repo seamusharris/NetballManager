@@ -1,13 +1,17 @@
 import { useState } from 'react';
 import { Position, allPositions } from '@shared/schema';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 
 interface SimplePlayerFormProps {
-  onSubmit: (data: any) => void;
-  onCancel: () => void;
-  isSubmitting: boolean;
+  clubId?: number;
+  onSuccess?: () => void;
 }
 
-export default function SimplePlayerForm({ onSubmit, onCancel, isSubmitting }: SimplePlayerFormProps) {
+export function SimplePlayerForm({ clubId, onSuccess }: SimplePlayerFormProps) {
   const [displayName, setDisplayName] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -17,8 +21,9 @@ export default function SimplePlayerForm({ onSubmit, onCancel, isSubmitting }: S
   const [position2, setPosition2] = useState('none');
   const [position3, setPosition3] = useState('none');
   const [position4, setPosition4] = useState('none');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Validate required fields
@@ -45,78 +50,109 @@ export default function SimplePlayerForm({ onSubmit, onCancel, isSubmitting }: S
       return;
     }
     
-    // For new players, we'll create their avatar color when they're created
-    // The actual color assignment will happen server-side based on their ID
-    onSubmit({
-      displayName,
-      firstName,
-      lastName,
-      dateOfBirth: dateOfBirth || null, // Allow empty date of birth
-      active,
-      positionPreferences,
-      avatarColor: "auto" // This will be replaced with a specific color once the player is created and has an ID
-    });
+    setIsSubmitting(true);
+    
+    try {
+      const response = await fetch('/api/players', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-current-club-id': clubId?.toString() || '',
+        },
+        body: JSON.stringify({
+          displayName,
+          firstName,
+          lastName,
+          dateOfBirth: dateOfBirth || null,
+          active,
+          positionPreferences,
+          avatarColor: "auto"
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create player');
+      }
+
+      // Reset form
+      setDisplayName('');
+      setFirstName('');
+      setLastName('');
+      setDateOfBirth('');
+      setActive(true);
+      setPosition1('');
+      setPosition2('none');
+      setPosition3('none');
+      setPosition4('none');
+
+      onSuccess?.();
+    } catch (error) {
+      console.error('Error creating player:', error);
+      alert('Failed to create player. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
   
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium mb-1">Display Name <span className="text-red-500">*</span></label>
-          <input 
+          <Label htmlFor="displayName">Display Name <span className="text-red-500">*</span></Label>
+          <Input 
+            id="displayName"
             type="text"
             required
-            className="w-full p-2 border rounded-md"
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
+            placeholder="J. Smith"
           />
           <p className="text-xs text-gray-500 mt-1">Name as displayed on roster and statistics</p>
         </div>
         
         <div className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
           <div>
-            <label className="block text-sm font-medium">Active Status</label>
+            <Label>Active Status</Label>
             <p className="text-xs text-gray-500">Inactive players won't appear in roster selections</p>
           </div>
-          <div>
-            <input
-              type="checkbox"
-              checked={active}
-              onChange={(e) => setActive(e.target.checked)}
-            />
-          </div>
+          <Switch
+            checked={active}
+            onCheckedChange={setActive}
+          />
         </div>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium mb-1">First Name <span className="text-red-500">*</span></label>
-          <input
+          <Label htmlFor="firstName">First Name <span className="text-red-500">*</span></Label>
+          <Input
+            id="firstName"
             type="text"
             required
-            className="w-full p-2 border rounded-md"
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
+            placeholder="Jane"
           />
         </div>
         
         <div>
-          <label className="block text-sm font-medium mb-1">Last Name <span className="text-red-500">*</span></label>
-          <input
+          <Label htmlFor="lastName">Last Name <span className="text-red-500">*</span></Label>
+          <Input
+            id="lastName"
             type="text"
             required
-            className="w-full p-2 border rounded-md"
             value={lastName}
             onChange={(e) => setLastName(e.target.value)}
+            placeholder="Smith"
           />
         </div>
       </div>
       
       <div>
-        <label className="block text-sm font-medium mb-1">Date of Birth</label>
-        <input
+        <Label htmlFor="dateOfBirth">Date of Birth</Label>
+        <Input
+          id="dateOfBirth"
           type="date"
-          className="w-full p-2 border rounded-md"
           value={dateOfBirth}
           onChange={(e) => setDateOfBirth(e.target.value)}
         />
@@ -126,79 +162,73 @@ export default function SimplePlayerForm({ onSubmit, onCancel, isSubmitting }: S
         <h3 className="text-sm font-medium mb-2">Position Preferences (Ranked)</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium mb-1">Primary Position <span className="text-red-500">*</span></label>
-            <select
-              required
-              className="w-full p-2 border rounded-md"
-              value={position1}
-              onChange={(e) => setPosition1(e.target.value)}
-            >
-              <option value="" disabled>Select position</option>
-              {allPositions.map(pos => (
-                <option key={pos} value={pos}>{pos}</option>
-              ))}
-            </select>
+            <Label>Primary Position <span className="text-red-500">*</span></Label>
+            <Select value={position1} onValueChange={setPosition1} required>
+              <SelectTrigger>
+                <SelectValue placeholder="Select position" />
+              </SelectTrigger>
+              <SelectContent>
+                {allPositions.map(pos => (
+                  <SelectItem key={pos} value={pos}>{pos}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           
           <div>
-            <label className="block text-sm font-medium mb-1">Second Preference</label>
-            <select
-              className="w-full p-2 border rounded-md"
-              value={position2}
-              onChange={(e) => setPosition2(e.target.value)}
-            >
-              <option value="none">None</option>
-              {allPositions.map(pos => (
-                <option key={pos} value={pos}>{pos}</option>
-              ))}
-            </select>
+            <Label>Second Preference</Label>
+            <Select value={position2} onValueChange={setPosition2}>
+              <SelectTrigger>
+                <SelectValue placeholder="None" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">None</SelectItem>
+                {allPositions.map(pos => (
+                  <SelectItem key={pos} value={pos}>{pos}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           
           <div>
-            <label className="block text-sm font-medium mb-1">Third Preference</label>
-            <select
-              className="w-full p-2 border rounded-md"
-              value={position3}
-              onChange={(e) => setPosition3(e.target.value)}
-            >
-              <option value="none">None</option>
-              {allPositions.map(pos => (
-                <option key={pos} value={pos}>{pos}</option>
-              ))}
-            </select>
+            <Label>Third Preference</Label>
+            <Select value={position3} onValueChange={setPosition3}>
+              <SelectTrigger>
+                <SelectValue placeholder="None" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">None</SelectItem>
+                {allPositions.map(pos => (
+                  <SelectItem key={pos} value={pos}>{pos}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           
           <div>
-            <label className="block text-sm font-medium mb-1">Fourth Preference</label>
-            <select
-              className="w-full p-2 border rounded-md"
-              value={position4}
-              onChange={(e) => setPosition4(e.target.value)}
-            >
-              <option value="none">None</option>
-              {allPositions.map(pos => (
-                <option key={pos} value={pos}>{pos}</option>
-              ))}
-            </select>
+            <Label>Fourth Preference</Label>
+            <Select value={position4} onValueChange={setPosition4}>
+              <SelectTrigger>
+                <SelectValue placeholder="None" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">None</SelectItem>
+                {allPositions.map(pos => (
+                  <SelectItem key={pos} value={pos}>{pos}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </div>
       
-      <div className="flex justify-end space-x-2 pt-4">
-        <button
-          type="button"
-          className="px-4 py-2 border rounded-md"
-          onClick={onCancel}
-        >
-          Cancel
-        </button>
-        <button
+      <div className="flex justify-end pt-4">
+        <Button
           type="submit"
-          className="px-4 py-2 bg-blue-600 text-white rounded-md"
           disabled={isSubmitting}
         >
           {isSubmitting ? 'Saving...' : 'Add Player'}
-        </button>
+        </Button>
       </div>
     </form>
   );
