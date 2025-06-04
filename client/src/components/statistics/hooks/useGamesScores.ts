@@ -24,8 +24,14 @@ export function useGamesScores(gameIds: number[], forceFresh = false) {
 
   // Stabilize gameIds to prevent unnecessary re-renders
   const stableGameIds = useMemo(() => {
-    return gameIds.length > 0 ? [...gameIds].sort((a, b) => a - b) : [];
+    if (!gameIds || !Array.isArray(gameIds) || gameIds.length === 0) {
+      return [];
+    }
+    return [...gameIds].filter(id => typeof id === 'number' && id > 0).sort((a, b) => a - b);
   }, [gameIds]);
+
+  // Only proceed if we have both club and valid game IDs
+  const shouldFetch = currentClub?.id && stableGameIds.length > 0;
 
   // Create a stable query key that won't change unnecessarily
   const queryKey = useMemo(() => [
@@ -39,8 +45,8 @@ export function useGamesScores(gameIds: number[], forceFresh = false) {
   const batchStatsQuery = useQuery({
     queryKey,
     queryFn: async () => {
-      if (!stableGameIds.length || !currentClub?.id) {
-        console.log('useGamesScores: Skipping fetch - no games or no club');
+      if (!shouldFetch) {
+        console.log('useGamesScores: Skipping fetch - missing requirements');
         return {};
       }
 
@@ -67,14 +73,17 @@ export function useGamesScores(gameIds: number[], forceFresh = false) {
         return data || {};
       } catch (error) {
         console.error('useGamesScores: Error fetching batch stats:', error);
-        throw error;
+        // Return empty object instead of throwing to prevent error loops
+        return {};
       }
     },
-    enabled: stableGameIds.length > 0 && !!currentClub?.id,
+    enabled: shouldFetch,
     staleTime: forceFresh ? 0 : 15 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
-    refetchOnWindowFocus: false, // Prevent unnecessary refetches
-    refetchOnMount: false, // Use cache when possible
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    retry: 1, // Only retry once to avoid spam
+    retryDelay: 5000, // Wait 5 seconds before retry
   });
 
   const { data: batchStats, isLoading, error } = batchStatsQuery || {};
@@ -105,17 +114,20 @@ export function useGamesScores(gameIds: number[], forceFresh = false) {
         return [];
       }
     },
-    enabled: !!currentClub?.id,
-    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    enabled: !!currentClub?.id && shouldFetch,
+    staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
+    retry: 1,
+    retryDelay: 5000,
   });
 
   const { data: games = [] } = gamesQuery || {};
 
   // Calculate scores for each game using the batch stats
   const scoresMap: Record<number, GameScores | undefined> = useMemo(() => {
-    if (!batchStats || games.length === 0 || stableGameIds.length === 0) {
+    // Early return if we don't have the necessary data
+    if (!shouldFetch || !batchStats || !games || games.length === 0 || stableGameIds.length === 0) {
       return {};
     }
 
