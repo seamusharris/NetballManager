@@ -76,18 +76,23 @@ export default function ClubDashboard() {
 
   // Team performance metrics
   const teamPerformance = activeTeams.map(team => {
+    // Filter games where this team is playing (either home or away)
     const teamGames = games.filter(game => 
-      (game.homeTeamId === team.id || game.awayTeamId === team.id) && game.homeClubId === currentClub?.id
+      game.homeTeamId === team.id || game.awayTeamId === team.id
     );
     const teamCompletedGames = teamGames.filter(game => game.statusIsCompleted);
     
     const wins = teamCompletedGames.filter(game => {
       // Check if this is a home or away game for our team
       const isHomeTeam = game.homeTeamId === team.id;
-      const teamScore = isHomeTeam ? game.statusTeamGoals : game.statusOpponentGoals;
-      const opponentScore = isHomeTeam ? game.statusOpponentGoals : game.statusTeamGoals;
       
-      return game.statusName === 'completed' && teamScore !== null && opponentScore !== null && teamScore > opponentScore;
+      // For home games: our score is statusTeamGoals, opponent is statusOpponentGoals
+      // For away games: our score is statusOpponentGoals, opponent is statusTeamGoals
+      const ourScore = isHomeTeam ? game.statusTeamGoals : game.statusOpponentGoals;
+      const theirScore = isHomeTeam ? game.statusOpponentGoals : game.statusTeamGoals;
+      
+      // Win if our score is higher and both scores are not null
+      return ourScore !== null && theirScore !== null && ourScore > theirScore;
     }).length;
 
     return {
@@ -187,12 +192,14 @@ export default function ClubDashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-orange-900">
-                {teamPerformance.length > 0 
-                  ? Math.round(teamPerformance.reduce((sum, team) => sum + team.winRate, 0) / teamPerformance.length)
-                  : 0}%
+                {(() => {
+                  const totalWins = teamPerformance.reduce((sum, team) => sum + team.wins, 0);
+                  const totalGames = teamPerformance.reduce((sum, team) => sum + team.totalGames, 0);
+                  return totalGames > 0 ? Math.round((totalWins / totalGames) * 100) : 0;
+                })()}%
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                Average across teams
+                {teamPerformance.reduce((sum, team) => sum + team.wins, 0)} wins from {teamPerformance.reduce((sum, team) => sum + team.totalGames, 0)} games
               </p>
             </CardContent>
           </Card>
