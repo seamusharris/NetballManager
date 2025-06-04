@@ -28,6 +28,9 @@ import { Suspense } from 'react'; // Import Suspense
 // Assuming PositionOpponentAnalysis is in the same directory, otherwise adjust path
 import PositionOpponentAnalysis from './PositionOpponentAnalysis';
 import PlayerAnalyticsWidget from './PlayerAnalyticsWidget';
+import { PlayerCombinationAnalysis } from './PlayerCombinationAnalysis';
+import { TeamPositionAnalysis } from './TeamPositionAnalysis';
+import { UpcomingGameRecommendations } from './UpcomingGameRecommendations';
 
 interface DashboardSummaryProps {
   players: Player[];
@@ -258,6 +261,20 @@ export default function DashboardSummary({
               centralizedStats={centralizedStats}
               centralizedRosters={centralizedRosters}
             />
+            <PlayerCombinationAnalysis 
+              games={filteredGames} 
+              players={players} 
+              centralizedStats={centralizedStats}
+              centralizedRosters={centralizedRosters}
+              currentClubId={currentClub?.id || 0}
+            />
+            <TeamPositionAnalysis 
+              games={filteredGames} 
+              players={players} 
+              centralizedStats={centralizedStats}
+              centralizedRosters={centralizedRosters}
+              currentClubId={currentClub?.id || 0}
+            />
           </>
         )}
       </div>
@@ -302,6 +319,18 @@ export default function DashboardSummary({
           activeSeason={activeSeason}
           centralizedStats={centralizedStats}
         />
+      )}
+      {/* Upcoming Game Recommendations Section */}
+      {!isLoading && (
+        <div className="mt-8">
+          <UpcomingGameRecommendations
+            games={filteredGames}
+            players={players}
+            centralizedStats={centralizedStats}
+            centralizedRosters={centralizedRosters}
+            currentClubId={currentClub?.id}
+          />
+        </div>
       )}
     </div>
   );
