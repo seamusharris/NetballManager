@@ -174,12 +174,12 @@ class UnifiedStatisticsService {
     }
 
     try {
-      // Use POST method with proper authentication
+      // Use POST method with proper authentication via apiRequest
       const result = await apiRequest('POST', '/api/games/stats/batch', { gameIds: validIds });
       return result || {};
     } catch (error) {
       console.error('getBatchGameStats: Error fetching batch stats:', error);
-      // Fallback to individual requests
+      // Fallback to individual requests using apiRequest
       return this.fallbackIndividualFetch(validIds);
     }
   }
@@ -211,15 +211,19 @@ class UnifiedStatisticsService {
 
   private async fallbackIndividualFetch(gameIds: number[]): Promise<Record<number, GameStat[]>> {
     const statsMap: Record<number, GameStat[]> = {};
+    
+    // Use apiRequest for individual game stats to ensure proper authentication
     const results = await Promise.allSettled(
       gameIds.map(id => apiRequest('GET', `/api/games/${id}/stats`))
     );
 
     results.forEach((result, index) => {
+      const gameId = gameIds[index];
       if (result.status === 'fulfilled') {
-        statsMap[gameIds[index]] = result.value;
+        statsMap[gameId] = result.value || [];
       } else {
-        statsMap[gameIds[index]] = [];
+        console.error(`Failed to fetch stats for game ${gameId}:`, result.reason);
+        statsMap[gameId] = [];
       }
     });
 
