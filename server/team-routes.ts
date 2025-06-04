@@ -621,14 +621,17 @@ export function registerTeamRoutes(app: Express) {
         return res.status(403).json({ error: 'Access denied to this team' });
       }
 
-      // Get players from the team's club who are not assigned to any team in this season
+      // Get players from the team's club who are assigned to this season but not assigned to any team
       const availablePlayers = await db.execute(sql`
         SELECT p.id, p.display_name, p.first_name, p.last_name, p.date_of_birth, 
                p.position_preferences, p.active, p.avatar_color
         FROM players p
         JOIN club_players cp ON p.id = cp.player_id
+        JOIN player_seasons ps ON p.id = ps.player_id
         WHERE cp.club_id = ${teamClubId} 
+          AND cp.is_active = true
           AND p.active = true
+          AND ps.season_id = ${seasonId}
           AND NOT EXISTS (
             SELECT 1
             FROM team_players tp
