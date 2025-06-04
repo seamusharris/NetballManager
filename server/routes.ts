@@ -1656,8 +1656,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ----- PLAYER AVAILABILITY API -----
 
   // Get player availability for a specific game
-  app.get("/api/games/:gameId/availability", async
-(req, res) => {
+  app.get("/api/games/:gameId/availability", async (req, res) => {
     try {
       const gameId = Number(req.params.gameId);
       const { playerAvailabilityStorage } = await import('./player-availability-storage');
