@@ -55,6 +55,9 @@ function withErrorBoundary(Component: React.ComponentType<any>, name: string) {
   );
 }
 
+import PlayerBorrowing from '@/pages/PlayerBorrowing';
+import TeamAnalysis from '@/pages/TeamAnalysis';
+
 function Router() {
   return (
     <Layout>
@@ -98,6 +101,7 @@ function Router() {
             </Suspense>
           </ErrorBoundary>
         </Route>
+        <Route path="/team-analysis" component={withErrorBoundary(TeamAnalysis, 'TeamAnalysis')} />
         <Route component={withErrorBoundary(NotFound, 'NotFound')} />
       </Switch>
     </Layout>
