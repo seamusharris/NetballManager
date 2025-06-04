@@ -407,6 +407,34 @@ export function registerTeamRoutes(app: Express) {
     }
   });
 
+  // Get team by ID
+  app.get('/api/teams/:id', requireClubAccess(), async (req: AuthenticatedRequest, res) => {
+    try {
+      const teamId = parseInt(req.params.id);
+      const userClubs = req.user?.clubs?.map(c => c.clubId) || [];
+
+      // Get team details and check if user has access to the team's club
+      const team = await db.execute(sql`
+        SELECT * FROM teams WHERE id = ${teamId}
+      `);
+
+      if (team.rows.length === 0) {
+        return res.status(404).json({ error: 'Team not found' });
+      }
+
+      const teamData = team.rows[0];
+
+      // Check if user has access to this team's club
+      if (!userClubs.includes(teamData.club_id)) {
+        return res.status(403).json({ error: 'Access denied to this team' });
+      }
+
+      res.json(teamData);
+    } catch (error) {
+      console.error("Error fetching team:", error);
+      res.status(500).json({ message: "Failed to fetch team" });
+    }
+  });
 
 
   // Add player to team
@@ -500,11 +528,29 @@ export function registerTeamRoutes(app: Express) {
   });
 
   // Get players for a specific team
-  app.get("/api/teams/:teamId/players", async (req, res) => {
+  app.get("/api/teams/:teamId/players", requireClubAccess(), async (req: AuthenticatedRequest, res) => {
     try {
       const teamId = parseInt(req.params.teamId);
       const seasonId = await db.execute(sql`SELECT season_id FROM teams WHERE id = ${teamId}`);
       const parsedSeasonId = seasonId.rows[0]?.season_id;
+      const userClubs = req.user?.clubs?.map(c => c.clubId) || [];
+
+      // Get team details to check club access
+      const team = await db.execute(sql`
+        SELECT club_id FROM teams WHERE id = ${teamId}
+      `);
+
+      if (team.rows.length === 0) {
+        return res.status(404).json({ error: 'Team not found' });
+      }
+
+      const teamClubId = team.rows[0].club_id;
+
+      // Check if user has access to this team's club
+      if (!userClubs.includes(teamClubId)) {
+        return res.status(403).json({ error: 'Access denied to this team' });
+      }
+
 
       const result = await db.execute(sql`
         SELECT 
@@ -553,7 +599,7 @@ export function registerTeamRoutes(app: Express) {
           p.avatar_color
         FROM players p
         JOIN clubs c ON p.club_id = c.id
-        WHERE c.id = (SELECT club_id FROM teams WHERE id = ${teamId})
+        WHERE c.id = ${teamClubId}
           AND p.active = true
           AND NOT EXISTS (
             SELECT 1
@@ -577,7 +623,7 @@ export function registerTeamRoutes(app: Express) {
         active: row.active,
         avatarColor: row.avatar_color
       }));
-      
+
       res.json({
         teamPlayers: players,
         availablePlayers: mappedAvailablePlayers
@@ -585,6 +631,72 @@ export function registerTeamRoutes(app: Express) {
     } catch (error) {
       console.error("Error fetching team players:", error);
       res.status(500).json({ message: "Failed to fetch team players" });
+    }
+  });
+
+  // Get available players for a team (not assigned to any team in the season)
+  app.get('/api/teams/:teamId/available-players', requireClubAccess(), async (req: AuthenticatedRequest, res) => {
+    try {
+      const teamId = parseInt(req.params.teamId);
+      const seasonId = parseInt(req.query.seasonId as string);
+      const userClubs = req.user?.clubs?.map(c => c.clubId) || [];
+
+      if (!seasonId) {
+        return res.status(400).json({ error: 'Season ID is required' });
+      }
+
+      // Get team details to check club access
+      const team = await db.execute(sql`
+        SELECT club_id FROM teams WHERE id = ${teamId}
+      `);
+
+      if (team.rows.length === 0) {
+        return res.status(404).json({ error: 'Team not found' });
+      }
+
+      const teamClubId = team.rows[0].club_id;
+
+      // Check if user has access to this team's club
+      if (!userClubs.includes(teamClubId)) {
+        return res.status(403).json({ error: 'Access denied to this team' });
+      }
+
+      // Get players from the team's club who are not assigned to any team in this season
+      const availablePlayers = await db.execute(sql`
+        SELECT p.id, p.display_name, p.first_name, p.last_name, p.date_of_birth, 
+               p.position_preferences, p.active, p.avatar_color
+        FROM players p
+        JOIN clubs c ON p.club_id = c.id
+        WHERE c.id = ${teamClubId} 
+          AND p.active = true
+          AND NOT EXISTS (
+            SELECT 1
+            FROM team_players tp
+            JOIN teams t ON tp.team_id = t.id
+            WHERE tp.player_id = p.id
+              AND t.season_id = ${seasonId}
+          )
+        ORDER BY p.display_name
+      `);
+
+      const mappedAvailablePlayers = availablePlayers.rows.map(row => ({
+        id: row.id,
+        displayName: row.display_name,
+        firstName: row.first_name,
+        lastName: row.last_name,
+        dateOfBirth: row.date_of_birth,
+        positionPreferences: typeof row.position_preferences === 'string'
+          ? JSON.parse(row.position_preferences)
+          : row.position_preferences || [],
+        active: row.active,
+        avatarColor: row.avatar_color
+      }));
+  
+
+      res.json(mappedAvailablePlayers);
+    } catch (error) {
+      console.error("Error fetching available players:", error);
+      res.status(500).json({ message: "Failed to fetch available players" });
     }
   });
 }
