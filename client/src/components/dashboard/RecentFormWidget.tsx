@@ -40,6 +40,9 @@ export default function RecentFormWidget({
   const formData = completedGames.map(game => {
     const stats = centralizedStats?.[game.id] || [];
 
+    // Debug: Log stats for this game
+    console.log(`RecentFormWidget - Game ${game.id} stats:`, stats.length, 'stats entries');
+
     // Calculate scores from stats
     let teamScore = 0;
     let opponentScore = 0;

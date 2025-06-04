@@ -62,6 +62,9 @@ export default function RecentGames({ games, opponents, className, seasonFilter,
   const getScores = (game: Game): [number, number] => {
     const gameStatsList = allGameStats?.[game.id] || [];
 
+    // Debug: Log stats for this game
+    console.log(`RecentGames - Game ${game.id} stats:`, gameStatsList.length, 'stats entries');
+
     // If no stats found, return 0-0
     if (gameStatsList.length === 0) {
       return [0, 0];

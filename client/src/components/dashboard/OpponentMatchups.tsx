@@ -109,6 +109,10 @@ export default function TeamMatchups({
 
         sortedGames.forEach((game, index) => {
           const gameStats = centralizedStats[game.id] || [];
+          
+          // Debug: Log stats for this game
+          console.log(`OpponentMatchups - Game ${game.id} stats:`, gameStats.length, 'stats entries');
+          
           const isHomeTeamOurs = game.homeTeamClubId === currentClubId;
 
           // Calculate our team and opposing team scores from stats
