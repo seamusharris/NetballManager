@@ -3,7 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Game } from '@shared/schema';
 import { useEffect, useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { apiRequest } from '@/lib/apiClient';
+import { apiRequest, apiClient } from '@/lib/apiClient';
 import { isGameValidForStatistics } from '@/lib/gameFilters';
 import { getCompletedGamesForStats } from '@/lib/gameFilters';
 
@@ -51,24 +51,13 @@ export default function QuarterPerformanceWidget({
       }
 
       try {
-        // Use the batch endpoint with proper URL encoding
-        const gameIdsParam = validGameIds.join(',');
-        const url = `/api/games/stats/batch?gameIds=${gameIdsParam}`;
+        // Use the POST batch endpoint with proper request body
+        console.log(`QuarterPerformanceWidget: Fetching batch stats for game IDs:`, validGameIds);
 
-        console.log(`QuarterPerformanceWidget: Fetching batch stats from ${url}`);
-
-        const response = await fetch(url, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+        const batchStats = await apiClient.post('/api/games/stats/batch', {
+          gameIds: validGameIds
         });
 
-        if (!response.ok) {
-          throw new Error(`Failed to fetch batch game stats: ${response.statusText}`);
-        }
-
-        const batchStats = await response.json();
         console.log('QuarterPerformanceWidget: Received batch stats:', batchStats);
 
         // Check if we got valid data - the batch endpoint returns an object where keys are game IDs
@@ -82,20 +71,14 @@ export default function QuarterPerformanceWidget({
         console.warn("QuarterPerformanceWidget: Batch endpoint failed, falling back to individual requests:", error);
       }
 
-      // Fallback to individual requests using fetch (same as working calls)
+      // Fallback to individual requests using apiClient (properly authenticated)
       console.log('QuarterPerformanceWidget: Using fallback individual requests');
       const statsMap: Record<number, any[]> = {};
       for (const gameId of validGameIds) {
         try {
-          const response = await fetch(`/api/games/${gameId}/stats`);
-          if (response.ok) {
-            const stats = await response.json();
-            statsMap[gameId] = stats;
-            console.log(`QuarterPerformanceWidget: Individual request for game ${gameId} returned ${stats.length} stats`);
-          } else {
-            statsMap[gameId] = [];
-            console.warn(`QuarterPerformanceWidget: Individual request for game ${gameId} failed with status ${response.status}`);
-          }
+          const stats = await apiClient.get(`/api/games/${gameId}/stats`);
+          statsMap[gameId] = stats;
+          console.log(`QuarterPerformanceWidget: Individual request for game ${gameId} returned ${stats.length} stats`);
         } catch (error) {
           console.error(`QuarterPerformanceWidget: Error fetching stats for game ${gameId}:`, error);
           statsMap[gameId] = [];
