@@ -149,8 +149,8 @@ export const CourtDisplay = ({
                 backgroundColor: bgColor,
                 boxShadow: '0 4px 8px rgba(0, 0, 0, 0.5)',
                 border: playerName ? '3px solid white' : '2px solid red',
-                width: '5rem',
-                height: '5rem',
+                width: 'clamp(4rem, 8vw, 7rem)',
+                height: 'clamp(4rem, 8vw, 7rem)',
                 borderRadius: '100%',
                 display: 'flex',
                 flexDirection: 'column',
@@ -160,17 +160,17 @@ export const CourtDisplay = ({
               }}
             >
               {showPositionLabels && (
-                <div className="font-bold text-center text-base md:text-lg" style={{ color: textColor }}>
+                <div className="font-bold text-center text-sm md:text-base lg:text-lg" style={{ color: textColor }}>
                   {position}
                 </div>
               )}
               {playerName && (
-                <div className="text-xs md:text-sm text-center font-medium leading-tight mx-1" style={{ color: textColor }}>
+                <div className="text-xs md:text-sm lg:text-base text-center font-medium leading-tight mx-1" style={{ color: textColor }}>
                   {playerName}
                 </div>
               )}
               {!playerName && (
-                <div className="text-xs text-red-500 text-center">Unassigned</div>
+                <div className="text-xs md:text-sm text-red-500 text-center">Unassigned</div>
               )}
             </div>
           </div>
