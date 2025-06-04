@@ -284,27 +284,25 @@ export default function TopPlayersWidget({
               displayName={player.displayName}
               subtitle={`${player.stats.gamesPlayed} games`}
               onClick={() => window.location.href = `/player/${player.id}`}
+              className="flex items-center justify-between"
             >
-              <div className="flex items-center justify-between w-full">
-                <div className="flex-1" />
-                <div className="flex items-center space-x-4 text-xs">
-                  <div className="text-center">
-                    <p className="font-semibold text-gray-700">{player.stats.goals}</p>
-                    <p className="text-gray-500">Goals</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="font-semibold text-gray-700">{player.stats.intercepts}</p>
-                    <p className="text-gray-500">Int</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="font-semibold text-gray-700">{player.stats.rebounds}</p>
-                    <p className="text-gray-500">Reb</p>
-                  </div>
-                  <div className="text-center">
-                    <span className={cn("px-2 py-1 rounded text-xs font-semibold", getRatingClass(player.stats.rating))}>
-                      {player.stats.rating.toFixed(1)}
-                    </span>
-                  </div>
+              <div className="flex items-center space-x-4 text-xs ml-auto">
+                <div className="text-center">
+                  <p className="font-semibold text-gray-700">{player.stats.goals}</p>
+                  <p className="text-gray-500">Goals</p>
+                </div>
+                <div className="text-center">
+                  <p className="font-semibold text-gray-700">{player.stats.intercepts}</p>
+                  <p className="text-gray-500">Int</p>
+                </div>
+                <div className="text-center">
+                  <p className="font-semibold text-gray-700">{player.stats.rebounds}</p>
+                  <p className="text-gray-500">Reb</p>
+                </div>
+                <div className="text-center">
+                  <span className={cn("px-2 py-1 rounded text-xs font-semibold", getRatingClass(player.stats.rating))}>
+                    {player.stats.rating.toFixed(1)}
+                  </span>
                 </div>
               </div>
             </PlayerBox>
