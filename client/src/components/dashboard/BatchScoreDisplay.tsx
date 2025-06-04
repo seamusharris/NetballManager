@@ -1,9 +1,10 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useContext } from 'react';
 import { useBatchGameStatistics } from '../statistics/hooks/useBatchGameStatistics';
 import { isForfeitGame, getForfeitGameScore } from '@/lib/utils';
 import { Game, GameStat } from '@shared/schema';
 import { getCachedScores, cacheScores } from '@/lib/scoresCache';
 import { statisticsService } from '@/lib/statisticsService';
+import { CurrentClubContext } from '@/contexts/CurrentClubContext';
 
 interface BatchScoreDisplayProps {
   games: Game[];
@@ -15,6 +16,9 @@ interface BatchScoreDisplayProps {
  * instead of separate requests for each game
  */
 export default function BatchScoreDisplay({ games, className }: BatchScoreDisplayProps) {
+  // Access the current club context
+  const { currentClub } = useContext(CurrentClubContext);
+
   // Filter to only get completed games and ensure we have valid data
   const completedGames = useMemo(() => {
     if (!games || !Array.isArray(games)) return [];
@@ -29,16 +33,16 @@ export default function BatchScoreDisplay({ games, className }: BatchScoreDispla
     const validIds = completedGames
       .map(g => g?.id)
       .filter(id => id && typeof id === 'number' && id > 0 && !isNaN(id));
-    
+
     return validIds.length > 0 ? validIds : [];
   }, [completedGames]);
 
   // Log batch request for debugging
   useEffect(() => {
     if (gameIds.length > 0) {
-      
+
     } else if (games) {
-      
+
     }
   }, [gameIds, games]);
 
@@ -46,21 +50,31 @@ export default function BatchScoreDisplay({ games, className }: BatchScoreDispla
   useEffect(() => {
     async function loadAndCacheBatchStats() {
       if (!gameIds || gameIds.length === 0) {
-        
+
         return;
       }
 
       try {
-        
+
 
         // Only proceed if we have valid game IDs
         if (!gameIds || gameIds.length === 0) {
-          
+
           return;
         }
-        
+        const response = await fetch(`/api/games/stats/batch?gameIds=${gameIds.join(',')}`, {
+          headers: {
+            'x-current-club-id': currentClub?.id?.toString() || '',
+          },
+        });
+        if (!response.ok) {
+          throw new Error(`Failed to fetch batch stats: ${response.statusText}`);
+        }
+        const batchData = await response.json();
+
         // Use the service to fetch stats in a batch
-        const batchStats = await statisticsService.getBatchGameStats(gameIds);
+        // const batchStats = await statisticsService.getBatchGameStats(gameIds);
+        const batchStats = batchData;
 
         // Process results in the same way as the individual calls
         completedGames.forEach(game => {
@@ -84,14 +98,14 @@ export default function BatchScoreDisplay({ games, className }: BatchScoreDispla
           }
         });
 
-        
+
       } catch (error) {
         console.error("Error loading batch game statistics:", error);
       }
     }
 
     loadAndCacheBatchStats();
-  }, [gameIds, completedGames]);
+  }, [gameIds, completedGames, currentClub]);
 
   // This component doesn't render anything directly
   // It just efficiently loads and caches scores for other components to use

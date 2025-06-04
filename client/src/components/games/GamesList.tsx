@@ -191,8 +191,10 @@ export function GamesList({
     staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
   });
 
-  // Use the same efficient scores approach as the dashboard
-  const { scoresMap, isLoading: isLoadingScores } = useGamesScores(completedGameIds);
+  // Use the same efficient scores approach as the dashboard (only fetch if we have a club)
+  const { scoresMap, isLoading: isLoadingScores } = useGamesScores(
+    currentClub?.id ? completedGameIds : []
+  );
 
   // Determine game stats status (only for non-dashboard)
   useEffect(() => {
