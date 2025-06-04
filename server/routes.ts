@@ -985,9 +985,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check if we're doing an import operation (with ID) or regular create
       const hasId = req.body.id !== undefined;
 
+      // Extract club context from request
+      const clubId = req.body.clubId || req.headers['x-current-club-id'];
+
       // Use the appropriate schema based on operation type
       const schema = hasId ? importPlayerSchema : insertPlayerSchema;
-      const parsedData = schema.safeParse(req.body);
+      const { clubId: _, ...playerDataForValidation } = req.body; // Remove clubId for validation
+      const parsedData = schema.safeParse(playerDataForValidation);
 
       if (!parsedData.success) {
         return res.status(400).json({ message: "Invalid player data", errors: parsedData.error.errors });
@@ -1000,11 +1004,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`Creating player with request ID: ${requestId}`, {
         displayName: playerData.displayName,
         firstName: playerData.firstName,
-        lastName: playerData.lastName
+        lastName: playerData.lastName,
+        clubId: clubId
       });
 
       // Create the player (avatar color handling is now in the storage layer)
       const player = await storage.createPlayer(playerData);
+
+      // Auto-associate with club if club context is provided
+      if (clubId && player.id) {
+        try {
+          const numericClubId = typeof clubId === 'string' ? parseInt(clubId, 10) : clubId;
+          if (!isNaN(numericClubId) && numericClubId > 0) {
+            console.log(`Auto-associating player ${player.id} with club ${numericClubId}`);
+            await storage.addPlayerToClub(player.id, numericClubId);
+            console.log(`Successfully auto-associated player ${player.id} with club ${numericClubId}`);
+          }
+        } catch (clubError) {
+          console.error(`Failed to auto-associate player ${player.id} with club ${clubId}:`, clubError);
+          // Don't fail the player creation if club association fails
+        }
+      }
 
       // Log successful creation
       console.log(`Successfully created player with ID: ${player.id}`);

@@ -265,11 +265,14 @@ export default function Players() {
                       <PlayerForm
                         onSubmit={async (playerData) => {
                           try {
-                            // Create the player
-                            const response = await apiClient.post('/api/players', playerData);
+                            // Create the player with club context
+                            const response = await apiClient.post('/api/players', {
+                              ...playerData,
+                              clubId: currentClub?.id // Include club ID in player creation
+                            });
                             const newPlayer = response;
                             
-                            // Associate the player with the current club
+                            // Ensure the player is associated with the current club
                             if (currentClub?.id && newPlayer.id) {
                               try {
                                 await apiClient.post(`/api/clubs/${currentClub.id}/players/${newPlayer.id}`, {});
@@ -280,10 +283,11 @@ export default function Players() {
                               }
                             }
                             
-                            // Invalidate queries to refresh the UI
-                            queryClient.invalidateQueries({ queryKey: ['players', currentClub?.id] });
-                            queryClient.invalidateQueries({ queryKey: ['available-players', teamId, activeSeason?.id] });
+                            // Invalidate all relevant queries to refresh the UI
+                            queryClient.invalidateQueries({ queryKey: ['players'] });
+                            queryClient.invalidateQueries({ queryKey: ['available-players'] });
                             queryClient.invalidateQueries({ queryKey: ['clubs', currentClub?.id, 'players'] });
+                            queryClient.invalidateQueries({ queryKey: ['team-players'] });
                             
                             toast({ title: 'Success', description: 'Player created successfully' });
                           } catch (error) {
