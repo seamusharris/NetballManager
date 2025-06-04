@@ -404,7 +404,7 @@ export function TeamPositionAnalysis({
                         quarter={1}
                         layout="horizontal"
                         showPositionLabels={true}
-                        className="max-w-2xl"
+                        className="max-w-md"
                       />
                     </div>
                   </Card>
@@ -488,7 +488,7 @@ export function TeamPositionAnalysis({
                         quarter={1}
                         layout="horizontal"
                         showPositionLabels={true}
-                        className="max-w-2xl"
+                        className="max-w-md"
                       />
                     </div>
                   </Card>

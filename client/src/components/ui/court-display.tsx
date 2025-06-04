@@ -110,7 +110,7 @@ export const CourtDisplay = ({
   const courtHeight = layout === 'horizontal' ? 'h-96' : 'h-auto';
 
   return (
-    <div className={`relative w-full max-w-2xl mx-auto ${courtAspectRatio} ${courtHeight} bg-green-100 rounded-lg border border-green-300 ${className}`}>
+    <div className={`relative w-full max-w-md mx-auto ${courtAspectRatio} ${courtHeight} bg-green-100 rounded-lg border border-green-300 ${className}`}>
       {/* Court markings */}
       <div className="absolute inset-0 flex flex-col">
         {layout === 'horizontal' ? (
@@ -149,8 +149,8 @@ export const CourtDisplay = ({
                 backgroundColor: bgColor,
                 boxShadow: '0 4px 8px rgba(0, 0, 0, 0.5)',
                 border: playerName ? '3px solid white' : '2px solid red',
-                width: '6rem',
-                height: '6rem',
+                width: '5rem',
+                height: '5rem',
                 borderRadius: '100%',
                 display: 'flex',
                 flexDirection: 'column',
