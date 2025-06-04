@@ -95,7 +95,12 @@ export default function UpcomingGames({ games, opponents, className, seasonFilte
           </div>
         )}
 
-        {upcomingGames.length > upcomingGames.slice(0, 5).length ? (
+        {games.filter(game => {
+          const isCompleted = game.statusIsCompleted === true || 
+                             game.gameStatus?.isCompleted === true || 
+                             game.completed === true;
+          return !isCompleted;
+        }).length > 5 ? (
           <ViewMoreButton href="/games?status=upcoming">
             View more →
           </ViewMoreButton>
