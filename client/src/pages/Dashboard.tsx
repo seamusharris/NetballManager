@@ -9,9 +9,7 @@ import { Loader2 } from 'lucide-react';
 import { apiClient } from '@/lib/apiClient';
 
 export default function Dashboard() {
-  const { currentClub, isLoading: clubLoading } = useClub();
-
-  const currentClubId = currentClub?.id;
+  const { currentClub, currentClubId, isLoading: clubLoading } = useClub();
 
   // Call ALL hooks first, before any conditional returns
   const { data: players = [], isLoading: isLoadingPlayers, error: playersError } = useQuery<any[]>({
@@ -41,7 +39,7 @@ export default function Dashboard() {
   });
 
   // NOW we can do conditional returns after all hooks are called
-  if (clubLoading || !currentClub || !currentClubId) {
+  if (clubLoading || !currentClubId) {
     console.log('Dashboard waiting for club context:', { clubLoading, hasCurrentClub: !!currentClub, currentClubId });
     return (
       <div className="flex items-center justify-center h-64">
