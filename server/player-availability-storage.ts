@@ -35,26 +35,26 @@ export class PlayerAvailabilityStorage {
         // This applies to both upcoming and completed games that lack availability data
         for (const player of playersResult.rows) {
           try {
-            // Check if record already exists first
+            // First check if record already exists to avoid constraint violations
             const existingRecord = await db.execute(sql`
               SELECT id FROM player_availability 
               WHERE game_id = ${gameId} AND player_id = ${player.id}
             `);
 
             if (existingRecord.rows.length === 0) {
+              // Insert new record only if one doesn't exist
               await db.execute(sql`
                 INSERT INTO player_availability (game_id, player_id, is_available, created_at, updated_at)
                 VALUES (${gameId}, ${player.id}, true, NOW(), NOW())
               `);
+              console.log(`Created availability record for game ${gameId}, player ${player.id} (available by default)`);
+            } else {
+              console.log(`Availability record already exists for game ${gameId}, player ${player.id}`);
             }
           } catch (error: any) {
-            // If it's a duplicate key error, just continue - record already exists
-            if (error.code === '23505') {
-              console.log(`Availability record already exists for game ${gameId}, player ${player.id}`);
-              continue;
-            }
-            // For other errors, log and continue to avoid hanging
-            console.error(`Error creating availability record for game ${gameId}, player ${player.id}:`, error.message);
+            // Handle any remaining errors gracefully
+            console.error(`Error handling availability record for game ${gameId}, player ${player.id}:`, error.message);
+            // Continue processing other players instead of stopping
             continue;
           }
         }
