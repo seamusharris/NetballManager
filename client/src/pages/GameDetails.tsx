@@ -1207,6 +1207,30 @@ export default function GameDetails() {
   const isForfeitGame = game.status === 'forfeit-win' || game.status === 'forfeit-loss';
   //const opponentName = getOpponentName(opponents || [], game.opponentId); // Removed opponentName
 
+  // Helper function to get score display
+  const finalTeamScore = quarterScores.reduce((sum, q) => sum + q.teamScore, 0);
+  const finalOpponentScore = quarterScores.reduce((sum, q) => sum + q.opponentScore, 0);
+
+  const result = finalTeamScore > finalOpponentScore ? 'Win' : 
+                 finalTeamScore < finalOpponentScore ? 'Loss' : 'Draw';
+
+  const getScoreDisplay = () => {
+    if (!game) return "- -";
+
+    // Show fixed scores from status if available
+    if (game.statusTeamGoals !== null && game.statusOpponentGoals !== null) {
+      return `${game.statusTeamGoals}-${game.statusOpponentGoals}`;
+    }
+
+    // Show actual scores for completed games
+    if (game.statusIsCompleted) {
+      return `${finalTeamScore}-${finalOpponentScore}`;
+    }
+
+    // Show dash for upcoming games or games without statistics
+    return "- -";
+  };
+
   return (
     <div className="container py-8 mx-auto">
       <Helmet>
@@ -1847,26 +1871,4 @@ export default function GameDetails() {
       )}
     </div>
   );
-    const finalTeamScore = quarterScores.reduce((sum, q) => sum + q.teamScore, 0);
-  const finalOpponentScore = quarterScores.reduce((sum, q) => sum + q.opponentScore, 0);
-
-  const result = finalTeamScore > finalOpponentScore ? 'Win' : 
-                 finalTeamScore < finalOpponentScore ? 'Loss' : 'Draw';
-
-  const getScoreDisplay = () => {
-    if (!game) return "- -";
-
-    // Show fixed scores from status if available
-    if (game.statusTeamGoals !== null && game.statusOpponentGoals !== null) {
-      return `${game.statusTeamGoals}-${game.statusOpponentGoals}`;
-    }
-
-    // Show actual scores for completed games
-    if (game.statusIsCompleted) {
-      return `${finalTeamScore}-${finalOpponentScore}`;
-    }
-
-    // Show dash for upcoming games or games without statistics
-    return "- -";
-  };
 }
