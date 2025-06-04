@@ -54,6 +54,19 @@ export default function Players() {
     },
   });
 
+  // Get team details if viewing a specific team
+  const { data: teamData } = useQuery({
+    queryKey: ['team', teamId],
+    queryFn: async () => {
+      const response = await fetch(`/api/teams/${teamId}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    },
+    enabled: !!teamId,
+  });
+
   // Get team players if viewing a specific team
   const { data: teamPlayers = [], isLoading: isLoadingTeamPlayers } = useQuery({
     queryKey: ['team-players', teamId],
@@ -147,6 +160,20 @@ export default function Players() {
         </Helmet>
 
         <div className="space-y-6">
+          {/* Team Header */}
+          {teamData && (
+            <div className="mb-6">
+              <h1 className="text-2xl font-bold text-gray-900">
+                {teamData.name}
+              </h1>
+              {teamData.division && (
+                <p className="text-lg text-gray-600 mt-1">
+                  {teamData.division}
+                </p>
+              )}
+            </div>
+          )}
+
           {/* Current Team Players */}
           <Card>
             <CardHeader>
