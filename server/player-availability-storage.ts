@@ -15,6 +15,50 @@ export class PlayerAvailabilityStorage {
   
   async getPlayerAvailabilityForGame(gameId: number): Promise<number[]> {
     try {
+      // First check if any availability records exist for this game
+      const existingRecords = await db.execute(sql`
+        SELECT COUNT(*) as count FROM player_availability WHERE game_id = ${gameId}
+      `);
+      
+      const hasExistingRecords = parseInt(existingRecords.rows[0].count) > 0;
+      
+      if (!hasExistingRecords) {
+        // No records exist - check if this is an upcoming game
+        const gameResult = await db.execute(sql`
+          SELECT gs.is_completed 
+          FROM games g
+          LEFT JOIN game_statuses gs ON g.status_id = gs.id
+          WHERE g.id = ${gameId}
+        `);
+        
+        if (gameResult.rows.length > 0) {
+          const isCompleted = gameResult.rows[0].is_completed;
+          
+          if (!isCompleted) {
+            // This is an upcoming game with no availability records - create default records
+            console.log(`Creating default availability records for upcoming game ${gameId}`);
+            
+            // Get all active players
+            const playersResult = await db.execute(sql`
+              SELECT id FROM players WHERE active = true
+            `);
+            
+            // Create availability records for all active players (default to available)
+            for (const player of playersResult.rows) {
+              await db.execute(sql`
+                INSERT INTO player_availability (game_id, player_id, is_available, created_at, updated_at)
+                VALUES (${gameId}, ${player.id}, true, NOW(), NOW())
+                ON CONFLICT (game_id, player_id) DO NOTHING
+              `);
+            }
+            
+            // Return all active player IDs as available
+            return playersResult.rows.map(row => row.id as number);
+          }
+        }
+      }
+      
+      // Return existing availability records
       const result = await db.execute(sql`
         SELECT player_id 
         FROM player_availability 

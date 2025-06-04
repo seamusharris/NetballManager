@@ -126,44 +126,10 @@ export default function PlayerAvailabilityManager({
 
     // Handle successful availability data
     if (availabilityData && Array.isArray(availabilityData.availablePlayerIds)) {
-      // For new games (upcoming games), we default to all active players being available
-      if (availabilityData.availablePlayerIds.length === 0) {
-        const selectedGame = games.find(game => game.id === gameId);
-        console.log('Empty availability array received - checking game status:', {
-          gameId,
-          statusName: selectedGame?.statusName,
-          statusIsCompleted: selectedGame?.statusIsCompleted,
-          gameData: selectedGame
-        });
-
-        // Only default to all active players for truly upcoming games (not completed)
-        // Use the database-driven statusIsCompleted field as the source of truth
-        const isUpcomingGame = selectedGame && selectedGame.statusIsCompleted === false;
-
-        if (isUpcomingGame) {
-          const activePlayerIds = players.filter(p => p.active).map(p => p.id);
-          console.log('Empty availability for upcoming game - defaulting to all active players:', {
-            gameId,
-            activePlayerIds,
-            activePlayersCount: activePlayerIds.length,
-            gameStatus: selectedGame.statusName,
-            isCompleted: selectedGame.statusIsCompleted
-          });
-          setAvailablePlayerIds(activePlayerIds);
-          // Also notify parent component
-          onAvailabilityChange?.(activePlayerIds);
-        } else {
-          // For completed games, respect the empty array
-          console.log('Setting available players from API (empty for completed game):', availabilityData.availablePlayerIds);
-          setAvailablePlayerIds(availabilityData.availablePlayerIds);
-          onAvailabilityChange?.(availabilityData.availablePlayerIds);
-        }
-      } else {
-        // Use the exact availability data from the API
-        console.log('Setting available players from API:', availabilityData.availablePlayerIds);
-        setAvailablePlayerIds(availabilityData.availablePlayerIds);
-        onAvailabilityChange?.(availabilityData.availablePlayerIds);
-      }
+      // Always use the exact availability data from the API - don't override it
+      console.log('Setting available players from API:', availabilityData.availablePlayerIds);
+      setAvailablePlayerIds(availabilityData.availablePlayerIds);
+      onAvailabilityChange?.(availabilityData.availablePlayerIds);
     } else if (availabilityError) {
       // Only fallback to all active players if there's an actual error
       const activePlayerIds = players.filter(p => p.active).map(p => p.id);
