@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { BaseWidget } from '@/components/ui/base-widget';
@@ -46,29 +45,30 @@ export default function TeamMatchups({
   useEffect(() => {
     const calculateMatchups = () => {
       const teamMatchups: TeamMatchup[] = [];
-      
+
       // Get all unique opposing teams from games
       const opposingTeams = new Map<number, { id: number; name: string; division?: string }>();
-      
+
       games.forEach(game => {
         if (isGameValidForStatistics(game)) {
           // Determine which team is the opposing team
           let opposingTeamId: number | null = null;
           let opposingTeamName = '';
-          
+
           // Check if we're home or away team
           if (game.homeTeamId && game.awayTeamId) {
             // Find which team belongs to current club
             const isHomeTeamOurs = game.homeTeamClubId === currentClubId;
-            
-            if (isHomeTeamOurs && game.awayTeamId) {
+            const isAwayTeamOurs = game.awayTeamClubId === currentClubId;
+
+            if (isHomeTeamOurs && game.awayTeamId && !isAwayTeamOurs) {
               opposingTeamId = game.awayTeamId;
               opposingTeamName = game.awayTeamName || `Team ${game.awayTeamId}`;
-            } else if (!isHomeTeamOurs && game.homeTeamId) {
+            } else if (isAwayTeamOurs && game.homeTeamId && !isHomeTeamOurs) {
               opposingTeamId = game.homeTeamId;
               opposingTeamName = game.homeTeamName || `Team ${game.homeTeamId}`;
             }
-            
+
             if (opposingTeamId && !opposingTeams.has(opposingTeamId)) {
               opposingTeams.set(opposingTeamId, {
                 id: opposingTeamId,
@@ -83,13 +83,14 @@ export default function TeamMatchups({
       opposingTeams.forEach(team => {
         const teamGames = games.filter(game => {
           if (!isGameValidForStatistics(game)) return false;
-          
+
           // Check if this game involves the opposing team
           const isHomeTeamOurs = game.homeTeamClubId === currentClubId;
-          
-          if (isHomeTeamOurs && game.awayTeamId === team.id) return true;
-          if (!isHomeTeamOurs && game.homeTeamId === team.id) return true;
-          
+          const isAwayTeamOurs = game.awayTeamClubId === currentClubId;
+
+          if (isHomeTeamOurs && game.awayTeamId === team.id && !isAwayTeamOurs) return true;
+          if (isAwayTeamOurs && game.homeTeamId === team.id && !isHomeTeamOurs) return true;
+
           return false;
         });
 
@@ -109,10 +110,10 @@ export default function TeamMatchups({
 
         sortedGames.forEach((game, index) => {
           const gameStats = centralizedStats[game.id] || [];
-          
+
           // Debug: Log stats for this game
           console.log(`OpponentMatchups - Game ${game.id} stats:`, gameStats.length, 'stats entries');
-          
+
           const isHomeTeamOurs = game.homeTeamClubId === currentClubId;
 
           // Calculate our team and opposing team scores from stats
@@ -186,10 +187,10 @@ export default function TeamMatchups({
 
   const calculateStreak = (form: string[]) => {
     if (form.length === 0) return { type: 'None', count: 0 };
-    
+
     const mostRecent = form[0];
     let count = 1;
-    
+
     for (let i = 1; i < form.length; i++) {
       if (form[i] === mostRecent) {
         count++;
@@ -197,7 +198,7 @@ export default function TeamMatchups({
         break;
       }
     }
-    
+
     return {
       type: mostRecent === 'W' ? 'Win' : mostRecent === 'L' ? 'Loss' : 'Draw',
       count
@@ -399,7 +400,7 @@ export default function TeamMatchups({
                 const strong = matchups.filter(m => m.winRate >= 70);
                 const balanced = matchups.filter(m => m.winRate >= 30 && m.winRate < 70);
                 const challenging = matchups.filter(m => m.winRate < 30);
-                
+
                 return [
                   { label: 'Strong vs', count: strong.length, color: 'text-green-600' },
                   { label: 'Balanced vs', count: balanced.length, color: 'text-yellow-600' },
