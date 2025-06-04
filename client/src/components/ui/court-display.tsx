@@ -160,17 +160,17 @@ export const CourtDisplay = ({
               }}
             >
               {showPositionLabels && (
-                <div className="font-bold text-center text-sm" style={{ color: textColor }}>
+                <div className="font-bold text-center text-base" style={{ color: textColor }}>
                   {position}
                 </div>
               )}
               {playerName && (
-                <div className="text-xs text-center font-medium leading-tight mx-1" style={{ color: textColor }}>
+                <div className="text-sm text-center font-medium leading-tight mx-1" style={{ color: textColor }}>
                   {playerName}
                 </div>
               )}
               {!playerName && (
-                <div className="text-xs text-red-500 text-center">Unassigned</div>
+                <div className="text-sm text-red-500 text-center">Unassigned</div>
               )}
             </div>
           </div>
