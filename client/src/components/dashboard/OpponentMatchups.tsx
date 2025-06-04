@@ -51,25 +51,38 @@ export default function TeamMatchups({
 
       games.forEach(game => {
         if (isGameValidForStatistics(game)) {
+          console.log(`OpponentMatchups - Processing valid game ${game.id}: ${game.homeTeamName} vs ${game.awayTeamName}`);
+          console.log(`OpponentMatchups - Game ${game.id}: homeClubId=${game.homeClubId}, awayClubId=${game.awayClubId}, currentClubId=${currentClubId}`);
+
           // Determine which team is the opposing team
           let opposingTeamId: number | null = null;
           let opposingTeamName = '';
 
-          // Check if we're home or away team
           if (game.homeTeamId && game.awayTeamId) {
             // Find which team belongs to current club
-            const isHomeTeamOurs = game.homeTeamClubId === currentClubId;
-            const isAwayTeamOurs = game.awayTeamClubId === currentClubId;
+            const isHomeTeamOurs = game.homeClubId === currentClubId;
+            const isAwayTeamOurs = game.awayClubId === currentClubId;
+
+            console.log(`OpponentMatchups - Game ${game.id}: isHomeTeamOurs=${isHomeTeamOurs}, isAwayTeamOurs=${isAwayTeamOurs}`);
+
+            // Skip games where both teams belong to our club (intra-club matches)
+            if (isHomeTeamOurs && isAwayTeamOurs) {
+              console.log(`OpponentMatchups - Skipping intra-club game ${game.id}`);
+              return;
+            }
 
             if (isHomeTeamOurs && game.awayTeamId && !isAwayTeamOurs) {
               opposingTeamId = game.awayTeamId;
               opposingTeamName = game.awayTeamName || `Team ${game.awayTeamId}`;
+              console.log(`OpponentMatchups - We are home, opponent: ${opposingTeamName} (ID: ${opposingTeamId})`);
             } else if (isAwayTeamOurs && game.homeTeamId && !isHomeTeamOurs) {
               opposingTeamId = game.homeTeamId;
               opposingTeamName = game.homeTeamName || `Team ${game.homeTeamId}`;
+              console.log(`OpponentMatchups - We are away, opponent: ${opposingTeamName} (ID: ${opposingTeamId})`);
             }
 
             if (opposingTeamId && !opposingTeams.has(opposingTeamId)) {
+              console.log(`OpponentMatchups - Adding opponent team: ${opposingTeamName}`);
               opposingTeams.set(opposingTeamId, {
                 id: opposingTeamId,
                 name: opposingTeamName,
