@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/apiClient';
@@ -208,7 +207,7 @@ export function GameStatusManager() {
                 <div className="grid gap-4 py-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="name">Internal Name</Label>
+                      <Label htmlFor="name">Name *</Label>
                       <Input
                         id="name"
                         value={formData.name}
@@ -375,7 +374,7 @@ export function GameStatusManager() {
               <div className="grid gap-4 py-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="edit-name">Internal Name</Label>
+                    <Label htmlFor="edit-name">Name *</Label>
                     <Input
                       id="edit-name"
                       value={formData.name}

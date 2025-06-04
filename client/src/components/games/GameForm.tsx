@@ -161,7 +161,7 @@ export default function GameForm({
             name="date"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Date</FormLabel>
+                <FormLabel required>Date</FormLabel>
                 <FormControl>
                   <Input type="date" {...field} />
                 </FormControl>
@@ -175,7 +175,7 @@ export default function GameForm({
             name="time"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Time</FormLabel>
+                <FormLabel required>Time</FormLabel>
                 <FormControl>
                   <Input type="time" {...field} />
                 </FormControl>
@@ -209,7 +209,7 @@ export default function GameForm({
             name="seasonId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Season</FormLabel>
+                <FormLabel required>Season</FormLabel>
                 <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
                     <SelectTrigger>

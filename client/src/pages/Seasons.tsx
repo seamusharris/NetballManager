@@ -360,11 +360,11 @@ export default function Seasons() {
           <Form {...addForm}>
             <form onSubmit={addForm.handleSubmit(onAddSubmit)} className="space-y-4">
               <FormField
-                control={addForm.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel required>Season Name</FormLabel>
+                  control={addForm.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel required>Season Name</FormLabel>
                     <FormControl>
                       <Input placeholder="e.g., Spring Season 2025" {...field} />
                     </FormControl>
@@ -562,11 +562,11 @@ export default function Seasons() {
           <Form {...editForm}>
             <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-4">
               <FormField
-                control={editForm.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel required>Season Name</FormLabel>
+                  control={editForm.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel required>Season Name</FormLabel>
                     <FormControl>
                       <Input {...field} />
                     </FormControl>
