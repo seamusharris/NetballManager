@@ -68,7 +68,7 @@ export default function Roster() {
       setCurrentStep('availability');
       console.log('Set current step to availability for game:', gameIdFromUrl);
     }
-  }, [gameIdFromUrl, selectedGameId]);
+  }, [gameIdFromUrl]); // Remove selectedGameId dependency to prevent reset loops
 
   // Debug logging for rendering conditions
   useEffect(() => {
