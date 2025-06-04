@@ -72,7 +72,7 @@ export default function Players() {
   });
 
   // Get team details if viewing a specific team
-  const { data: teamData } = useQuery({
+  const { data: teamData, isLoading: isLoadingTeam } = useQuery({
     queryKey: ['team', teamId],
     queryFn: async () => {
       const response = await fetch(`/api/teams/${teamId}`);
@@ -100,7 +100,8 @@ export default function Players() {
   const { data: availablePlayersForTeam = [], isLoading: isLoadingAvailablePlayers } = useQuery({
     queryKey: ['available-players', teamId, activeSeason?.id],
     queryFn: async () => {
-      const response = await fetch(`/api/teams/${teamId}/available-players?seasonId=${activeSeason?.id}`);
+      if (!teamId || !activeSeason?.id) return [];
+      const response = await fetch(`/api/teams/${teamId}/available-players?seasonId=${activeSeason.id}`);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -163,7 +164,7 @@ export default function Players() {
   });
 
   const isLoading = teamId 
-    ? isLoadingTeamPlayers || isLoadingAvailablePlayers
+    ? isLoadingTeamPlayers || isLoadingAvailablePlayers || isLoadingTeam
     : isLoadingPlayers;
 
   if (teamId) {
@@ -181,17 +182,13 @@ export default function Players() {
           <div className="mb-6">
             <div className="flex items-center justify-between">
               <div>
-                {teamData && (
-                  <>
-                    <h1 className="text-2xl font-bold text-gray-900">
-                      {teamData.name}
-                    </h1>
-                    {teamData.division && (
-                      <p className="text-lg text-gray-600 mt-1">
-                        {teamData.division}
-                      </p>
-                    )}
-                  </>
+                <h1 className="text-2xl font-bold text-gray-900">
+                  {teamData?.name || 'Team Players'}
+                </h1>
+                {teamData?.division && (
+                  <p className="text-lg text-gray-600 mt-1">
+                    {teamData.division}
+                  </p>
                 )}
               </div>
               {/* Team Switcher Dropdown */}
