@@ -1013,7 +1013,7 @@ export default function TeamAnalysis() {
         {/* Player Combination Analysis */}
         <PlayerCombinationAnalysis 
           games={completedGames}
-          players={teams}
+          players={players}
           centralizedStats={centralizedStats}
           centralizedRosters={centralizedRosters}
         />
