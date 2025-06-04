@@ -24,35 +24,14 @@ export class PlayerAvailabilityStorage {
       const hasExistingRecords = parseInt(existingRecords.rows[0].count) > 0;
 
       if (!hasExistingRecords) {
-        console.log(`No availability records found for game ${gameId}, creating default records...`);
+        console.log(`No availability records found for game ${gameId}, returning all active players as available by default`);
 
-        // Get all active players to create default availability records
+        // Get all active players and return them as available (don't create records)
         const playersResult = await db.execute(sql`
           SELECT id FROM players WHERE active = true
         `);
 
-        console.log(`Found ${playersResult.rows.length} active players to create availability records for`);
-
-        // Create availability records for all active players (default to available)
-        for (const player of playersResult.rows) {
-          try {
-            // Simple insert - we already checked no records exist for this game
-            await db.execute(sql`
-              INSERT INTO player_availability (game_id, player_id, is_available, created_at, updated_at)
-              VALUES (${gameId}, ${player.id}, true, NOW(), NOW())
-            `);
-            console.log(`Created availability record for game ${gameId}, player ${player.id} (available by default)`);
-          } catch (error: any) {
-            // Handle any remaining errors gracefully - could be duplicate key or other issues
-            console.error(`Error creating availability record for game ${gameId}, player ${player.id}:`, error.message);
-            // Continue processing other players instead of stopping
-            continue;
-          }
-        }
-
-        console.log(`Completed creating default availability records for game ${gameId}`);
-
-        // Return all active player IDs as available
+        console.log(`Returning ${playersResult.rows.length} active players as available by default for game ${gameId}`);
         return playersResult.rows.map(row => row.id as number);
       } else {
         console.log(`Found existing availability records for game ${gameId}`);
@@ -70,7 +49,7 @@ export class PlayerAvailabilityStorage {
 
     } catch (error) {
       console.error('Error fetching player availability:', error);
-      
+
       // Fallback: return all active players as available
       try {
         const playersResult = await db.execute(sql`
