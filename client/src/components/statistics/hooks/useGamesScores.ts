@@ -46,9 +46,9 @@ export function useGamesScores(gameIds: number[], forceFresh = false) {
   const queryKey = useMemo(() => [
     'batchGameStats', 
     stableGameIds.join(','), 
-    freshQueryKey, 
+    forceFresh ? 'fresh' : 'cached', 
     currentClub?.id || 'no-club'
-  ], [stableGameIds, freshQueryKey, currentClub?.id]);
+  ], [stableGameIds, forceFresh, currentClub?.id]);
 
   // Use a single query to fetch batch stats for all games
   const batchStatsQuery = useQuery({
