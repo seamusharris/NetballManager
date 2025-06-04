@@ -4,6 +4,7 @@ import { useClub } from '@/contexts/ClubContext';
 import { apiClient } from '@/lib/apiClient';
 import { Loader2, TrendingUp, Target, Award, BarChart3, TrendingDown, Zap, Users, ArrowLeft } from 'lucide-react';
 import { useBatchGameStatistics } from '@/components/statistics/hooks/useBatchGameStatistics';
+import { useBatchRosterData } from '@/components/statistics/hooks/useBatchRosterData';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -11,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { useLocation } from 'wouter';
 import { getWinLoseLabel } from '@/lib/utils';
 import { useState, useEffect } from 'react';
+import { PlayerCombinationAnalysis } from '@/components/dashboard/PlayerCombinationAnalysis';
 
 interface OpponentTeamData {
   teamId: number;
@@ -174,6 +176,9 @@ export default function TeamAnalysis() {
 
   // Fetch batch statistics for all completed games
   const { statsMap: centralizedStats = {}, isLoading: isLoadingStats } = useBatchGameStatistics(gameIds);
+  
+  // Fetch batch roster data for combination analysis
+  const { rostersMap: centralizedRosters = {}, isLoading: isLoadingRosters } = useBatchRosterData(gameIds);
 
   const [analytics, setAnalytics] = useState<PerformanceMetrics>({
     momentum: { trend: 'stable', strength: 0, recentForm: [] },
@@ -379,7 +384,7 @@ export default function TeamAnalysis() {
     );
   }
 
-  const isLoading = isLoadingGames || isLoadingStats || isLoadingTeams || isLoadingOpponents;
+  const isLoading = isLoadingGames || isLoadingStats || isLoadingTeams || isLoadingOpponents || isLoadingRosters;
 
   if (isLoading) {
     return (
@@ -1004,6 +1009,14 @@ export default function TeamAnalysis() {
             })()}
           </CardContent>
         </Card>
+
+        {/* Player Combination Analysis */}
+        <PlayerCombinationAnalysis 
+          games={completedGames}
+          players={teams}
+          centralizedStats={centralizedStats}
+          centralizedRosters={centralizedRosters}
+        />
 
         {/* All Opponents Table */}
         <Card>
