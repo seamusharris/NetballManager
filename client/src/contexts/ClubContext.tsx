@@ -59,7 +59,7 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
 
   // Set default club on load
   useEffect(() => {
-    if (Array.isArray(userClubs) && userClubs.length > 0 && !currentClubId && !isInitialized) {
+    if (Array.isArray(userClubs) && userClubs.length > 0 && currentClubId === null && !isInitialized) {
       // Get stored club ID from localStorage
       const storedClubId = localStorage.getItem('currentClubId');
 
@@ -93,7 +93,7 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
         queryClient.invalidateQueries();
       }, 0);
     }
-  }, [userClubs, currentClubId, isInitialized, queryClient]);
+  }, [userClubs, isInitialized, queryClient]);
 
   const switchClub = useCallback((clubId: number) => {
     console.log('Switching to club:', clubId, 'Current club:', currentClubId);
