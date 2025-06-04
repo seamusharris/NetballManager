@@ -28,6 +28,34 @@ export function registerTeamRoutes(app: Express) {
     }
   });
 
+  // Get all team-player assignments for a season
+  app.get("/api/seasons/:seasonId/team-assignments", async (req, res) => {
+    try {
+      const seasonId = parseInt(req.params.seasonId);
+
+      const assignments = await db.execute(sql`
+        SELECT tp.team_id, tp.player_id, t.name as team_name, p.display_name
+        FROM team_players tp
+        JOIN teams t ON tp.team_id = t.id
+        JOIN players p ON tp.player_id = p.id
+        WHERE t.season_id = ${seasonId} AND t.is_active = true AND p.active = true
+        ORDER BY t.name, p.display_name
+      `);
+
+      const mappedAssignments = assignments.rows.map(row => ({
+        teamId: row.team_id,
+        playerId: row.player_id,
+        teamName: row.team_name,
+        playerName: row.display_name
+      }));
+
+      res.json(mappedAssignments);
+    } catch (error) {
+      console.error("Error fetching team assignments:", error);
+      res.status(500).json({ message: "Failed to fetch team assignments" });
+    }
+  });
+
   // Get or create default team for a season
   app.get("/api/seasons/:seasonId/default-team", async (req, res) => {
     try {

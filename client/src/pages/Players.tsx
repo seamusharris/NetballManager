@@ -5,8 +5,10 @@ import { Helmet } from 'react-helmet';
 import PlayersList from '@/components/players/PlayersList';
 import { useClub } from '@/contexts/ClubContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { SimplePlayerForm } from '@/components/players/SimplePlayerForm';
 import { UserPlus, UserMinus, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -41,6 +43,16 @@ export default function Players() {
 
   // Determine if this is team-specific or club-wide players
   const teamId = params.teamId ? parseInt(params.teamId) : null;
+
+  // Get active season for team assignments
+  const { data: activeSeason } = useQuery({
+    queryKey: ['seasons', 'active'],
+    queryFn: async () => {
+      const response = await fetch('/api/seasons/active');
+      if (!response.ok) throw new Error('Failed to fetch active season');
+      return response.json();
+    },
+  });
 
   // Get team players if viewing a specific team
   const { data: teamPlayers = [], isLoading: isLoadingTeamPlayers } = useQuery({
@@ -180,17 +192,42 @@ export default function Players() {
             </CardContent>
           </Card>
 
-          {/* Available Players */}
+          {/* Available Players to Add */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
-                <span>Available Club Players</span>
-                <Badge variant="outline">{availablePlayers.length} available</Badge>
+                <span>Available Players</span>
+                <div className="flex items-center space-x-2">
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" size="sm">
+                        <UserPlus className="h-4 w-4 mr-1" />
+                        Add New Player
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Add New Player</DialogTitle>
+                      </DialogHeader>
+                      <SimplePlayerForm 
+                        clubId={currentClub?.id} 
+                        onSuccess={() => {
+                          queryClient.invalidateQueries({ queryKey: ['players', currentClub?.id] });
+                        }}
+                      />
+                    </DialogContent>
+                  </Dialog>
+                  <Badge variant="outline">{availablePlayers.length} available</Badge>
+                </div>
               </CardTitle>
             </CardHeader>
             <CardContent>
               {availablePlayers.length === 0 ? (
-                <p className="text-gray-500 text-center py-4">All active club players are already on this team.</p>
+                <p className="text-gray-500 text-center py-4">
+                  No unassigned players available. All active players are already assigned to teams this season.
+                  <br />
+                  <span className="text-sm">Use "Add New Player" to create a new player for this team.</span>
+                </p>
               ) : (
                 <div className="grid gap-3">
                   {availablePlayers.map((player) => (
