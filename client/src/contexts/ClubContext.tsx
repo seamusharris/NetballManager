@@ -95,23 +95,21 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
 
       console.log('ClubContext: Setting initial club to:', targetClubId);
       
-      // Update all three synchronously to prevent race conditions
+      // Update localStorage and API client first
       localStorage.setItem('currentClubId', targetClubId.toString());
       apiClient.setClubContext({ currentClubId: targetClubId });
       
-      // Force immediate state update using React's synchronous state update
-      setCurrentClubId(() => {
-        console.log('ClubContext: React state updated to:', targetClubId);
-        return targetClubId;
-      });
+      // Set the React state immediately - use the direct setter without callback
+      setCurrentClubId(targetClubId);
+      console.log('ClubContext: React state set to:', targetClubId);
       
       // Invalidate queries after state is set
       setTimeout(() => {
         console.log('ClubContext: Invalidating queries for club:', targetClubId);
         queryClient.invalidateQueries();
-      }, 0);
+      }, 100); // Small delay to ensure state is updated
     }
-  }, [userClubs, queryClient]);
+  }, [userClubs, queryClient, currentClubId]);
 
   // Keep API client in sync with currentClubId changes
   useEffect(() => {
