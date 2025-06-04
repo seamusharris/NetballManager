@@ -292,12 +292,12 @@ export function PlayerCombinationAnalysis({
 
           <div className="flex items-center gap-2">
             <label className="text-sm font-medium">Filter Positions:</label>
-            <Select value={selectedPositions.join(',')} onValueChange={(value) => setSelectedPositions(value ? value.split(',') : [])}>
+            <Select value={selectedPositions.length > 0 ? selectedPositions.join(',') : 'all'} onValueChange={(value) => setSelectedPositions(value === 'all' ? [] : value.split(','))}>
               <SelectTrigger className="w-32">
                 <SelectValue placeholder="All" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Positions</SelectItem>
+                <SelectItem value="all">All Positions</SelectItem>
                 <SelectItem value="GS,GA">Attack</SelectItem>
                 <SelectItem value="WA,C,WD">Midcourt</SelectItem>
                 <SelectItem value="GD,GK">Defense</SelectItem>
