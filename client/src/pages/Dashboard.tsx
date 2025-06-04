@@ -42,6 +42,7 @@ export default function Dashboard() {
 
   // NOW we can do conditional returns after all hooks are called
   if (clubLoading || !currentClub || !currentClubId) {
+    console.log('Dashboard waiting for club context:', { clubLoading, hasCurrentClub: !!currentClub, currentClubId });
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
