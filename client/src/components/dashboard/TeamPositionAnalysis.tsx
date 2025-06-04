@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -6,6 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { TrendingUp, TrendingDown, Target, Users, Zap, Trophy } from 'lucide-react';
+import { CourtDisplay } from '@/components/ui/court-display';
 
 interface TeamPositionAnalysisProps {
   games: any[];
@@ -57,7 +57,7 @@ export function TeamPositionAnalysis({
         .map(game => {
           const isHomeGame = game.homeClubId === currentClubId;
           const isAwayGame = game.awayClubId === currentClubId;
-          
+
           if (isHomeGame && !isAwayGame) {
             return game.awayTeamName;
           } else if (isAwayGame && !isHomeGame) {
@@ -102,7 +102,7 @@ export function TeamPositionAnalysis({
     completedGames.forEach(game => {
       const gameStats = centralizedStats[game.id] || [];
       const gameRosters = centralizedRosters[game.id] || [];
-      
+
       if (gameStats.length === 0 || gameRosters.length === 0) return;
 
       // Group by quarter to analyze quarter-specific lineups
@@ -138,7 +138,7 @@ export function TeamPositionAnalysis({
 
         // Build position lineup for this quarter
         const positionLineup: Record<string, string> = {};
-        
+
         positions.forEach(position => {
           const playerInPosition = quarterRoster.find(r => r.position === position);
           if (playerInPosition) {
@@ -179,7 +179,7 @@ export function TeamPositionAnalysis({
           // Track game-level data for unique game counting
           if (!lineupData.gamesPlayed.some(g => g.id === game.id)) {
             lineupData.gamesPlayed.push(game);
-            
+
             // Calculate game result for win tracking
             const gameGoalsFor = gameStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
             const gameGoalsAgainst = gameStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
@@ -192,7 +192,7 @@ export function TeamPositionAnalysis({
           let opponent = null;
           const isHomeGame = game.homeClubId === currentClubId;
           const isAwayGame = game.awayClubId === currentClubId;
-          
+
           if (isHomeGame && !isAwayGame) {
             opponent = game.awayTeamName;
           } else if (isAwayGame && !isHomeGame) {
@@ -221,7 +221,7 @@ export function TeamPositionAnalysis({
 
     lineupMap.forEach((data, lineupKey) => {
       const quartersPlayed = data.quarters.length;
-      
+
       if (quartersPlayed >= 2) { // Minimum sample size
         const baseResult: PositionLineup = {
           formation: data.formation,
@@ -391,7 +391,7 @@ export function TeamPositionAnalysis({
                           {lineup.effectiveness.toFixed(1)}
                         </Badge>
                       </div>
-                      
+
                       <div className="grid grid-cols-4 gap-3 text-sm">
                         <div className="text-center">
                           <div className="font-medium text-gray-600">Quarters</div>
@@ -464,7 +464,7 @@ export function TeamPositionAnalysis({
                           {lineup.effectiveness.toFixed(1)}
                         </Badge>
                       </div>
-                      
+
                       <div className="grid grid-cols-5 gap-3 text-sm">
                         <div className="text-center">
                           <div className="font-medium text-gray-600">Quarters</div>
