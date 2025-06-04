@@ -240,6 +240,7 @@ export default function Roster() {
           opponents={opponents}
           onComplete={() => setCurrentStep('roster')}
           onAvailabilityChange={setAvailablePlayerIds}
+          onGameChange={handleGameSelection}
         />
       )}
 
