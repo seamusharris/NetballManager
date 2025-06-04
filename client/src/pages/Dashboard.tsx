@@ -44,12 +44,13 @@ export default function Dashboard() {
   });
 
   // NOW we can do conditional returns after all hooks are called
-  if (clubLoading || !currentClub) {
+  if (clubLoading || !currentClub || !currentClubId) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <Loader2 className="mx-auto h-8 w-8 animate-spin" />
           <p className="mt-2 text-sm text-muted-foreground">Loading club data...</p>
+          {!currentClubId && <p className="text-xs text-muted-foreground">Initializing club context...</p>}
         </div>
       </div>
     );

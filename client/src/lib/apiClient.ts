@@ -20,6 +20,7 @@ class ApiClient {
 
   setClubContext(context: { currentClubId: number | null }) {
     this.clubContext = context;
+    console.log('ApiClient: Club context set to:', context.currentClubId);
   }
 
   async request<T>(method: string, endpoint: string, data?: any): Promise<T> {
