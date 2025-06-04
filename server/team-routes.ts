@@ -621,6 +621,40 @@ export function registerTeamRoutes(app: Express) {
         return res.status(403).json({ error: 'Access denied to this team' });
       }
 
+      console.log(`Available players query for team ${teamId}, season ${seasonId}, club ${teamClubId}`);
+
+      // First, let's check what players exist in the club
+      const clubPlayers = await db.execute(sql`
+        SELECT p.id, p.display_name, cp.is_active as club_active
+        FROM players p
+        JOIN club_players cp ON p.id = cp.player_id
+        WHERE cp.club_id = ${teamClubId}
+        ORDER BY p.display_name
+      `);
+      console.log(`Club ${teamClubId} has ${clubPlayers.rows.length} players:`, clubPlayers.rows.map(r => `${r.display_name} (active: ${r.club_active})`));
+
+      // Check player seasons
+      const playerSeasons = await db.execute(sql`
+        SELECT ps.player_id, ps.season_id, p.display_name
+        FROM player_seasons ps
+        JOIN players p ON ps.player_id = p.id
+        JOIN club_players cp ON p.id = cp.player_id
+        WHERE cp.club_id = ${teamClubId} AND ps.season_id = ${seasonId}
+        ORDER BY p.display_name
+      `);
+      console.log(`Players in season ${seasonId}:`, playerSeasons.rows.map(r => `${r.display_name} (player_id: ${r.player_id})`));
+
+      // Check team assignments
+      const teamAssignments = await db.execute(sql`
+        SELECT tp.player_id, tp.team_id, p.display_name, t.name as team_name
+        FROM team_players tp
+        JOIN players p ON tp.player_id = p.id
+        JOIN teams t ON tp.team_id = t.id
+        WHERE t.season_id = ${seasonId}
+        ORDER BY p.display_name
+      `);
+      console.log(`Team assignments for season ${seasonId}:`, teamAssignments.rows.map(r => `${r.display_name} -> ${r.team_name} (team_id: ${r.team_id})`));
+
       // Get players from the team's club who are assigned to this season but not assigned to any team
       const availablePlayers = await db.execute(sql`
         SELECT p.id, p.display_name, p.first_name, p.last_name, p.date_of_birth, 
@@ -642,6 +676,8 @@ export function registerTeamRoutes(app: Express) {
         ORDER BY p.display_name
       `);
 
+      console.log(`Available players query returned ${availablePlayers.rows.length} players:`, availablePlayers.rows.map(r => r.display_name));
+
       const mappedAvailablePlayers = availablePlayers.rows.map(row => ({
         id: row.id,
         displayName: row.display_name,
@@ -655,7 +691,7 @@ export function registerTeamRoutes(app: Express) {
         avatarColor: row.avatar_color
       }));
 
-
+      console.log(`Returning ${mappedAvailablePlayers.length} available players`);
       res.json(mappedAvailablePlayers);
     } catch (error) {
       console.error("Error fetching available players:", error);
