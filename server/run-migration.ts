@@ -1,16 +1,6 @@
 
-import { removeOpponentSystem } from './migrations/removeOpponentSystem';
+// All migrations have been completed and archived
+// This file is kept for reference but no longer executes migrations
 
-async function runMigration() {
-  try {
-    console.log('Starting opponent system removal migration...');
-    await removeOpponentSystem();
-    console.log('Migration completed successfully!');
-    process.exit(0);
-  } catch (error) {
-    console.error('Migration failed:', error);
-    process.exit(1);
-  }
-}
-
-runMigration();
+console.log('All migrations have been completed. No migrations to run.');
+process.exit(0);

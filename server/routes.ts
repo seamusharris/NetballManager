@@ -185,12 +185,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ----- DATA MANAGEMENT APIs -----
 
-  // Populate club_players table
-  app.post("/api/populate-club-players", async (req, res) => {
-    try {
-      const { populateClubPlayersTable } = await import('./migrations/populateClubPlayers');
-      const success = await populateClubPlayersTable();
-
       if (success) {
         res.json({ message: "Club-player relationships populated successfully" });
       } else {
