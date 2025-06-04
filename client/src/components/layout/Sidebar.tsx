@@ -29,7 +29,6 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen, isTablet }: Sid
     { path: '/roster', label: 'Roster', icon: <ClipboardList className="w-5 h-5" /> },
     { path: '/games', label: 'Games', icon: <Calendar className="w-5 h-5" /> },
     { path: '/seasons', label: 'Seasons', icon: <CalendarRange className="w-5 h-5" /> },
-    { path: '/opponents', label: 'Opponents', icon: <Flag className="w-5 h-5" /> },
     { path: '/opponent-analysis', label: 'Matchup Analysis', icon: <Trophy className="w-5 h-5" /> },
     { path: '/statistics', label: 'Statistics', icon: <BarChart className="w-5 h-5" /> },
     { path: '/data-management', label: 'Data Management', icon: <Database className="w-5 h-5" /> },

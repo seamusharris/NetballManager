@@ -28,18 +28,20 @@ export default function Header({ setIsMobileOpen, isTablet }: HeaderProps) {
   };
 
   const navLinks = [
-    { path: '/', label: 'Dashboard', icon: <Home className="w-4 h-4" /> },
-    { path: '/players', label: 'Players', icon: <Users className="w-4 h-4" /> },
-    { path: '/roster', label: 'Roster', icon: <ClipboardList className="w-4 h-4" /> },
-    { path: '/games', label: 'Games', icon: <Calendar className="w-4 h-4" /> },
-    { path: '/seasons', label: 'Seasons', icon: <CalendarRange className="w-4 h-4" /> },
-    { path: '/opponents', label: 'Opponents', icon: <Users className="w-4 h-4" /> },
-    { path: '/opponent-analysis', label: 'Matchup Analysis', icon: <Trophy className="w-4 h-4" /> },
-    { path: '/statistics', label: 'Statistics', icon: <BarChart className="w-4 h-4" /> },
-    { path: '/data-management', label: 'Data Management', icon: <Database className="w-4 h-4" /> },
-    { path: '/performance', label: 'Performance', icon: <Zap className="w-4 h-4" /> },
-    { path: '/settings', label: 'Settings', icon: <SettingsIcon className="w-4 h-4" /> },
-    { path: '/club-dashboard', label: 'Club Dashboard', icon: <Trophy className="w-4 h-4" /> },
+    { path: '/', label: 'Team Dashboard', icon: <Home className="h-5 w-5" /> },
+    { path: '/club-dashboard', label: 'Club Dashboard', icon: <Building2 className="h-5 w-5" /> },
+    { path: '/players', label: 'Players', icon: <Users className="h-5 w-5" /> },
+    { path: '/teams', label: 'Teams', icon: <Users className="h-5 w-5" /> },
+    { path: '/roster', label: 'Roster', icon: <ClipboardList className="h-5 w-5" /> },
+    { path: '/games', label: 'Games', icon: <Calendar className="h-5 w-5" /> },
+    { path: '/seasons', label: 'Seasons', icon: <CalendarRange className="h-5 w-5" /> },
+    { path: '/opponents', label: 'Opponents', icon: <Flag className="h-5 w-5" /> },
+    { path: '/opponent-analysis', label: 'Matchup Analysis', icon: <Trophy className="h-5 w-5" /> },
+    { path: '/statistics', label: 'Statistics', icon: <BarChart className="h-5 w-5" /> },
+    { path: '/data-management', label: 'Data Management', icon: <Database className="h-5 w-5" /> },
+    { path: '/performance', label: 'Performance', icon: <Zap className="h-5 w-5" /> },
+    { path: '/clubs', label: 'Club Management', icon: <Building2 className="h-5 w-5" /> },
+    { path: '/settings', label: 'Settings', icon: <SettingsIcon className="h-5 w-5" /> },
   ];
 
   return (
