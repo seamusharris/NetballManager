@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/apiClient';
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 
 interface Club {
   id: number;
@@ -51,6 +51,11 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
     queryFn: () => apiClient.get(`/api/clubs/${currentClubId}`),
     enabled: !!currentClubId,
   });
+
+  // Connect apiClient to club context
+  useEffect(() => {
+    apiClient.setClubContext({ currentClubId });
+  }, [currentClubId]);
 
   // Set default club on load
   useEffect(() => {

@@ -106,6 +106,7 @@ function Router() {
 }
 
 import { ClubProvider } from '@/contexts/ClubContext';
+import { apiClient } from '@/lib/apiClient';
 
 function App() {
   return (
