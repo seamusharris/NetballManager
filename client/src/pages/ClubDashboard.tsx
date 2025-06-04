@@ -71,21 +71,23 @@ export default function ClubDashboard() {
   const activeTeams = teams.filter(team => team.isActive && team.name !== 'BYE');
   const completedGames = games.filter(game => game.statusIsCompleted);
   const upcomingGames = games.filter(game => !game.statusIsCompleted);
+  const totalPlayers = players.length; // Count all players, not just active ones
   const activePlayers = players.filter(player => player.isActive);
 
   // Team performance metrics
   const teamPerformance = activeTeams.map(team => {
     const teamGames = games.filter(game => 
-      game.homeTeamId === team.id || game.awayTeamId === team.id
+      (game.homeTeamId === team.id || game.awayTeamId === team.id) && game.homeClubId === currentClub?.id
     );
     const teamCompletedGames = teamGames.filter(game => game.statusIsCompleted);
     
     const wins = teamCompletedGames.filter(game => {
-      if (game.homeTeamId === team.id) {
-        return game.statusName === 'completed' && game.statusTeamGoals > game.statusOpponentGoals;
-      } else {
-        return game.statusName === 'completed' && game.statusOpponentGoals > game.statusTeamGoals;
-      }
+      // Check if this is a home or away game for our team
+      const isHomeTeam = game.homeTeamId === team.id;
+      const teamScore = isHomeTeam ? game.statusTeamGoals : game.statusOpponentGoals;
+      const opponentScore = isHomeTeam ? game.statusOpponentGoals : game.statusTeamGoals;
+      
+      return game.statusName === 'completed' && teamScore !== null && opponentScore !== null && teamScore > opponentScore;
     }).length;
 
     return {
@@ -108,73 +110,88 @@ export default function ClubDashboard() {
         <meta name="description" content={`View ${currentClub?.name} overall performance metrics and team statistics`} />
       </Helmet>
 
-      <div className="container py-8 mx-auto space-y-6">
+      <div className="container py-8 mx-auto space-y-8">
         {/* Header */}
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Club Dashboard</h1>
-            <p className="text-muted-foreground">
+          <div className="space-y-1">
+            <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+              Club Dashboard
+            </h1>
+            <p className="text-lg text-muted-foreground">
               Overview of {currentClub?.name} performance across all teams
             </p>
           </div>
-          <Badge variant="outline" className="text-sm">
-            {activeSeason?.name || 'No Active Season'}
-          </Badge>
+          <div className="text-right">
+            <Badge variant="outline" className="text-sm mb-2">
+              {activeSeason?.name || 'No Active Season'}
+            </Badge>
+            <p className="text-sm text-muted-foreground">
+              {activeTeams.length} active teams
+            </p>
+          </div>
         </div>
 
         {/* Key Metrics Row */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card>
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <Card className="border-l-4 border-l-blue-500 shadow-md hover:shadow-lg transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Teams</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-blue-700">Active Teams</CardTitle>
+              <div className="p-2 bg-blue-100 rounded-full">
+                <Users className="h-4 w-4 text-blue-600" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{activeTeams.length}</div>
-              <p className="text-xs text-muted-foreground">
+              <div className="text-3xl font-bold text-blue-900">{activeTeams.length}</div>
+              <p className="text-xs text-muted-foreground mt-1">
                 Competing in {activeSeason?.name}
               </p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border-l-4 border-l-green-500 shadow-md hover:shadow-lg transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Players</CardTitle>
-              <Target className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-green-700">Total Players</CardTitle>
+              <div className="p-2 bg-green-100 rounded-full">
+                <Target className="h-4 w-4 text-green-600" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{activePlayers.length}</div>
-              <p className="text-xs text-muted-foreground">
-                Active across all teams
+              <div className="text-3xl font-bold text-green-900">{totalPlayers}</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {activePlayers.length} active players
               </p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border-l-4 border-l-purple-500 shadow-md hover:shadow-lg transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Games Played</CardTitle>
-              <Calendar className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-purple-700">Games Played</CardTitle>
+              <div className="p-2 bg-purple-100 rounded-full">
+                <Calendar className="h-4 w-4 text-purple-600" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{completedGames.length}</div>
-              <p className="text-xs text-muted-foreground">
+              <div className="text-3xl font-bold text-purple-900">{completedGames.length}</div>
+              <p className="text-xs text-muted-foreground mt-1">
                 {upcomingGames.length} upcoming
               </p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border-l-4 border-l-orange-500 shadow-md hover:shadow-lg transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Club Win Rate</CardTitle>
-              <Trophy className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-orange-700">Club Win Rate</CardTitle>
+              <div className="p-2 bg-orange-100 rounded-full">
+                <Trophy className="h-4 w-4 text-orange-600" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
+              <div className="text-3xl font-bold text-orange-900">
                 {teamPerformance.length > 0 
                   ? Math.round(teamPerformance.reduce((sum, team) => sum + team.winRate, 0) / teamPerformance.length)
                   : 0}%
               </div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-muted-foreground mt-1">
                 Average across teams
               </p>
             </CardContent>
@@ -182,45 +199,59 @@ export default function ClubDashboard() {
         </div>
 
         {/* Team Performance Overview */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5" />
+        <Card className="shadow-lg">
+          <CardHeader className="bg-gradient-to-r from-slate-50 to-slate-100 rounded-t-lg">
+            <CardTitle className="flex items-center gap-2 text-xl">
+              <div className="p-2 bg-slate-200 rounded-full">
+                <TrendingUp className="h-5 w-5 text-slate-700" />
+              </div>
               Team Performance Overview
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-6">
             <div className="space-y-4">
               {teamPerformance.map((team) => (
-                <div key={team.id} className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex items-center gap-3">
+                <div key={team.id} className="flex items-center justify-between p-6 border-2 rounded-xl hover:shadow-md transition-all duration-200 bg-gradient-to-r from-white to-slate-50">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+                      <span className="text-primary font-bold text-lg">
+                        {team.name.charAt(0)}
+                      </span>
+                    </div>
                     <div>
-                      <h4 className="font-semibold">{team.name}</h4>
-                      <p className="text-sm text-muted-foreground">{team.division}</p>
+                      <h4 className="font-bold text-lg text-slate-900">{team.name}</h4>
+                      <p className="text-sm text-slate-600 font-medium">{team.division}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-4 text-sm">
-                    <div className="text-center">
-                      <div className="font-semibold">{team.totalGames}</div>
-                      <div className="text-muted-foreground">Games</div>
+                  <div className="flex items-center gap-6 text-sm">
+                    <div className="text-center p-3 bg-blue-50 rounded-lg">
+                      <div className="font-bold text-xl text-blue-700">{team.totalGames}</div>
+                      <div className="text-blue-600 font-medium">Games</div>
                     </div>
-                    <div className="text-center">
-                      <div className="font-semibold">{team.wins}</div>
-                      <div className="text-muted-foreground">Wins</div>
+                    <div className="text-center p-3 bg-green-50 rounded-lg">
+                      <div className="font-bold text-xl text-green-700">{team.wins}</div>
+                      <div className="text-green-600 font-medium">Wins</div>
                     </div>
-                    <div className="text-center">
-                      <div className="font-semibold">{Math.round(team.winRate)}%</div>
-                      <div className="text-muted-foreground">Win Rate</div>
+                    <div className="text-center p-3 bg-purple-50 rounded-lg">
+                      <div className="font-bold text-xl text-purple-700">{Math.round(team.winRate)}%</div>
+                      <div className="text-purple-600 font-medium">Win Rate</div>
                     </div>
-                    <Badge variant={team.winRate >= 60 ? "default" : team.winRate >= 40 ? "secondary" : "destructive"}>
+                    <Badge 
+                      variant={team.winRate >= 60 ? "default" : team.winRate >= 40 ? "secondary" : "destructive"}
+                      className="text-sm px-3 py-1 font-medium"
+                    >
                       {team.winRate >= 60 ? "Strong" : team.winRate >= 40 ? "Average" : "Needs Focus"}
                     </Badge>
                   </div>
                 </div>
               ))}
               {teamPerformance.length === 0 && (
-                <div className="text-center py-8 text-muted-foreground">
-                  No team performance data available
+                <div className="text-center py-12 text-muted-foreground">
+                  <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <TrendingUp className="h-8 w-8 text-slate-400" />
+                  </div>
+                  <p className="text-lg font-medium">No team performance data available</p>
+                  <p className="text-sm">Teams will appear here once games are played</p>
                 </div>
               )}
             </div>
