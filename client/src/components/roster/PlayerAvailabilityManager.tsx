@@ -13,6 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useDataLoader } from '@/hooks/use-data-loader';
 import { apiClient } from '@/lib/apiClient';
 import { useQueryClient } from '@tanstack/react-query';
+import { useLocation } from 'wouter';
 
 // Define the PlayerAvatar component
 interface PlayerAvatarProps {
@@ -66,6 +67,7 @@ export default function PlayerAvailabilityManager({
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [, navigate] = useLocation();
 
   console.log('PlayerAvailabilityManager props:', {
     gameId,
@@ -302,8 +304,7 @@ export default function PlayerAvailabilityManager({
               value={gameId?.toString() || ''} 
               onValueChange={(value) => {
                 const newGameId = Number(value);
-                // You can add navigation logic here if needed
-                window.location.href = `/roster/${newGameId}`;
+                navigate(`/roster/${newGameId}`);
               }}
             >
               <SelectTrigger className="w-[400px]">
