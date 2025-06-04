@@ -1,4 +1,4 @@
-import React, { Suspense, lazy } from "react";
+import React, { Suspense, lazy, useEffect } from "react";
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -21,6 +21,8 @@ import DataManagement from "@/pages/DataManagement";
 import Settings from "@/pages/Settings";
 import Seasons from "@/pages/Seasons";
 import NotFound from "@/pages/not-found";
+import { useClub } from '@/contexts/ClubContext';
+import { apiClient } from '@/lib/apiClient';
 
 // Import GameDetails directly for now
 import GameDetails from "./pages/GameDetails";
@@ -101,12 +103,24 @@ function Router() {
 }
 
 import { ClubProvider } from '@/contexts/ClubContext';
-import { apiClient } from '@/lib/apiClient';
 
 function App() {
+  // Component to sync API client with club context
+  const ApiClientSync = () => {
+    const { currentClub } = useClub();
+
+    useEffect(() => {
+      if (currentClub?.id) {
+        apiClient.setClubContext({ currentClubId: currentClub.id });
+      }
+    }, [currentClub?.id]);
+
+    return null;
+  };
   return (
     <QueryClientProvider client={queryClient}>
       <ClubProvider>
+        <ApiClientSync />
         <TooltipProvider>
           <Router />
           <Toaster />

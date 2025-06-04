@@ -43,6 +43,7 @@ import { GameScoreDisplay } from '@/components/statistics/GameScoreDisplay';
 import { useGamesScores } from '@/components/statistics/hooks/useGamesScores';
 import { GameStatusButton } from './GameStatusBadge';
 import { GameStatusDialog } from './GameStatusDialog';
+import { useClub } from '@/contexts/ClubContext';
 
 interface GamesListProps {
   games: Game[];
@@ -85,27 +86,26 @@ const filterGamesByStatus = (games: any[], statusFilter: string, searchQuery: st
   });
 };
 
-export default function GamesList({ 
+export function GamesList({ 
   games, 
-  opponents, 
-  isLoading = false,
+  opponents = [], 
+  isLoading = false, 
+  onDelete, 
   onEdit, 
-  onDelete,
   onViewStats,
-  className,
   isDashboard = false,
   showFilters = true,
   showActions = true,
   maxRows,
-  title
+  title,
+  className
 }: GamesListProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [sortColumn, setSortColumn] = useState<string>('date');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [opponentFilter, setOpponentFilter] = useState<number | null>(null);
   const [itemToDelete, setItemToDelete] = useState<number | null>(null);
   const [, setLocation] = useLocation();
+  const { currentClub } = useClub();
 
   // Helper function to get game status
   const getGameStatus = (game: any) => {
@@ -370,7 +370,7 @@ export default function GamesList({
               </div>
 
               <div className="flex gap-3 items-center">
-                
+
 
                 {/* Status Filter */}
                 <div className="w-[140px]">

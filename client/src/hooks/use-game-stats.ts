@@ -2,19 +2,26 @@ import { useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { GameStat } from '@shared/schema';
 import { apiClient } from '@shared/apiClient';
+import { useCurrentClub } from '@shared/hooks/useCurrentClub'; // Assuming this hook exists
 
 export function useGameStats(gameId: number | undefined) {
+  const { currentClub } = useCurrentClub();
   return useQuery<GameStat[]>({
-    queryKey: ['/api/games', gameId, 'stats'],
+    queryKey: ['/api/games', gameId, 'stats', currentClub?.id],
     queryFn: async () => {
       if (!gameId) return [];
-      return await apiClient.get(`/api/games/${gameId}/stats`);
+      return await apiClient.get(`/api/games/${gameId}/stats`, {
+        headers: {
+          'x-current-club-id': currentClub?.id?.toString() || ''
+        }
+      });
     },
-    enabled: !!gameId,
+    enabled: !!gameId && !!currentClub?.id,
   });
 }
 
 export function useBatchGameStats(gameIds: number[]) {
+  const { currentClub } = useCurrentClub();
   // Filter and sort game IDs for consistency - be more strict
   const validGameIds = useMemo(() => {
     if (!gameIds || !Array.isArray(gameIds) || gameIds.length === 0) {
@@ -26,7 +33,7 @@ export function useBatchGameStats(gameIds: number[]) {
 
   // Fetch stats for multiple games efficiently
   return useQuery<Record<number, GameStat[]>>({
-    queryKey: ['/api/games/stats/batch', validGameIds.sort()],
+    queryKey: ['/api/games/stats/batch', validGameIds.sort(), currentClub?.id],
     queryFn: async () => {
       if (!validGameIds || validGameIds.length === 0) {
         console.log('No valid game IDs provided for batch request, returning empty object');
@@ -45,14 +52,22 @@ export function useBatchGameStats(gameIds: number[]) {
         const url = '/api/games/stats/batch';
         console.log(`Making batch request to: ${url} with gameIds:`, validGameIds);
 
-        return await apiClient.post(url, { gameIds: validGameIds });
+        return await apiClient.post(url, { gameIds: validGameIds }, {
+          headers: {
+            'x-current-club-id': currentClub?.id?.toString() || ''
+          }
+        });
       } catch (error) {
         console.error('Batch fetch failed:', error);
         // Fallback to individual requests
         const statsMap: Record<number, GameStat[]> = {};
         const results = await Promise.allSettled(
           validGameIds.map(async (id) => {
-            return await apiClient.get(`/api/games/${id}/stats`);
+            return await apiClient.get(`/api/games/${id}/stats`, {
+              headers: {
+                'x-current-club-id': currentClub?.id?.toString() || ''
+              }
+            });
           })
         );
 
@@ -74,7 +89,8 @@ export function useBatchGameStats(gameIds: number[]) {
              gameIds !== null &&
              Array.isArray(gameIds) && 
              gameIds.length > 0 &&
-             validGameIds.join(',').length > 0,
+             validGameIds.join(',').length > 0 &&
+             !!currentClub?.id,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
   });
