@@ -82,22 +82,23 @@ export default function Players() {
 
   // Get team players if viewing a specific team
   const { data: teamPlayersData, isLoading: isLoadingTeamPlayers } = useQuery({
-    queryKey: ['team-players', teamId],
+    queryKey: ['team-players', teamId, currentClub?.id],
     queryFn: async () => {
+      if (!currentClub?.id) return [];
       const response = await apiClient.get(`/api/teams/${teamId}/players`);
       return response;
     },
-    enabled: !!teamId,
+    enabled: !!teamId && !!currentClub?.id,
   });
 
   const { data: availablePlayersForTeam = [], isLoading: isLoadingAvailablePlayers } = useQuery({
-    queryKey: ['available-players', teamId, activeSeason?.id],
+    queryKey: ['available-players', teamId, activeSeason?.id, currentClub?.id],
     queryFn: async () => {
-      if (!teamId || !activeSeason?.id) return [];
+      if (!teamId || !activeSeason?.id || !currentClub?.id) return [];
       const response = await apiClient.get(`/api/teams/${teamId}/available-players?seasonId=${activeSeason.id}`);
       return response;
     },
-    enabled: !!teamId && !!activeSeason?.id,
+    enabled: !!teamId && !!activeSeason?.id && !!currentClub?.id,
   });
 
   // Get players for non-team view
@@ -264,9 +265,26 @@ export default function Players() {
                       <PlayerForm
                         onSubmit={async (playerData) => {
                           try {
+                            // Create the player
                             const response = await apiClient.post('/api/players', playerData);
+                            const newPlayer = response;
+                            
+                            // Associate the player with the current club
+                            if (currentClub?.id && newPlayer.id) {
+                              try {
+                                await apiClient.post(`/api/clubs/${currentClub.id}/players/${newPlayer.id}`, {});
+                                console.log(`Successfully associated player ${newPlayer.id} with club ${currentClub.id}`);
+                              } catch (clubError) {
+                                console.error('Error associating player with club:', clubError);
+                                // Don't fail the entire operation if club association fails
+                              }
+                            }
+                            
+                            // Invalidate queries to refresh the UI
                             queryClient.invalidateQueries({ queryKey: ['players', currentClub?.id] });
                             queryClient.invalidateQueries({ queryKey: ['available-players', teamId, activeSeason?.id] });
+                            queryClient.invalidateQueries({ queryKey: ['clubs', currentClub?.id, 'players'] });
+                            
                             toast({ title: 'Success', description: 'Player created successfully' });
                           } catch (error) {
                             console.error('Error creating player:', error);
