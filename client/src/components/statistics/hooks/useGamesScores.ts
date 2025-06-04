@@ -19,17 +19,7 @@ import { useClub } from '@/contexts/ClubContext';
  */
 export function useGamesScores(gameIds: number[], forceFresh = false) {
   const { currentClub } = useClub();
-
-  // Early return if club context is not ready - prevents all hook execution
-  if (!currentClub?.id) {
-    return {
-      scoresMap: {},
-      isLoading: false,
-      hasError: false,
-      invalidateGame: () => {},
-      invalidateAll: () => {}
-    };
-  }
+  const queryClient = useQueryClient();
 
   // Stabilize gameIds to prevent unnecessary re-renders
   const stableGameIds = useMemo(() => {
@@ -50,7 +40,6 @@ export function useGamesScores(gameIds: number[], forceFresh = false) {
     currentClub?.id || 'no-club'
   ], [stableGameIds, forceFresh, currentClub?.id]);
 
-  // Use a single query to fetch batch stats for all games
   const batchStatsQuery = useQuery({
     queryKey,
     queryFn: async () => {
@@ -82,7 +71,6 @@ export function useGamesScores(gameIds: number[], forceFresh = false) {
         return data || {};
       } catch (error) {
         console.error('useGamesScores: Error fetching batch stats:', error);
-        // Return empty object instead of throwing to prevent error loops
         return {};
       }
     },
@@ -95,9 +83,8 @@ export function useGamesScores(gameIds: number[], forceFresh = false) {
     retryDelay: 5000, // Wait 5 seconds before retry
   });
 
-  const { data: batchStats, isLoading, error } = batchStatsQuery || {};
+  const { data: batchStats, isLoading, error } = batchStatsQuery;
 
-  // Get games data to handle forfeit games properly
   const gamesQuery = useQuery({
     queryKey: ['games', currentClub?.id || 'no-club'],
     queryFn: async () => {
@@ -131,12 +118,20 @@ export function useGamesScores(gameIds: number[], forceFresh = false) {
     retryDelay: 5000,
   });
 
-  const { data: games = [] } = gamesQuery || {};
+  const { data: games = [] } = gamesQuery;
 
-  // Calculate scores for each game using the batch stats
   const scoresMap: Record<number, GameScores | undefined> = useMemo(() => {
-    // Early return if we don't have the necessary data
-    if (!shouldFetch || !batchStats || !games || games.length === 0 || stableGameIds.length === 0) {
+    if (!shouldFetch || !batchStats || !games) {
+      return {};
+    }
+
+    if (Object.keys(batchStats).length === 0) {
+      console.warn('useGamesScores: No batch stats available.');
+      return {};
+    }
+
+    if (games.length === 0) {
+      console.warn('useGamesScores: No games available.');
       return {};
     }
 
@@ -147,7 +142,6 @@ export function useGamesScores(gameIds: number[], forceFresh = false) {
       const stats = batchStats[gameId] || [];
 
       if (game) {
-        // Check cache first if not forcing fresh
         if (!forceFresh) {
           const cached = getCachedScores(gameId, stats, game.status);
           if (cached) {
@@ -156,11 +150,9 @@ export function useGamesScores(gameIds: number[], forceFresh = false) {
           }
         }
 
-        // Calculate scores based on game status
         let scores: GameScores;
 
         if (game.status === 'forfeit-win' || game.status === 'forfeit-loss') {
-          // Handle forfeit games with 10-0 or 0-10 scores
           const isWin = game.status === 'forfeit-win';
           const quarterScores = {
             '1': { for: isWin ? 10 : 0, against: isWin ? 0 : 10 },
@@ -177,46 +169,41 @@ export function useGamesScores(gameIds: number[], forceFresh = false) {
             }
           };
         } else if (stats && stats.length > 0) {
-          // Calculate regular game scores using the same method as dashboard
           try {
             scores = statisticsService.calculateScoresFromStats(stats, gameId);
           } catch (error) {
             console.error(`Error calculating scores for game ${gameId}:`, error);
-            return; // Skip this game if calculation fails
+            return;
           }
         } else {
-          // No stats available for this completed game
           console.warn(`No stats available for completed game ${gameId}`);
           return;
         }
 
-        // Cache the calculated scores
         cacheScores(gameId, scores, stats, game.status);
         newScoresMap[gameId] = scores;
       }
     });
 
     return newScoresMap;
-  }, [batchStats, games, stableGameIds, forceFresh]);
-  const queryClient = useQueryClient();
+  }, [batchStats, games, stableGameIds, forceFresh, shouldFetch]);
 
+  const invalidateGame = (gameId: number) => {
+    queryClient.invalidateQueries({ queryKey: ['gameScores', gameId] });
+    invalidateGameCache(gameId);
+  };
+
+  const invalidateAll = () => {
+    queryClient.invalidateQueries({ queryKey: ['gameScores'] });
+    stableGameIds.forEach(gameId => clearGameCache(gameId));
+  };
+  
+  // Always return the same object structure, regardless of the currentClub
   return {
     scoresMap,
-    isLoading,
-    hasError: error !== undefined,
-    // Provide a way to invalidate a specific game's score in both React Query and global cache
-    invalidateGame: (gameId: number) => {
-      // Invalidate React Query cache
-      queryClient.invalidateQueries({queryKey: ['gameScores', gameId]});
-      // Also invalidate our global persistent cache
-      invalidateGameCache(gameId);
-    },
-    // Provide a way to invalidate all scores
-    invalidateAll: () => {
-      // Invalidate all game scores in React Query cache
-      queryClient.invalidateQueries({queryKey: ['gameScores']});
-      // Also clear our global persistent cache for all games
-      gameIds.forEach(gameId => clearGameCache(gameId));
-    }
+    isLoading: shouldFetch ? isLoading : false,
+    hasError: shouldFetch ? error !== undefined : false,
+    invalidateGame,
+    invalidateAll
   };
 }

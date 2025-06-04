@@ -191,8 +191,8 @@ export function GamesList({
     staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
   });
 
-  // Use the same efficient scores approach as the dashboard (only fetch if we have a club)
-  const scoresResult = currentClub?.id ? useGamesScores(completedGameIds) : null;
+  // Use the same efficient scores approach as the dashboard (always call hook but conditionally pass data)
+  const scoresResult = useGamesScores(currentClub?.id ? completedGameIds : []);
   const scoresMap = scoresResult?.scoresMap || {};
   const isLoadingScores = scoresResult?.isLoading || false;
 
