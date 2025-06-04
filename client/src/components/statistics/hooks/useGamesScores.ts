@@ -9,6 +9,7 @@ import {
 import { apiRequest } from '@/lib/queryClient';
 import { apiClient } from '@/lib/apiClient'; // Ensure apiClient is imported
 import { Game } from '@/components/GameCard'; // Ensure Game is imported
+import { useClub } from '@/contexts/ClubContext';
 
 /**
  * Custom hook to fetch multiple game scores efficiently with enhanced global caching
@@ -21,22 +22,27 @@ import { Game } from '@/components/GameCard'; // Ensure Game is imported
 export function useGamesScores(gameIds: number[], forceFresh = false) {
   // Generate a fresh query key if we're forcing fresh data
   const freshQueryKey = forceFresh ? Date.now() : 'cached';
+  const { currentClub } = useClub();
 
   // Use a single query to fetch batch stats for all games
   const { data: batchStats, isLoading, error } = useQuery({
-    queryKey: ['batchGameStats', gameIds.sort().join(','), freshQueryKey],
+    queryKey: ['batchGameStats', gameIds.sort().join(','), freshQueryKey, currentClub?.id],
     queryFn: async () => {
       if (!gameIds.length) return {};
 
       // Use the batch endpoint to get stats for all games at once
-      const response = await fetch(`/api/games/stats/batch?gameIds=${gameIds.join(',')}`);
+      const response = await fetch(`/api/games/stats/batch?gameIds=${gameIds.join(',')}`, {
+        headers: {
+          'x-current-club-id': currentClub?.id?.toString() || '',
+        },
+      });
       if (!response.ok) {
         throw new Error(`Failed to fetch batch stats: ${response.statusText}`);
       }
       const data = await response.json();
       return data || {};
     },
-    enabled: gameIds.length > 0,
+    enabled: gameIds.length > 0 && !!currentClub?.id,
     staleTime: forceFresh ? 0 : 15 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
   });
