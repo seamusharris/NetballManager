@@ -14,7 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { Building2, ChevronDown } from 'lucide-react';
 
 export function ClubSwitcher() {
-  const { currentClub, userClubs, switchClub, isLoading } = useClub();
+  const { currentClub, currentClubId, userClubs, switchClub, isLoading } = useClub();
 
   if (isLoading) {
     return (
@@ -36,11 +36,9 @@ export function ClubSwitcher() {
 
   // Find the current club from userClubs data or fall back to first club
   // Use the currentClubId from context to find the right club
-  const currentClubId = localStorage.getItem('currentClubId');
-  const currentClubIdNum = currentClubId ? parseInt(currentClubId) : null;
   
   const currentUserClub = userClubs.find(club => 
-    club.clubId === (currentClub?.id || currentClubIdNum)
+    club.clubId === (currentClub?.id || currentClubId)
   );
   
   const displayClub = currentUserClub ? {
