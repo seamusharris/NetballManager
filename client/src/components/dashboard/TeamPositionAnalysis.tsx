@@ -147,6 +147,8 @@ export function TeamPositionAnalysis({
           }
         });
 
+        console.log(`Game ${game.id}, Quarter ${quarter}: Found ${Object.keys(positionLineup).length}/7 positions`, positionLineup);
+
         // Only analyze complete lineups (all 7 positions filled)
         if (Object.keys(positionLineup).length === 7) {
           // Create a consistent key for this lineup
@@ -219,10 +221,16 @@ export function TeamPositionAnalysis({
     const generalResults: PositionLineup[] = [];
     const opponentSpecificResults: OpponentSpecificLineup[] = [];
 
+    console.log(`Total lineups before filtering: ${lineupMap.size}`);
+    
     lineupMap.forEach((data, lineupKey) => {
       const quartersPlayed = data.quarters.length;
+      console.log(`Lineup ${lineupKey.substring(0, 50)}... has ${quartersPlayed} quarters`);
 
-      if (quartersPlayed >= 2) { // Minimum sample size
+      // Use adaptive minimum sample size - 1 for specific quarters, 2 for all quarters
+      const minSampleSize = selectedQuarter === 'all' ? 2 : 1;
+      
+      if (quartersPlayed >= minSampleSize) {
         const baseResult: PositionLineup = {
           formation: data.formation,
           formationKey: lineupKey,
