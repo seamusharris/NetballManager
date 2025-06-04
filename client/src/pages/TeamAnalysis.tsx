@@ -873,7 +873,7 @@ export default function TeamAnalysis() {
         )}
 
         {/* Opponent Categories */}
-        <Card className="bg-gradient-to-r from-indigo-50 to-purple-50">
+        <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Users className="h-5 w-5 text-indigo-600" />
@@ -881,121 +881,122 @@ export default function TeamAnalysis() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {(() => {
-                const strongOpponents = opponentTeamsData.filter(team => team.winRate >= 70);
-                const balancedOpponents = opponentTeamsData.filter(team => team.winRate >= 30 && team.winRate < 70);
-                const challengingOpponents = opponentTeamsData.filter(team => team.winRate < 30);
+            {(() => {
+              const strongOpponents = opponentTeamsData.filter(team => team.winRate >= 70);
+              const balancedOpponents = opponentTeamsData.filter(team => team.winRate >= 30 && team.winRate < 70);
+              const challengingOpponents = opponentTeamsData.filter(team => team.winRate < 30);
 
-                const categories = [
-                  {
-                    title: 'Strong Against',
-                    teams: strongOpponents,
-                    description: 'Teams we perform well against',
-                    color: 'text-green-600',
-                    bgColor: 'bg-green-50',
-                    borderColor: 'border-green-200',
-                    icon: '💪'
-                  },
-                  {
-                    title: 'Balanced Matchups',
-                    teams: balancedOpponents,
-                    description: 'Competitive matchups',
-                    color: 'text-yellow-600',
-                    bgColor: 'bg-yellow-50',
-                    borderColor: 'border-yellow-200',
-                    icon: '⚖️'
-                  },
-                  {
-                    title: 'Challenging Opponents',
-                    teams: challengingOpponents,
-                    description: 'Teams that challenge us',
-                    color: 'text-red-600',
-                    bgColor: 'bg-red-50',
-                    borderColor: 'border-red-200',
-                    icon: '🔥'
-                  }
-                ];
+              const categories = [
+                {
+                  title: 'Strong Against',
+                  teams: strongOpponents,
+                  description: 'Teams we perform well against',
+                  color: 'text-green-600',
+                  bgColor: 'bg-green-50',
+                  borderColor: 'border-green-300',
+                  icon: '💪'
+                },
+                {
+                  title: 'Balanced Matchups', 
+                  teams: balancedOpponents,
+                  description: 'Competitive matchups',
+                  color: 'text-yellow-600',
+                  bgColor: 'bg-yellow-50',
+                  borderColor: 'border-yellow-300',
+                  icon: '⚖️'
+                },
+                {
+                  title: 'Challenging Opponents',
+                  teams: challengingOpponents,
+                  description: 'Teams that challenge us',
+                  color: 'text-red-600',
+                  bgColor: 'bg-red-50',
+                  borderColor: 'border-red-300',
+                  icon: '🔥'
+                }
+              ];
 
-                return categories.map((category, categoryIndex) => (
-                  <div key={categoryIndex} className={`p-4 rounded-lg border-2 ${category.bgColor} ${category.borderColor}`}>
-                    <div className="text-center mb-4">
-                      <div className="text-2xl mb-2">{category.icon}</div>
-                      <h3 className={`text-lg font-bold ${category.color}`}>{category.title}</h3>
-                      <p className="text-sm text-gray-600">{category.description}</p>
-                      <div className={`text-2xl font-bold ${category.color} mt-2`}>
-                        {category.teams.length} teams
+              return (
+                <div className="space-y-6">
+                  {/* Category Summary */}
+                  <div className="grid grid-cols-3 gap-4 text-center">
+                    {categories.map((category, index) => (
+                      <div key={index} className={`p-3 rounded-lg border ${category.bgColor} ${category.borderColor}`}>
+                        <div className="text-xl mb-1">{category.icon}</div>
+                        <div className={`text-2xl font-bold ${category.color}`}>
+                          {category.teams.length}
+                        </div>
+                        <div className="text-sm text-gray-600">{category.title}</div>
                       </div>
-                    </div>
-                    
-                    {category.teams.length > 0 ? (
-                      <div className="space-y-2 max-h-64 overflow-y-auto">
-                        {category.teams
-                          .sort((a, b) => b.winRate - a.winRate)
-                          .map((team, index) => (
-                            <div key={team.teamId} className="bg-white rounded-lg p-3 border border-gray-100 shadow-sm">
-                              <div className="flex items-center justify-between mb-2">
-                                <div className="flex-1">
-                                  <h4 className="font-semibold text-sm truncate">{team.teamName}</h4>
-                                  <p className="text-xs text-gray-500 truncate">{team.clubName}</p>
-                                  {team.division && (
-                                    <p className="text-xs text-gray-400">{team.division}</p>
-                                  )}
-                                </div>
-                                <div className="text-right">
-                                  <div className={`text-lg font-bold ${category.color}`}>
-                                    {team.winRate.toFixed(0)}%
-                                  </div>
-                                  <div className="text-xs text-gray-500">
-                                    {team.wins}-{team.losses}
-                                    {team.draws > 0 && `-${team.draws}`}
-                                  </div>
-                                </div>
-                              </div>
-                              
-                              <div className="grid grid-cols-3 gap-2 text-center">
-                                <div className="bg-gray-50 rounded px-2 py-1">
-                                  <div className="text-sm font-semibold">{team.totalGames}</div>
-                                  <div className="text-xs text-gray-600">Games</div>
-                                </div>
-                                <div className="bg-gray-50 rounded px-2 py-1">
-                                  <div className="text-sm font-semibold">{team.avgScoreFor.toFixed(1)}</div>
-                                  <div className="text-xs text-gray-600">Avg For</div>
-                                </div>
-                                <div className="bg-gray-50 rounded px-2 py-1">
-                                  <div className={`text-sm font-semibold ${team.scoreDifferential >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                    {team.scoreDifferential >= 0 ? '+' : ''}{team.scoreDifferential.toFixed(1)}
-                                  </div>
-                                  <div className="text-xs text-gray-600">Diff</div>
-                                </div>
-                              </div>
-
-                              {team.recentForm.length > 0 && (
-                                <div className="flex items-center justify-center gap-1 mt-2 pt-2 border-t border-gray-100">
-                                  <span className="text-xs text-gray-500 mr-1">Form:</span>
-                                  {team.recentForm.slice(-3).map((result, formIndex) => (
-                                    <Badge 
-                                      key={formIndex} 
-                                      variant="secondary" 
-                                      className={`w-5 h-5 p-0 flex items-center justify-center text-xs ${getFormBadgeColor(result)}`}
-                                    >
-                                      {result}
-                                    </Badge>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                          ))}
-                      </div>
-                    ) : (
-                      <div className="text-center py-4 text-gray-500">
-                        <p className="text-sm">No teams in this category</p>
-                      </div>
-                    )}
+                    ))}
                   </div>
-                ));
-              })()}
-            </div>
+
+                  {/* Detailed Team Lists */}
+                  {categories.map((category, categoryIndex) => (
+                    category.teams.length > 0 && (
+                      <div key={categoryIndex}>
+                        <h3 className={`text-lg font-semibold ${category.color} mb-3 flex items-center gap-2`}>
+                          <span>{category.icon}</span>
+                          {category.title} ({category.teams.length})
+                        </h3>
+                        <div className="space-y-2">
+                          {category.teams
+                            .sort((a, b) => b.winRate - a.winRate)
+                            .map((team) => (
+                              <div key={team.teamId} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                <div className="flex-1">
+                                  <div className="flex items-center justify-between">
+                                    <div>
+                                      <h4 className="font-semibold text-sm">{team.teamName}</h4>
+                                      <p className="text-xs text-gray-500">{team.clubName}</p>
+                                      {team.division && (
+                                        <p className="text-xs text-gray-400">{team.division}</p>
+                                      )}
+                                    </div>
+                                    <div className="text-right">
+                                      <div className={`text-lg font-bold ${category.color}`}>
+                                        {team.winRate.toFixed(0)}%
+                                      </div>
+                                      <div className="text-xs text-gray-500">
+                                        {team.wins}-{team.losses}{team.draws > 0 && `-${team.draws}`}
+                                      </div>
+                                    </div>
+                                  </div>
+                                  
+                                  <div className="flex items-center justify-between mt-2">
+                                    <div className="flex gap-4 text-xs text-gray-600">
+                                      <span>{team.totalGames} games</span>
+                                      <span>{team.avgScoreFor.toFixed(1)} avg</span>
+                                      <span className={team.scoreDifferential >= 0 ? 'text-green-600' : 'text-red-600'}>
+                                        {team.scoreDifferential >= 0 ? '+' : ''}{team.scoreDifferential.toFixed(1)} diff
+                                      </span>
+                                    </div>
+                                    
+                                    {team.recentForm.length > 0 && (
+                                      <div className="flex items-center gap-1">
+                                        <span className="text-xs text-gray-500">Form:</span>
+                                        {team.recentForm.slice(-3).map((result, formIndex) => (
+                                          <Badge 
+                                            key={formIndex} 
+                                            variant="secondary" 
+                                            className={`w-5 h-5 p-0 flex items-center justify-center text-xs ${getFormBadgeColor(result)}`}
+                                          >
+                                            {result}
+                                          </Badge>
+                                        ))}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                        </div>
+                      </div>
+                    )
+                  ))}
+                </div>
+              );
+            })()}
           </CardContent>
         </Card>
 
