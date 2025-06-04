@@ -27,6 +27,7 @@ import { useClub } from '@/contexts/ClubContext';
 import { Suspense } from 'react'; // Import Suspense
 // Assuming PositionOpponentAnalysis is in the same directory, otherwise adjust path
 import PositionOpponentAnalysis from './PositionOpponentAnalysis';
+import PlayerAnalyticsWidget from './PlayerAnalyticsWidget';
 
 interface DashboardSummaryProps {
   players: Player[];
@@ -250,6 +251,12 @@ export default function DashboardSummary({
               activeSeason={activeSeason} 
               selectedSeason={selectedSeasonId === 'current' ? activeSeason : seasons.find(s => s.id.toString() === selectedSeasonId)} 
               centralizedStats={centralizedStats}
+            />
+            <PlayerAnalyticsWidget
+              players={players}
+              games={filteredGames}
+              centralizedStats={centralizedStats}
+              centralizedRosters={centralizedRosters}
             />
           </>
         )}
