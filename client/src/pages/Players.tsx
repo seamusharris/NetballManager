@@ -312,30 +312,21 @@ export default function Players() {
               ) : (
                 <div className="grid gap-3">
                   {availablePlayers.map((player) => (
-                    <div key={player.id} className="flex items-center justify-between p-3 border rounded-lg">
-                      <div className="flex items-center space-x-3">
-                        <div className={`h-8 w-8 rounded-full flex items-center justify-center text-white text-sm ${player.avatarColor || 'bg-gray-500'}`}>
-                          {player.firstName?.[0]}{player.lastName?.[0]}
-                        </div>
-                        <div>
-                          <div className="font-medium">{player.displayName}</div>
-                          <div className="text-sm text-gray-500">
-                            {Array.isArray(player.positionPreferences) && player.positionPreferences.length > 0 
-                              ? player.positionPreferences.join(', ') 
-                              : 'No position preferences'}
-                          </div>
-                        </div>
-                      </div>
-                      <Button
-                        variant="default"
-                        size="sm"
-                        onClick={() => addPlayerToTeam.mutate(player.id)}
-                        disabled={addPlayerToTeam.isPending}
-                      >
-                        <UserPlus className="h-4 w-4 mr-1" />
-                        Add to Team
-                      </Button>
-                    </div>
+                    <PlayerBox
+                      key={player.id}
+                      player={player}
+                      actions={
+                        <Button
+                          variant="default"
+                          size="sm"
+                          onClick={() => addPlayerToTeam.mutate(player.id)}
+                          disabled={addPlayerToTeam.isPending}
+                        >
+                          <UserPlus className="h-4 w-4 mr-1" />
+                          Add to Team
+                        </Button>
+                      }
+                    />
                   ))}
                 </div>
               )}
