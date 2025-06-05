@@ -1,107 +1,81 @@
-
 import React from 'react';
-import { cn, getInitials } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 
 interface PlayerBoxProps {
-  playerId?: number;
-  playerName: string | null;
-  playerColor?: string;
-  displayName?: string;
-  subtitle?: string;
-  children?: React.ReactNode;
-  onClick?: () => void;
+  player: {
+    id: number;
+    displayName: string;
+    firstName?: string;
+    lastName?: string;
+    positionPreferences?: string[];
+    avatarColor?: string;
+    active?: boolean;
+  };
+  actions?: React.ReactNode;
+  showPositions?: boolean;
   className?: string;
-  showAvatar?: boolean;
-  variant?: 'default' | 'compact' | 'position';
+  size?: 'sm' | 'md' | 'lg';
 }
 
-export const PlayerBox: React.FC<PlayerBoxProps> = ({
-  playerId,
-  playerName,
-  playerColor,
-  displayName,
-  subtitle,
-  children,
-  onClick,
-  className,
-  showAvatar = true,
-  variant = 'default'
-}) => {
-  // Always use red for unassigned positions
-  const unassignedColor = '#e11d48'; // red-600
-  
-  // Use player color if player assigned, otherwise use red for unassigned
-  const displayColor = playerName ? playerColor || '#6b7280' : unassignedColor;
-  
-  // Determine if this is an assigned or unassigned position
-  const isAssigned = !!playerName;
-  
-  const finalDisplayName = displayName || playerName || 'Unassigned';
-  
-  const baseClasses = cn(
-    "rounded-lg transition-colors",
-    variant === 'compact' ? 'p-2' : 'p-3',
-    onClick && "cursor-pointer hover:opacity-90",
-    className
-  );
+export function PlayerBox({ 
+  player, 
+  actions, 
+  showPositions = true, 
+  className = "",
+  size = "md" 
+}: PlayerBoxProps) {
+  const sizeClasses = {
+    sm: "p-2",
+    md: "p-3", 
+    lg: "p-4"
+  };
+
+  const avatarSizes = {
+    sm: "h-6 w-6 text-xs",
+    md: "h-8 w-8 text-sm",
+    lg: "h-10 w-10 text-base"
+  };
+
+  const getInitials = () => {
+    if (player.firstName && player.lastName) {
+      return `${player.firstName[0]}${player.lastName[0]}`;
+    }
+    if (player.displayName) {
+      const nameParts = player.displayName.split(' ');
+      if (nameParts.length >= 2) {
+        return `${nameParts[0][0]}${nameParts[nameParts.length - 1][0]}`;
+      }
+      return player.displayName[0] || '';
+    }
+    return '';
+  };
 
   return (
-    <div 
-      className={baseClasses}
-      style={{ 
-        backgroundColor: `${displayColor}10`,
-        border: `2px solid ${displayColor}`
-      }}
-      onClick={onClick}
-    >
-      <div className={cn(
-        "flex items-center",
-        variant === 'compact' ? 'space-x-2' : 'space-x-3'
-      )}>
-        {showAvatar && (
-          <div 
-            className={cn(
-              "rounded-full flex items-center justify-center text-white",
-              variant === 'compact' ? 'h-6 w-6' : 'h-8 w-8'
-            )}
-            style={{ backgroundColor: displayColor }}
-          >
-            <span className={cn(
-              "font-semibold",
-              variant === 'compact' ? 'text-xs' : 'text-xs'
-            )}>
-              {playerName ? getInitials(playerName.split(' ')[0] || '', playerName.split(' ')[1] || '') : '?'}
-            </span>
-          </div>
-        )}
-        
+    <div className={`flex items-center justify-between border rounded-lg ${sizeClasses[size]} ${className}`}>
+      <div className="flex items-center space-x-3">
+        <div className={`${avatarSizes[size]} rounded-full flex items-center justify-center text-white ${player.avatarColor || 'bg-gray-500'}`}>
+          {getInitials()}
+        </div>
         <div className="flex-1">
-          <p 
-            className={cn(
-              "font-medium truncate",
-              variant === 'compact' ? 'text-xs' : 'text-sm'
-            )}
-            style={{ color: isAssigned ? displayColor : '#a5183d' }}
-            title={finalDisplayName}
-          >
-            {finalDisplayName}
-          </p>
-          {subtitle && (
-            <p className={cn(
-              "text-gray-500",
-              variant === 'compact' ? 'text-xs' : 'text-xs'
-            )}>
-              {subtitle}
-            </p>
+          <div className="font-medium">{player.displayName}</div>
+          {showPositions && (
+            <div className="text-sm text-gray-500">
+              {Array.isArray(player.positionPreferences) && player.positionPreferences.length > 0 
+                ? player.positionPreferences.join(', ') 
+                : 'No position preferences'}
+            </div>
+          )}
+          {player.active === false && (
+            <Badge variant="secondary" className="text-xs mt-1">Inactive</Badge>
           )}
         </div>
       </div>
-      
-      {children && (
-        <div className={cn(variant === 'compact' ? 'mt-1' : 'mt-2')}>
-          {children}
+      {actions && (
+        <div className="flex items-center space-x-2">
+          {actions}
         </div>
       )}
     </div>
   );
-};
+}

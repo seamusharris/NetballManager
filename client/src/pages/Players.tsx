@@ -10,7 +10,8 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import PlayerForm from '@/components/players/PlayerForm';
-import { UserPlus, UserMinus, Loader2 } from 'lucide-react';
+import { User, UserMinus, UserPlus, Loader2, Calendar, Users } from 'lucide-react';
+import { PlayerBox } from '@/components/ui/player-box';
 import { useToast } from '@/hooks/use-toast';
 import { useLocation } from 'wouter';
 import { apiClient } from '@/lib/apiClient';
@@ -216,30 +217,22 @@ export default function Players() {
               ) : (
                 <div className="grid gap-3">
                   {teamPlayers.map((player) => (
-                    <div key={player.id} className="flex items-center justify-between p-3 border rounded-lg">
-                      <div className="flex items-center space-x-3">
-                        <div className={`h-8 w-8 rounded-full flex items-center justify-center text-white text-sm ${player.avatarColor || 'bg-gray-500'}`}>
-                          {player.firstName?.[0]}{player.lastName?.[0]}
-                        </div>
-                        <div>
-                          <div className="font-medium">{player.displayName}</div>
-                          <div className="text-sm text-gray-500">
-                            {Array.isArray(player.positionPreferences) && player.positionPreferences.length > 0 
-                              ? player.positionPreferences.join(', ') 
-                              : 'No position preferences'}
-                          </div>
-                        </div>
-                      </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => removePlayerFromTeam.mutate(player.id)}
-                        disabled={removePlayerFromTeam.isPending}
-                      >
-                        <UserMinus className="h-4 w-4 mr-1" />
-                        Remove
-                      </Button>
-                    </div>
+                    <PlayerBox
+                      key={player.id}
+                      player={player}
+                      actions={
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => removePlayerFromTeam.mutate(player.id)}
+                          disabled={removePlayerFromTeam.isPending}
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          <UserMinus className="h-4 w-4 mr-1" />
+                          Remove
+                        </Button>
+                      }
+                    />
                   ))}
                 </div>
               )}
