@@ -42,7 +42,7 @@ export class ApiClient {
     console.log('API Client: Club context set to:', context.currentClubId);
   }
 
-  async request<T>(method: string, endpoint: string, data?: any): Promise<T> {
+  async request<T>(method: string, endpoint: string, data?: any, customHeaders?: Record<string, string>): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
 
     const headers: Record<string, string> = {
@@ -55,10 +55,22 @@ export class ApiClient {
       headers['x-current-club-id'] = clubId;
     }
 
-    // Add team context header if available
+    // Add team context header if available, but respect custom header overrides
     const teamId = getCurrentTeamId();
-    if (teamId) {
+    if (teamId && (!customHeaders || !customHeaders.hasOwnProperty('x-current-team-id'))) {
       headers['x-current-team-id'] = teamId;
+    }
+
+    // Apply custom headers (these can override defaults)
+    if (customHeaders) {
+      Object.assign(headers, customHeaders);
+
+      // Special handling for empty string values to clear headers
+      Object.keys(customHeaders).forEach(key => {
+        if (customHeaders[key] === '') {
+          delete headers[key];
+        }
+      });
     }
 
     const config: RequestInit = {
