@@ -9,6 +9,25 @@ export interface ApiResponse<T = any> {
 
 import { useClub } from '../contexts/ClubContext';
 
+// Get current club ID for requests
+function getCurrentClubId(): string | null {
+  // Try to get from localStorage first
+  const savedClubId = localStorage.getItem('current-club-id');
+  if (savedClubId) {
+    return savedClubId;
+  }
+  return null;
+}
+
+// Get current team ID for requests
+function getCurrentTeamId(): string | null {
+  const savedTeamId = localStorage.getItem('current-team-id');
+  if (savedTeamId) {
+    return savedTeamId;
+  }
+  return null;
+}
+
 // Create a singleton API client that can access club context
 export class ApiClient {
   private baseURL: string;
@@ -30,13 +49,16 @@ export class ApiClient {
       'Content-Type': 'application/json',
     };
 
-    // Always add club context header if available - ensure it's properly set
-    if (this.clubContext.currentClubId !== null && this.clubContext.currentClubId !== undefined) {
-      headers['x-current-club-id'] = this.clubContext.currentClubId.toString();
-      console.log(`API Request to ${endpoint} with club ID: ${this.clubContext.currentClubId}`);
-      console.log('API Request adding club ID header:', this.clubContext.currentClubId);
-    } else {
-      console.warn(`API Request to ${endpoint} without club ID - context:`, this.clubContext);
+    // Add club context header if available
+    const clubId = getCurrentClubId();
+    if (clubId) {
+      headers['x-current-club-id'] = clubId;
+    }
+
+    // Add team context header if available
+    const teamId = getCurrentTeamId();
+    if (teamId) {
+      headers['x-current-team-id'] = teamId;
     }
 
     const config: RequestInit = {

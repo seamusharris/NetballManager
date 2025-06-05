@@ -1,5 +1,4 @@
-
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/apiClient';
 
@@ -24,10 +23,19 @@ interface UserClubAccess {
   };
 }
 
+interface Team {
+  id: number;
+  name: string;
+  clubId: number;
+}
+
 interface ClubContextType {
   currentClub: Club | null;
   currentClubId: number | null;
+  currentTeamId: number | null;
+  currentTeam: Team | null;
   userClubs: UserClubAccess[];
+  clubTeams: Team[];
   switchClub: (clubId: number) => void;
   hasPermission: (permission: keyof UserClubAccess['permissions']) => boolean;
   isLoading: boolean;
@@ -42,7 +50,7 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
     const stored = localStorage.getItem('currentClubId');
     const clubId = stored ? parseInt(stored, 10) : null;
     console.log('ClubProvider: Initializing with stored club ID:', clubId);
-    
+
     if (clubId && !isNaN(clubId)) {
       // Set API client context immediately during initialization
       apiClient.setClubContext({ currentClubId: clubId });
@@ -52,8 +60,13 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
     return null;
   });
 
+  const [currentTeamId, setCurrentTeamId] = useState<number | null>(() => {
+    const stored = localStorage.getItem('current-team-id');
+    return stored ? parseInt(stored, 10) : null;
+  });
+
   const [isInitialized, setIsInitialized] = useState(false);
-  
+
   const queryClient = useQueryClient();
 
   // Fetch user's club access
@@ -69,6 +82,13 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
     enabled: !!currentClubId,
   });
 
+    // Fetch teams when club changes
+  const { data: clubTeams = [], isLoading: isLoadingTeams } = useQuery<Team[]>({
+    queryKey: ['teams', currentClubId],
+    queryFn: () => apiClient.get(`/api/clubs/${currentClubId}/teams`),
+    enabled: !!currentClubId
+  });
+
   // Initialize club context when userClubs are loaded and we don't have a currentClubId
   useEffect(() => {
     console.log('ClubContext initialization effect:', { 
@@ -81,7 +101,7 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
     if (Array.isArray(userClubs) && userClubs.length > 0) {
       if (currentClubId === null) {
         console.log('ClubContext: Need to initialize club selection');
-        
+
         // Try to get stored club ID
         const storedClubId = localStorage.getItem('currentClubId');
         let targetClubId: number;
@@ -99,18 +119,18 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
         }
 
         console.log('ClubContext: Setting initial club to:', targetClubId);
-        
+
         // Update all three synchronously
         localStorage.setItem('currentClubId', targetClubId.toString());
         apiClient.setClubContext({ currentClubId: targetClubId });
         setCurrentClubId(targetClubId);
-        
+
         console.log('ClubContext: React state set to:', targetClubId);
-        
+
         // Invalidate queries immediately since state is now set
         queryClient.invalidateQueries();
       }
-      
+
       // Mark as initialized once we have user clubs data
       if (!isInitialized) {
         setIsInitialized(true);
@@ -122,7 +142,7 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     console.log('ClubContext: Updating apiClient club context to:', currentClubId);
     apiClient.setClubContext({ currentClubId });
-    
+
     // Force a check that the context was set properly
     if (currentClubId !== null) {
       console.log('ClubContext: Verifying API client has club context set');
@@ -131,7 +151,7 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
 
   const switchClub = useCallback((clubId: number) => {
     console.log('ClubContext: Switching club from', currentClubId, 'to', clubId);
-    
+
     // Update all three synchronously to prevent race conditions
     localStorage.setItem('currentClubId', clubId.toString());
     apiClient.setClubContext({ currentClubId: clubId });
@@ -139,11 +159,11 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
       console.log('ClubContext: React state switched to:', clubId);
       return clubId;
     });
-    
+
     // Invalidate and refetch queries
     queryClient.invalidateQueries();
     queryClient.refetchQueries({ queryKey: ['games'] });
-    
+
     console.log('ClubContext: Club switch completed to:', clubId);
   }, [currentClubId, queryClient]);
 
@@ -153,13 +173,41 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
     return clubAccess?.permissions[permission] || false;
   };
 
-  const contextValue = {
+    // Handle team selection
+    const handleSetCurrentTeamId = useCallback((teamId: number | null) => {
+      setCurrentTeamId(teamId);
+      if (teamId) {
+        localStorage.setItem('current-team-id', teamId.toString());
+      } else {
+        localStorage.removeItem('current-team-id');
+      }
+      queryClient.invalidateQueries(['games']);
+    }, [queryClient]);
+  
+  // Load saved team from localStorage
+  useEffect(() => {
+    const savedTeamId = localStorage.getItem('current-team-id');
+    if (savedTeamId && !currentTeamId) {
+      setCurrentTeamId(parseInt(savedTeamId, 10));
+    }
+  }, [currentTeamId]);
+
+  // Get current team object
+  const currentTeam = useMemo(() => {
+    return clubTeams.find(team => team.id === currentTeamId) || null;
+  }, [clubTeams, currentTeamId]);
+
+  const contextValue: ClubContextType = {
     currentClub,
     currentClubId,
+    currentTeamId,
+    currentTeam,
     userClubs,
+    clubTeams,
     switchClub,
     hasPermission,
-    isLoading: isLoadingClubs || (!!currentClubId && isLoadingClub),
+    setCurrentTeamId: handleSetCurrentTeamId,
+    isLoading: isLoadingClubs || (!!currentClubId && isLoadingClub) || isLoadingTeams,
     isInitialized,
   };
 

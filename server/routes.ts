@@ -1283,25 +1283,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Debug all headers
       console.log('Games endpoint headers:', {
         'x-current-club-id': req.headers['x-current-club-id'],
+        'x-current-team-id': req.headers['x-current-team-id'],
         'user-agent': req.headers['user-agent']?.substring(0, 50),
         'all-headers': Object.keys(req.headers)
       });
 
       // Use club ID from user context (same as teams endpoint)
       const clubId = req.user?.currentClubId;
+      const teamId = req.headers['x-current-team-id'] ? parseInt(req.headers['x-current-team-id'] as string, 10) : null;
 
-      console.log(`Games endpoint: currentClubId=${clubId}, user clubs:`, req.user?.clubs?.map(c => c.clubId));
+      console.log(`Games endpoint: currentClubId=${clubId}, currentTeamId=${teamId}, user clubs:`, req.user?.clubs?.map(c => c.clubId));
 
       if (!clubId) {
         console.log('Games endpoint: No club ID in request - header missing');
         return res.status(400).json({ error: 'Club context required - please refresh the page' });
       }
 
-      console.log(`Games endpoint: Using club ID ${clubId} from user context`);
+      console.log(`Games endpoint: Using club ID ${clubId} from user context, team filter: ${teamId}`);
 
       // Filter to include only games that this club has access to
       if (clubId) {
-        console.log(`Fetching games for club ${clubId}`);
+        console.log(`Fetching games for club ${clubId}${teamId ? ` and team ${teamId}` : ''}`);
+
+        let whereClause = sql`WHERE (ht.club_id = ${clubId} OR at.club_id = ${clubId} OR EXISTS (
+          SELECT 1 FROM game_permissions gp 
+          WHERE gp.game_id = g.id AND gp.club_id = ${clubId}
+        ))`;
+
+        // Add team filter if specified
+        if (teamId) {
+          whereClause = sql`WHERE (ht.club_id = ${clubId} OR at.club_id = ${clubId} OR EXISTS (
+            SELECT 1 FROM game_permissions gp 
+            WHERE gp.game_id = g.id AND gp.club_id = ${clubId}
+          )) AND (g.home_team_id = ${teamId} OR g.away_team_id = ${teamId})`;
+        }
 
         const result = await db.execute(sql`
         SELECT 
@@ -1319,10 +1334,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         LEFT JOIN teams at ON g.away_team_id = at.id
         LEFT JOIN clubs hc ON ht.club_id = hc.id
         LEFT JOIN clubs ac ON at.club_id = ac.id
-        WHERE (ht.club_id = ${clubId} OR at.club_id = ${clubId} OR EXISTS (
-          SELECT 1 FROM game_permissions gp 
-          WHERE gp.game_id = g.id AND gp.club_id = ${clubId}
-        ))
+        ${whereClause}
         ORDER BY g.date DESC, g.time DESC
       `);
 
