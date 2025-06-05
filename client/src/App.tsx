@@ -59,8 +59,22 @@ import PlayerBorrowing from '@/pages/PlayerBorrowing';
 import TeamAnalysis from '@/pages/TeamAnalysis';
 
 function Router() {
+  // Component to sync API client with club context
+  const ApiClientSync = () => {
+    const { currentClub } = useClub();
+
+    useEffect(() => {
+      if (currentClub?.id) {
+        apiClient.setClubContext({ currentClubId: currentClub.id });
+      }
+    }, [currentClub?.id]);
+
+    return null;
+  };
+
   return (
     <Layout>
+      <ApiClientSync />
       <Switch>
         <Route path="/" component={withErrorBoundary(ClubDashboard, 'ClubDashboard')} />
         <Route path="/team-dashboard" component={withErrorBoundary(Dashboard, 'Dashboard')} />
@@ -112,22 +126,9 @@ function Router() {
 import { ClubProvider } from '@/contexts/ClubContext';
 
 function App() {
-  // Component to sync API client with club context
-  const ApiClientSync = () => {
-    const { currentClub } = useClub();
-
-    useEffect(() => {
-      if (currentClub?.id) {
-        apiClient.setClubContext({ currentClubId: currentClub.id });
-      }
-    }, [currentClub?.id]);
-
-    return null;
-  };
   return (
     <QueryClientProvider client={queryClient}>
       <ClubProvider>
-        <ApiClientSync />
         <TooltipProvider>
           <Router />
           <Toaster />
