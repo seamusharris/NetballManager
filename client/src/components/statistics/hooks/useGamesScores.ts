@@ -77,8 +77,8 @@ export function useGamesScores(gameIds: number[], forceFresh = false) {
     enabled: shouldFetch,
     staleTime: forceFresh ? 0 : 15 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
+    refetchOnWindowFocus: true,
+    refetchOnMount: 'always',
     retry: 1, // Only retry once to avoid spam
     retryDelay: 5000, // Wait 5 seconds before retry
   });
