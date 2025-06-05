@@ -19,6 +19,7 @@ import {
   AlertDialogTitle 
 } from "@/components/ui/alert-dialog";
 import { useClub } from '@/contexts/ClubContext';
+import { useNavigate } from 'react-router-dom';
 
 interface Club {
   id: number;
@@ -50,8 +51,9 @@ export default function ClubManagement() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingClub, setEditingClub] = useState<any>(null);
   const [deletingClub, setDeletingClub] = useState<any>(null);
-  const { currentClub } = useClub();
+  const { currentClub, switchToClub } = useClub();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   // Fetch all clubs (admin only)
   const { data: clubs, isLoading } = useQuery({
@@ -301,14 +303,11 @@ export default function ClubManagement() {
                   <Button 
                     variant="outline" 
                     size="sm"
-                    onClick={() => {
+                    onClick={async () => {
                       if (currentClub?.id !== club.id) {
-                        // Switch club context first, then navigate
-                        localStorage.setItem('currentClubId', club.id.toString());
-                        window.location.href = `/players`;
-                      } else {
-                        window.location.href = `/players`;
+                        await switchToClub(club.id);
                       }
+                      navigate('/players');
                     }}
                   >
                     Manage Players
@@ -316,14 +315,11 @@ export default function ClubManagement() {
                   <Button 
                     variant="outline" 
                     size="sm"
-                    onClick={() => {
+                    onClick={async () => {
                       if (currentClub?.id !== club.id) {
-                        // Switch club context first, then navigate
-                        localStorage.setItem('currentClubId', club.id.toString());
-                        window.location.href = `/teams`;
-                      } else {
-                        window.location.href = `/teams`;
+                        await switchToClub(club.id);
                       }
+                      navigate('/teams');
                     }}
                   >
                     Manage Teams
@@ -331,14 +327,11 @@ export default function ClubManagement() {
                   <Button 
                     variant="outline" 
                     size="sm"
-                    onClick={() => {
+                    onClick={async () => {
                       if (currentClub?.id !== club.id) {
-                        // Switch club context first, then navigate
-                        localStorage.setItem('currentClubId', club.id.toString());
-                        window.location.href = `/games`;
-                      } else {
-                        window.location.href = `/games`;
+                        await switchToClub(club.id);
                       }
+                      navigate('/games');
                     }}
                   >
                     View Games
