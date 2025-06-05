@@ -102,22 +102,31 @@ export function useCrudMutations<T extends { id?: number }>({
     },
     onError: (error: Error) => {
       // Handle "not found" errors gracefully - this is common in React Strict Mode
-      if (error.message.includes("not found") || error.message.includes("404")) {
+      const errorMessage = error.message.toLowerCase();
+      const is404Error = errorMessage.includes("not found") || 
+                         errorMessage.includes("404") || 
+                         errorMessage.includes("player not found") ||
+                         (error as any).status === 404 ||
+                         (error as any).response?.status === 404;
+
+      if (is404Error) {
+        // Don't show any error for 404s - they're expected in React Strict Mode
         toast({
           title: "Success", 
-          description: `${entityName} was already removed`,
+          description: `${entityName} removed successfully`,
         });
+        return; // Exit early, don't call custom error handler
+      } 
+
+      // Use custom error handler if provided
+      if (onDeleteError) {
+        onDeleteError(error);
       } else {
-        // Use custom error handler if provided
-        if (onDeleteError) {
-          onDeleteError(error);
-        } else {
-          toast({
-            title: "Error",
-            description: `Failed to remove ${entityName.toLowerCase()}: ${error.message}`,
-            variant: "destructive",
-          });
-        }
+        toast({
+          title: "Error",
+          description: `Failed to remove ${entityName.toLowerCase()}: ${error.message}`,
+          variant: "destructive",
+        });
       }
     }
   });
