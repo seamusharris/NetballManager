@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams } from "wouter";
 import { Helmet } from 'react-helmet';
@@ -107,6 +107,9 @@ export default function Players() {
     enabled: !!teamId && !!activeSeason?.id && !!currentClubId,
   });
 
+  // Team filter state for main players view
+  const [selectedTeamFilter, setSelectedTeamFilter] = useState<string>('all');
+
   // Get players for non-team view
   const { data: players = [], isLoading: isLoadingPlayers } = useQuery({
     queryKey: ['players', currentClub?.id],
@@ -117,6 +120,19 @@ export default function Players() {
     },
     enabled: !!currentClub?.id && !teamId,
   });
+
+  // Filter players based on team selection
+  const filteredPlayers = useMemo(() => {
+    if (!players || selectedTeamFilter === 'all') return players;
+    
+    return players.filter(player => {
+      // Check if player has team assignments in current season
+      const hasTeamAssignment = player.teamAssignments?.some(
+        assignment => assignment.teamId === parseInt(selectedTeamFilter)
+      );
+      return hasTeamAssignment;
+    });
+  }, [players, selectedTeamFilter]);
 
   // Add player to team mutation
   const addPlayerToTeam = useMutation({
@@ -379,13 +395,35 @@ export default function Players() {
       </Helmet>
 
       <div className="space-y-6">
-        {/* Add Player Button for main players view */}
+        {/* Header with Team Filter and Add Player Button */}
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Players</h1>
             <p className="text-lg text-gray-600 mt-1">Manage your club's players</p>
           </div>
-          <Dialog>
+          <div className="flex items-center gap-4">
+            {/* Team Filter Dropdown */}
+            <div className="w-64">
+              <Select
+                value={selectedTeamFilter}
+                onValueChange={setSelectedTeamFilter}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Filter by team" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Teams</SelectItem>
+                  {allTeams
+                    .filter(team => team.name !== 'BYE') // Filter out BYE teams
+                    .map(team => (
+                      <SelectItem key={team.id} value={team.id.toString()}>
+                        {team.name} {team.division && `(${team.division})`}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <Dialog>
             <DialogTrigger asChild>
               <Button>
                 <UserPlus className="h-4 w-4 mr-2" />
@@ -433,7 +471,7 @@ export default function Players() {
         </div>
 
         <PlayersList
-          players={players}
+          players={filteredPlayers}
           isLoading={isLoading}
           onEdit={() => {}} // Placeholder function - edit functionality handled by navigation
           onDelete={() => {}} // Placeholder function - delete functionality handled elsewhere
