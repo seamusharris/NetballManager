@@ -273,6 +273,110 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let rostersImported = 0;
       let statsImported = 0;
 
+      let clubsImported = 0;
+      let seasonsImported = 0;
+      let gameStatusesImported = 0;
+      let teamsImported = 0;
+
+      // DIRECT INSERT CLUBS (highest priority)
+      for (const club of (data.clubs || [])) {
+        try {
+          await db.execute(sql`
+            INSERT INTO clubs (
+              id, name, code, description, address, contact_email, contact_phone,
+              primary_color, secondary_color, is_active
+            ) VALUES (
+              ${club.id}, 
+              ${club.name || "Unknown Club"}, 
+              ${club.code || "UNK"}, 
+              ${club.description || null}, 
+              ${club.address || null}, 
+              ${club.contactEmail || null}, 
+              ${club.contactPhone || null}, 
+              ${club.primaryColor || "#1f2937"}, 
+              ${club.secondaryColor || "#ffffff"}, 
+              ${club.isActive !== false}
+            )
+          `);
+          clubsImported++;
+        } catch (error) {
+          console.error(`Failed to import club ${club.id}:`, error);
+        }
+      }
+
+      // DIRECT INSERT SEASONS
+      for (const season of (data.seasons || [])) {
+        try {
+          await db.execute(sql`
+            INSERT INTO seasons (
+              id, name, start_date, end_date, is_active, type, year, display_order
+            ) VALUES (
+              ${season.id}, 
+              ${season.name || "Unknown Season"}, 
+              ${season.startDate || null}, 
+              ${season.endDate || null}, 
+              ${season.isActive !== false}, 
+              ${season.type || null}, 
+              ${season.year || new Date().getFullYear()}, 
+              ${season.displayOrder || 0}
+            )
+          `);
+          seasonsImported++;
+        } catch (error) {
+          console.error(`Failed to import season ${season.id}:`, error);
+        }
+      }
+
+      // DIRECT INSERT GAME STATUSES
+      for (const status of (data.gameStatuses || [])) {
+        try {
+          await db.execute(sql`
+            INSERT INTO game_statuses (
+              id, name, display_name, points, opponent_points, team_goals, opponent_goals,
+              is_completed, allows_statistics, requires_opponent, color_class, sort_order, is_active
+            ) VALUES (
+              ${status.id}, 
+              ${status.name || "unknown"}, 
+              ${status.displayName || "Unknown"}, 
+              ${status.points || 0}, 
+              ${status.opponentPoints || 0}, 
+              ${status.teamGoals || null}, 
+              ${status.opponentGoals || null}, 
+              ${status.isCompleted !== false}, 
+              ${status.allowsStatistics !== false}, 
+              ${status.requiresOpponent !== false}, 
+              ${status.colorClass || null}, 
+              ${status.sortOrder || 0}, 
+              ${status.isActive !== false}
+            )
+          `);
+          gameStatusesImported++;
+        } catch (error) {
+          console.error(`Failed to import game status ${status.id}:`, error);
+        }
+      }
+
+      // DIRECT INSERT TEAMS
+      for (const team of (data.teams || [])) {
+        try {
+          await db.execute(sql`
+            INSERT INTO teams (
+              id, club_id, season_id, name, division, is_active
+            ) VALUES (
+              ${team.id}, 
+              ${team.clubId}, 
+              ${team.seasonId}, 
+              ${team.name || "Unknown Team"}, 
+              ${team.division || null}, 
+              ${team.isActive !== false}
+            )
+          `);
+          teamsImported++;
+        } catch (error) {
+          console.error(`Failed to import team ${team.id}:`, error);
+        }
+      }
+
       // DIRECT INSERT PLAYERS
       // This uses raw SQL to ensure IDs are preserved exactly
       for (const player of data.players) {
@@ -476,6 +580,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Return the import results
       res.status(200).json({
+        clubsImported,
+        seasonsImported,
+        gameStatusesImported,
+        teamsImported,
         playersImported,
         opponentsImported,
         gamesImported,
@@ -781,8 +889,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { 
         name, 
         code, 
-        description, 
-        address, 
+        description,```text
+         address, 
         contactEmail, 
         contactPhone, 
         primaryColor = '#1f2937', 

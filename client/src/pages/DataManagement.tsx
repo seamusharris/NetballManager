@@ -267,13 +267,24 @@ export default function DataManagement() {
             <AlertTitle>Import Successful</AlertTitle>
             <AlertDescription>
               <p>Successfully imported:</p>
-              <ul className="list-disc pl-6 mt-2">
-                <li>{importStats.playersImported} players</li>
-                <li>{importStats.opponentsImported} opponents</li>
-                <li>{importStats.gamesImported} games</li>
-                <li>{importStats.rostersImported} roster entries</li>
-                <li>{importStats.statsImported} game statistics</li>
-              </ul>
+              <div className="grid grid-cols-2 gap-x-6 mt-2">
+                <ul className="list-disc pl-6">
+                  {importStats.clubsImported > 0 && <li>{importStats.clubsImported} clubs</li>}
+                  {importStats.seasonsImported > 0 && <li>{importStats.seasonsImported} seasons</li>}
+                  {importStats.gameStatusesImported > 0 && <li>{importStats.gameStatusesImported} game statuses</li>}
+                  {importStats.teamsImported > 0 && <li>{importStats.teamsImported} teams</li>}
+                  <li>{importStats.playersImported} players</li>
+                  {importStats.opponentsImported > 0 && <li>{importStats.opponentsImported} opponents (legacy)</li>}
+                </ul>
+                <ul className="list-disc pl-6">
+                  <li>{importStats.gamesImported} games</li>
+                  <li>{importStats.rostersImported} roster entries</li>
+                  <li>{importStats.statsImported} game statistics</li>
+                  {importStats.clubPlayersImported > 0 && <li>{importStats.clubPlayersImported} club-player relationships</li>}
+                  {importStats.teamPlayersImported > 0 && <li>{importStats.teamPlayersImported} team-player relationships</li>}
+                  {importStats.playerAvailabilityImported > 0 && <li>{importStats.playerAvailabilityImported} availability records</li>}
+                </ul>
+              </div>
             </AlertDescription>
           </Alert>
         )}

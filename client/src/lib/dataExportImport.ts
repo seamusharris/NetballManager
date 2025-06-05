@@ -31,7 +31,7 @@ interface ImportResult {
 export async function exportAllData(): Promise<ExportResult> {
   try {
     console.log("Starting data export process...");
-    
+
     // Fetch all players
     console.log("Fetching players...");
     const playersResponse = await fetch('/api/players');
@@ -40,7 +40,7 @@ export async function exportAllData(): Promise<ExportResult> {
     }
     const players = await playersResponse.json() as Player[];
     console.log(`Exported ${players.length} players with their avatar colors`);
-    
+
     // Fetch all opponents
     console.log("Fetching opponents...");
     const opponentsResponse = await fetch('/api/opponents');
@@ -49,7 +49,7 @@ export async function exportAllData(): Promise<ExportResult> {
     }
     const opponents = await opponentsResponse.json() as Opponent[];
     console.log(`Exported ${opponents.length} opponents`);
-    
+
     // Fetch all games
     console.log("Fetching games...");
     const gamesResponse = await fetch('/api/games');
@@ -58,11 +58,11 @@ export async function exportAllData(): Promise<ExportResult> {
     }
     const games = await gamesResponse.json() as Game[];
     console.log(`Exported ${games.length} games`);
-    
+
     // Fetch rosters and stats for each game
     let allRosters: Roster[] = [];
     let allGameStats: GameStat[] = [];
-    
+
     console.log("Fetching roster and stat data for each game...");
     for (const game of games) {
       // Get rosters for this game
@@ -78,7 +78,7 @@ export async function exportAllData(): Promise<ExportResult> {
       } catch (error) {
         console.error(`Failed to fetch rosters for game ${game.id}:`, error);
       }
-      
+
       // Get game stats for this game
       try {
         const statsResponse = await fetch(`/api/games/${game.id}/stats`);
@@ -93,7 +93,7 @@ export async function exportAllData(): Promise<ExportResult> {
         console.error(`Failed to fetch stats for game ${game.id}:`, error);
       }
     }
-    
+
     // Create JSON structure for all data in the standardized format
     const exportData = {
       players,
@@ -103,16 +103,16 @@ export async function exportAllData(): Promise<ExportResult> {
       gameStats: allGameStats,
       exportDate: new Date().toISOString()
     };
-    
+
     // Convert to JSON string
     const jsonData = JSON.stringify(exportData, null, 2);
-    
+
     // Create the filename with current date and time
     const now = new Date();
     const datePart = now.toISOString().split('T')[0]; // YYYY-MM-DD
     const timePart = now.toISOString().split('T')[1].split('.')[0].replace(/:/g, '-'); // HH-MM-SS
     const filename = `netball_export_${datePart}_${timePart}.json`;
-    
+
     return {
       fileContents: jsonData,
       filename
@@ -140,45 +140,52 @@ export async function importData(jsonData: string): Promise<ImportResult> {
   try {
     // Parse the JSON data
     const data = JSON.parse(jsonData);
-    
+
     // Validate the data structure
     if (!data.players || !data.opponents || !data.games) {
       throw new Error('Invalid data format. The import file is missing required data sections.');
     }
-    
+
     // First, clean the database to prevent ID conflicts
     console.log("Clearing existing data before import...");
     await fetch('/api/clear-data', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' }
     });
-    
+
     // Count successful imports
     let playersImported = 0;
     let opponentsImported = 0;
     let gamesImported = 0;
     let rostersImported = 0;
     let statsImported = 0;
-    
+
     // Import all data in a single bulk operation
     console.log("Importing data in bulk...");
-    
+
     try {
       const response = await fetch('/api/bulk-import', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: jsonData // Send the entire JSON data as is
       });
-      
+
       if (response.ok) {
         const result = await response.json();
+        clubsImported = result.clubsImported || 0;
+        seasonsImported = result.seasonsImported || 0;
+        gameStatusesImported = result.gameStatusesImported || 0;
+        teamsImported = result.teamsImported || 0;
         playersImported = result.playersImported || 0;
         opponentsImported = result.opponentsImported || 0;
         gamesImported = result.gamesImported || 0;
         rostersImported = result.rostersImported || 0;
         statsImported = result.statsImported || 0;
-        
-        console.log(`Import completed successfully: ${playersImported} players, ${opponentsImported} opponents, ${gamesImported} games, ${rostersImported} roster entries, ${statsImported} stats`);
+        clubPlayersImported = result.clubPlayersImported || 0;
+        teamPlayersImported = result.teamPlayersImported || 0;
+        playerAvailabilityImported = result.playerAvailabilityImported || 0;
+
+        console.log(`Import completed successfully: ${clubsImported} clubs, ${seasonsImported} seasons, ${gameStatusesImported} game statuses, ${teamsImported} teams, ${playersImported} players, ${opponentsImported} opponents, ${gamesImported} games, ${rostersImported} roster entries, ${statsImported} stats, ${clubPlayersImported} club-player relationships, ${teamPlayersImported} team-player relationships, ${playerAvailabilityImported} availability records`);
       } else {
         const errorText = await response.text();
         console.error("Import API error:", errorText);
@@ -188,7 +195,7 @@ export async function importData(jsonData: string): Promise<ImportResult> {
       console.error("Failed during bulk import:", importError);
       throw importError;
     }
-    
+
     return {
       playersImported,
       opponentsImported,
