@@ -2425,6 +2425,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`Found ${mappedPlayers.length} unassigned players for season ${seasonId}:`, mappedPlayers.map(p => ({ id: p.id, name: p.displayName })));
       console.log(`Final response being sent:`, JSON.stringify(mappedPlayers, null, 2));
+      console.log(`=== UNASSIGNED PLAYERS ENDPOINT COMPLETE ===`);
       res.json(mappedPlayers);
     } catch (error) {
       console.error('Error fetching unassigned players:', error);
