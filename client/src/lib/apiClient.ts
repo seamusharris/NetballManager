@@ -85,18 +85,19 @@ export const apiClient = new ApiClient();
 // Helper function for mutations with automatic cache invalidation
 export async function mutateWithInvalidation<T>(
   mutationFn: () => Promise<T>,
-  invalidatePatterns: string[]
+  invalidatePatterns: (string | (string | number | undefined)[])[]
 ): Promise<T> {
   const result = await mutationFn();
 
-  // Invalidate related queries
+  // Invalidate queries after successful mutation
   invalidatePatterns.forEach(pattern => {
-    queryClient.invalidateQueries({
-      predicate: (query) => {
-        const queryKey = query.queryKey[0];
-        return typeof queryKey === 'string' && queryKey.includes(pattern);
-      }
-    });
+    if (Array.isArray(pattern)) {
+      // Filter out undefined values from the array
+      const cleanPattern = pattern.filter(p => p !== undefined);
+      queryClient.invalidateQueries({ queryKey: cleanPattern });
+    } else {
+      queryClient.invalidateQueries({ queryKey: [pattern] });
+    }
   });
 
   return result;

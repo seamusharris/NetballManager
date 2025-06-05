@@ -138,9 +138,9 @@ export default function Players() {
     entityName: 'Player',
     baseEndpoint: `/api/teams/${teamId}/players`,
     invalidatePatterns: [
-      `team-players-${teamId}`,
-      `unassigned-players-${activeSeason?.id}`,
-      'players'
+      ['team-players', teamId, currentClub?.id],
+      ['unassigned-players', activeSeason?.id, currentClub?.id],
+      ['players', currentClub?.id]
     ]
   });
 
