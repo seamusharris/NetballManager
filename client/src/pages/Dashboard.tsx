@@ -178,14 +178,15 @@ export default function Dashboard() {
       {games && Array.isArray(games) && games.length > 0 && <BatchScoreDisplay games={games} />}
 
       <DashboardSummary 
-        players={players || []} 
-        games={games || []} 
-        seasons={seasons || []}
-        activeSeason={activeSeason}
-        isLoading={isLoading}
-        centralizedRosters={centralizedRosters}
-        centralizedStats={centralizedStats}
-      />
+          players={players || []} 
+          games={games || []} 
+          seasons={seasons || []}
+          activeSeason={activeSeason}
+          isLoading={isLoading}
+          centralizedRosters={centralizedRosters}
+          centralizedStats={centralizedStats}
+        />
+      </div>
     </>
   );
 }
