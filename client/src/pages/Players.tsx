@@ -135,29 +135,26 @@ export default function Players() {
   // Remove player from team mutation
   const removePlayerFromTeam = useMutation({
     mutationFn: async (playerId: number) => {
-      setRemovingPlayers(prev => new Set(prev).add(playerId));
       try {
         const response = await apiClient.delete(`/api/teams/${teamId}/players/${playerId}`);
         return response;
-      } catch (error) {
+      } catch (error: any) {
         // Handle 404 errors gracefully - player already removed
-        if (error instanceof Error && error.message.includes('Player not found')) {
+        if (error?.response?.status === 404 || 
+            (error instanceof Error && error.message.includes('Player not found'))) {
           return { success: true }; // Treat as success
         }
         throw error;
-      } finally {
-        setRemovingPlayers(prev => {
-          const newSet = new Set(prev);
-          newSet.delete(playerId);
-          return newSet;
-        });
       }
     },
+    onMutate: (playerId: number) => {
+      setRemovingPlayers(prev => new Set(prev).add(playerId));
+    },
     onSuccess: () => {
-      // More specific cache invalidation
-      queryClient.invalidateQueries({ queryKey: ['team-players', teamId, currentClub?.id] });
-      queryClient.invalidateQueries({ queryKey: ['unassigned-players', activeSeason?.id, currentClub?.id] });
-      queryClient.invalidateQueries({ queryKey: ['players', currentClub?.id] });
+      // Invalidate all relevant queries to refresh the UI
+      queryClient.invalidateQueries({ queryKey: ['team-players', teamId] });
+      queryClient.invalidateQueries({ queryKey: ['unassigned-players', activeSeason?.id] });
+      queryClient.invalidateQueries({ queryKey: ['players'] });
       toast({ title: 'Success', description: 'Player removed from team' });
     },
     onError: (error: Error) => {
@@ -165,6 +162,13 @@ export default function Players() {
         title: 'Error', 
         description: `Failed to remove player from team: ${error.message}`, 
         variant: 'destructive' 
+      });
+    },
+    onSettled: (data, error, playerId) => {
+      setRemovingPlayers(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(playerId);
+        return newSet;
       });
     },
   });
