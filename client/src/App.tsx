@@ -62,7 +62,8 @@ function Router() {
   return (
     <Layout>
       <Switch>
-        <Route path="/" component={withErrorBoundary(Dashboard, 'Dashboard')} />
+        <Route path="/" component={withErrorBoundary(ClubDashboard, 'ClubDashboard')} />
+        <Route path="/team-dashboard" component={withErrorBoundary(Dashboard, 'Dashboard')} />
         <Route path="/dashboard" component={withErrorBoundary(Dashboard, 'Dashboard')} />
         <Route path="/players" component={withErrorBoundary(Players, 'Players')} />
         <Route path="/players/:clubId" component={withErrorBoundary(Players, 'Players')} />

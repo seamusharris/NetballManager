@@ -19,8 +19,9 @@ const getPageTitle = (path: string): string => {
   
   // Static routes
   const routeMap: Record<string, string> = {
-    '/': 'Dashboard',
-    '/dashboard': 'Dashboard',
+    '/': 'Club Dashboard',
+    '/team-dashboard': 'Team Dashboard', 
+    '/dashboard': 'Team Dashboard',
     '/games': 'Games',
     '/players': 'Players',
     '/opponents': 'Opponents',

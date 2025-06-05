@@ -29,8 +29,8 @@ export default function Header({ setIsMobileOpen, isTablet }: HeaderProps) {
   };
 
   const navLinks = [
-    { path: '/', label: 'Team Dashboard', icon: <Home className="h-5 w-5" /> },
-    { path: '/club-dashboard', label: 'Club Dashboard', icon: <Building2 className="h-5 w-5" /> },
+    { path: '/', label: 'Club Dashboard', icon: <Building2 className="h-5 w-5" /> },
+    { path: '/team-dashboard', label: 'Team Dashboard', icon: <Home className="h-5 w-5" /> },
     { path: '/players', label: 'Players', icon: <Users className="h-5 w-5" /> },
     { path: '/teams', label: 'Teams', icon: <Users className="h-5 w-5" /> },
     { path: '/roster', label: 'Roster', icon: <ClipboardList className="h-5 w-5" /> },

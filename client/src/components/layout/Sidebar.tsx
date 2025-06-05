@@ -23,8 +23,8 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen, isTablet }: Sid
   };
 
   const navLinks = [
-    { path: '/', label: 'Team Dashboard', icon: <Home className="w-5 h-5" /> },
-    { path: '/club-dashboard', label: 'Club Dashboard', icon: <Building2 className="w-5 h-5" /> },
+    { path: '/', label: 'Club Dashboard', icon: <Building2 className="w-5 h-5" /> },
+    { path: '/team-dashboard', label: 'Team Dashboard', icon: <Home className="w-5 h-5" /> },
     { path: '/players', label: 'Players', icon: <Users className="w-5 h-5" /> },
     { path: '/teams', label: 'Teams', icon: <Users className="w-5 h-5" /> },
     { path: '/roster', label: 'Roster', icon: <ClipboardList className="w-5 h-5" /> },
