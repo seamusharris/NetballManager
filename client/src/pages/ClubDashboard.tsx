@@ -19,8 +19,10 @@ export default function ClubDashboard() {
   });
 
   const { data: games = [], isLoading: isLoadingGames } = useQuery<any[]>({
-    queryKey: ['games', currentClubId],
-    queryFn: () => apiClient.get('/api/games'),
+    queryKey: ['club-games', currentClubId],
+    queryFn: () => apiClient.get('/api/games', { 
+      headers: { 'x-club-wide': 'true' } 
+    }),
     enabled: !!currentClubId,
   });
 
@@ -48,7 +50,7 @@ export default function ClubDashboard() {
   ).map(game => game.id) || [];
 
   const { data: centralizedStats = {}, isLoading: isLoadingStats } = useQuery({
-    queryKey: ['centralizedStats', currentClubId, completedGameIds.join(',')],
+    queryKey: ['club-centralizedStats', currentClubId, completedGameIds.join(',')],
     queryFn: async () => {
       if (completedGameIds.length === 0) return {};
 

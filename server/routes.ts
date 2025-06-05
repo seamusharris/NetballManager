@@ -891,7 +891,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         code, 
         description,
         address, 
-        contactEmail, 
+        contact```text
+Email, 
         contactPhone, 
         primaryColor = '#1f2937', 
         secondaryColor = '#ffffff' 
@@ -2656,6 +2657,145 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error fetching club players:', error);
       res.status(500).json({ error: 'Failed to fetch club players' });
+    }
+  });
+
+  // Games routes
+  app.get("/api/games", loadUserPermissions, async (req, res) => {
+    try {
+      const currentTeamId = req.headers['x-current-team-id'];
+      const isClubWide = req.headers['x-club-wide'] === 'true';
+
+      console.log('Games endpoint headers:', {
+        'x-current-club-id': req.headers['x-current-club-id'],
+        'x-current-team-id': currentTeamId,
+        'x-club-wide': isClubWide,
+        'user-agent': req.headers['user-agent']?.substring(0, 50),
+        'all-headers': Object.keys(req.headers)
+      });
+
+      console.log(`Games endpoint: currentClubId=${req.user.currentClubId}, currentTeamId=${currentTeamId}, isClubWide=${isClubWide}, user clubs:`, req.user.clubs);
+
+      if (!req.user.currentClubId) {
+        return res.status(400).json({ error: "No current club selected" });
+      }
+
+      let query;
+      if (isClubWide) {
+        console.log(`Fetching ALL games for club ${req.user.currentClubId} (club-wide view)`);
+        query = sql`
+          SELECT 
+            g.*,
+            ht.name as home_team_name,
+            at.name as away_team_name,
+            s.name as season_name,
+            s.id as season_id,
+            hc.name as home_club_name,
+            ac.name as away_club_name,
+            gs.name as status_name,
+            gs.display_name as status_display_name,
+            gs.is_completed as status_is_completed,
+            gs.allows_statistics as status_allows_statistics,
+            gs.team_goals as status_team_goals,
+            gs.opponent_goals as status_opponent_goals
+          FROM games g
+          LEFT JOIN teams ht ON g.home_team_id = ht.id
+          LEFT JOIN teams at ON g.away_team_id = at.id
+          LEFT JOIN seasons s ON g.season_id = s.id
+          LEFT JOIN clubs hc ON g.home_club_id = hc.id
+          LEFT JOIN clubs ac ON g.away_club_id = ac.id
+          LEFT JOIN game_statuses gs ON g.status_id = gs.id
+          WHERE g.home_club_id = ${req.user.currentClubId} OR g.away_club_id = ${req.user.currentClubId}
+          ORDER BY g.date DESC, g.time DESC
+        `;
+      } else if (currentTeamId && currentTeamId !== 'null' && currentTeamId !== 'undefined') {
+        console.log(`Fetching games for club ${req.user.currentClubId} and team ${currentTeamId}`);
+        query = sql`
+          SELECT 
+            g.*,
+            ht.name as home_team_name,
+            at.name as away_team_name,
+            s.name as season_name,
+            s.id as season_id,
+            hc.name as home_club_name,
+            ac.name as away_club_name,
+            gs.name as status_name,
+            gs.display_name as status_display_name,
+            gs.is_completed as status_is_completed,
+            gs.allows_statistics as status_allows_statistics,
+            gs.team_goals as status_team_goals,
+            gs.opponent_goals as status_opponent_goals
+          FROM games g
+          LEFT JOIN teams ht ON g.home_team_id = ht.id
+          LEFT JOIN teams at ON g.away_team_id = at.id
+          LEFT JOIN seasons s ON g.season_id = s.id
+          LEFT JOIN clubs hc ON g.home_club_id = hc.id
+          LEFT JOIN clubs ac ON g.away_club_id = ac.id
+          LEFT JOIN game_statuses gs ON g.status_id = gs.id
+          WHERE (g.home_club_id = ${req.user.currentClubId} OR g.away_club_id = ${req.user.currentClubId})
+            AND (g.home_team_id = ${currentTeamId} OR g.away_team_id = ${currentTeamId})
+          ORDER BY g.date DESC, g.time DESC
+        `;
+      } else {
+        console.log(`Fetching all games for club ${req.user.currentClubId}`);
+        query = sql`
+          SELECT 
+            g.*,
+            ht.name as home_team_name,
+            at.name as away_team_name,
+            s.name as season_name,
+            s.id as season_id,
+            hc.name as home_club_name,
+            ac.name as away_club_name,
+            gs.name as status_name,
+            gs.display_name as status_display_name,
+            gs.is_completed as status_is_completed,
+            gs.allows_statistics as status_allows_statistics,
+            gs.team_goals as status_team_goals,
+            gs.opponent_goals as status_opponent_goals
+          FROM games g
+          LEFT JOIN teams ht ON g.home_team_id = ht.id
+          LEFT JOIN teams at ON g.away_team_id = at.id
+          LEFT JOIN seasons s ON g.season_id = s.id
+          LEFT JOIN clubs hc ON g.home_club_id = hc.id
+          LEFT JOIN clubs ac ON g.away_club_id = ac.id
+          LEFT JOIN game_statuses gs ON g.status_id = gs.id
+          WHERE g.home_club_id = ${req.user.currentClubId} OR g.away_club_id = ${req.user.currentClubId}
+          ORDER BY g.date DESC, g.time DESC
+        `;
+      }
+
+      const games = (await db.execute(query)).rows.map(row => ({
+        id: row.id,
+        date: row.date,
+        time: row.time,
+        homeTeamId: row.home_team_id,
+        awayTeamId: row.away_team_id,
+        venue: row.venue,
+        isInterClub: row.is_inter_club,
+        statusId: row.status_id,
+        round: row.round,
+        seasonId: row.season_id,
+        notes: row.notes,
+        awardWinnerId: row.award_winner_id,
+        homeTeamName: row.home_team_name,
+        awayTeamName: row.away_team_name,
+        seasonName: row.season_name,
+	      seasonId: row.season_id,
+        homeClubName: row.home_club_name,
+        awayClubName: row.away_club_name,
+        statusName: row.status_name,
+        statusDisplayName: row.status_display_name,
+        statusIsCompleted: row.status_is_completed,
+        statusAllowsStatistics: row.status_allows_statistics,
+        statusTeamGoals: row.status_team_goals,
+        statusOpponentGoals: row.status_opponent_goals
+      }));
+
+      res.json(games);
+    } catch (error) {
+      console.error('Error fetching games:', error);
+      res.status(500).json({ error: 'Failed to fetch games' });
     }
   });
 
