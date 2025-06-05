@@ -185,7 +185,8 @@ export default function PlayerPerformance({ players, games, className, seasonFil
         playerGameIds[player.id] = new Set();
       });
 
-      // First, process game rosters to find participation (only for filtered games)
+      // Map position-based stats to players for display purposes only
+      // Note: Stats are stored by position, we use rosters to determine which player played where
       if (gameRostersMap) {
         Object.entries(gameRostersMap).forEach(([gameIdStr, rosters]) => {
           const gameId = parseInt(gameIdStr);

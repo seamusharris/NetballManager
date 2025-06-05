@@ -1963,13 +1963,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid position value" });
       }
 
-      // Ensure position context exists for this game/quarter/position
-      // const { ensurePositionContext } = await import('./roster-fallback');
-      // const playerId = await ensurePositionContext(gameId, parsedData.data.quarter, parsedData.data.position);
-
-      // if (!playerId) {
-      //   console.warn(`No position context available for Game ${gameId}, Q${parsedData.data.quarter}, ${parsedData.data.position}`);
-      // }
+      // Stats are now recorded directly against positions without requiring roster context
 
       try {
         // Check for existing stat
