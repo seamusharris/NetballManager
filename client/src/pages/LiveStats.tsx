@@ -225,30 +225,7 @@ export default function LiveStats() {
     queryFn: () => apiClient.get('/api/players'),
   });
 
-  // This mutation is now only used by the saveAllStats function - not for individual stat updates
-  const { mutate: saveGameStat } = useMutation({
-    mutationFn: (gameStat: Partial<GameStat>) => {
-      // Check if this is an existing stat that we want to update
-      const existingStat = existingStats?.find(s => 
-        s.position === gameStat.position && s.quarter === gameStat.quarter
-      );
-
-      if (existingStat) {
-        // Update existing stat
-        return apiClient.patch(`/api/games/${gameId}/stats/${existingStat.id}`, gameStat);
-      } else {
-        // Create new stat
-        return apiClient.post(`/api/games/${gameId}/stats`, gameStat);
-      }
-    },
-    onSuccess: () => {
-      // Only refetch after bulk save
-      refetchStats();
-      clearGameCache(gameId);
-      queryClient.invalidateQueries({ queryKey: ['/api/games', gameId, 'stats'] });
-      queryClient.invalidateQueries({ queryKey: [`/api/games/${gameId}/stats`] });
-    }
-  });
+  // This mutation is only used by the saveAllStats function - not for individual stat updates
 
   // Check if game is forfeit and redirect if needed
   useEffect(() => {
@@ -875,7 +852,7 @@ export default function LiveStats() {
   }
 
   // Error state - game is a forfeit
-  if (game.status === 'forfeit') {
+  if (game.status ==='forfeit') {
     return (
       <div className="container py-6">
         <h1 className="text-2xl font-bold mb-4">Cannot edit statistics</h1>
