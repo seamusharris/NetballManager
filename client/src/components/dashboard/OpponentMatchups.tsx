@@ -371,7 +371,7 @@ export default function TeamMatchups({
                           strokeWidth="4"
                           fill="none"
                           strokeDasharray={`${(difficulty / 100) * 175.93} 175.93`}
-                          strokeDashoffset="43.98"
+                          strokeDashoffset="0"
                           transform="rotate(-90 32 32)"
                         />
                       </svg>
