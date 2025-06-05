@@ -2362,9 +2362,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: 'Invalid season ID' });
       }
 
+      console.log(`\n=== DETAILED UNASSIGNED PLAYERS DEBUG ===`);
       console.log(`Fetching unassigned players for season ${seasonId}, club ${clubId}`);
 
-      // First, let's see what players are in the club
+      // Step 1: Check all players in the club
       const allClubPlayers = await db.execute(sql`
         SELECT p.id, p.display_name, cp.is_active as club_active, p.active as player_active
         FROM players p
@@ -2372,9 +2373,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
         WHERE cp.club_id = ${clubId}
         ORDER BY p.display_name
       `);
-      console.log(`All club ${clubId} players:`, allClubPlayers.rows.map(r => `${r.display_name} (club_active: ${r.club_active}, player_active: ${r.player_active})`));
+      console.log(`STEP 1 - All club ${clubId} players (${allClubPlayers.rows.length}):`, 
+        allClubPlayers.rows.map(r => `${r.display_name} (club_active: ${r.club_active}, player_active: ${r.player_active})`));
 
-      // Check which players are assigned to this season
+      // Step 2: Check active club players
+      const activeClubPlayers = await db.execute(sql`
+        SELECT p.id, p.display_name
+        FROM players p
+        JOIN club_players cp ON p.id = cp.player_id
+        WHERE cp.club_id = ${clubId} 
+          AND cp.is_active = true
+          AND p.active = true
+        ORDER BY p.display_name
+      `);
+      console.log(`STEP 2 - Active club players (${activeClubPlayers.rows.length}):`, 
+        activeClubPlayers.rows.map(r => r.display_name));
+
+      // Step 3: Check player_seasons table entries
+      const playerSeasonsCheck = await db.execute(sql`
+        SELECT ps.player_id, ps.season_id, p.display_name
+        FROM player_seasons ps
+        JOIN players p ON ps.player_id = p.id
+        JOIN club_players cp ON p.id = cp.player_id
+        WHERE cp.club_id = ${clubId}
+        ORDER BY ps.season_id, p.display_name
+      `);
+      console.log(`STEP 3 - All player_seasons entries for club ${clubId} (${playerSeasonsCheck.rows.length}):`, 
+        playerSeasonsCheck.rows.map(r => `${r.display_name} -> season ${r.season_id}`));
+
+      // Step 4: Check which players are assigned to this specific season
       const seasonPlayers = await db.execute(sql`
         SELECT p.id, p.display_name
         FROM players p
@@ -2384,15 +2411,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
           AND ps.season_id = ${seasonId}
         ORDER BY p.display_name
       `);
-      console.log(`Players assigned to season ${seasonId}:`, seasonPlayers.rows.map(r => r.display_name));
+      console.log(`STEP 4 - Players assigned to season ${seasonId} (${seasonPlayers.rows.length}):`, 
+        seasonPlayers.rows.map(r => r.display_name));
 
-      // Debug: Check if we have team_players table entries
-      const teamPlayersCheck = await db.execute(sql`
-        SELECT COUNT(*) as count FROM team_players tp
+      // Step 5: Check team assignments in this season
+      const teamAssignments = await db.execute(sql`
+        SELECT tp.player_id, tp.team_id, p.display_name, t.name as team_name
+        FROM team_players tp
+        JOIN players p ON tp.player_id = p.id
         JOIN teams t ON tp.team_id = t.id
         WHERE t.season_id = ${seasonId}
+        ORDER BY p.display_name
       `);
-      console.log(`Team players in season ${seasonId}:`, teamPlayersCheck.rows[0].count);
+      console.log(`STEP 5 - Team assignments in season ${seasonId} (${teamAssignments.rows.length}):`, 
+        teamAssignments.rows.map(r => `${r.display_name} -> ${r.team_name} (team_id: ${r.team_id})`));
+
+      // Step 6: Check what the main query would return without the team exclusion
+      const seasonPlayersWithoutTeamFilter = await db.execute(sql`
+        SELECT p.id, p.display_name
+        FROM players p
+        JOIN club_players cp ON p.id = cp.player_id
+        JOIN player_seasons ps ON p.id = ps.player_id
+        WHERE cp.club_id = ${clubId} 
+          AND cp.is_active = true
+          AND p.active = true
+          AND ps.season_id = ${seasonId}
+        ORDER BY p.display_name
+      `);
+      console.log(`STEP 6 - Season players before team exclusion (${seasonPlayersWithoutTeamFilter.rows.length}):`, 
+        seasonPlayersWithoutTeamFilter.rows.map(r => r.display_name));
 
       // Get players from the club who are assigned to this season but not assigned to any team
       const unassignedPlayers = await db.execute(sql`
