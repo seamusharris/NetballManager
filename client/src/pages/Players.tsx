@@ -15,6 +15,7 @@ import { PlayerBox } from '@/components/ui/player-box';
 import { useToast } from '@/hooks/use-toast';
 import { useLocation } from 'wouter';
 import { apiClient } from '@/lib/apiClient';
+import { useCrudMutations } from '@/hooks/use-crud-mutations';
 
 export default function Players() {
   const { currentClub, hasPermission, isLoading: clubLoading, switchToClub } = useClub();
@@ -132,45 +133,21 @@ export default function Players() {
   // Track which players are being removed
   const [removingPlayers, setRemovingPlayers] = useState<Set<number>>(new Set());
 
-  // Remove player from team mutation
-  const removePlayerFromTeam = useMutation({
-    mutationFn: async (playerId: number) => {
-      try {
-        const response = await apiClient.delete(`/api/teams/${teamId}/players/${playerId}`);
-        return response;
-      } catch (error: any) {
-        // Handle 404 errors gracefully - player already removed
-        if (error?.response?.status === 404 || 
-            (error instanceof Error && error.message.includes('Player not found'))) {
-          return { success: true }; // Treat as success
-        }
-        throw error;
-      }
-    },
-    onMutate: (playerId: number) => {
-      setRemovingPlayers(prev => new Set(prev).add(playerId));
-    },
+  // Remove player from team using standardized hook
+  const { deleteMutation: removePlayerFromTeam } = useCrudMutations({
+    entityName: 'Player',
+    baseEndpoint: `/api/teams/${teamId}/players`,
+    invalidatePatterns: [
+      `team-players-${teamId}`,
+      `unassigned-players-${activeSeason?.id}`,
+      'players'
+    ],
     onSuccess: () => {
-      // Invalidate all relevant queries to refresh the UI
-      queryClient.invalidateQueries({ queryKey: ['team-players', teamId] });
-      queryClient.invalidateQueries({ queryKey: ['unassigned-players', activeSeason?.id] });
-      queryClient.invalidateQueries({ queryKey: ['players'] });
-      toast({ title: 'Success', description: 'Player removed from team' });
+      // Additional success handling if needed
     },
     onError: (error: Error) => {
-      toast({ 
-        title: 'Error', 
-        description: `Failed to remove player from team: ${error.message}`, 
-        variant: 'destructive' 
-      });
-    },
-    onSettled: (data, error, playerId) => {
-      setRemovingPlayers(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(playerId);
-        return newSet;
-      });
-    },
+      // Additional error handling if needed
+    }
   });
 
   const isLoading = teamId 
@@ -252,12 +229,23 @@ export default function Players() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => removePlayerFromTeam.mutate(player.id)}
-                          disabled={removingPlayers.has(player.id)}
+                          onClick={() => {
+                            setRemovingPlayers(prev => new Set(prev).add(player.id));
+                            removePlayerFromTeam.mutate(player.id, {
+                              onSettled: () => {
+                                setRemovingPlayers(prev => {
+                                  const newSet = new Set(prev);
+                                  newSet.delete(player.id);
+                                  return newSet;
+                                });
+                              }
+                            });
+                          }}
+                          disabled={removingPlayers.has(player.id) || removePlayerFromTeam.isPending}
                           className="text-red-600 hover:text-red-700 disabled:opacity-50"
                         >
                           <UserMinus className="h-4 w-4 mr-1" />
-                          {removingPlayers.has(player.id) ? 'Removing...' : 'Remove'}
+                          {removingPlayers.has(player.id) || removePlayerFromTeam.isPending ? 'Removing...' : 'Remove'}
                         </Button>
                       }
                     />
