@@ -130,55 +130,15 @@ export default function Players() {
     },
   });
 
-  // Track which players are being removed
-  const [removingPlayers, setRemovingPlayers] = useState<Set<number>>(new Set());
-
-  // Remove player from team mutation with proper state management
-  const removePlayerFromTeam = useMutation({
-    mutationFn: async (playerId: number) => {
-      // Prevent duplicate requests
-      if (removingPlayers.has(playerId)) {
-        throw new Error('Player removal already in progress');
-      }
-      
-      setRemovingPlayers(prev => new Set(prev).add(playerId));
-      
-      try {
-        const response = await apiClient.delete(`/api/teams/${teamId}/players/${playerId}`);
-        return response;
-      } finally {
-        // Always clear the removing state
-        setRemovingPlayers(prev => {
-          const newSet = new Set(prev);
-          newSet.delete(playerId);
-          return newSet;
-        });
-      }
-    },
-    onSuccess: () => {
-      // Invalidate relevant queries to refresh the UI
-      queryClient.invalidateQueries({ queryKey: ['team-players', teamId] });
-      queryClient.invalidateQueries({ queryKey: ['unassigned-players', activeSeason?.id] });
-      queryClient.invalidateQueries({ queryKey: ['players', currentClub?.id] });
-      
-      toast({ title: 'Success', description: 'Player removed from team' });
-    },
-    onError: (error: any) => {
-      // Handle the case where player was already removed
-      if (error.message?.includes('not found') || error.message?.includes('404')) {
-        toast({ title: 'Success', description: 'Player was already removed from team' });
-        
-        // Still refresh the UI to show current state
-        queryClient.invalidateQueries({ queryKey: ['team-players', teamId] });
-        queryClient.invalidateQueries({ queryKey: ['unassigned-players', activeSeason?.id] });
-      } else {
-        toast({ 
-          title: 'Error', 
-          description: `Failed to remove player: ${error.message}`, 
-          variant: 'destructive' 
-        });
-      }
-    },
+  // Remove player from team using standardized mutation hook
+  const { deleteMutation: removePlayerFromTeam } = useCrudMutations({
+    entityName: 'Player',
+    baseEndpoint: `/api/teams/${teamId}/players`,
+    invalidatePatterns: [
+      ['team-players', teamId],
+      ['unassigned-players', activeSeason?.id],
+      ['players', currentClub?.id]
+    ]
   });
 
   const isLoading = teamId 
@@ -261,11 +221,11 @@ export default function Players() {
                           variant="outline"
                           size="sm"
                           onClick={() => removePlayerFromTeam.mutate(player.id)}
-                          disabled={removingPlayers.has(player.id) || removePlayerFromTeam.isPending}
+                          disabled={removePlayerFromTeam.isPending}
                           className="text-red-600 hover:text-red-700 disabled:opacity-50"
                         >
                           <UserMinus className="h-4 w-4 mr-1" />
-                          {removingPlayers.has(player.id) ? 'Removing...' : 'Remove'}
+                          {removePlayerFromTeam.isPending ? 'Removing...' : 'Remove'}
                         </Button>
                       }
                     />

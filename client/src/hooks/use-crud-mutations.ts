@@ -74,6 +74,8 @@ export function useCrudMutations<T extends { id?: number }>({
         invalidatePatterns
       );
     },
+    // Prevent duplicate requests for the same ID
+    mutationKey: [baseEndpoint, 'delete'],
     onSuccess: () => {
       toast({
         title: "Success",
