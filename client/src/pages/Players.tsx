@@ -226,10 +226,10 @@ export default function Players() {
                           size="sm"
                           onClick={() => removePlayerFromTeam.mutate(player.id)}
                           disabled={removePlayerFromTeam.isPending}
-                          className="text-red-600 hover:text-red-700"
+                          className="text-red-600 hover:text-red-700 disabled:opacity-50"
                         >
                           <UserMinus className="h-4 w-4 mr-1" />
-                          Remove
+                          {removePlayerFromTeam.isPending ? 'Removing...' : 'Remove'}
                         </Button>
                       }
                     />
