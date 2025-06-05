@@ -11,8 +11,8 @@ import { useClub } from '../contexts/ClubContext';
 
 // Get current club ID for requests
 function getCurrentClubId(): string | null {
-  // Try to get from localStorage first
-  const savedClubId = localStorage.getItem('current-club-id');
+  // Try to get from localStorage first (use consistent key with ClubContext)
+  const savedClubId = localStorage.getItem('currentClubId');
   if (savedClubId) {
     return savedClubId;
   }
