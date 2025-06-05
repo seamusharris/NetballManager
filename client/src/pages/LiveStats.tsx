@@ -845,8 +845,7 @@ export default function LiveStats() {
 
   // Loading state
   if (gameLoading || rostersLoading || statsLoading || playersLoading) {
-    return (
-      <div className="container py-6">
+    return (<div className="container py-6">
         <h1 className="text-2xl font-bold mb-4">Loading game statistics...</h1>
         <p>Please wait while we load the game data.</p>
       </div>
@@ -880,7 +879,7 @@ export default function LiveStats() {
   }
 
   // Error state - game is a forfeit
-  if (game.status ==='forfeit') {
+  if (game.status === 'forfeit') {
     return (
       <div className="container py-6">
         <h1 className="text-2xl font-bold mb-4">Cannot edit statistics</h1>
