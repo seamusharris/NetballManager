@@ -20,13 +20,17 @@ interface UseCrudMutationsOptions {
 export function useCrudMutations<T extends { id?: number }>({
   entityName,
   baseEndpoint,
-  invalidatePatterns,
-  onSuccess,
-  onError
-}: CrudMutationOptions<T>) {
+  invalidatePatterns = [],
+  mutationOptions = {},
+  onDeleteError,
+  onCreateError,
+  onUpdateError
+}: UseCrudMutationsOptions) {
   const { toast } = useToast();
 
   const createMutation = useMutation({
+    retry: mutationOptions.retry ?? false,
+    networkMode: mutationOptions.networkMode ?? 'online',
     mutationFn: async (data: Omit<T, 'id'>) => {
       return mutateWithInvalidation(
         () => apiClient.post<T>(baseEndpoint, data),
@@ -38,19 +42,23 @@ export function useCrudMutations<T extends { id?: number }>({
         title: "Success",
         description: `${entityName} created successfully`,
       });
-      onSuccess?.(data);
     },
     onError: (error: Error) => {
-      toast({
-        title: "Error",
-        description: `Failed to create ${entityName.toLowerCase()}: ${error.message}`,
-        variant: "destructive",
-      });
-      onError?.(error);
+      if (onCreateError) {
+        onCreateError(error);
+      } else {
+        toast({
+          title: "Error",
+          description: `Failed to create ${entityName.toLowerCase()}: ${error.message}`,
+          variant: "destructive",
+        });
+      }
     }
   });
 
   const updateMutation = useMutation({
+    retry: mutationOptions.retry ?? false,
+    networkMode: mutationOptions.networkMode ?? 'online',
     mutationFn: async ({ id, ...data }: T & { id: number }) => {
       return mutateWithInvalidation(
         () => apiClient.patch<T>(`${baseEndpoint}/${id}`, data),
@@ -62,19 +70,24 @@ export function useCrudMutations<T extends { id?: number }>({
         title: "Success",
         description: `${entityName} updated successfully`,
       });
-      onSuccess?.(data);
     },
     onError: (error: Error) => {
-      toast({
-        title: "Error",
-        description: `Failed to update ${entityName.toLowerCase()}: ${error.message}`,
-        variant: "destructive",
-      });
-      onError?.(error);
+      if (onUpdateError) {
+        onUpdateError(error);
+      } else {
+        toast({
+          title: "Error",
+          description: `Failed to update ${entityName.toLowerCase()}: ${error.message}`,
+          variant: "destructive",
+        });
+      }
     }
   });
 
   const deleteMutation = useMutation({
+    mutationKey: mutationOptions.mutationKey ? (id: number) => mutationOptions.mutationKey!(id) : undefined,
+    retry: mutationOptions.retry ?? false,
+    networkMode: mutationOptions.networkMode ?? 'online',
     mutationFn: async (id: number) => {
       return mutateWithInvalidation(
         () => apiClient.delete(`${baseEndpoint}/${id}`),
@@ -84,26 +97,27 @@ export function useCrudMutations<T extends { id?: number }>({
     onSuccess: () => {
       toast({
         title: "Success",
-        description: `${entityName} deleted successfully`,
+        description: `${entityName} removed successfully`,
       });
-      onSuccess?.(undefined as any);
     },
     onError: (error: Error) => {
-      // Handle "not found" errors gracefully
+      // Handle "not found" errors gracefully - this is common in React Strict Mode
       if (error.message.includes("not found") || error.message.includes("404")) {
         toast({
           title: "Success", 
           description: `${entityName} was already removed`,
         });
-        // Still refresh the UI to show current state
-        onSuccess?.(undefined as any);
       } else {
-        toast({
-          title: "Error",
-          description: `Failed to delete ${entityName.toLowerCase()}: ${error.message}`,
-          variant: "destructive",
-        });
-        onError?.(error);
+        // Use custom error handler if provided
+        if (onDeleteError) {
+          onDeleteError(error);
+        } else {
+          toast({
+            title: "Error",
+            description: `Failed to remove ${entityName.toLowerCase()}: ${error.message}`,
+            variant: "destructive",
+          });
+        }
       }
     }
   });
