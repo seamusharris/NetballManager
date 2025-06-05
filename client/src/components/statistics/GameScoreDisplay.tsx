@@ -61,6 +61,20 @@ export function GameScoreDisplay({ gameId, compact = false, preloadedStats, fall
       );
     }
     
+    // For any other stat-related errors on completed games, also show dash
+    if (error.message?.toLowerCase().includes('no stats') || 
+        error.message?.toLowerCase().includes('stats not found')) {
+      return compact ? (
+        <div className="text-muted-foreground">
+          —
+        </div>
+      ) : (
+        <div className="text-muted-foreground">
+          No scores recorded
+        </div>
+      );
+    }
+    
     return compact ? (
       <div className="text-destructive">
         Score Error
