@@ -225,7 +225,35 @@ export default function LiveStats() {
     queryFn: () => apiClient.get('/api/players'),
   });
 
-  // This mutation is only used by the saveAllStats function - not for individual stat updates
+  // Save all stats mutation - only used when "Save All Stats" button is clicked
+  const { mutate: saveGameStat } = useMutation({
+    mutationFn: async (statData: {gameId: number, position: Position, quarter: number, stats: any}) => {
+      // Check if this is an existing stat that we want to update
+      const existingStat = existingStats?.find(s => 
+        s.position === statData.position && s.quarter === statData.quarter
+      );
+
+      if (existingStat) {
+        // Update existing stat
+        return apiClient.patch(`/api/games/${statData.gameId}/stats/${existingStat.id}`, statData.stats);
+      } else {
+        // Create new stat
+        return apiClient.post(`/api/games/${statData.gameId}/stats`, {
+          gameId: statData.gameId,
+          position: statData.position,
+          quarter: statData.quarter,
+          ...statData.stats
+        });
+      }
+    },
+    onSuccess: () => {
+      // Refetch stats after successful save
+      refetchStats();
+      clearGameCache(gameId);
+      queryClient.invalidateQueries({ queryKey: ['/api/games', gameId, 'stats'] });
+      queryClient.invalidateQueries({ queryKey: [`/api/games/${gameId}/stats`] });
+    }
+  });
 
   // Check if game is forfeit and redirect if needed
   useEffect(() => {
@@ -389,7 +417,7 @@ export default function LiveStats() {
     });
   };
 
-  // Record a new stat
+  // Record a new stat (local only - no API call)
   const recordStat = (playerId: number, stat: StatType, value: number = 1) => {
     // Save current state for undo
     setUndoStack([...undoStack, JSON.parse(JSON.stringify(liveStats))]);
