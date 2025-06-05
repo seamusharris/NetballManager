@@ -14,6 +14,7 @@ import { getWinLoseLabel } from '@/lib/utils';
 import { useState, useEffect } from 'react';
 import { PlayerCombinationAnalysis } from '@/components/dashboard/PlayerCombinationAnalysis';
 import { TeamPositionAnalysis } from '@/components/dashboard/TeamPositionAnalysis';
+import { TeamSwitcher } from '@/components/layout/TeamSwitcher';
 
 interface OpponentTeamData {
   teamId: number;
@@ -608,6 +609,9 @@ export default function TeamAnalysis() {
                 </span>
               )}
             </p>
+          </div>
+          <div className="flex items-center gap-4">
+            <TeamSwitcher mode="optional" />
           </div>
         </div>
 
