@@ -129,19 +129,41 @@ export default function Players() {
     },
   });
 
+  // Track which players are being removed
+  const [removingPlayers, setRemovingPlayers] = useState<Set<number>>(new Set());
+
   // Remove player from team mutation
   const removePlayerFromTeam = useMutation({
     mutationFn: async (playerId: number) => {
-      const response = await apiClient.delete(`/api/teams/${teamId}/players/${playerId}`);
-      return response;
+      setRemovingPlayers(prev => new Set(prev).add(playerId));
+      try {
+        const response = await apiClient.delete(`/api/teams/${teamId}/players/${playerId}`);
+        return response;
+      } catch (error) {
+        // Handle 404 errors gracefully - player already removed
+        if (error instanceof Error && error.message.includes('Player not found')) {
+          return { success: true }; // Treat as success
+        }
+        throw error;
+      } finally {
+        setRemovingPlayers(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(playerId);
+          return newSet;
+        });
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['team-players', teamId] });
       queryClient.invalidateQueries({ queryKey: ['unassigned-players', activeSeason?.id] });
       toast({ title: 'Success', description: 'Player removed from team' });
     },
-    onError: () => {
-      toast({ title: 'Error', description: 'Failed to remove player from team', variant: 'destructive' });
+    onError: (error: Error) => {
+      toast({ 
+        title: 'Error', 
+        description: `Failed to remove player from team: ${error.message}`, 
+        variant: 'destructive' 
+      });
     },
   });
 
@@ -225,11 +247,11 @@ export default function Players() {
                           variant="outline"
                           size="sm"
                           onClick={() => removePlayerFromTeam.mutate(player.id)}
-                          disabled={removePlayerFromTeam.isPending}
+                          disabled={removingPlayers.has(player.id)}
                           className="text-red-600 hover:text-red-700 disabled:opacity-50"
                         >
                           <UserMinus className="h-4 w-4 mr-1" />
-                          {removePlayerFromTeam.isPending ? 'Removing...' : 'Remove'}
+                          {removingPlayers.has(player.id) ? 'Removing...' : 'Remove'}
                         </Button>
                       }
                     />
