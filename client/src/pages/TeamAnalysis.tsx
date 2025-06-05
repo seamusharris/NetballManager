@@ -153,9 +153,18 @@ export default function TeamAnalysis() {
   const { currentClub, currentClubId, isLoading: clubLoading } = useClub();
   const [, navigate] = useLocation();
 
+  // Get current team context for filtering
+  const currentTeamId = localStorage.getItem('currentTeamId');
+
   const { data: games = [], isLoading: isLoadingGames } = useQuery<any[]>({
-    queryKey: ['games', currentClubId],
-    queryFn: () => apiClient.get('/api/games'),
+    queryKey: ['games', currentClubId, currentTeamId],
+    queryFn: () => {
+      const headers: Record<string, string> = {};
+      if (currentTeamId) {
+        headers['x-current-team-id'] = currentTeamId;
+      }
+      return apiClient.get('/api/games', { headers });
+    },
     enabled: !!currentClubId,
   });
 
@@ -593,6 +602,11 @@ export default function TeamAnalysis() {
             </h1>
             <p className="text-lg text-gray-600">
               Comprehensive performance analysis and advanced team metrics
+              {currentTeamId && (
+                <span className="ml-2 text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                  Filtered by selected team
+                </span>
+              )}
             </p>
           </div>
         </div>
