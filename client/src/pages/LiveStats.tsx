@@ -845,8 +845,7 @@ export default function LiveStats() {
           missedGoals: existingStat.missedGoals || 0,
           rebounds: existingStat.rebounds || 0,
           intercepts: existingStat.intercepts || 0,
-```text
-badPass: existingStat.badPass || 0,
+          badPass: existingStat.badPass || 0,
           handlingError: existingStat.handlingError || 0,
           pickUp: existingStat.pickUp || 0,
           infringement: existingStat.infringement || 0
