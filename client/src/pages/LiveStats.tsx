@@ -225,7 +225,7 @@ export default function LiveStats() {
     queryFn: () => apiClient.get('/api/players'),
   });
 
-  // Create or update game stats using standardized API endpoint pattern
+  // This mutation is now only used by the saveAllStats function - not for individual stat updates
   const { mutate: saveGameStat } = useMutation({
     mutationFn: (gameStat: Partial<GameStat>) => {
       // Check if this is an existing stat that we want to update
@@ -242,13 +242,9 @@ export default function LiveStats() {
       }
     },
     onSuccess: () => {
-      // Immediately refetch stats to update the UI
+      // Only refetch after bulk save
       refetchStats();
-
-      // Clear cache to ensure fresh data
       clearGameCache(gameId);
-
-      // Invalidate related queries
       queryClient.invalidateQueries({ queryKey: ['/api/games', gameId, 'stats'] });
       queryClient.invalidateQueries({ queryKey: [`/api/games/${gameId}/stats`] });
     }
@@ -664,61 +660,37 @@ export default function LiveStats() {
     saveAllStatsMutation.mutate();
   };
 
-  // Get quarter total for a specific stat - prioritizes live stats for immediate updates
+  // Get quarter total for a specific stat - always use live stats for immediate updates
   const getQuarterTotal = (stat: StatType): number => {
     let total = 0;
 
-    // Always use liveStats first for immediate updates
-    if (Object.keys(liveStats).length > 0) {
-      Object.keys(liveStats).forEach(playerIdStr => {
-        const playerId = parseInt(playerIdStr);
-        const playerStats = liveStats[playerId]?.[currentQuarter];
-        if (playerStats && playerStats[stat] !== undefined) {
-          total += playerStats[stat] || 0;
-        }
-      });
-      return total;
-    }
-
-    // Fallback to existingStats only if liveStats is empty
-    if (existingStats) {
-      existingStats.filter(s => s.quarter === currentQuarter).forEach(statEntry => {
-        if (statEntry[stat] !== undefined) {
-          total += statEntry[stat] || 0;
-        }
-      });
-    }
+    // Use liveStats if available
+    Object.keys(liveStats).forEach(playerIdStr => {
+      const playerId = parseInt(playerIdStr);
+      const playerStats = liveStats[playerId]?.[currentQuarter];
+      if (playerStats && playerStats[stat] !== undefined) {
+        total += playerStats[stat] || 0;
+      }
+    });
 
     return total;
   };
 
-  // Get game total for a specific stat - prioritizes live stats for immediate updates
+  // Get game total for a specific stat - always use live stats for immediate updates
   const getGameTotal = (stat: StatType): number => {
     let total = 0;
 
-    // Always use liveStats first for immediate updates
-    if (Object.keys(liveStats).length > 0) {
-      Object.keys(liveStats).forEach(playerIdStr => {
-        const playerId = parseInt(playerIdStr);
+    // Use liveStats for all calculations
+    Object.keys(liveStats).forEach(playerIdStr => {
+      const playerId = parseInt(playerIdStr);
 
-        [1, 2, 3, 4].forEach(quarter => {
-          const playerStats = liveStats[playerId]?.[quarter];
-          if (playerStats && playerStats[stat] !== undefined) {
-            total += playerStats[stat] || 0;
-          }
-        });
-      });
-      return total;
-    }
-
-    // Fallback to existingStats only if liveStats is empty
-    if (existingStats) {
-      existingStats.forEach(statEntry => {
-        if (statEntry[stat] !== undefined) {
-          total += statEntry[stat] || 0;
+      [1, 2, 3, 4].forEach(quarter => {
+        const playerStats = liveStats[playerId]?.[quarter];
+        if (playerStats && playerStats[stat] !== undefined) {
+          total += playerStats[stat] || 0;
         }
       });
-    }
+    });
 
     return total;
   };
@@ -780,7 +752,7 @@ export default function LiveStats() {
     // Function to handle stat updates
     const handleStatChange = (change: number) => {
       if (playerId === 0 && position) {
-        // This is an unassigned position - update stats directly in database
+        // This is an unassigned position - update stats locally only
         updatePositionStat(position, stat, currentValue + change);
       } else {
         // Normal player stat update
@@ -819,93 +791,51 @@ export default function LiveStats() {
     );
   };
 
-  // Function to update stats for a position without a player
-  const updatePositionStat = async (position: Position, statType: StatType, newValue: number) => {
-    try {
-      // Ensure newValue is at least 0
-      const sanitizedValue = Math.max(0, newValue);
+  // Function to update stats locally (no server save until "Save All Stats" is clicked)
+  const updatePositionStat = (position: Position, statType: StatType, newValue: number) => {
+    // Save current state for undo
+    setUndoStack([...undoStack, JSON.parse(JSON.stringify(liveStats))]);
+    setRedoStack([]);
 
-      // Find existing stat for this position and quarter
-      const existingStat = existingStats?.find(
-        (stat: GameStat) => stat.position === position && stat.quarter === currentQuarter
+    // Ensure newValue is at least 0
+    const sanitizedValue = Math.max(0, newValue);
+
+    setLiveStats(prev => {
+      const newStats = JSON.parse(JSON.stringify(prev));
+
+      // Find a player assigned to this position, or create a placeholder entry
+      const playerRoster = rosters?.find(r => 
+        r.quarter === currentQuarter && r.position === position
       );
 
-      if (existingStat) {
-        // Update existing stat
-        console.log(`Updating stat for position ${position} in Q${currentQuarter}: ${statType} = ${sanitizedValue}`);
+      if (playerRoster) {
+        // Player is assigned to this position
+        const playerId = playerRoster.playerId;
 
-        // Create update payload - create a new object to avoid mutation issues
-        const updatePayload = {
-          id: existingStat.id,
-          gameId,
-          position,
-          quarter: currentQuarter,
-          goalsFor: existingStat.goalsFor || 0,
-          goalsAgainst: existingStat.goalsAgainst || 0,
-          missedGoals: existingStat.missedGoals || 0,
-          rebounds: existingStat.rebounds || 0,
-          intercepts: existingStat.intercepts || 0,
-          badPass: existingStat.badPass || 0,
-          handlingError: existingStat.handlingError || 0,
-          pickUp: existingStat.pickUp || 0,
-          infringement: existingStat.infringement || 0
-        };
+        if (!newStats[playerId]) {
+          newStats[playerId] = {};
+        }
+        if (!newStats[playerId][currentQuarter]) {
+          newStats[playerId][currentQuarter] = { ...emptyQuarterStats };
+        }
 
-        // Update the specific stat
-        updatePayload[statType] = sanitizedValue;
-
-        // Save to server
-        await saveGameStat(updatePayload);
-
-        // Refresh stats to update UI
-        await refetchStats();
-
-        toast({
-          title: "Statistic updated",
-          description: `Updated ${statLabels[statType]} for ${positionLabels[position]} in Q${currentQuarter}`
-        });
+        newStats[playerId][currentQuarter][statType] = sanitizedValue;
+        newStats[playerId][currentQuarter].position = position;
       } else {
-        // Create new stat
-        console.log(`Creating new stat for position ${position} in Q${currentQuarter}: ${statType} = ${sanitizedValue}`);
+        // No player assigned - use position ID 0 as placeholder
+        if (!newStats[0]) {
+          newStats[0] = {};
+        }
+        if (!newStats[0][currentQuarter]) {
+          newStats[0][currentQuarter] = { ...emptyQuarterStats };
+        }
 
-        // Create base stat object with all stats initialized to 0
-        const newStat = {
-          gameId,
-          position,
-          quarter: currentQuarter,
-          goalsFor: 0,
-          goalsAgainst: 0,
-          missedGoals: 0,
-          rebounds: 0,
-          intercepts: 0,
-          badPass: 0,
-          handlingError: 0,
-          pickUp: 0,
-          infringement: 0
-        };
-
-        // Set the specific stat value
-        newStat[statType] = sanitizedValue;
-
-        // Save to server
-        await saveGameStat(newStat);
-
-        // Refresh stats to update UI
-        await refetchStats();
-
-        toast({
-          title: "Statistic recorded",
-          description: `Recorded ${statLabels[statType]} for ${positionLabels[position]} in Q${currentQuarter}`
-        });
+        newStats[0][currentQuarter][statType] = sanitizedValue;
+        newStats[0][currentQuarter].position = position;
       }
-    } catch (error) {
-      console.error("Error updating position stat:", error);
-      toast({
-        title: "Error",
-        description: "Failed to save statistic. Please try again.",
-        variant: "destructive"
-      });
-    }
+
+      return newStats;
+    });
   };
 
   // Loading state
