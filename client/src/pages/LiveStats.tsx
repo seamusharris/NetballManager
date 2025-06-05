@@ -225,35 +225,7 @@ export default function LiveStats() {
     queryFn: () => apiClient.get('/api/players'),
   });
 
-  // Save all stats mutation - only used when "Save All Stats" button is clicked
-  const { mutate: saveGameStat } = useMutation({
-    mutationFn: async (statData: {gameId: number, position: Position, quarter: number, stats: any}) => {
-      // Check if this is an existing stat that we want to update
-      const existingStat = existingStats?.find(s => 
-        s.position === statData.position && s.quarter === statData.quarter
-      );
-
-      if (existingStat) {
-        // Update existing stat
-        return apiClient.patch(`/api/games/${statData.gameId}/stats/${existingStat.id}`, statData.stats);
-      } else {
-        // Create new stat
-        return apiClient.post(`/api/games/${statData.gameId}/stats`, {
-          gameId: statData.gameId,
-          position: statData.position,
-          quarter: statData.quarter,
-          ...statData.stats
-        });
-      }
-    },
-    onSuccess: () => {
-      // Refetch stats after successful save
-      refetchStats();
-      clearGameCache(gameId);
-      queryClient.invalidateQueries({ queryKey: ['/api/games', gameId, 'stats'] });
-      queryClient.invalidateQueries({ queryKey: [`/api/games/${gameId}/stats`] });
-    }
-  });
+  
 
   // Check if game is forfeit and redirect if needed
   useEffect(() => {
@@ -419,6 +391,8 @@ export default function LiveStats() {
 
   // Record a new stat (local only - no API call)
   const recordStat = (playerId: number, stat: StatType, value: number = 1) => {
+    console.log(`Recording stat ${stat} for player ${playerId}: ${value > 0 ? 'add' : 'remove'}`);
+    
     // Save current state for undo
     setUndoStack([...undoStack, JSON.parse(JSON.stringify(liveStats))]);
     setRedoStack([]);
@@ -440,13 +414,15 @@ export default function LiveStats() {
 
       // Update the stat
       const currentValue = newStats[playerId][currentQuarter][stat] || 0;
-      newStats[playerId][currentQuarter][stat] = Math.max(0, currentValue + value);
+      const newValue = Math.max(0, currentValue + value);
+      newStats[playerId][currentQuarter][stat] = newValue;
 
       // Store position with the stats
       if (position) {
         newStats[playerId][currentQuarter].position = position;
       }
 
+      console.log(`Updated ${stat} from ${currentValue} to ${newValue} for player ${playerId}`);
       return newStats;
     });
   };
@@ -798,6 +774,8 @@ export default function LiveStats() {
 
   // Function to update stats locally (no server save until "Save All Stats" is clicked)
   const updatePositionStat = (position: Position, statType: StatType, newValue: number) => {
+    console.log(`Updating position stat ${statType} for ${position} to ${newValue}`);
+    
     // Save current state for undo
     setUndoStack([...undoStack, JSON.parse(JSON.stringify(liveStats))]);
     setRedoStack([]);
@@ -826,6 +804,8 @@ export default function LiveStats() {
 
         newStats[playerId][currentQuarter][statType] = sanitizedValue;
         newStats[playerId][currentQuarter].position = position;
+        
+        console.log(`Updated player ${playerId} ${statType} to ${sanitizedValue}`);
       } else {
         // No player assigned - use position ID 0 as placeholder
         if (!newStats[0]) {
@@ -837,6 +817,8 @@ export default function LiveStats() {
 
         newStats[0][currentQuarter][statType] = sanitizedValue;
         newStats[0][currentQuarter].position = position;
+        
+        console.log(`Updated unassigned position ${position} ${statType} to ${sanitizedValue}`);
       }
 
       return newStats;
