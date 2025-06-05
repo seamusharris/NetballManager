@@ -146,23 +146,8 @@ export default function Players() {
       networkMode: 'online', // Only execute when online
       // Add mutation key for better tracking
       mutationKey: (id: number) => ['remove-player-from-team', teamId, id],
-    },
-    // Enhanced error handling for 404s
-    onDeleteError: (error: any) => {
-      if (error.message?.includes('not found') || error.message?.includes('404')) {
-        toast({ title: 'Success', description: 'Player was already removed from team' });
-        // Still invalidate queries to update UI
-        queryClient.invalidateQueries({ queryKey: ['team-players', teamId] });
-        queryClient.invalidateQueries({ queryKey: ['unassigned-players', activeSeason?.id] });
-        queryClient.invalidateQueries({ queryKey: ['players', currentClub?.id] });
-      } else {
-        toast({ 
-          title: 'Error', 
-          description: `Failed to remove player: ${error.message}`, 
-          variant: 'destructive' 
-        });
-      }
     }
+    // Remove custom error handler - let the default CRUD mutations handle 404s properly
   });
 
   const isLoading = teamId 
