@@ -355,12 +355,67 @@ export default function Players() {
         <title>Players | Team Manager</title>
       </Helmet>
 
-      <PlayersList
-        players={players}
-        isLoading={isLoading}
-        onEdit={() => {}} // Placeholder function - edit functionality handled by navigation
-        onDelete={() => {}} // Placeholder function - delete functionality handled elsewhere
-      />
+      <div className="space-y-6">
+        {/* Add Player Button for main players view */}
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Players</h1>
+            <p className="text-lg text-gray-600 mt-1">Manage your club's players</p>
+          </div>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button>
+                <UserPlus className="h-4 w-4 mr-2" />
+                Add New Player
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Add New Player</DialogTitle>
+              </DialogHeader>
+              <PlayerForm
+                onSubmit={async (playerData) => {
+                  try {
+                    // Create the player with club context
+                    const response = await apiClient.post('/api/players', {
+                      ...playerData,
+                      clubId: currentClub?.id
+                    });
+                    const newPlayer = response;
+
+                    // Ensure the player is associated with the current club
+                    if (currentClub?.id && newPlayer.id) {
+                      try {
+                        await apiClient.post(`/api/clubs/${currentClub.id}/players/${newPlayer.id}`, {});
+                        console.log(`Successfully associated player ${newPlayer.id} with club ${currentClub.id}`);
+                      } catch (clubError) {
+                        console.error('Error associating player with club:', clubError);
+                      }
+                    }
+
+                    // Invalidate queries to refresh the UI
+                    queryClient.invalidateQueries({ queryKey: ['players'] });
+                    queryClient.invalidateQueries({ queryKey: ['clubs', currentClub?.id, 'players'] });
+
+                    toast({ title: 'Success', description: 'Player created successfully' });
+                  } catch (error) {
+                    console.error('Error creating player:', error);
+                    toast({ title: 'Error', description: 'Failed to create player', variant: 'destructive' });
+                  }
+                }}
+                isSubmitting={false}
+              />
+            </DialogContent>
+          </Dialog>
+        </div>
+
+        <PlayersList
+          players={players}
+          isLoading={isLoading}
+          onEdit={() => {}} // Placeholder function - edit functionality handled by navigation
+          onDelete={() => {}} // Placeholder function - delete functionality handled elsewhere
+        />
+      </div>
     </>
   );
 }

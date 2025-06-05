@@ -2386,6 +2386,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       `);
       console.log(`Players assigned to season ${seasonId}:`, seasonPlayers.rows.map(r => r.display_name));
 
+      // Debug: Check if we have team_players table entries
+      const teamPlayersCheck = await db.execute(sql`
+        SELECT COUNT(*) as count FROM team_players tp
+        JOIN teams t ON tp.team_id = t.id
+        WHERE t.season_id = ${seasonId}
+      `);
+      console.log(`Team players in season ${seasonId}:`, teamPlayersCheck.rows[0].count);
+
       // Get players from the club who are assigned to this season but not assigned to any team
       const unassignedPlayers = await db.execute(sql`
         SELECT p.id, p.display_name, p.first_name, p.last_name, p.date_of_birth, 
@@ -2424,6 +2432,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }));
 
       console.log(`Found ${mappedPlayers.length} unassigned players for season ${seasonId}:`, mappedPlayers.map(p => ({ id: p.id, name: p.displayName })));
+
+      // If no unassigned players, let's check if it's because all players are assigned to teams
+      // or if there are simply no players in the season
+      if (mappedPlayers.length === 0) {
+        console.log(`No unassigned players found. Checking if this is due to assignments or missing season players...`);
+        
+        // Check all players in season (regardless of team assignment)
+        const allSeasonPlayers = await db.execute(sql`
+          SELECT p.id, p.display_name
+          FROM players p
+          JOIN club_players cp ON p.id = cp.player_id
+          JOIN player_seasons ps ON p.id = ps.player_id
+          WHERE cp.club_id = ${clubId} 
+            AND cp.is_active = true
+            AND p.active = true
+            AND ps.season_id = ${seasonId}
+          ORDER BY p.display_name
+        `);
+        console.log(`Total active players in season ${seasonId} for club ${clubId}:`, allSeasonPlayers.rows.length);
+        console.log(`Season players:`, allSeasonPlayers.rows.map(r => r.display_name));
+      }
+
       console.log(`Final response being sent:`, JSON.stringify(mappedPlayers, null, 2));
       console.log(`=== UNASSIGNED PLAYERS ENDPOINT COMPLETE ===`);
       res.json(mappedPlayers);
