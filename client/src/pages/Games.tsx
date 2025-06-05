@@ -39,9 +39,6 @@ export default function Games() {
   const [editingGame, setEditingGame] = useState<Game | null>(null);
   const [, setLocation] = useLocation();
 
-  // Get current club context
-  const currentClubId = apiClient.getCurrentClubId ? apiClient.getCurrentClubId() : null;
-
   // Fetch games
   const { data: games = [], isLoading: isLoadingGames } = useQuery<any[]>({
     queryKey: ['games', currentClubId, currentTeamId],
