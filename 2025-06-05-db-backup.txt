@@ -1,0 +1,2349 @@
+--
+-- PostgreSQL database dump
+--
+
+-- Dumped from database version 16.9
+-- Dumped by pg_dump version 16.5
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SELECT pg_catalog.set_config('search_path', '', false);
+SET check_function_bodies = false;
+SET xmloption = content;
+SET client_min_messages = warning;
+SET row_security = off;
+
+--
+-- Name: sync_sequence(text); Type: FUNCTION; Schema: public; Owner: neondb_owner
+--
+
+CREATE FUNCTION public.sync_sequence(table_name text) RETURNS void
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+  seq_name text;
+  max_id integer;
+BEGIN
+  EXECUTE format('SELECT MAX(id) FROM %I', table_name) INTO max_id;
+  seq_name := table_name || '_id_seq';
+  IF max_id IS NOT NULL THEN
+    EXECUTE format('SELECT setval(%L, %s)', seq_name, max_id);
+  END IF;
+END;
+$$;
+
+
+ALTER FUNCTION public.sync_sequence(table_name text) OWNER TO neondb_owner;
+
+SET default_tablespace = '';
+
+SET default_table_access_method = heap;
+
+--
+-- Name: club_players; Type: TABLE; Schema: public; Owner: neondb_owner
+--
+
+CREATE TABLE public.club_players (
+    id integer NOT NULL,
+    club_id integer NOT NULL,
+    player_id integer NOT NULL,
+    joined_date date DEFAULT CURRENT_DATE,
+    left_date date,
+    is_active boolean DEFAULT true NOT NULL,
+    notes text,
+    created_at timestamp without time zone DEFAULT now() NOT NULL,
+    updated_at timestamp without time zone DEFAULT now() NOT NULL
+);
+
+
+ALTER TABLE public.club_players OWNER TO neondb_owner;
+
+--
+-- Name: club_players_id_seq; Type: SEQUENCE; Schema: public; Owner: neondb_owner
+--
+
+CREATE SEQUENCE public.club_players_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.club_players_id_seq OWNER TO neondb_owner;
+
+--
+-- Name: club_players_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: neondb_owner
+--
+
+ALTER SEQUENCE public.club_players_id_seq OWNED BY public.club_players.id;
+
+
+--
+-- Name: club_users; Type: TABLE; Schema: public; Owner: neondb_owner
+--
+
+CREATE TABLE public.club_users (
+    id integer NOT NULL,
+    club_id integer NOT NULL,
+    user_id integer NOT NULL,
+    role text NOT NULL,
+    can_manage_players boolean DEFAULT false NOT NULL,
+    can_manage_games boolean DEFAULT false NOT NULL,
+    can_manage_stats boolean DEFAULT false NOT NULL,
+    can_view_other_teams boolean DEFAULT false NOT NULL,
+    is_active boolean DEFAULT true NOT NULL,
+    created_at timestamp without time zone DEFAULT now() NOT NULL
+);
+
+
+ALTER TABLE public.club_users OWNER TO neondb_owner;
+
+--
+-- Name: club_users_id_seq; Type: SEQUENCE; Schema: public; Owner: neondb_owner
+--
+
+CREATE SEQUENCE public.club_users_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.club_users_id_seq OWNER TO neondb_owner;
+
+--
+-- Name: club_users_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: neondb_owner
+--
+
+ALTER SEQUENCE public.club_users_id_seq OWNED BY public.club_users.id;
+
+
+--
+-- Name: clubs; Type: TABLE; Schema: public; Owner: neondb_owner
+--
+
+CREATE TABLE public.clubs (
+    id integer NOT NULL,
+    name text NOT NULL,
+    code text NOT NULL,
+    address text,
+    contact_email text,
+    contact_phone text,
+    logo_url text,
+    primary_color text DEFAULT '#1f2937'::text NOT NULL,
+    secondary_color text DEFAULT '#ffffff'::text NOT NULL,
+    is_active boolean DEFAULT true NOT NULL,
+    created_at timestamp without time zone DEFAULT now() NOT NULL,
+    updated_at timestamp without time zone DEFAULT now() NOT NULL,
+    description text
+);
+
+
+ALTER TABLE public.clubs OWNER TO neondb_owner;
+
+--
+-- Name: clubs_id_seq; Type: SEQUENCE; Schema: public; Owner: neondb_owner
+--
+
+CREATE SEQUENCE public.clubs_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.clubs_id_seq OWNER TO neondb_owner;
+
+--
+-- Name: clubs_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: neondb_owner
+--
+
+ALTER SEQUENCE public.clubs_id_seq OWNED BY public.clubs.id;
+
+
+--
+-- Name: game_permissions; Type: TABLE; Schema: public; Owner: neondb_owner
+--
+
+CREATE TABLE public.game_permissions (
+    id integer NOT NULL,
+    game_id integer NOT NULL,
+    club_id integer NOT NULL,
+    can_edit_stats boolean DEFAULT false NOT NULL,
+    can_view_detailed_stats boolean DEFAULT true NOT NULL
+);
+
+
+ALTER TABLE public.game_permissions OWNER TO neondb_owner;
+
+--
+-- Name: game_permissions_id_seq; Type: SEQUENCE; Schema: public; Owner: neondb_owner
+--
+
+CREATE SEQUENCE public.game_permissions_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.game_permissions_id_seq OWNER TO neondb_owner;
+
+--
+-- Name: game_permissions_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: neondb_owner
+--
+
+ALTER SEQUENCE public.game_permissions_id_seq OWNED BY public.game_permissions.id;
+
+
+--
+-- Name: game_stats; Type: TABLE; Schema: public; Owner: neondb_owner
+--
+
+CREATE TABLE public.game_stats (
+    id integer NOT NULL,
+    game_id integer NOT NULL,
+    quarter integer NOT NULL,
+    goals_for integer DEFAULT 0 NOT NULL,
+    goals_against integer DEFAULT 0 NOT NULL,
+    missed_goals integer DEFAULT 0 NOT NULL,
+    rebounds integer DEFAULT 0 NOT NULL,
+    intercepts integer DEFAULT 0 NOT NULL,
+    bad_pass integer DEFAULT 0 NOT NULL,
+    handling_error integer DEFAULT 0 NOT NULL,
+    pick_up integer DEFAULT 0 NOT NULL,
+    infringement integer DEFAULT 0 NOT NULL,
+    rating integer,
+    "position" text NOT NULL
+);
+
+
+ALTER TABLE public.game_stats OWNER TO neondb_owner;
+
+--
+-- Name: game_stats_id_seq; Type: SEQUENCE; Schema: public; Owner: neondb_owner
+--
+
+CREATE SEQUENCE public.game_stats_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.game_stats_id_seq OWNER TO neondb_owner;
+
+--
+-- Name: game_stats_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: neondb_owner
+--
+
+ALTER SEQUENCE public.game_stats_id_seq OWNED BY public.game_stats.id;
+
+
+--
+-- Name: game_statuses; Type: TABLE; Schema: public; Owner: neondb_owner
+--
+
+CREATE TABLE public.game_statuses (
+    id integer NOT NULL,
+    name text NOT NULL,
+    display_name text NOT NULL,
+    points integer DEFAULT 0 NOT NULL,
+    opponent_points integer DEFAULT 0 NOT NULL,
+    is_completed boolean DEFAULT false NOT NULL,
+    allows_statistics boolean DEFAULT true NOT NULL,
+    requires_opponent boolean DEFAULT true NOT NULL,
+    color_class text,
+    sort_order integer DEFAULT 0 NOT NULL,
+    is_active boolean DEFAULT true NOT NULL,
+    created_at timestamp without time zone DEFAULT now() NOT NULL,
+    updated_at timestamp without time zone DEFAULT now() NOT NULL,
+    team_goals integer,
+    opponent_goals integer
+);
+
+
+ALTER TABLE public.game_statuses OWNER TO neondb_owner;
+
+--
+-- Name: game_statuses_id_seq; Type: SEQUENCE; Schema: public; Owner: neondb_owner
+--
+
+CREATE SEQUENCE public.game_statuses_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.game_statuses_id_seq OWNER TO neondb_owner;
+
+--
+-- Name: game_statuses_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: neondb_owner
+--
+
+ALTER SEQUENCE public.game_statuses_id_seq OWNED BY public.game_statuses.id;
+
+
+--
+-- Name: games; Type: TABLE; Schema: public; Owner: neondb_owner
+--
+
+CREATE TABLE public.games (
+    id integer NOT NULL,
+    date text NOT NULL,
+    "time" text NOT NULL,
+    round text,
+    season_id integer,
+    notes text,
+    award_winner_id integer,
+    status_id integer,
+    home_team_id integer NOT NULL,
+    away_team_id integer NOT NULL,
+    is_inter_club boolean DEFAULT false NOT NULL,
+    venue text
+);
+
+
+ALTER TABLE public.games OWNER TO neondb_owner;
+
+--
+-- Name: games_id_seq; Type: SEQUENCE; Schema: public; Owner: neondb_owner
+--
+
+CREATE SEQUENCE public.games_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.games_id_seq OWNER TO neondb_owner;
+
+--
+-- Name: games_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: neondb_owner
+--
+
+ALTER SEQUENCE public.games_id_seq OWNED BY public.games.id;
+
+
+--
+-- Name: opponents; Type: TABLE; Schema: public; Owner: neondb_owner
+--
+
+CREATE TABLE public.opponents (
+    id integer NOT NULL,
+    team_name text NOT NULL,
+    primary_contact text,
+    contact_info text,
+    primary_color text,
+    secondary_color text,
+    notes text
+);
+
+
+ALTER TABLE public.opponents OWNER TO neondb_owner;
+
+--
+-- Name: opponents_id_seq; Type: SEQUENCE; Schema: public; Owner: neondb_owner
+--
+
+CREATE SEQUENCE public.opponents_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.opponents_id_seq OWNER TO neondb_owner;
+
+--
+-- Name: opponents_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: neondb_owner
+--
+
+ALTER SEQUENCE public.opponents_id_seq OWNED BY public.opponents.id;
+
+
+--
+-- Name: player_availability; Type: TABLE; Schema: public; Owner: neondb_owner
+--
+
+CREATE TABLE public.player_availability (
+    id integer NOT NULL,
+    game_id integer NOT NULL,
+    player_id integer NOT NULL,
+    is_available boolean DEFAULT true NOT NULL,
+    created_at timestamp without time zone DEFAULT now() NOT NULL,
+    updated_at timestamp without time zone DEFAULT now() NOT NULL
+);
+
+
+ALTER TABLE public.player_availability OWNER TO neondb_owner;
+
+--
+-- Name: player_availability_id_seq; Type: SEQUENCE; Schema: public; Owner: neondb_owner
+--
+
+CREATE SEQUENCE public.player_availability_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.player_availability_id_seq OWNER TO neondb_owner;
+
+--
+-- Name: player_availability_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: neondb_owner
+--
+
+ALTER SEQUENCE public.player_availability_id_seq OWNED BY public.player_availability.id;
+
+
+--
+-- Name: player_borrowing; Type: TABLE; Schema: public; Owner: neondb_owner
+--
+
+CREATE TABLE public.player_borrowing (
+    id integer NOT NULL,
+    game_id integer NOT NULL,
+    player_id integer NOT NULL,
+    borrowing_team_id integer NOT NULL,
+    lending_team_id integer NOT NULL,
+    approved_by_lending_club boolean DEFAULT false NOT NULL,
+    approved_by_borrowing_club boolean DEFAULT false NOT NULL,
+    jersey_number integer,
+    notes text,
+    created_at timestamp without time zone DEFAULT now() NOT NULL
+);
+
+
+ALTER TABLE public.player_borrowing OWNER TO neondb_owner;
+
+--
+-- Name: player_borrowing_id_seq; Type: SEQUENCE; Schema: public; Owner: neondb_owner
+--
+
+CREATE SEQUENCE public.player_borrowing_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.player_borrowing_id_seq OWNER TO neondb_owner;
+
+--
+-- Name: player_borrowing_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: neondb_owner
+--
+
+ALTER SEQUENCE public.player_borrowing_id_seq OWNED BY public.player_borrowing.id;
+
+
+--
+-- Name: player_seasons; Type: TABLE; Schema: public; Owner: neondb_owner
+--
+
+CREATE TABLE public.player_seasons (
+    id integer NOT NULL,
+    player_id integer NOT NULL,
+    season_id integer NOT NULL,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+
+ALTER TABLE public.player_seasons OWNER TO neondb_owner;
+
+--
+-- Name: player_seasons_id_seq; Type: SEQUENCE; Schema: public; Owner: neondb_owner
+--
+
+CREATE SEQUENCE public.player_seasons_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.player_seasons_id_seq OWNER TO neondb_owner;
+
+--
+-- Name: player_seasons_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: neondb_owner
+--
+
+ALTER SEQUENCE public.player_seasons_id_seq OWNED BY public.player_seasons.id;
+
+
+--
+-- Name: players; Type: TABLE; Schema: public; Owner: neondb_owner
+--
+
+CREATE TABLE public.players (
+    id integer NOT NULL,
+    display_name text NOT NULL,
+    first_name text NOT NULL,
+    last_name text NOT NULL,
+    date_of_birth text,
+    position_preferences json NOT NULL,
+    active boolean DEFAULT true NOT NULL,
+    avatar_color text DEFAULT 'bg-blue-600'::text NOT NULL
+);
+
+
+ALTER TABLE public.players OWNER TO neondb_owner;
+
+--
+-- Name: players_id_seq; Type: SEQUENCE; Schema: public; Owner: neondb_owner
+--
+
+CREATE SEQUENCE public.players_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.players_id_seq OWNER TO neondb_owner;
+
+--
+-- Name: players_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: neondb_owner
+--
+
+ALTER SEQUENCE public.players_id_seq OWNED BY public.players.id;
+
+
+--
+-- Name: rosters; Type: TABLE; Schema: public; Owner: neondb_owner
+--
+
+CREATE TABLE public.rosters (
+    id integer NOT NULL,
+    game_id integer NOT NULL,
+    quarter integer NOT NULL,
+    "position" text NOT NULL,
+    player_id integer NOT NULL
+);
+
+
+ALTER TABLE public.rosters OWNER TO neondb_owner;
+
+--
+-- Name: rosters_id_seq; Type: SEQUENCE; Schema: public; Owner: neondb_owner
+--
+
+CREATE SEQUENCE public.rosters_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.rosters_id_seq OWNER TO neondb_owner;
+
+--
+-- Name: rosters_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: neondb_owner
+--
+
+ALTER SEQUENCE public.rosters_id_seq OWNED BY public.rosters.id;
+
+
+--
+-- Name: seasons; Type: TABLE; Schema: public; Owner: neondb_owner
+--
+
+CREATE TABLE public.seasons (
+    id integer NOT NULL,
+    name text NOT NULL,
+    start_date date NOT NULL,
+    end_date date NOT NULL,
+    is_active boolean DEFAULT false NOT NULL,
+    type text,
+    year integer NOT NULL,
+    display_order integer DEFAULT 0 NOT NULL
+);
+
+
+ALTER TABLE public.seasons OWNER TO neondb_owner;
+
+--
+-- Name: seasons_id_seq; Type: SEQUENCE; Schema: public; Owner: neondb_owner
+--
+
+CREATE SEQUENCE public.seasons_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.seasons_id_seq OWNER TO neondb_owner;
+
+--
+-- Name: seasons_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: neondb_owner
+--
+
+ALTER SEQUENCE public.seasons_id_seq OWNED BY public.seasons.id;
+
+
+--
+-- Name: team_players; Type: TABLE; Schema: public; Owner: neondb_owner
+--
+
+CREATE TABLE public.team_players (
+    id integer NOT NULL,
+    team_id integer NOT NULL,
+    player_id integer NOT NULL,
+    is_regular boolean DEFAULT true NOT NULL,
+    jersey_number integer,
+    position_preferences json,
+    created_at timestamp without time zone DEFAULT now() NOT NULL
+);
+
+
+ALTER TABLE public.team_players OWNER TO neondb_owner;
+
+--
+-- Name: team_players_id_seq; Type: SEQUENCE; Schema: public; Owner: neondb_owner
+--
+
+CREATE SEQUENCE public.team_players_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.team_players_id_seq OWNER TO neondb_owner;
+
+--
+-- Name: team_players_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: neondb_owner
+--
+
+ALTER SEQUENCE public.team_players_id_seq OWNED BY public.team_players.id;
+
+
+--
+-- Name: teams; Type: TABLE; Schema: public; Owner: neondb_owner
+--
+
+CREATE TABLE public.teams (
+    id integer NOT NULL,
+    club_id integer NOT NULL,
+    season_id integer NOT NULL,
+    name text NOT NULL,
+    division text,
+    is_active boolean DEFAULT true NOT NULL,
+    created_at timestamp without time zone DEFAULT now() NOT NULL,
+    updated_at timestamp without time zone DEFAULT now() NOT NULL
+);
+
+
+ALTER TABLE public.teams OWNER TO neondb_owner;
+
+--
+-- Name: teams_id_seq; Type: SEQUENCE; Schema: public; Owner: neondb_owner
+--
+
+CREATE SEQUENCE public.teams_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.teams_id_seq OWNER TO neondb_owner;
+
+--
+-- Name: teams_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: neondb_owner
+--
+
+ALTER SEQUENCE public.teams_id_seq OWNED BY public.teams.id;
+
+
+--
+-- Name: users; Type: TABLE; Schema: public; Owner: neondb_owner
+--
+
+CREATE TABLE public.users (
+    id integer NOT NULL,
+    username text NOT NULL,
+    password text NOT NULL
+);
+
+
+ALTER TABLE public.users OWNER TO neondb_owner;
+
+--
+-- Name: users_id_seq; Type: SEQUENCE; Schema: public; Owner: neondb_owner
+--
+
+CREATE SEQUENCE public.users_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.users_id_seq OWNER TO neondb_owner;
+
+--
+-- Name: users_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: neondb_owner
+--
+
+ALTER SEQUENCE public.users_id_seq OWNED BY public.users.id;
+
+
+--
+-- Name: club_players id; Type: DEFAULT; Schema: public; Owner: neondb_owner
+--
+
+ALTER TABLE ONLY public.club_players ALTER COLUMN id SET DEFAULT nextval('public.club_players_id_seq'::regclass);
+
+
+--
+-- Name: club_users id; Type: DEFAULT; Schema: public; Owner: neondb_owner
+--
+
+ALTER TABLE ONLY public.club_users ALTER COLUMN id SET DEFAULT nextval('public.club_users_id_seq'::regclass);
+
+
+--
+-- Name: clubs id; Type: DEFAULT; Schema: public; Owner: neondb_owner
+--
+
+ALTER TABLE ONLY public.clubs ALTER COLUMN id SET DEFAULT nextval('public.clubs_id_seq'::regclass);
+
+
+--
+-- Name: game_permissions id; Type: DEFAULT; Schema: public; Owner: neondb_owner
+--
+
+ALTER TABLE ONLY public.game_permissions ALTER COLUMN id SET DEFAULT nextval('public.game_permissions_id_seq'::regclass);
+
+
+--
+-- Name: game_stats id; Type: DEFAULT; Schema: public; Owner: neondb_owner
+--
+
+ALTER TABLE ONLY public.game_stats ALTER COLUMN id SET DEFAULT nextval('public.game_stats_id_seq'::regclass);
+
+
+--
+-- Name: game_statuses id; Type: DEFAULT; Schema: public; Owner: neondb_owner
+--
+
+ALTER TABLE ONLY public.game_statuses ALTER COLUMN id SET DEFAULT nextval('public.game_statuses_id_seq'::regclass);
+
+
+--
+-- Name: games id; Type: DEFAULT; Schema: public; Owner: neondb_owner
+--
+
+ALTER TABLE ONLY public.games ALTER COLUMN id SET DEFAULT nextval('public.games_id_seq'::regclass);
+
+
+--
+-- Name: opponents id; Type: DEFAULT; Schema: public; Owner: neondb_owner
+--
+
+ALTER TABLE ONLY public.opponents ALTER COLUMN id SET DEFAULT nextval('public.opponents_id_seq'::regclass);
+
+
+--
+-- Name: player_availability id; Type: DEFAULT; Schema: public; Owner: neondb_owner
+--
+
+ALTER TABLE ONLY public.player_availability ALTER COLUMN id SET DEFAULT nextval('public.player_availability_id_seq'::regclass);
+
+
+--
+-- Name: player_borrowing id; Type: DEFAULT; Schema: public; Owner: neondb_owner
+--
+
+ALTER TABLE ONLY public.player_borrowing ALTER COLUMN id SET DEFAULT nextval('public.player_borrowing_id_seq'::regclass);
+
+
+--
+-- Name: player_seasons id; Type: DEFAULT; Schema: public; Owner: neondb_owner
+--
+
+ALTER TABLE ONLY public.player_seasons ALTER COLUMN id SET DEFAULT nextval('public.player_seasons_id_seq'::regclass);
+
+
+--
+-- Name: players id; Type: DEFAULT; Schema: public; Owner: neondb_owner
+--
+
+ALTER TABLE ONLY public.players ALTER COLUMN id SET DEFAULT nextval('public.players_id_seq'::regclass);
+
+
+--
+-- Name: rosters id; Type: DEFAULT; Schema: public; Owner: neondb_owner
+--
+
+ALTER TABLE ONLY public.rosters ALTER COLUMN id SET DEFAULT nextval('public.rosters_id_seq'::regclass);
+
+
+--
+-- Name: seasons id; Type: DEFAULT; Schema: public; Owner: neondb_owner
+--
+
+ALTER TABLE ONLY public.seasons ALTER COLUMN id SET DEFAULT nextval('public.seasons_id_seq'::regclass);
+
+
+--
+-- Name: team_players id; Type: DEFAULT; Schema: public; Owner: neondb_owner
+--
+
+ALTER TABLE ONLY public.team_players ALTER COLUMN id SET DEFAULT nextval('public.team_players_id_seq'::regclass);
+
+
+--
+-- Name: teams id; Type: DEFAULT; Schema: public; Owner: neondb_owner
+--
+
+ALTER TABLE ONLY public.teams ALTER COLUMN id SET DEFAULT nextval('public.teams_id_seq'::regclass);
+
+
+--
+-- Name: users id; Type: DEFAULT; Schema: public; Owner: neondb_owner
+--
+
+ALTER TABLE ONLY public.users ALTER COLUMN id SET DEFAULT nextval('public.users_id_seq'::regclass);
+
+
+--
+-- Data for Name: club_players; Type: TABLE DATA; Schema: public; Owner: neondb_owner
+--
+
+COPY public.club_players (id, club_id, player_id, joined_date, left_date, is_active, notes, created_at, updated_at) FROM stdin;
+17	54	60	2025-05-30	\N	t	\N	2025-05-30 23:05:39.346476	2025-05-30 23:05:39.346476
+18	54	59	2025-05-30	\N	t	\N	2025-05-30 23:05:49.836068	2025-05-30 23:05:49.836068
+19	54	76	2025-05-31	\N	t	\N	2025-05-31 07:40:22.038701	2025-05-31 07:40:22.038701
+20	54	61	2025-05-31	\N	t	\N	2025-05-31 07:40:34.226426	2025-05-31 07:40:34.226426
+21	54	63	2025-05-31	\N	t	\N	2025-05-31 07:40:52.848928	2025-05-31 07:40:52.848928
+22	54	71	2025-05-31	\N	t	\N	2025-05-31 08:01:09.425546	2025-05-31 08:01:09.425546
+23	54	78	2025-05-31	\N	t	\N	2025-05-31 08:01:23.351731	2025-05-31 08:01:23.351731
+24	54	80	2025-05-31	\N	t	\N	2025-05-31 08:01:36.817772	2025-05-31 08:01:36.817772
+25	54	79	2025-05-31	\N	t	\N	2025-05-31 08:54:02.346893	2025-05-31 08:54:02.346893
+26	54	64	2025-05-31	\N	t	\N	2025-05-31 08:54:11.713931	2025-05-31 08:54:11.713931
+27	54	65	2025-05-31	\N	t	\N	2025-05-31 08:54:21.757239	2025-05-31 08:54:21.757239
+28	54	62	2025-05-31	\N	t	\N	2025-05-31 08:55:53.888299	2025-05-31 08:55:53.888299
+29	54	77	2025-05-31	\N	t	\N	2025-05-31 08:56:03.806518	2025-05-31 08:56:03.806518
+30	54	66	2025-05-31	\N	t	\N	2025-05-31 08:56:14.108228	2025-05-31 08:56:14.108228
+31	54	81	2025-06-04	\N	t	\N	2025-06-04 23:28:02.57869	2025-06-04 23:37:15.61035
+\.
+
+
+--
+-- Data for Name: club_users; Type: TABLE DATA; Schema: public; Owner: neondb_owner
+--
+
+COPY public.club_users (id, club_id, user_id, role, can_manage_players, can_manage_games, can_manage_stats, can_view_other_teams, is_active, created_at) FROM stdin;
+2	1	1	admin	t	t	t	t	t	2025-05-29 23:15:04.543422
+\.
+
+
+--
+-- Data for Name: clubs; Type: TABLE DATA; Schema: public; Owner: neondb_owner
+--
+
+COPY public.clubs (id, name, code, address, contact_email, contact_phone, logo_url, primary_color, secondary_color, is_active, created_at, updated_at, description) FROM stdin;
+59	Doncaster	DO				\N	#005223	#ffffff	t	2025-06-05 03:45:58.785868	2025-06-05 03:45:58.785868	
+54	Warrandyte Netball Club	WNC				\N	#ff2c36	#ffffff	t	2025-05-30 08:01:30.142249	2025-05-30 08:01:30.142249	
+1	Eltham Panthers	EP				\N	#000000	#ff0000	t	2025-05-29 21:29:27.643991	2025-05-29 21:29:27.643991	
+15	East Doncaster	EDNC				\N	#007acc	#ffffff	t	2025-05-29 23:48:10.248803	2025-05-29 23:48:10.248803	
+57	Deep Creek	DC				\N	#006aff	#eeff00	t	2025-06-02 22:11:59.826549	2025-06-02 22:11:59.826549	
+58	Waverley Rep	WR				\N	#6b7280	#ffffff	t	2025-06-02 22:56:13.56809	2025-06-02 22:56:13.56809	A catch-all club for Waverley Rep teams.
+\.
+
+
+--
+-- Data for Name: game_permissions; Type: TABLE DATA; Schema: public; Owner: neondb_owner
+--
+
+COPY public.game_permissions (id, game_id, club_id, can_edit_stats, can_view_detailed_stats) FROM stdin;
+2	70	54	t	t
+3	69	54	t	t
+4	68	54	t	t
+5	67	54	t	t
+6	66	54	t	t
+7	65	54	t	t
+8	64	54	t	t
+9	63	54	t	t
+10	62	54	t	t
+11	73	54	t	t
+12	72	54	t	t
+13	61	54	t	t
+14	76	54	t	t
+\.
+
+
+--
+-- Data for Name: game_stats; Type: TABLE DATA; Schema: public; Owner: neondb_owner
+--
+
+COPY public.game_stats (id, game_id, quarter, goals_for, goals_against, missed_goals, rebounds, intercepts, bad_pass, handling_error, pick_up, infringement, rating, "position") FROM stdin;
+585	64	1	0	0	0	0	0	0	0	0	0	5	WD
+737	64	1	0	5	0	0	0	0	0	0	0	5	GK
+458	62	1	2	0	0	0	0	0	0	0	0	5	GS
+528	62	1	0	4	0	0	0	0	0	0	0	5	GK
+477	72	4	0	0	0	0	0	0	0	0	0	\N	WD
+745	69	1	2	0	0	0	0	0	0	0	0	\N	GA
+800	70	2	0	0	0	0	0	0	0	0	0	\N	GD
+586	64	1	0	0	0	0	0	0	0	0	0	5	GA
+739	64	3	0	0	0	0	0	0	0	0	0	\N	C
+542	62	4	0	0	0	0	0	0	0	0	0	\N	GK
+469	72	3	0	2	0	0	0	0	0	0	0	\N	GD
+743	69	1	0	0	0	0	0	0	0	0	0	\N	WA
+801	70	1	3	0	0	0	0	0	0	0	0	\N	GS
+563	63	2	0	0	0	0	0	0	0	0	0	\N	WD
+571	63	3	0	0	0	0	0	0	0	0	0	\N	WD
+567	63	3	4	0	0	0	0	0	0	0	0	\N	GS
+592	64	1	0	5	0	0	0	0	0	0	0	5	GD
+577	63	4	0	1	0	0	0	0	0	0	0	\N	GK
+794	69	4	0	0	0	0	0	0	0	0	0	\N	WA
+602	64	3	0	0	0	0	0	0	0	0	0	0	WA
+524	62	1	0	0	0	0	0	0	0	0	0	5	WD
+544	62	1	0	0	0	0	0	0	0	0	0	5	C
+545	62	1	0	0	0	0	0	0	0	0	0	5	WA
+546	62	2	0	0	0	0	0	0	0	0	0	\N	WA
+547	62	2	0	0	0	0	0	0	0	0	0	\N	C
+548	62	2	0	1	0	0	0	0	0	0	0	\N	GK
+549	62	3	0	0	0	0	0	0	0	0	0	\N	GS
+550	62	3	0	0	0	0	0	0	0	0	0	\N	GK
+551	62	3	0	0	0	0	0	0	0	0	0	\N	C
+552	62	3	0	0	0	0	0	0	0	0	0	\N	WA
+553	62	4	0	0	0	0	0	0	0	0	0	\N	C
+543	62	4	0	0	0	0	0	0	0	0	0	\N	WD
+838	70	4	0	0	0	0	0	0	0	0	0	\N	GS
+850	70	4	0	0	0	0	0	0	0	0	0	\N	WA
+814	70	1	0	0	0	0	0	0	0	0	0	\N	WD
+846	70	2	0	0	0	0	0	0	0	0	0	\N	WD
+826	70	3	0	0	0	0	0	0	0	0	0	\N	WD
+830	70	1	0	0	0	0	0	0	0	0	0	\N	GK
+818	70	3	1	0	0	0	0	0	0	0	0	\N	GS
+802	70	4	0	1	0	0	0	0	0	0	0	\N	GD
+559	63	2	4	0	0	0	0	0	0	0	0	\N	GS
+560	63	2	0	1	0	0	0	0	0	0	0	\N	GK
+554	63	1	0	2	0	0	0	0	0	0	0	\N	GK
+573	63	3	0	1	0	0	0	0	0	0	0	\N	GK
+555	63	1	0	0	0	0	0	0	0	0	0	\N	WA
+570	63	3	0	0	0	0	0	0	0	0	0	\N	WA
+562	63	2	0	0	0	0	0	0	0	0	0	\N	WA
+575	63	4	0	0	0	0	0	0	0	0	0	\N	WD
+557	63	1	0	0	0	0	0	0	0	0	0	\N	GA
+564	63	2	2	0	0	0	0	0	0	0	0	\N	GA
+487	72	2	4	0	0	0	0	0	0	0	0	\N	GS
+569	63	3	2	0	0	0	0	0	0	0	0	\N	GA
+744	69	1	0	0	0	0	0	0	0	0	0	\N	C
+790	69	4	0	0	0	0	0	0	0	0	0	\N	GK
+576	63	4	3	0	0	0	0	0	0	0	0	\N	GA
+561	63	1	0	0	0	0	0	0	0	0	0	\N	WD
+783	69	4	0	0	0	0	0	0	0	0	0	\N	C
+779	69	3	0	0	0	0	0	0	0	0	0	\N	GD
+605	64	3	0	0	0	0	0	0	0	0	0	\N	GK
+778	69	3	0	0	0	0	0	0	0	0	0	\N	C
+771	69	3	5	0	0	0	0	0	0	0	0	\N	GS
+767	69	2	0	0	0	0	0	0	0	0	0	\N	C
+786	69	4	0	0	0	0	0	0	0	0	0	\N	WD
+755	69	1	0	0	0	0	0	0	0	0	0	\N	GK
+749	69	1	0	1	0	0	0	0	0	0	0	\N	GD
+763	69	2	5	0	0	0	0	0	0	0	0	\N	GA
+451	72	1	2	0	2	0	0	0	0	0	0	\N	GS
+815	70	4	0	0	0	0	0	0	0	0	0	\N	WD
+851	70	2	0	0	0	0	0	0	0	0	0	\N	C
+834	70	2	0	0	0	0	0	0	0	0	0	\N	WA
+803	70	4	0	0	0	0	0	0	0	0	0	\N	C
+847	70	3	0	0	0	0	0	0	0	0	0	\N	GK
+819	70	1	2	0	0	0	0	0	0	0	0	\N	GA
+823	70	1	0	2	0	0	0	0	0	0	0	\N	GD
+791	69	4	6	0	0	0	0	0	0	0	0	\N	GS
+750	69	1	0	0	0	0	0	0	0	0	0	\N	WD
+762	69	2	4	0	0	0	0	0	0	0	0	\N	GS
+766	69	2	0	0	0	0	0	0	0	0	0	\N	WD
+774	69	3	0	0	0	0	0	0	0	0	0	\N	WD
+795	69	4	1	0	0	0	0	0	0	0	0	\N	GA
+757	69	2	0	0	0	0	0	0	0	0	0	\N	GK
+822	70	3	1	0	0	0	0	0	0	0	0	\N	GA
+813	70	3	0	0	0	0	0	0	0	0	0	\N	WA
+835	70	3	0	0	0	0	0	0	0	0	0	\N	GD
+606	64	4	0	0	0	0	0	0	0	0	0	\N	WD
+610	64	4	0	0	0	0	0	0	0	0	0	\N	GA
+611	64	4	0	0	0	0	0	0	0	0	0	\N	WA
+842	70	2	0	0	0	0	0	0	0	0	0	\N	GA
+806	70	2	0	1	0	0	0	0	0	0	0	\N	GK
+769	69	3	0	0	0	0	0	0	0	0	0	\N	WA
+756	69	2	0	0	0	0	0	0	0	0	0	\N	GD
+775	69	3	3	0	0	0	0	0	0	0	0	\N	GA
+761	69	2	0	0	0	0	0	0	0	0	0	\N	WA
+782	69	3	0	0	0	0	0	0	0	0	0	\N	GK
+788	69	4	0	1	0	0	0	0	0	0	0	\N	GD
+751	69	1	1	0	0	0	0	0	0	0	0	\N	GS
+839	70	2	4	0	0	0	0	0	0	0	0	\N	GS
+807	70	1	0	0	0	0	0	0	0	0	0	\N	C
+844	70	4	0	0	0	0	0	0	0	0	0	\N	GA
+812	70	1	0	0	0	0	0	0	0	0	0	\N	WA
+831	70	3	0	0	0	0	0	0	0	0	0	\N	C
+827	70	4	0	1	0	0	0	0	0	0	0	\N	GK
+712	68	4	0	0	0	0	0	0	0	0	0	0	WD
+706	68	3	2	0	0	0	0	0	0	0	0	0	GA
+713	68	4	1	0	0	0	0	0	0	0	0	0	GA
+707	68	3	0	1	0	0	0	0	0	0	0	0	GD
+710	68	3	0	1	0	0	0	0	0	0	0	0	GK
+715	68	4	0	2	0	0	0	0	0	0	0	0	GK
+711	68	3	0	0	0	0	0	0	0	0	0	0	WA
+714	68	4	0	6	0	0	0	0	0	0	0	0	GD
+708	68	3	3	0	0	0	0	0	0	0	0	0	GS
+716	68	4	0	0	0	0	0	0	0	0	0	0	GS
+709	68	3	0	0	0	0	0	0	0	0	0	0	C
+587	64	1	0	0	0	0	0	0	0	0	0	5	WA
+596	64	2	0	0	0	0	0	0	0	0	0	\N	WD
+588	64	1	0	0	0	0	0	0	0	0	0	5	GS
+603	64	3	0	0	0	0	0	0	0	0	0	\N	GD
+594	64	2	0	0	0	0	0	0	0	0	0	\N	GS
+526	62	1	0	2	0	0	0	0	0	0	0	5	GD
+529	62	2	0	2	0	0	0	0	0	0	0	\N	GD
+522	62	1	0	0	0	0	0	0	0	0	0	5	GA
+627	65	1	0	0	0	0	0	0	0	0	0	5	GS
+634	65	2	2	0	0	0	0	0	0	0	0	0	GS
+613	65	3	0	0	0	0	0	0	0	0	0	0	GD
+621	65	4	0	2	0	0	0	0	0	0	0	0	GD
+628	65	1	0	0	0	0	0	0	0	0	0	5	WA
+615	65	3	0	0	0	0	0	0	0	0	0	0	WD
+620	65	4	0	0	0	0	0	0	0	0	0	0	WA
+630	65	1	0	0	0	0	0	0	0	0	0	5	C
+635	65	2	0	0	0	0	0	0	0	0	0	0	C
+614	65	3	1	0	0	0	0	0	0	0	0	0	GA
+622	65	4	2	0	0	0	0	0	0	0	0	0	GA
+629	65	1	0	2	0	0	0	0	0	0	0	5	GK
+636	65	2	0	1	0	0	0	0	0	0	0	0	GK
+616	65	3	0	0	0	0	0	0	0	0	0	0	WA
+631	65	1	1	0	0	0	0	0	0	0	0	5	GA
+637	65	2	2	0	0	0	0	0	0	0	0	0	GA
+617	65	3	0	0	0	0	0	0	0	0	0	0	GS
+624	65	4	1	0	0	0	0	0	0	0	0	0	GS
+632	65	1	0	0	0	0	0	0	0	0	0	5	WD
+639	65	2	0	0	0	0	0	0	0	0	0	0	WD
+623	65	4	0	0	0	0	0	0	0	0	0	0	C
+633	65	1	0	4	0	0	0	0	0	0	0	5	GD
+638	65	2	0	6	0	0	0	0	0	0	0	0	GD
+618	65	3	0	2	0	0	0	0	0	0	0	0	GK
+625	65	4	0	3	0	0	0	0	0	0	0	0	GK
+612	65	2	0	0	0	0	0	0	0	0	0	0	WA
+619	65	3	0	0	0	0	0	0	0	0	0	0	C
+626	65	4	0	0	0	0	0	0	0	0	0	0	WD
+468	66	1	0	0	0	0	0	0	0	0	0	5	GS
+658	66	2	2	0	0	0	0	0	0	0	0	0	GS
+666	66	3	2	0	0	0	0	0	0	0	0	0	GS
+646	66	4	1	0	0	0	0	0	0	0	0	0	GA
+652	66	1	0	0	0	0	0	0	0	0	0	5	GD
+660	66	2	0	1	0	0	0	0	0	0	0	0	GD
+655	66	3	0	1	0	0	0	0	0	0	0	0	GK
+644	66	4	0	0	0	0	0	0	0	0	0	0	GK
+653	66	1	0	0	0	0	0	0	0	0	0	5	WD
+595	64	2	0	0	0	0	0	0	0	0	0	\N	GA
+600	64	3	0	0	0	0	0	0	0	0	0	\N	GA
+608	64	4	0	0	0	0	0	0	0	0	0	\N	GK
+527	62	2	2	0	0	0	0	0	0	0	0	\N	GS
+599	64	3	0	0	0	0	0	0	0	0	0	\N	GS
+601	64	3	0	0	0	0	0	0	0	0	0	\N	WD
+609	64	4	0	0	0	0	0	0	0	0	0	\N	GS
+532	62	2	1	0	0	0	0	0	0	0	0	\N	GA
+590	64	2	0	0	0	0	0	0	0	0	0	\N	GD
+607	64	4	0	0	0	0	0	0	0	0	0	\N	GD
+591	64	2	0	0	0	0	0	0	0	0	0	\N	GK
+584	64	1	0	0	0	0	0	0	0	0	0	5	C
+597	64	2	0	0	0	0	0	0	0	0	0	\N	C
+604	64	4	0	0	0	0	0	0	0	0	0	\N	C
+533	62	2	0	0	0	0	0	0	0	0	0	\N	WD
+593	64	2	0	0	0	0	0	0	0	0	0	\N	WA
+459	62	3	0	0	0	0	0	0	0	0	0	\N	WD
+535	62	3	0	0	0	0	0	0	0	0	0	\N	GA
+536	62	3	0	0	0	0	0	0	0	0	0	\N	GD
+540	62	4	0	0	0	0	0	0	0	0	0	\N	GD
+457	62	4	0	0	0	0	0	0	0	0	0	\N	GS
+541	62	4	0	0	0	0	0	0	0	0	0	\N	WA
+460	62	4	0	0	0	0	0	0	0	0	0	\N	GA
+466	63	4	0	2	0	0	0	0	0	0	0	\N	GD
+556	63	1	0	0	0	0	0	0	0	0	0	\N	C
+579	63	4	0	0	0	0	0	0	0	0	0	\N	WA
+565	63	2	0	0	0	0	0	0	0	0	0	\N	C
+467	63	1	3	0	0	0	0	0	0	0	0	\N	GS
+578	63	4	5	0	0	0	0	0	0	0	0	\N	GS
+572	63	3	0	0	0	0	0	0	0	0	0	\N	C
+580	63	1	0	3	0	0	0	0	0	0	0	\N	GD
+582	63	3	0	4	0	0	0	0	0	0	0	\N	GD
+581	63	2	0	1	0	0	0	0	0	0	0	\N	GD
+583	63	4	0	0	0	0	0	0	0	0	0	\N	C
+647	66	4	1	0	0	0	0	0	0	0	0	0	GS
+654	66	1	3	0	0	0	0	0	0	0	0	5	GA
+640	66	3	1	0	0	0	0	0	0	0	0	0	GA
+656	66	1	0	0	0	0	0	0	0	0	0	5	WA
+661	66	2	0	0	0	0	0	0	0	0	0	0	WA
+642	66	3	0	2	0	0	0	0	0	0	0	0	GD
+648	66	4	0	0	0	0	0	0	0	0	0	0	GD
+662	66	2	2	0	0	0	0	0	0	0	0	0	GA
+643	66	3	0	0	0	0	0	0	0	0	0	0	C
+649	66	4	0	0	0	0	0	0	0	0	0	0	C
+663	66	2	0	0	0	0	0	0	0	0	0	0	WD
+645	66	3	0	0	0	0	0	0	0	0	0	0	WD
+650	66	4	0	0	0	0	0	0	0	0	0	0	WD
+657	66	1	0	0	0	0	0	0	0	0	0	5	GK
+664	66	2	0	0	0	0	0	0	0	0	0	0	GK
+659	66	1	0	0	0	0	0	0	0	0	0	5	C
+665	66	2	0	0	0	0	0	0	0	0	0	0	C
+641	66	3	0	0	0	0	0	0	0	0	0	0	WA
+651	66	4	0	0	0	0	0	0	0	0	0	0	WA
+680	67	1	0	1	0	0	0	0	0	0	0	5	GK
+685	67	3	0	0	0	0	0	0	0	0	0	0	GK
+670	67	4	0	1	0	0	0	0	0	0	0	0	GK
+463	67	1	1	0	0	0	0	0	0	0	0	5	GS
+689	67	2	0	0	0	0	0	0	0	0	0	0	GS
+688	67	3	3	0	0	0	0	0	0	0	0	0	GS
+671	67	4	2	0	0	0	0	0	0	0	0	0	GS
+464	67	2	0	0	0	0	0	0	0	0	0	5	GK
+668	67	3	0	0	0	0	0	0	0	0	0	0	GD
+672	67	4	0	1	0	0	0	0	0	0	0	0	GD
+681	67	1	0	0	0	0	0	0	0	0	0	5	WD
+690	67	2	0	0	0	0	0	0	0	0	0	0	WA
+465	67	3	0	0	0	0	0	0	0	0	0	5	WA
+682	67	1	0	0	0	0	0	0	0	0	0	5	GA
+691	67	2	0	0	0	0	0	0	0	0	0	0	C
+686	67	3	1	0	0	0	0	0	0	0	0	0	GA
+673	67	4	1	0	0	0	0	0	0	0	0	0	GA
+683	67	1	0	2	0	0	0	0	0	0	0	5	GD
+677	67	2	0	2	0	0	0	0	0	0	0	0	GD
+667	67	3	0	0	0	0	0	0	0	0	0	0	WD
+674	67	4	0	0	0	0	0	0	0	0	0	0	WD
+684	67	1	0	0	0	0	0	0	0	0	0	5	C
+678	67	2	1	0	0	0	0	0	0	0	0	0	GA
+669	67	3	0	0	0	0	0	0	0	0	0	0	C
+675	67	4	0	0	0	0	0	0	0	0	0	0	WA
+687	67	1	0	0	0	0	0	0	0	0	0	5	WA
+679	67	2	0	0	0	0	0	0	0	0	0	0	WD
+676	67	4	0	0	0	0	0	0	0	0	0	0	C
+697	68	2	0	3	0	0	0	0	0	0	0	0	GK
+705	68	3	0	0	0	0	0	0	0	0	0	0	WD
+461	68	1	1	0	0	0	0	0	0	0	0	5	GS
+699	68	2	1	0	0	0	0	0	0	0	0	0	GS
+692	68	1	0	0	0	0	0	0	0	0	0	5	WD
+702	68	2	0	1	0	0	0	0	0	0	0	0	GD
+695	68	1	0	0	0	0	0	0	0	0	0	5	C
+700	68	2	0	0	0	0	0	0	0	0	0	0	C
+694	68	1	0	0	0	0	0	0	0	0	0	5	GK
+693	68	1	0	2	0	0	0	0	0	0	0	5	GD
+701	68	2	1	0	0	0	0	0	0	0	0	0	GA
+462	68	4	0	0	0	0	0	0	0	0	0	5	C
+696	68	1	0	0	0	0	0	0	0	0	0	5	GA
+704	68	2	0	0	0	0	0	0	0	0	0	0	WA
+717	68	4	0	0	0	0	0	0	0	0	0	0	WA
+698	68	1	0	0	0	0	0	0	0	0	0	5	WA
+703	68	2	0	0	0	0	0	0	0	0	0	0	WD
+471	72	3	1	0	0	0	0	0	0	0	0	\N	GS
+483	72	1	0	0	0	0	0	0	0	0	0	\N	WA
+489	72	2	0	0	0	0	0	0	0	0	0	\N	WA
+485	72	1	0	0	0	0	0	0	0	0	0	\N	GA
+491	72	2	1	0	0	0	0	0	0	0	0	\N	GA
+450	72	1	0	0	0	0	0	0	0	0	0	\N	GK
+475	72	3	0	0	0	0	0	0	0	0	0	\N	WA
+488	72	2	0	0	0	0	0	0	0	0	0	\N	GK
+476	72	4	0	0	0	0	0	0	0	0	0	\N	GD
+482	72	4	0	0	0	0	0	0	0	0	0	\N	WA
+474	72	3	0	0	0	0	0	0	0	0	0	\N	WD
+478	72	4	0	0	0	0	0	0	0	0	0	\N	GK
+481	72	4	0	0	0	0	0	0	0	0	0	\N	GA
+472	72	3	3	0	0	0	0	0	0	0	0	\N	GA
+492	72	2	0	0	0	0	0	0	0	0	0	\N	GD
+484	72	1	0	0	0	0	0	0	0	0	0	\N	WD
+479	72	4	0	0	0	0	0	0	0	0	0	\N	C
+493	72	2	0	0	0	0	0	0	0	0	0	\N	WD
+470	72	3	0	0	0	0	0	0	0	0	0	\N	GK
+486	72	1	0	0	0	0	0	0	0	0	0	\N	GD
+495	73	1	0	4	0	0	0	0	0	0	0	5	GD
+512	73	2	0	0	0	0	0	0	0	0	0	0	WD
+494	73	3	0	0	0	0	0	0	0	0	0	0	WD
+505	73	4	0	0	0	0	0	0	0	0	0	0	WD
+455	73	1	0	4	0	0	0	0	0	0	0	5	GK
+513	73	2	2	0	0	0	0	0	0	0	0	0	GS
+496	73	3	0	0	0	0	0	0	0	0	0	0	GS
+506	73	4	0	0	0	0	0	0	0	0	0	0	GS
+501	73	1	0	0	0	0	0	0	0	0	0	5	WD
+515	73	2	0	2	0	0	0	0	0	0	0	0	GD
+497	73	3	0	6	0	0	0	0	0	0	0	0	GD
+508	73	4	0	4	0	0	0	0	0	0	0	0	GD
+503	73	1	0	0	0	0	0	0	0	0	0	5	GS
+518	73	2	0	0	0	0	0	0	0	0	0	0	WA
+498	73	3	0	0	0	0	0	0	0	0	0	0	WA
+511	73	4	0	0	0	0	0	0	0	0	0	0	WA
+504	73	1	1	0	0	0	0	0	0	0	0	5	GA
+516	73	2	0	0	0	0	0	0	0	0	0	0	GA
+499	73	3	0	0	0	0	0	0	0	0	0	0	GA
+510	73	4	2	0	0	0	0	0	0	0	0	0	GA
+507	73	1	0	0	0	0	0	0	0	0	0	5	WA
+519	73	2	0	6	0	0	0	0	0	0	0	0	GK
+500	73	3	0	2	0	0	0	0	0	0	0	0	GK
+514	73	4	0	2	0	0	0	0	0	0	0	0	GK
+509	73	1	0	0	0	0	0	0	0	0	0	5	C
+520	73	2	0	0	0	0	0	0	0	0	0	0	C
+502	73	3	0	0	0	0	0	0	0	0	0	0	C
+517	73	4	0	0	0	0	0	0	0	0	0	0	C
+490	72	1	0	0	0	0	0	0	0	0	0	\N	C
+473	72	2	0	0	0	0	0	0	0	0	0	\N	C
+480	72	3	0	0	0	0	0	0	0	0	0	\N	C
+452	72	4	4	0	0	0	0	0	0	0	0	\N	GS
+\.
+
+
+--
+-- Data for Name: game_statuses; Type: TABLE DATA; Schema: public; Owner: neondb_owner
+--
+
+COPY public.game_statuses (id, name, display_name, points, opponent_points, is_completed, allows_statistics, requires_opponent, color_class, sort_order, is_active, created_at, updated_at, team_goals, opponent_goals) FROM stdin;
+1	upcoming	Upcoming	0	0	f	f	t	bg-gray-500	1	t	2025-05-27 23:46:47.511179	2025-05-27 23:46:47.511179	\N	\N
+2	in-progress	In Progress	0	0	f	t	t	bg-blue-500	2	t	2025-05-27 23:46:47.511179	2025-05-27 23:46:47.511179	\N	\N
+3	completed	Completed	0	0	t	t	t	bg-green-500	3	t	2025-05-27 23:46:47.511179	2025-05-27 23:46:47.511179	\N	\N
+6	bye	BYE	4	0	t	f	f	bg-purple-500	6	t	2025-05-27 23:46:47.511179	2025-05-27 23:46:47.511179	\N	\N
+7	abandoned	Abandoned	0	0	t	f	t	bg-gray-600	7	t	2025-05-27 23:46:47.511179	2025-05-27 23:46:47.511179	\N	\N
+4	forfeit-win	Forfeit Win	4	0	t	f	t	bg-green-600	4	t	2025-05-27 23:46:47.511179	2025-05-27 23:46:47.511179	10	0
+5	forfeit-loss	Forfeit Loss	0	4	t	f	t	bg-red-600	5	t	2025-05-27 23:46:47.511179	2025-05-27 23:46:47.511179	0	10
+\.
+
+
+--
+-- Data for Name: games; Type: TABLE DATA; Schema: public; Owner: neondb_owner
+--
+
+COPY public.games (id, date, "time", round, season_id, notes, award_winner_id, status_id, home_team_id, away_team_id, is_inter_club, venue) FROM stdin;
+63	2025-03-22	10:00	5	1	Isla shot very well and played well as GK in 4th quarter. Abbey N moves fast but sometimes needs to slow down and not just throw the ball away in a hurry.\n\n4th quarter combination worked very well. Holly played well in C and Mila as GS. Holly's run in defence was great but she struggled against taller defenders. The Noye sisters worked together well in WA and GA.\n\nLucia out with broken finger, Emily with twisted ankle. Evie and Holly filled in. Xanthe is keen and willing to fill in in future. She would be good to add some height to our defence.	71	3	116	2	t	\N
+65	2025-04-05	10:00	7	1	\N	78	3	116	117	t	\N
+66	2025-05-03	10:00	8	1	\N	80	3	116	2	t	\N
+70	2025-05-31	10:00	12	1	First quarter combination worked best, last quarter not at all.\n\nA lot of footwork calls from moving too fast and not being sure of feet and passing. We need to look for our taller options when surrounded and not just pass blindly or to short players who are behind.\n\nEmily shot very well, Abbey N wasn't very accurate. Isla better as a shooter than defender. Xanthe played well and Ollie better in C/GD than GA.	59	3	116	67	t	\N
+68	2025-05-17	10:00	10	1	\N	62	3	116	117	t	\N
+67	2025-05-10	10:00	9	1	\N	79	3	116	67	t	\N
+72	2025-02-22	10:00	2	1	Great running from Abbey Noye and Mila. Jo Jo played well in GK.\n\nNeed to work on leading to the ball, not running away. Using voices to call when an option (and keeping quiet when not). Holding on the circle.\n\nEvie Noye filled in from 11Us.	78	3	116	2	t	\N
+69	2025-05-24	10:00	11	1	\N	61	3	116	2	t	\N
+61	2025-02-15	10:00	1	1	\N	\N	6	116	118	t	\N
+76	2025-06-14	10:00	13	1	\N	\N	1	116	117	f	\N
+64	2025-03-29	10:00	6	1	\N	\N	5	116	67	t	\N
+73	2025-03-01	10:00	3	1	Too short in first quarter against tall and good team. Emily was good in defence, Abbey D not so much. Team threw ball straight in to oppositions arms many times. Need to pass around, drive to ball and 45 degree leads. We lost the ball many times to interecepts. \n\nAva Duncan and Pip Wills filled in.\n\nDeep Creek Jades moved up to section 2 at regrading.	61	3	116	122	t	\N
+62	2025-03-15	10:00	4	1	Olive Frame filled in and played well. Deep Creek shooters were tall and accurate and good at drawing our defenders out and running back in to space.\n\nWe need to put our arms up and contest rebounds. Second half match-ups were much better than first half. Defenders stay back in circle and not chase attackers out (particulary GK/GS).\n\nLucia out for 4-6 weeks after breaking finger during training.\n\nShortened game due to heat. 2 x 10 minutes halves with 2 minute half-time break.	60	3	116	117	t	\N
+\.
+
+
+--
+-- Data for Name: opponents; Type: TABLE DATA; Schema: public; Owner: neondb_owner
+--
+
+COPY public.opponents (id, team_name, primary_contact, contact_info, primary_color, secondary_color, notes) FROM stdin;
+22	Deep Creek Jades	Michael Chen	mchen@jades.net	#000000	#FFFFFF	\N
+23	Panthers Asteroids	Emma Rodriguez	coach@panthers-asteroids.org	#000000	#FFFFFF	\N
+24	EDNC Lunas	David Wilson	dwilson@ednc-lunas.com	#000000	#FFFFFF	\N
+21	Deep Creek Emeralds	DC	sarah.j@emeralds.com	#000000	#FFFFFF	\N
+\.
+
+
+--
+-- Data for Name: player_availability; Type: TABLE DATA; Schema: public; Owner: neondb_owner
+--
+
+COPY public.player_availability (id, game_id, player_id, is_available, created_at, updated_at) FROM stdin;
+246	69	77	f	2025-06-03 20:29:00.566721	2025-06-03 20:29:00.566721
+247	76	77	f	2025-06-04 00:18:30.28209	2025-06-04 00:23:58.003045
+248	76	76	f	2025-06-04 00:18:35.35757	2025-06-04 00:24:01.535894
+249	63	77	t	2025-06-04 01:08:39.595651	2025-06-04 01:08:39.595651
+250	76	60	t	2025-06-04 01:08:47.61152	2025-06-04 01:08:47.61152
+251	76	59	t	2025-06-04 01:09:54.450032	2025-06-04 01:09:54.450032
+252	76	61	t	2025-06-04 01:09:56.446943	2025-06-04 01:09:56.446943
+253	76	80	t	2025-06-04 01:09:57.499946	2025-06-04 01:09:57.499946
+254	76	78	t	2025-06-04 01:09:58.714521	2025-06-04 01:09:58.714521
+255	76	62	t	2025-06-04 01:10:01.648726	2025-06-04 01:10:01.648726
+256	76	79	t	2025-06-04 01:10:03.984945	2025-06-04 01:10:03.984945
+257	76	66	t	2025-06-04 01:12:44.670699	2025-06-04 01:12:44.670699
+258	76	64	t	2025-06-04 01:12:52.638058	2025-06-04 01:12:52.638058
+259	68	60	t	2025-06-04 01:24:53.58157	2025-06-04 01:24:53.58157
+260	68	62	t	2025-06-04 01:24:58.498056	2025-06-04 01:24:58.498056
+261	68	64	t	2025-06-04 01:25:02.022612	2025-06-04 01:25:02.022612
+262	68	79	t	2025-06-04 01:25:05.854076	2025-06-04 01:25:05.854076
+263	68	65	t	2025-06-04 01:25:13.545865	2025-06-04 01:25:13.545865
+264	68	80	t	2025-06-04 01:25:16.330107	2025-06-04 01:25:16.330107
+265	68	78	t	2025-06-04 01:25:31.662444	2025-06-04 01:25:31.662444
+266	68	61	t	2025-06-04 01:25:50.313057	2025-06-04 01:25:50.313057
+267	67	78	t	2025-06-04 01:26:23.949405	2025-06-04 01:26:23.949405
+268	67	60	t	2025-06-04 01:26:25.819265	2025-06-04 01:26:25.819265
+269	67	79	t	2025-06-04 01:26:33.005709	2025-06-04 01:26:33.005709
+270	67	59	t	2025-06-04 01:26:34.392436	2025-06-04 01:26:34.392436
+271	67	61	t	2025-06-04 01:26:36.314651	2025-06-04 01:26:36.314651
+272	67	64	t	2025-06-04 01:26:39.400421	2025-06-04 01:26:39.400421
+273	67	71	t	2025-06-04 01:26:45.023577	2025-06-04 01:26:45.023577
+274	67	80	t	2025-06-04 01:26:52.844219	2025-06-04 01:26:52.844219
+56	69	61	t	2025-05-26 01:38:17.303256	2025-05-26 01:38:17.303256
+57	69	62	t	2025-05-26 01:38:17.303256	2025-05-26 01:38:17.303256
+58	69	63	t	2025-05-26 01:38:17.303256	2025-05-26 01:38:17.303256
+59	69	66	t	2025-05-26 01:38:17.303256	2025-05-26 01:38:17.303256
+60	69	64	t	2025-05-26 01:38:17.303256	2025-05-26 01:38:17.303256
+61	69	78	t	2025-05-26 01:38:17.303256	2025-05-26 01:38:17.303256
+62	69	79	t	2025-05-26 01:38:17.303256	2025-05-26 01:38:17.303256
+63	69	80	t	2025-05-26 01:38:17.303256	2025-05-26 01:38:17.303256
+232	70	61	t	2025-05-30 22:19:29.827133	2025-05-30 22:19:29.827133
+233	70	62	t	2025-05-30 22:19:29.827133	2025-05-30 22:19:29.827133
+234	70	63	f	2025-05-30 22:19:29.827133	2025-05-30 22:19:29.827133
+235	70	65	f	2025-05-30 22:19:29.827133	2025-05-30 22:19:29.827133
+236	70	66	t	2025-05-30 22:19:29.827133	2025-05-30 22:19:29.827133
+237	70	64	t	2025-05-30 22:19:29.827133	2025-05-30 22:19:29.827133
+238	70	71	f	2025-05-30 22:19:29.827133	2025-05-30 22:19:29.827133
+239	70	59	t	2025-05-30 22:19:29.827133	2025-05-30 22:19:29.827133
+240	70	60	t	2025-05-30 22:19:29.827133	2025-05-30 22:19:29.827133
+241	70	76	f	2025-05-30 22:19:29.827133	2025-05-30 22:19:29.827133
+242	70	77	f	2025-05-30 22:19:29.827133	2025-05-30 22:19:29.827133
+243	70	78	t	2025-05-30 22:19:29.827133	2025-05-30 22:19:29.827133
+244	70	79	f	2025-05-30 22:19:29.827133	2025-05-30 22:19:29.827133
+245	70	80	t	2025-05-30 22:19:29.827133	2025-05-30 22:19:29.827133
+148	72	61	t	2025-05-26 02:30:50.057334	2025-05-26 02:30:50.057334
+149	72	62	f	2025-05-26 02:30:50.057334	2025-05-26 02:30:50.057334
+150	72	63	f	2025-05-26 02:30:50.057334	2025-05-26 02:30:50.057334
+151	72	65	f	2025-05-26 02:30:50.057334	2025-05-26 02:30:50.057334
+152	72	66	f	2025-05-26 02:30:50.057334	2025-05-26 02:30:50.057334
+153	72	64	t	2025-05-26 02:30:50.057334	2025-05-26 02:30:50.057334
+154	72	71	f	2025-05-26 02:30:50.057334	2025-05-26 02:30:50.057334
+155	72	59	t	2025-05-26 02:30:50.057334	2025-05-26 02:30:50.057334
+156	72	60	t	2025-05-26 02:30:50.057334	2025-05-26 02:30:50.057334
+157	72	76	f	2025-05-26 02:30:50.057334	2025-05-26 02:30:50.057334
+158	72	77	f	2025-05-26 02:30:50.057334	2025-05-26 02:30:50.057334
+159	72	78	t	2025-05-26 02:30:50.057334	2025-05-26 02:30:50.057334
+160	72	79	t	2025-05-26 02:30:50.057334	2025-05-26 02:30:50.057334
+161	72	80	t	2025-05-26 02:30:50.057334	2025-05-26 02:30:50.057334
+\.
+
+
+--
+-- Data for Name: player_borrowing; Type: TABLE DATA; Schema: public; Owner: neondb_owner
+--
+
+COPY public.player_borrowing (id, game_id, player_id, borrowing_team_id, lending_team_id, approved_by_lending_club, approved_by_borrowing_club, jersey_number, notes, created_at) FROM stdin;
+\.
+
+
+--
+-- Data for Name: player_seasons; Type: TABLE DATA; Schema: public; Owner: neondb_owner
+--
+
+COPY public.player_seasons (id, player_id, season_id, created_at) FROM stdin;
+35	61	1	2025-05-25 06:50:02.069949
+36	62	1	2025-05-25 06:50:02.160628
+37	63	1	2025-05-25 06:50:02.249593
+38	65	1	2025-05-25 06:50:02.344936
+39	66	1	2025-05-25 06:50:02.443119
+40	64	1	2025-05-25 06:50:02.544273
+41	71	1	2025-05-25 06:50:02.641261
+46	59	1	2025-05-25 07:07:12.820357
+49	60	1	2025-05-25 07:38:04.346186
+53	76	1	2025-05-25 10:50:27.458152
+54	77	1	2025-05-25 11:45:22.598214
+55	78	1	2025-05-25 11:45:22.686767
+56	79	1	2025-05-25 11:45:22.770179
+57	80	1	2025-05-25 11:45:22.852866
+58	81	1	2025-06-04 23:37:43.131708
+\.
+
+
+--
+-- Data for Name: players; Type: TABLE DATA; Schema: public; Owner: neondb_owner
+--
+
+COPY public.players (id, display_name, first_name, last_name, date_of_birth, position_preferences, active, avatar_color) FROM stdin;
+61	Emily	Emily	Litchfield	\N	["GD","GK","WD","WA"]	t	bg-yellow-600
+62	Ollie	Ollie	Wynne	\N	["GD","C","GA","GK"]	t	bg-indigo-600
+63	Evie	Evie	Noye	\N	["WA","WD","C","GD"]	t	bg-sky-600
+65	Olive	Olive	Frame	\N	["C","WA","WD","GA"]	t	bg-pink-500
+66	Xanthe	Xanthe	Bowen	\N	["GK","GD","WD","WA"]	t	bg-lime-600
+64	Mila	Mila	de Kort	2013-01-01	["C","GA","WA","GS"]	t	bg-purple-600
+71	Holly	Holly	McPherson	\N	["C","WA","WD","GD"]	t	bg-cyan-600
+59	Abby D	Abby	Davidson	\N	["GS","GA"]	t	bg-orange-500
+60	Abbey N	Abbey	Noye	\N	["GA","GS","C","WA"]	t	bg-red-500
+76	Ava	Ava	Duncan	\N	["WA","WD","C","GA"]	t	bg-teal-600
+77	Pip	Pip	Wills	\N	["WD","WA","GD","GA"]	t	bg-fuchsia-600
+78	Isla	Isla	Mitchell	\N	["GS","GA","GD","GK"]	t	bg-violet-600
+79	Lucia	Lucia	Chapman	\N	["GK","GD","WD","WA"]	t	bg-emerald-600
+80	Jo Jo	Josephine	Moore	\N	["GK","GD","WD","WA"]	t	bg-blue-600
+81	Erin	Erin	Harris	\N	["C","WD","WA","GD"]	t	bg-green-700
+\.
+
+
+--
+-- Data for Name: rosters; Type: TABLE DATA; Schema: public; Owner: neondb_owner
+--
+
+COPY public.rosters (id, game_id, quarter, "position", player_id) FROM stdin;
+2803	73	1	GS	76
+2804	73	1	GA	60
+2809	73	2	WA	76
+2810	73	2	C	64
+2811	73	2	WD	59
+2815	73	3	GS	78
+2818	73	3	GD	60
+3236	76	1	GS	60
+2821	73	4	GS	77
+2824	73	4	C	61
+2825	73	4	WD	60
+2826	73	4	GD	59
+2942	65	1	GS	78
+2943	65	1	GD	66
+2970	66	1	GD	80
+2998	67	1	GS	78
+2999	67	1	GD	61
+3027	68	1	GS	78
+3037	68	2	WD	65
+2860	62	1	WD	59
+3237	76	1	GA	59
+3238	76	2	GS	60
+3038	68	2	GD	80
+3039	68	2	GK	79
+3049	68	4	WA	79
+2918	63	1	GS	78
+2924	63	2	C	64
+2931	63	3	WA	59
+2933	63	3	GD	71
+2934	63	3	GK	80
+2935	63	4	GS	64
+2938	63	4	C	71
+3052	68	4	GD	80
+3054	69	1	GA	62
+3239	76	1	WD	80
+3241	76	2	GA	62
+3248	76	2	GD	78
+3250	76	3	GA	62
+3251	76	3	WA	79
+3255	76	3	GK	78
+3256	76	4	GS	59
+3259	76	4	C	62
+3262	76	4	GK	61
+3082	72	1	GA	60
+3210	70	1	C	62
+3216	70	2	GA	78
+3223	70	3	WA	59
+3227	70	3	GK	66
+3235	70	4	GK	80
+2805	73	1	WA	61
+2806	73	1	GK	78
+2807	73	2	GS	78
+2808	73	2	GA	60
+3240	76	1	WA	61
+2812	73	2	GD	77
+2813	73	2	GK	61
+2814	73	3	GA	59
+2816	73	3	WA	77
+2817	73	3	C	64
+2819	73	3	WD	76
+2820	73	3	GK	61
+2822	73	4	GA	64
+2823	73	4	WA	76
+2827	73	4	GK	78
+2944	65	1	WA	59
+2953	65	2	WD	65
+2954	65	2	GD	66
+2955	65	2	GK	61
+2861	62	1	WA	61
+2867	62	2	GA	64
+2875	62	3	C	60
+2876	62	3	WD	65
+2877	62	3	GD	80
+2880	62	4	GS	78
+2883	62	4	WD	65
+2958	65	3	C	71
+2962	65	4	GS	64
+2971	66	1	GS	78
+2985	66	3	WD	65
+2986	66	3	GD	59
+2987	66	3	GK	80
+2991	66	4	C	64
+2992	66	4	WD	65
+2993	66	4	GD	61
+3000	67	1	WD	59
+3009	67	2	C	60
+3010	67	2	GD	61
+3011	67	2	GK	80
+3012	67	3	GS	78
+3021	67	4	WA	64
+3022	67	4	C	71
+3023	67	4	WD	61
+3024	67	4	GD	80
+3028	68	1	WD	80
+3036	68	2	C	60
+3040	68	3	WA	79
+3048	68	4	GS	60
+3053	68	4	GK	61
+3055	69	1	WD	61
+3064	69	2	WD	79
+2919	63	1	WA	59
+2920	63	1	GK	80
+2921	63	2	GS	78
+2922	63	2	GA	60
+2923	63	2	WA	59
+2932	63	3	C	64
+2936	63	4	GA	60
+3066	69	2	GD	80
+3067	69	2	GK	66
+3077	69	4	GA	62
+3079	69	4	GD	66
+3083	72	1	WD	61
+3093	72	2	WD	61
+3094	72	2	GD	79
+3095	72	2	GK	80
+3211	70	1	GA	78
+3217	70	2	C	62
+3221	70	2	GK	80
+3230	70	4	WA	60
+3233	70	4	WD	61
+2828	73	1	WD	59
+2945	65	1	GA	64
+2951	65	2	WA	71
+2964	65	4	GA	60
+2968	65	4	GD	78
+3242	76	1	GK	79
+2972	66	1	GA	60
+3244	76	2	WA	66
+3246	76	2	WD	61
+3253	76	3	WD	66
+3258	76	4	WA	80
+2973	66	1	GK	66
+2974	66	2	GS	78
+2862	62	1	GD	65
+2863	62	1	GK	80
+2866	62	2	C	60
+2869	62	2	WD	65
+2870	62	2	GD	80
+2871	62	2	GK	61
+2873	62	3	GA	64
+2881	62	4	GA	64
+2882	62	4	C	60
+2884	62	4	GD	80
+2885	62	4	GK	61
+2975	66	2	GA	64
+2976	66	2	WA	61
+2977	66	2	C	71
+2978	66	2	WD	65
+2979	66	2	GD	80
+2980	66	2	GK	66
+2981	66	3	GS	78
+2982	66	3	GA	64
+2983	66	3	WA	71
+2984	66	3	C	60
+2988	66	4	GS	60
+2989	66	4	GA	59
+2990	66	4	WA	71
+2994	66	4	GK	80
+3001	67	1	WA	71
+3008	67	2	WD	71
+3013	67	3	GA	60
+3020	67	4	GA	60
+3025	67	4	GK	79
+3029	68	1	WA	65
+3035	68	2	GA	62
+3042	68	3	GA	78
+3047	68	4	GA	78
+3056	69	1	C	64
+3065	69	2	C	62
+3068	69	3	GS	61
+3076	69	4	WA	78
+3078	69	4	C	64
+3080	69	4	WD	63
+3084	72	1	GD	79
+3091	72	2	C	64
+3096	72	3	GS	78
+3212	70	1	GD	80
+3215	70	2	GS	61
+3225	70	3	GA	60
+3226	70	3	WD	61
+3231	70	4	GS	59
+3234	70	4	C	64
+3243	76	1	GD	78
+3245	76	2	C	64
+3247	76	2	GK	80
+3249	76	3	GS	59
+3252	76	3	C	60
+3254	76	3	GD	61
+3257	76	4	GA	64
+3260	76	4	WD	79
+3261	76	4	GD	66
+2946	65	1	C	60
+2950	65	2	GA	64
+2957	65	3	WA	61
+2959	65	3	GS	64
+2960	65	3	WD	59
+2829	73	1	GD	77
+2961	65	3	GK	66
+2965	65	4	WA	59
+3263	76	1	C	64
+2966	65	4	C	65
+2967	65	4	WD	71
+2969	65	4	GK	66
+2995	66	1	WA	61
+3002	67	1	GA	60
+2864	62	1	C	64
+2865	62	2	GS	78
+2868	62	2	WA	59
+2872	62	3	GS	78
+2874	62	3	WA	59
+2878	62	3	GK	61
+2879	62	4	WA	59
+2914	63	1	GD	71
+2915	63	1	C	64
+3004	67	1	GK	79
+3007	67	2	WA	59
+3014	67	3	WA	59
+3017	67	3	GD	80
+3018	67	3	GK	79
+3030	68	1	GD	62
+3034	68	2	WA	64
+3041	68	3	GS	60
+3044	68	3	WD	64
+3045	68	3	GD	80
+3057	69	1	GS	78
+3063	69	2	WA	63
+3069	69	3	GA	64
+3075	69	4	GS	61
+3081	69	4	GK	79
+3085	72	1	WA	59
+3092	72	2	WA	59
+3097	72	3	GA	60
+3104	72	4	WA	61
+3107	72	4	WD	79
+3109	72	4	GK	80
+3213	70	1	WD	59
+3214	70	1	GK	66
+3218	70	2	WA	64
+3220	70	2	GD	66
+3224	70	3	C	64
+3228	70	3	GD	62
+2947	65	1	WD	65
+2948	65	1	GK	61
+2949	65	2	GS	78
+2952	65	2	C	60
+2830	73	1	C	64
+2858	62	1	GS	78
+2956	65	3	GA	60
+2963	65	3	GD	78
+2916	63	1	GA	60
+2926	63	2	GD	71
+2927	63	2	GK	80
+2928	63	3	GS	78
+2929	63	3	WD	63
+2939	63	4	WD	59
+2940	63	4	GD	80
+2941	63	4	GK	78
+2996	66	1	WD	59
+3003	67	1	C	64
+3005	67	2	GS	78
+3006	67	2	GA	64
+3015	67	3	C	64
+3016	67	3	WD	61
+3019	67	4	GS	78
+3031	68	1	GA	64
+3032	68	1	GK	61
+3033	68	2	GS	78
+3043	68	3	C	62
+3046	68	3	GK	61
+3050	68	4	C	62
+3051	68	4	WD	64
+3058	69	1	WA	80
+3062	69	2	GA	78
+3071	69	3	C	62
+3072	69	3	WD	63
+3073	69	3	GD	79
+3086	72	1	GS	78
+3090	72	2	GA	60
+3098	72	3	WA	59
+3100	72	3	WD	61
+3101	72	3	GD	79
+3103	72	4	GS	64
+3108	72	4	GD	78
+3208	70	1	GS	61
+2997	66	1	C	71
+3026	68	1	C	60
+3059	69	1	GD	79
+3060	69	1	GK	66
+3061	69	2	GS	64
+3070	69	3	WA	80
+3074	69	3	GK	66
+2859	62	1	GA	60
+3087	72	1	C	64
+2917	63	1	WD	63
+2925	63	2	WD	63
+2930	63	3	GA	60
+2937	63	4	WA	63
+3088	72	1	GK	80
+3089	72	2	GS	78
+3099	72	3	C	64
+3102	72	3	GK	80
+3105	72	4	GA	60
+3106	72	4	C	59
+3209	70	1	WA	64
+3219	70	2	WD	59
+3222	70	3	GS	78
+3229	70	4	GA	62
+3232	70	4	GD	78
+\.
+
+
+--
+-- Data for Name: seasons; Type: TABLE DATA; Schema: public; Owner: neondb_owner
+--
+
+COPY public.seasons (id, name, start_date, end_date, is_active, type, year, display_order) FROM stdin;
+1	Autumn 2025	2025-01-01	2025-06-29	t	Default	2025	0
+2	Spring 2025	2025-06-30	2025-12-30	f	Regular	2025	0
+\.
+
+
+--
+-- Data for Name: team_players; Type: TABLE DATA; Schema: public; Owner: neondb_owner
+--
+
+COPY public.team_players (id, team_id, player_id, is_regular, jersey_number, position_preferences, created_at) FROM stdin;
+2	1	62	t	\N	\N	2025-05-29 21:29:27.927458
+4	1	65	t	\N	\N	2025-05-29 21:29:28.019289
+6	1	64	t	\N	\N	2025-05-29 21:29:28.108026
+11	1	77	t	\N	\N	2025-05-29 21:29:28.329838
+757	116	60	t	\N	\N	2025-05-31 08:06:50.060045
+758	116	59	t	\N	\N	2025-05-31 08:15:06.907031
+759	116	61	t	\N	\N	2025-05-31 08:15:09.944287
+760	116	78	t	\N	\N	2025-05-31 08:15:13.458677
+761	116	80	t	\N	\N	2025-05-31 08:15:16.452189
+762	116	79	t	\N	\N	2025-05-31 08:58:05.530598
+763	116	64	t	\N	\N	2025-05-31 08:58:08.137163
+764	116	62	t	\N	\N	2025-05-31 08:58:11.121179
+765	123	81	t	\N	\N	2025-06-05 00:15:20.464313
+776	123	76	t	\N	\N	2025-06-05 02:44:46.75774
+777	123	63	t	\N	\N	2025-06-05 03:22:49.283902
+\.
+
+
+--
+-- Data for Name: teams; Type: TABLE DATA; Schema: public; Owner: neondb_owner
+--
+
+COPY public.teams (id, club_id, season_id, name, division, is_active, created_at, updated_at) FROM stdin;
+70	15	1	tests	test	t	2025-05-30 03:19:31.677692	2025-05-30 03:19:31.677692
+116	54	1	WNC Dingoes	13U/3s	t	2025-05-30 10:03:57.60598	2025-05-30 10:03:57.60598
+2	1	2	Panthers Asteroids	13U/3s	t	2025-05-29 21:29:27.787962	2025-06-02 21:14:43.382
+67	15	1	EDNC Lunas	13U/3s	t	2025-05-30 03:14:12.044276	2025-06-02 21:15:39.036
+117	57	1	Emeralds	13U/3s	t	2025-06-02 22:12:34.630725	2025-06-02 22:12:34.630725
+118	54	1	BYE	BYE	t	2025-06-02 22:56:12.839461	2025-06-02 22:56:12.839461
+119	1	1	BYE	BYE	t	2025-06-02 22:56:12.994384	2025-06-02 22:56:12.994384
+120	15	1	BYE	BYE	t	2025-06-02 22:56:13.131712	2025-06-02 22:56:13.131712
+121	57	1	BYE	BYE	t	2025-06-02 22:56:13.268307	2025-06-02 22:56:13.268307
+122	58	1	Deep Creek Jades	External	t	2025-06-02 22:56:13.61569	2025-06-02 22:56:13.61569
+123	54	1	WNC Emus	15U/1s	t	2025-06-04 22:57:05.300059	2025-06-04 22:57:05.300059
+1	1	1	Matrix	15U/1s	t	2025-05-29 21:29:27.739028	2025-06-05 03:43:36.167
+71	15	1	Jets	15U/1s	t	2025-05-30 03:32:54.943015	2025-06-05 03:44:26.489
+124	57	1	Gems	15U/1s	t	2025-06-05 03:44:55.326549	2025-06-05 03:44:55.326549
+125	59	1	Pumas	15/1s	t	2025-06-05 03:46:15.227489	2025-06-05 03:46:15.227489
+\.
+
+
+--
+-- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: neondb_owner
+--
+
+COPY public.users (id, username, password) FROM stdin;
+1	admin	admin123
+\.
+
+
+--
+-- Name: club_players_id_seq; Type: SEQUENCE SET; Schema: public; Owner: neondb_owner
+--
+
+SELECT pg_catalog.setval('public.club_players_id_seq', 32, true);
+
+
+--
+-- Name: club_users_id_seq; Type: SEQUENCE SET; Schema: public; Owner: neondb_owner
+--
+
+SELECT pg_catalog.setval('public.club_users_id_seq', 48, true);
+
+
+--
+-- Name: clubs_id_seq; Type: SEQUENCE SET; Schema: public; Owner: neondb_owner
+--
+
+SELECT pg_catalog.setval('public.clubs_id_seq', 59, true);
+
+
+--
+-- Name: game_permissions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: neondb_owner
+--
+
+SELECT pg_catalog.setval('public.game_permissions_id_seq', 14, true);
+
+
+--
+-- Name: game_stats_id_seq; Type: SEQUENCE SET; Schema: public; Owner: neondb_owner
+--
+
+SELECT pg_catalog.setval('public.game_stats_id_seq', 851, true);
+
+
+--
+-- Name: game_statuses_id_seq; Type: SEQUENCE SET; Schema: public; Owner: neondb_owner
+--
+
+SELECT pg_catalog.setval('public.game_statuses_id_seq', 7, true);
+
+
+--
+-- Name: games_id_seq; Type: SEQUENCE SET; Schema: public; Owner: neondb_owner
+--
+
+SELECT pg_catalog.setval('public.games_id_seq', 76, true);
+
+
+--
+-- Name: opponents_id_seq; Type: SEQUENCE SET; Schema: public; Owner: neondb_owner
+--
+
+SELECT pg_catalog.setval('public.opponents_id_seq', 24, true);
+
+
+--
+-- Name: player_availability_id_seq; Type: SEQUENCE SET; Schema: public; Owner: neondb_owner
+--
+
+SELECT pg_catalog.setval('public.player_availability_id_seq', 274, true);
+
+
+--
+-- Name: player_borrowing_id_seq; Type: SEQUENCE SET; Schema: public; Owner: neondb_owner
+--
+
+SELECT pg_catalog.setval('public.player_borrowing_id_seq', 1, false);
+
+
+--
+-- Name: player_seasons_id_seq; Type: SEQUENCE SET; Schema: public; Owner: neondb_owner
+--
+
+SELECT pg_catalog.setval('public.player_seasons_id_seq', 58, true);
+
+
+--
+-- Name: players_id_seq; Type: SEQUENCE SET; Schema: public; Owner: neondb_owner
+--
+
+SELECT pg_catalog.setval('public.players_id_seq', 81, true);
+
+
+--
+-- Name: rosters_id_seq; Type: SEQUENCE SET; Schema: public; Owner: neondb_owner
+--
+
+SELECT pg_catalog.setval('public.rosters_id_seq', 3263, true);
+
+
+--
+-- Name: seasons_id_seq; Type: SEQUENCE SET; Schema: public; Owner: neondb_owner
+--
+
+SELECT pg_catalog.setval('public.seasons_id_seq', 2, true);
+
+
+--
+-- Name: team_players_id_seq; Type: SEQUENCE SET; Schema: public; Owner: neondb_owner
+--
+
+SELECT pg_catalog.setval('public.team_players_id_seq', 777, true);
+
+
+--
+-- Name: teams_id_seq; Type: SEQUENCE SET; Schema: public; Owner: neondb_owner
+--
+
+SELECT pg_catalog.setval('public.teams_id_seq', 125, true);
+
+
+--
+-- Name: users_id_seq; Type: SEQUENCE SET; Schema: public; Owner: neondb_owner
+--
+
+SELECT pg_catalog.setval('public.users_id_seq', 1, true);
+
+
+--
+-- Name: club_players club_players_club_id_player_id_key; Type: CONSTRAINT; Schema: public; Owner: neondb_owner
+--
+
+ALTER TABLE ONLY public.club_players
+    ADD CONSTRAINT club_players_club_id_player_id_key UNIQUE (club_id, player_id);
+
+
+--
+-- Name: club_players club_players_pkey; Type: CONSTRAINT; Schema: public; Owner: neondb_owner
+--
+
+ALTER TABLE ONLY public.club_players
+    ADD CONSTRAINT club_players_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: club_users club_users_club_id_user_id_key; Type: CONSTRAINT; Schema: public; Owner: neondb_owner
+--
+
+ALTER TABLE ONLY public.club_users
+    ADD CONSTRAINT club_users_club_id_user_id_key UNIQUE (club_id, user_id);
+
+
+--
+-- Name: club_users club_users_pkey; Type: CONSTRAINT; Schema: public; Owner: neondb_owner
+--
+
+ALTER TABLE ONLY public.club_users
+    ADD CONSTRAINT club_users_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: clubs clubs_code_key; Type: CONSTRAINT; Schema: public; Owner: neondb_owner
+--
+
+ALTER TABLE ONLY public.clubs
+    ADD CONSTRAINT clubs_code_key UNIQUE (code);
+
+
+--
+-- Name: clubs clubs_name_key; Type: CONSTRAINT; Schema: public; Owner: neondb_owner
+--
+
+ALTER TABLE ONLY public.clubs
+    ADD CONSTRAINT clubs_name_key UNIQUE (name);
+
+
+--
+-- Name: clubs clubs_pkey; Type: CONSTRAINT; Schema: public; Owner: neondb_owner
+--
+
+ALTER TABLE ONLY public.clubs
+    ADD CONSTRAINT clubs_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: game_permissions game_permissions_game_id_club_id_key; Type: CONSTRAINT; Schema: public; Owner: neondb_owner
+--
+
+ALTER TABLE ONLY public.game_permissions
+    ADD CONSTRAINT game_permissions_game_id_club_id_key UNIQUE (game_id, club_id);
+
+
+--
+-- Name: game_permissions game_permissions_pkey; Type: CONSTRAINT; Schema: public; Owner: neondb_owner
+--
+
+ALTER TABLE ONLY public.game_permissions
+    ADD CONSTRAINT game_permissions_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: game_stats game_stats_pkey; Type: CONSTRAINT; Schema: public; Owner: neondb_owner
+--
+
+ALTER TABLE ONLY public.game_stats
+    ADD CONSTRAINT game_stats_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: game_statuses game_statuses_pkey; Type: CONSTRAINT; Schema: public; Owner: neondb_owner
+--
+
+ALTER TABLE ONLY public.game_statuses
+    ADD CONSTRAINT game_statuses_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: games games_pkey; Type: CONSTRAINT; Schema: public; Owner: neondb_owner
+--
+
+ALTER TABLE ONLY public.games
+    ADD CONSTRAINT games_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: opponents opponents_pkey; Type: CONSTRAINT; Schema: public; Owner: neondb_owner
+--
+
+ALTER TABLE ONLY public.opponents
+    ADD CONSTRAINT opponents_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: opponents opponents_team_name_unique; Type: CONSTRAINT; Schema: public; Owner: neondb_owner
+--
+
+ALTER TABLE ONLY public.opponents
+    ADD CONSTRAINT opponents_team_name_unique UNIQUE (team_name);
+
+
+--
+-- Name: player_availability player_availability_pkey; Type: CONSTRAINT; Schema: public; Owner: neondb_owner
+--
+
+ALTER TABLE ONLY public.player_availability
+    ADD CONSTRAINT player_availability_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: player_borrowing player_borrowing_game_id_player_id_key; Type: CONSTRAINT; Schema: public; Owner: neondb_owner
+--
+
+ALTER TABLE ONLY public.player_borrowing
+    ADD CONSTRAINT player_borrowing_game_id_player_id_key UNIQUE (game_id, player_id);
+
+
+--
+-- Name: player_borrowing player_borrowing_pkey; Type: CONSTRAINT; Schema: public; Owner: neondb_owner
+--
+
+ALTER TABLE ONLY public.player_borrowing
+    ADD CONSTRAINT player_borrowing_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: player_seasons player_seasons_pkey; Type: CONSTRAINT; Schema: public; Owner: neondb_owner
+--
+
+ALTER TABLE ONLY public.player_seasons
+    ADD CONSTRAINT player_seasons_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: players players_pkey; Type: CONSTRAINT; Schema: public; Owner: neondb_owner
+--
+
+ALTER TABLE ONLY public.players
+    ADD CONSTRAINT players_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: rosters rosters_pkey; Type: CONSTRAINT; Schema: public; Owner: neondb_owner
+--
+
+ALTER TABLE ONLY public.rosters
+    ADD CONSTRAINT rosters_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: seasons seasons_pkey; Type: CONSTRAINT; Schema: public; Owner: neondb_owner
+--
+
+ALTER TABLE ONLY public.seasons
+    ADD CONSTRAINT seasons_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: team_players team_players_pkey; Type: CONSTRAINT; Schema: public; Owner: neondb_owner
+--
+
+ALTER TABLE ONLY public.team_players
+    ADD CONSTRAINT team_players_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: team_players team_players_team_id_player_id_key; Type: CONSTRAINT; Schema: public; Owner: neondb_owner
+--
+
+ALTER TABLE ONLY public.team_players
+    ADD CONSTRAINT team_players_team_id_player_id_key UNIQUE (team_id, player_id);
+
+
+--
+-- Name: teams teams_club_id_season_id_name_key; Type: CONSTRAINT; Schema: public; Owner: neondb_owner
+--
+
+ALTER TABLE ONLY public.teams
+    ADD CONSTRAINT teams_club_id_season_id_name_key UNIQUE (club_id, season_id, name);
+
+
+--
+-- Name: teams teams_pkey; Type: CONSTRAINT; Schema: public; Owner: neondb_owner
+--
+
+ALTER TABLE ONLY public.teams
+    ADD CONSTRAINT teams_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: neondb_owner
+--
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT users_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: users users_username_unique; Type: CONSTRAINT; Schema: public; Owner: neondb_owner
+--
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT users_username_unique UNIQUE (username);
+
+
+--
+-- Name: idx_club_players_active; Type: INDEX; Schema: public; Owner: neondb_owner
+--
+
+CREATE INDEX idx_club_players_active ON public.club_players USING btree (is_active);
+
+
+--
+-- Name: idx_club_players_club_id; Type: INDEX; Schema: public; Owner: neondb_owner
+--
+
+CREATE INDEX idx_club_players_club_id ON public.club_players USING btree (club_id);
+
+
+--
+-- Name: idx_club_players_player_id; Type: INDEX; Schema: public; Owner: neondb_owner
+--
+
+CREATE INDEX idx_club_players_player_id ON public.club_players USING btree (player_id);
+
+
+--
+-- Name: idx_game_stats_game_id; Type: INDEX; Schema: public; Owner: neondb_owner
+--
+
+CREATE INDEX idx_game_stats_game_id ON public.game_stats USING btree (game_id);
+
+
+--
+-- Name: idx_game_stats_game_pos_quarter; Type: INDEX; Schema: public; Owner: neondb_owner
+--
+
+CREATE INDEX idx_game_stats_game_pos_quarter ON public.game_stats USING btree (game_id, "position", quarter);
+
+
+--
+-- Name: idx_game_stats_position; Type: INDEX; Schema: public; Owner: neondb_owner
+--
+
+CREATE INDEX idx_game_stats_position ON public.game_stats USING btree ("position");
+
+
+--
+-- Name: idx_game_stats_quarter; Type: INDEX; Schema: public; Owner: neondb_owner
+--
+
+CREATE INDEX idx_game_stats_quarter ON public.game_stats USING btree (quarter);
+
+
+--
+-- Name: idx_rosters_game_id; Type: INDEX; Schema: public; Owner: neondb_owner
+--
+
+CREATE INDEX idx_rosters_game_id ON public.rosters USING btree (game_id);
+
+
+--
+-- Name: idx_rosters_game_quarter; Type: INDEX; Schema: public; Owner: neondb_owner
+--
+
+CREATE INDEX idx_rosters_game_quarter ON public.rosters USING btree (game_id, quarter);
+
+
+--
+-- Name: idx_rosters_player_id; Type: INDEX; Schema: public; Owner: neondb_owner
+--
+
+CREATE INDEX idx_rosters_player_id ON public.rosters USING btree (player_id);
+
+
+--
+-- Name: club_players club_players_club_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: neondb_owner
+--
+
+ALTER TABLE ONLY public.club_players
+    ADD CONSTRAINT club_players_club_id_fkey FOREIGN KEY (club_id) REFERENCES public.clubs(id) ON DELETE CASCADE;
+
+
+--
+-- Name: club_players club_players_player_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: neondb_owner
+--
+
+ALTER TABLE ONLY public.club_players
+    ADD CONSTRAINT club_players_player_id_fkey FOREIGN KEY (player_id) REFERENCES public.players(id) ON DELETE CASCADE;
+
+
+--
+-- Name: club_users club_users_club_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: neondb_owner
+--
+
+ALTER TABLE ONLY public.club_users
+    ADD CONSTRAINT club_users_club_id_fkey FOREIGN KEY (club_id) REFERENCES public.clubs(id) ON DELETE CASCADE;
+
+
+--
+-- Name: club_users club_users_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: neondb_owner
+--
+
+ALTER TABLE ONLY public.club_users
+    ADD CONSTRAINT club_users_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+
+
+--
+-- Name: game_permissions game_permissions_club_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: neondb_owner
+--
+
+ALTER TABLE ONLY public.game_permissions
+    ADD CONSTRAINT game_permissions_club_id_fkey FOREIGN KEY (club_id) REFERENCES public.clubs(id) ON DELETE CASCADE;
+
+
+--
+-- Name: game_permissions game_permissions_game_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: neondb_owner
+--
+
+ALTER TABLE ONLY public.game_permissions
+    ADD CONSTRAINT game_permissions_game_id_fkey FOREIGN KEY (game_id) REFERENCES public.games(id) ON DELETE CASCADE;
+
+
+--
+-- Name: games games_away_team_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: neondb_owner
+--
+
+ALTER TABLE ONLY public.games
+    ADD CONSTRAINT games_away_team_id_fkey FOREIGN KEY (away_team_id) REFERENCES public.teams(id);
+
+
+--
+-- Name: games games_home_team_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: neondb_owner
+--
+
+ALTER TABLE ONLY public.games
+    ADD CONSTRAINT games_home_team_id_fkey FOREIGN KEY (home_team_id) REFERENCES public.teams(id);
+
+
+--
+-- Name: games games_status_id_game_statuses_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: neondb_owner
+--
+
+ALTER TABLE ONLY public.games
+    ADD CONSTRAINT games_status_id_game_statuses_id_fk FOREIGN KEY (status_id) REFERENCES public.game_statuses(id);
+
+
+--
+-- Name: player_borrowing player_borrowing_borrowing_team_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: neondb_owner
+--
+
+ALTER TABLE ONLY public.player_borrowing
+    ADD CONSTRAINT player_borrowing_borrowing_team_id_fkey FOREIGN KEY (borrowing_team_id) REFERENCES public.teams(id) ON DELETE CASCADE;
+
+
+--
+-- Name: player_borrowing player_borrowing_game_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: neondb_owner
+--
+
+ALTER TABLE ONLY public.player_borrowing
+    ADD CONSTRAINT player_borrowing_game_id_fkey FOREIGN KEY (game_id) REFERENCES public.games(id) ON DELETE CASCADE;
+
+
+--
+-- Name: player_borrowing player_borrowing_lending_team_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: neondb_owner
+--
+
+ALTER TABLE ONLY public.player_borrowing
+    ADD CONSTRAINT player_borrowing_lending_team_id_fkey FOREIGN KEY (lending_team_id) REFERENCES public.teams(id) ON DELETE CASCADE;
+
+
+--
+-- Name: player_borrowing player_borrowing_player_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: neondb_owner
+--
+
+ALTER TABLE ONLY public.player_borrowing
+    ADD CONSTRAINT player_borrowing_player_id_fkey FOREIGN KEY (player_id) REFERENCES public.players(id) ON DELETE CASCADE;
+
+
+--
+-- Name: team_players team_players_player_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: neondb_owner
+--
+
+ALTER TABLE ONLY public.team_players
+    ADD CONSTRAINT team_players_player_id_fkey FOREIGN KEY (player_id) REFERENCES public.players(id) ON DELETE CASCADE;
+
+
+--
+-- Name: team_players team_players_team_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: neondb_owner
+--
+
+ALTER TABLE ONLY public.team_players
+    ADD CONSTRAINT team_players_team_id_fkey FOREIGN KEY (team_id) REFERENCES public.teams(id) ON DELETE CASCADE;
+
+
+--
+-- Name: teams teams_club_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: neondb_owner
+--
+
+ALTER TABLE ONLY public.teams
+    ADD CONSTRAINT teams_club_id_fkey FOREIGN KEY (club_id) REFERENCES public.clubs(id) ON DELETE CASCADE;
+
+
+--
+-- Name: teams teams_season_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: neondb_owner
+--
+
+ALTER TABLE ONLY public.teams
+    ADD CONSTRAINT teams_season_id_fkey FOREIGN KEY (season_id) REFERENCES public.seasons(id) ON DELETE CASCADE;
+
+
+--
+-- Name: DEFAULT PRIVILEGES FOR SEQUENCES; Type: DEFAULT ACL; Schema: public; Owner: cloud_admin
+--
+
+ALTER DEFAULT PRIVILEGES FOR ROLE cloud_admin IN SCHEMA public GRANT ALL ON SEQUENCES TO neon_superuser WITH GRANT OPTION;
+
+
+--
+-- Name: DEFAULT PRIVILEGES FOR TABLES; Type: DEFAULT ACL; Schema: public; Owner: cloud_admin
+--
+
+ALTER DEFAULT PRIVILEGES FOR ROLE cloud_admin IN SCHEMA public GRANT ALL ON TABLES TO neon_superuser WITH GRANT OPTION;
+
+
+--
+-- PostgreSQL database dump complete
+--
+
