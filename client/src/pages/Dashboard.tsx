@@ -13,7 +13,7 @@ import { UpcomingGameRecommendations } from '@/components/dashboard/UpcomingGame
 import { TeamSwitcher } from '@/components/layout/TeamSwitcher';
 
 export default function Dashboard() {
-  const { currentClub, currentClubId, isLoading: clubLoading, currentTeamId, currentTeam } = useClub();
+  const { currentClub, currentClubId, isLoading: clubLoading, currentTeamId, currentTeam, clubTeams } = useClub();
 
   // Call ALL hooks first, before any conditional returns
   const { data: players = [], isLoading: isLoadingPlayers, error: playersError } = useQuery<any[]>({
