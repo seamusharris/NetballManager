@@ -51,7 +51,7 @@ export default function ClubManagement() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingClub, setEditingClub] = useState<any>(null);
   const [deletingClub, setDeletingClub] = useState<any>(null);
-  const { currentClub, switchToClub } = useClub();
+  const { currentClub, switchClub } = useClub();
   const queryClient = useQueryClient();
   const [, navigate] = useLocation();
 
@@ -305,7 +305,7 @@ export default function ClubManagement() {
                     size="sm"
                     onClick={async () => {
                       if (currentClub?.id !== club.id) {
-                        await switchToClub(club.id);
+                        switchClub(club.id);
                       }
                       navigate('/players');
                     }}
@@ -317,7 +317,7 @@ export default function ClubManagement() {
                     size="sm"
                     onClick={async () => {
                       if (currentClub?.id !== club.id) {
-                        await switchToClub(club.id);
+                        switchClub(club.id);
                       }
                       navigate('/teams');
                     }}
@@ -329,7 +329,7 @@ export default function ClubManagement() {
                     size="sm"
                     onClick={async () => {
                       if (currentClub?.id !== club.id) {
-                        await switchToClub(club.id);
+                        switchClub(club.id);
                       }
                       navigate('/games');
                     }}
