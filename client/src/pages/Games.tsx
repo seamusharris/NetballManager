@@ -11,6 +11,10 @@ import { Game, Player } from '@shared/schema';
 import { useToast } from '@/hooks/use-toast';
 import { useLocation } from 'wouter';
 import { useClub } from '@/contexts/ClubContext';
+import { BackButton } from '@/components/ui/back-button';
+import { Badge } from '@/components/ui/badge';
+import { TEAM_NAME } from '@/lib/settings';
+import { TeamSwitcher } from '@/components/layout/TeamSwitcher';
 
 
 interface QueryParams {
@@ -168,10 +172,27 @@ export default function Games() {
   return (
     <>
       <Card>
-        <CardHeader>
-          <CardTitle>Games</CardTitle>
-          <CardDescription>Manage games here</CardDescription>
-        </CardHeader>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Games</CardTitle>
+                <CardDescription>
+                  Manage and view game schedules and results
+                  {currentTeamId && (
+                    <span className="ml-2 text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                      Filtered by {currentTeam?.name || 'Selected Team'}
+                    </span>
+                  )}
+                </CardDescription>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="text-sm text-muted-foreground">
+                  Team Filter (Optional):
+                </div>
+                <TeamSwitcher />
+              </div>
+            </div>
+          </CardHeader>
         <CardContent>
           <div className="flex justify-end pb-4">
             <Button onClick={() => setIsDialogOpen(true)}>

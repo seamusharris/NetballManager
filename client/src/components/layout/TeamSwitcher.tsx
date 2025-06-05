@@ -15,12 +15,18 @@ export function TeamSwitcher() {
     <div className="flex items-center space-x-2">
       <span className="text-sm font-medium text-gray-700">Team:</span>
       <Select
-        value={currentTeamId?.toString() || ''}
-        onValueChange={(value) => setCurrentTeamId(parseInt(value, 10))}
+        value={currentTeamId?.toString() || 'all'}
+        onValueChange={(value) => {
+          if (value === 'all') {
+            setCurrentTeamId(null);
+          } else {
+            setCurrentTeamId(parseInt(value, 10));
+          }
+        }}
       >
         <SelectTrigger className="w-[200px]">
-          <SelectValue placeholder="Select team">
-            {currentTeam && (
+          <SelectValue placeholder="All teams">
+            {currentTeam ? (
               <div className="flex items-center space-x-2">
                 <span>{currentTeam.name}</span>
                 {currentTeam.division && (
@@ -29,11 +35,16 @@ export function TeamSwitcher() {
                   </Badge>
                 )}
               </div>
+            ) : (
+              <span className="text-muted-foreground">All teams</span>
             )}
           </SelectValue>
         </SelectTrigger>
         <SelectContent>
-          {clubTeams.map((team) => (
+          <SelectItem value="all">
+            <span className="text-muted-foreground">All teams (no filter)</span>
+          </SelectItem>
+          {clubTeams.filter(team => team.name !== 'BYE').map((team) => (
             <SelectItem key={team.id} value={team.id.toString()}>
               <div className="flex items-center space-x-2">
                 <span>{team.name}</span>

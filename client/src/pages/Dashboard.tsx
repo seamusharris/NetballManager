@@ -13,7 +13,7 @@ import { UpcomingGameRecommendations } from '@/components/dashboard/UpcomingGame
 import { TeamSwitcher } from '@/components/layout/TeamSwitcher';
 
 export default function Dashboard() {
-  const { currentClub, currentClubId, isLoading: clubLoading, currentTeamId } = useClub();
+  const { currentClub, currentClubId, isLoading: clubLoading, currentTeamId, currentTeam } = useClub();
 
   // Call ALL hooks first, before any conditional returns
   const { data: players = [], isLoading: isLoadingPlayers, error: playersError } = useQuery<any[]>({
@@ -152,6 +152,27 @@ export default function Dashboard() {
         <title>Team Dashboard | {TEAM_NAME} Stats Tracker</title>
         <meta name="description" content={`View ${TEAM_NAME} team's performance metrics, upcoming games, and player statistics`} />
       </Helmet>
+
+      <div className="container py-8 mx-auto space-y-8">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div className="space-y-1">
+            <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+              Team Dashboard
+            </h1>
+            <p className="text-lg text-muted-foreground">
+              Performance metrics and insights for your team
+              {currentTeamId && (
+                <span className="ml-2 text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                  {currentTeam?.name || 'Selected Team'}
+                </span>
+              )}
+            </p>
+          </div>
+          <div className="flex items-center gap-4">
+            <TeamSwitcher />
+          </div>
+        </div>
 
       {/* BatchScoreDisplay doesn't render anything but efficiently loads and caches game scores */}
       {games && Array.isArray(games) && games.length > 0 && <BatchScoreDisplay games={games} />}

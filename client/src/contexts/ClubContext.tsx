@@ -37,6 +37,7 @@ interface ClubContextType {
   userClubs: UserClubAccess[];
   clubTeams: Team[];
   switchClub: (clubId: number) => void;
+  setCurrentTeamId: (teamId: number | null) => void;
   hasPermission: (permission: keyof UserClubAccess['permissions']) => boolean;
   isLoading: boolean;
   isInitialized: boolean;
@@ -208,8 +209,8 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
     userClubs,
     clubTeams,
     switchClub,
-    hasPermission,
     setCurrentTeamId: handleSetCurrentTeamId,
+    hasPermission,
     isLoading: isLoadingClubs || (!!currentClubId && isLoadingClub) || isLoadingTeams,
     isInitialized,
   };
