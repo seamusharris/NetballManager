@@ -42,6 +42,38 @@ export default function ClubDashboard() {
     enabled: !!currentClubId,
   });
 
+  // Centralized stats fetching for completed games only
+  const completedGameIds = games?.filter(game => 
+    game.statusIsCompleted && game.statusAllowsStatistics
+  ).map(game => game.id) || [];
+
+  const { data: centralizedStats = {}, isLoading: isLoadingStats } = useQuery({
+    queryKey: ['centralizedStats', currentClubId, completedGameIds.join(',')],
+    queryFn: async () => {
+      if (completedGameIds.length === 0) return {};
+
+      console.log(`ClubDashboard centralizing stats fetch for ${completedGameIds.length} completed games`);
+      const statsMap: Record<number, any[]> = {};
+
+      // Fetch stats for completed games only
+      for (const gameId of completedGameIds) {
+        try {
+          const stats = await apiClient.get(`/api/games/${gameId}/stats`);
+          statsMap[gameId] = stats || [];
+        } catch (error) {
+          console.error(`Error fetching stats for game ${gameId}:`, error);
+          statsMap[gameId] = [];
+        }
+      }
+
+      console.log(`ClubDashboard centralized stats fetch completed for ${Object.keys(statsMap).length} games`);
+      return statsMap;
+    },
+    enabled: !!currentClubId && completedGameIds.length > 0,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 15 * 60 * 1000 // 15 minutes
+  });
+
   if (clubLoading || !currentClubId) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -53,7 +85,7 @@ export default function ClubDashboard() {
     );
   }
 
-  const isLoading = isLoadingPlayers || isLoadingGames || isLoadingTeams || isLoadingSeasons || isLoadingActiveSeason;
+  const isLoading = isLoadingPlayers || isLoadingGames || isLoadingTeams || isLoadingSeasons || isLoadingActiveSeason || isLoadingStats;
 
   if (isLoading) {
     return (
