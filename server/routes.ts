@@ -2461,7 +2461,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           )
         ORDER BY p.display_name
       `);
-      
+
       console.log(`Unassigned players query returned ${unassignedPlayers.rows.length} players:`, unassignedPlayers.rows.map(r => r.display_name));
 
       // Let's also check what the final mapped result looks like
@@ -2480,26 +2480,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`Found ${mappedPlayers.length} unassigned players for season ${seasonId}:`, mappedPlayers.map(p => ({ id: p.id, name: p.displayName })));
 
-      // If no unassigned players, let's check if it's because all players are assigned to teams
-      // or if there are simply no players in the season
-      if (mappedPlayers.length === 0) {
-        console.log(`No unassigned players found. Checking if this is due to assignments or missing season players...`);
-        
-        // Check all players in season (regardless of team assignment)
-        const allSeasonPlayers = await db.execute(sql`
-          SELECT p.id, p.display_name
-          FROM players p
-          JOIN club_players cp ON p.id = cp.player_id
-          JOIN player_seasons ps ON p.id = ps.player_id
-          WHERE cp.club_id = ${clubId} 
-            AND cp.is_active = true
-            AND p.active = true
-            AND ps.season_id = ${seasonId}
-          ORDER BY p.display_name
-        `);
-        console.log(`Total active players in season ${seasonId} for club ${clubId}:`, allSeasonPlayers.rows.length);
-        console.log(`Season players:`, allSeasonPlayers.rows.map(r => r.display_name));
-      }
+      // SPECIFIC DEBUG: Check for Erin
+      const erinCheck = await db.execute(sql`
+        SELECT p.id, p.display_name,
+               cp.is_active as club_active,
+               ps.season_id,
+               CASE WHEN tp.player_id IS NOT NULL THEN 'ASSIGNED_TO_TEAM' ELSE 'NOT_ASSIGNED' END as team_status,
+               t.name as team_name
+        FROM players p
+        LEFT JOIN club_players cp ON p.id = cp.player_id AND cp.club_id = ${clubId}
+        LEFT JOIN player_seasons ps ON p.id = ps.player_id AND ps.season_id = ${seasonId}
+        LEFT JOIN team_players tp ON p.id = tp.player_id
+        LEFT JOIN teams t ON tp.team_id = t.id AND t.season_id = ${seasonId}
+        WHERE LOWER(p.display_name) LIKE '%erin%' OR LOWER(p.first_name) LIKE '%erin%'
+        ORDER BY p.display_name
+      `);
+      console.log(`=== ERIN DEBUG ===`);
+      erinCheck.rows.forEach(row => {
+        console.log(`Player: ${row.display_name} (ID: ${row.id})`);
+        console.log(`  - Club Active: ${row.club_active}`);
+        console.log(`  - Season ID: ${row.season_id}`);
+        console.log(`  - Team Status: ${row.team_status}`);
+        console.log(`  - Team Name: ${row.team_name}`);
+      });
+      console.log(`=== END ERIN DEBUG ===`);
 
       console.log(`Final response being sent:`, JSON.stringify(mappedPlayers, null, 2));
       console.log(`=== UNASSIGNED PLAYERS ENDPOINT COMPLETE ===`);
