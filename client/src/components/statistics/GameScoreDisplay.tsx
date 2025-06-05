@@ -48,8 +48,16 @@ export function GameScoreDisplay({ gameId, compact = false, preloadedStats, fall
   if (error) {
     console.error('Error loading game stats:', error);
     
-    // For completed games with no stats, show a dash instead of error
-    if (error.message?.includes('No stats available for completed game')) {
+    // For completed games with no stats or any stats-related errors, show a dash instead of error
+    const errorMessage = error.message?.toLowerCase() || '';
+    const isStatsError = errorMessage.includes('no stats') || 
+                        errorMessage.includes('stats not found') || 
+                        errorMessage.includes('no stats available') ||
+                        errorMessage.includes('stats not available') ||
+                        errorMessage.includes('no goal stats') ||
+                        errorMessage.includes('no statistics');
+    
+    if (isStatsError) {
       return compact ? (
         <div className="text-muted-foreground">
           —
@@ -61,20 +69,7 @@ export function GameScoreDisplay({ gameId, compact = false, preloadedStats, fall
       );
     }
     
-    // For any other stat-related errors on completed games, also show dash
-    if (error.message?.toLowerCase().includes('no stats') || 
-        error.message?.toLowerCase().includes('stats not found')) {
-      return compact ? (
-        <div className="text-muted-foreground">
-          —
-        </div>
-      ) : (
-        <div className="text-muted-foreground">
-          No scores recorded
-        </div>
-      );
-    }
-    
+    // Only show "Score Error" for actual technical errors, not missing data
     return compact ? (
       <div className="text-destructive">
         Score Error
