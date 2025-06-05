@@ -188,31 +188,31 @@ export default function LiveStats() {
   const [redoStack, setRedoStack] = useState<GameStats[]>([]);
   const [saveInProgress, setSaveInProgress] = useState<boolean>(false);
 
-  // Fetch game details
+  // Fetch game details - use direct game endpoint to bypass team filtering
   const { data: game, isLoading: gameLoading } = useQuery({
     queryKey: ['/api/games', gameId],
-    queryFn: () => apiRequest('GET', `/api/games/${gameId}`),
+    queryFn: () => apiClient.get(`/api/games/${gameId}`),
     enabled: !!gameId && !isNaN(gameId)
   });
 
   // Fetch opponent details if we have a game
   const { data: opponent, isLoading: opponentLoading } = useQuery({
     queryKey: ['/api/opponents', game?.opponentId],
-    queryFn: () => apiRequest('GET', `/api/opponents/${game?.opponentId}`),
+    queryFn: () => apiClient.get(`/api/opponents/${game?.opponentId}`),
     enabled: !!game?.opponentId
   });
 
   // Fetch player roster for this game
   const { data: rosters, isLoading: rostersLoading } = useQuery({
     queryKey: ['/api/games', gameId, 'rosters'],
-    queryFn: () => apiRequest('GET', `/api/games/${gameId}/rosters`),
+    queryFn: () => apiClient.get(`/api/games/${gameId}/rosters`),
     enabled: !!gameId && !isNaN(gameId)
   });
 
   // Fetch existing stats for this game with forced refresh when needed
   const { data: existingStats, isLoading: statsLoading, refetch: refetchStats } = useQuery({
     queryKey: ['/api/games', gameId, 'stats'],
-    queryFn: () => apiRequest('GET', `/api/games/${gameId}/stats`),
+    queryFn: () => apiClient.get(`/api/games/${gameId}/stats`),
     enabled: !!gameId && !isNaN(gameId),
     staleTime: 0, // Consider it always stale to fetch fresh data
     refetchOnMount: 'always', // Always refetch when component mounts
@@ -222,7 +222,7 @@ export default function LiveStats() {
   // Fetch all players
   const { data: players, isLoading: playersLoading } = useQuery({
     queryKey: ['/api/players'],
-    queryFn: () => apiRequest('GET', '/api/players'),
+    queryFn: () => apiClient.get('/api/players'),
   });
 
   // Create or update game stats using standardized API endpoint pattern
