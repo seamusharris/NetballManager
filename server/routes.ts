@@ -880,7 +880,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         code: club.code,
         description: club.description,
         address: club.address,
-```text
         contactEmail: club.contact_email,
         contactPhone: club.contact_phone,
         primaryColor: club.primary_color,
@@ -2435,7 +2434,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`STEP 5 - Team assignments in season ${seasonId} (${teamAssignments.rows.length}):`, 
         teamAssignments.rows.map(r => `${r.display_name} -> ${r.team_name} (team_id: ${r.team_id})`));
 
-      // Step 6: Check what the main query would return without the team exclusion
+      // Step 6: Check what the main query would not return without the team exclusion
       const seasonPlayersWithoutTeamFilter = await db.execute(sql`
         SELECT p.id, p.display_name
         FROM players p
