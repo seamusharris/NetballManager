@@ -880,7 +880,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         code: club.code,
         description: club.description,
         address: club.address,
-        contactEmail: club.contact_email,
+        contactEmail: club<previous_generation>
+.contact_email,
         contactPhone: club.contact_phone,
         primaryColor: club.primary_color,
         secondaryColor: club.secondary_color
