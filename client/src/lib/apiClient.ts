@@ -93,24 +93,24 @@ export class ApiClient {
   }
 
   // HTTP method helpers
-  async get<T>(endpoint: string): Promise<T> {
-    return this.request<T>('GET', endpoint);
+  async get<T>(endpoint: string, customHeaders?: Record<string, string>): Promise<T> {
+    return this.request<T>('GET', endpoint, undefined, customHeaders);
   }
 
-  async post<T>(endpoint: string, data?: any): Promise<T> {
-    return this.request<T>('POST', endpoint, data);
+  async post<T>(endpoint: string, data?: any, customHeaders?: Record<string, string>): Promise<T> {
+    return this.request<T>('POST', endpoint, data, customHeaders);
   }
 
-  async put<T>(endpoint: string, data?: any): Promise<T> {
-    return this.request<T>('PUT', endpoint, data);
+  async put<T>(endpoint: string, data?: any, customHeaders?: Record<string, string>): Promise<T> {
+    return this.request<T>('PUT', endpoint, data, customHeaders);
   }
 
-  async patch<T>(endpoint: string, data?: any): Promise<T> {
-    return this.request<T>('PATCH', endpoint, data);
+  async patch<T>(endpoint: string, data?: any, customHeaders?: Record<string, string>): Promise<T> {
+    return this.request<T>('PATCH', endpoint, data, customHeaders);
   }
 
-  async delete<T>(endpoint: string): Promise<T> {
-    return this.request<T>('DELETE', endpoint);
+  async delete<T>(endpoint: string, customHeaders?: Record<string, string>): Promise<T> {
+    return this.request<T>('DELETE', endpoint, undefined, customHeaders);
   }
 }
 
