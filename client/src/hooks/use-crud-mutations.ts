@@ -2,12 +2,19 @@ import { useMutation } from '@tanstack/react-query';
 import { useToast } from './use-toast';
 import { apiClient, mutateWithInvalidation } from '@/lib/apiClient';
 
-interface CrudMutationOptions<T> {
+interface UseCrudMutationsOptions {
   entityName: string;
   baseEndpoint: string;
-  invalidatePatterns: string[];
-  onSuccess?: (data: T) => void;
-  onError?: (error: Error) => void;
+  invalidatePatterns?: (string | (string | number | undefined)[])[];
+  mutationOptions?: {
+    retry?: boolean | number;
+    cacheTime?: number;
+    networkMode?: 'online' | 'always' | 'offlineFirst';
+    mutationKey?: (id?: number) => (string | number)[];
+  };
+  onDeleteError?: (error: any) => void;
+  onCreateError?: (error: any) => void;
+  onUpdateError?: (error: any) => void;
 }
 
 export function useCrudMutations<T extends { id?: number }>({

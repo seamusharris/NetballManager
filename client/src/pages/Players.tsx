@@ -130,7 +130,7 @@ export default function Players() {
     },
   });
 
-  // Remove player from team using standardized mutation hook
+  // Remove player from team using best practice CRUD mutations with enhanced settings
   const { deleteMutation: removePlayerFromTeam } = useCrudMutations({
     entityName: 'Player',
     baseEndpoint: `/api/teams/${teamId}/players`,
@@ -138,7 +138,31 @@ export default function Players() {
       ['team-players', teamId],
       ['unassigned-players', activeSeason?.id],
       ['players', currentClub?.id]
-    ]
+    ],
+    mutationOptions: {
+      // Enhanced React Query options for better duplicate prevention
+      retry: false, // Don't retry failed requests to prevent duplicates
+      cacheTime: 0, // Don't cache mutation results
+      networkMode: 'online', // Only execute when online
+      // Add mutation key for better tracking
+      mutationKey: (id: number) => ['remove-player-from-team', teamId, id],
+    },
+    // Enhanced error handling for 404s
+    onDeleteError: (error: any) => {
+      if (error.message?.includes('not found') || error.message?.includes('404')) {
+        toast({ title: 'Success', description: 'Player was already removed from team' });
+        // Still invalidate queries to update UI
+        queryClient.invalidateQueries({ queryKey: ['team-players', teamId] });
+        queryClient.invalidateQueries({ queryKey: ['unassigned-players', activeSeason?.id] });
+        queryClient.invalidateQueries({ queryKey: ['players', currentClub?.id] });
+      } else {
+        toast({ 
+          title: 'Error', 
+          description: `Failed to remove player: ${error.message}`, 
+          variant: 'destructive' 
+        });
+      }
+    }
   });
 
   const isLoading = teamId 
