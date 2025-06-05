@@ -49,6 +49,7 @@ export default function Players() {
 
   // Determine if this is team-specific or club-wide players
   const teamId = params.teamId ? parseInt(params.teamId) : null;
+  const currentClubId = currentClub?.id;
 
   // Get active season for team assignments
   const { data: activeSeason } = useQuery({
@@ -82,25 +83,28 @@ export default function Players() {
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
-  // Get team players if viewing a specific team
-  const { data: teamPlayersData, isLoading: isLoadingTeamPlayers } = useQuery({
-    queryKey: ['team-players', teamId, currentClub?.id],
-    queryFn: async () => {
-      if (!currentClub?.id) return [];
-      const response = await apiClient.get(`/api/teams/${teamId}/players`);
-      return response;
+  const { data: teamPlayersData = [], isLoading: isLoadingTeamPlayers } = useQuery<any[]>({
+    queryKey: ['team-players', teamId, currentClubId],
+    queryFn: () => {
+      const headers: Record<string, string> = {};
+      if (currentClubId) {
+        headers['x-current-club-id'] = currentClubId.toString();
+      }
+      return apiClient.get(`/api/teams/${teamId}/players`, { headers });
     },
-    enabled: !!teamId && !!currentClub?.id,
+    enabled: !!teamId && !!currentClubId,
   });
 
-  const { data: availablePlayersForTeam = [], isLoading: isLoadingAvailablePlayers } = useQuery({
-    queryKey: ['unassigned-players', activeSeason?.id, currentClub?.id],
-    queryFn: async () => {
-      if (!activeSeason?.id || !currentClub?.id) return [];
-      const response = await apiClient.get(`/api/seasons/${activeSeason.id}/unassigned-players`);
-      return response;
+  const { data: availablePlayersForTeam = [], isLoading: isLoadingAvailablePlayers } = useQuery<any[]>({
+    queryKey: ['unassigned-players', activeSeason?.id, currentClubId],
+    queryFn: () => {
+      const headers: Record<string, string> = {};
+      if (currentClubId) {
+        headers['x-current-club-id'] = currentClubId.toString();
+      }
+      return apiClient.get(`/api/players/unassigned/${activeSeason?.id}`, { headers });
     },
-    enabled: !!activeSeason?.id && !!currentClub?.id,
+    enabled: !!teamId && !!activeSeason?.id && !!currentClubId,
   });
 
   // Get players for non-team view
@@ -138,7 +142,7 @@ export default function Players() {
     mutationFn: async (playerId: number) => {
       // Add player to removing set
       setRemovingPlayerIds(prev => new Set([...prev, playerId]));
-      
+
       const response = await apiClient.delete(`/api/teams/${teamId}/players/${playerId}`);
       return { playerId, response };
     },
@@ -149,7 +153,7 @@ export default function Players() {
         newSet.delete(data.playerId);
         return newSet;
       });
-      
+
       queryClient.invalidateQueries({ queryKey: ['team-players', teamId] });
       queryClient.invalidateQueries({ queryKey: ['unassigned-players', activeSeason?.id] });
       toast({ title: 'Success', description: 'Player removed from team' });
