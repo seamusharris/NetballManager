@@ -740,6 +740,13 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
         queryClient.invalidateQueries({ queryKey: ['/api/games', gameId] });
         queryClient.invalidateQueries({ queryKey: ['playerGameStats'] });
         queryClient.invalidateQueries({ queryKey: ['gameStats'] });
+        
+        // Invalidate batch stats queries that might include this game
+        queryClient.invalidateQueries({ queryKey: ['batchGameStats'] });
+        
+        // Invalidate games scores queries (critical for dashboard/games list updates)
+        queryClient.invalidateQueries({ queryKey: ['gameScores'] });
+        
         // Invalidate all game-related queries to ensure scoreboard updates
         queryClient.invalidateQueries({ queryKey: ['/api/games'] });
         

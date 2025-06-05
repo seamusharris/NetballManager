@@ -198,7 +198,7 @@ export function useGamesScores(gameIds: number[], forceFresh = false) {
     queryClient.invalidateQueries({ queryKey: ['gameScores'] });
     stableGameIds.forEach(gameId => clearGameCache(gameId));
   };
-  
+
   // Always return the same object structure, regardless of the currentClub
   return {
     scoresMap,

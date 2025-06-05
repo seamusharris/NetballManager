@@ -510,14 +510,24 @@ export default function LiveStats() {
       console.log('All position stats saved successfully');
     },
     onSuccess: () => {
-      // Clear local caches
-      clearGameCache(gameId);
-
-      // Invalidate queries
+      // Invalidate and refetch relevant queries immediately
       queryClient.invalidateQueries({ queryKey: ['/api/games', gameId, 'stats'] });
       queryClient.invalidateQueries({ queryKey: [`/api/games/${gameId}/stats`] });
-      queryClient.invalidateQueries({ queryKey: ['/api/games/stats/batch'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/games'], exact: true });
+      queryClient.invalidateQueries({ queryKey: ['gameScores', gameId] });
+      queryClient.invalidateQueries({ queryKey: ['positionStats', gameId] });
+      queryClient.invalidateQueries({ queryKey: ['playerStats', gameId] });
+
+      // Invalidate all batch stats queries that might include this game
+      queryClient.invalidateQueries({ queryKey: ['batchGameStats'] });
+
+      // Invalidate games scores queries (used by dashboard and games list)
+      queryClient.invalidateQueries({ queryKey: ['gameScores'] });
+
+      // Also invalidate the games list to ensure score updates
+      queryClient.invalidateQueries({ queryKey: ['/api/games'] });
+
+      // Clear the global scores cache for this specific game
+      clearGameCache(gameId);
 
       toast({
         title: "Success",
@@ -829,7 +839,7 @@ export default function LiveStats() {
           return (
             <Card key={cardKey} className="mb-3 overflow-hidden">
               <CardHeader className="py-2 pb-2">
-                {/* Use flex instead of grid for better control */}
+                                {/* Use flex instead of grid for better control */}
                 <div className="flex flex-wrap items-center gap-2">
                   {/* First section - position identity, fixed width */}
                   <div className="flex items-center gap-2 mr-3 min-w-fit">

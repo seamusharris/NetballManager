@@ -46,7 +46,7 @@ export function useGameStatistics(gameId: number, forceFresh: boolean = false, p
         console.log(`useGameStatistics: Using preloaded stats for game ${gameId} (${preloadedStats.length} stats)`);
         return Promise.resolve(statisticsService.calculateScoresFromStats(preloadedStats, gameId));
       }
-      
+
       // Fast path: check global cache first if we're not forcing fresh data
       if (!forceFresh) {
         const cached = getCachedScores(gameId);
@@ -104,7 +104,7 @@ export function useGameStatistics(gameId: number, forceFresh: boolean = false, p
   // Combine loading and error states - be more forgiving with errors when we have preloaded data
   const isLoading = isLoadingScores || isLoadingPositionStats || isLoadingPlayerStats || 
                    (isLoadingRawStats && !hasCachedScores && !hasPreloadedStats);
-  
+
   // Only report errors if we don't have any alternative data source
   const error = hasPreloadedStats ? null : (rawStatsError || scoresError || positionStatsError || playerStatsError);
 
