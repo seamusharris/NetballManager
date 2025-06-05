@@ -2091,8 +2091,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           COUNT(DISTINCT t.id) as teams_count
         FROM clubs c
         LEFT JOIN club_players cp ON c.id = cp.club_id AND cp.is_active = true
-        LEFT JOIN teams t ON c.id = t.club_id
-        GROUP BY c.id
+        LEFT JOIN teams t ON c.id = t.club_id AND t.is_active = true
+        GROUP BY c.id, c.name, c.code, c.address, c.contact_email, c.contact_phone, c.primary_color, c.secondary_color, c.is_active, c.created_at, c.updated_at
         ORDER BY c.name
       `);
 
@@ -2107,7 +2107,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         secondaryColor: row.secondary_color,
         isActive: row.is_active,
         createdAt: row.created_at,
-        updatedAt: row.updated_at
+        updatedAt: row.updated_at,
+        playersCount: parseInt(row.players_count) || 0,
+        teamsCount: parseInt(row.teams_count) || 0
       }));
 
       res.json(clubs);
