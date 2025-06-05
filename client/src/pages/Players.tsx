@@ -468,6 +468,7 @@ export default function Players() {
               />
             </DialogContent>
           </Dialog>
+          </div>
         </div>
 
         <PlayersList
