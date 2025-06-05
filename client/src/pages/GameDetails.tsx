@@ -1857,20 +1857,6 @@ export default function GameDetails() {
 
         </Tabs>
       </div>
-      {/* Final score summary */}
-      {game && (
-        <div className="mt-8">
-          <h2 className="text-2xl font-bold mb-4">Game Result</h2>
-          <div className="flex justify-center items-center">
-            <div className="text-4xl font-bold mr-4">{game.homeTeamName || game.home_team_name}</div>
-            <div className="text-2xl">vs</div>
-            <div className="text-4xl font-bold ml-4">{game.awayTeamName || game.away_team_name}</div>
-          </div>
-          <div className="flex justify-center items-center mt-4">
-            <div className="text-3xl font-bold">{getScoreDisplay()}</div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
