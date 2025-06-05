@@ -1512,20 +1512,17 @@ export default function GameDetails() {
                         size="sm" 
                         onClick={async () => {
                           try {
-                            const response = await apiClient.patch(`/api/games/${gameId}`, { awardWinnerId: selectedAwardWinner });
+                            await apiClient.patch(`/api/games/${gameId}`, { awardWinnerId: selectedAwardWinner });
 
-                            if (response.ok) {
-                              // Invalidate the game query to refresh the data
-                              queryClient.invalidateQueries({ queryKey: ['/api/games', gameId] });
-                              setIsEditingAward(false);
-                              toast({
-                                title: "Award Winner saved",
-                                description: "Player of the match has been updated successfully.",
-                              });
-                            } else {
-                              throw new Error('Failed to save award winner');
-                            }
+                            // Invalidate the game query to refresh the data
+                            queryClient.invalidateQueries({ queryKey: ['/api/games', gameId] });
+                            setIsEditingAward(false);
+                            toast({
+                              title: "Award Winner saved",
+                              description: "Player of the match has been updated successfully.",
+                            });
                           } catch (error) {
+                            console.error('Error saving award winner:', error);
                             toast({
                               variant: "destructive",
                               title: "Error",
