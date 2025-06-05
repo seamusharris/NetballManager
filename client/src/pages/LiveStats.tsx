@@ -701,33 +701,13 @@ export default function LiveStats() {
   ) => {
     let currentValue = 0;
 
+    // Always use liveStats - this is the single source of truth during live tracking
     if (playerId === 0 && position) {
-      // For unassigned positions, get stats directly from the database records
-      const positionStat = existingStats?.find(
-        (s: GameStat) => s.position === position && s.quarter === currentQuarter
-      );
-
-      if (positionStat && typeof positionStat[stat] !== 'undefined') {
-        currentValue = Number(positionStat[stat]) || 0;
-      }
+      // For unassigned positions, check if we have any stats stored under playerId 0
+      currentValue = liveStats[0]?.[currentQuarter]?.[stat] || 0;
     } else {
-      // For assigned players, get their stats from liveStats
-      // If that's empty, check existingStats for their position
+      // For assigned players, get their stats from liveStats only
       currentValue = liveStats[playerId]?.[currentQuarter]?.[stat] || 0;
-
-      // If player has no stats in liveStats, try to find their position and get stats
-      if (currentValue === 0 && rosters) {
-        const playerPosition = getPlayerPosition(playerId, currentQuarter);
-        if (playerPosition) {
-          const positionStat = existingStats?.find(
-            (s: GameStat) => s.position === playerPosition && s.quarter === currentQuarter
-          );
-
-          if (positionStat && typeof positionStat[stat] !== 'undefined') {
-            currentValue = Number(positionStat[stat]) || 0;
-          }
-        }
-      }
     }
 
     // Function to handle stat updates
@@ -1012,36 +992,18 @@ export default function LiveStats() {
           playersOnCourt.map(({playerId, position, hasPlayer}) => {
             const player = hasPlayer ? getPlayer(playerId) : null;
 
-            // Get stats for this position, whether or not a player is assigned
-            // For positions without players, we'll use a positional stat approach
+            // Get stats configuration for this position
             const statConfig = positionStatConfig[position];
 
-            // For positions with players, use player stats; otherwise find position stats directly
+            // Always use liveStats - this is our single source of truth during live tracking
             let positionStats = { ...emptyQuarterStats };
 
             if (hasPlayer && player) {
-              // If we have a player, use their stats
+              // If we have a player, use their stats from liveStats
               positionStats = liveStats[playerId]?.[currentQuarter] || { ...emptyQuarterStats };
             } else {
-              // If no player, look for position stats in existingStats
-              const positionStat = existingStats.find(
-                (stat: GameStat) => stat.position === position && stat.quarter === currentQuarter
-              );
-
-              if (positionStat) {
-                // Convert position stat to QuarterStats format
-                positionStats = {
-                  goalsFor: positionStat.goalsFor || 0,
-                  goalsAgainst: positionStat.goalsAgainst || 0,
-                  missedGoals: positionStat.missedGoals || 0,
-                  rebounds: positionStat.rebounds || 0,
-                  intercepts: positionStat.intercepts || 0,
-                  badPass: positionStat.badPass || 0,
-                  handlingError: positionStat.handlingError || 0,
-                  pickUp: positionStat.pickUp || 0,
-                  infringement: positionStat.infringement || 0
-                };
-              }
+              // If no player assigned, check for stats under playerId 0 with this position
+              positionStats = liveStats[0]?.[currentQuarter] || { ...emptyQuarterStats };
             }
 
             // Generate a unique key - for positions without players, use the position as key
@@ -1081,10 +1043,7 @@ export default function LiveStats() {
                       {commonStats.map(stat => (
                         statConfig[stat] && (
                           <div key={`${playerId}-common-${stat}`} className="flex-1 min-w-[120px]">
-                            {hasPlayer ? 
-                              renderStatCounter(playerId, stat, false) : 
-                              renderStatCounter(0, stat, false, false, position, positionStats)
-                            }
+                            {renderStatCounter(hasPlayer ? playerId : 0, stat, false, false, position)}
                           </div>
                         )
                       ))}
@@ -1107,10 +1066,7 @@ export default function LiveStats() {
                       <div className="flex justify-center gap-2 flex-wrap">
                         {posSpecificStats.map(statType => (
                           <div key={`${playerId}-${statType}`} className="w-[180px]">
-                            {hasPlayer ? 
-                              renderStatCounter(playerId, statType, false, true) : 
-                              renderStatCounter(0, statType, false, true, position, positionStats)
-                            }
+                            {renderStatCounter(hasPlayer ? playerId : 0, statType, false, true, position)}
                           </div>
                         ))}
                       </div>
