@@ -12,17 +12,17 @@ import { TeamPositionAnalysis } from '@/components/dashboard/TeamPositionAnalysi
 import { UpcomingGameRecommendations } from '@/components/dashboard/UpcomingGameRecommendations';
 
 export default function Dashboard() {
-  const { currentClub, currentClubId, isLoading: clubLoading } = useClub();
+  const { currentClub, currentClubId, isLoading: clubLoading, currentTeamId } = useClub();
 
   // Call ALL hooks first, before any conditional returns
   const { data: players = [], isLoading: isLoadingPlayers, error: playersError } = useQuery<any[]>({
-    queryKey: ['players', currentClubId],
+    queryKey: ['players', currentClubId, currentTeamId],
     queryFn: () => apiClient.get('/api/players'),
     enabled: !!currentClubId,
   });
 
   const { data: games = [], isLoading: isLoadingGames, error: gamesError } = useQuery<any[]>({
-    queryKey: ['games', currentClubId],
+    queryKey: ['games', currentClubId, currentTeamId],
     queryFn: () => apiClient.get('/api/games'),
     enabled: !!currentClubId,
   });

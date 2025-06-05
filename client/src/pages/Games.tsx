@@ -19,7 +19,7 @@ interface QueryParams {
 }
 
 export default function Games() {
-  const { currentClub, hasPermission, isLoading: clubLoading } = useClub();
+  const { currentClub, currentClubId, currentTeamId, currentTeam, isLoading: clubLoading } = useClub();
 
   // Don't render anything until club context is fully loaded
   if (clubLoading || !currentClub) {
@@ -43,22 +43,16 @@ export default function Games() {
   const currentClubId = apiClient.getCurrentClubId ? apiClient.getCurrentClubId() : null;
 
   // Fetch games
-  const { data: games = [], isLoading: isLoadingGames } = useQuery<Game[]>({
-    queryKey: ['games', currentClub?.id],
-    queryFn: () => {
-      return apiClient.get('/api/games');
-    },
-    enabled: !!currentClub?.id, // Only fetch when we have a club ID
-    staleTime: 0, // Disable caching temporarily to debug
-    refetchOnMount: true,
-    refetchOnWindowFocus: true,
+  const { data: games = [], isLoading: isLoadingGames } = useQuery<any[]>({
+    queryKey: ['games', currentClubId, currentTeamId],
+    queryFn: () => apiClient.get('/api/games'),
+    enabled: !!currentClubId,
   });
 
-  // Fetch teams for current club
-  const { data: teams = [], isLoading: isLoadingTeams } = useQuery({
-    queryKey: ['teams', currentClub?.id],
+  const { data: teams = [], isLoading: isLoadingTeams } = useQuery<any[]>({
+    queryKey: ['teams', currentClubId],
     queryFn: () => apiClient.get('/api/teams'),
-    enabled: !!currentClub?.id,
+    enabled: !!currentClubId,
   });
 
   // Fetch seasons - no club context needed

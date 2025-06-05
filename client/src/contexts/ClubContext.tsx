@@ -181,7 +181,10 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
       } else {
         localStorage.removeItem('current-team-id');
       }
+      // Invalidate all relevant queries to refresh the dashboard
       queryClient.invalidateQueries(['games']);
+      queryClient.invalidateQueries(['players']);
+      queryClient.invalidateQueries(['stats']);
     }, [queryClient]);
   
   // Load saved team from localStorage

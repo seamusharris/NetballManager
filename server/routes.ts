@@ -344,7 +344,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               ${status.opponentGoals || null}, 
               ${status.isCompleted !== false}, 
               ${status.allowsStatistics !== false}, 
-              ${status.requiresOpponent !== false}, 
+              ${status.requires_opponent !== false}, 
               ${status.colorClass || null}, 
               ${status.sortOrder || 0}, 
               ${status.isActive !== false}
@@ -892,7 +892,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         description,
         address, 
         contactEmail, 
-        contactPhone, 
+        contactPhone, ```text
         primaryColor = '#1f2937', 
         secondaryColor = '#ffffff' 
       } = req.body;
@@ -2459,6 +2459,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           division: row.division,
           clubId: row.club_id,
           seasonId: row.season_id,
+```text
           isActive: row.is_active,
           createdAt: row.created_at,
           updatedAt: row.updated_at,
