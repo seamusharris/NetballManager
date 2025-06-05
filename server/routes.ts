@@ -892,7 +892,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         description,
         address, 
         contactEmail, 
-        contactPhone, 
+        contactPhone, ```
         primaryColor = '#1f2937', 
         secondaryColor = '#ffffff' 
       } = req.body;
@@ -1653,7 +1653,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
           }
         }
-      } else if (req.body.statusId && req.body.statusId !== 6) {
+      } else if (req.bodyThe code is modified to remove roster fallback dependency and simplify stats recording to work with position-quarter only.
+```javascript
+.statusId && req.body.statusId !== 6) {
         // For non-BYE games, ensure both teams are set and neither is a BYE team
         if (!req.body.homeTeamId || !req.body.awayTeamId) {
           return res.status(400).json({ message: "Both home and away teams are required for regular games" });
@@ -1962,12 +1964,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Ensure position context exists for this game/quarter/position
-      const { ensurePositionContext } = await import('./roster-fallback');
-      const playerId = await ensurePositionContext(gameId, parsedData.data.quarter, parsedData.data.position);
+      // const { ensurePositionContext } = await import('./roster-fallback');
+      // const playerId = await ensurePositionContext(gameId, parsedData.data.quarter, parsedData.data.position);
 
-      if (!playerId) {
-        console.warn(`No position context available for Game ${gameId}, Q${parsedData.data.quarter}, ${parsedData.data.position}`);
-      }
+      // if (!playerId) {
+      //   console.warn(`No position context available for Game ${gameId}, Q${parsedData.data.quarter}, ${parsedData.data.position}`);
+      // }
 
       try {
         // Check for existing stat
@@ -2456,6 +2458,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const mappedTeams = teams.rows.map(row => ({
           id: row.id,
           name: row.name,
+```javascript
           division: row.division,
           clubId: row.club_id,
           seasonId: row.season_id,
