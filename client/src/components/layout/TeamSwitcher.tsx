@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { useClub } from '@/contexts/ClubContext';
 
@@ -12,6 +13,17 @@ interface TeamSwitcherProps {
 
 export function TeamSwitcher({ mode = 'optional', className, onTeamChange }: TeamSwitcherProps) {
   const { currentTeamId, currentTeam, clubTeams, setCurrentTeamId } = useClub();
+
+  // Auto-select first team if in required mode and no team is selected
+  useEffect(() => {
+    if (mode === 'required' && !currentTeamId && clubTeams.length > 0) {
+      const firstTeam = clubTeams.find(team => team.name !== 'BYE');
+      if (firstTeam) {
+        console.log('TeamSwitcher: Auto-selecting first team in required mode:', firstTeam.name);
+        setCurrentTeamId(firstTeam.id);
+      }
+    }
+  }, [mode, currentTeamId, clubTeams, setCurrentTeamId]);
 
   // Don't render if hidden mode or only one team
   if (mode === 'hidden' || clubTeams.length <= 1) {

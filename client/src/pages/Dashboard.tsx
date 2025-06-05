@@ -116,6 +116,41 @@ export default function Dashboard() {
     );
   }
 
+  // For Team Dashboard, require team selection - show prompt if no team selected
+  if (!currentTeamId && clubTeams.length > 1) {
+    return (
+      <>
+        <Helmet>
+          <title>Team Dashboard | {TEAM_NAME} Stats Tracker</title>
+          <meta name="description" content={`View ${TEAM_NAME} team's performance metrics, upcoming games, and player statistics`} />
+        </Helmet>
+
+        <div className="container py-8 mx-auto space-y-8">
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+                Team Dashboard
+              </h1>
+              <p className="text-lg text-muted-foreground">
+                Performance metrics and insights for your team
+              </p>
+            </div>
+            <div className="flex items-center gap-4">
+              <TeamSwitcher mode="required" />
+            </div>
+          </div>
+
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center">
+              <h2 className="text-xl font-semibold mb-2">Select a Team</h2>
+              <p className="text-muted-foreground">Please select a team from the dropdown above to view the dashboard.</p>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
+
   const isLoading = isLoadingPlayers || isLoadingGames || isLoadingSeasons || isLoadingActiveSeason || isLoadingRosters || isLoadingStats;
 
   // Show error state if any query fails

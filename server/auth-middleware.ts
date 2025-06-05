@@ -342,3 +342,31 @@ export function standardAuth(options: {
     }
   };
 }
+
+declare global {
+  namespace Express {
+    interface Request {
+      currentClubId?: number;
+      currentTeamId?: number;
+    }
+  }
+}
+
+export const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
+  const clubId = req.headers['x-current-club-id'] as string;
+  const teamId = req.headers['x-current-team-id'] as string;
+
+  if (!clubId) {
+    console.log(`Auth middleware: No x-current-club-id header for ${req.method} ${req.path}`);
+  } else {
+    req.currentClubId = parseInt(clubId, 10);
+    console.log(`Auth middleware: Set currentClubId to ${req.currentClubId} from header`);
+  }
+
+  if (teamId) {
+    req.currentTeamId = parseInt(teamId, 10);
+    console.log(`Auth middleware: Set currentTeamId to ${req.currentTeamId} from header`);
+  }
+
+  next();
+};

@@ -29,17 +29,22 @@ function getCurrentTeamId(): string | null {
 }
 
 // Create a singleton API client that can access club context
-export class ApiClient {
+interface ClubContext {
+  currentClubId: number | null;
+  currentTeamId?: number | null;
+}
+
+class ApiClient {
   private baseURL: string;
-  private clubContext: { currentClubId: number | null } = { currentClubId: null };
+  private clubContext: ClubContext = { currentClubId: null, currentTeamId: null };
 
   constructor(baseURL: string = '') {
     this.baseURL = baseURL;
   }
 
-  setClubContext(context: { currentClubId: number | null }) {
+  setClubContext(context: ClubContext) {
     this.clubContext = context;
-    console.log('API Client: Club context set to:', context.currentClubId);
+    console.log('API Client: Club context set to:', context.currentClubId, 'Team:', context.currentTeamId);
   }
 
   async request<T>(method: string, endpoint: string, data?: any, customHeaders?: Record<string, string>): Promise<T> {
@@ -82,7 +87,16 @@ export class ApiClient {
       config.body = JSON.stringify(data);
     }
 
-    console.log('API Request adding club ID header:', this.clubContext.currentClubId);
+    if (this.clubContext.currentClubId) {
+      console.log('API Request adding club ID header:', this.clubContext.currentClubId);
+      headers['x-current-club-id'] = this.clubContext.currentClubId.toString();
+    }
+
+    if (this.clubContext.currentTeamId) {
+      console.log('API Request adding team ID header:', this.clubContext.currentTeamId);
+      headers['x-current-team-id'] = this.clubContext.currentTeamId.toString();
+    }
+
     const response = await fetch(url, config);
 
     if (!response.ok) {
