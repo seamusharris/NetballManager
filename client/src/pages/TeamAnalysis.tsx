@@ -151,18 +151,15 @@ const calculateScoringTrends = (gameResults: any[], currentClubId: number) => {
 };
 
 export default function TeamAnalysis() {
-  const { currentClub, currentClubId, isLoading: clubLoading } = useClub();
+  const { currentClub, currentClubId, currentTeamId, isLoading: clubLoading } = useClub();
   const [, navigate] = useLocation();
-
-  // Get current team context for filtering
-  const currentTeamId = localStorage.getItem('currentTeamId');
 
   const { data: games = [], isLoading: isLoadingGames } = useQuery<any[]>({
     queryKey: ['games', currentClubId, currentTeamId],
     queryFn: () => {
       const headers: Record<string, string> = {};
       if (currentTeamId) {
-        headers['x-current-team-id'] = currentTeamId;
+        headers['x-current-team-id'] = currentTeamId.toString();
       }
       return apiClient.get('/api/games', { headers });
     },
