@@ -2409,6 +2409,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`Unassigned players query returned ${unassignedPlayers.rows.length} players:`, unassignedPlayers.rows.map(r => r.display_name));
 
+      // Let's also check what the final mapped result looks like
       const mappedPlayers = unassignedPlayers.rows.map(row => ({
         id: row.id,
         displayName: row.display_name,
@@ -2423,6 +2424,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }));
 
       console.log(`Found ${mappedPlayers.length} unassigned players for season ${seasonId}:`, mappedPlayers.map(p => ({ id: p.id, name: p.displayName })));
+      console.log(`Final response being sent:`, JSON.stringify(mappedPlayers, null, 2));
       res.json(mappedPlayers);
     } catch (error) {
       console.error('Error fetching unassigned players:', error);
