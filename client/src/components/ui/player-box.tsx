@@ -26,6 +26,11 @@ export function PlayerBox({
   className = "",
   size = "md" 
 }: PlayerBoxProps) {
+  // Add null safety check
+  if (!player) {
+    return null;
+  }
+
   const sizeClasses = {
     sm: "p-2",
     md: "p-3", 
