@@ -19,7 +19,7 @@ import {
   AlertDialogTitle 
 } from "@/components/ui/alert-dialog";
 import { useClub } from '@/contexts/ClubContext';
-import { useNavigate } from 'react-router-dom';
+import { useLocation } from 'wouter';
 
 interface Club {
   id: number;
@@ -53,7 +53,7 @@ export default function ClubManagement() {
   const [deletingClub, setDeletingClub] = useState<any>(null);
   const { currentClub, switchToClub } = useClub();
   const queryClient = useQueryClient();
-  const navigate = useNavigate();
+  const [, navigate] = useLocation();
 
   // Fetch all clubs (admin only)
   const { data: clubs, isLoading } = useQuery({
