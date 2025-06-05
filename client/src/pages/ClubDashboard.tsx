@@ -86,13 +86,26 @@ export default function ClubDashboard() {
       // Check if this is a home or away game for our team
       const isHomeTeam = game.homeTeamId === team.id;
       
-      // For home games: our score is statusTeamGoals, opponent is statusOpponentGoals
-      // For away games: our score is statusOpponentGoals, opponent is statusTeamGoals
-      const ourScore = isHomeTeam ? game.statusTeamGoals : game.statusOpponentGoals;
-      const theirScore = isHomeTeam ? game.statusOpponentGoals : game.statusTeamGoals;
+      // First try to use status scores if available
+      if (game.statusTeamGoals !== null && game.statusOpponentGoals !== null) {
+        const ourScore = isHomeTeam ? game.statusTeamGoals : game.statusOpponentGoals;
+        const theirScore = isHomeTeam ? game.statusOpponentGoals : game.statusTeamGoals;
+        return ourScore > theirScore;
+      }
       
-      // Win if our score is higher and both scores are not null
-      return ourScore !== null && theirScore !== null && ourScore > theirScore;
+      // Fall back to calculating from game statistics
+      const gameStats = centralizedStats[game.id] || [];
+      if (gameStats.length === 0) return false;
+      
+      // Calculate total goals for and against from all quarters
+      const totalGoalsFor = gameStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
+      const totalGoalsAgainst = gameStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
+      
+      // For away games, the perspective is flipped
+      const ourScore = isHomeTeam ? totalGoalsFor : totalGoalsAgainst;
+      const theirScore = isHomeTeam ? totalGoalsAgainst : totalGoalsFor;
+      
+      return ourScore > theirScore;
     }).length;
 
     return {
