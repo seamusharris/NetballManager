@@ -4,28 +4,35 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { useClub } from '@/contexts/ClubContext';
 
-export function TeamSwitcher() {
+interface TeamSwitcherProps {
+  mode?: 'optional' | 'required' | 'hidden';
+  className?: string;
+  onTeamChange?: (teamId: number | null) => void;
+}
+
+export function TeamSwitcher({ mode = 'optional', className, onTeamChange }: TeamSwitcherProps) {
   const { currentTeamId, currentTeam, clubTeams, setCurrentTeamId } = useClub();
 
-  if (clubTeams.length <= 1) {
-    return null; // Don't show switcher if only one team
+  // Don't render if hidden mode or only one team
+  if (mode === 'hidden' || clubTeams.length <= 1) {
+    return null;
   }
 
+  const handleTeamChange = (value: string) => {
+    const teamId = value === 'all' ? null : parseInt(value, 10);
+    setCurrentTeamId(teamId);
+    onTeamChange?.(teamId);
+  };
+
   return (
-    <div className="flex items-center space-x-2">
+    <div className={`flex items-center space-x-2 ${className || ''}`}>
       <span className="text-sm font-medium text-gray-700">Team:</span>
       <Select
         value={currentTeamId?.toString() || 'all'}
-        onValueChange={(value) => {
-          if (value === 'all') {
-            setCurrentTeamId(null);
-          } else {
-            setCurrentTeamId(parseInt(value, 10));
-          }
-        }}
+        onValueChange={handleTeamChange}
       >
         <SelectTrigger className="w-[200px]">
-          <SelectValue placeholder="All teams">
+          <SelectValue placeholder={mode === 'required' ? "Select team" : "All teams"}>
             {currentTeam ? (
               <div className="flex items-center space-x-2">
                 <span>{currentTeam.name}</span>
@@ -36,14 +43,18 @@ export function TeamSwitcher() {
                 )}
               </div>
             ) : (
-              <span className="text-muted-foreground">All teams</span>
+              <span className="text-muted-foreground">
+                {mode === 'required' ? "Select team" : "All teams"}
+              </span>
             )}
           </SelectValue>
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">
-            <span className="text-muted-foreground">All teams (no filter)</span>
-          </SelectItem>
+          {mode === 'optional' && (
+            <SelectItem value="all">
+              <span className="text-muted-foreground">All teams (no filter)</span>
+            </SelectItem>
+          )}
           {clubTeams.filter(team => team.name !== 'BYE').map((team) => (
             <SelectItem key={team.id} value={team.id.toString()}>
               <div className="flex items-center space-x-2">

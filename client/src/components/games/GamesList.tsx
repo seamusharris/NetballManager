@@ -44,6 +44,7 @@ import { useGamesScores } from '@/components/statistics/hooks/useGamesScores';
 import { GameStatusButton } from './GameStatusBadge';
 import { GameStatusDialog } from './GameStatusDialog';
 import { useClub } from '@/contexts/ClubContext';
+import { TeamSwitcher } from '@/components/layout/TeamSwitcher';
 
 interface GamesListProps {
   games: Game[];

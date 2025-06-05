@@ -106,7 +106,7 @@ export default function Header({ setIsMobileOpen, isTablet }: HeaderProps) {
         </div>
 
         <div className="flex items-center gap-4">
-          <ClubSwitcher />
+          {/* Team filtering is now handled per-page */}
         </div>
 
         <div className="flex items-center space-x-4">
