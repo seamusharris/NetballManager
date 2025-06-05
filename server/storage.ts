@@ -171,28 +171,23 @@ export class DatabaseStorage implements IStorage {
     const existingPlayers = await this.getPlayers();
     const usedColors = existingPlayers.map(p => p.avatarColor).filter(Boolean);
 
-    // Define our color palette for players
+    // Define our expanded color palette for players (40 colors)
     const avatarColors = [
-      'bg-blue-600',    // Blue
-      'bg-purple-600',  // Purple
-      'bg-pink-600',    // Pink
-      'bg-green-600',   // Green
-      'bg-teal-600',    // Teal
-      'bg-indigo-600',  // Indigo
-      'bg-orange-500',  // Orange
-      'bg-red-500',     // Red
-      'bg-yellow-600',  // Yellow
-      'bg-cyan-600',    // Cyan
-      'bg-amber-600',   // Amber
-      'bg-lime-600',    // Lime
-      'bg-emerald-600', // Emerald
-      'bg-violet-600',  // Violet
-      'bg-fuchsia-600', // Fuchsia
-      'bg-rose-600',    // Rose
-      'bg-blue-700',    // Dark Blue
-      'bg-purple-700',  // Dark Purple
-      'bg-green-700',   // Dark Green
-      'bg-red-700',     // Dark Red
+      // Original palette (weight 600)
+      'bg-blue-600',    'bg-purple-600',  'bg-pink-600',    'bg-green-600',   
+      'bg-teal-600',    'bg-indigo-600',  'bg-orange-600',  'bg-red-600',     
+      'bg-yellow-600',  'bg-cyan-600',    'bg-amber-600',   'bg-lime-600',    
+      'bg-emerald-600', 'bg-violet-600',  'bg-fuchsia-600', 'bg-rose-600',    
+      
+      // Darker variants (weight 700) 
+      'bg-blue-700',    'bg-purple-700',  'bg-pink-700',    'bg-green-700',   
+      'bg-teal-700',    'bg-indigo-700',  'bg-orange-700',  'bg-red-700',     
+      'bg-yellow-700',  'bg-cyan-700',    'bg-amber-700',   'bg-lime-700',    
+      'bg-emerald-700', 'bg-violet-700',  'bg-fuchsia-700', 'bg-rose-700',    
+      
+      // Medium variants (weight 500) for lighter options
+      'bg-blue-500',    'bg-purple-500',  'bg-green-500',   'bg-red-500',     
+      'bg-orange-500',  'bg-sky-500',     'bg-slate-600',   'bg-stone-600'
     ];
 
     // Determine the avatar color
