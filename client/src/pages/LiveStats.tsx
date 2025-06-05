@@ -235,14 +235,22 @@ export default function LiveStats() {
 
       if (existingStat) {
         // Update existing stat
-        return apiRequest('PATCH', `/api/games/${gameId}/stats/${existingStat.id}`, gameStat);
+        return apiClient.patch(`/api/games/${gameId}/stats/${existingStat.id}`, gameStat);
       } else {
         // Create new stat
-        return apiRequest('POST', `/api/games/${gameId}/stats`, gameStat);
+        return apiClient.post(`/api/games/${gameId}/stats`, gameStat);
       }
     },
     onSuccess: () => {
-      // We'll handle all invalidation after saving all stats
+      // Immediately refetch stats to update the UI
+      refetchStats();
+
+      // Clear cache to ensure fresh data
+      clearGameCache(gameId);
+
+      // Invalidate related queries
+      queryClient.invalidateQueries({ queryKey: ['/api/games', gameId, 'stats'] });
+      queryClient.invalidateQueries({ queryKey: [`/api/games/${gameId}/stats`] });
     }
   });
 
@@ -837,7 +845,8 @@ export default function LiveStats() {
           missedGoals: existingStat.missedGoals || 0,
           rebounds: existingStat.rebounds || 0,
           intercepts: existingStat.intercepts || 0,
-          badPass: existingStat.badPass || 0,
+```text
+badPass: existingStat.badPass || 0,
           handlingError: existingStat.handlingError || 0,
           pickUp: existingStat.pickUp || 0,
           infringement: existingStat.infringement || 0
