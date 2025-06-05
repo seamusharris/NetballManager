@@ -154,8 +154,10 @@ export default function Players() {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['team-players', teamId] });
-      queryClient.invalidateQueries({ queryKey: ['unassigned-players', activeSeason?.id] });
+      // More specific cache invalidation
+      queryClient.invalidateQueries({ queryKey: ['team-players', teamId, currentClub?.id] });
+      queryClient.invalidateQueries({ queryKey: ['unassigned-players', activeSeason?.id, currentClub?.id] });
+      queryClient.invalidateQueries({ queryKey: ['players', currentClub?.id] });
       toast({ title: 'Success', description: 'Player removed from team' });
     },
     onError: (error: Error) => {
