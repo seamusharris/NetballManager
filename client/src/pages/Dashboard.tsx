@@ -10,6 +10,7 @@ import { apiClient } from '@/lib/apiClient';
 import { PlayerCombinationAnalysis } from '@/components/dashboard/PlayerCombinationAnalysis';
 import { TeamPositionAnalysis } from '@/components/dashboard/TeamPositionAnalysis';
 import { UpcomingGameRecommendations } from '@/components/dashboard/UpcomingGameRecommendations';
+import { TeamSwitcher } from '@/components/layout/TeamSwitcher';
 
 export default function Dashboard() {
   const { currentClub, currentClubId, isLoading: clubLoading, currentTeamId } = useClub();

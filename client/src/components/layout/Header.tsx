@@ -105,10 +105,8 @@ export default function Header({ setIsMobileOpen, isTablet }: HeaderProps) {
           </div>
         </div>
 
-        <div className="flex items-center space-x-4">
-          {/* Club Switcher */}
+        <div className="flex items-center gap-4">
           <ClubSwitcher />
-          <TeamSwitcher />
         </div>
 
         <div className="flex items-center space-x-4">
