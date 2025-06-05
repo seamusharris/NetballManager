@@ -74,8 +74,6 @@ export function useCrudMutations<T extends { id?: number }>({
         invalidatePatterns
       );
     },
-    // Prevent duplicate requests for the same ID
-    mutationKey: [baseEndpoint, 'delete'],
     onSuccess: () => {
       toast({
         title: "Success",
@@ -87,9 +85,11 @@ export function useCrudMutations<T extends { id?: number }>({
       // Handle "not found" errors gracefully
       if (error.message.includes("not found") || error.message.includes("404")) {
         toast({
-          title: "Success",
-          description: `${entityName} was already deleted`,
+          title: "Success", 
+          description: `${entityName} was already removed`,
         });
+        // Still refresh the UI to show current state
+        onSuccess?.(undefined as any);
       } else {
         toast({
           title: "Error",
