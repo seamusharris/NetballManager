@@ -47,6 +47,20 @@ export function GameScoreDisplay({ gameId, compact = false, preloadedStats, fall
 
   if (error) {
     console.error('Error loading game stats:', error);
+    
+    // For completed games with no stats, show a dash instead of error
+    if (error.message?.includes('No stats available for completed game')) {
+      return compact ? (
+        <div className="text-muted-foreground">
+          —
+        </div>
+      ) : (
+        <div className="text-muted-foreground">
+          No scores recorded
+        </div>
+      );
+    }
+    
     return compact ? (
       <div className="text-destructive">
         Score Error
