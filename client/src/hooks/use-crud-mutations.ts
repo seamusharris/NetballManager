@@ -80,6 +80,7 @@ export function useCrudMutations<T extends { id?: number }>({
         title: "Success",
         description: `${entityName} deleted successfully`,
       });
+      onSuccess?.(undefined as any);
     },
     onError: (error: Error) => {
       // Handle "not found" errors gracefully
@@ -94,6 +95,7 @@ export function useCrudMutations<T extends { id?: number }>({
           description: `Failed to delete ${entityName.toLowerCase()}: ${error.message}`,
           variant: "destructive",
         });
+        onError?.(error);
       }
     }
   });

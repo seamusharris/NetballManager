@@ -141,13 +141,7 @@ export default function Players() {
       `team-players-${teamId}`,
       `unassigned-players-${activeSeason?.id}`,
       'players'
-    ],
-    onSuccess: () => {
-      // Additional success handling if needed
-    },
-    onError: (error: Error) => {
-      // Additional error handling if needed
-    }
+    ]
   });
 
   const isLoading = teamId 
@@ -229,23 +223,12 @@ export default function Players() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => {
-                            setRemovingPlayers(prev => new Set(prev).add(player.id));
-                            removePlayerFromTeam.mutate(player.id, {
-                              onSettled: () => {
-                                setRemovingPlayers(prev => {
-                                  const newSet = new Set(prev);
-                                  newSet.delete(player.id);
-                                  return newSet;
-                                });
-                              }
-                            });
-                          }}
-                          disabled={removingPlayers.has(player.id) || removePlayerFromTeam.isPending}
+                          onClick={() => removePlayerFromTeam.mutate(player.id)}
+                          disabled={removePlayerFromTeam.isPending}
                           className="text-red-600 hover:text-red-700 disabled:opacity-50"
                         >
                           <UserMinus className="h-4 w-4 mr-1" />
-                          {removingPlayers.has(player.id) || removePlayerFromTeam.isPending ? 'Removing...' : 'Remove'}
+                          {removePlayerFromTeam.isPending ? 'Removing...' : 'Remove'}
                         </Button>
                       }
                     />
