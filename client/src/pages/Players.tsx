@@ -205,13 +205,13 @@ export default function Players() {
 
           {/* Current Team Players */}
           <Card>
-            <CardHeader>
+            <CardHeader className="pb-2">
               <CardTitle className="flex items-center justify-between">
                 <span>Current Team Players</span>
                 <Badge variant="secondary">{teamPlayers?.length || 0} players</Badge>
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-6">
               {!teamPlayers || teamPlayers.length === 0 ? (
                 <p className="text-gray-500 text-center py-4">No players assigned to this team yet.</p>
               ) : (
@@ -241,7 +241,7 @@ export default function Players() {
 
           {/* Available Players to Add */}
           <Card>
-            <CardHeader>
+            <CardHeader className="pb-2">
               <CardTitle className="flex items-center justify-between">
                 <span>Available Players</span>
                 <div className="flex items-center space-x-2">
@@ -297,7 +297,7 @@ export default function Players() {
                 </div>
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-6">
               {availablePlayers.length === 0 ? (
                 <p className="text-gray-500 text-center py-4">
                   No unassigned players available. All active players are already assigned to teams this season.
