@@ -67,45 +67,52 @@ export default function PlayerForm({ player, clubId, teamId, onSuccess, onCancel
 
   const positionDefaults = getPositionDefaults();
 
-  const createMutation = useMutation({
+  const createPlayer = useMutation({
     mutationFn: (data: any) => {
-      // Prepare headers with club context and optional team context
-      const headers: Record<string, string> = {
-        'x-current-club-id': clubId.toString()
-      };
-
-      // Add team context if provided
-      if (teamId) {
-        headers['x-current-team-id'] = teamId.toString();
+      console.log('PlayerForm: Creating player with club context:', clubId, 'team context:', teamId);
+      
+      // Ensure we have the required club context
+      if (!clubId) {
+        throw new Error('Club context is required for player creation');
       }
 
-      return apiClient.post('/api/players', { 
-        ...data, 
-        clubId,
-        teamId: teamId || undefined // Include team ID in payload if available
-      }, { headers });
-    },
-    onSuccess: () => {
-      // Invalidate all player-related queries
-      queryClient.invalidateQueries({ queryKey: ['/api/players'] });
-      queryClient.invalidateQueries({ queryKey: ['players'] });
-      queryClient.invalidateQueries({ queryKey: [`/api/clubs/${clubId}/players`] });
-      queryClient.invalidateQueries({ queryKey: ['unassigned-players'] });
-      queryClient.invalidateQueries({ queryKey: ['team-players'] });
-      queryClient.invalidateQueries({ 
-        predicate: (query) => {
-          const queryKey = query.queryKey[0];
-          return typeof queryKey === 'string' && queryKey.includes('/api/players');
+      // Create the standardized payload
+      const playerData = {
+        ...data,
+        clubId, // Always include club ID in payload
+        teamId: teamId || undefined // Include team ID if in team context
+      };
+
+      console.log('PlayerForm: Sending player data:', playerData);
+
+      // Use consistent headers like our working forms
+      return apiClient.post('/api/players', playerData, {
+        headers: {
+          'x-current-club-id': clubId.toString(),
+          ...(teamId && { 'x-current-team-id': teamId.toString() })
         }
       });
+    },
+    onSuccess: () => {
+      // Invalidate all player-related queries - simplified like working forms
+      queryClient.invalidateQueries({ queryKey: ['/api/players'] });
+      queryClient.invalidateQueries({ queryKey: [`/api/clubs/${clubId}/players`] });
+      
+      // Team-specific invalidations if in team context
+      if (teamId) {
+        queryClient.invalidateQueries({ queryKey: ['team-players', teamId] });
+        queryClient.invalidateQueries({ queryKey: ['unassigned-players'] });
+      }
 
       toast({ title: "Player created successfully" });
+      form.reset(); // Reset form on success
       onSuccess?.();
     },
     onError: (error: any) => {
+      console.error('PlayerForm: Player creation failed:', error);
       toast({
         title: "Error creating player",
-        description: error.message,
+        description: error.message || "Failed to create player",
         variant: "destructive"
       });
     }
@@ -138,7 +145,7 @@ export default function PlayerForm({ player, clubId, teamId, onSuccess, onCancel
     }
   });
 
-  const isSubmitting = createMutation.isPending || updateMutation.isPending;
+  const isSubmitting = createPlayer.isPending || updateMutation.isPending;
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -250,6 +257,9 @@ export default function PlayerForm({ player, clubId, teamId, onSuccess, onCancel
       positionPreferences,
     };
 
+    console.log('PlayerForm: Submitting player data:', playerData);
+    console.log('PlayerForm: Club context:', clubId, 'Team context:', teamId);
+
     if (player) {
       updateMutation.mutate(playerData, {
         onSuccess: () => {
@@ -258,12 +268,7 @@ export default function PlayerForm({ player, clubId, teamId, onSuccess, onCancel
         }
       });
     } else {
-      createMutation.mutate(playerData, {
-        onSuccess: () => {
-          form.reset();
-          onSuccess?.();
-        }
-      });
+      createPlayer.mutate(playerData);
     }
   };
 
@@ -469,11 +474,9 @@ export default function PlayerForm({ player, clubId, teamId, onSuccess, onCancel
         </div>
 
         <div className="flex justify-end space-x-2">
-          {onCancel && (
-            <Button type="button" variant="outline" onClick={onCancel}>
-              Cancel
-            </Button>
-          )}
+          <Button type="button" variant="outline" onClick={onCancel}>
+            Cancel
+          </Button>
           <Button type="submit" className="bg-primary text-white" disabled={isSubmitting}>
             {isSubmitting ? 'Saving...' : isEditing ? 'Update Player' : 'Add Player'}
           </Button>

@@ -168,12 +168,7 @@ export default function Players() {
       }
 
       // Create the player with both club and optional team context
-      const response = await apiClient.post('/api/players', {
-        ...playerData,
-        clubId: currentClub.id,
-        teamId: teamId || undefined, // Include team ID in payload if available
-        avatarColor: "auto"
-      }, { headers });
+      const response = await apiClient.post('/api/players', playerData, { headers });
 
       return response;
     },

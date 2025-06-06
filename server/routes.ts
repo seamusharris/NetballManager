@@ -1074,80 +1074,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('Headers:', {
         'x-current-club-id': req.headers['x-current-club-id'],
         'x-current-team-id': req.headers['x-current-team-id'],
-        'content-type': req.headers['content-type'],
-        'user-agent': req.headers['user-agent']?.substring(0, 50)
+        'content-type': req.headers['content-type']
       });
       console.log('Request body:', JSON.stringify(req.body, null, 2));
 
-      // Ensure we're not processing a duplicate request
-      const requestId = req.headers['x-request-id'] || req.ip + ':' + Date.now();
-
-      // Check if we're doing an import operation (with ID) or regular create
-      const hasId = req.body.id !== undefined;
-
-      // Extract club and team context from request
+      // Extract club and team context using consistent approach
       const clubId = req.body.clubId || req.headers['x-current-club-id'];
       const teamId = req.body.teamId || req.headers['x-current-team-id'];
       
       console.log('Extracted club ID:', clubId);
       console.log('Extracted team ID:', teamId);
 
+      // Validate club context is available
       if (!clubId) {
-        console.log('ERROR: No club ID provided');
-        return res.status(400).json({ message: "Club context required" });
+        console.log('ERROR: No club ID provided in headers or body');
+        return res.status(400).json({ 
+          message: "Club context required", 
+          debug: {
+            headerClubId: req.headers['x-current-club-id'],
+            bodyClubId: req.body.clubId
+          }
+        });
       }
 
-      // Use the appropriate schema based on operation type
+      // Convert to number for consistency
+      const numericClubId = typeof clubId === 'string' ? parseInt(clubId, 10) : clubId;
+      const numericTeamId = teamId ? (typeof teamId === 'string' ? parseInt(teamId, 10) : teamId) : null;
+
+      if (isNaN(numericClubId)) {
+        console.log('ERROR: Invalid club ID format:', clubId);
+        return res.status(400).json({ message: "Invalid club ID format" });
+      }
+
+      // Check if we're doing an import operation (with ID) or regular create
+      const hasId = req.body.id !== undefined;
       const schema = hasId ? importPlayerSchema : insertPlayerSchema;
-      const { clubId: _, teamId: __, ...playerDataForValidation } = req.body; // Remove clubId and teamId for validation
       
-      console.log('Data for validation:', playerDataForValidation);
-      console.log('Using schema:', hasId ? 'import' : 'insert');
+      // Remove context fields for validation (similar to working forms)
+      const { clubId: _, teamId: __, ...playerDataForValidation } = req.body;
       
+      console.log('Validating player data:', playerDataForValidation);
       const parsedData = schema.safeParse(playerDataForValidation);
 
       if (!parsedData.success) {
         console.log('Validation failed:', parsedData.error.errors);
-        return res.status(400).json({ message: "Invalid player data", errors: parsedData.error.errors });
+        return res.status(400).json({ 
+          message: "Invalid player data", 
+          errors: parsedData.error.errors 
+        });
       }
 
-      console.log('Validation successful');
+      console.log('Validation successful, creating player...');
 
-      // Let the storage layer handle the avatar color assignment
-      const playerData = parsedData.data;
+      // Create the player using storage layer (like teams/clubs)
+      const player = await storage.createPlayer(parsedData.data);
+      console.log('Player created with ID:', player.id);
 
-      // Log the request for debugging
-      console.log(`Creating player with request ID: ${requestId}`, {
-        displayName: playerData.displayName,
-        firstName: playerData.firstName,
-        lastName: playerData.lastName,
-        clubId: clubId
-      });
-
-      // Create the player (avatar color handling is now in the storage layer)
-      console.log('Calling storage.createPlayer with:', playerData);
-      const player = await storage.createPlayer(playerData);
-      console.log('Player created by storage:', player);
-
-      // Auto-associate with club if club context is provided
-      if (clubId && player.id) {
+      // Auto-associate with club (simplified approach)
+      if (player.id && numericClubId) {
         try {
-          const numericClubId = typeof clubId === 'string' ? parseInt(clubId, 10) : clubId;
-          if (!isNaN(numericClubId) && numericClubId > 0) {
-            console.log(`Auto-associating player ${player.id} with club ${numericClubId}`);
-            await storage.addPlayerToClub(player.id, numericClubId);
-            console.log(`Successfully auto-associated player ${player.id} with club ${numericClubId}`);
-          }
+          await storage.addPlayerToClub(player.id, numericClubId);
+          console.log(`Auto-associated player ${player.id} with club ${numericClubId}`);
         } catch (clubError) {
-          console.error(`Failed to auto-associate player ${player.id} with club ${clubId}:`, clubError);
+          console.error(`Club association failed (non-critical):`, clubError);
           // Don't fail the player creation if club association fails
         }
       }
 
-      // Log successful creation
-      console.log(`Successfully created player with ID: ${player.id}`);
       console.log('=== PLAYER CREATION REQUEST COMPLETE ===\n');
-
       res.status(201).json(player);
     } catch (error) {
       console.error("=== PLAYER CREATION ERROR ===");
