@@ -18,16 +18,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -59,7 +50,6 @@ type SeasonFormData = {
 export default function Seasons() {
   const [openAddDialog, setOpenAddDialog] = useState(false);
   const [editingSeason, setEditingSeason] = useState<Season | null>(null);
-  const [deletingSeason, setDeletingSeason] = useState<Season | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -134,9 +124,9 @@ export default function Seasons() {
         title: "Season deleted",
         description: "The season has been successfully deleted."
       });
-      setDeletingSeason(null);
     },
     onError: (error: any) => {
+      console.error('Failed to delete season:', error);
       toast({
         title: "Error deleting season",
         description: error.response?.data?.message || "Failed to delete season. Please try again.",
@@ -180,9 +170,9 @@ export default function Seasons() {
   };
 
   // Handle delete confirmation
-  const handleDeleteSeason = () => {
-    if (deletingSeason) {
-      deleteSeasonMutation.mutate(deletingSeason.id);
+  const handleDeleteSeason = (season: Season) => {
+    if (confirm(`Are you sure you want to delete "${season.name}"? This action cannot be undone.`)) {
+      deleteSeasonMutation.mutate(season.id);
     }
   };
 
@@ -286,7 +276,7 @@ export default function Seasons() {
                     variant="outline" 
                     size="sm" 
                     className="text-red-600 hover:text-red-800 hover:bg-red-50"
-                    onClick={() => setDeletingSeason(season)}
+                    onClick={() => handleDeleteSeason(season)}
                   >
                     <Trash2 className="h-4 w-4 mr-1" />
                     Delete
@@ -332,26 +322,7 @@ export default function Seasons() {
           />
         </DialogContent>
       </Dialog>
-      {/* Delete Season Confirmation */}
-      <AlertDialog open={!!deletingSeason} onOpenChange={(open) => !open && setDeletingSeason(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently delete "{deletingSeason?.name}" and cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={handleDeleteSeason}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      
     </div>
   );
 }
