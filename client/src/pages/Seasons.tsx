@@ -752,13 +752,12 @@ export default function Seasons() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleteSeasonMutation.isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              className="bg-red-600 hover:bg-red-700 text-white"
               onClick={executeDeleteSeason}
-              disabled={deleteSeasonMutation.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {deleteSeasonMutation.isPending ? "Deleting..." : "Delete"}
+              Delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
