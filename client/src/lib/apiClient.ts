@@ -66,6 +66,17 @@ class ApiClient {
       headers['x-current-team-id'] = teamId;
     }
 
+    // Add club context from instance (fallback)
+    if (this.clubContext.currentClubId && !headers['x-current-club-id']) {
+      console.log('API Request adding club ID header:', this.clubContext.currentClubId);
+      headers['x-current-club-id'] = this.clubContext.currentClubId.toString();
+    }
+
+    if (this.clubContext.currentTeamId && !headers['x-current-team-id']) {
+      console.log('API Request adding team ID header:', this.clubContext.currentTeamId);
+      headers['x-current-team-id'] = this.clubContext.currentTeamId.toString();
+    }
+
     // Apply custom headers last (these can override defaults)
     if (customHeaders) {
       Object.assign(headers, customHeaders);
@@ -85,16 +96,6 @@ class ApiClient {
 
     if (data && (method === 'POST' || method === 'PUT' || method === 'PATCH')) {
       config.body = JSON.stringify(data);
-    }
-
-    if (this.clubContext.currentClubId) {
-      console.log('API Request adding club ID header:', this.clubContext.currentClubId);
-      headers['x-current-club-id'] = this.clubContext.currentClubId.toString();
-    }
-
-    if (this.clubContext.currentTeamId) {
-      console.log('API Request adding team ID header:', this.clubContext.currentTeamId);
-      headers['x-current-team-id'] = this.clubContext.currentTeamId.toString();
     }
 
     const response = await fetch(url, config);
