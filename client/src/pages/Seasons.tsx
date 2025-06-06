@@ -73,7 +73,7 @@ export default function Seasons() {
   const deleteMutation = useMutation({
     mutationFn: (seasonId: number) => apiClient.delete(`/api/seasons/${seasonId}`),
     onSuccess: () => {
-      // Invalidate and refetch both seasons queries
+      // Invalidate and refetch both seasons queries (match useStandardQuery format)
       queryClient.invalidateQueries({ queryKey: ['/api/seasons'] });
       queryClient.invalidateQueries({ queryKey: ['/api/seasons/active'] });
 
