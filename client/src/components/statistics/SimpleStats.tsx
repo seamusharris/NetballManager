@@ -750,6 +750,19 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
         // Invalidate all game-related queries to ensure scoreboard updates
         queryClient.invalidateQueries({ queryKey: ['/api/games'] });
         
+        // Invalidate team-specific game queries to ensure team dashboards update
+        queryClient.invalidateQueries({ 
+          predicate: (query) => {
+            const queryKey = query.queryKey;
+            return queryKey.some(key => 
+              typeof key === 'string' && key === '/api/games'
+            ) || (
+              Array.isArray(queryKey) && 
+              queryKey[0] === 'games' // This covers ['games', clubId, teamId] patterns
+            );
+          }
+        });
+        
         // Invalidate specific player queries for all players in the current game
         const uniquePlayerIds = new Set();
         
