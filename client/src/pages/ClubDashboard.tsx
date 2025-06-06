@@ -12,9 +12,9 @@ export default function ClubDashboard() {
   const { currentClub, currentClubId, isLoading: clubLoading } = useClub();
   const [, navigate] = useLocation();
 
-  // Fetch all club data
+  // Queries with proper club context
   const { data: players = [], isLoading: isLoadingPlayers } = useQuery<any[]>({
-    queryKey: ['players', currentClubId],
+    queryKey: ['club-players', currentClubId],
     queryFn: () => apiClient.get('/api/players'),
     enabled: !!currentClubId,
   });
@@ -23,8 +23,7 @@ export default function ClubDashboard() {
     queryKey: ['club-games', currentClubId],
     queryFn: () => apiClient.get('/api/games', {
       headers: {
-        'x-club-wide': 'true', // Enable club-wide view - bypass team filtering
-        'x-current-team-id': '' // Explicitly clear team filter for club-wide view
+        'x-club-wide': 'true' // Enable club-wide view - bypass team filtering
       }
     }),
     enabled: !!currentClubId,
