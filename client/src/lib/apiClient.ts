@@ -60,13 +60,7 @@ class ApiClient {
       headers['x-current-club-id'] = clubId;
     }
 
-    // Add team context header if available, but respect custom header overrides
-    const teamId = getCurrentTeamId();
-    if (teamId && (!customHeaders || !customHeaders.hasOwnProperty('x-current-team-id'))) {
-      headers['x-current-team-id'] = teamId;
-    }
-
-    // Apply custom headers (these can override defaults)
+    // Apply custom headers first (these can override defaults)
     if (customHeaders) {
       Object.assign(headers, customHeaders);
 
@@ -76,6 +70,12 @@ class ApiClient {
           delete headers[key];
         }
       });
+    }
+
+    // Add team context header if available and not overridden by custom headers
+    const teamId = getCurrentTeamId();
+    if (teamId && (!customHeaders || !customHeaders.hasOwnProperty('x-current-team-id') || customHeaders['x-current-team-id'] !== '')) {
+      headers['x-current-team-id'] = teamId;
     }
 
     const config: RequestInit = {
