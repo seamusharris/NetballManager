@@ -19,6 +19,7 @@ import { useCrudMutations } from '@/hooks/use-crud-mutations';
 
 export default function Players() {
   const { currentClub, hasPermission, isLoading: clubLoading, switchToClub } = useClub();
+  const [isAddPlayerDialogOpen, setIsAddPlayerDialogOpen] = useState(false);
 
   // Don't render anything until club context is fully loaded
   if (clubLoading || !currentClub) {
@@ -394,20 +395,21 @@ export default function Players() {
               <CardTitle className="flex items-center justify-between">
                 <span>Available Players</span>
                 <div className="flex items-center space-x-2">
-                  <Dialog>
+                  <Dialog open={isAddPlayerDialogOpen} onOpenChange={setIsAddPlayerDialogOpen}>
                     <DialogTrigger asChild>
                       <Button variant="outline" size="sm">
                         <UserPlus className="h-4 w-4 mr-1" />
                         Add New Player
                       </Button>
                     </DialogTrigger>
-                    <DialogContent>
+                    <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                       <DialogHeader>
                         <DialogTitle>Add New Player</DialogTitle>
                       </DialogHeader>
                       <PlayerForm
-                        onSubmit={createPlayerForTeam.mutate}
+                        onSubmit={(data) => createPlayerForTeam.mutate(data)}
                         isSubmitting={createPlayerForTeam.isPending}
+                        onCancel={() => setIsAddPlayerDialogOpen(false)}
                       />
                     </DialogContent>
                   </Dialog>
@@ -486,20 +488,21 @@ export default function Players() {
                 </SelectContent>
               </Select>
             </div>
-            <Dialog>
+            <Dialog open={isAddPlayerDialogOpen} onOpenChange={setIsAddPlayerDialogOpen}>
             <DialogTrigger asChild>
               <Button>
                 <UserPlus className="h-4 w-4 mr-2" />
                 Add New Player
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Add New Player</DialogTitle>
               </DialogHeader>
               <PlayerForm
-                onSubmit={createPlayerForClub.mutate}
+                onSubmit={(data) => createPlayerForClub.mutate(data)}
                 isSubmitting={createPlayerForClub.isPending}
+                onCancel={() => setIsAddPlayerDialogOpen(false)}
               />
             </DialogContent>
           </Dialog>

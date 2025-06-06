@@ -1068,7 +1068,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/players", async (req, res) => {
+  app.post("/api/players", standardAuth({ requireClub: true, permission: 'canManagePlayers' }), async (req: AuthenticatedRequest, res) => {
     try {
       // Ensure we're not processing a duplicate request
       const requestId = req.headers['x-request-id'] || req.ip + ':' + Date.now();
@@ -1076,8 +1076,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check if we're doing an import operation (with ID) or regular create
       const hasId = req.body.id !== undefined;
 
-      // Extract club context from request
-      const clubId = req.body.clubId || req.headers['x-current-club-id'];
+      // Extract club context from authenticated user (middleware ensures this is set)
+      const clubId = req.user.currentClubId;
 
       // Use the appropriate schema based on operation type
       const schema = hasId ? importPlayerSchema : insertPlayerSchema;
