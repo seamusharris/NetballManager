@@ -422,8 +422,13 @@ export default function Players() {
                         <DialogTitle>Add New Player</DialogTitle>
                       </DialogHeader>
                       <PlayerForm
-                        onSubmit={createPlayerForTeam.mutate}
-                        isSubmitting={createPlayerForTeam.isPending}
+                        clubId={currentClubId}
+                        onSuccess={() => {
+                          queryClient.invalidateQueries({ queryKey: ['team-players', teamId] });
+                          queryClient.invalidateQueries({ queryKey: ['unassigned-players', activeSeason?.id] });
+                          toast({ title: 'Success', description: 'Player created successfully' });
+                          setIsAddPlayerDialogOpen(false);
+                        }}
                       />
                     </DialogContent>
                   </Dialog>
@@ -514,8 +519,13 @@ export default function Players() {
                 <DialogTitle>Add New Player</DialogTitle>
               </DialogHeader>
               <PlayerForm
-                onSubmit={createPlayerForClub.mutate}
-                isSubmitting={createPlayerForClub.isPending}
+                clubId={currentClubId}
+                onSuccess={() => {
+                  queryClient.invalidateQueries({ queryKey: ['players'] });
+                  queryClient.invalidateQueries({ queryKey: ['clubs', currentClub?.id, 'players'] });
+                  toast({ title: 'Success', description: 'Player created successfully' });
+                  setIsAddPlayerDialogOpen(false);
+                }}
               />
             </DialogContent>
           </Dialog>

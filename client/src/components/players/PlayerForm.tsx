@@ -23,6 +23,9 @@ import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { insertPlayerSchema, Position, Player, allPositions } from "@shared/schema";
 import { useEffect, useState } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiClient } from "@/lib/apiClient";
 
 // Extend the schema for the form validation
 const formSchema = insertPlayerSchema.extend({
@@ -38,13 +41,15 @@ type FormValues = z.infer<typeof formSchema>;
 
 interface PlayerFormProps {
   player?: Player;
-  onSubmit: (data: any) => void;
-  isSubmitting: boolean;
+  clubId: number;
+  onSuccess?: (data?: any) => void;
   onCancel?: () => void;
 }
 
-export default function PlayerForm({ player, onSubmit, isSubmitting, onCancel }: PlayerFormProps) {
+export default function PlayerForm({ player, clubId, onSuccess, onCancel }: PlayerFormProps) {
   const isEditing = !!player;
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   // Extract position preferences for default values
   const getPositionDefaults = () => {
@@ -60,6 +65,61 @@ export default function PlayerForm({ player, onSubmit, isSubmitting, onCancel }:
   };
 
   const positionDefaults = getPositionDefaults();
+
+  const createMutation = useMutation({
+    mutationFn: (data: any) => apiClient.post('/api/players', { ...data, clubId }),
+    onSuccess: () => {
+      // Invalidate all player-related queries
+      queryClient.invalidateQueries({ queryKey: ['/api/players'] });
+      queryClient.invalidateQueries({ queryKey: ['players'] });
+      queryClient.invalidateQueries({ queryKey: [`/api/clubs/${clubId}/players`] });
+      queryClient.invalidateQueries({ 
+        predicate: (query) => {
+          const queryKey = query.queryKey[0];
+          return typeof queryKey === 'string' && queryKey.includes('/api/players');
+        }
+      });
+
+      toast({ title: "Player created successfully" });
+      onSuccess?.();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error creating player",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: (data: any) => apiClient.patch(`/api/players/${player?.id}`, data),
+    onSuccess: () => {
+      // Invalidate all player-related queries
+      queryClient.invalidateQueries({ queryKey: ['/api/players'] });
+      queryClient.invalidateQueries({ queryKey: ['players'] });
+      queryClient.invalidateQueries({ queryKey: [`/api/players/${player?.id}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/clubs/${clubId}/players`] });
+      queryClient.invalidateQueries({ 
+        predicate: (query) => {
+          const queryKey = query.queryKey[0];
+          return typeof queryKey === 'string' && queryKey.includes('/api/players');
+        }
+      });
+
+      toast({ title: "Player updated successfully" });
+      onSuccess?.();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error updating player",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  });
+
+  const isSubmitting = createMutation.isPending || updateMutation.isPending;
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -171,8 +231,21 @@ export default function PlayerForm({ player, onSubmit, isSubmitting, onCancel }:
       positionPreferences,
     };
 
-    // Call parent's onSubmit function
-    onSubmit(playerData);
+    if (player) {
+      updateMutation.mutate(playerData, {
+        onSuccess: () => {
+          form.reset();
+          onSuccess?.();
+        }
+      });
+    } else {
+      createMutation.mutate(playerData, {
+        onSuccess: () => {
+          form.reset();
+          onSuccess?.();
+        }
+      });
+    }
   };
 
   // Season management is now handled on the player details page
