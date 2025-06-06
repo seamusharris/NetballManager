@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet';
 import { useLocation } from 'wouter';
@@ -114,29 +113,43 @@ export default function ClubDashboard() {
   // Team performance metrics
   const teamPerformance = activeTeams.map(team => {
     // Filter games where this team is playing (either home or away)
+    // Note: using the correct field names from the server response
     const teamGames = games.filter(game => 
       game.homeTeamId === team.id || game.awayTeamId === team.id
     );
     const teamCompletedGames = teamGames.filter(game => game.statusIsCompleted);
-    
+
+    console.log(`ClubDashboard: Team ${team.name} (ID: ${team.id}) has ${teamGames.length} total games, ${teamCompletedGames.length} completed games`);
+    console.log(`ClubDashboard: Available games for filtering:`, games.map(g => ({ id: g.id, homeTeamId: g.homeTeamId, awayTeamId: g.awayTeamId, homeTeamName: g.homeTeamName, awayTeamName: g.awayTeamName })));
+    console.log(`ClubDashboard: Team ${team.name} filtered games:`, teamGames.map(g => ({ id: g.id, homeTeamId: g.homeTeamId, awayTeamId: g.awayTeamId })));
+
     const wins = teamCompletedGames.filter(game => {
       // Use game statistics which are always from our team's perspective
       const gameStats = centralizedStats[game.id] || [];
-      if (gameStats.length === 0) return false;
-      
+      if (gameStats.length === 0) {
+        console.log(`ClubDashboard: No stats found for game ${game.id}`);
+        return false;
+      }
+
       // Calculate total goals for and against from all quarters
       const totalGoalsFor = gameStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
       const totalGoalsAgainst = gameStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
-      
+
+      console.log(`ClubDashboard: Game ${game.id} - Goals for: ${totalGoalsFor}, Goals against: ${totalGoalsAgainst}`);
+
       return totalGoalsFor > totalGoalsAgainst;
     }).length;
 
-    return {
+    const teamPerf = {
       ...team,
       totalGames: teamCompletedGames.length,
       wins,
       winRate: teamCompletedGames.length > 0 ? (wins / teamCompletedGames.length) * 100 : 0
     };
+
+    console.log(`ClubDashboard: Team ${team.name} final performance:`, teamPerf);
+
+    return teamPerf;
   });
 
   // Recent games across all teams
@@ -290,7 +303,7 @@ export default function ClubDashboard() {
                       {team.winRate >= 60 ? "Strong" : team.winRate >= 40 ? "Average" : "Needs Focus"}
                     </Badge>
                   </div>
-                  
+
                 </div>
               ))}
               {teamPerformance.length === 0 && (
