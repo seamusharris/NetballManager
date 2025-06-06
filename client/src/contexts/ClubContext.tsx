@@ -176,15 +176,21 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
 
     // Handle team selection
     const handleSetCurrentTeamId = useCallback((teamId: number | null) => {
+      console.log('ClubContext: Setting team ID to:', teamId);
       setCurrentTeamId(teamId);
       if (teamId) {
         localStorage.setItem('current-team-id', teamId.toString());
       } else {
         localStorage.removeItem('current-team-id');
       }
+      
+      // Update API client context immediately with new team ID
+      apiClient.setClubContext({ currentClubId, currentTeamId: teamId });
+      console.log('ClubContext: Updated API client with team ID:', teamId);
+      
       // Don't invalidate any cached data - let React Query handle caching
       // Team switches should use existing cached data for better performance
-    }, []);
+    }, [currentClubId]);
   
   // Load saved team from localStorage
   useEffect(() => {
