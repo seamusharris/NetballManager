@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useCrudMutations } from '@/hooks/use-crud-mutations';
 import { useStandardQuery } from '@/hooks/use-standard-query';
@@ -18,6 +19,7 @@ import { cn } from '@/lib/utils';
 export default function Seasons() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingSeason, setEditingSeason] = useState<Season | null>(null);
+  const { toast } = useToast();
   const queryClient = useQueryClient();
 
   // Fetch seasons using same pattern as Teams
@@ -43,33 +45,31 @@ export default function Seasons() {
     },
   });
 
-  const { toast } = useToast();
-
-  // Delete mutation - exactly matching Teams pattern
+  // Delete mutation - EXACTLY matching Teams pattern
   const deleteMutation = useMutation({
-    mutationFn: (seasonId: number) => apiRequest('DELETE', `/api/seasons/${seasonId}`),
-    onSuccess: (data: any) => {
-      // Invalidate and refetch seasons query to update the list
+    mutationFn: (id: number) => apiRequest('DELETE', `/api/seasons/${id}`),
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/seasons'] });
       queryClient.invalidateQueries({ queryKey: ['/api/seasons/active'] });
-
       toast({
         title: "Success",
-        description: data?.message || "Season deleted successfully",
+        description: "Season deleted successfully",
       });
     },
     onError: (error: any) => {
+      console.error('Failed to delete season:', error);
       toast({
         title: "Error",
-        description: error.message || "Failed to delete season",
+        description: error.response?.data?.message || "Failed to delete season",
         variant: "destructive",
       });
     },
   });
 
-  const handleDelete = (seasonId: number) => {
-    if (confirm('Are you sure you want to delete this season?')) {
-      deleteMutation.mutate(seasonId);
+  // Delete handler - EXACTLY matching Teams pattern
+  const handleDelete = (season: Season) => {
+    if (confirm(`Are you sure you want to delete "${season.name}"? This action cannot be undone.`)) {
+      deleteMutation.mutate(season.id);
     }
   };
 
@@ -193,7 +193,7 @@ export default function Seasons() {
                           variant="outline" 
                           size="sm" 
                           className="text-red-600 hover:text-red-800 hover:bg-red-50"
-                          onClick={() => handleDelete(season.id)}
+                          onClick={() => handleDelete(season)}
                         >
                           <Trash2 className="h-4 w-4 mr-1" />
                           Delete
