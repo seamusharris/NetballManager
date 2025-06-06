@@ -109,6 +109,8 @@ export default function Seasons() {
         description: "Failed to create season. Please try again.",
         variant: "destructive"
       });
+      addForm.reset();
+      setOpenAddDialog(false);
     }
   });
 
