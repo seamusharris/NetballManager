@@ -459,7 +459,8 @@ export default function Players() {
                   // Create the player with club context
                   const response = await apiClient.post('/api/players', {
                     ...playerData,
-                    clubId: currentClub?.id
+                    clubId: currentClub?.id,
+                    avatarColor: "auto"
                   }, {
                     headers: {
                       'x-current-club-id': currentClub?.id?.toString() || ''
