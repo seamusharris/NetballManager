@@ -2461,7 +2461,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           name: row.name,
           division: row.division,
           clubId: row.club_id,
-          seasonId: row<string>row.season_id,
+          seasonId: row.season_id,
           isActive: row.is_active,
           createdAt: row.created_at,
           updatedAt: row.updated_at,
