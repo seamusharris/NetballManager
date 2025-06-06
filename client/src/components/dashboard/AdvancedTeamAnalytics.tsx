@@ -533,24 +533,59 @@ export default function AdvancedTeamAnalytics({
   };
 
   const calculateOpponentStrengthMatrix = (games: Game[], statsMap: Record<number, GameStat[]>, opponents: Opponent[]) => {
+    // First, calculate win rate against each opponent
+    const opponentPerformance: Record<string, { wins: number; total: number; winRate: number; totalScore: number }> = {};
+    
+    games.forEach(game => {
+      const isHomeGame = game.homeClubId === currentClubId;
+      const opponentName = isHomeGame ? game.awayTeamName : game.homeTeamName;
+      
+      if (!opponentName || opponentName === 'Bye') return;
+      
+      if (!opponentPerformance[opponentName]) {
+        opponentPerformance[opponentName] = { wins: 0, total: 0, winRate: 0, totalScore: 0 };
+      }
+      
+      const gameStats = statsMap[game.id] || [];
+      const teamScore = gameStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
+      const opponentScore = gameStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
+      
+      opponentPerformance[opponentName].total++;
+      opponentPerformance[opponentName].totalScore += teamScore;
+      
+      if (getWinLoseLabel(teamScore, opponentScore) === 'Win') {
+        opponentPerformance[opponentName].wins++;
+      }
+    });
+
+    // Calculate win rates
+    Object.keys(opponentPerformance).forEach(opponentName => {
+      const data = opponentPerformance[opponentName];
+      data.winRate = data.total > 0 ? (data.wins / data.total) * 100 : 0;
+    });
+
+    // Now categorize opponents based on our performance against them
     const opponentStrengthMatrix = {
-      vsStrong: { wins: 0, total: 0, totalScore: 0 },
-      vsMedium: { wins: 0, total: 0, totalScore: 0 },
-      vsWeak: { wins: 0, total: 0, totalScore: 0 }
+      vsStrong: { wins: 0, total: 0, totalScore: 0 }, // Teams we perform well against (≥70% win rate)
+      vsMedium: { wins: 0, total: 0, totalScore: 0 }, // Balanced matchups (30-69% win rate)
+      vsWeak: { wins: 0, total: 0, totalScore: 0 }    // Teams that challenge us (<30% win rate)
     };
 
     games.forEach(game => {
-      // Simple categorization based on opponent name patterns
+      const isHomeGame = game.homeClubId === currentClubId;
+      const opponentName = isHomeGame ? game.awayTeamName : game.homeTeamName;
+      
+      if (!opponentName || opponentName === 'Bye') return;
+      
+      const performance = opponentPerformance[opponentName];
+      if (!performance) return;
+      
+      // Categorize based on our win rate against this opponent
       let category: 'vsStrong' | 'vsMedium' | 'vsWeak' = 'vsMedium';
-      
-      const homeTeam = game.homeTeamName?.toLowerCase() || '';
-      const awayTeam = game.awayTeamName?.toLowerCase() || '';
-      const opponentName = homeTeam + ' ' + awayTeam;
-      
-      if (opponentName.includes('emerald') || opponentName.includes('champion') || opponentName.includes('elite') || opponentName.includes('premier')) {
-        category = 'vsStrong';
-      } else if (opponentName.includes('junior') || opponentName.includes('development') || opponentName.includes('rookie') || opponentName.includes('beginner')) {
-        category = 'vsWeak';
+      if (performance.winRate >= 70) {
+        category = 'vsStrong'; // We're strong against this opponent
+      } else if (performance.winRate < 30) {
+        category = 'vsWeak'; // This opponent challenges us
       }
 
       const gameStats = statsMap[game.id] || [];
@@ -896,9 +931,9 @@ export default function AdvancedTeamAnalytics({
           
           <div className="space-y-3">
             {[
-              { key: 'vsStrong', label: 'Strong Teams', color: 'red' },
-              { key: 'vsMedium', label: 'Medium Teams', color: 'yellow' },
-              { key: 'vsWeak', label: 'Weak Teams', color: 'green' }
+              { key: 'vsStrong', label: 'Teams We Dominate', color: 'green' },
+              { key: 'vsMedium', label: 'Balanced Matchups', color: 'yellow' },
+              { key: 'vsWeak', label: 'Challenging Opponents', color: 'red' }
             ].map(({ key, label, color }) => {
               const data = analytics.opponentStrengthMatrix[key as keyof typeof analytics.opponentStrengthMatrix];
               const winRate = data.total > 0 ? (data.wins / data.total) * 100 : 0;
