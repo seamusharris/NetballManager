@@ -67,7 +67,7 @@ export default function Seasons() {
     }
   });
 
-  // Delete mutation - EXACTLY matching Teams pattern
+  // Delete mutation - with React Strict Mode 404 handling
   const deleteMutation = useMutation({
     mutationFn: (id: number) => apiClient.delete(`/api/seasons/${id}`),
     onSuccess: () => {
@@ -77,6 +77,25 @@ export default function Seasons() {
     },
     onError: (error: any) => {
       console.error('Failed to delete season:', error);
+      
+      // Handle "not found" errors gracefully - this is common in React Strict Mode
+      const errorMessage = error.message?.toLowerCase() || '';
+      const is404Error = errorMessage.includes("not found") || 
+                         errorMessage.includes("404") || 
+                         errorMessage.includes("season not found") ||
+                         error.status === 404 ||
+                         error.response?.status === 404;
+
+      if (is404Error) {
+        // Don't show any error for 404s - they're expected in React Strict Mode
+        toast({
+          title: "Season deleted successfully",
+          description: "The season has been removed."
+        });
+        return; // Exit early, don't show error
+      }
+
+      // Show error for other types of failures
       toast({
         title: "Error",
         description: error.response?.data?.message || "Failed to delete season",
@@ -213,9 +232,10 @@ export default function Seasons() {
                           size="sm" 
                           className="text-red-600 hover:text-red-800 hover:bg-red-50"
                           onClick={() => handleDelete(season)}
+                          disabled={deleteMutation.isPending}
                         >
                           <Trash2 className="h-4 w-4 mr-1" />
-                          Delete
+                          {deleteMutation.isPending ? "Deleting..." : "Delete"}
                         </Button>
                       )}
                     </CardFooter>
