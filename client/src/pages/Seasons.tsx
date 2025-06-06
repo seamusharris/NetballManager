@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -16,52 +15,40 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
 import { Badge } from "@/components/ui/badge";
-import { Calendar } from "@/components/ui/calendar";
-import { 
-  Popover, 
-  PopoverContent, 
-  PopoverTrigger 
-} from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { CalendarIcon, PlusCircle, Pencil, Trash2 } from "lucide-react";
+import { PlusCircle, Pencil, Trash2 } from "lucide-react";
 import { BackButton } from "@/components/ui/back-button";
+import SeasonForm from "@/components/seasons/SeasonForm";
 
-// Season form schema with validation
-const seasonFormSchema = z.object({
-  name: z.string().min(2, { message: "Season name must be at least 2 characters." }),
-  type: z.string().optional(),
-  startDate: z.date({ required_error: "Start date is required." }),
-  endDate: z.date({ required_error: "End date is required." }),
-  year: z.number().int().min(2020, { message: "Year must be 2020 or later." }),
-  displayOrder: z.number().int().min(0, { message: "Display order must be 0 or higher." }),
-  isActive: z.boolean().default(false)
-});
+interface Season {
+  id: number;
+  name: string;
+  type?: string;
+  startDate: string;
+  endDate: string;
+  year: number;
+  displayOrder: number;
+  isActive: boolean;
+}
 
-type SeasonFormValues = z.infer<typeof seasonFormSchema>;
+type SeasonFormData = {
+  name: string;
+  type?: string;
+  startDate: Date;
+  endDate: Date;
+  year: number;
+  displayOrder: number;
+  isActive: boolean;
+};
 
 export default function Seasons() {
   const [openAddDialog, setOpenAddDialog] = useState(false);
-  const [editingSeason, setEditingSeason] = useState<any>(null);
+  const [editingSeason, setEditingSeason] = useState<Season | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -75,48 +62,47 @@ export default function Seasons() {
   const { data: activeSeason } = useQuery({
     queryKey: ['/api/seasons/active'],
     staleTime: 10000,
-    retry: false // Don't retry if no active season exists
+    retry: false
   });
 
   // Add new season mutation
   const addSeasonMutation = useMutation({
-    mutationFn: async (seasonData: SeasonFormValues) => {
+    mutationFn: async (seasonData: SeasonFormData) => {
       return await apiRequest('POST', '/api/seasons', seasonData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/seasons'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/seasons/active'] });
       toast({
         title: "Season created",
         description: "The new season has been successfully created."
       });
-      addForm.reset();
       setOpenAddDialog(false);
     },
-    onError: (error) => {
+    onError: () => {
       toast({
         title: "Error creating season",
         description: "Failed to create season. Please try again.",
         variant: "destructive"
       });
-      addForm.reset();
-      setOpenAddDialog(false);
     }
   });
 
   // Update season mutation
   const updateSeasonMutation = useMutation({
-    mutationFn: async (data: { id: number; seasonData: Partial<SeasonFormValues> }) => {
+    mutationFn: async (data: { id: number; seasonData: SeasonFormData }) => {
       return await apiRequest('PATCH', `/api/seasons/${data.id}`, data.seasonData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/seasons'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/seasons/active'] });
       toast({
         title: "Season updated",
         description: "The season has been successfully updated."
       });
       setEditingSeason(null);
     },
-    onError: (error) => {
+    onError: () => {
       toast({
         title: "Error updating season",
         description: "Failed to update season. Please try again.",
@@ -132,6 +118,7 @@ export default function Seasons() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/seasons'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/seasons/active'] });
       toast({
         title: "Season deleted",
         description: "The season has been successfully deleted."
@@ -159,7 +146,7 @@ export default function Seasons() {
         description: "The active season has been updated."
       });
     },
-    onError: (error) => {
+    onError: () => {
       toast({
         title: "Error changing active season",
         description: "Failed to change active season. Please try again.",
@@ -168,58 +155,20 @@ export default function Seasons() {
     }
   });
 
-  // Add season form
-  const addForm = useForm<SeasonFormValues>({
-    resolver: zodResolver(seasonFormSchema),
-    defaultValues: {
-      name: "",
-      type: "Regular",
-      year: new Date().getFullYear(),
-      displayOrder: 0,
-      isActive: false
-    }
-  });
-
-  // Edit season form
-  const editForm = useForm<SeasonFormValues>({
-    resolver: zodResolver(seasonFormSchema),
-    defaultValues: {
-      name: "",
-      type: "",
-      year: new Date().getFullYear(),
-      displayOrder: 0,
-      isActive: false
-    }
-  });
-
   // Handle add season form submission
-  const onAddSubmit = (data: SeasonFormValues) => {
+  const handleAddSubmit = (data: SeasonFormData) => {
     addSeasonMutation.mutate(data);
   };
 
   // Handle edit season form submission
-  const onEditSubmit = (data: SeasonFormValues) => {
+  const handleEditSubmit = (data: SeasonFormData) => {
     if (editingSeason) {
       updateSeasonMutation.mutate({ id: editingSeason.id, seasonData: data });
     }
   };
 
-  // Set up the edit form when a season is selected for editing
-  const handleEditSeason = (season: any) => {
-    setEditingSeason(season);
-    editForm.reset({
-      name: season.name,
-      type: season.type || "",
-      startDate: new Date(season.startDate),
-      endDate: new Date(season.endDate),
-      year: season.year,
-      displayOrder: season.displayOrder,
-      isActive: season.isActive
-    });
-  };
-
-  // Delete a season - exactly like club deletion
-  const handleDeleteSeason = (season: any) => {
+  // Delete a season - exactly like club deletion with simple confirm
+  const handleDeleteSeason = (season: Season) => {
     if (confirm(`Are you sure you want to delete "${season.name}"? This action cannot be undone.`)) {
       deleteSeasonMutation.mutate(season.id);
     }
@@ -268,7 +217,7 @@ export default function Seasons() {
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {Array.isArray(seasons) && seasons.map((season: any) => (
+          {Array.isArray(seasons) && seasons.map((season: Season) => (
             <Card key={season.id} className={cn(
               "transition-all", 
               season.isActive ? "border-blue-600 shadow-md" : ""
@@ -315,7 +264,7 @@ export default function Seasons() {
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  onClick={() => handleEditSeason(season)}
+                  onClick={() => setEditingSeason(season)}
                 >
                   <Pencil className="h-4 w-4 mr-1" />
                   Edit
@@ -346,196 +295,11 @@ export default function Seasons() {
               Create a new season for managing games and statistics.
             </DialogDescription>
           </DialogHeader>
-          <Form {...addForm}>
-            <form onSubmit={addForm.handleSubmit(onAddSubmit)} className="space-y-4">
-              <FormField
-                  control={addForm.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel required>Season Name</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g., Spring Season 2025" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={addForm.control}
-                name="type"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Season Type</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g., Regular, Summer, Winter" {...field} />
-                    </FormControl>
-                    <FormDescription>
-                      Optional: Specify the type of season
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={addForm.control}
-                  name="startDate"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                      <FormLabel>Start Date</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant={"outline"}
-                              className={cn(
-                                "pl-3 text-left font-normal",
-                                !field.value && "text-muted-foreground"
-                              )}
-                            >
-                              {field.value ? (
-                                format(field.value, "PPP")
-                              ) : (
-                                <span>Pick a date</span>
-                              )}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={addForm.control}
-                  name="endDate"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                      <FormLabel>End Date</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant={"outline"}
-                              className={cn(
-                                "pl-3 text-left font-normal",
-                                !field.value && "text-muted-foreground"
-                              )}
-                            >
-                              {field.value ? (
-                                format(field.value, "PPP")
-                              ) : (
-                                <span>Pick a date</span>
-                              )}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={addForm.control}
-                  name="year"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Year</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="number" 
-                          {...field} 
-                          onChange={e => field.onChange(parseInt(e.target.value) || 2025)}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={addForm.control}
-                  name="displayOrder"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Display Order</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="number" 
-                          {...field} 
-                          onChange={e => field.onChange(parseInt(e.target.value) || 0)}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <FormField
-                control={addForm.control}
-                name="isActive"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-center space-x-2 space-y-0">
-                    <FormControl>
-                      <input
-                        type="checkbox"
-                        checked={field.value}
-                        onChange={field.onChange}
-                        className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                      />
-                    </FormControl>
-                    <FormLabel className="font-normal">
-                      Set as active season
-                    </FormLabel>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <DialogFooter>
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => setOpenAddDialog(false)}
-                >
-                  Cancel
-                </Button>
-                <Button 
-                  type="submit" 
-                  className="bg-blue-600 hover:bg-blue-700"
-                  disabled={addSeasonMutation.isPending}
-                >
-                  {addSeasonMutation.isPending ? "Creating..." : "Create Season"}
-                </Button>
-              </DialogFooter>
-            </form>
-          </Form>
+          <SeasonForm
+            onSubmit={handleAddSubmit}
+            onCancel={() => setOpenAddDialog(false)}
+            isSubmitting={addSeasonMutation.isPending}
+          />
         </DialogContent>
       </Dialog>
 
@@ -548,175 +312,12 @@ export default function Seasons() {
               Update season details and preferences.
             </DialogDescription>
           </DialogHeader>
-          <Form {...editForm}>
-            <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-4">
-              <FormField
-                  control={editForm.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel required>Season Name</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={editForm.control}
-                name="type"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Season Type</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormDescription>
-                      Optional: Specify the type of season
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={editForm.control}
-                  name="startDate"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                      <FormLabel>Start Date</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant={"outline"}
-                              className={cn(
-                                "pl-3 text-left font-normal",
-                                !field.value && "text-muted-foreground"
-                              )}
-                            >
-                              {field.value ? (
-                                format(field.value, "PPP")
-                              ) : (
-                                <span>Pick a date</span>
-                              )}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={editForm.control}
-                  name="endDate"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                      <FormLabel>End Date</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant={"outline"}
-                              className={cn(
-                                "pl-3 text-left font-normal",
-                                !field.value && "text-muted-foreground"
-                              )}
-                            >
-                              {field.value ? (
-                                format(field.value, "PPP")
-                              ) : (
-                                <span>Pick a date</span>
-                              )}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={editForm.control}
-                  name="year"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Year</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="number" 
-                          {...field} 
-                          onChange={e => field.onChange(parseInt(e.target.value) || 2025)}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={editForm.control}
-                  name="displayOrder"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Display Order</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="number" 
-                          {...field} 
-                          onChange={e => field.onChange(parseInt(e.target.value) || 0)}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <DialogFooter>
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => setEditingSeason(null)}
-                >
-                  Cancel
-                </Button>
-                <Button 
-                  type="submit" 
-                  className="bg-blue-600 hover:bg-blue-700"
-                  disabled={updateSeasonMutation.isPending}
-                >
-                  {updateSeasonMutation.isPending ? "Saving..." : "Save Changes"}
-                </Button>
-              </DialogFooter>
-            </form>
-          </Form>
+          <SeasonForm
+            season={editingSeason || undefined}
+            onSubmit={handleEditSubmit}
+            onCancel={() => setEditingSeason(null)}
+            isSubmitting={updateSeasonMutation.isPending}
+          />
         </DialogContent>
       </Dialog>
     </div>
