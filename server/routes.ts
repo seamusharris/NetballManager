@@ -1280,38 +1280,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.set('Pragma', 'no-cache');
       res.set('Expires', '0');
 
+      // Check for club-wide flag first
+      const isClubWide = req.headers['x-club-wide'] === 'true';
+      const teamId = req.headers['x-current-team-id'] ? parseInt(req.headers['x-current-team-id'] as string, 10) : null;
+
       // Debug all headers
       console.log('Games endpoint headers:', {
         'x-current-club-id': req.headers['x-current-club-id'],
         'x-current-team-id': req.headers['x-current-team-id'],
+        'x-club-wide': req.headers['x-club-wide'],
         'user-agent': req.headers['user-agent']?.substring(0, 50),
         'all-headers': Object.keys(req.headers)
       });
 
       // Use club ID from user context (same as teams endpoint)
       const clubId = req.user?.currentClubId;
-      const teamId = req.headers['x-current-team-id'] ? parseInt(req.headers['x-current-team-id'] as string, 10) : null;
 
-      console.log(`Games endpoint: currentClubId=${clubId}, currentTeamId=${teamId}, user clubs:`, req.user?.clubs?.map(c => c.clubId));
+      console.log(`Games endpoint: currentClubId=${clubId}, currentTeamId=${teamId}, isClubWide=${isClubWide}, user clubs:`, req.user?.clubs?.map(c => c.clubId));
 
       if (!clubId) {
         console.log('Games endpoint: No club ID in request - header missing');
         return res.status(400).json({ error: 'Club context required - please refresh the page' });
       }
 
-      console.log(`Games endpoint: Using club ID ${clubId} from user context, team filter: ${teamId}`);
-
       // Filter to include only games that this club has access to
       if (clubId) {
-        console.log(`Fetching games for club ${clubId}${teamId ? ` and team ${teamId}` : ''}`);
+        if (isClubWide) {
+          console.log(`Fetching ALL games for club ${clubId} (club-wide view - ignoring team filter)`);
+        } else {
+          console.log(`Fetching games for club ${clubId}${teamId ? ` and team ${teamId}` : ''}`);
+        }
 
         let whereClause = sql`WHERE (ht.club_id = ${clubId} OR at.club_id = ${clubId} OR EXISTS (
           SELECT 1 FROM game_permissions gp 
           WHERE gp.game_id = g.id AND gp.club_id = ${clubId}
         ))`;
 
-        // Add team filter if specified
-        if (teamId) {
+        // Add team filter ONLY if NOT club-wide and team ID is specified
+        if (!isClubWide && teamId) {
           whereClause = sql`WHERE (ht.club_id = ${clubId} OR at.club_id = ${clubId} OR EXISTS (
             SELECT 1 FROM game_permissions gp 
             WHERE gp.game_id = g.id AND gp.club_id = ${clubId}
