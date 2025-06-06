@@ -153,24 +153,26 @@ export default function Seasons() {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {seasons.map((season: Season) => (
-                  <Card key={season.id} className={cn(
-                    "transition-all", 
-                    season.isActive ? "border-blue-600 shadow-md" : ""
-                  )}>
-                    <CardHeader className="pb-2">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <CardTitle className="text-xl">{season.name}</CardTitle>
-                          <CardDescription>
-                            {season.type || "Regular"} Season {season.year}
-                          </CardDescription>
+                {seasons.map((season: Season) => {
+                  const isCurrentlyActive = activeSeason?.id === season.id;
+                  return (
+                    <Card key={season.id} className={cn(
+                      "transition-all", 
+                      isCurrentlyActive ? "border-blue-600 shadow-md" : ""
+                    )}>
+                      <CardHeader className="pb-2">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <CardTitle className="text-xl">{season.name}</CardTitle>
+                            <CardDescription>
+                              {season.type || "Regular"} Season {season.year}
+                            </CardDescription>
+                          </div>
+                          {isCurrentlyActive && (
+                            <Badge className="bg-blue-600">Active</Badge>
+                          )}
                         </div>
-                        {season.isActive && (
-                          <Badge className="bg-blue-600">Active</Badge>
-                        )}
-                      </div>
-                    </CardHeader>
+                      </CardHeader>
                     <CardContent className="pb-2">
                       <div className="space-y-2">
                         <div className="text-sm">
@@ -188,7 +190,7 @@ export default function Seasons() {
                       </div>
                     </CardContent>
                     <CardFooter className="flex justify-end gap-2">
-                      {!season.isActive && (
+                      {!isCurrentlyActive && (
                         <Button 
                           variant="outline" 
                           size="sm"
@@ -205,7 +207,7 @@ export default function Seasons() {
                         <Pencil className="h-4 w-4 mr-1" />
                         Edit
                       </Button>
-                      {!season.isActive && (
+                      {!isCurrentlyActive && (
                         <Button 
                           variant="outline" 
                           size="sm" 
@@ -218,7 +220,8 @@ export default function Seasons() {
                       )}
                     </CardFooter>
                   </Card>
-                ))}
+                );
+                })}
               </div>
             )}
           </CardContent>
