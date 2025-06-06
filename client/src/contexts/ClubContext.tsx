@@ -182,11 +182,9 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
       } else {
         localStorage.removeItem('current-team-id');
       }
-      // Only invalidate team-specific queries, not all data
-      queryClient.invalidateQueries({ queryKey: ['games', currentClubId, teamId] });
-      queryClient.invalidateQueries({ queryKey: ['centralizedRosters'] });
-      queryClient.invalidateQueries({ queryKey: ['centralizedStats'] });
-    }, [queryClient, currentClubId]);
+      // Don't invalidate any cached data - let React Query handle caching
+      // Team switches should use existing cached data for better performance
+    }, []);
   
   // Load saved team from localStorage
   useEffect(() => {
