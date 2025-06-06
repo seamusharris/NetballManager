@@ -5,7 +5,21 @@ import { Game, GameStat, Opponent } from '@shared/schema';
 import { useEffect, useState } from 'react';
 import { getWinLoseLabel } from '@/lib/utils';
 import { BaseWidget } from '@/components/ui/base-widget';
-import { TrendingUp, TrendingDown, Target, Users, BarChart3, Zap } from 'lucide-react';
+import { 
+  TrendingUp, 
+  TrendingDown, 
+  Target, 
+  Users, 
+  BarChart3, 
+  Zap, 
+  Activity,
+  Trophy,
+  Timer,
+  MapPin,
+  Flame,
+  Shield,
+  Gauge
+} from 'lucide-react';
 
 interface AdvancedTeamAnalyticsProps {
   games: Game[];
@@ -35,6 +49,30 @@ interface PerformanceMetrics {
     recoveryRate: number;
     avgDeficitSize: number;
   };
+  consistencyIndex: {
+    score: number;
+    classification: 'Very Consistent' | 'Consistent' | 'Moderate' | 'Inconsistent' | 'Very Inconsistent';
+    scoreVariance: number;
+  };
+  streakAnalysis: {
+    currentStreak: { type: 'win' | 'loss' | 'draw'; count: number };
+    longestWinStreak: number;
+    longestLossStreak: number;
+  };
+  pressurePerformance: {
+    leadingPerformance: { wins: number; total: number; percentage: number };
+    trailingPerformance: { comebacks: number; total: number; percentage: number };
+    closeGameRecord: { wins: number; total: number; percentage: number };
+  };
+  peakPerformanceWindows: {
+    bestQuarter: { quarter: number; avgNetScore: number };
+    worstQuarter: { quarter: number; avgNetScore: number };
+    quarterTrends: Record<number, { avgFor: number; avgAgainst: number; netScore: number }>;
+  };
+  teamChemistry: {
+    bestCombinations: Array<{ positions: string[]; winRate: number; gamesPlayed: number }>;
+    substitutionImpact: { positive: number; negative: number; neutral: number };
+  };
   opponentStrengthMatrix: {
     vsStrong: { wins: number; total: number; avgScore: number };
     vsMedium: { wins: number; total: number; avgScore: number };
@@ -55,6 +93,26 @@ export default function AdvancedTeamAnalytics({
     momentum: { trend: 'stable', strength: 0, recentForm: [] },
     positionEfficiency: {},
     comebackPotential: { deficitRecoveries: 0, totalDeficits: 0, recoveryRate: 0, avgDeficitSize: 0 },
+    consistencyIndex: { score: 0, classification: 'Moderate', scoreVariance: 0 },
+    streakAnalysis: { 
+      currentStreak: { type: 'win', count: 0 }, 
+      longestWinStreak: 0, 
+      longestLossStreak: 0 
+    },
+    pressurePerformance: {
+      leadingPerformance: { wins: 0, total: 0, percentage: 0 },
+      trailingPerformance: { comebacks: 0, total: 0, percentage: 0 },
+      closeGameRecord: { wins: 0, total: 0, percentage: 0 }
+    },
+    peakPerformanceWindows: {
+      bestQuarter: { quarter: 1, avgNetScore: 0 },
+      worstQuarter: { quarter: 1, avgNetScore: 0 },
+      quarterTrends: {}
+    },
+    teamChemistry: {
+      bestCombinations: [],
+      substitutionImpact: { positive: 0, negative: 0, neutral: 0 }
+    },
     opponentStrengthMatrix: {
       vsStrong: { wins: 0, total: 0, avgScore: 0 },
       vsMedium: { wins: 0, total: 0, avgScore: 0 },
@@ -66,32 +124,46 @@ export default function AdvancedTeamAnalytics({
     game.statusIsCompleted && game.statusAllowsStatistics
   );
   
-  // Use centralized stats instead of making individual API calls
   const gameStatsMap = centralizedStats || {};
-  const isLoading = false; // No loading state needed with centralized stats
+  const isLoading = false;
   
   console.log('AdvancedTeamAnalytics: Using centralized stats for', completedGames.length, 'completed games');
-  console.log('AdvancedTeamAnalytics: Available stats for games:', Object.keys(gameStatsMap));
 
-  // Calculate advanced analytics
+  // Calculate all advanced analytics
   useEffect(() => {
     if (!gameStatsMap || isLoading || Object.keys(gameStatsMap).length === 0) return;
 
-    // 1. Performance Momentum Analysis
-    const recentGames = completedGames
-      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-      .slice(-5); // Last 5 games
+    // Sort games chronologically for analysis
+    const sortedGames = completedGames
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
+    // 1. Performance Momentum Analysis
+    const recentGames = sortedGames.slice(-5);
     const recentResults = recentGames.map(game => {
       const gameStats = gameStatsMap[game.id] || [];
       const teamScore = gameStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
       const opponentScore = gameStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
       return getWinLoseLabel(teamScore, opponentScore);
     });
-
     const momentum = calculateMomentum(recentResults);
 
-    // 2. Position Efficiency Analysis
+    // 2. Consistency Index Analysis
+    const gameScores = sortedGames.map(game => {
+      const gameStats = gameStatsMap[game.id] || [];
+      return gameStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
+    });
+    const consistencyIndex = calculateConsistencyIndex(gameScores);
+
+    // 3. Streak Analysis
+    const allResults = sortedGames.map(game => {
+      const gameStats = gameStatsMap[game.id] || [];
+      const teamScore = gameStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
+      const opponentScore = gameStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
+      return getWinLoseLabel(teamScore, opponentScore);
+    });
+    const streakAnalysis = calculateStreakAnalysis(allResults);
+
+    // 4. Position Efficiency Analysis
     const positionStats: Record<string, any> = {};
     const positions = ['GK', 'GD', 'WD', 'C', 'WA', 'GA', 'GS'];
 
@@ -109,7 +181,6 @@ export default function AdvancedTeamAnalytics({
           const countKey = `${quarter}Count`;
           
           if (positionStats[stat.position][quarter] !== undefined) {
-            // Calculate efficiency as goals scored minus goals conceded
             const efficiency = (stat.goalsFor || 0) - (stat.goalsAgainst || 0);
             positionStats[stat.position][quarter] += efficiency;
             positionStats[stat.position][countKey]++;
@@ -118,7 +189,6 @@ export default function AdvancedTeamAnalytics({
       });
     });
 
-    // Calculate averages and overall efficiency
     const positionEfficiency: Record<string, any> = {};
     positions.forEach(position => {
       const stats = positionStats[position];
@@ -140,7 +210,7 @@ export default function AdvancedTeamAnalytics({
       }
     });
 
-    // 3. Comeback Potential Analysis
+    // 5. Comeback Potential Analysis
     let deficitRecoveries = 0;
     let totalDeficits = 0;
     let totalDeficitSize = 0;
@@ -156,7 +226,6 @@ export default function AdvancedTeamAnalytics({
         }
       });
 
-      // Check for deficit situations and recoveries
       for (let q = 0; q < 3; q++) {
         const teamRunning = quarterScores.team.slice(0, q + 1).reduce((a, b) => a + b, 0);
         const opponentRunning = quarterScores.opponent.slice(0, q + 1).reduce((a, b) => a + b, 0);
@@ -165,7 +234,6 @@ export default function AdvancedTeamAnalytics({
           totalDeficits++;
           totalDeficitSize += (opponentRunning - teamRunning);
           
-          // Check if they recovered by game end
           const finalTeam = quarterScores.team.reduce((a, b) => a + b, 0);
           const finalOpponent = quarterScores.opponent.reduce((a, b) => a + b, 0);
           
@@ -183,74 +251,33 @@ export default function AdvancedTeamAnalytics({
       avgDeficitSize: totalDeficits > 0 ? totalDeficitSize / totalDeficits : 0
     };
 
-    // 4. Opponent Strength Matrix
-    const opponentStrengthMatrix = {
-      vsStrong: { wins: 0, total: 0, totalScore: 0 },
-      vsMedium: { wins: 0, total: 0, totalScore: 0 },
-      vsWeak: { wins: 0, total: 0, totalScore: 0 }
-    };
+    // 6. Pressure Performance Analysis
+    const pressurePerformance = calculatePressurePerformance(sortedGames, gameStatsMap);
 
-    completedGames.forEach(game => {
-      const opponent = opponents.find(o => o.id === game.opponentId);
-      const gameStats = gameStatsMap[game.id] || [];
-      const teamScore = gameStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
-      const opponentScore = gameStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
-      
-      // Categorize opponent strength (this could be enhanced with historical data)
-      let category: 'vsStrong' | 'vsMedium' | 'vsWeak' = 'vsMedium';
-      if (opponent) {
-        // Simple categorization - could be improved with more data
-        const opponentName = opponent.teamName.toLowerCase();
-        if (opponentName.includes('emerald') || opponentName.includes('champion') || opponentName.includes('elite')) {
-          category = 'vsStrong';
-        } else if (opponentName.includes('junior') || opponentName.includes('development') || opponentName.includes('rookie')) {
-          category = 'vsWeak';
-        }
-      }
+    // 7. Peak Performance Windows Analysis
+    const peakPerformanceWindows = calculatePeakPerformanceWindows(sortedGames, gameStatsMap);
 
-      opponentStrengthMatrix[category].total++;
-      opponentStrengthMatrix[category].totalScore += teamScore;
-      
-      if (getWinLoseLabel(teamScore, opponentScore) === 'Win') {
-        opponentStrengthMatrix[category].wins++;
-      }
-    });
+    // 8. Team Chemistry Analysis
+    const teamChemistry = calculateTeamChemistry(sortedGames, gameStatsMap);
 
-    // Calculate averages
-    const finalOpponentMatrix = {
-      vsStrong: {
-        wins: opponentStrengthMatrix.vsStrong.wins,
-        total: opponentStrengthMatrix.vsStrong.total,
-        avgScore: opponentStrengthMatrix.vsStrong.total > 0 
-          ? opponentStrengthMatrix.vsStrong.totalScore / opponentStrengthMatrix.vsStrong.total 
-          : 0
-      },
-      vsMedium: {
-        wins: opponentStrengthMatrix.vsMedium.wins,
-        total: opponentStrengthMatrix.vsMedium.total,
-        avgScore: opponentStrengthMatrix.vsMedium.total > 0 
-          ? opponentStrengthMatrix.vsMedium.totalScore / opponentStrengthMatrix.vsMedium.total 
-          : 0
-      },
-      vsWeak: {
-        wins: opponentStrengthMatrix.vsWeak.wins,
-        total: opponentStrengthMatrix.vsWeak.total,
-        avgScore: opponentStrengthMatrix.vsWeak.total > 0 
-          ? opponentStrengthMatrix.vsWeak.totalScore / opponentStrengthMatrix.vsWeak.total 
-          : 0
-      }
-    };
+    // 9. Opponent Strength Matrix
+    const opponentStrengthMatrix = calculateOpponentStrengthMatrix(sortedGames, gameStatsMap, opponents);
 
     setAnalytics({
       momentum,
       positionEfficiency,
       comebackPotential,
-      opponentStrengthMatrix: finalOpponentMatrix
+      consistencyIndex,
+      streakAnalysis,
+      pressurePerformance,
+      peakPerformanceWindows,
+      teamChemistry,
+      opponentStrengthMatrix
     });
 
   }, [gameStatsMap, isLoading, completedGames, opponents]);
 
-  // Helper function to calculate momentum
+  // Helper functions
   const calculateMomentum = (results: string[]) => {
     if (results.length === 0) return { trend: 'stable' as const, strength: 0, recentForm: [] };
 
@@ -260,7 +287,7 @@ export default function AdvancedTeamAnalytics({
 
     let momentum = 0;
     results.forEach((result, index) => {
-      const weight = (index + 1) / results.length; // More recent games have higher weight
+      const weight = (index + 1) / results.length;
       if (result === 'Win') momentum += winWeight * weight;
       else if (result === 'Draw') momentum += drawWeight * weight;
       else momentum += lossWeight * weight;
@@ -272,6 +299,294 @@ export default function AdvancedTeamAnalytics({
       trend,
       strength: Math.abs(momentum),
       recentForm: results
+    };
+  };
+
+  const calculateConsistencyIndex = (scores: number[]) => {
+    if (scores.length < 2) return { score: 100, classification: 'Moderate' as const, scoreVariance: 0 };
+
+    const mean = scores.reduce((a, b) => a + b, 0) / scores.length;
+    const variance = scores.reduce((sum, score) => sum + Math.pow(score - mean, 2), 0) / scores.length;
+    const stdDev = Math.sqrt(variance);
+    
+    // Consistency score: lower variance = higher consistency
+    const consistencyScore = Math.max(0, 100 - (stdDev * 10));
+    
+    let classification: 'Very Consistent' | 'Consistent' | 'Moderate' | 'Inconsistent' | 'Very Inconsistent';
+    if (consistencyScore >= 80) classification = 'Very Consistent';
+    else if (consistencyScore >= 65) classification = 'Consistent';
+    else if (consistencyScore >= 45) classification = 'Moderate';
+    else if (consistencyScore >= 25) classification = 'Inconsistent';
+    else classification = 'Very Inconsistent';
+
+    return {
+      score: Math.round(consistencyScore),
+      classification,
+      scoreVariance: Math.round(variance * 10) / 10
+    };
+  };
+
+  const calculateStreakAnalysis = (results: string[]) => {
+    if (results.length === 0) {
+      return {
+        currentStreak: { type: 'win' as const, count: 0 },
+        longestWinStreak: 0,
+        longestLossStreak: 0
+      };
+    }
+
+    // Current streak
+    let currentStreak = { type: results[results.length - 1].toLowerCase() as 'win' | 'loss' | 'draw', count: 1 };
+    for (let i = results.length - 2; i >= 0; i--) {
+      if (results[i] === results[results.length - 1]) {
+        currentStreak.count++;
+      } else {
+        break;
+      }
+    }
+
+    // Longest streaks
+    let longestWinStreak = 0;
+    let longestLossStreak = 0;
+    let currentWinStreak = 0;
+    let currentLossStreak = 0;
+
+    results.forEach(result => {
+      if (result === 'Win') {
+        currentWinStreak++;
+        currentLossStreak = 0;
+        longestWinStreak = Math.max(longestWinStreak, currentWinStreak);
+      } else if (result === 'Loss') {
+        currentLossStreak++;
+        currentWinStreak = 0;
+        longestLossStreak = Math.max(longestLossStreak, currentLossStreak);
+      } else {
+        currentWinStreak = 0;
+        currentLossStreak = 0;
+      }
+    });
+
+    return {
+      currentStreak,
+      longestWinStreak,
+      longestLossStreak
+    };
+  };
+
+  const calculatePressurePerformance = (games: Game[], statsMap: Record<number, GameStat[]>) => {
+    let leadingWins = 0, leadingTotal = 0;
+    let trailingComebacks = 0, trailingTotal = 0;
+    let closeGameWins = 0, closeGameTotal = 0;
+
+    games.forEach(game => {
+      const gameStats = statsMap[game.id] || [];
+      const finalTeamScore = gameStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
+      const finalOpponentScore = gameStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
+      const scoreDiff = Math.abs(finalTeamScore - finalOpponentScore);
+
+      // Close game analysis (within 3 goals)
+      if (scoreDiff <= 3) {
+        closeGameTotal++;
+        if (finalTeamScore > finalOpponentScore) closeGameWins++;
+      }
+
+      // Quarter-by-quarter analysis for leading/trailing
+      const quarterScores = { team: [0, 0, 0, 0], opponent: [0, 0, 0, 0] };
+      gameStats.forEach(stat => {
+        if (stat.quarter >= 1 && stat.quarter <= 4) {
+          quarterScores.team[stat.quarter - 1] += stat.goalsFor || 0;
+          quarterScores.opponent[stat.quarter - 1] += stat.goalsAgainst || 0;
+        }
+      });
+
+      // Check if leading at halftime
+      const halfTimeTeam = quarterScores.team[0] + quarterScores.team[1];
+      const halfTimeOpponent = quarterScores.opponent[0] + quarterScores.opponent[1];
+      
+      if (halfTimeTeam > halfTimeOpponent) {
+        leadingTotal++;
+        if (finalTeamScore > finalOpponentScore) leadingWins++;
+      } else if (halfTimeTeam < halfTimeOpponent) {
+        trailingTotal++;
+        if (finalTeamScore > finalOpponentScore) trailingComebacks++;
+      }
+    });
+
+    return {
+      leadingPerformance: {
+        wins: leadingWins,
+        total: leadingTotal,
+        percentage: leadingTotal > 0 ? (leadingWins / leadingTotal) * 100 : 0
+      },
+      trailingPerformance: {
+        comebacks: trailingComebacks,
+        total: trailingTotal,
+        percentage: trailingTotal > 0 ? (trailingComebacks / trailingTotal) * 100 : 0
+      },
+      closeGameRecord: {
+        wins: closeGameWins,
+        total: closeGameTotal,
+        percentage: closeGameTotal > 0 ? (closeGameWins / closeGameTotal) * 100 : 0
+      }
+    };
+  };
+
+  const calculatePeakPerformanceWindows = (games: Game[], statsMap: Record<number, GameStat[]>) => {
+    const quarterTrends: Record<number, { totalFor: number; totalAgainst: number; games: number }> = {
+      1: { totalFor: 0, totalAgainst: 0, games: 0 },
+      2: { totalFor: 0, totalAgainst: 0, games: 0 },
+      3: { totalFor: 0, totalAgainst: 0, games: 0 },
+      4: { totalFor: 0, totalAgainst: 0, games: 0 }
+    };
+
+    games.forEach(game => {
+      const gameStats = statsMap[game.id] || [];
+      const quarterData: Record<number, { for: number; against: number }> = {};
+
+      gameStats.forEach(stat => {
+        if (!quarterData[stat.quarter]) {
+          quarterData[stat.quarter] = { for: 0, against: 0 };
+        }
+        quarterData[stat.quarter].for += stat.goalsFor || 0;
+        quarterData[stat.quarter].against += stat.goalsAgainst || 0;
+      });
+
+      [1, 2, 3, 4].forEach(quarter => {
+        if (quarterData[quarter]) {
+          quarterTrends[quarter].totalFor += quarterData[quarter].for;
+          quarterTrends[quarter].totalAgainst += quarterData[quarter].against;
+          quarterTrends[quarter].games++;
+        }
+      });
+    });
+
+    const avgQuarterPerformance = Object.entries(quarterTrends).map(([quarter, data]) => ({
+      quarter: parseInt(quarter),
+      avgFor: data.games > 0 ? data.totalFor / data.games : 0,
+      avgAgainst: data.games > 0 ? data.totalAgainst / data.games : 0,
+      netScore: data.games > 0 ? (data.totalFor - data.totalAgainst) / data.games : 0
+    }));
+
+    const bestQuarter = avgQuarterPerformance.reduce((best, current) => 
+      current.netScore > best.netScore ? current : best
+    );
+
+    const worstQuarter = avgQuarterPerformance.reduce((worst, current) => 
+      current.netScore < worst.netScore ? current : worst
+    );
+
+    const quarterTrendsFormatted = avgQuarterPerformance.reduce((acc, quarter) => {
+      acc[quarter.quarter] = {
+        avgFor: Math.round(quarter.avgFor * 10) / 10,
+        avgAgainst: Math.round(quarter.avgAgainst * 10) / 10,
+        netScore: Math.round(quarter.netScore * 10) / 10
+      };
+      return acc;
+    }, {} as Record<number, { avgFor: number; avgAgainst: number; netScore: number }>);
+
+    return {
+      bestQuarter: {
+        quarter: bestQuarter.quarter,
+        avgNetScore: Math.round(bestQuarter.netScore * 10) / 10
+      },
+      worstQuarter: {
+        quarter: worstQuarter.quarter,
+        avgNetScore: Math.round(worstQuarter.netScore * 10) / 10
+      },
+      quarterTrends: quarterTrendsFormatted
+    };
+  };
+
+  const calculateTeamChemistry = (games: Game[], statsMap: Record<number, GameStat[]>) => {
+    // This is a simplified version - in reality you'd need roster data
+    // For now, we'll analyze substitution patterns based on quarter performance
+    let positiveSubImpact = 0;
+    let negativeSubImpact = 0;
+    let neutralSubImpact = 0;
+
+    games.forEach(game => {
+      const gameStats = statsMap[game.id] || [];
+      const quarterPerformance = [1, 2, 3, 4].map(quarter => {
+        const quarterStats = gameStats.filter(s => s.quarter === quarter);
+        const quarterFor = quarterStats.reduce((sum, s) => sum + (s.goalsFor || 0), 0);
+        const quarterAgainst = quarterStats.reduce((sum, s) => sum + (s.goalsAgainst || 0), 0);
+        return quarterFor - quarterAgainst;
+      });
+
+      // Simple analysis: if performance improves from quarter to quarter, credit substitutions
+      for (let i = 1; i < quarterPerformance.length; i++) {
+        const improvement = quarterPerformance[i] - quarterPerformance[i - 1];
+        if (improvement > 1) positiveSubImpact++;
+        else if (improvement < -1) negativeSubImpact++;
+        else neutralSubImpact++;
+      }
+    });
+
+    return {
+      bestCombinations: [], // Would need roster data to calculate properly
+      substitutionImpact: {
+        positive: positiveSubImpact,
+        negative: negativeSubImpact,
+        neutral: neutralSubImpact
+      }
+    };
+  };
+
+  const calculateOpponentStrengthMatrix = (games: Game[], statsMap: Record<number, GameStat[]>, opponents: Opponent[]) => {
+    const opponentStrengthMatrix = {
+      vsStrong: { wins: 0, total: 0, totalScore: 0 },
+      vsMedium: { wins: 0, total: 0, totalScore: 0 },
+      vsWeak: { wins: 0, total: 0, totalScore: 0 }
+    };
+
+    games.forEach(game => {
+      // Simple categorization based on opponent name patterns
+      let category: 'vsStrong' | 'vsMedium' | 'vsWeak' = 'vsMedium';
+      
+      const homeTeam = game.homeTeamName?.toLowerCase() || '';
+      const awayTeam = game.awayTeamName?.toLowerCase() || '';
+      const opponentName = homeTeam + ' ' + awayTeam;
+      
+      if (opponentName.includes('emerald') || opponentName.includes('champion') || opponentName.includes('elite') || opponentName.includes('premier')) {
+        category = 'vsStrong';
+      } else if (opponentName.includes('junior') || opponentName.includes('development') || opponentName.includes('rookie') || opponentName.includes('beginner')) {
+        category = 'vsWeak';
+      }
+
+      const gameStats = statsMap[game.id] || [];
+      const teamScore = gameStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
+      const opponentScore = gameStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
+      
+      opponentStrengthMatrix[category].total++;
+      opponentStrengthMatrix[category].totalScore += teamScore;
+      
+      if (getWinLoseLabel(teamScore, opponentScore) === 'Win') {
+        opponentStrengthMatrix[category].wins++;
+      }
+    });
+
+    return {
+      vsStrong: {
+        wins: opponentStrengthMatrix.vsStrong.wins,
+        total: opponentStrengthMatrix.vsStrong.total,
+        avgScore: opponentStrengthMatrix.vsStrong.total > 0 
+          ? Math.round((opponentStrengthMatrix.vsStrong.totalScore / opponentStrengthMatrix.vsStrong.total) * 10) / 10
+          : 0
+      },
+      vsMedium: {
+        wins: opponentStrengthMatrix.vsMedium.wins,
+        total: opponentStrengthMatrix.vsMedium.total,
+        avgScore: opponentStrengthMatrix.vsMedium.total > 0 
+          ? Math.round((opponentStrengthMatrix.vsMedium.totalScore / opponentStrengthMatrix.vsMedium.total) * 10) / 10
+          : 0
+      },
+      vsWeak: {
+        wins: opponentStrengthMatrix.vsWeak.wins,
+        total: opponentStrengthMatrix.vsWeak.total,
+        avgScore: opponentStrengthMatrix.vsWeak.total > 0 
+          ? Math.round((opponentStrengthMatrix.vsWeak.totalScore / opponentStrengthMatrix.vsWeak.total) * 10) / 10
+          : 0
+      }
     };
   };
 
@@ -329,6 +644,176 @@ export default function AdvancedTeamAnalytics({
                 {analytics.momentum.strength.toFixed(1)}
               </div>
               <div className="text-xs text-gray-600">Momentum Score</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Consistency Index */}
+        <div className="bg-gradient-to-r from-teal-50 to-cyan-50 p-4 rounded-xl border">
+          <div className="flex items-center gap-2 mb-3">
+            <Gauge className="h-5 w-5 text-teal-600" />
+            <span className="font-semibold text-gray-700">Team Consistency</span>
+          </div>
+          
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-3xl font-bold text-teal-700">
+                {analytics.consistencyIndex.score}%
+              </div>
+              <div className="text-sm text-gray-600">
+                {analytics.consistencyIndex.classification}
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="text-lg font-semibold text-gray-700">
+                ±{analytics.consistencyIndex.scoreVariance}
+              </div>
+              <div className="text-xs text-gray-600">Score Variance</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Streak Analysis */}
+        <div className="bg-gradient-to-r from-orange-50 to-amber-50 p-4 rounded-xl border">
+          <div className="flex items-center gap-2 mb-3">
+            <Flame className="h-5 w-5 text-orange-600" />
+            <span className="font-semibold text-gray-700">Streak Analysis</span>
+          </div>
+          
+          <div className="grid grid-cols-3 gap-4">
+            <div className="text-center">
+              <div className={`text-2xl font-bold ${
+                analytics.streakAnalysis.currentStreak.type === 'win' ? 'text-green-600' :
+                analytics.streakAnalysis.currentStreak.type === 'loss' ? 'text-red-600' : 'text-yellow-600'
+              }`}>
+                {analytics.streakAnalysis.currentStreak.count}
+              </div>
+              <div className="text-xs text-gray-600">
+                Current {analytics.streakAnalysis.currentStreak.type} streak
+              </div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-green-600">
+                {analytics.streakAnalysis.longestWinStreak}
+              </div>
+              <div className="text-xs text-gray-600">Longest Win Streak</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-red-600">
+                {analytics.streakAnalysis.longestLossStreak}
+              </div>
+              <div className="text-xs text-gray-600">Longest Loss Streak</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Pressure Performance */}
+        <div className="bg-gradient-to-r from-rose-50 to-pink-50 p-4 rounded-xl border">
+          <div className="flex items-center gap-2 mb-3">
+            <Shield className="h-5 w-5 text-rose-600" />
+            <span className="font-semibold text-gray-700">Pressure Performance</span>
+          </div>
+          
+          <div className="grid grid-cols-3 gap-4">
+            <div className="text-center">
+              <div className="text-xl font-bold text-blue-600">
+                {analytics.pressurePerformance.leadingPerformance.percentage.toFixed(0)}%
+              </div>
+              <div className="text-xs text-gray-600">
+                Win Rate When Leading ({analytics.pressurePerformance.leadingPerformance.wins}/{analytics.pressurePerformance.leadingPerformance.total})
+              </div>
+            </div>
+            <div className="text-center">
+              <div className="text-xl font-bold text-green-600">
+                {analytics.pressurePerformance.trailingPerformance.percentage.toFixed(0)}%
+              </div>
+              <div className="text-xs text-gray-600">
+                Comeback Rate ({analytics.pressurePerformance.trailingPerformance.comebacks}/{analytics.pressurePerformance.trailingPerformance.total})
+              </div>
+            </div>
+            <div className="text-center">
+              <div className="text-xl font-bold text-purple-600">
+                {analytics.pressurePerformance.closeGameRecord.percentage.toFixed(0)}%
+              </div>
+              <div className="text-xs text-gray-600">
+                Close Game Record ({analytics.pressurePerformance.closeGameRecord.wins}/{analytics.pressurePerformance.closeGameRecord.total})
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Peak Performance Windows */}
+        <div className="bg-gradient-to-r from-indigo-50 to-blue-50 p-4 rounded-xl border">
+          <div className="flex items-center gap-2 mb-3">
+            <Timer className="h-5 w-5 text-indigo-600" />
+            <span className="font-semibold text-gray-700">Peak Performance Windows</span>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <div className="text-center p-3 bg-green-100 rounded-lg">
+              <div className="text-lg font-bold text-green-700">
+                Q{analytics.peakPerformanceWindows.bestQuarter.quarter}
+              </div>
+              <div className="text-sm text-gray-600">Best Quarter</div>
+              <div className="text-xs text-gray-500">
+                +{analytics.peakPerformanceWindows.bestQuarter.avgNetScore} avg
+              </div>
+            </div>
+            <div className="text-center p-3 bg-red-100 rounded-lg">
+              <div className="text-lg font-bold text-red-700">
+                Q{analytics.peakPerformanceWindows.worstQuarter.quarter}
+              </div>
+              <div className="text-sm text-gray-600">Needs Work</div>
+              <div className="text-xs text-gray-500">
+                {analytics.peakPerformanceWindows.worstQuarter.avgNetScore} avg
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            {Object.entries(analytics.peakPerformanceWindows.quarterTrends).map(([quarter, data]) => (
+              <div key={quarter} className="flex items-center justify-between">
+                <span className="text-sm font-medium">Quarter {quarter}</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-green-600">{data.avgFor}</span>
+                  <span className="text-xs text-gray-400">-</span>
+                  <span className="text-xs text-red-600">{data.avgAgainst}</span>
+                  <span className={`text-sm font-bold ml-2 ${
+                    data.netScore > 0 ? 'text-green-600' : data.netScore < 0 ? 'text-red-600' : 'text-gray-600'
+                  }`}>
+                    {data.netScore > 0 ? '+' : ''}{data.netScore}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Team Chemistry */}
+        <div className="bg-gradient-to-r from-violet-50 to-purple-50 p-4 rounded-xl border">
+          <div className="flex items-center gap-2 mb-3">
+            <Users className="h-5 w-5 text-violet-600" />
+            <span className="font-semibold text-gray-700">Team Chemistry & Substitutions</span>
+          </div>
+          
+          <div className="grid grid-cols-3 gap-4">
+            <div className="text-center">
+              <div className="text-lg font-bold text-green-600">
+                {analytics.teamChemistry.substitutionImpact.positive}
+              </div>
+              <div className="text-xs text-gray-600">Positive Impact</div>
+            </div>
+            <div className="text-center">
+              <div className="text-lg font-bold text-gray-600">
+                {analytics.teamChemistry.substitutionImpact.neutral}
+              </div>
+              <div className="text-xs text-gray-600">Neutral Impact</div>
+            </div>
+            <div className="text-center">
+              <div className="text-lg font-bold text-red-600">
+                {analytics.teamChemistry.substitutionImpact.negative}
+              </div>
+              <div className="text-xs text-gray-600">Negative Impact</div>
             </div>
           </div>
         </div>
@@ -405,7 +890,7 @@ export default function AdvancedTeamAnalytics({
         {/* Opponent Strength Matrix */}
         <div className="bg-gradient-to-r from-gray-50 to-blue-50 p-4 rounded-xl border">
           <div className="flex items-center gap-2 mb-4">
-            <Users className="h-5 w-5 text-blue-600" />
+            <Activity className="h-5 w-5 text-blue-600" />
             <span className="font-semibold text-gray-700">Performance vs Opponent Strength</span>
           </div>
           
