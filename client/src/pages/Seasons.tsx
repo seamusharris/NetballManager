@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useStandardQuery } from '@/hooks/use-standard-query';
-import { useCrudMutations } from '@/hooks/use-crud-mutations';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { CrudDialog } from '@/components/ui/crud-dialog';
@@ -31,14 +30,43 @@ export default function Seasons() {
     endpoint: '/api/seasons/active'
   });
 
-  // Use CRUD mutations for create/update, but handle delete separately like Teams
-  const { createMutation, updateMutation } = useCrudMutations({
-    entityName: 'Season',
-    baseEndpoint: '/api/seasons',
-    invalidatePatterns: [
-      ['/api/seasons'],
-      ['/api/seasons/active']
-    ],
+  // Direct mutations like Teams - no useCrudMutations to avoid 404 handling issues
+  const createMutation = useMutation({
+    mutationFn: (data: any) => apiClient.post('/api/seasons', data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/seasons'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/seasons/active'] });
+      toast({
+        title: "Success",
+        description: "Season created successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create season",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, ...data }: any) => apiClient.patch(`/api/seasons/${id}`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/seasons'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/seasons/active'] });
+      toast({
+        title: "Success",
+        description: "Season updated successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update season",
+        variant: "destructive",
+      });
+    },
   });
 
   // Delete mutation handled separately like Teams to avoid 404 issues
