@@ -3,6 +3,8 @@ import { useStandardQuery } from '@/hooks/use-standard-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { CrudDialog } from '@/components/ui/crud-dialog';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { apiClient } from '@/lib/apiClient';
 import SeasonForm from '@/components/seasons/SeasonForm';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { Season } from '@shared/schema';
@@ -10,8 +12,6 @@ import { BackButton } from '@/components/ui/back-button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '@/lib/apiClient';
 import { useToast } from '@/hooks/use-toast';
 
 export default function Seasons() {
