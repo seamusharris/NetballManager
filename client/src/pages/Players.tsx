@@ -160,13 +160,14 @@ export default function Players() {
     },
   });
 
-    const createPlayerForTeam = useMutation({
+    // Single consolidated player creation mutation
+  const createPlayer = useMutation({
     mutationFn: async (playerData: any) => {
       if (!currentClub?.id) {
         throw new Error('No club selected');
       }
 
-      // Create the player with club context
+      // Create the player with club context and proper headers
       const response = await apiClient.post('/api/players', {
         ...playerData,
         clubId: currentClub.id,
@@ -180,49 +181,11 @@ export default function Players() {
       return response;
     },
     onSuccess: () => {
-      // Invalidate all relevant queries to refresh the UI
+      // Comprehensive query invalidation for all scenarios
       queryClient.invalidateQueries({ queryKey: ['players'] });
       queryClient.invalidateQueries({ queryKey: ['unassigned-players'] });
       queryClient.invalidateQueries({ queryKey: ['clubs', currentClub?.id, 'players'] });
       queryClient.invalidateQueries({ queryKey: ['team-players'] });
-
-      toast({ title: 'Success', description: 'Player created successfully' });
-      setIsAddPlayerDialogOpen(false);
-    },
-    onError: (error: any) => {
-      const errorMessage = error.response?.data?.error || error.message || 'Failed to create player';
-      toast({ 
-        title: 'Error', 
-        description: errorMessage, 
-        variant: 'destructive' 
-      });
-    },
-  });
-
-  // Create new player mutation for club context
-  const createPlayerForClub = useMutation({
-    mutationFn: async (playerData: any) => {
-      if (!currentClub?.id) {
-        throw new Error('No club selected');
-      }
-
-      // Create the player with club context
-      const response = await apiClient.post('/api/players', {
-        ...playerData,
-        clubId: currentClub.id,
-        avatarColor: "auto"
-      }, {
-        headers: {
-          'x-current-club-id': currentClub.id.toString()
-        }
-      });
-
-      return response;
-    },
-    onSuccess: () => {
-      // Invalidate queries to refresh the UI
-      queryClient.invalidateQueries({ queryKey: ['players'] });
-      queryClient.invalidateQueries({ queryKey: ['clubs', currentClub?.id, 'players'] });
 
       toast({ title: 'Success', description: 'Player created successfully' });
       setIsAddPlayerDialogOpen(false);
@@ -415,8 +378,8 @@ export default function Players() {
                         <DialogTitle>Add New Player</DialogTitle>
                       </DialogHeader>
                       <PlayerForm
-                        onSubmit={(data) => createPlayerForTeam.mutate(data)}
-                        isSubmitting={createPlayerForTeam.isPending}
+                        onSubmit={(data) => createPlayer.mutate(data)}
+                        isSubmitting={createPlayer.isPending}
                         onCancel={() => setIsAddPlayerDialogOpen(false)}
                       />
                     </DialogContent>
@@ -508,8 +471,8 @@ export default function Players() {
                 <DialogTitle>Add New Player</DialogTitle>
               </DialogHeader>
               <PlayerForm
-                onSubmit={(data) => createPlayerForClub.mutate(data)}
-                isSubmitting={createPlayerForClub.isPending}
+                onSubmit={(data) => createPlayer.mutate(data)}
+                isSubmitting={createPlayer.isPending}
                 onCancel={() => setIsAddPlayerDialogOpen(false)}
               />
             </DialogContent>
