@@ -1,6 +1,5 @@
 
 import React, { useState } from 'react';
-import { useCrudMutations } from '@/hooks/use-crud-mutations';
 import { useStandardQuery } from '@/hooks/use-standard-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,7 +9,7 @@ import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { Season } from '@shared/schema';
 import { BackButton } from '@/components/ui/back-button';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiRequest } from '@/lib/queryClient';
+import { apiClient } from '@/lib/apiClient';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
@@ -32,29 +31,49 @@ export default function Seasons() {
     endpoint: '/api/seasons/active'
   });
 
-  const { createMutation, updateMutation } = useCrudMutations({
-    entityName: 'Season',
-    baseEndpoint: '/api/seasons',
-    invalidatePatterns: [['seasons']],
-    onSuccess: (data, variables, context) => {
-      if (context === 'create') {
-        setIsDialogOpen(false);
-      } else if (context === 'update') {
-        setEditingSeason(null);
-      }
+  // Create mutation - EXACTLY matching Teams pattern
+  const createMutation = useMutation({
+    mutationFn: (data: any) => apiClient.post('/api/seasons', data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/seasons'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/seasons/active'] });
+      toast({ title: "Season created successfully" });
+      setIsDialogOpen(false);
     },
+    onError: (error: any) => {
+      toast({
+        title: "Error creating season",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Update mutation - EXACTLY matching Teams pattern
+  const updateMutation = useMutation({
+    mutationFn: ({ id, ...data }: any) => apiClient.patch(`/api/seasons/${id}`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/seasons'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/seasons/active'] });
+      toast({ title: "Season updated successfully" });
+      setEditingSeason(null);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error updating season",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
   });
 
   // Delete mutation - EXACTLY matching Teams pattern
   const deleteMutation = useMutation({
-    mutationFn: (id: number) => apiRequest('DELETE', `/api/seasons/${id}`),
+    mutationFn: (id: number) => apiClient.delete(`/api/seasons/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/seasons'] });
       queryClient.invalidateQueries({ queryKey: ['/api/seasons/active'] });
-      toast({
-        title: "Success",
-        description: "Season deleted successfully",
-      });
+      toast({ title: "Season deleted successfully" });
     },
     onError: (error: any) => {
       console.error('Failed to delete season:', error);
@@ -214,8 +233,9 @@ export default function Seasons() {
         title="Create Season"
       >
         <SeasonForm
-          onSubmit={() => setIsDialogOpen(false)}
+          onSubmit={(data) => createMutation.mutate(data)}
           onCancel={() => setIsDialogOpen(false)}
+          isSubmitting={createMutation.isPending}
         />
       </CrudDialog>
 
@@ -226,8 +246,9 @@ export default function Seasons() {
       >
         <SeasonForm
           season={editingSeason || undefined}
-          onSubmit={() => setEditingSeason(null)}
+          onSubmit={(data) => updateMutation.mutate({ id: editingSeason!.id, ...data })}
           onCancel={() => setEditingSeason(null)}
+          isSubmitting={updateMutation.isPending}
         />
       </CrudDialog>
     </>
