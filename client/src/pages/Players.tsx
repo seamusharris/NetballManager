@@ -124,7 +124,7 @@ export default function Players() {
   // Filter players based on team selection
   const filteredPlayers = useMemo(() => {
     if (!players || selectedTeamFilter === 'all') return players;
-    
+
     return players.filter(player => {
       // Check if player has team assignments in current season
       const hasTeamAssignment = player.teamAssignments?.some(
@@ -176,7 +176,7 @@ export default function Players() {
       queryClient.invalidateQueries({ queryKey: ['unassigned-players'] });
       queryClient.invalidateQueries({ queryKey: ['players'] });
       queryClient.invalidateQueries({ queryKey: ['clubs', currentClub?.id, 'players'] });
-      
+
       toast({ title: 'Success', description: 'Player removed from team' });
     },
     onError: (error, playerId) => {
@@ -328,8 +328,7 @@ export default function Players() {
                         <DialogTitle>Add New Player</DialogTitle>
                       </DialogHeader>
                       <PlayerForm
-                        onSubmit={async (playerData) => {
-                          try {
+                        onSubmit={async (playerData) => {                          try {
                             // Create the player with club context
                             const response = await apiClient.post('/api/players', {
                               ...playerData,

@@ -209,14 +209,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await db.execute(sql`DELETE FROM game_stats`);
       await db.execute(sql`DELETE FROM rosters`);
       await db.execute(sql`DELETE FROM games`);
-      await db.execute(sql`DELETE FROM opponents`);
       await db.execute(sql`DELETE FROM players`);
 
       // Reset all sequences
       await db.execute(sql`ALTER SEQUENCE game_stats_id_seq RESTART WITH 1`);
       await db.execute(sql`ALTER SEQUENCE rosters_id_seq RESTART WITH 1`);
       await db.execute(sql`ALTER SEQUENCE games_id_seq RESTART WITH 1`);
-      await db.execute(sql`ALTER SEQUENCE opponents_id_seq RESTART WITH 1`);
       await db.execute(sql`ALTER SEQUENCE players_id_seq RESTART WITH 1`);
 
       res.status(200).json({ message: "All data cleared successfully" });
@@ -402,28 +400,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      // DIRECT INSERT OPPONENTS
-      for (const opponent of data.opponents) {
-        try {
-          await db.execute(sql`
-            INSERT INTO opponents (
-              id, team_name, primary_contact, contact_info,
-              primary_color, secondary_color, notes
-            ) VALUES (
-              ${opponent.id}, 
-              ${opponent.teamName || "Unknown Team"}, 
-              ${opponent.primaryContact || null}, 
-              ${opponent.contactInfo || null},
-              ${opponent.primaryColor || "#000000"},
-              ${opponent.secondaryColor || "#FFFFFF"},
-              ${opponent.notes || null}
-            )
-          `);
-          opponentsImported++;
-        } catch (error) {
-          console.error(`Failed to import opponent ${opponent.id}:`, error);
-        }
-      }
+      // Opponents system has been removed - skip opponents import
 
       // DIRECT INSERT GAMES
       for (const game of data.games) {
@@ -2164,6 +2141,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error(`Error fetching games for season ${req.params.id}:`, error);
       res.status(500).json({ message: 'Failed to fetch games for season' });
     }
+  });
+
+  // Opponents system has been removed - return 404 for any remaining calls
+  app.get('/api/opponents', (req, res) => {
+    res.status(404).json({ 
+      error: 'Opponents system has been removed', 
+      message: 'Use team-based system instead' 
+    });
   });
 
   // Health check

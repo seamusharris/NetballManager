@@ -183,7 +183,7 @@ export default function PlayerForm({ player, onSubmit, isSubmitting, onCancel }:
 
   // Season management is now handled on the player details page
 
-  
+  // Remove games fetch since it's not needed for player creation and was causing opponent API calls
 
   return (
     <Form {...form}>
