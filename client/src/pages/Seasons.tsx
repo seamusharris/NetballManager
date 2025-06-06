@@ -1,5 +1,7 @@
+
 import React, { useState } from 'react';
 import { useStandardQuery } from '@/hooks/use-standard-query';
+import { useCrudMutations } from '@/hooks/use-crud-mutations';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { CrudDialog } from '@/components/ui/crud-dialog';
@@ -7,13 +9,12 @@ import SeasonForm from '@/components/seasons/SeasonForm';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { Season } from '@shared/schema';
 import { BackButton } from '@/components/ui/back-button';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '@/lib/apiClient';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { useCrudMutations } from '@/hooks/use-crud-mutations';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { apiClient } from '@/lib/apiClient';
 
 export default function Seasons() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -21,64 +22,22 @@ export default function Seasons() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Fetch seasons using same pattern as Teams
+  // Fetch seasons - EXACTLY like Teams
   const { data: seasons = [], isLoading: isLoadingSeasons } = useStandardQuery<Season[]>({
     endpoint: '/api/seasons'
   });
 
-  // Fetch active season using same pattern
+  // Fetch active season
   const { data: activeSeason } = useStandardQuery<Season>({
     endpoint: '/api/seasons/active'
   });
 
-  // Create mutation - EXACTLY matching Teams pattern
-  const createMutation = useMutation({
-    mutationFn: (data: any) => apiClient.post('/api/seasons', data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/seasons'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/seasons/active'] });
-      toast({ title: "Season created successfully" });
-      setIsDialogOpen(false);
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error creating season",
-        description: error.message,
-        variant: "destructive"
-      });
-    }
-  });
-
-  // Update mutation - EXACTLY matching Teams pattern
-  const updateMutation = useMutation({
-    mutationFn: ({ id, ...data }: any) => apiClient.patch(`/api/seasons/${id}`, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/seasons'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/seasons/active'] });
-      toast({ title: "Season updated successfully" });
-      setEditingSeason(null);
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error updating season",
-        description: error.message,
-        variant: "destructive"
-      });
-    }
-  });
-
-  const { deleteMutation } = useCrudMutations({
+  // Use CRUD mutations - EXACTLY like Teams
+  const { createMutation, updateMutation, deleteMutation } = useCrudMutations({
     entityName: 'Season',
     baseEndpoint: '/api/seasons',
     invalidatePatterns: [['/api/seasons'], ['/api/seasons/active']],
   });
-
-  // Delete handler - EXACTLY matching Teams pattern
-  const handleDelete = (season: Season) => {
-    if (confirm(`Are you sure you want to delete "${season.name}"? This action cannot be undone.`)) {
-      deleteMutation.mutate(season.id);
-    }
-  };
 
   // Set active season mutation
   const setActiveSeasonMutation = useMutation({
@@ -102,6 +61,26 @@ export default function Seasons() {
 
   const handleSetActiveSeason = (id: number) => {
     setActiveSeasonMutation.mutate(id);
+  };
+
+  const handleCreate = (data: any) => {
+    createMutation.mutate(data, {
+      onSuccess: () => setIsDialogOpen(false)
+    });
+  };
+
+  const handleUpdate = (data: any) => {
+    if (editingSeason) {
+      updateMutation.mutate({ id: editingSeason.id, ...data }, {
+        onSuccess: () => setEditingSeason(null)
+      });
+    }
+  };
+
+  const handleDelete = (season: Season) => {
+    if (confirm(`Are you sure you want to delete "${season.name}"? This action cannot be undone.`)) {
+      deleteMutation.mutate(season.id);
+    }
   };
 
   return (
@@ -165,59 +144,57 @@ export default function Seasons() {
                             </CardDescription>
                           </div>
                           {isCurrentlyActive && (
-                            <Badge className="bg-blue-600 text-white">Active</Badge>
+                            <Badge className="bg-blue-600 text-white hover:bg-blue-600">Active</Badge>
                           )}
                         </div>
                       </CardHeader>
-                    <CardContent className="pb-2">
-                      <div className="space-y-2">
-                        <div className="text-sm">
-                          <span className="font-semibold">Start Date:</span>{" "}
-                          {format(new Date(season.startDate), "PPP")}
+                      <CardContent className="pb-2">
+                        <div className="space-y-2">
+                          <div className="text-sm">
+                            <span className="font-semibold">Start Date:</span>{" "}
+                            {format(new Date(season.startDate), "PPP")}
+                          </div>
+                          <div className="text-sm">
+                            <span className="font-semibold">End Date:</span>{" "}
+                            {format(new Date(season.endDate), "PPP")}
+                          </div>
+                          <div className="text-sm">
+                            <span className="font-semibold">Display Order:</span>{" "}
+                            {season.displayOrder}
+                          </div>
                         </div>
-                        <div className="text-sm">
-                          <span className="font-semibold">End Date:</span>{" "}
-                          {format(new Date(season.endDate), "PPP")}
-                        </div>
-                        <div className="text-sm">
-                          <span className="font-semibold">Display Order:</span>{" "}
-                          {season.displayOrder}
-                        </div>
-                      </div>
-                    </CardContent>
-                    <CardFooter className="flex justify-end gap-2">
-                      {!isCurrentlyActive && (
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => handleSetActiveSeason(season.id)}
-                        >
-                          Set Active
-                        </Button>
-                      )}
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={() => setEditingSeason(season)}
-                      >
-                        <Pencil className="h-4 w-4 mr-1" />
-                        Edit
-                      </Button>
-                      {!isCurrentlyActive && (
+                      </CardContent>
+                      <CardFooter className="flex justify-end gap-2">
+                        {!isCurrentlyActive && (
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleSetActiveSeason(season.id)}
+                          >
+                            Set Active
+                          </Button>
+                        )}
                         <Button 
                           variant="outline" 
                           size="sm" 
-                          className="text-red-600 hover:text-red-800 hover:bg-red-50"
-                          onClick={() => handleDelete(season)}
-                          disabled={deleteMutation.isPending}
+                          onClick={() => setEditingSeason(season)}
                         >
-                          <Trash2 className="h-4 w-4 mr-1" />
-                          {deleteMutation.isPending ? "Deleting..." : "Delete"}
+                          <Pencil className="h-4 w-4" />
                         </Button>
-                      )}
-                    </CardFooter>
-                  </Card>
-                );
+                        {!isCurrentlyActive && (
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="text-red-600 hover:text-red-800 hover:bg-red-50"
+                            onClick={() => handleDelete(season)}
+                            disabled={deleteMutation.isPending}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </CardFooter>
+                    </Card>
+                  );
                 })}
               </div>
             )}
@@ -231,7 +208,7 @@ export default function Seasons() {
         title="Create Season"
       >
         <SeasonForm
-          onSubmit={(data) => createMutation.mutate(data)}
+          onSubmit={handleCreate}
           onCancel={() => setIsDialogOpen(false)}
           isSubmitting={createMutation.isPending}
         />
@@ -244,7 +221,7 @@ export default function Seasons() {
       >
         <SeasonForm
           season={editingSeason || undefined}
-          onSubmit={(data) => updateMutation.mutate({ id: editingSeason!.id, ...data })}
+          onSubmit={handleUpdate}
           onCancel={() => setEditingSeason(null)}
           isSubmitting={updateMutation.isPending}
         />
