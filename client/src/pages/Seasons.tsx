@@ -18,6 +18,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -169,9 +179,11 @@ export default function Seasons() {
     }
   };
 
-  // Delete a season - using AlertDialog pattern like club deletion
-  const handleDeleteSeason = (season: Season) => {
-      deleteSeasonMutation.mutate(season.id);
+  // Handle delete confirmation
+  const handleDeleteSeason = () => {
+    if (deletingSeason) {
+      deleteSeasonMutation.mutate(deletingSeason.id);
+    }
   };
 
   // Set a season as active
@@ -320,33 +332,26 @@ export default function Seasons() {
           />
         </DialogContent>
       </Dialog>
-      {/* Delete Season Dialog */}
-      <Dialog open={!!deletingSeason} onOpenChange={(open) => !open && setDeletingSeason(null)}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Delete Season</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete {deletingSeason?.name}? This action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex justify-end space-x-2">
-            <Button variant="ghost" onClick={() => setDeletingSeason(null)}>
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              disabled={deleteSeasonMutation.isPending}
-              onClick={() => {
-                if (deletingSeason) {
-                  handleDeleteSeason(deletingSeason);
-                }
-              }}
+      {/* Delete Season Confirmation */}
+      <AlertDialog open={!!deletingSeason} onOpenChange={(open) => !open && setDeletingSeason(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete "{deletingSeason?.name}" and cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeleteSeason}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Delete
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
