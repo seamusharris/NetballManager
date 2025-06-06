@@ -115,8 +115,7 @@ export default function Seasons() {
   // Update season mutation
   const updateSeasonMutation = useMutation({
     mutationFn: async (data: { id: number; seasonData: Partial<SeasonFormValues> }) => {
-      const res = await apiRequest('PATCH', `/api/seasons/${data.id}`, data.seasonData);
-      return res.json();
+      return await apiRequest('PATCH', `/api/seasons/${data.id}`, data.seasonData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/seasons'] });
@@ -138,8 +137,7 @@ export default function Seasons() {
   // Delete season mutation
   const deleteSeasonMutation = useMutation({
     mutationFn: async (id: number) => {
-      const res = await apiRequest('DELETE', `/api/seasons/${id}`);
-      return res.json();
+      return await apiRequest('DELETE', `/api/seasons/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/seasons'] });
@@ -155,14 +153,14 @@ export default function Seasons() {
         description: error.response?.data?.message || "Failed to delete season. Please try again.",
         variant: "destructive"
       });
+      setDeletingSeason(null);
     }
   });
 
   // Set active season mutation
   const setActiveSeasonMutation = useMutation({
     mutationFn: async (id: number) => {
-      const res = await apiRequest('POST', `/api/seasons/${id}/activate`);
-      return res.json();
+      return await apiRequest('POST', `/api/seasons/${id}/activate`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/seasons'] });
@@ -748,7 +746,11 @@ export default function Seasons() {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               className="bg-red-600 hover:bg-red-700 text-white"
-              onClick={() => deleteSeasonMutation.mutate(deletingSeason.id)}
+              onClick={() => {
+                if (!deleteSeasonMutation.isPending) {
+                  deleteSeasonMutation.mutate(deletingSeason.id);
+                }
+              }}
               disabled={deleteSeasonMutation.isPending}
             >
               {deleteSeasonMutation.isPending ? "Deleting..." : "Delete"}
