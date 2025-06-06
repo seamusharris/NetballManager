@@ -153,23 +153,24 @@ export default function Players() {
   // Create new player mutation for team context
   const createPlayerForTeam = useMutation({
     mutationFn: async (playerData: any) => {
-      console.log('Creating player with club context:', currentClub?.id);
-      
+      if (!currentClub?.id) {
+        throw new Error('No club selected');
+      }
+
       // Create the player with club context
       const response = await apiClient.post('/api/players', {
         ...playerData,
-        clubId: currentClub?.id,
+        clubId: currentClub.id,
         avatarColor: "auto"
       }, {
         headers: {
-          'x-current-club-id': currentClub?.id?.toString() || ''
+          'x-current-club-id': currentClub.id.toString()
         }
       });
+
       return response;
     },
-    onSuccess: (newPlayer) => {
-      console.log('Player created successfully:', newPlayer);
-      
+    onSuccess: () => {
       // Invalidate all relevant queries to refresh the UI
       queryClient.invalidateQueries({ queryKey: ['players'] });
       queryClient.invalidateQueries({ queryKey: ['unassigned-players'] });
@@ -177,42 +178,53 @@ export default function Players() {
       queryClient.invalidateQueries({ queryKey: ['team-players'] });
 
       toast({ title: 'Success', description: 'Player created successfully' });
+      setIsAddPlayerDialogOpen(false);
     },
-    onError: (error) => {
-      console.error('Error creating player:', error);
-      toast({ title: 'Error', description: 'Failed to create player', variant: 'destructive' });
+    onError: (error: any) => {
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to create player';
+      toast({ 
+        title: 'Error', 
+        description: errorMessage, 
+        variant: 'destructive' 
+      });
     },
   });
 
   // Create new player mutation for club context
   const createPlayerForClub = useMutation({
     mutationFn: async (playerData: any) => {
-      console.log('Creating player with club context:', currentClub?.id);
-      
+      if (!currentClub?.id) {
+        throw new Error('No club selected');
+      }
+
       // Create the player with club context
       const response = await apiClient.post('/api/players', {
         ...playerData,
-        clubId: currentClub?.id,
+        clubId: currentClub.id,
         avatarColor: "auto"
       }, {
         headers: {
-          'x-current-club-id': currentClub?.id?.toString() || ''
+          'x-current-club-id': currentClub.id.toString()
         }
       });
+
       return response;
     },
-    onSuccess: (newPlayer) => {
-      console.log('Player created successfully:', newPlayer);
-
+    onSuccess: () => {
       // Invalidate queries to refresh the UI
       queryClient.invalidateQueries({ queryKey: ['players'] });
       queryClient.invalidateQueries({ queryKey: ['clubs', currentClub?.id, 'players'] });
 
       toast({ title: 'Success', description: 'Player created successfully' });
+      setIsAddPlayerDialogOpen(false);
     },
-    onError: (error) => {
-      console.error('Error creating player:', error);
-      toast({ title: 'Error', description: 'Failed to create player', variant: 'destructive' });
+    onError: (error: any) => {
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to create player';
+      toast({ 
+        title: 'Error', 
+        description: errorMessage, 
+        variant: 'destructive' 
+      });
     },
   });
 
