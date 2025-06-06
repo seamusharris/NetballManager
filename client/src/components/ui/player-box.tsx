@@ -37,9 +37,9 @@ export function PlayerBox({
   };
 
   const avatarSizes = {
-    sm: "h-6 w-6 text-xs",
-    md: "h-8 w-8 text-sm",
-    lg: "h-10 w-10 text-base"
+    sm: "h-8 w-8 text-sm",
+    md: "h-10 w-10 text-base",
+    lg: "h-12 w-12 text-lg"
   };
 
   const getInitials = () => {
@@ -101,7 +101,7 @@ export function PlayerBox({
         </div>
         <div className="flex-1">
           <div 
-            className="font-medium"
+            className="font-bold text-base"
             style={{ color: playerColor }}
           >
             {player.displayName}
