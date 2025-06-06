@@ -159,8 +159,8 @@ export default function ClubDashboard() {
   return (
     <>
       <Helmet>
-        <title>Club Dashboard | {currentClub?.name} Stats Tracker</title>
-        <meta name="description" content={`View ${currentClub?.name} overall performance metrics and team statistics`} />
+        <title>{`Club Dashboard | ${currentClub?.name || 'Netball Club'} Stats Tracker`}</title>
+        <meta name="description" content={`View ${currentClub?.name || 'club'} overall performance metrics and team statistics`} />
       </Helmet>
 
       <div className="container py-8 mx-auto space-y-8">
