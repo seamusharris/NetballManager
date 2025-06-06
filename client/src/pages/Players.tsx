@@ -328,7 +328,8 @@ export default function Players() {
                         <DialogTitle>Add New Player</DialogTitle>
                       </DialogHeader>
                       <PlayerForm
-                        onSubmit={async (playerData) => {                          try {
+                        onSubmit={async (playerData) => {
+                          try {
                             // Create the player with club context
                             const response = await apiClient.post('/api/players', {
                               ...playerData,
@@ -357,7 +358,11 @@ export default function Players() {
                           } catch (error) {
                             console.error('Error creating player:', error);
                             toast({ title: 'Error', description: 'Failed to create player', variant: 'destructive' });
+                            throw error; // Re-throw to prevent dialog from closing on error
                           }
+                        }}
+                        onCancel={() => {
+                          // Dialog will close automatically when trigger is clicked again
                         }}
                         isSubmitting={false}
                       />
@@ -477,7 +482,11 @@ export default function Players() {
                   } catch (error) {
                     console.error('Error creating player:', error);
                     toast({ title: 'Error', description: 'Failed to create player', variant: 'destructive' });
+                    throw error; // Re-throw to prevent dialog from closing on error
                   }
+                }}
+                onCancel={() => {
+                  // Dialog will close automatically when trigger is clicked again
                 }}
                 isSubmitting={false}
               />

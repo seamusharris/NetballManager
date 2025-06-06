@@ -134,7 +134,7 @@ export default function PlayerForm({ player, onSubmit, isSubmitting, onCancel }:
 
   }, [position1, position2, position3, position4, form]);
 
-  const handleSubmit = (values: FormValues) => {
+  const handleSubmit = async (values: FormValues) => {
     try {
       // Validate at least one position is selected
       if (!values.position1) {
@@ -174,8 +174,16 @@ export default function PlayerForm({ player, onSubmit, isSubmitting, onCancel }:
 
       console.log("Submitting player data:", playerData);
 
-      // Submit the data
-      onSubmit(playerData);
+      // Submit the data and wait for completion
+      await onSubmit(playerData);
+      
+      // Reset form after successful submission
+      form.reset();
+      
+      // Call onCancel to close dialog if provided
+      if (onCancel) {
+        onCancel();
+      }
     } catch (error) {
       console.error("Error in handleSubmit:", error);
     }

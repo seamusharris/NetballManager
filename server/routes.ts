@@ -891,7 +891,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const result = await pool.query(`
         INSERT INTO clubs (name, code, description, address, contact_email, contact_phone, primary_color, secondary_color)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-        RETURNING id, name, code, description, address, contact_email, contact_phone, primary_color, secondary_color
+        RETURNING id, name, code,description, address, contact_email, contact_phone, primary_color, secondary_color
       `, [name, code.toUpperCase(), description, address, contactEmail, contactPhone, primaryColor, secondaryColor]);
 
       const club = result.rows[0];
@@ -2141,14 +2141,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error(`Error fetching games for season ${req.params.id}:`, error);
       res.status(500).json({ message: 'Failed to fetch games for season' });
     }
-  });
-
-  // Opponents system has been removed - return 404 for any remaining calls
-  app.get('/api/opponents', (req, res) => {
-    res.status(404).json({ 
-      error: 'Opponents system has been removed', 
-      message: 'Use team-based system instead' 
-    });
   });
 
   // Health check
