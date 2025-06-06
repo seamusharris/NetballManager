@@ -73,9 +73,9 @@ export default function Seasons() {
   const deleteMutation = useMutation({
     mutationFn: (seasonId: number) => apiClient.delete(`/api/seasons/${seasonId}`),
     onSuccess: () => {
-      // Use exact Teams pattern to prevent automatic retry
-      queryClient.invalidateQueries({ queryKey: ['seasons'] });
-      queryClient.invalidateQueries({ queryKey: ['seasons'] });
+      // Use correct endpoint-based keys that match useStandardQuery
+      queryClient.invalidateQueries({ queryKey: ['/api/seasons'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/seasons/active'] });
 
       toast({
         title: "Success",
