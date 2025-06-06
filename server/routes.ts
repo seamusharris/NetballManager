@@ -2124,7 +2124,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!deleted) {
         return res.status(404).json({ message: 'Season not found' });
       }
-      res.status(204).end();
+      res.json({ success: true, message: "Season deleted successfully" });
     } catch (error) {
       console.error(`Error deleting season ${req.params.id}:`, error);
       res.status(500).json({ message: 'Failed to delete season' });
