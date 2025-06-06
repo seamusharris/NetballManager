@@ -20,6 +20,7 @@ export default function Dashboard() {
     currentClub, 
     currentClubId, 
     currentTeamId, 
+    currentTeam,
     clubTeams, 
     setCurrentTeamId,
     isLoading: clubLoading 
@@ -30,11 +31,13 @@ export default function Dashboard() {
     const teamIdFromUrl = params.teamId;
     if (teamIdFromUrl && !isNaN(Number(teamIdFromUrl))) {
       const targetTeamId = Number(teamIdFromUrl);
-      if (currentTeamId !== targetTeamId) {
+      // Check if the team exists in the current club
+      const teamExists = clubTeams?.some(team => team.id === targetTeamId);
+      if (teamExists && currentTeamId !== targetTeamId) {
         setCurrentTeamId(targetTeamId);
       }
     }
-  }, [params.teamId, currentTeamId, setCurrentTeamId]);
+  }, [params.teamId, currentTeamId, setCurrentTeamId, clubTeams]);
 
   // Call ALL hooks first, before any conditional returns
   const { data: players = [], isLoading: isLoadingPlayers, error: playersError } = useQuery<any[]>({

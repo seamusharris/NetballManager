@@ -252,45 +252,46 @@ export default function ClubDashboard() {
           <CardContent className="p-6">
             <div className="space-y-4">
               {teamPerformance.map((team) => (
-                <div key={team.id} className="flex items-center justify-between p-6 border-2 rounded-xl hover:shadow-md transition-all duration-200 bg-gradient-to-r from-white to-slate-50">
+                <div 
+                  key={team.id} 
+                  onClick={() => window.location.href = `/dashboard/${team.id}`}
+                  className="flex items-center justify-between p-6 border-2 rounded-xl cursor-pointer transform transition-all duration-300 ease-in-out bg-gradient-to-r from-white to-slate-50 hover:from-blue-50 hover:to-blue-100 hover:shadow-lg hover:scale-[1.02] hover:border-blue-300 active:scale-[0.98]"
+                >
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+                    <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center transition-colors duration-300 group-hover:bg-primary/20">
                       <span className="text-primary font-bold text-lg">
                         {team.name.charAt(0)}
                       </span>
                     </div>
                     <div>
-                      <h4 className="font-bold text-lg text-slate-900">{team.name}</h4>
+                      <h4 className="font-bold text-lg text-slate-900 transition-colors duration-300 hover:text-primary">{team.name}</h4>
                       <p className="text-sm text-slate-600 font-medium">{team.division}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-6 text-sm">
-                    <div className="text-center p-3 bg-blue-50 rounded-lg">
+                    <div className="text-center p-3 bg-blue-50 rounded-lg transition-all duration-300 hover:bg-blue-100 hover:scale-105">
                       <div className="font-bold text-xl text-blue-700">{team.totalGames}</div>
                       <div className="text-blue-600 font-medium">Games</div>
                     </div>
-                    <div className="text-center p-3 bg-green-50 rounded-lg">
+                    <div className="text-center p-3 bg-green-50 rounded-lg transition-all duration-300 hover:bg-green-100 hover:scale-105">
                       <div className="font-bold text-xl text-green-700">{team.wins}</div>
                       <div className="text-green-600 font-medium">Wins</div>
                     </div>
-                    <div className="text-center p-3 bg-purple-50 rounded-lg">
+                    <div className="text-center p-3 bg-purple-50 rounded-lg transition-all duration-300 hover:bg-purple-100 hover:scale-105">
                       <div className="font-bold text-xl text-purple-700">{Math.round(team.winRate)}%</div>
                       <div className="text-purple-600 font-medium">Win Rate</div>
                     </div>
                     <Badge 
                       variant={team.winRate >= 60 ? "default" : team.winRate >= 40 ? "secondary" : "destructive"}
-                      className="text-sm px-3 py-1 font-medium"
+                      className="text-sm px-3 py-1 font-medium transition-all duration-300 hover:scale-110"
                     >
                       {team.winRate >= 60 ? "Strong" : team.winRate >= 40 ? "Average" : "Needs Focus"}
                     </Badge>
                   </div>
-                  <div className="flex items-center">
-                    <button 
-                      onClick={() => window.location.href = `/dashboard/${team.id}`}
-                      className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors font-medium"
-                    >
-                      View Team
-                    </button>
+                  <div className="flex items-center opacity-60 transition-opacity duration-300 hover:opacity-100">
+                    <div className="text-sm text-slate-500 font-medium">
+                      Click to view →
+                    </div>
                   </div>
                 </div>
               ))}
