@@ -23,8 +23,8 @@ export default function ClubDashboard() {
     queryKey: ['club-games', currentClubId],
     queryFn: () => apiClient.get('/api/games', { 
       headers: {
-        'x-club-wide': 'true',
-        'x-current-team-id': '' // Clear any team filter for club-wide view
+        'x-club-wide': 'true'
+        // Explicitly do NOT send x-current-team-id to get all club games
       }
     }),
     enabled: !!currentClubId,
