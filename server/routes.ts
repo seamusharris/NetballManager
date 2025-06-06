@@ -2024,7 +2024,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ----- SEASONS API -----
 
   // Get all seasons
-  app.get('/api/seasons', async (req, res) => {
+  app.get('/api/seasons', standardAuth(), async (req: AuthenticatedRequest, res) => {
     try {
       const allSeasons = await storage.getSeasons();
       res.json(allSeasons);
@@ -2035,7 +2035,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get active season
-  app.get('/api/seasons/active', async (req, res) => {
+  app.get('/api/seasons/active', standardAuth(), async (req: AuthenticatedRequest, res) => {
     try {
       const activeSeason = await storage.getActiveSeason();
       if (!activeSeason) {
@@ -2049,7 +2049,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get season by ID
-  app.get('/api/seasons/:id', async (req, res) => {
+  app.get('/api/seasons/:id', standardAuth(), async (req: AuthenticatedRequest, res) => {
     try {
       const id = parseInt(req.params.id);
       const season = await storage.getSeason(id);
@@ -2064,7 +2064,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Create season
-  app.post('/api/seasons', async (req, res) => {
+  app.post('/api/seasons', standardAuth(), async (req: AuthenticatedRequest, res) => {
     try {
       const seasonData = insertSeasonSchema.parse(req.body);
       const season = await storage.createSeason(seasonData);
@@ -2076,7 +2076,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update season
-  app.patch('/api/seasons/:id', async (req, res) => {
+  app.patch('/api/seasons/:id', standardAuth(), async (req: AuthenticatedRequest, res) => {
     try {
       const id = parseInt(req.params.id);
       // Allow partial updates
@@ -2093,7 +2093,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Set active season
-  app.post('/api/seasons/:id/activate', async (req, res) => {
+  app.post('/api/seasons/:id/activate', standardAuth(), async (req: AuthenticatedRequest, res) => {
     try {
       const id = parseInt(req.params.id);
       const season = await storage.setActiveSeason(id);
@@ -2108,7 +2108,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Delete season
-  app.delete('/api/seasons/:id', async (req, res) => {
+  app.delete('/api/seasons/:id', standardAuth(), async (req: AuthenticatedRequest, res) => {
     try {
       const id = parseInt(req.params.id);
       const activeSeason = await storage.getActiveSeason();
