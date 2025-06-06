@@ -1,9 +1,10 @@
+import { useLocation, useParams } from 'wouter';
+import { useClub } from '@/contexts/ClubContext';
 import { useQuery } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet';
 import DashboardSummary from '@/components/dashboard/DashboardSummary';
 import BatchScoreDisplay from '@/components/dashboard/BatchScoreDisplay';
 import { TEAM_NAME } from '@/lib/settings';
-import { useClub } from '@/contexts/ClubContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
 import { apiClient } from '@/lib/apiClient';
@@ -11,9 +12,29 @@ import { PlayerCombinationAnalysis } from '@/components/dashboard/PlayerCombinat
 import { TeamPositionAnalysis } from '@/components/dashboard/TeamPositionAnalysis';
 import { UpcomingGameRecommendations } from '@/components/dashboard/UpcomingGameRecommendations';
 import { TeamSwitcher } from '@/components/layout/TeamSwitcher';
+import { useEffect } from 'react';
 
 export default function Dashboard() {
-  const { currentClub, currentClubId, isLoading: clubLoading, currentTeamId, currentTeam, clubTeams } = useClub();
+  const params = useParams();
+  const { 
+    currentClub, 
+    currentClubId, 
+    currentTeamId, 
+    clubTeams, 
+    setCurrentTeamId,
+    isLoading: clubLoading 
+  } = useClub();
+
+  // Handle teamId from URL parameter
+  useEffect(() => {
+    const teamIdFromUrl = params.teamId;
+    if (teamIdFromUrl && !isNaN(Number(teamIdFromUrl))) {
+      const targetTeamId = Number(teamIdFromUrl);
+      if (currentTeamId !== targetTeamId) {
+        setCurrentTeamId(targetTeamId);
+      }
+    }
+  }, [params.teamId, currentTeamId, setCurrentTeamId]);
 
   // Call ALL hooks first, before any conditional returns
   const { data: players = [], isLoading: isLoadingPlayers, error: playersError } = useQuery<any[]>({

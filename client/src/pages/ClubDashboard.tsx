@@ -284,6 +284,14 @@ export default function ClubDashboard() {
                       {team.winRate >= 60 ? "Strong" : team.winRate >= 40 ? "Average" : "Needs Focus"}
                     </Badge>
                   </div>
+                  <div className="flex items-center">
+                    <button 
+                      onClick={() => window.location.href = `/dashboard/${team.id}`}
+                      className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors font-medium"
+                    >
+                      View Team
+                    </button>
+                  </div>
                 </div>
               ))}
               {teamPerformance.length === 0 && (
