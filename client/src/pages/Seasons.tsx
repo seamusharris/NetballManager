@@ -9,12 +9,12 @@ import SeasonForm from '@/components/seasons/SeasonForm';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { Season } from '@shared/schema';
 import { BackButton } from '@/components/ui/back-button';
-import { useToast } from '@/hooks/use-toast';
-import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/apiClient';
+import { useToast } from '@/hooks/use-toast';
 
 export default function Seasons() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -22,8 +22,8 @@ export default function Seasons() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Fetch seasons - EXACTLY like Teams
-  const { data: seasons = [], isLoading: isLoadingSeasons } = useStandardQuery<Season[]>({
+  // Fetch seasons using standard query (like Teams)
+  const { data: seasons = [], isLoading } = useStandardQuery<Season[]>({
     endpoint: '/api/seasons'
   });
 
@@ -32,7 +32,7 @@ export default function Seasons() {
     endpoint: '/api/seasons/active'
   });
 
-  // Use CRUD mutations - EXACTLY like Teams
+  // Use CRUD mutations exactly like Teams
   const { createMutation, updateMutation, deleteMutation } = useCrudMutations({
     entityName: 'Season',
     baseEndpoint: '/api/seasons',
@@ -46,22 +46,18 @@ export default function Seasons() {
       queryClient.invalidateQueries({ queryKey: ['/api/seasons'] });
       queryClient.invalidateQueries({ queryKey: ['/api/seasons/active'] });
       toast({
-        title: "Active season changed",
-        description: "The active season has been updated."
+        title: "Success",
+        description: "Active season updated successfully."
       });
     },
     onError: () => {
       toast({
-        title: "Error changing active season",
-        description: "Failed to change active season. Please try again.",
+        title: "Error",
+        description: "Failed to update active season. Please try again.",
         variant: "destructive"
       });
     }
   });
-
-  const handleSetActiveSeason = (id: number) => {
-    setActiveSeasonMutation.mutate(id);
-  };
 
   const handleCreate = (data: any) => {
     createMutation.mutate(data, {
@@ -78,10 +74,21 @@ export default function Seasons() {
   };
 
   const handleDelete = (season: Season) => {
-    if (confirm(`Are you sure you want to delete "${season.name}"? This action cannot be undone.`)) {
-      deleteMutation.mutate(season.id);
-    }
+    deleteMutation.mutate(season.id);
   };
+
+  const handleSetActiveSeason = (id: number) => {
+    setActiveSeasonMutation.mutate(id);
+  };
+
+  // Sort seasons: active first, then by display order
+  const sortedSeasons = seasons
+    .slice()
+    .sort((a, b) => {
+      if (activeSeason?.id === a.id) return -1;
+      if (activeSeason?.id === b.id) return 1;
+      return a.displayOrder - b.displayOrder;
+    });
 
   return (
     <>
@@ -105,7 +112,7 @@ export default function Seasons() {
               </Button>
             </div>
 
-            {isLoadingSeasons ? (
+            {isLoading ? (
               <div className="flex justify-center items-center h-40">
                 <div className="animate-spin h-8 w-8 border-4 border-blue-600 rounded-full border-t-transparent"></div>
               </div>
@@ -120,15 +127,7 @@ export default function Seasons() {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {seasons
-                  .slice()
-                  .sort((a, b) => {
-                    // Show active season first, then sort by display order
-                    if (activeSeason?.id === a.id) return -1;
-                    if (activeSeason?.id === b.id) return 1;
-                    return a.displayOrder - b.displayOrder;
-                  })
-                  .map((season: Season) => {
+                {sortedSeasons.map((season: Season) => {
                   const isCurrentlyActive = activeSeason?.id === season.id;
                   return (
                     <Card key={season.id} className={cn(
@@ -144,7 +143,9 @@ export default function Seasons() {
                             </CardDescription>
                           </div>
                           {isCurrentlyActive && (
-                            <Badge className="bg-blue-600 text-white hover:bg-blue-600">Active</Badge>
+                            <Badge className="bg-blue-600 text-white hover:bg-blue-600">
+                              Active
+                            </Badge>
                           )}
                         </div>
                       </CardHeader>
@@ -170,6 +171,7 @@ export default function Seasons() {
                             variant="outline" 
                             size="sm"
                             onClick={() => handleSetActiveSeason(season.id)}
+                            disabled={setActiveSeasonMutation.isPending}
                           >
                             Set Active
                           </Button>
