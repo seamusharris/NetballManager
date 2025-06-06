@@ -1280,9 +1280,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.set('Pragma', 'no-cache');
       res.set('Expires', '0');
 
-      // Check for club-wide flag first
+      // Check for club-wide flag FIRST - this takes precedence over everything
       const isClubWide = req.headers['x-club-wide'] === 'true';
-      const teamId = req.headers['x-current-team-id'] ? parseInt(req.headers['x-current-team-id'] as string, 10) : null;
+      const teamId = !isClubWide && req.headers['x-current-team-id'] ? parseInt(req.headers['x-current-team-id'] as string, 10) : null;
 
       // Debug all headers
       console.log('Games endpoint headers:', {
@@ -1306,17 +1306,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Filter to include only games that this club has access to
       if (clubId) {
         if (isClubWide) {
-          console.log(`Fetching ALL games for club ${clubId} (club-wide view - ignoring team filter)`);
+          console.log(`Fetching ALL games for club ${clubId} (club-wide view - team filter disabled)`);
+        } else if (teamId) {
+          console.log(`Fetching games for club ${clubId} and team ${teamId}`);
         } else {
-          console.log(`Fetching games for club ${clubId}${teamId ? ` and team ${teamId}` : ''}`);
+          console.log(`Fetching ALL games for club ${clubId} (no team filter specified)`);
         }
 
+        // Base clause for club access
         let whereClause = sql`WHERE (ht.club_id = ${clubId} OR at.club_id = ${clubId} OR EXISTS (
           SELECT 1 FROM game_permissions gp 
           WHERE gp.game_id = g.id AND gp.club_id = ${clubId}
         ))`;
 
-        // Add team filter ONLY if NOT club-wide and team ID is specified
+        // Add team filter ONLY if NOT club-wide AND team ID is specified
         if (!isClubWide && teamId) {
           whereClause = sql`WHERE (ht.club_id = ${clubId} OR at.club_id = ${clubId} OR EXISTS (
             SELECT 1 FROM game_permissions gp 
