@@ -144,8 +144,8 @@ export default function Dashboard() {
     return (
       <>
         <Helmet>
-          <title>{`Team Dashboard | ${TEAM_NAME || 'Netball'} Stats Tracker`}</title>
-          <meta name="description" content={`View ${TEAM_NAME || 'team'}'s performance metrics, upcoming games, and player statistics`} />
+          <title>Team Dashboard | {TEAM_NAME} Stats Tracker</title>
+          <meta name="description" content={`View ${TEAM_NAME} team's performance metrics, upcoming games, and player statistics`} />
         </Helmet>
 
         <div className="container py-8 mx-auto space-y-8">
@@ -207,8 +207,8 @@ export default function Dashboard() {
   return (
     <>
       <Helmet>
-        <title>{`Team Dashboard | ${TEAM_NAME || 'Netball'} Stats Tracker`}</title>
-        <meta name="description" content={`View ${TEAM_NAME || 'team'}'s performance metrics, upcoming games, and player statistics`} />
+        <title>Team Dashboard | {TEAM_NAME} Stats Tracker</title>
+        <meta name="description" content={`View ${TEAM_NAME} team's performance metrics, upcoming games, and player statistics`} />
       </Helmet>
 
       <div className="container py-8 mx-auto space-y-8">

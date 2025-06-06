@@ -38,7 +38,7 @@ type FormValues = z.infer<typeof formSchema>;
 
 interface PlayerFormProps {
   player?: Player;
-  onSubmit: (data: any) => Promise<void>;
+  onSubmit: (data: any) => void;
   isSubmitting: boolean;
   onCancel?: () => void;
 }
@@ -134,7 +134,7 @@ export default function PlayerForm({ player, onSubmit, isSubmitting, onCancel }:
 
   }, [position1, position2, position3, position4, form]);
 
-  const handleSubmit = async (values: FormValues) => {
+  const handleSubmit = (values: FormValues) => {
     // Validate at least one position is selected
     if (!values.position1) {
       form.setError("position1", { 
@@ -171,12 +171,8 @@ export default function PlayerForm({ player, onSubmit, isSubmitting, onCancel }:
       positionPreferences,
     };
 
-    try {
-      await onSubmit(playerData);
-    } catch (error) {
-      console.error('Error submitting player form:', error);
-      alert('Failed to save player. Please try again.');
-    }
+    // Call parent's onSubmit function
+    onSubmit(playerData);
   };
 
   // Season management is now handled on the player details page

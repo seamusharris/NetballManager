@@ -17,18 +17,8 @@ import { useLocation } from 'wouter';
 import { apiClient } from '@/lib/apiClient';
 import { useCrudMutations } from '@/hooks/use-crud-mutations';
 
-// Helper function to get current club ID
-function getCurrentClubId(): string | null {
-  const savedClubId = localStorage.getItem('currentClubId');
-  if (savedClubId) {
-    return savedClubId;
-  }
-  return null;
-}
-
 export default function Players() {
   const { currentClub, hasPermission, isLoading: clubLoading, switchToClub } = useClub();
-  const [isAddPlayerDialogOpen, setIsAddPlayerDialogOpen] = useState(false);
 
   // Don't render anything until club context is fully loaded
   if (clubLoading || !currentClub) {
@@ -160,14 +150,14 @@ export default function Players() {
     },
   });
 
-    // Single consolidated player creation mutation
-  const createPlayer = useMutation({
+  // Create new player mutation for team context
+  const createPlayerForTeam = useMutation({
     mutationFn: async (playerData: any) => {
       if (!currentClub?.id) {
         throw new Error('No club selected');
       }
 
-      // Create the player with club context and proper headers
+      // Create the player with club context
       const response = await apiClient.post('/api/players', {
         ...playerData,
         clubId: currentClub.id,
@@ -181,11 +171,49 @@ export default function Players() {
       return response;
     },
     onSuccess: () => {
-      // Comprehensive query invalidation for all scenarios
+      // Invalidate all relevant queries to refresh the UI
       queryClient.invalidateQueries({ queryKey: ['players'] });
       queryClient.invalidateQueries({ queryKey: ['unassigned-players'] });
       queryClient.invalidateQueries({ queryKey: ['clubs', currentClub?.id, 'players'] });
       queryClient.invalidateQueries({ queryKey: ['team-players'] });
+
+      toast({ title: 'Success', description: 'Player created successfully' });
+      setIsAddPlayerDialogOpen(false);
+    },
+    onError: (error: any) => {
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to create player';
+      toast({ 
+        title: 'Error', 
+        description: errorMessage, 
+        variant: 'destructive' 
+      });
+    },
+  });
+
+  // Create new player mutation for club context
+  const createPlayerForClub = useMutation({
+    mutationFn: async (playerData: any) => {
+      if (!currentClub?.id) {
+        throw new Error('No club selected');
+      }
+
+      // Create the player with club context
+      const response = await apiClient.post('/api/players', {
+        ...playerData,
+        clubId: currentClub.id,
+        avatarColor: "auto"
+      }, {
+        headers: {
+          'x-current-club-id': currentClub.id.toString()
+        }
+      });
+
+      return response;
+    },
+    onSuccess: () => {
+      // Invalidate queries to refresh the UI
+      queryClient.invalidateQueries({ queryKey: ['players'] });
+      queryClient.invalidateQueries({ queryKey: ['clubs', currentClub?.id, 'players'] });
 
       toast({ title: 'Success', description: 'Player created successfully' });
       setIsAddPlayerDialogOpen(false);
@@ -366,21 +394,20 @@ export default function Players() {
               <CardTitle className="flex items-center justify-between">
                 <span>Available Players</span>
                 <div className="flex items-center space-x-2">
-                  <Dialog open={isAddPlayerDialogOpen} onOpenChange={setIsAddPlayerDialogOpen}>
+                  <Dialog>
                     <DialogTrigger asChild>
                       <Button variant="outline" size="sm">
                         <UserPlus className="h-4 w-4 mr-1" />
                         Add New Player
                       </Button>
                     </DialogTrigger>
-                    <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                    <DialogContent>
                       <DialogHeader>
                         <DialogTitle>Add New Player</DialogTitle>
                       </DialogHeader>
                       <PlayerForm
-                        onSubmit={(data) => createPlayer.mutate(data)}
-                        isSubmitting={createPlayer.isPending}
-                        onCancel={() => setIsAddPlayerDialogOpen(false)}
+                        onSubmit={createPlayerForTeam.mutate}
+                        isSubmitting={createPlayerForTeam.isPending}
                       />
                     </DialogContent>
                   </Dialog>
@@ -459,21 +486,20 @@ export default function Players() {
                 </SelectContent>
               </Select>
             </div>
-            <Dialog open={isAddPlayerDialogOpen} onOpenChange={setIsAddPlayerDialogOpen}>
+            <Dialog>
             <DialogTrigger asChild>
               <Button>
                 <UserPlus className="h-4 w-4 mr-2" />
                 Add New Player
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogContent>
               <DialogHeader>
                 <DialogTitle>Add New Player</DialogTitle>
               </DialogHeader>
               <PlayerForm
-                onSubmit={(data) => createPlayer.mutate(data)}
-                isSubmitting={createPlayer.isPending}
-                onCancel={() => setIsAddPlayerDialogOpen(false)}
+                onSubmit={createPlayerForClub.mutate}
+                isSubmitting={createPlayerForClub.isPending}
               />
             </DialogContent>
           </Dialog>
