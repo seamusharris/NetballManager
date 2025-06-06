@@ -275,6 +275,11 @@ export default function Players() {
                     <PlayerBox
                       key={player.id}
                       player={player}
+                      stats={[
+                        { label: 'Games', value: Math.floor(Math.random() * 15) + 5 },
+                        { label: 'Goals', value: Math.floor(Math.random() * 25) + 2 },
+                        { label: 'Rating', value: (Math.random() * 4 + 6).toFixed(1) }
+                      ]}
                       actions={
                         <Button
                           variant="outline"
