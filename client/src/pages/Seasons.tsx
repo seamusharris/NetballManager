@@ -70,9 +70,10 @@ export default function Seasons() {
   // Delete mutation - with React Strict Mode 404 handling
   const deleteMutation = useMutation({
     mutationFn: (id: number) => apiClient.delete(`/api/seasons/${id}`),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/seasons'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/seasons/active'] });
+    onSuccess: async () => {
+      // Force refetch both queries to ensure UI updates
+      await queryClient.invalidateQueries({ queryKey: ['/api/seasons'] });
+      await queryClient.invalidateQueries({ queryKey: ['/api/seasons/active'] });
       toast({ title: "Season deleted successfully" });
     },
     onError: (error: any) => {
@@ -172,7 +173,15 @@ export default function Seasons() {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {seasons.map((season: Season) => {
+                {seasons
+                  .slice()
+                  .sort((a, b) => {
+                    // Show active season first, then sort by display order
+                    if (activeSeason?.id === a.id) return -1;
+                    if (activeSeason?.id === b.id) return 1;
+                    return a.displayOrder - b.displayOrder;
+                  })
+                  .map((season: Season) => {
                   const isCurrentlyActive = activeSeason?.id === season.id;
                   return (
                     <Card key={season.id} className={cn(
@@ -188,7 +197,7 @@ export default function Seasons() {
                             </CardDescription>
                           </div>
                           {isCurrentlyActive && (
-                            <Badge className="bg-blue-600">Active</Badge>
+                            <Badge className="bg-blue-600 text-white">Active</Badge>
                           )}
                         </div>
                       </CardHeader>
