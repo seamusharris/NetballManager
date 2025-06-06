@@ -133,27 +133,30 @@ export function PlayerBox({
             <Badge variant="secondary" className="text-xs mt-1">Inactive</Badge>
           )}
           
-          {stats && stats.length > 0 && (
-            <div className="flex space-x-6">
-              {stats.map((stat, index) => (
-                <div key={index} className="text-center">
-                  <div 
-                    className="text-2xl font-bold"
-                    style={{ color: playerColor }}
-                  >
-                    {stat.value}
-                  </div>
-                  <div 
-                    className="text-sm"
-                    style={{ color: `${playerColor}AA` }}
-                  >
-                    {stat.label}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+          
         </div>
+        
+        {/* Stats positioned on the right */}
+        {stats && stats.length > 0 && (
+          <div className="flex space-x-6 ml-4">
+            {stats.map((stat, index) => (
+              <div key={index} className="text-center">
+                <div 
+                  className="text-2xl font-bold"
+                  style={{ color: playerColor }}
+                >
+                  {stat.value}
+                </div>
+                <div 
+                  className="text-sm"
+                  style={{ color: `${playerColor}AA` }}
+                >
+                  {stat.label}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
         
         {actions && (
           <div className="flex items-center space-x-2 ml-4">

@@ -170,8 +170,13 @@ export default function Players() {
         return newSet;
       });
 
+      // More aggressive cache invalidation
       queryClient.invalidateQueries({ queryKey: ['team-players', teamId] });
       queryClient.invalidateQueries({ queryKey: ['unassigned-players', activeSeason?.id] });
+      queryClient.invalidateQueries({ queryKey: ['unassigned-players'] });
+      queryClient.invalidateQueries({ queryKey: ['players'] });
+      queryClient.invalidateQueries({ queryKey: ['clubs', currentClub?.id, 'players'] });
+      
       toast({ title: 'Success', description: 'Player removed from team' });
     },
     onError: (error, playerId) => {
@@ -194,6 +199,9 @@ export default function Players() {
         toast({ title: 'Success', description: 'Player removed from team' });
         queryClient.invalidateQueries({ queryKey: ['team-players', teamId] });
         queryClient.invalidateQueries({ queryKey: ['unassigned-players', activeSeason?.id] });
+        queryClient.invalidateQueries({ queryKey: ['unassigned-players'] });
+        queryClient.invalidateQueries({ queryKey: ['players'] });
+        queryClient.invalidateQueries({ queryKey: ['clubs', currentClub?.id, 'players'] });
       } else {
         toast({ title: 'Error', description: 'Failed to remove player from team', variant: 'destructive' });
       }
@@ -282,14 +290,17 @@ export default function Players() {
                       ]}
                       actions={
                         <Button
-                          variant="outline"
+                          variant="ghost"
                           size="sm"
                           onClick={() => removePlayerFromTeam.mutate(player.id)}
                           disabled={removingPlayerIds.has(player.id)}
-                          className="text-red-600 hover:text-red-700 disabled:opacity-50"
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50 disabled:opacity-50 h-8 w-8 p-0"
                         >
-                          <UserMinus className="h-4 w-4 mr-1" />
-                          {removingPlayerIds.has(player.id) ? 'Removing...' : 'Remove'}
+                          {removingPlayerIds.has(player.id) ? (
+                            <UserMinus className="h-4 w-4" />
+                          ) : (
+                            <span className="text-lg font-bold">−</span>
+                          )}
                         </Button>
                       }
                     />
