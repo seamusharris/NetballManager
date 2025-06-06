@@ -244,7 +244,7 @@ export default function Seasons() {
                             size="sm" 
                             className="text-red-600 hover:text-red-800 hover:bg-red-50"
                             onClick={() => handleDelete(season)}
-                            disabled={deleteMutation.isPending || deleteMutation.variables === season.id}
+                            disabled={deleteMutation.isPending}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
