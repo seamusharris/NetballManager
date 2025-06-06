@@ -43,9 +43,9 @@ export function PlayerBox({
   };
 
   const avatarSizes = {
-    sm: "h-12 w-12 text-sm",
-    md: "h-16 w-16 text-lg",
-    lg: "h-20 w-20 text-xl"
+    sm: "h-12 w-12 text-base",
+    md: "h-16 w-16 text-xl",
+    lg: "h-20 w-20 text-2xl"
   };
 
   const getInitials = () => {
