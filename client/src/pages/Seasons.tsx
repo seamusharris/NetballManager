@@ -34,8 +34,8 @@ export default function Seasons() {
   const createMutation = useMutation({
     mutationFn: (data: any) => apiClient.post('/api/seasons', data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['seasons'] });
-      queryClient.invalidateQueries({ queryKey: ['seasons'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/seasons'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/seasons/active'] });
       toast({
         title: "Success",
         description: "Season created successfully",
@@ -53,8 +53,8 @@ export default function Seasons() {
   const updateMutation = useMutation({
     mutationFn: ({ id, ...data }: any) => apiClient.patch(`/api/seasons/${id}`, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['seasons'] });
-      queryClient.invalidateQueries({ queryKey: ['seasons'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/seasons'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/seasons/active'] });
       toast({
         title: "Success",
         description: "Season updated successfully",
@@ -95,8 +95,8 @@ export default function Seasons() {
   const setActiveSeasonMutation = useMutation({
     mutationFn: (id: number) => apiClient.post(`/api/seasons/${id}/activate`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['seasons'] });
-      queryClient.invalidateQueries({ queryKey: ['seasons'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/seasons'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/seasons/active'] });
       toast({
         title: "Success",
         description: "Active season updated successfully."
