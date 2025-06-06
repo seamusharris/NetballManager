@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Game, GameStat, Opponent } from '@shared/schema';
@@ -88,7 +87,7 @@ export default function AdvancedTeamAnalytics({
   selectedSeason,
   centralizedStats 
 }: AdvancedTeamAnalyticsProps) {
-  
+
   const [analytics, setAnalytics] = useState<PerformanceMetrics>({
     momentum: { trend: 'stable', strength: 0, recentForm: [] },
     positionEfficiency: {},
@@ -123,10 +122,10 @@ export default function AdvancedTeamAnalytics({
   const completedGames = games.filter(game => 
     game.statusIsCompleted && game.statusAllowsStatistics
   );
-  
+
   const gameStatsMap = centralizedStats || {};
   const isLoading = false;
-  
+
   console.log('AdvancedTeamAnalytics: Using centralized stats for', completedGames.length, 'completed games');
 
   // Calculate all advanced analytics
@@ -179,7 +178,7 @@ export default function AdvancedTeamAnalytics({
         if (stat.position && positions.includes(stat.position)) {
           const quarter = `quarter${stat.quarter}`;
           const countKey = `${quarter}Count`;
-          
+
           if (positionStats[stat.position][quarter] !== undefined) {
             const efficiency = (stat.goalsFor || 0) - (stat.goalsAgainst || 0);
             positionStats[stat.position][quarter] += efficiency;
@@ -199,7 +198,7 @@ export default function AdvancedTeamAnalytics({
         quarter4: stats.quarter4Count > 0 ? stats.quarter4 / stats.quarter4Count : 0,
         overall: 0
       };
-      
+
       const totalQuarters = [1, 2, 3, 4].filter(q => stats[`quarter${q}Count`] > 0).length;
       if (totalQuarters > 0) {
         positionEfficiency[position].overall = 
@@ -218,7 +217,7 @@ export default function AdvancedTeamAnalytics({
     completedGames.forEach(game => {
       const gameStats = gameStatsMap[game.id] || [];
       const quarterScores = { team: [0, 0, 0, 0], opponent: [0, 0, 0, 0] };
-      
+
       gameStats.forEach(stat => {
         if (stat.quarter >= 1 && stat.quarter <= 4) {
           quarterScores.team[stat.quarter - 1] += stat.goalsFor || 0;
@@ -229,14 +228,14 @@ export default function AdvancedTeamAnalytics({
       for (let q = 0; q < 3; q++) {
         const teamRunning = quarterScores.team.slice(0, q + 1).reduce((a, b) => a + b, 0);
         const opponentRunning = quarterScores.opponent.slice(0, q + 1).reduce((a, b) => a + b, 0);
-        
+
         if (teamRunning < opponentRunning) {
           totalDeficits++;
           totalDeficitSize += (opponentRunning - teamRunning);
-          
+
           const finalTeam = quarterScores.team.reduce((a, b) => a + b, 0);
           const finalOpponent = quarterScores.opponent.reduce((a, b) => a + b, 0);
-          
+
           if (finalTeam >= finalOpponent) {
             deficitRecoveries++;
           }
@@ -294,7 +293,7 @@ export default function AdvancedTeamAnalytics({
     });
 
     const trend = momentum > 1 ? 'up' : momentum < -1 ? 'down' : 'stable';
-    
+
     return {
       trend,
       strength: Math.abs(momentum),
@@ -308,10 +307,10 @@ export default function AdvancedTeamAnalytics({
     const mean = scores.reduce((a, b) => a + b, 0) / scores.length;
     const variance = scores.reduce((sum, score) => sum + Math.pow(score - mean, 2), 0) / scores.length;
     const stdDev = Math.sqrt(variance);
-    
+
     // Consistency score: lower variance = higher consistency
     const consistencyScore = Math.max(0, 100 - (stdDev * 10));
-    
+
     let classification: 'Very Consistent' | 'Consistent' | 'Moderate' | 'Inconsistent' | 'Very Inconsistent';
     if (consistencyScore >= 80) classification = 'Very Consistent';
     else if (consistencyScore >= 65) classification = 'Consistent';
@@ -402,7 +401,7 @@ export default function AdvancedTeamAnalytics({
       // Check if leading at halftime
       const halfTimeTeam = quarterScores.team[0] + quarterScores.team[1];
       const halfTimeOpponent = quarterScores.opponent[0] + quarterScores.opponent[1];
-      
+
       if (halfTimeTeam > halfTimeOpponent) {
         leadingTotal++;
         if (finalTeamScore > finalOpponentScore) leadingWins++;
@@ -535,24 +534,26 @@ export default function AdvancedTeamAnalytics({
   const calculateOpponentStrengthMatrix = (games: Game[], statsMap: Record<number, GameStat[]>, opponents: Opponent[]) => {
     // First, calculate win rate against each opponent
     const opponentPerformance: Record<string, { wins: number; total: number; winRate: number; totalScore: number }> = {};
-    
+
     games.forEach(game => {
-      const isHomeGame = game.homeClubId === currentClubId;
-      const opponentName = isHomeGame ? game.awayTeamName : game.homeTeamName;
-      
+      // Get opponent name - could be either home or away team name depending on the game
+      const opponentName = game.homeTeamName && game.awayTeamName 
+        ? (game.homeTeamName !== game.awayTeamName ? (game.homeTeamName || game.awayTeamName) : null)
+        : (game.homeTeamName || game.awayTeamName);
+
       if (!opponentName || opponentName === 'Bye') return;
-      
+
       if (!opponentPerformance[opponentName]) {
         opponentPerformance[opponentName] = { wins: 0, total: 0, winRate: 0, totalScore: 0 };
       }
-      
+
       const gameStats = statsMap[game.id] || [];
       const teamScore = gameStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
       const opponentScore = gameStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
-      
+
       opponentPerformance[opponentName].total++;
       opponentPerformance[opponentName].totalScore += teamScore;
-      
+
       if (getWinLoseLabel(teamScore, opponentScore) === 'Win') {
         opponentPerformance[opponentName].wins++;
       }
@@ -572,14 +573,16 @@ export default function AdvancedTeamAnalytics({
     };
 
     games.forEach(game => {
-      const isHomeGame = game.homeClubId === currentClubId;
-      const opponentName = isHomeGame ? game.awayTeamName : game.homeTeamName;
-      
+      // Get opponent name using same logic as above
+      const opponentName = game.homeTeamName && game.awayTeamName 
+        ? (game.homeTeamName !== game.awayTeamName ? (game.homeTeamName || game.awayTeamName) : null)
+        : (game.homeTeamName || game.awayTeamName);
+
       if (!opponentName || opponentName === 'Bye') return;
-      
+
       const performance = opponentPerformance[opponentName];
       if (!performance) return;
-      
+
       // Categorize based on our win rate against this opponent
       let category: 'vsStrong' | 'vsMedium' | 'vsWeak' = 'vsMedium';
       if (performance.winRate >= 70) {
@@ -591,10 +594,10 @@ export default function AdvancedTeamAnalytics({
       const gameStats = statsMap[game.id] || [];
       const teamScore = gameStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
       const opponentScore = gameStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
-      
+
       opponentStrengthMatrix[category].total++;
       opponentStrengthMatrix[category].totalScore += teamScore;
-      
+
       if (getWinLoseLabel(teamScore, opponentScore) === 'Win') {
         opponentStrengthMatrix[category].wins++;
       }
@@ -638,7 +641,7 @@ export default function AdvancedTeamAnalytics({
   return (
     <BaseWidget title="Advanced Team Analytics" className={className}>
       <div className="space-y-6 p-4">
-        
+
         {/* Performance Momentum Tracker */}
         <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-xl border">
           <div className="flex items-center justify-between mb-3">
@@ -659,7 +662,7 @@ export default function AdvancedTeamAnalytics({
               {analytics.momentum.trend.toUpperCase()}
             </Badge>
           </div>
-          
+
           <div className="flex items-center justify-between">
             <div className="flex gap-1">
               {analytics.momentum.recentForm.map((result, index) => (
@@ -689,7 +692,7 @@ export default function AdvancedTeamAnalytics({
             <Gauge className="h-5 w-5 text-teal-600" />
             <span className="font-semibold text-gray-700">Team Consistency</span>
           </div>
-          
+
           <div className="flex items-center justify-between">
             <div>
               <div className="text-3xl font-bold text-teal-700">
@@ -714,7 +717,7 @@ export default function AdvancedTeamAnalytics({
             <Flame className="h-5 w-5 text-orange-600" />
             <span className="font-semibold text-gray-700">Streak Analysis</span>
           </div>
-          
+
           <div className="grid grid-cols-3 gap-4">
             <div className="text-center">
               <div className={`text-2xl font-bold ${
@@ -748,7 +751,7 @@ export default function AdvancedTeamAnalytics({
             <Shield className="h-5 w-5 text-rose-600" />
             <span className="font-semibold text-gray-700">Pressure Performance</span>
           </div>
-          
+
           <div className="grid grid-cols-3 gap-4">
             <div className="text-center">
               <div className="text-xl font-bold text-blue-600">
@@ -783,7 +786,7 @@ export default function AdvancedTeamAnalytics({
             <Timer className="h-5 w-5 text-indigo-600" />
             <span className="font-semibold text-gray-700">Peak Performance Windows</span>
           </div>
-          
+
           <div className="grid grid-cols-2 gap-4 mb-4">
             <div className="text-center p-3 bg-green-100 rounded-lg">
               <div className="text-lg font-bold text-green-700">
@@ -830,7 +833,7 @@ export default function AdvancedTeamAnalytics({
             <Users className="h-5 w-5 text-violet-600" />
             <span className="font-semibold text-gray-700">Team Chemistry & Substitutions</span>
           </div>
-          
+
           <div className="grid grid-cols-3 gap-4">
             <div className="text-center">
               <div className="text-lg font-bold text-green-600">
@@ -859,7 +862,7 @@ export default function AdvancedTeamAnalytics({
             <Target className="h-5 w-5 text-green-600" />
             <span className="font-semibold text-gray-700">Position Efficiency Heatmap</span>
           </div>
-          
+
           <div className="grid grid-cols-4 gap-2 mb-2">
             <div></div>
             {['Q1', 'Q2', 'Q3', 'Q4'].map(quarter => (
@@ -868,7 +871,7 @@ export default function AdvancedTeamAnalytics({
               </div>
             ))}
           </div>
-          
+
           {['GS', 'GA', 'WA', 'C', 'WD', 'GD', 'GK'].map(position => (
             <div key={position} className="grid grid-cols-4 gap-2 mb-1">
               <div className="text-xs font-medium text-gray-700 flex items-center">
@@ -878,7 +881,7 @@ export default function AdvancedTeamAnalytics({
                 const efficiency = analytics.positionEfficiency[position]?.[`quarter${quarter}`] || 0;
                 const intensity = Math.min(1, Math.max(0.1, Math.abs(efficiency) / 2));
                 const color = efficiency > 0 ? 'bg-green-500' : efficiency < 0 ? 'bg-red-500' : 'bg-gray-300';
-                
+
                 return (
                   <div
                     key={quarter}
@@ -899,7 +902,7 @@ export default function AdvancedTeamAnalytics({
             <BarChart3 className="h-5 w-5 text-orange-600" />
             <span className="font-semibold text-gray-700">Comeback Potential</span>
           </div>
-          
+
           <div className="grid grid-cols-3 gap-4">
             <div className="text-center">
               <div className="text-2xl font-bold text-orange-700">
@@ -928,7 +931,7 @@ export default function AdvancedTeamAnalytics({
             <Activity className="h-5 w-5 text-blue-600" />
             <span className="font-semibold text-gray-700">Performance vs Opponent Strength</span>
           </div>
-          
+
           <div className="space-y-3">
             {[
               { key: 'vsStrong', label: 'Teams We Dominate', color: 'green' },
@@ -937,7 +940,7 @@ export default function AdvancedTeamAnalytics({
             ].map(({ key, label, color }) => {
               const data = analytics.opponentStrengthMatrix[key as keyof typeof analytics.opponentStrengthMatrix];
               const winRate = data.total > 0 ? (data.wins / data.total) * 100 : 0;
-              
+
               return (
                 <div key={key} className="flex items-center justify-between">
                   <span className="text-sm font-medium text-gray-700 min-w-[100px]">
