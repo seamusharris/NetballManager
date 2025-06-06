@@ -92,8 +92,7 @@ export default function Seasons() {
   // Add new season mutation
   const addSeasonMutation = useMutation({
     mutationFn: async (seasonData: SeasonFormValues) => {
-      const res = await apiRequest('POST', '/api/seasons', seasonData);
-      return res.json();
+      return await apiRequest('POST', '/api/seasons', seasonData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/seasons'] });
@@ -101,6 +100,7 @@ export default function Seasons() {
         title: "Season created",
         description: "The new season has been successfully created."
       });
+      addForm.reset();
       setOpenAddDialog(false);
     },
     onError: (error) => {
