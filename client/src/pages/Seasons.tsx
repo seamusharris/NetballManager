@@ -49,6 +49,7 @@ type SeasonFormData = {
 export default function Seasons() {
   const [openAddDialog, setOpenAddDialog] = useState(false);
   const [editingSeason, setEditingSeason] = useState<Season | null>(null);
+  const [deletingSeason, setDeletingSeason] = useState<Season | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -123,6 +124,7 @@ export default function Seasons() {
         title: "Season deleted",
         description: "The season has been successfully deleted."
       });
+      setDeletingSeason(null);
     },
     onError: (error: any) => {
       toast({
@@ -167,11 +169,9 @@ export default function Seasons() {
     }
   };
 
-  // Delete a season - exactly like club deletion with simple confirm
+  // Delete a season - using AlertDialog pattern like club deletion
   const handleDeleteSeason = (season: Season) => {
-    if (confirm(`Are you sure you want to delete "${season.name}"? This action cannot be undone.`)) {
       deleteSeasonMutation.mutate(season.id);
-    }
   };
 
   // Set a season as active
@@ -274,7 +274,7 @@ export default function Seasons() {
                     variant="outline" 
                     size="sm" 
                     className="text-red-600 hover:text-red-800 hover:bg-red-50"
-                    onClick={() => handleDeleteSeason(season)}
+                    onClick={() => setDeletingSeason(season)}
                   >
                     <Trash2 className="h-4 w-4 mr-1" />
                     Delete
@@ -318,6 +318,33 @@ export default function Seasons() {
             onCancel={() => setEditingSeason(null)}
             isSubmitting={updateSeasonMutation.isPending}
           />
+        </DialogContent>
+      </Dialog>
+      {/* Delete Season Dialog */}
+      <Dialog open={!!deletingSeason} onOpenChange={(open) => !open && setDeletingSeason(null)}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Delete Season</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete {deletingSeason?.name}? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end space-x-2">
+            <Button variant="ghost" onClick={() => setDeletingSeason(null)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={deleteSeasonMutation.isPending}
+              onClick={() => {
+                if (deletingSeason) {
+                  handleDeleteSeason(deletingSeason);
+                }
+              }}
+            >
+              Delete
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
