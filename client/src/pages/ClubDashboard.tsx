@@ -22,9 +22,7 @@ export default function ClubDashboard() {
   const { data: games = [], isLoading: isLoadingGames } = useQuery<any[]>({
     queryKey: ['club-games', currentClubId],
     queryFn: () => apiClient.get('/api/games', {
-      headers: {
-        'x-club-wide': 'true' // Enable club-wide view - bypass team filtering
-      }
+      'x-club-wide': 'true'
     }),
     enabled: !!currentClubId,
   });
