@@ -290,11 +290,7 @@ export default function ClubDashboard() {
                       {team.winRate >= 60 ? "Strong" : team.winRate >= 40 ? "Average" : "Needs Focus"}
                     </Badge>
                   </div>
-                  <div className="flex items-center opacity-60 transition-opacity duration-300 hover:opacity-100">
-                    <div className="text-sm text-slate-500 font-medium">
-                      Click to view →
-                    </div>
-                  </div>
+                  
                 </div>
               ))}
               {teamPerformance.length === 0 && (
