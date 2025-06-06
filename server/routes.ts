@@ -1073,6 +1073,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('\n=== PLAYER CREATION REQUEST START ===');
       console.log('Headers:', {
         'x-current-club-id': req.headers['x-current-club-id'],
+        'x-current-team-id': req.headers['x-current-team-id'],
         'content-type': req.headers['content-type'],
         'user-agent': req.headers['user-agent']?.substring(0, 50)
       });
@@ -1084,9 +1085,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check if we're doing an import operation (with ID) or regular create
       const hasId = req.body.id !== undefined;
 
-      // Extract club context from request
+      // Extract club and team context from request
       const clubId = req.body.clubId || req.headers['x-current-club-id'];
+      const teamId = req.body.teamId || req.headers['x-current-team-id'];
+      
       console.log('Extracted club ID:', clubId);
+      console.log('Extracted team ID:', teamId);
 
       if (!clubId) {
         console.log('ERROR: No club ID provided');
@@ -1095,7 +1099,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Use the appropriate schema based on operation type
       const schema = hasId ? importPlayerSchema : insertPlayerSchema;
-      const { clubId: _, ...playerDataForValidation } = req.body; // Remove clubId for validation
+      const { clubId: _, teamId: __, ...playerDataForValidation } = req.body; // Remove clubId and teamId for validation
       
       console.log('Data for validation:', playerDataForValidation);
       console.log('Using schema:', hasId ? 'import' : 'insert');

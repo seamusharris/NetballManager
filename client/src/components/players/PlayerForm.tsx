@@ -42,11 +42,12 @@ type FormValues = z.infer<typeof formSchema>;
 interface PlayerFormProps {
   player?: Player;
   clubId: number;
+  teamId?: number; // Optional team context for automatic team assignment
   onSuccess?: (data?: any) => void;
   onCancel?: () => void;
 }
 
-export default function PlayerForm({ player, clubId, onSuccess, onCancel }: PlayerFormProps) {
+export default function PlayerForm({ player, clubId, teamId, onSuccess, onCancel }: PlayerFormProps) {
   const isEditing = !!player;
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -67,12 +68,30 @@ export default function PlayerForm({ player, clubId, onSuccess, onCancel }: Play
   const positionDefaults = getPositionDefaults();
 
   const createMutation = useMutation({
-    mutationFn: (data: any) => apiClient.post('/api/players', { ...data, clubId }),
+    mutationFn: (data: any) => {
+      // Prepare headers with club context and optional team context
+      const headers: Record<string, string> = {
+        'x-current-club-id': clubId.toString()
+      };
+
+      // Add team context if provided
+      if (teamId) {
+        headers['x-current-team-id'] = teamId.toString();
+      }
+
+      return apiClient.post('/api/players', { 
+        ...data, 
+        clubId,
+        teamId: teamId || undefined // Include team ID in payload if available
+      }, { headers });
+    },
     onSuccess: () => {
       // Invalidate all player-related queries
       queryClient.invalidateQueries({ queryKey: ['/api/players'] });
       queryClient.invalidateQueries({ queryKey: ['players'] });
       queryClient.invalidateQueries({ queryKey: [`/api/clubs/${clubId}/players`] });
+      queryClient.invalidateQueries({ queryKey: ['unassigned-players'] });
+      queryClient.invalidateQueries({ queryKey: ['team-players'] });
       queryClient.invalidateQueries({ 
         predicate: (query) => {
           const queryKey = query.queryKey[0];

@@ -150,23 +150,30 @@ export default function Players() {
     },
   });
 
-  // Create new player mutation for team context
-  const createPlayerForTeam = useMutation({
+  // Standardized player creation mutation that handles both club and team contexts
+  const createPlayer = useMutation({
     mutationFn: async (playerData: any) => {
       if (!currentClub?.id) {
         throw new Error('No club selected');
       }
 
-      // Create the player with club context
+      // Prepare headers with club context and optional team context
+      const headers: Record<string, string> = {
+        'x-current-club-id': currentClub.id.toString()
+      };
+
+      // Add team context if we're in team-specific view
+      if (teamId) {
+        headers['x-current-team-id'] = teamId.toString();
+      }
+
+      // Create the player with both club and optional team context
       const response = await apiClient.post('/api/players', {
         ...playerData,
         clubId: currentClub.id,
+        teamId: teamId || undefined, // Include team ID in payload if available
         avatarColor: "auto"
-      }, {
-        headers: {
-          'x-current-club-id': currentClub.id.toString()
-        }
-      });
+      }, { headers });
 
       return response;
     },
@@ -198,54 +205,9 @@ export default function Players() {
     },
   });
 
-  // Create new player mutation for club context
-  const createPlayerForClub = useMutation({
-    mutationFn: async (playerData: any) => {
-      if (!currentClub?.id) {
-        throw new Error('No club selected');
-      }
-
-      // Create the player with club context
-      const response = await apiClient.post('/api/players', {
-        ...playerData,
-        clubId: currentClub.id,
-        avatarColor: "auto"
-      }, {
-        headers: {
-          'x-current-club-id': currentClub.id.toString()
-        }
-      });
-
-      return response;
-    },
-    onSuccess: () => {
-      // Invalidate queries to refresh the UI
-      queryClient.invalidateQueries({ queryKey: ['players'] });
-      queryClient.invalidateQueries({ queryKey: ['clubs', currentClub?.id, 'players'] });
-
-      toast({ title: 'Success', description: 'Player created successfully' });
-      setIsAddPlayerDialogOpen(false);
-    },
-    onError: (error: any) => {
-      console.error('Player creation failed:', error);
-      console.error('Error response:', error.response);
-      console.error('Error details:', {
-        status: error.response?.status,
-        data: error.response?.data,
-        message: error.message
-      });
-
-      const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message || 'Failed to create player';
-      toast({ 
-        title: 'Error', 
-        description: errorMessage, 
-        variant: 'destructive' 
-      });
-    },
-  });
-
   // Track which players are being removed
   const [removingPlayerIds, setRemovingPlayerIds] = useState<Set<number>>(new Set());
+  const [isAddPlayerDialogOpen, setIsAddPlayerDialogOpen] = useState(false);
 
   // Remove player from team using simple mutation (matches add pattern)
   const removePlayerFromTeam = useMutation({
@@ -410,7 +372,7 @@ export default function Players() {
               <CardTitle className="flex items-center justify-between">
                 <span>Available Players</span>
                 <div className="flex items-center space-x-2">
-                  <Dialog>
+                  <Dialog open={isAddPlayerDialogOpen} onOpenChange={setIsAddPlayerDialogOpen}>
                     <DialogTrigger asChild>
                       <Button variant="outline" size="sm">
                         <UserPlus className="h-4 w-4 mr-1" />
@@ -423,12 +385,14 @@ export default function Players() {
                       </DialogHeader>
                       <PlayerForm
                         clubId={currentClubId}
+                        teamId={teamId}
                         onSuccess={() => {
                           queryClient.invalidateQueries({ queryKey: ['team-players', teamId] });
                           queryClient.invalidateQueries({ queryKey: ['unassigned-players', activeSeason?.id] });
                           toast({ title: 'Success', description: 'Player created successfully' });
                           setIsAddPlayerDialogOpen(false);
                         }}
+                        onCancel={() => setIsAddPlayerDialogOpen(false)}
                       />
                     </DialogContent>
                   </Dialog>
@@ -507,7 +471,7 @@ export default function Players() {
                 </SelectContent>
               </Select>
             </div>
-            <Dialog>
+            <Dialog open={isAddPlayerDialogOpen} onOpenChange={setIsAddPlayerDialogOpen}>
             <DialogTrigger asChild>
               <Button>
                 <UserPlus className="h-4 w-4 mr-2" />
@@ -520,12 +484,14 @@ export default function Players() {
               </DialogHeader>
               <PlayerForm
                 clubId={currentClubId}
+                teamId={undefined} // No team context for club-wide player creation
                 onSuccess={() => {
                   queryClient.invalidateQueries({ queryKey: ['players'] });
                   queryClient.invalidateQueries({ queryKey: ['clubs', currentClub?.id, 'players'] });
                   toast({ title: 'Success', description: 'Player created successfully' });
                   setIsAddPlayerDialogOpen(false);
                 }}
+                onCancel={() => setIsAddPlayerDialogOpen(false)}
               />
             </DialogContent>
           </Dialog>
