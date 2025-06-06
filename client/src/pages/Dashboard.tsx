@@ -20,7 +20,6 @@ export default function Dashboard() {
     currentClub, 
     currentClubId, 
     currentTeamId, 
-    currentTeam,
     clubTeams, 
     setCurrentTeamId,
     isLoading: clubLoading 
@@ -221,9 +220,9 @@ export default function Dashboard() {
             </h1>
             <p className="text-lg text-muted-foreground">
               Performance metrics and insights for your team
-              {currentTeamId && (
+              {currentTeamId && clubTeams && (
                 <span className="ml-2 text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                  {currentTeam?.name || 'Selected Team'}
+                  {clubTeams.find(team => team.id === currentTeamId)?.name || 'Selected Team'}
                 </span>
               )}
             </p>
