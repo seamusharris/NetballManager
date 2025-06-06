@@ -234,6 +234,13 @@ export default function Seasons() {
     setDeletingSeason(season);
   };
 
+  // Execute season deletion
+  const executeDeleteSeason = () => {
+    if (deletingSeason) {
+      deleteSeasonMutation.mutate(deletingSeason.id);
+    }
+  };
+
   // Set a season as active
   const handleSetActiveSeason = (id: number) => {
     setActiveSeasonMutation.mutate(id);
@@ -743,14 +750,10 @@ export default function Seasons() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={deleteSeasonMutation.isPending}>Cancel</AlertDialogCancel>
             <AlertDialogAction
               className="bg-red-600 hover:bg-red-700 text-white"
-              onClick={() => {
-                if (!deleteSeasonMutation.isPending) {
-                  deleteSeasonMutation.mutate(deletingSeason.id);
-                }
-              }}
+              onClick={executeDeleteSeason}
               disabled={deleteSeasonMutation.isPending}
             >
               {deleteSeasonMutation.isPending ? "Deleting..." : "Delete"}
