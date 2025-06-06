@@ -125,10 +125,10 @@ export default function Seasons() {
     }
   };
 
-  const handleDelete = (season: Season) => {
+  const handleDelete = (seasonId: number) => {
     if (deleteMutation.isPending) return; // Prevent duplicate calls
     if (confirm('Are you sure you want to delete this season?')) {
-      deleteMutation.mutate(season.id);
+      deleteMutation.mutate(seasonId);
     }
   };
 
@@ -243,7 +243,7 @@ export default function Seasons() {
                             variant="outline" 
                             size="sm" 
                             className="text-red-600 hover:text-red-800 hover:bg-red-50"
-                            onClick={() => handleDelete(season)}
+                            onClick={() => handleDelete(season.id)}
                             disabled={deleteMutation.isPending}
                           >
                             <Trash2 className="h-4 w-4" />
