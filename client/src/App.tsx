@@ -58,7 +58,6 @@ function withErrorBoundary(Component: React.ComponentType<any>, name: string) {
 import PlayerBorrowing from '@/pages/PlayerBorrowing';
 import TeamAnalysis from '@/pages/TeamAnalysis';
 import GameResultExamples from '@/pages/GameResultExamples';
-import NotFound from '@/pages/not-found';
 
 function Router() {
   // Component to sync API client with club context
