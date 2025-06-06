@@ -182,11 +182,11 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
       } else {
         localStorage.removeItem('current-team-id');
       }
-      // Invalidate all relevant queries to refresh the dashboard
-      queryClient.invalidateQueries(['games']);
-      queryClient.invalidateQueries(['players']);
-      queryClient.invalidateQueries(['stats']);
-    }, [queryClient]);
+      // Only invalidate team-specific queries, not all data
+      queryClient.invalidateQueries({ queryKey: ['games', currentClubId, teamId] });
+      queryClient.invalidateQueries({ queryKey: ['centralizedRosters'] });
+      queryClient.invalidateQueries({ queryKey: ['centralizedStats'] });
+    }, [queryClient, currentClubId]);
   
   // Load saved team from localStorage
   useEffect(() => {
