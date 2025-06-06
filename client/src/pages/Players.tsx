@@ -17,6 +17,15 @@ import { useLocation } from 'wouter';
 import { apiClient } from '@/lib/apiClient';
 import { useCrudMutations } from '@/hooks/use-crud-mutations';
 
+// Helper function to get current club ID
+function getCurrentClubId(): string | null {
+  const savedClubId = localStorage.getItem('currentClubId');
+  if (savedClubId) {
+    return savedClubId;
+  }
+  return null;
+}
+
 export default function Players() {
   const { currentClub, hasPermission, isLoading: clubLoading, switchToClub } = useClub();
   const [isAddPlayerDialogOpen, setIsAddPlayerDialogOpen] = useState(false);
@@ -151,8 +160,7 @@ export default function Players() {
     },
   });
 
-  // Create new player mutation for team context
-  const createPlayerForTeam = useMutation({
+    const createPlayerForTeam = useMutation({
     mutationFn: async (playerData: any) => {
       if (!currentClub?.id) {
         throw new Error('No club selected');
