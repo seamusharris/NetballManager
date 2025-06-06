@@ -31,11 +31,36 @@ export default function Seasons() {
     endpoint: '/api/seasons/active'
   });
 
-  // Use CRUD mutations exactly like Teams
-  const { createMutation, updateMutation, deleteMutation } = useCrudMutations({
+  // Use CRUD mutations for create/update, but handle delete separately like Teams
+  const { createMutation, updateMutation } = useCrudMutations({
     entityName: 'Season',
     baseEndpoint: '/api/seasons',
-    invalidatePatterns: [['/api/seasons'], ['/api/seasons/active']],
+    invalidatePatterns: [
+      ['/api/seasons'],
+      ['/api/seasons/active']
+    ],
+  });
+
+  // Delete mutation handled separately like Teams to avoid 404 issues
+  const deleteMutation = useMutation({
+    mutationFn: (seasonId: number) => apiClient.delete(`/api/seasons/${seasonId}`),
+    onSuccess: () => {
+      // Invalidate and refetch both seasons queries
+      queryClient.invalidateQueries({ queryKey: ['/api/seasons'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/seasons/active'] });
+
+      toast({
+        title: "Success",
+        description: "Season deleted successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error", 
+        description: error.message || "Failed to delete season",
+        variant: "destructive",
+      });
+    },
   });
 
   // Set active season mutation
@@ -73,7 +98,9 @@ export default function Seasons() {
   };
 
   const handleDelete = (season: Season) => {
-    deleteMutation.mutate(season.id);
+    if (confirm('Are you sure you want to delete this season?')) {
+      deleteMutation.mutate(season.id);
+    }
   };
 
   const handleSetActiveSeason = (id: number) => {
