@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useStandardQuery } from '@/hooks/use-standard-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -14,6 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { useCrudMutations } from '@/hooks/use-crud-mutations';
 
 export default function Seasons() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -67,42 +67,10 @@ export default function Seasons() {
     }
   });
 
-  // Delete mutation - with React Strict Mode 404 handling
-  const deleteMutation = useMutation({
-    mutationFn: (id: number) => apiClient.delete(`/api/seasons/${id}`),
-    onSuccess: async () => {
-      // Force refetch both queries to ensure UI updates
-      await queryClient.invalidateQueries({ queryKey: ['/api/seasons'] });
-      await queryClient.invalidateQueries({ queryKey: ['/api/seasons/active'] });
-      toast({ title: "Season deleted successfully" });
-    },
-    onError: (error: any) => {
-      console.error('Failed to delete season:', error);
-      
-      // Handle "not found" errors gracefully - this is common in React Strict Mode
-      const errorMessage = error.message?.toLowerCase() || '';
-      const is404Error = errorMessage.includes("not found") || 
-                         errorMessage.includes("404") || 
-                         errorMessage.includes("season not found") ||
-                         error.status === 404 ||
-                         error.response?.status === 404;
-
-      if (is404Error) {
-        // Don't show any error for 404s - they're expected in React Strict Mode
-        toast({
-          title: "Season deleted successfully",
-          description: "The season has been removed."
-        });
-        return; // Exit early, don't show error
-      }
-
-      // Show error for other types of failures
-      toast({
-        title: "Error",
-        description: error.response?.data?.message || "Failed to delete season",
-        variant: "destructive",
-      });
-    },
+  const { deleteMutation } = useCrudMutations({
+    entityName: 'Season',
+    baseEndpoint: '/api/seasons',
+    invalidatePatterns: [['/api/seasons'], ['/api/seasons/active']],
   });
 
   // Delete handler - EXACTLY matching Teams pattern
