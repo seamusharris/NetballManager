@@ -891,7 +891,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         code, 
         description,
         address, 
-        contactEmail,```text
+        contactEmail,
         contactPhone, 
         primaryColor = '#1f2937', 
         secondaryColor = '#ffffff' 
