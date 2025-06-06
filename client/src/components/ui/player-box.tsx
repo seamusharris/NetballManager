@@ -134,17 +134,17 @@ export function PlayerBox({
           )}
           
           {stats && stats.length > 0 && (
-            <div className="mt-2 flex space-x-6">
+            <div className="flex space-x-6">
               {stats.map((stat, index) => (
                 <div key={index} className="text-center">
                   <div 
-                    className="text-lg font-bold"
+                    className="text-2xl font-bold"
                     style={{ color: playerColor }}
                   >
                     {stat.value}
                   </div>
                   <div 
-                    className="text-xs uppercase tracking-wide"
+                    className="text-sm"
                     style={{ color: `${playerColor}AA` }}
                   >
                     {stat.label}
