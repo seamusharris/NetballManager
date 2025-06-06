@@ -329,44 +329,38 @@ export default function Players() {
                       </DialogHeader>
                       <PlayerForm
                         onSubmit={async (playerData) => {
-                          try {
-                            console.log('Creating player with club context:', currentClub?.id);
-                            
-                            // Create the player with club context
-                            const response = await apiClient.post('/api/players', {
-                              ...playerData,
-                              clubId: currentClub?.id // Include club ID in player creation
-                            }, {
-                              headers: {
-                                'x-current-club-id': currentClub?.id?.toString() || ''
-                              }
-                            });
-                            const newPlayer = response;
-                            console.log('Player created successfully:', newPlayer);
-
-                            // Ensure the player is associated with the current club
-                            if (currentClub?.id && newPlayer.id) {
-                              try {
-                                await apiClient.post(`/api/clubs/${currentClub.id}/players/${newPlayer.id}`, {});
-                                console.log(`Successfully associated player ${newPlayer.id} with club ${currentClub.id}`);
-                              } catch (clubError) {
-                                console.error('Error associating player with club:', clubError);
-                                // Don't fail the entire operation if club association fails
-                              }
+                          console.log('Creating player with club context:', currentClub?.id);
+                          
+                          // Create the player with club context
+                          const response = await apiClient.post('/api/players', {
+                            ...playerData,
+                            clubId: currentClub?.id // Include club ID in player creation
+                          }, {
+                            headers: {
+                              'x-current-club-id': currentClub?.id?.toString() || ''
                             }
+                          });
+                          const newPlayer = response;
+                          console.log('Player created successfully:', newPlayer);
 
-                            // Invalidate all relevant queries to refresh the UI
-                            queryClient.invalidateQueries({ queryKey: ['players'] });
-                            queryClient.invalidateQueries({ queryKey: ['unassigned-players'] });
-                            queryClient.invalidateQueries({ queryKey: ['clubs', currentClub?.id, 'players'] });
-                            queryClient.invalidateQueries({ queryKey: ['team-players'] });
-
-                            toast({ title: 'Success', description: 'Player created successfully' });
-                          } catch (error) {
-                            console.error('Error creating player:', error);
-                            toast({ title: 'Error', description: 'Failed to create player', variant: 'destructive' });
-                            throw error; // Re-throw to prevent dialog from closing on error
+                          // Ensure the player is associated with the current club
+                          if (currentClub?.id && newPlayer.id) {
+                            try {
+                              await apiClient.post(`/api/clubs/${currentClub.id}/players/${newPlayer.id}`, {});
+                              console.log(`Successfully associated player ${newPlayer.id} with club ${currentClub.id}`);
+                            } catch (clubError) {
+                              console.error('Error associating player with club:', clubError);
+                              // Don't fail the entire operation if club association fails
+                            }
                           }
+
+                          // Invalidate all relevant queries to refresh the UI
+                          queryClient.invalidateQueries({ queryKey: ['players'] });
+                          queryClient.invalidateQueries({ queryKey: ['unassigned-players'] });
+                          queryClient.invalidateQueries({ queryKey: ['clubs', currentClub?.id, 'players'] });
+                          queryClient.invalidateQueries({ queryKey: ['team-players'] });
+
+                          toast({ title: 'Success', description: 'Player created successfully' });
                         }}
                         isSubmitting={false}
                       />
@@ -460,41 +454,35 @@ export default function Players() {
               </DialogHeader>
               <PlayerForm
                 onSubmit={async (playerData) => {
-                  try {
-                    console.log('Creating player with club context:', currentClub?.id);
-                    
-                    // Create the player with club context
-                    const response = await apiClient.post('/api/players', {
-                      ...playerData,
-                      clubId: currentClub?.id
-                    }, {
-                      headers: {
-                        'x-current-club-id': currentClub?.id?.toString() || ''
-                      }
-                    });
-                    const newPlayer = response;
-                    console.log('Player created successfully:', newPlayer);
-
-                    // Ensure the player is associated with the current club
-                    if (currentClub?.id && newPlayer.id) {
-                      try {
-                        await apiClient.post(`/api/clubs/${currentClub.id}/players/${newPlayer.id}`, {});
-                        console.log(`Successfully associated player ${newPlayer.id} with club ${currentClub.id}`);
-                      } catch (clubError) {
-                        console.error('Error associating player with club:', clubError);
-                      }
+                  console.log('Creating player with club context:', currentClub?.id);
+                  
+                  // Create the player with club context
+                  const response = await apiClient.post('/api/players', {
+                    ...playerData,
+                    clubId: currentClub?.id
+                  }, {
+                    headers: {
+                      'x-current-club-id': currentClub?.id?.toString() || ''
                     }
+                  });
+                  const newPlayer = response;
+                  console.log('Player created successfully:', newPlayer);
 
-                    // Invalidate queries to refresh the UI
-                    queryClient.invalidateQueries({ queryKey: ['players'] });
-                    queryClient.invalidateQueries({ queryKey: ['clubs', currentClub?.id, 'players'] });
-
-                    toast({ title: 'Success', description: 'Player created successfully' });
-                  } catch (error) {
-                    console.error('Error creating player:', error);
-                    toast({ title: 'Error', description: 'Failed to create player', variant: 'destructive' });
-                    throw error; // Re-throw to prevent dialog from closing on error
+                  // Ensure the player is associated with the current club
+                  if (currentClub?.id && newPlayer.id) {
+                    try {
+                      await apiClient.post(`/api/clubs/${currentClub.id}/players/${newPlayer.id}`, {});
+                      console.log(`Successfully associated player ${newPlayer.id} with club ${currentClub.id}`);
+                    } catch (clubError) {
+                      console.error('Error associating player with club:', clubError);
+                    }
                   }
+
+                  // Invalidate queries to refresh the UI
+                  queryClient.invalidateQueries({ queryKey: ['players'] });
+                  queryClient.invalidateQueries({ queryKey: ['clubs', currentClub?.id, 'players'] });
+
+                  toast({ title: 'Success', description: 'Player created successfully' });
                 }}
                 isSubmitting={false}
               />

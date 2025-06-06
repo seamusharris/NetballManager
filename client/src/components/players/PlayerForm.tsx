@@ -181,8 +181,6 @@ export default function PlayerForm({ player, onSubmit, isSubmitting, onCancel }:
       form.reset();
     } catch (error) {
       console.error("Error in handleSubmit:", error);
-      // Re-throw error so parent component can handle it properly
-      throw error;
     }
   };
 
