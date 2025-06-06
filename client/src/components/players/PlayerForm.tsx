@@ -179,13 +179,10 @@ export default function PlayerForm({ player, onSubmit, isSubmitting, onCancel }:
       
       // Reset form after successful submission
       form.reset();
-      
-      // Call onCancel to close dialog if provided
-      if (onCancel) {
-        onCancel();
-      }
     } catch (error) {
       console.error("Error in handleSubmit:", error);
+      // Re-throw error so parent component can handle it properly
+      throw error;
     }
   };
 

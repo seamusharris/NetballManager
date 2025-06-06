@@ -330,12 +330,19 @@ export default function Players() {
                       <PlayerForm
                         onSubmit={async (playerData) => {
                           try {
+                            console.log('Creating player with club context:', currentClub?.id);
+                            
                             // Create the player with club context
                             const response = await apiClient.post('/api/players', {
                               ...playerData,
                               clubId: currentClub?.id // Include club ID in player creation
+                            }, {
+                              headers: {
+                                'x-current-club-id': currentClub?.id?.toString() || ''
+                              }
                             });
                             const newPlayer = response;
+                            console.log('Player created successfully:', newPlayer);
 
                             // Ensure the player is associated with the current club
                             if (currentClub?.id && newPlayer.id) {
@@ -360,9 +367,6 @@ export default function Players() {
                             toast({ title: 'Error', description: 'Failed to create player', variant: 'destructive' });
                             throw error; // Re-throw to prevent dialog from closing on error
                           }
-                        }}
-                        onCancel={() => {
-                          // Dialog will close automatically when trigger is clicked again
                         }}
                         isSubmitting={false}
                       />
@@ -457,12 +461,19 @@ export default function Players() {
               <PlayerForm
                 onSubmit={async (playerData) => {
                   try {
+                    console.log('Creating player with club context:', currentClub?.id);
+                    
                     // Create the player with club context
                     const response = await apiClient.post('/api/players', {
                       ...playerData,
                       clubId: currentClub?.id
+                    }, {
+                      headers: {
+                        'x-current-club-id': currentClub?.id?.toString() || ''
+                      }
                     });
                     const newPlayer = response;
+                    console.log('Player created successfully:', newPlayer);
 
                     // Ensure the player is associated with the current club
                     if (currentClub?.id && newPlayer.id) {
@@ -484,9 +495,6 @@ export default function Players() {
                     toast({ title: 'Error', description: 'Failed to create player', variant: 'destructive' });
                     throw error; // Re-throw to prevent dialog from closing on error
                   }
-                }}
-                onCancel={() => {
-                  // Dialog will close automatically when trigger is clicked again
                 }}
                 isSubmitting={false}
               />
