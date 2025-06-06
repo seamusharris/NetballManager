@@ -1070,6 +1070,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/players", async (req, res) => {
     try {
+      console.log('\n=== PLAYER CREATION REQUEST START ===');
+      console.log('Headers:', {
+        'x-current-club-id': req.headers['x-current-club-id'],
+        'content-type': req.headers['content-type'],
+        'user-agent': req.headers['user-agent']?.substring(0, 50)
+      });
+      console.log('Request body:', JSON.stringify(req.body, null, 2));
+
       // Ensure we're not processing a duplicate request
       const requestId = req.headers['x-request-id'] || req.ip + ':' + Date.now();
 
@@ -1078,15 +1086,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Extract club context from request
       const clubId = req.body.clubId || req.headers['x-current-club-id'];
+      console.log('Extracted club ID:', clubId);
+
+      if (!clubId) {
+        console.log('ERROR: No club ID provided');
+        return res.status(400).json({ message: "Club context required" });
+      }
 
       // Use the appropriate schema based on operation type
       const schema = hasId ? importPlayerSchema : insertPlayerSchema;
       const { clubId: _, ...playerDataForValidation } = req.body; // Remove clubId for validation
+      
+      console.log('Data for validation:', playerDataForValidation);
+      console.log('Using schema:', hasId ? 'import' : 'insert');
+      
       const parsedData = schema.safeParse(playerDataForValidation);
 
       if (!parsedData.success) {
+        console.log('Validation failed:', parsedData.error.errors);
         return res.status(400).json({ message: "Invalid player data", errors: parsedData.error.errors });
       }
+
+      console.log('Validation successful');
 
       // Let the storage layer handle the avatar color assignment
       const playerData = parsedData.data;
@@ -1100,7 +1121,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       // Create the player (avatar color handling is now in the storage layer)
+      console.log('Calling storage.createPlayer with:', playerData);
       const player = await storage.createPlayer(playerData);
+      console.log('Player created by storage:', player);
 
       // Auto-associate with club if club context is provided
       if (clubId && player.id) {
@@ -1119,11 +1142,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Log successful creation
       console.log(`Successfully created player with ID: ${player.id}`);
+      console.log('=== PLAYER CREATION REQUEST COMPLETE ===\n');
 
       res.status(201).json(player);
     } catch (error) {
-      console.error("Failed to create player:", error);
-      res.status(500).json({ message: "Failed to create player" });
+      console.error("=== PLAYER CREATION ERROR ===");
+      console.error("Error details:", error);
+      console.error("Error message:", error instanceof Error ? error.message : String(error));
+      console.error("Error stack:", error instanceof Error ? error.stack : 'No stack trace');
+      console.error("=== END PLAYER CREATION ERROR ===\n");
+      
+      res.status(500).json({ 
+        message: "Failed to create player",
+        error: error instanceof Error ? error.message : String(error)
+      });
     }
   });
 

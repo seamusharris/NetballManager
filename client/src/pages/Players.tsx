@@ -181,7 +181,15 @@ export default function Players() {
       setIsAddPlayerDialogOpen(false);
     },
     onError: (error: any) => {
-      const errorMessage = error.response?.data?.error || error.message || 'Failed to create player';
+      console.error('Player creation failed:', error);
+      console.error('Error response:', error.response);
+      console.error('Error details:', {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message
+      });
+
+      const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message || 'Failed to create player';
       toast({ 
         title: 'Error', 
         description: errorMessage, 
@@ -219,7 +227,15 @@ export default function Players() {
       setIsAddPlayerDialogOpen(false);
     },
     onError: (error: any) => {
-      const errorMessage = error.response?.data?.error || error.message || 'Failed to create player';
+      console.error('Player creation failed:', error);
+      console.error('Error response:', error.response);
+      console.error('Error details:', {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message
+      });
+
+      const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message || 'Failed to create player';
       toast({ 
         title: 'Error', 
         description: errorMessage, 
