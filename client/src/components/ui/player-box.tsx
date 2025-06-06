@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -14,6 +15,10 @@ interface PlayerBoxProps {
   };
   actions?: React.ReactNode;
   showPositions?: boolean;
+  stats?: {
+    label: string;
+    value: string | number;
+  }[];
   className?: string;
   size?: 'sm' | 'md' | 'lg';
 }
@@ -22,6 +27,7 @@ export function PlayerBox({
   player, 
   actions, 
   showPositions = true, 
+  stats,
   className = "",
   size = "md" 
 }: PlayerBoxProps) {
@@ -37,9 +43,9 @@ export function PlayerBox({
   };
 
   const avatarSizes = {
-    sm: "h-8 w-8 text-sm",
-    md: "h-10 w-10 text-base",
-    lg: "h-12 w-12 text-lg"
+    sm: "h-12 w-12 text-sm",
+    md: "h-16 w-16 text-lg",
+    lg: "h-20 w-20 text-xl"
   };
 
   const getInitials = () => {
@@ -88,44 +94,73 @@ export function PlayerBox({
   const lightBackgroundColor = `${playerColor}15`; // Add transparency for background
 
   return (
-    <div 
-      className={`flex items-center justify-between border-2 rounded-lg shadow-sm ${sizeClasses[size]} ${className}`}
-      style={{
-        borderColor: playerColor,
-        backgroundColor: lightBackgroundColor
-      }}
-    >
-      <div className="flex items-center space-x-3">
-        <div className={`${avatarSizes[size]} rounded-full flex items-center justify-center text-white font-semibold ${player.avatarColor || 'bg-gray-700'}`}>
-          {getInitials()}
-        </div>
+    <div className={`flex items-center space-x-4 ${className}`}>
+      {/* Avatar Circle - matching Player of the Match style */}
+      <div 
+        className={`${avatarSizes[size]} rounded-full flex items-center justify-center text-white font-bold shadow-md flex-shrink-0 ${player.avatarColor || 'bg-gray-700'}`}
+      >
+        {getInitials()}
+      </div>
+      
+      {/* Stats Box - matching Player of the Match style */}
+      <div 
+        className="flex-1 flex items-center p-3 rounded-lg border-2"
+        style={{ 
+          backgroundColor: lightBackgroundColor,
+          borderColor: playerColor
+        }}
+      >
         <div className="flex-1">
           <div 
-            className="font-bold text-base"
+            className="text-lg font-bold"
             style={{ color: playerColor }}
           >
             {player.displayName}
           </div>
+          
           {showPositions && (
             <div 
               className="text-sm"
-              style={{ color: `${playerColor}AA` }} // Add some transparency
+              style={{ color: playerColor }}
             >
               {Array.isArray(player.positionPreferences) && player.positionPreferences.length > 0 
                 ? player.positionPreferences.join(', ') 
                 : 'No position preferences'}
             </div>
           )}
+          
           {player.active === false && (
             <Badge variant="secondary" className="text-xs mt-1">Inactive</Badge>
           )}
+          
+          {stats && stats.length > 0 && (
+            <div className="mt-2 flex space-x-6">
+              {stats.map((stat, index) => (
+                <div key={index} className="text-center">
+                  <div 
+                    className="text-lg font-bold"
+                    style={{ color: playerColor }}
+                  >
+                    {stat.value}
+                  </div>
+                  <div 
+                    className="text-xs uppercase tracking-wide"
+                    style={{ color: `${playerColor}AA` }}
+                  >
+                    {stat.label}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
+        
+        {actions && (
+          <div className="flex items-center space-x-2 ml-4">
+            {actions}
+          </div>
+        )}
       </div>
-      {actions && (
-        <div className="flex items-center space-x-2">
-          {actions}
-        </div>
-      )}
     </div>
   );
 }
