@@ -118,17 +118,7 @@ export default function ClubDashboard() {
     const teamCompletedGames = teamGames.filter(game => game.statusIsCompleted);
     
     const wins = teamCompletedGames.filter(game => {
-      // Check if this is a home or away game for our team
-      const isHomeTeam = game.homeTeamId === team.id;
-      
-      // First try to use status scores if available
-      if (game.statusTeamGoals !== null && game.statusOpponentGoals !== null) {
-        const ourScore = isHomeTeam ? game.statusTeamGoals : game.statusOpponentGoals;
-        const theirScore = isHomeTeam ? game.statusOpponentGoals : game.statusTeamGoals;
-        return ourScore > theirScore;
-      }
-      
-      // Fall back to calculating from game statistics
+      // Use game statistics which are always from our team's perspective
       const gameStats = centralizedStats[game.id] || [];
       if (gameStats.length === 0) return false;
       
@@ -136,11 +126,7 @@ export default function ClubDashboard() {
       const totalGoalsFor = gameStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
       const totalGoalsAgainst = gameStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
       
-      // For away games, the perspective is flipped
-      const ourScore = isHomeTeam ? totalGoalsFor : totalGoalsAgainst;
-      const theirScore = isHomeTeam ? totalGoalsAgainst : totalGoalsFor;
-      
-      return ourScore > theirScore;
+      return totalGoalsFor > totalGoalsAgainst;
     }).length;
 
     return {

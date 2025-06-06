@@ -190,7 +190,7 @@ export default function TeamAnalysis() {
 
   // Fetch batch statistics for all completed games
   const { statsMap: centralizedStats = {}, isLoading: isLoadingStats } = useBatchGameStatistics(gameIds);
-  
+
   // Fetch batch roster data for combination analysis
   const { rostersMap: centralizedRosters = {}, isLoading: isLoadingRosters } = useBatchRosterData(gameIds);
 
@@ -349,7 +349,7 @@ export default function TeamAnalysis() {
       let opponentName = null;
       const isHomeGame = game.homeClubId === currentClubId;
       const isAwayGame = game.awayClubId === currentClubId;
-      
+
       if (isHomeGame && !isAwayGame) {
         opponentName = game.awayTeamName;
       } else if (isAwayGame && !isHomeGame) {
@@ -877,28 +877,16 @@ export default function TeamAnalysis() {
                 </div>
               </div>
 
-              {/* Home vs Away Performance */}
+              {/* Team Consistency Analysis */}
               <div>
-                <h4 className="font-semibold mb-3">Home vs Away Performance</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="p-4 bg-blue-50 rounded-lg">
-                    <div className="text-center">
-                      <div className="text-lg font-bold text-blue-600">{detailedStats.scoringTrends.homeRecord.wins}-{detailedStats.scoringTrends.homeRecord.total - detailedStats.scoringTrends.homeRecord.wins}</div>
-                      <div className="text-sm text-blue-700">Home Record</div>
-                      <div className="text-xs text-blue-600">
-                        {detailedStats.scoringTrends.homeRecord.total > 0 ? 
-                          Math.round((detailedStats.scoringTrends.homeRecord.wins / detailedStats.scoringTrends.homeRecord.total) * 100) : 0}% Win Rate
-                      </div>
+                <h4 className="font-semibold mb-3">Performance Consistency</h4>
+                <div className="p-4 bg-gradient-to-r from-teal-50 to-cyan-50 rounded-lg">
+                  <div className="text-center">
+                    <div className="text-lg font-bold text-teal-600">
+                      All games played at same venue
                     </div>
-                  </div>
-                  <div className="p-4 bg-orange-50 rounded-lg">
-                    <div className="text-center">
-                      <div className="text-lg font-bold text-orange-600">{detailedStats.scoringTrends.awayRecord.wins}-{detailedStats.scoringTrends.awayRecord.total - detailedStats.scoringTrends.awayRecord.wins}</div>
-                      <div className="text-sm text-orange-700">Away Record</div>
-                      <div className="text-xs text-orange-600">
-                        {detailedStats.scoringTrends.awayRecord.total > 0 ? 
-                          Math.round((detailedStats.scoringTrends.awayRecord.wins / detailedStats.scoringTrends.awayRecord.total) * 100) : 0}% Win Rate
-                      </div>
+                    <div className="text-sm text-teal-700 mt-2">
+                      Home/Away designation is administrative only
                     </div>
                   </div>
                 </div>
@@ -1001,7 +989,7 @@ export default function TeamAnalysis() {
                                     </div>
                                   </div>
                                 </div>
-                                
+
                                 <div className="flex items-center justify-between mt-2">
                                   <div className="flex gap-3 text-xs text-gray-600">
                                     <span>{team.totalGames} games</span>
@@ -1010,7 +998,7 @@ export default function TeamAnalysis() {
                                       {team.scoreDifferential >= 0 ? '+' : ''}{team.scoreDifferential.toFixed(1)}
                                     </span>
                                   </div>
-                                  
+
                                   {team.recentForm.length > 0 && (
                                     <div className="flex items-center gap-1">
                                       <span className="text-xs text-gray-500">Form:</span>

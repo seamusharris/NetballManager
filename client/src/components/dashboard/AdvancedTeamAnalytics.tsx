@@ -536,10 +536,8 @@ export default function AdvancedTeamAnalytics({
     const opponentPerformance: Record<string, { wins: number; total: number; winRate: number; totalScore: number }> = {};
 
     games.forEach(game => {
-      // Get opponent name - could be either home or away team name depending on the game
-      const opponentName = game.homeTeamName && game.awayTeamName 
-        ? (game.homeTeamName !== game.awayTeamName ? (game.homeTeamName || game.awayTeamName) : null)
-        : (game.homeTeamName || game.awayTeamName);
+      // Get opponent name - this works regardless of home/away since we use game stats perspective
+      const opponentName = game.awayTeamName || game.homeTeamName;
 
       if (!opponentName || opponentName === 'Bye') return;
 
@@ -574,9 +572,7 @@ export default function AdvancedTeamAnalytics({
 
     games.forEach(game => {
       // Get opponent name using same logic as above
-      const opponentName = game.homeTeamName && game.awayTeamName 
-        ? (game.homeTeamName !== game.awayTeamName ? (game.homeTeamName || game.awayTeamName) : null)
-        : (game.homeTeamName || game.awayTeamName);
+      const opponentName = game.awayTeamName || game.homeTeamName;
 
       if (!opponentName || opponentName === 'Bye') return;
 
