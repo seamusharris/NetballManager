@@ -94,9 +94,7 @@ export default function Seasons() {
 
   // Set active season mutation
   const setActiveSeasonMutation = useMutation({
-    mutationFn: async (id: number) => {
-      return await apiRequest('POST', `/api/seasons/${id}/activate`);
-    },
+    mutationFn: (id: number) => apiClient.post(`/api/seasons/${id}/activate`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/seasons'] });
       queryClient.invalidateQueries({ queryKey: ['/api/seasons/active'] });
