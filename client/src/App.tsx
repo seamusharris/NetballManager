@@ -57,7 +57,6 @@ function withErrorBoundary(Component: React.ComponentType<any>, name: string) {
 
 import PlayerBorrowing from '@/pages/PlayerBorrowing';
 import TeamAnalysis from '@/pages/TeamAnalysis';
-import PerformanceDemo from '@/pages/PerformanceDemo';
 import GameResultExamples from '@/pages/GameResultExamples';
 import NotFound from '@/pages/not-found';
 
