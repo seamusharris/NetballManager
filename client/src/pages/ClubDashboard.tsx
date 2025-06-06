@@ -1,6 +1,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet';
+import { useLocation } from 'wouter';
 import { TEAM_NAME } from '@/lib/settings';
 import { useClub } from '@/contexts/ClubContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 
 export default function ClubDashboard() {
   const { currentClub, currentClubId, isLoading: clubLoading } = useClub();
+  const [, navigate] = useLocation();
 
   // Fetch all club data
   const { data: players = [], isLoading: isLoadingPlayers } = useQuery<any[]>({
@@ -254,7 +256,7 @@ export default function ClubDashboard() {
               {teamPerformance.map((team) => (
                 <div 
                   key={team.id} 
-                  onClick={() => window.location.href = `/dashboard/${team.id}`}
+                  onClick={() => navigate(`/dashboard/${team.id}`)}
                   className="flex items-center justify-between p-6 border-2 rounded-xl cursor-pointer transform transition-all duration-300 ease-in-out bg-gradient-to-r from-white to-slate-50 hover:from-blue-50 hover:to-blue-100 hover:shadow-lg hover:scale-[1.02] hover:border-blue-300 active:scale-[0.98]"
                 >
                   <div className="flex items-center gap-4">
