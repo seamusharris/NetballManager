@@ -33,6 +33,7 @@ import { Game, Player, Position, GameStat } from '@shared/schema';
 import { cn, getInitials, positionGroups } from '@/lib/utils';
 import { allPositions } from '@shared/schema';
 import { apiClient } from '@/lib/apiClient';
+import { useClub } from '@/contexts/ClubContext';
 
 interface PlayersListProps {
   players: Player[];
@@ -66,6 +67,8 @@ interface SortConfig {
 }
 
 export default function PlayersList({ players, isLoading: isPlayersLoading, onEdit, onDelete }: PlayersListProps) {
+  const { currentClubId } = useClub();
+  
   // Track players being deleted to prevent double-clicks
   const [deletingPlayerIds, setDeletingPlayerIds] = useState<Set<number>>(new Set());
   const [searchQuery, setSearchQuery] = useState('');
@@ -88,13 +91,13 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
   const gameIds = completedGames.map(game => game.id);
   const enableQuery = gameIds.length > 0;
 
-  // Use centralized batch fetching like the team dashboard
+  // Use Team Dashboard's cache keys to share data
   const { data: gameStatsMap, isLoading: isLoadingStats } = useQuery<Record<number, GameStat[]>>({
-    queryKey: ['centralizedPlayerStats', gameIds.join(',')],
+    queryKey: ['centralizedStats', currentClubId, gameIds.join(',')],
     queryFn: async () => {
       if (gameIds.length === 0) return {};
 
-      console.log(`PlayersList: Centralizing stats fetch for ${gameIds.length} completed games`);
+      console.log(`PlayersList: Using Team Dashboard cache for stats fetch of ${gameIds.length} completed games`);
       const statsMap: Record<number, GameStat[]> = {};
 
       // Fetch stats for all completed games
@@ -111,18 +114,18 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
       console.log(`PlayersList: Centralized stats fetch completed for ${Object.keys(statsMap).length} games`);
       return statsMap;
     },
-    enabled: enableQuery,
+    enabled: enableQuery && !!currentClubId,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 15 * 60 * 1000, // 15 minutes
   });
 
-  // Centralized roster fetching for all games
+  // Use Team Dashboard's cache keys to share roster data
   const { data: gameRostersMap, isLoading: isLoadingRosters } = useQuery<Record<number, any[]>>({
-    queryKey: ['centralizedPlayerRosters', gameIds.join(',')],
+    queryKey: ['centralizedRosters', currentClubId, gameIds.join(',')],
     queryFn: async () => {
       if (gameIds.length === 0) return {};
 
-      console.log(`PlayersList: Centralizing roster fetch for ${gameIds.length} games`);
+      console.log(`PlayersList: Using Team Dashboard cache for roster fetch of ${gameIds.length} games`);
       const rostersMap: Record<number, any[]> = {};
 
       // Fetch rosters for all games
@@ -139,7 +142,7 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
       console.log(`PlayersList: Centralized roster fetch completed for ${Object.keys(rostersMap).length} games`);
       return rostersMap;
     },
-    enabled: enableQuery,
+    enabled: enableQuery && !!currentClubId,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 15 * 60 * 1000, // 15 minutes
   });
