@@ -2080,6 +2080,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const playerId = parseInt(req.params.playerId);
 
+      console.log(`Fetching teams for player ${playerId}`);
+
       const teams = await db.execute(sql`
         SELECT 
           t.id,
@@ -2093,9 +2095,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         JOIN team_players tp ON t.id = tp.team_id
         JOIN clubs c ON t.club_id = c.id
         JOIN seasons s ON t.season_id = s.id
-        WHERE tp.player_id = ${playerId} AND t.is_active = true
+        WHERE tp.player_id = ${playerId} 
+          AND t.is_active = true 
+          AND t.name != 'Bye'
         ORDER BY s.start_date DESC, t.name
       `);
+
+      console.log(`Found ${teams.rows.length} teams for player ${playerId}:`, teams.rows.map(r => r.name));
 
       const mappedTeams = teams.rows.map(row => ({
         id: row.id,
