@@ -1071,7 +1071,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/players", async (req, res) => {
     try {
       console.log('\n=== PLAYER CREATION REQUEST START ===');
-      console.log('Server: POST /api/players endpoint reached');
+      console.log('Server: POST /api/players endpoint reached at:', new Date().toISOString());
       console.log('Headers:', {
         'x-current-club-id': req.headers['x-current-club-id'],
         'x-current-team-id': req.headers['x-current-team-id'],
@@ -1079,9 +1079,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         'user-agent': req.headers['user-agent']?.substring(0, 50)
       });
       console.log('All headers:', Object.keys(req.headers));
+      console.log('Request body size:', JSON.stringify(req.body).length, 'bytes');
       console.log('Request body:', JSON.stringify(req.body, null, 2));
       console.log('Request method:', req.method);
       console.log('Request URL:', req.url);
+      console.log('Request IP:', req.ip);
+      console.log('Request user agent:', req.headers['user-agent']);
+      console.log('Express middleware chain working:', true);
 
       // Extract club and team context using consistent approach
       const clubId = req.body.clubId || req.headers['x-current-club-id'];

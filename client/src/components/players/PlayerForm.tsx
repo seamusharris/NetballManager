@@ -69,10 +69,13 @@ export default function PlayerForm({ player, clubId, teamId, onSuccess, onCancel
 
   const createPlayer = useMutation({
     mutationFn: (data: any) => {
+      console.log('\n=== PLAYER FORM MUTATION START ===');
+      console.log('PlayerForm: Timestamp:', new Date().toISOString());
       console.log('PlayerForm: Creating player with club context:', clubId, 'team context:', teamId);
       console.log('PlayerForm: Raw form data received:', JSON.stringify(data, null, 2));
 
       if (!clubId) {
+        console.error('PlayerForm: ERROR - No club context available');
         throw new Error('Club context is required for player creation');
       }
 
@@ -88,15 +91,34 @@ export default function PlayerForm({ player, clubId, teamId, onSuccess, onCancel
         ...(teamId && { 'x-current-team-id': teamId.toString() })
       });
 
-      // Log the API call
+      // Log the API call details
       console.log('PlayerForm: About to make API call to /api/players');
+      console.log('PlayerForm: Request details:', {
+        url: '/api/players',
+        method: 'POST',
+        timestamp: new Date().toISOString(),
+        bodySize: JSON.stringify(playerData).length + ' bytes'
+      });
 
-      return apiClient.post('/api/players', playerData, {
+      const apiPromise = apiClient.post('/api/players', playerData, {
         headers: {
           'x-current-club-id': clubId.toString(),
           ...(teamId && { 'x-current-team-id': teamId.toString() })
         }
       });
+
+      console.log('PlayerForm: API call initiated, promise created');
+      
+      // Add promise logging
+      apiPromise
+        .then(response => {
+          console.log('PlayerForm: API call succeeded with response:', response.status);
+        })
+        .catch(error => {
+          console.error('PlayerForm: API call failed with error:', error);
+        });
+
+      return apiPromise;
     },
     onSuccess: () => {
       // Invalidate all player-related queries - simplified like working forms
@@ -226,10 +248,17 @@ export default function PlayerForm({ player, clubId, teamId, onSuccess, onCancel
   }, [position1, position2, position3, position4, form]);
 
   const handleSubmit = (values: FormValues) => {
-    console.log('=== PLAYER FORM SUBMISSION START ===');
+    console.log('\n=== PLAYER FORM SUBMISSION START ===');
+    console.log('PlayerForm: handleSubmit called at:', new Date().toISOString());
     console.log('PlayerForm: handleSubmit called with values:', JSON.stringify(values, null, 2));
     console.log('PlayerForm: Club context:', clubId, 'Team context:', teamId);
     console.log('PlayerForm: Is editing mode:', isEditing);
+    console.log('PlayerForm: Form validation state:', {
+      isValid: form.formState.isValid,
+      isDirty: form.formState.isDirty,
+      isSubmitting: form.formState.isSubmitting,
+      errors: form.formState.errors
+    });
 
     // Validate at least one position is selected
     if (!values.position1) {
@@ -290,12 +319,25 @@ export default function PlayerForm({ player, clubId, teamId, onSuccess, onCancel
         });
       } else {
         console.log('PlayerForm: Calling createPlayer.mutate for new player');
-        console.log('PlayerForm: About to call createPlayer mutation...');
+        console.log('PlayerForm: About to call createPlayer mutation at:', new Date().toISOString());
+        console.log('PlayerForm: Mutation state before call:', {
+          isPending: createPlayer.isPending,
+          isError: createPlayer.isError,
+          isSuccess: createPlayer.isSuccess
+        });
+        
         createPlayer.mutate(playerData);
+        
         console.log('PlayerForm: createPlayer.mutate call completed (async)');
+        console.log('PlayerForm: Mutation state after call:', {
+          isPending: createPlayer.isPending,
+          isError: createPlayer.isError,
+          isSuccess: createPlayer.isSuccess
+        });
       }
     } catch (error) {
       console.error('PlayerForm: Exception during mutation call:', error);
+      console.error('PlayerForm: Exception stack trace:', error.stack);
     }
 
     console.log('=== PLAYER FORM SUBMISSION END ===');
