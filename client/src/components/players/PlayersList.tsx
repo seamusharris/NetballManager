@@ -225,6 +225,8 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
       // Create a map to track the most recent stat entry for each player in each quarter of each game
       const dedupedStats: Record<number, Record<string, GameStat>> = {};
 
+      console.log('PlayersList: Processing stats from gameStatsMap:', Object.keys(gameStatsMap).length, 'games');
+
       // In the position-based model, we need to map position stats to players using roster data
       Object.entries(gameStatsMap).forEach(([gameIdStr, stats]) => {
         const gameId = parseInt(gameIdStr);
@@ -241,7 +243,12 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
           );
 
           // Skip if no player was assigned to this position
-          if (!rosterEntry || !rosterEntry.playerId) return;
+          if (!rosterEntry || !rosterEntry.playerId) {
+            console.log(`PlayersList: No roster entry found for position ${stat.position}, quarter ${stat.quarter} in game ${gameId}`);
+            return;
+          }
+
+          console.log(`PlayersList: Mapping stat for position ${stat.position}, quarter ${stat.quarter} to player ${rosterEntry.playerId}`);
 
           const playerId = rosterEntry.playerId;
 
@@ -270,6 +277,7 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
 
         Object.values(playerQuarterStats).forEach(stat => {
           // Add this player's stats based on the position they played
+          const oldGoals = newPlayerStatsMap[playerId].goals;
           newPlayerStatsMap[playerId].goals += stat.goalsFor || 0;
           newPlayerStatsMap[playerId].goalsAgainst += stat.goalsAgainst || 0;
           newPlayerStatsMap[playerId].missedGoals += stat.missedGoals || 0;
@@ -279,8 +287,14 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
           newPlayerStatsMap[playerId].handlingError += stat.handlingError || 0;
           newPlayerStatsMap[playerId].pickUp += stat.pickUp || 0;
           newPlayerStatsMap[playerId].infringement += stat.infringement || 0;
+          
+          if (stat.goalsFor && stat.goalsFor > 0) {
+            console.log(`PlayersList: Added ${stat.goalsFor} goals for player ${playerId} (was ${oldGoals}, now ${newPlayerStatsMap[playerId].goals})`);
+          }
         });
       });
+
+      console.log('PlayersList: Final calculated stats sample:', Object.values(newPlayerStatsMap).slice(0, 3));
     }
 
     // Process player ratings from position-based stats - use the most recent quarter 1 stats
