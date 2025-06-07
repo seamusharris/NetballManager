@@ -812,6 +812,81 @@ export class DatabaseStorage implements IStorage {
   // Opponents system has been removed - use team-based system instead
 }
 
+export async function getPlayers(): Promise<any[]> {
+    try {
+        const result = await db.select().from(players);
+        return result;
+    } catch (error) {
+        console.error("Error fetching players:", error);
+        return [];
+    }
+}
+
+export async function createPlayer(data: any) {
+  console.log('Storage: Creating player with data:', data);
+
+  // Generate a unique avatar color if not provided
+  if (!data.avatarColor || data.avatarColor === 'auto') {
+    const existingPlayers = await getPlayers();
+    const usedColors = existingPlayers.map(p => p.avatarColor).filter(Boolean);
+
+    const availableColors = [
+      'bg-blue-600', 'bg-purple-600', 'bg-green-600', 'bg-red-600', 
+      'bg-orange-600', 'bg-yellow-600', 'bg-pink-600', 'bg-teal-600',
+      'bg-indigo-600', 'bg-cyan-600', 'bg-amber-600', 'bg-lime-600',
+      'bg-emerald-600', 'bg-sky-600', 'bg-violet-600', 'bg-fuchsia-600',
+      'bg-rose-600', 'bg-blue-700', 'bg-purple-700', 'bg-green-700',
+      'bg-red-700', 'bg-orange-700', 'bg-yellow-700', 'bg-pink-700'
+    ];
+
+    const unusedColors = availableColors.filter(color => !usedColors.includes(color));
+
+    if (unusedColors.length > 0) {
+      data.avatarColor = unusedColors[Math.floor(Math.random() * unusedColors.length)];
+    } else {
+      data.avatarColor = availableColors[Math.floor(Math.random() * availableColors.length)];
+    }
+  }
+
+  console.log('Storage: Player data with avatar color:', data);
+
+  try {
+    // Insert the player using Drizzle ORM with explicit import
+    const result = await db.insert(players).values({
+      displayName: data.displayName,
+      firstName: data.firstName,
+      lastName: data.lastName,
+      dateOfBirth: data.dateOfBirth,
+      positionPreferences: data.positionPreferences,
+      active: data.active !== false, // Default to true
+      avatarColor: data.avatarColor
+    }).returning();
+
+    console.log('Storage: Database insert result:', result);
+
+    if (result.length === 0) {
+      throw new Error('Failed to create player - no result returned from database');
+    }
+
+    const player = result[0];
+    console.log('Storage: Player created successfully with ID:', player.id);
+
+    return {
+      id: player.id,
+      displayName: player.displayName,
+      firstName: player.firstName,
+      lastName: player.lastName,
+      dateOfBirth: player.dateOfBirth,
+      positionPreferences: player.positionPreferences,
+      active: player.active,
+      avatarColor: player.avatarColor
+    };
+  } catch (error) {
+    console.error('Storage: Database error during player creation:', error);
+    throw new Error(`Failed to create player: ${error.message}`);
+  }
+}
+
 // Export a single instance of DatabaseStorage
 export const storage = new DatabaseStorage();
 
