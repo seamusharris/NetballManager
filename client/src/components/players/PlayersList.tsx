@@ -96,6 +96,8 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
         return {};
       }
 
+      console.log('PlayersList: Fetching stats for games:', gameIds);
+
       // Fetch stats for each completed game
       const statsPromises = gameIds.map(async (gameId: number) => {
         const stats = await apiClient.get(`/api/games/${gameId}/stats?_t=${Date.now()}`);
@@ -110,6 +112,7 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
         statsMap[result.gameId] = result.stats;
       });
 
+      console.log('PlayersList: Stats map created:', statsMap);
       return statsMap;
     },
     enabled: enableQuery,
@@ -125,6 +128,8 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
         return {};
       }
 
+      console.log('PlayersList: Fetching rosters for games:', gameIds);
+
       // Fetch rosters for each game to count games played
       const rosterPromises = gameIds.map(async (gameId: number) => {
         const rosters = await apiClient.get(`/api/games/${gameId}/rosters`);
@@ -139,6 +144,7 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
         rostersMap[result.gameId] = result.rosters;
       });
 
+      console.log('PlayersList: Rosters map created:', rostersMap);
       return rostersMap;
     },
     enabled: enableQuery,
@@ -485,48 +491,6 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
       <ArrowUp className="ml-1 h-3 w-3 inline text-primary" /> : 
       <ArrowDown className="ml-1 h-3 w-3 inline text-primary" />;
   };
-
-  // Get game statistics using centralized batch approach
-  const { data: allGameStats = [] } = useQuery({
-    queryKey: ['batch-game-stats', gameIds],
-    queryFn: async () => {
-      if (gameIds.length === 0) return [];
-
-      console.log('PlayersList: Fetching batch stats for games:', gameIds);
-
-      // Fetch stats for each completed game
-      const statsPromises = gameIds.map(async (gameId: number) => {
-        const stats = await apiClient.get(`/api/games/${gameId}/stats?_t=${Date.now()}`);
-        return { gameId, stats };
-      });
-
-      const statsResults = await Promise.all(statsPromises);
-      console.log('PlayersList: Batch stats results:', statsResults);
-      return statsResults;
-    },
-    enabled: gameIds.length > 0 && !isLoadingGames,
-  });
-
-  // Get roster data for games played calculation
-  const { data: allRosterData = [] } = useQuery({
-    queryKey: ['batch-roster-data', gameIds],
-    queryFn: async () => {
-      if (gameIds.length === 0) return [];
-
-      console.log('PlayersList: Fetching batch roster data for games:', gameIds);
-
-      // Fetch rosters for each game to count games played
-      const rosterPromises = gameIds.map(async (gameId: number) => {
-        const rosters = await apiClient.get(`/api/games/${gameId}/rosters`);
-        return { gameId, rosters };
-      });
-
-      const rosterResults = await Promise.all(rosterPromises);
-      console.log('PlayersList: Batch roster results:', rosterResults);
-      return rosterResults;
-    },
-    enabled: gameIds.length > 0 && !isLoadingGames,
-  });
 
   return (
     <div className="space-y-6">
