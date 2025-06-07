@@ -27,8 +27,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/apiClient";
 
-// Extend the schema for the form validation
-const formSchema = insertPlayerSchema.extend({
+// Create form schema excluding positionPreferences (we handle this separately)
+const formSchema = insertPlayerSchema.omit({ positionPreferences: true }).extend({
   position1: z.string().refine((val) => allPositions.includes(val as Position), {
     message: "Please select a valid position",
   }),
