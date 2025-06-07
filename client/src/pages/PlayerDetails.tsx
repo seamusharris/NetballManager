@@ -26,7 +26,7 @@ import { apiClient } from "@/lib/apiClient";
 import PlayerForm from "@/components/players/PlayerForm";
 import PlayerClubsManager from '@/components/players/PlayerClubsManager';
 import PlayerSeasonsManager from '@/components/players/PlayerSeasonsManager';
-import { PlayerTeamsManager } from '@/components/players/PlayerTeamsManager';
+import PlayerTeamsManager from '@/components/players/PlayerTeamsManager';
 import { isGameValidForStatistics } from '@/lib/gameFilters';
 
 export default function PlayerDetails() {
@@ -1080,8 +1080,8 @@ export default function PlayerDetails() {
       </div>
 
           <div className="grid gap-6">
-            <PlayerTeamsManager playerId={id} />
-          </div>
+          {/* Teams are now managed via the modal */}
+        </div>
 
       {/* Season Manager Modal */}
       {isSeasonManagerOpen && player && (
@@ -1163,23 +1163,11 @@ export default function PlayerDetails() {
 
       {/* Team Manager Modal */}
       {isTeamManagerOpen && player && (
-        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center overflow-y-auto">
-          <div className="relative bg-white dark:bg-slate-900 p-6 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <button 
-              className="absolute right-4 top-4 rounded-sm opacity-70 text-gray-600 hover:opacity-100" 
-              onClick={() => setIsTeamManagerOpen(false)}
-            >
-              ✕
-              <span className="sr-only">Close</span>
-            </button>
-
-            <h2 className="text-xl font-semibold mb-2">Manage Teams</h2>
-            <p className="text-sm text-gray-500 mb-4">
-              Add or remove {player.displayName} from teams.
-            </p>
-            <PlayerTeamsManager playerId={parseInt(id)} />
-          </div>
-        </div>
+        <PlayerTeamsManager 
+          player={player}
+          isOpen={isTeamManagerOpen}
+          onClose={() => setIsTeamManagerOpen(false)}
+        />
       )}
     </>
   );
