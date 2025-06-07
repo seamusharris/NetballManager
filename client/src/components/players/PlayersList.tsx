@@ -88,68 +88,60 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
   const gameIds = completedGames.map(game => game.id);
   const enableQuery = gameIds.length > 0;
 
-  // Use React Query to fetch and cache game statistics and rosters
+  // Use centralized batch fetching like the team dashboard
   const { data: gameStatsMap, isLoading: isLoadingStats } = useQuery<Record<number, GameStat[]>>({
-    queryKey: ['playerGameStats', ...gameIds],
+    queryKey: ['centralizedPlayerStats', gameIds.join(',')],
     queryFn: async () => {
-      if (gameIds.length === 0) {
-        return {};
+      if (gameIds.length === 0) return {};
+
+      console.log(`PlayersList: Centralizing stats fetch for ${gameIds.length} completed games`);
+      const statsMap: Record<number, GameStat[]> = {};
+
+      // Fetch stats for all completed games
+      for (const gameId of gameIds) {
+        try {
+          const stats = await apiClient.get(`/api/games/${gameId}/stats`);
+          statsMap[gameId] = stats || [];
+        } catch (error) {
+          console.error(`PlayersList: Error fetching stats for game ${gameId}:`, error);
+          statsMap[gameId] = [];
+        }
       }
 
-      console.log('PlayersList: Fetching stats for games:', gameIds);
-
-      // Fetch stats for each completed game
-      const statsPromises = gameIds.map(async (gameId: number) => {
-        const stats = await apiClient.get(`/api/games/${gameId}/stats?_t=${Date.now()}`);
-        return { gameId, stats };
-      });
-
-      const results = await Promise.all(statsPromises);
-
-      // Create a map of game ID to stats array
-      const statsMap: Record<number, GameStat[]> = {};
-      results.forEach((result: {gameId: number, stats: GameStat[]}) => {
-        statsMap[result.gameId] = result.stats;
-      });
-
-      console.log('PlayersList: Stats map created:', statsMap);
+      console.log(`PlayersList: Centralized stats fetch completed for ${Object.keys(statsMap).length} games`);
       return statsMap;
     },
     enabled: enableQuery,
-    staleTime: 0, 
-    gcTime: 15 * 60 * 1000,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 15 * 60 * 1000, // 15 minutes
   });
 
-  // Fetch roster data for tracking games played
+  // Centralized roster fetching for all games
   const { data: gameRostersMap, isLoading: isLoadingRosters } = useQuery<Record<number, any[]>>({
-    queryKey: ['gameRosters', ...gameIds],
+    queryKey: ['centralizedPlayerRosters', gameIds.join(',')],
     queryFn: async () => {
-      if (gameIds.length === 0) {
-        return {};
+      if (gameIds.length === 0) return {};
+
+      console.log(`PlayersList: Centralizing roster fetch for ${gameIds.length} games`);
+      const rostersMap: Record<number, any[]> = {};
+
+      // Fetch rosters for all games
+      for (const gameId of gameIds) {
+        try {
+          const roster = await apiClient.get(`/api/games/${gameId}/rosters`);
+          rostersMap[gameId] = roster || [];
+        } catch (error) {
+          console.error(`PlayersList: Error fetching roster for game ${gameId}:`, error);
+          rostersMap[gameId] = [];
+        }
       }
 
-      console.log('PlayersList: Fetching rosters for games:', gameIds);
-
-      // Fetch rosters for each game to count games played
-      const rosterPromises = gameIds.map(async (gameId: number) => {
-        const rosters = await apiClient.get(`/api/games/${gameId}/rosters`);
-        return { gameId, rosters };
-      });
-
-      const results = await Promise.all(rosterPromises);
-
-      // Create a map of game ID to rosters array
-      const rostersMap: Record<number, any[]> = {};
-      results.forEach((result: {gameId: number, rosters: any[]}) => {
-        rostersMap[result.gameId] = result.rosters;
-      });
-
-      console.log('PlayersList: Rosters map created:', rostersMap);
+      console.log(`PlayersList: Centralized roster fetch completed for ${Object.keys(rostersMap).length} games`);
       return rostersMap;
     },
     enabled: enableQuery,
-    staleTime: 0,
-    gcTime: 15 * 60 * 1000,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 15 * 60 * 1000, // 15 minutes
   });
 
   // Combined loading state
