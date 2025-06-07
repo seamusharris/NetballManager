@@ -70,22 +70,27 @@ export default function PlayerForm({ player, clubId, teamId, onSuccess, onCancel
   const createPlayer = useMutation({
     mutationFn: (data: any) => {
       console.log('PlayerForm: Creating player with club context:', clubId, 'team context:', teamId);
-      
-      // Ensure we have the required club context
+      console.log('PlayerForm: Raw form data received:', JSON.stringify(data, null, 2));
+
       if (!clubId) {
         throw new Error('Club context is required for player creation');
       }
 
-      // Create the standardized payload
       const playerData = {
         ...data,
         clubId, // Always include club ID in payload
         teamId: teamId || undefined // Include team ID if in team context
       };
 
-      console.log('PlayerForm: Sending player data:', playerData);
+      console.log('PlayerForm: Final payload being sent:', JSON.stringify(playerData, null, 2));
+      console.log('PlayerForm: Headers being sent:', {
+        'x-current-club-id': clubId.toString(),
+        ...(teamId && { 'x-current-team-id': teamId.toString() })
+      });
 
-      // Use consistent headers like our working forms
+      // Log the API call
+      console.log('PlayerForm: About to make API call to /api/players');
+
       return apiClient.post('/api/players', playerData, {
         headers: {
           'x-current-club-id': clubId.toString(),
@@ -97,7 +102,7 @@ export default function PlayerForm({ player, clubId, teamId, onSuccess, onCancel
       // Invalidate all player-related queries - simplified like working forms
       queryClient.invalidateQueries({ queryKey: ['/api/players'] });
       queryClient.invalidateQueries({ queryKey: [`/api/clubs/${clubId}/players`] });
-      
+
       // Team-specific invalidations if in team context
       if (teamId) {
         queryClient.invalidateQueries({ queryKey: ['team-players', teamId] });

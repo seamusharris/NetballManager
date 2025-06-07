@@ -48,7 +48,8 @@ class ApiClient {
   }
 
   async request<T>(method: string, endpoint: string, data?: any, customHeaders?: Record<string, string>): Promise<T> {
-    const url = `${this.baseURL}${endpoint}`;
+    console.log(`\n=== API CLIENT REQUEST START ===`);
+    console.log(`API Client: ${method} ${endpoint}`);
 
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
@@ -58,53 +59,72 @@ class ApiClient {
     const clubId = getCurrentClubId();
     if (clubId) {
       headers['x-current-club-id'] = clubId;
+      console.log(`API Client: Added club header: ${clubId}`);
+    } else {
+      console.log(`API Client: No club ID available`);
     }
 
     // Add team context header if available
     const teamId = getCurrentTeamId();
     if (teamId) {
       headers['x-current-team-id'] = teamId;
+      console.log(`API Client: Added team header: ${teamId}`);
+    } else {
+      console.log(`API Client: No team ID available`);
     }
 
-    // Add club context from instance (fallback)
-    if (this.clubContext.currentClubId && !headers['x-current-club-id']) {
-      console.log('API Request adding club ID header:', this.clubContext.currentClubId);
-      headers['x-current-club-id'] = this.clubContext.currentClubId.toString();
-    }
-
-    if (this.clubContext.currentTeamId && !headers['x-current-team-id']) {
-      console.log('API Request adding team ID header:', this.clubContext.currentTeamId);
-      headers['x-current-team-id'] = this.clubContext.currentTeamId.toString();
-    }
-
-    // Apply custom headers last (these can override defaults)
+    // Merge custom headers
     if (customHeaders) {
       Object.assign(headers, customHeaders);
+      console.log(`API Client: Added custom headers:`, customHeaders);
+    }
 
-      // Special handling for empty string values to clear headers
-      Object.keys(customHeaders).forEach(key => {
-        if (customHeaders[key] === '') {
-          delete headers[key];
-        }
+    console.log(`API Client: Final headers:`, headers);
+    console.log(`API Client: Request data:`, JSON.stringify(data, null, 2));
+
+    try {
+      console.log(`API Client: Making fetch request to ${this.baseURL}${endpoint}`);
+
+      const response = await fetch(`${this.baseURL}${endpoint}`, {
+        method,
+        headers,
+        body: data ? JSON.stringify(data) : undefined,
       });
+
+      console.log(`API Client: Response status: ${response.status} ${response.statusText}`);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`API Client: ERROR Response body:`, errorText);
+        console.error(`API Client: ERROR Details:`, {
+          status: response.status,
+          statusText: response.statusText,
+          body: errorText,
+          url: `${this.baseURL}${endpoint}`,
+          method,
+          headers,
+          requestData: data
+        });
+        console.log(`=== API CLIENT REQUEST ERROR END ===\n`);
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
+      }
+
+      const result = await response.json();
+      console.log(`API Client: SUCCESS Response:`, result);
+      console.log(`=== API CLIENT REQUEST SUCCESS END ===\n`);
+      return result;
+    } catch (error) {
+      console.error(`API Client: Request failed with error:`, error);
+      console.error(`API Client: Error details:`, {
+        endpoint: `${this.baseURL}${endpoint}`,
+        method,
+        headers,
+        data,
+        error: error instanceof Error ? { message: error.message, stack: error.stack } : error
+      });
+      console.log(`=== API CLIENT REQUEST FAILURE END ===\n`);
+      throw error;
     }
-
-    const config: RequestInit = {
-      method,
-      headers,
-    };
-
-    if (data && (method === 'POST' || method === 'PUT' || method === 'PATCH')) {
-      config.body = JSON.stringify(data);
-    }
-
-    const response = await fetch(url, config);
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    return response.json();
   }
 
   // HTTP method helpers

@@ -1071,12 +1071,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/players", async (req, res) => {
     try {
       console.log('\n=== PLAYER CREATION REQUEST START ===');
+      console.log('Server: POST /api/players endpoint reached');
       console.log('Headers:', {
         'x-current-club-id': req.headers['x-current-club-id'],
         'x-current-team-id': req.headers['x-current-team-id'],
-        'content-type': req.headers['content-type']
+        'content-type': req.headers['content-type'],
+        'user-agent': req.headers['user-agent']?.substring(0, 50)
       });
+      console.log('All headers:', Object.keys(req.headers));
       console.log('Request body:', JSON.stringify(req.body, null, 2));
+      console.log('Request method:', req.method);
+      console.log('Request URL:', req.url);
 
       // Extract club and team context using consistent approach
       const clubId = req.body.clubId || req.headers['x-current-club-id'];
@@ -1109,22 +1114,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check if we're doing an import operation (with ID) or regular create
       const hasId = req.body.id !== undefined;
       const schema = hasId ? importPlayerSchema : insertPlayerSchema;
+      console.log('Server: Using schema for', hasId ? 'import' : 'create', 'operation');
       
       // Remove context fields for validation (similar to working forms)
       const { clubId: _, teamId: __, ...playerDataForValidation } = req.body;
       
-      console.log('Validating player data:', playerDataForValidation);
+      console.log('Server: Player data for validation:', JSON.stringify(playerDataForValidation, null, 2));
+      console.log('Server: Position preferences type:', typeof playerDataForValidation.positionPreferences);
+      console.log('Server: Position preferences value:', playerDataForValidation.positionPreferences);
+      
       const parsedData = schema.safeParse(playerDataForValidation);
 
       if (!parsedData.success) {
-        console.log('Validation failed:', parsedData.error.errors);
+        console.log('Server: VALIDATION FAILED');
+        console.log('Server: Validation errors:', JSON.stringify(parsedData.error.errors, null, 2));
+        console.log('Server: Error details:', parsedData.error.errors.map(err => ({
+          path: err.path,
+          message: err.message,
+          code: err.code,
+          expected: err.expected,
+          received: err.received
+        })));
         return res.status(400).json({ 
           message: "Invalid player data", 
           errors: parsedData.error.errors 
         });
       }
 
-      console.log('Validation successful, creating player...');
+      console.log('Server: Validation successful!');
+      console.log('Server: Parsed data:', JSON.stringify(parsedData.data, null, 2));
 
       // Create the player using storage layer (like teams/clubs)
       const player = await storage.createPlayer(parsedData.data);
