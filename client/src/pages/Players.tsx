@@ -150,11 +150,16 @@ export default function Players() {
         return newSet;
       });
 
-      // Invalidate relevant queries
+      // Invalidate relevant queries with consistent keys
       queryClient.invalidateQueries({ queryKey: ['team-players', teamId] });
       queryClient.invalidateQueries({ queryKey: ['team-available-players', teamId, activeSeason?.id] });
+      queryClient.invalidateQueries({ queryKey: ['unassigned-players', activeSeason?.id] });
       queryClient.invalidateQueries({ queryKey: ['unassigned-players'] });
       queryClient.invalidateQueries({ queryKey: ['players'] });
+      queryClient.invalidateQueries({ queryKey: ['clubs', currentClub?.id, 'players'] });
+
+      // Force refetch to ensure immediate UI update
+      queryClient.refetchQueries({ queryKey: ['team-available-players', teamId, activeSeason?.id] });
 
       toast({ title: 'Success', description: 'Player added to team' });
     },
@@ -243,12 +248,16 @@ export default function Players() {
         return newSet;
       });
 
-      // More aggressive cache invalidation
+      // Comprehensive cache invalidation to refresh both team players and available players
       queryClient.invalidateQueries({ queryKey: ['team-players', teamId] });
+      queryClient.invalidateQueries({ queryKey: ['team-available-players', teamId, activeSeason?.id] });
       queryClient.invalidateQueries({ queryKey: ['unassigned-players', activeSeason?.id] });
       queryClient.invalidateQueries({ queryKey: ['unassigned-players'] });
       queryClient.invalidateQueries({ queryKey: ['players'] });
       queryClient.invalidateQueries({ queryKey: ['clubs', currentClub?.id, 'players'] });
+
+      // Force refetch of available players to ensure UI updates immediately
+      queryClient.refetchQueries({ queryKey: ['team-available-players', teamId, activeSeason?.id] });
 
       toast({ title: 'Success', description: 'Player removed from team' });
     },
@@ -268,13 +277,19 @@ export default function Players() {
                          (error as any).response?.status === 404;
 
       if (is404Error) {
-        // Player was already removed, treat as success
+        // Player was already removed, treat as success and refresh all relevant data
         toast({ title: 'Success', description: 'Player removed from team' });
+        
+        // Comprehensive cache invalidation to ensure available players list updates
         queryClient.invalidateQueries({ queryKey: ['team-players', teamId] });
+        queryClient.invalidateQueries({ queryKey: ['team-available-players', teamId, activeSeason?.id] });
         queryClient.invalidateQueries({ queryKey: ['unassigned-players', activeSeason?.id] });
         queryClient.invalidateQueries({ queryKey: ['unassigned-players'] });
         queryClient.invalidateQueries({ queryKey: ['players'] });
         queryClient.invalidateQueries({ queryKey: ['clubs', currentClub?.id, 'players'] });
+        
+        // Force refetch of available players
+        queryClient.refetchQueries({ queryKey: ['team-available-players', teamId, activeSeason?.id] });
       } else {
         toast({ title: 'Error', description: 'Failed to remove player from team', variant: 'destructive' });
       }
