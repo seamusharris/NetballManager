@@ -1090,7 +1090,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Extract club and team context using consistent approach
       const clubId = req.body.clubId || req.headers['x-current-club-id'];
       const teamId = req.body.teamId || req.headers['x-current-team-id'];
-      
+
       console.log('Extracted club ID:', clubId);
       console.log('Extracted team ID:', teamId);
 
@@ -1119,14 +1119,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const hasId = req.body.id !== undefined;
       const schema = hasId ? importPlayerSchema : insertPlayerSchema;
       console.log('Server: Using schema for', hasId ? 'import' : 'create', 'operation');
-      
+
       // Remove context fields for validation (similar to working forms)
       const { clubId: _, teamId: __, ...playerDataForValidation } = req.body;
-      
+
       console.log('Server: Player data for validation:', JSON.stringify(playerDataForValidation, null, 2));
       console.log('Server: Position preferences type:', typeof playerDataForValidation.positionPreferences);
       console.log('Server: Position preferences value:', playerDataForValidation.positionPreferences);
-      
+
       const parsedData = schema.safeParse(playerDataForValidation);
 
       if (!parsedData.success) {
@@ -1171,7 +1171,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Error message:", error instanceof Error ? error.message : String(error));
       console.error("Error stack:", error instanceof Error ? error.stack : 'No stack trace');
       console.error("=== END PLAYER CREATION ERROR ===\n");
-      
+
       res.status(500).json({ 
         message: "Failed to create player",
         error: error instanceof Error ? error.message : String(error)
@@ -1634,7 +1634,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Check if a 4th game exists already
       const games = await storage.getGames();
-      if (games.length >= 4) {
+      if (games.length >= 4){
         // Set the 4th game as upcoming
         const fourthGame = games[3];
         await storage.updateGame(fourthGame.id, { completed: false });
@@ -2074,6 +2074,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Legacy gamestats endpoints removed - use /api/games/:id/stats instead
 
   // ----- SEASONS API -----
+
+  // Get teams for a specific player
+  app.get("/api/players/:playerId/teams", async (req, res) => {
+    try {
+      const playerId = parseInt(req.params.playerId);
+
+      const teams = await db.execute(sql`
+        SELECT 
+          t.id,
+          t.name,
+          t.division,
+          t.club_id,
+          t.season_id,
+          c.name as club_name,
+          s.name as season_name
+        FROM teams t
+        JOIN team_players tp ON t.id = tp.team_id
+        JOIN clubs c ON t.club_id = c.id
+        JOIN seasons s ON t.season_id = s.id
+        WHERE tp.player_id = ${playerId} AND t.is_active = true
+        ORDER BY s.start_date DESC, t.name
+      `);
+
+      const mappedTeams = teams.rows.map(row => ({
+        id: row.id,
+        name: row.name,
+        division: row.division,
+        clubId: row.club_id,
+        seasonId: row.season_id,
+        clubName: row.club_name,
+        seasonName: row.season_name
+      }));
+
+      res.json(mappedTeams);
+    } catch (error) {
+      console.error("Error fetching player teams:", error);
+      res.status(500).json({ message: "Failed to fetch player teams" });
+    }
+  });
 
   // Get all seasons
   app.get('/api/seasons', standardAuth(), async (req: AuthenticatedRequest, res) => {
