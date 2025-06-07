@@ -226,14 +226,22 @@ export default function PlayerForm({ player, clubId, teamId, onSuccess, onCancel
   }, [position1, position2, position3, position4, form]);
 
   const handleSubmit = (values: FormValues) => {
+    console.log('=== PLAYER FORM SUBMISSION START ===');
+    console.log('PlayerForm: handleSubmit called with values:', JSON.stringify(values, null, 2));
+    console.log('PlayerForm: Club context:', clubId, 'Team context:', teamId);
+    console.log('PlayerForm: Is editing mode:', isEditing);
+
     // Validate at least one position is selected
     if (!values.position1) {
+      console.log('PlayerForm: VALIDATION FAILED - No primary position selected');
       form.setError("position1", { 
         type: "required", 
         message: "Primary position is required" 
       });
       return;
     }
+
+    console.log('PlayerForm: Primary position validation passed:', values.position1);
 
     // Construct position preferences array from individual selections
     const positionPreferences: Position[] = [
@@ -243,15 +251,20 @@ export default function PlayerForm({ player, clubId, teamId, onSuccess, onCancel
     // Only add secondary positions if they're not "none"
     if (values.position2 !== "none") {
       positionPreferences.push(values.position2 as Position);
+      console.log('PlayerForm: Added position2:', values.position2);
     }
 
     if (values.position3 !== "none") {
       positionPreferences.push(values.position3 as Position);
+      console.log('PlayerForm: Added position3:', values.position3);
     }
 
     if (values.position4 !== "none") {
       positionPreferences.push(values.position4 as Position);
+      console.log('PlayerForm: Added position4:', values.position4);
     }
+
+    console.log('PlayerForm: Final position preferences array:', positionPreferences);
 
     // Remove position fields from the data object
     const { position1, position2, position3, position4, ...rest } = values;
@@ -262,19 +275,30 @@ export default function PlayerForm({ player, clubId, teamId, onSuccess, onCancel
       positionPreferences,
     };
 
-    console.log('PlayerForm: Submitting player data:', playerData);
-    console.log('PlayerForm: Club context:', clubId, 'Team context:', teamId);
+    console.log('PlayerForm: Final player data being submitted:', JSON.stringify(playerData, null, 2));
+    console.log('PlayerForm: Club context being sent:', clubId, 'Team context:', teamId);
 
-    if (player) {
-      updateMutation.mutate(playerData, {
-        onSuccess: () => {
-          form.reset();
-          onSuccess?.();
-        }
-      });
-    } else {
-      createPlayer.mutate(playerData);
+    try {
+      if (player) {
+        console.log('PlayerForm: Calling updateMutation.mutate for existing player');
+        updateMutation.mutate(playerData, {
+          onSuccess: () => {
+            console.log('PlayerForm: Update mutation succeeded');
+            form.reset();
+            onSuccess?.();
+          }
+        });
+      } else {
+        console.log('PlayerForm: Calling createPlayer.mutate for new player');
+        console.log('PlayerForm: About to call createPlayer mutation...');
+        createPlayer.mutate(playerData);
+        console.log('PlayerForm: createPlayer.mutate call completed (async)');
+      }
+    } catch (error) {
+      console.error('PlayerForm: Exception during mutation call:', error);
     }
+
+    console.log('=== PLAYER FORM SUBMISSION END ===');
   };
 
   // Season management is now handled on the player details page
@@ -482,7 +506,17 @@ export default function PlayerForm({ player, clubId, teamId, onSuccess, onCancel
           <Button type="button" variant="outline" onClick={onCancel}>
             Cancel
           </Button>
-          <Button type="submit" className="bg-primary text-white" disabled={isSubmitting}>
+          <Button 
+            type="submit" 
+            className="bg-primary text-white" 
+            disabled={isSubmitting}
+            onClick={() => {
+              console.log('PlayerForm: Submit button clicked');
+              console.log('PlayerForm: Current form state:', form.getValues());
+              console.log('PlayerForm: Form errors:', form.formState.errors);
+              console.log('PlayerForm: Is form valid:', form.formState.isValid);
+            }}
+          >
             {isSubmitting ? 'Saving...' : isEditing ? 'Update Player' : 'Add Player'}
           </Button>
         </div>
