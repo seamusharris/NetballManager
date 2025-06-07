@@ -482,18 +482,15 @@ class ApiClient {
     }
 
     console.log('API Client: All headers being sent:', headers);
-
-
     console.log(`API Client: Final headers:`, headers);
+    
     if (data) {
       const dataString = JSON.stringify(data);
       console.log('API Client: Request data size:', dataString.length + ' bytes');
       console.log(`API Client: Request data:`, JSON.stringify(data, null, 2));
+    } else {
+      console.log('API Client: No request data.');
     }
-    else {
-        console.log('API Client: No request data.');
-    }
-
 
     try {
       console.log(`API Client: Making fetch request to ${this.baseURL}${endpoint}`);
@@ -504,12 +501,12 @@ class ApiClient {
         body: data ? JSON.stringify(data) : undefined,
       });
 
-     console.log(`API Client: Response status: ${response.status} ${response.statusText} at ${new Date().toISOString()}`);
+      console.log(`API Client: Response status: ${response.status} ${response.statusText} at ${new Date().toISOString()}`);
       const responseHeaders: { [key: string]: string } = {};
       response.headers.forEach((value, key) => {
-          responseHeaders[key] = value;
+        responseHeaders[key] = value;
       });
-     console.log('API Client: Response headers:', responseHeaders);
+      console.log('API Client: Response headers:', responseHeaders);
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -533,17 +530,17 @@ class ApiClient {
       return result;
     } catch (error) {
       console.error(`API Client: Request failed with error:`, error);
-       console.error('\n=== API CLIENT ERROR ===');
-        console.error('API Client Error at:', new Date().toISOString());
-        console.error('API Client Error details:', {
-          endpoint: `${this.baseURL}${endpoint}`,
-            method,
-            headers,
-            data,
-           error: error instanceof Error ? { message: error.message, stack: error.stack } : error
-        });
-       console.error('API Client Error message:', error instanceof Error ? error.message : String(error));
-       console.error('API Client Error stack:', error instanceof Error ? error.stack : undefined);
+      console.error('\n=== API CLIENT ERROR ===');
+      console.error('API Client Error at:', new Date().toISOString());
+      console.error('API Client Error details:', {
+        endpoint: `${this.baseURL}${endpoint}`,
+        method,
+        headers,
+        data,
+        error: error instanceof Error ? { message: error.message, stack: error.stack } : error
+      });
+      console.error('API Client Error message:', error instanceof Error ? error.message : String(error));
+      console.error('API Client Error stack:', error instanceof Error ? error.stack : undefined);
       console.log(`=== API CLIENT REQUEST FAILURE END ===\n`);
       throw error;
     }
