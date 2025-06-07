@@ -47,14 +47,16 @@ export default function PlayerDetails() {
     enabled: !isNaN(playerId),
   });
 
-  // Fetch all games
+  // Fetch all games with club context
   const { data: games = [], isLoading: isLoadingGames } = useQuery<Game[]>({
     queryKey: ['/api/games'],
+    queryFn: () => apiClient.get('/api/games'),
   });
 
-  // Fetch all opponents
+  // Fetch all opponents with club context
   const { data: opponents = [], isLoading: isLoadingOpponents } = useQuery<any[]>({
     queryKey: ['/api/opponents'],
+    queryFn: () => apiClient.get('/api/opponents'),
   });
 
   // Fetch all seasons for the seasons manager
