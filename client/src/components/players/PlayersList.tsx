@@ -79,6 +79,7 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
   // Fetch games to calculate player statistics
   const { data: games = [], isLoading: isLoadingGames } = useQuery<Game[]>({
     queryKey: ['/api/games'],
+    queryFn: () => apiClient.get('/api/games'),
   });
 
   // Get only completed games
