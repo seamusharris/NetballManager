@@ -1100,8 +1100,9 @@ export default function PlayerDetails() {
 
             <PlayerForm 
               player={player}
-              onSubmit={handleUpdatePlayer} 
-              isSubmitting={updateMutation.isPending} 
+              clubId={player.clubId || 54}
+              onSuccess={() => setIsEditModalOpen(false)}
+              onCancel={() => setIsEditModalOpen(false)}
             />
           </div>
         </div>
