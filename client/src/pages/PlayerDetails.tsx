@@ -19,7 +19,7 @@ import { Player, Game, GameStat, allPositions, Position, Season } from "@shared/
 import { cn, getInitials } from "@/lib/utils";
 import { PlayerAvatar } from "@/components/ui/player-avatar";
 import { BackButton } from "@/components/ui/back-button";
-import { Award, Target, Shield, Activity, Edit, Trash2, Calendar } from "lucide-react";
+import { Award, Target, Shield, Activity, Edit, Trash2, Calendar, Users } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { apiClient } from "@/lib/apiClient";
@@ -39,6 +39,7 @@ export default function PlayerDetails() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isSeasonManagerOpen, setIsSeasonManagerOpen] = useState(false);
   const [isClubManagerOpen, setIsClubManagerOpen] = useState(false);
+  const [isTeamManagerOpen, setIsTeamManagerOpen] = useState(false);
 
   // Fetch player data
   const { data: player, isLoading: isLoadingPlayer } = useQuery<Player>({
@@ -504,6 +505,14 @@ export default function PlayerDetails() {
               onClick={() => setIsClubManagerOpen(true)}
             >
               <Shield className="h-4 w-4 mr-1" /> Manage Clubs
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="flex items-center" 
+              onClick={() => setIsTeamManagerOpen(true)}
+            >
+              <Users className="h-4 w-4 mr-1" /> Manage Teams
             </Button>
             <Button 
               variant="outline" 
@@ -1148,6 +1157,27 @@ export default function PlayerDetails() {
               isOpen={isClubManagerOpen}
               onClose={() => setIsClubManagerOpen(false)}
             />
+          </div>
+        </div>
+      )}
+
+      {/* Team Manager Modal */}
+      {isTeamManagerOpen && player && (
+        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center overflow-y-auto">
+          <div className="relative bg-white dark:bg-slate-900 p-6 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <button 
+              className="absolute right-4 top-4 rounded-sm opacity-70 text-gray-600 hover:opacity-100" 
+              onClick={() => setIsTeamManagerOpen(false)}
+            >
+              ✕
+              <span className="sr-only">Close</span>
+            </button>
+
+            <h2 className="text-xl font-semibold mb-2">Manage Teams</h2>
+            <p className="text-sm text-gray-500 mb-4">
+              Add or remove {player.displayName} from teams.
+            </p>
+            <PlayerTeamsManager playerId={parseInt(id)} />
           </div>
         </div>
       )}
