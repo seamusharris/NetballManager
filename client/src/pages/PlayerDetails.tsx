@@ -50,9 +50,6 @@ export default function PlayerDetails() {
   // Fetch all games with club context
   const { data: games = [], isLoading: isLoadingGames } = useQuery<Game[]>({
     queryKey: ['/api/games'],
-    queryFn: () => apiClient.get('/api/games', { 
-      'x-club-wide': 'true' 
-    }),
   });
 
   // Fetch all opponents with club context
