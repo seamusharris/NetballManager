@@ -87,8 +87,7 @@ export default function PlayerDetails() {
 
       // Fetch stats for each completed game
       const statsPromises = gameIds.map(async (gameId) => {
-        const response = await fetch(`/api/games/${gameId}/stats?_t=${Date.now()}`);
-        const allStats = await response.json() as GameStat[];
+        const allStats = await apiClient.get(`/api/games/${gameId}/stats?_t=${Date.now()}`) as GameStat[];
 
         // With position-based stats, we need to get player's positions from roster
         // and then find stats for those positions
@@ -97,8 +96,7 @@ export default function PlayerDetails() {
 
       // Fetch roster data for each completed game to check participation
       const rosterPromises = gameIds.map(async (gameId) => {
-        const response = await fetch(`/api/games/${gameId}/rosters?_t=${Date.now()}`);
-        const allRosters = await response.json();
+        const allRosters = await apiClient.get(`/api/games/${gameId}/rosters?_t=${Date.now()}`);
         // Filter rosters for only this player
         const playerRosters = allRosters.filter((roster: any) => roster.playerId === playerId);
         // Remove debug log once we've identified the issue
