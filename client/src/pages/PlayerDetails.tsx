@@ -377,14 +377,30 @@ export default function PlayerDetails() {
       });
     },
     onError: (error: any) => {
-      // Navigate back even on error to avoid being stuck on deleted player page
+      // Handle 404 errors gracefully (React Strict Mode double execution)
+      const errorMessage = error.message?.toLowerCase() || '';
+      const is404Error = errorMessage.includes("not found") || 
+                         errorMessage.includes("404") || 
+                         (error as any).status === 404 ||
+                         (error as any).response?.status === 404;
+
+      // Always navigate away first
       navigate('/players');
 
-      toast({
-        title: "Error",
-        description: error.message || "Failed to delete player",
-        variant: "destructive",
-      });
+      if (is404Error) {
+        // Player was already deleted, treat as success
+        queryClient.invalidateQueries({ queryKey: ['/api/players'] });
+        toast({
+          title: "Success",
+          description: "Player deleted successfully",
+        });
+      } else {
+        toast({
+          title: "Error", 
+          description: error.message || "Failed to delete player",
+          variant: "destructive",
+        });
+      }
     },
   });
 

@@ -96,15 +96,11 @@ export default function Players() {
   });
 
   const { data: availablePlayersForTeam = [], isLoading: isLoadingAvailablePlayers } = useQuery<any[]>({
-    queryKey: ['unassigned-players', activeSeason?.id, currentClubId],
+    queryKey: ['team-available-players', teamId, activeSeason?.id],
     queryFn: () => {
-      const headers: Record<string, string> = {};
-      if (currentClubId) {
-        headers['x-current-club-id'] = currentClubId.toString();
-      }
-      return apiClient.get(`/api/players/unassigned/${activeSeason?.id}`, { headers });
+      return apiClient.get(`/api/teams/${teamId}/available-players?seasonId=${activeSeason?.id}`);
     },
-    enabled: !!teamId && !!activeSeason?.id && !!currentClubId,
+    enabled: !!teamId && !!activeSeason?.id,
   });
 
   // Team filter state for main players view
@@ -137,15 +133,40 @@ export default function Players() {
   // Add player to team mutation
   const addPlayerToTeam = useMutation({
     mutationFn: async (playerId: number) => {
-      const response = await apiClient.post(`/api/teams/${teamId}/players`, { playerId, isRegular: true });
-      return response;
+      // Add player to adding set
+      setAddingPlayerIds(prev => new Set([...prev, playerId]));
+
+      const response = await apiClient.post(`/api/teams/${teamId}/players`, {
+        playerId,
+        isRegular: true
+      });
+      return { playerId, response };
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      // Remove player from adding set
+      setAddingPlayerIds(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(data.playerId);
+        return newSet;
+      });
+
+      // Invalidate relevant queries
       queryClient.invalidateQueries({ queryKey: ['team-players', teamId] });
-      queryClient.invalidateQueries({ queryKey: ['unassigned-players', activeSeason?.id] });
+      queryClient.invalidateQueries({ queryKey: ['team-available-players', teamId, activeSeason?.id] });
+      queryClient.invalidateQueries({ queryKey: ['unassigned-players'] });
+      queryClient.invalidateQueries({ queryKey: ['players'] });
+
       toast({ title: 'Success', description: 'Player added to team' });
     },
-    onError: () => {
+    onError: (error, playerId) => {
+      // Remove player from adding set on error
+      setAddingPlayerIds(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(playerId);
+        return newSet;
+      });
+
+      console.error('Error adding player to team:', error);
       toast({ title: 'Error', description: 'Failed to add player to team', variant: 'destructive' });
     },
   });
@@ -200,8 +221,9 @@ export default function Players() {
     },
   });
 
-  // Track which players are being removed
+  // Track which players are being removed/added
   const [removingPlayerIds, setRemovingPlayerIds] = useState<Set<number>>(new Set());
+  const [addingPlayerIds, setAddingPlayerIds] = useState<Set<number>>(new Set());
   const [isAddPlayerDialogOpen, setIsAddPlayerDialogOpen] = useState(false);
 
   // Remove player from team using simple mutation (matches add pattern)
@@ -413,10 +435,14 @@ export default function Players() {
                           variant="default"
                           size="sm"
                           onClick={() => addPlayerToTeam.mutate(player.id)}
-                          disabled={addPlayerToTeam.isPending}
+                          disabled={addingPlayerIds.has(player.id)}
                         >
-                          <UserPlus className="h-4 w-4 mr-1" />
-                          Add to Team
+                          {addingPlayerIds.has(player.id) ? (
+                            <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                          ) : (
+                            <UserPlus className="h-4 w-4 mr-1" />
+                          )}
+                          {addingPlayerIds.has(player.id) ? 'Adding...' : 'Add to Team'}
                         </Button>
                       }
                     />
