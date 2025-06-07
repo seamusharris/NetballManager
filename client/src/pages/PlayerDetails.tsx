@@ -24,8 +24,9 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { apiClient } from "@/lib/apiClient";
 import PlayerForm from "@/components/players/PlayerForm";
-import PlayerSeasonsManager from "@/components/players/PlayerSeasonsManager";
-import PlayerClubsManager from "@/components/players/PlayerClubsManager";
+import { PlayerClubsManager } from '@/components/players/PlayerClubsManager';
+import { PlayerSeasonsManager } from '@/components/players/PlayerSeasonsManager';
+import { PlayerTeamsManager } from '@/components/players/PlayerTeamsManager';
 import { isGameValidForStatistics } from '@/lib/gameFilters';
 
 export default function PlayerDetails() {
@@ -775,7 +776,7 @@ export default function PlayerDetails() {
                               const gameData = games.find(g => g.id === game.gameId);
                               const roundNumber = gameData?.round || '-';
 
-                              // Double check player is on roster for this game and has an actual position (not "off")
+                              // Double check player is on roster for this game and has an actual roster and has an actual position (not "off")
                               const gameRosters = allGameRosters[game.gameId] || [];
                               const isOnRoster = gameRosters.some((roster: any) => 
                                 roster.playerId === playerId && allPositions.includes(roster.position)
@@ -1069,7 +1070,9 @@ export default function PlayerDetails() {
         </Tabs>
       </div>
 
-
+          <div className="grid gap-6">
+            <PlayerTeamsManager playerId={id} />
+          </div>
 
       {/* Season Manager Modal */}
       {isSeasonManagerOpen && player && (
