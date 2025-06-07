@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -30,157 +29,150 @@ interface TeamAssignment {
   joinedDate: string;
 }
 
-export function PlayerTeamsManager({ playerId }: PlayerTeamsManagerProps) {
-  const [selectedTeamId, setSelectedTeamId] = useState<string>('');
-  const { toast } = useToast();
+export const PlayerTeamsManager: React.FC<PlayerTeamsManagerProps> = ({ playerId }) => {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const [selectedTeamId, setSelectedTeamId] = useState<string>('');
 
-  // Get player's current team assignments
+  // Fetch player's current teams
   const { data: playerTeams = [], isLoading: isLoadingPlayerTeams } = useQuery({
     queryKey: ['player-teams', playerId],
     queryFn: async () => {
-      const response = await apiClient.get(`/players/${playerId}/teams`);
-      return response.data;
+      const response = await apiClient.get(`/api/players/${playerId}/teams`);
+      return response;
     }
   });
 
-  // Get all available teams
+  // Fetch all available teams
   const { data: allTeams = [], isLoading: isLoadingTeams } = useQuery({
     queryKey: ['teams', 'all'],
     queryFn: async () => {
-      const response = await apiClient.get('/teams/all');
-      return response.data;
+      const response = await apiClient.get('/api/teams/all');
+      return response;
     }
   });
 
   // Add player to team mutation
   const addToTeamMutation = useMutation({
     mutationFn: async (teamId: number) => {
-      const response = await apiClient.post(`/teams/${teamId}/players/${playerId}`, {
+      const response = await apiClient.post(`/api/teams/${teamId}/players`, {
+        playerId: playerId,
         isRegular: true
       });
-      return response.data;
+      return response;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['player-teams', playerId] });
-      queryClient.invalidateQueries({ queryKey: ['team-players'] });
+      queryClient.invalidateQueries({ queryKey: ['teams'] });
       toast({
         title: "Success",
-        description: "Player added to team successfully"
+        description: "Player added to team successfully",
       });
       setSelectedTeamId('');
     },
     onError: (error: any) => {
       toast({
         title: "Error",
-        description: error.response?.data?.message || "Failed to add player to team",
-        variant: "destructive"
+        description: error.message || "Failed to add player to team",
+        variant: "destructive",
       });
-    }
+    },
   });
 
   // Remove player from team mutation
   const removeFromTeamMutation = useMutation({
     mutationFn: async (teamId: number) => {
-      const response = await apiClient.delete(`/teams/${teamId}/players/${playerId}`);
-      return response.data;
+      const response = await apiClient.delete(`/api/teams/${teamId}/players/${playerId}`);
+      return response;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['player-teams', playerId] });
-      queryClient.invalidateQueries({ queryKey: ['team-players'] });
+      queryClient.invalidateQueries({ queryKey: ['teams'] });
       toast({
         title: "Success",
-        description: "Player removed from team successfully"
+        description: "Player removed from team successfully",
       });
     },
     onError: (error: any) => {
       toast({
         title: "Error",
-        description: error.response?.data?.message || "Failed to remove player from team",
-        variant: "destructive"
+        description: error.message || "Failed to remove player from team",
+        variant: "destructive",
       });
-    }
+    },
   });
 
   const handleAddToTeam = () => {
-    if (selectedTeamId) {
+    if (selectedTeamId && !addToTeamMutation.isPending) {
       addToTeamMutation.mutate(parseInt(selectedTeamId));
     }
   };
 
   const handleRemoveFromTeam = (teamId: number) => {
-    removeFromTeamMutation.mutate(teamId);
+    if (!removeFromTeamMutation.isPending) {
+      removeFromTeamMutation.mutate(teamId);
+    }
   };
 
-  // Filter available teams (exclude teams player is already on)
-  const assignedTeamIds = playerTeams.map((team: Team) => team.id);
-  const availableTeams = allTeams.filter((team: Team) => !assignedTeamIds.includes(team.id));
+  // Get teams not assigned to player
+  const availableTeams = allTeams.filter(team => 
+    !playerTeams.some(playerTeam => playerTeam.id === team.id)
+  );
 
   if (isLoadingPlayerTeams || isLoadingTeams) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
-            Team Assignments
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-center p-4">
-            Loading team assignments...
-          </div>
-        </CardContent>
-      </Card>
+      <div className="text-center py-4">Loading teams...</div>
     );
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Users className="h-5 w-5" />
-          Team Assignments
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {/* Current team assignments */}
-        <div>
-          <h4 className="font-medium mb-2">Current Teams</h4>
-          {playerTeams.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No team assignments</p>
-          ) : (
-            <div className="flex flex-wrap gap-2">
-              {playerTeams.map((team: Team) => (
-                <Badge key={team.id} variant="secondary" className="flex items-center gap-1">
-                  {team.name} ({team.division})
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-4 w-4 p-0 hover:bg-destructive hover:text-destructive-foreground"
-                    onClick={() => handleRemoveFromTeam(team.id)}
-                    disabled={removeFromTeamMutation.isPending}
-                  >
-                    <X className="h-3 w-3" />
-                  </Button>
-                </Badge>
-              ))}
-            </div>
-          )}
-        </div>
+    <div className="py-4 space-y-4">
+      <div className="flex flex-wrap gap-2 mb-4">
+        <h3 className="text-sm font-medium mb-2 w-full">Currently assigned to:</h3>
+        {playerTeams.length > 0 ? (
+          playerTeams.map((team) => (
+            <Badge key={team.id} variant="secondary" className="flex items-center gap-1">
+              {team.name}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-4 w-4 p-0 hover:bg-transparent"
+                onClick={() => handleRemoveFromTeam(team.id)}
+                disabled={removeFromTeamMutation.isPending}
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            </Badge>
+          ))
+        ) : (
+          <span className="text-sm text-gray-500">No teams assigned</span>
+        )}
+      </div>
 
-        {/* Add to team */}
-        {availableTeams.length > 0 && (
-          <div>
-            <h4 className="font-medium mb-2">Add to Team</h4>
+      <div className="border rounded-md p-3">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-sm font-medium">Available teams:</h3>
+        </div>
+        <div className="space-y-2">
+          {isLoadingTeams ? (
+            <div className="text-sm text-gray-500 text-center py-2">
+              Loading teams...
+            </div>
+          ) : availableTeams.length > 0 ? (
             <div className="flex gap-2">
               <Select value={selectedTeamId} onValueChange={setSelectedTeamId}>
                 <SelectTrigger className="flex-1">
-                  <SelectValue placeholder="Select a team..." />
+                  <SelectValue placeholder="Select a team" />
                 </SelectTrigger>
                 <SelectContent>
-                  {availableTeams.map((team: Team) => (
+                  {availableTeams.map((team) => (
                     <SelectItem key={team.id} value={team.id.toString()}>
-                      {team.clubName} - {team.name} ({team.division}) - {team.seasonName}
+                      <div>
+                        <div className="font-medium">{team.name}</div>
+                        <div className="text-xs text-gray-500">
+                          {team.division} • {team.seasonName}
+                        </div>
+                      </div>
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -194,9 +186,13 @@ export function PlayerTeamsManager({ playerId }: PlayerTeamsManagerProps) {
                 Add
               </Button>
             </div>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+          ) : (
+            <div className="text-sm text-gray-500 text-center py-2">
+              No teams available. All teams are already assigned.
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
   );
-}
+};
