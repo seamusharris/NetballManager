@@ -22,7 +22,7 @@ import { BackButton } from "@/components/ui/back-button";
 import { Award, Target, Shield, Activity, Edit, Trash2, Calendar } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
+import { apiClient } from "@/lib/apiClient";
 import PlayerForm from "@/components/players/PlayerForm";
 import PlayerSeasonsManager from "@/components/players/PlayerSeasonsManager";
 import PlayerClubsManager from "@/components/players/PlayerClubsManager";
@@ -35,7 +35,6 @@ export default function PlayerDetails() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [selectedTab, setSelectedTab] = useState("overview");
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isSeasonManagerOpen, setIsSeasonManagerOpen] = useState(false);
   const [isClubManagerOpen, setIsClubManagerOpen] = useState(false);
@@ -362,84 +361,58 @@ export default function PlayerDetails() {
 
   const stats = calculateAggregateStats();
 
-  // Mutation for deleting the player
+  // Delete mutation handled separately like Seasons and Teams to avoid 404 issues
   const deletePlayerMutation = useMutation({
-    mutationFn: async () => {
-      try {
-        return await apiRequest('DELETE', `/api/players/${playerId}`);
-      } catch (error) {
-        // Check if the error indicates the player was not found (already deleted)
-        // This is actually a success case for us since the player no longer exists
-        if (error instanceof Error && error.message.includes('Player not found')) {
-          // This is fine - the player was already deleted or never existed
-          return { success: true, playerDeleted: true };
-        }
-        throw error; // Re-throw other errors
-      }
-    },
+    mutationFn: (playerId: number) => apiClient.delete(`/api/players/${playerId}`),
     onSuccess: () => {
-      // Always navigate to the players list first before any other operations
+      // Navigate to players list first
       navigate('/players');
-
-      // Then invalidate queries and show toast
+      
+      // Invalidate queries to update the list
       queryClient.invalidateQueries({ queryKey: ['/api/players'] });
+
       toast({
-        title: "Player deleted",
-        description: "The player has been successfully deleted.",
-        variant: "default",
+        title: "Success",
+        description: "Player deleted successfully",
       });
     },
-    onError: (error) => {
-      // If we get here, it's a real error that isn't related to "Player not found"
-      console.error("Failed to delete player:", error);
-
-      // Even if there was an error, navigate back to the players list anyway
-      // This ensures we don't get stuck on a deleted player's page
+    onError: (error: any) => {
+      // Navigate back even on error to avoid being stuck on deleted player page
       navigate('/players');
-
+      
       toast({
         title: "Error",
-        description: "There was a problem with the player deletion, but you've been redirected to the players list.",
+        description: error.message || "Failed to delete player",
         variant: "destructive",
       });
-    }
+    },
   });
 
   const handleDeletePlayer = () => {
-    setIsDeleteDialogOpen(true);
+    if (deletePlayerMutation.isPending) return; // Prevent duplicate calls
+    if (confirm('Are you sure you want to delete this player?')) {
+      deletePlayerMutation.mutate(playerId);
+    }
   };
 
-  const confirmDeletePlayer = () => {
-    deletePlayerMutation.mutate();
-    setIsDeleteDialogOpen(false);
-  };
-
-  // Mutation for updating the player
   const updateMutation = useMutation({
-    mutationFn: async (updatedPlayer: any) => {
-      // Ensure we're using a consistent format
-      console.log("Updating player in details page:", updatedPlayer);
-      const res = await apiRequest('PATCH', `/api/players/${playerId}`, updatedPlayer);
-      return res.json();
-    },
+    mutationFn: ({ id, ...data }: any) => apiClient.patch(`/api/players/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/players/${playerId}`] });
       queryClient.invalidateQueries({ queryKey: ['/api/players'] });
       toast({
-        title: "Player updated",
-        description: "The player has been successfully updated.",
-        variant: "default",
+        title: "Success",
+        description: "Player updated successfully",
       });
       setIsEditModalOpen(false);
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast({
         title: "Error",
-        description: "Failed to update player. Please try again.",
+        description: error.message || "Failed to update player",
         variant: "destructive",
       });
-      console.error("Failed to update player:", error);
-    }
+    },
   });
 
   const handleEditPlayer = () => {
@@ -447,8 +420,7 @@ export default function PlayerDetails() {
   };
 
   const handleUpdatePlayer = (data: any) => {
-    console.log("Updating player:", data);
-    updateMutation.mutate(data);
+    updateMutation.mutate({ id: playerId, ...data });
   };
 
   // Get the player's avatar color
@@ -527,6 +499,7 @@ export default function PlayerDetails() {
               size="sm" 
               className="flex items-center"
               onClick={handleDeletePlayer}
+              disabled={deletePlayerMutation.isPending}
             >
               <Trash2 className="h-4 w-4 mr-1" /> Delete
             </Button>
@@ -1078,27 +1051,7 @@ export default function PlayerDetails() {
         </Tabs>
       </div>
 
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently delete {player?.displayName}'s profile and all associated statistics.
-              This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={confirmDeletePlayer}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      
 
       {/* Season Manager Modal */}
       {isSeasonManagerOpen && player && (
