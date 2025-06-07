@@ -25,7 +25,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiClient } from "@/lib/apiClient";
 import PlayerForm from "@/components/players/PlayerForm";
 import PlayerClubsManager from '@/components/players/PlayerClubsManager';
-import { PlayerSeasonsManager } from '@/components/players/PlayerSeasonsManager';
+import PlayerSeasonsManager from '@/components/players/PlayerSeasonsManager';
 import { PlayerTeamsManager } from '@/components/players/PlayerTeamsManager';
 import { isGameValidForStatistics } from '@/lib/gameFilters';
 
