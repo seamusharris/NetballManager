@@ -32,11 +32,12 @@ export default function PlayerTeamsManager({
 }: PlayerTeamsManagerProps) {
   const { toast } = useToast();
   const [selectedTeams, setSelectedTeams] = useState<number[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Fetch player's current teams
   const { data: playerTeams = [], isLoading: isTeamsLoading } = useQuery<Team[]>({
     queryKey: [`/api/players/${player.id}/teams`],
-    enabled: !!player?.id, // Always fetch when player ID is available
+    enabled: !!player?.id,
   });
   
   // Fetch all available teams
@@ -54,8 +55,6 @@ export default function PlayerTeamsManager({
       setSelectedTeams([]);
     }
   }, [playerTeams, player.id]);
-  
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Handler for team selection changes
   const handleTeamToggle = (teamId: number) => {
@@ -148,51 +147,56 @@ export default function PlayerTeamsManager({
         </DialogHeader>
         
         <div className="py-4 space-y-4">
-          <div className="flex flex-wrap gap-2 mb-4">
-            <h3 className="text-sm font-medium mb-2 w-full">Currently assigned to:</h3>
-            {selectedTeams.length > 0 ? (
-              allTeams
-                .filter(team => selectedTeams.includes(team.id))
-                .map(team => (
-                  <Badge key={team.id} variant="secondary">
-                    {team.name}
-                    {team.division && (
-                      <span className="ml-1 text-xs">({team.division})</span>
-                    )}
-                  </Badge>
-                ))
-            ) : (
-              <span className="text-sm text-gray-500">No teams assigned</span>
-            )}
+          {/* Current teams display */}
+          <div className="bg-gray-50 rounded-lg p-4">
+            <h3 className="text-sm font-medium mb-3">Currently assigned to:</h3>
+            <div className="flex flex-wrap gap-2">
+              {selectedTeams.length > 0 ? (
+                allTeams
+                  .filter(team => selectedTeams.includes(team.id))
+                  .map(team => (
+                    <Badge key={team.id} variant="secondary" className="bg-blue-100 text-blue-800">
+                      {team.name}
+                      {team.division && (
+                        <span className="ml-1 text-xs">({team.division})</span>
+                      )}
+                    </Badge>
+                  ))
+              ) : (
+                <span className="text-sm text-gray-500">No teams assigned</span>
+              )}
+            </div>
           </div>
           
-          <div className="border rounded-md p-3">
-            <h3 className="text-sm font-medium mb-2">Available teams:</h3>
-            <div className="space-y-2 max-h-60 overflow-y-auto">
+          {/* Team selection */}
+          <div className="bg-gray-50 rounded-lg p-4">
+            <h3 className="text-sm font-medium mb-3">Available teams:</h3>
+            <div className="space-y-3 max-h-60 overflow-y-auto">
               {isLoadingAllTeams ? (
-                <div className="text-sm text-gray-500 text-center py-2">
+                <div className="text-sm text-gray-500 text-center py-4">
                   Loading teams...
                 </div>
               ) : allTeams.length > 0 ? (
                 allTeams.map(team => (
-                  <div key={team.id} className="flex items-center space-x-2">
+                  <div key={team.id} className="flex items-start space-x-3 p-2 rounded hover:bg-gray-100">
                     <Checkbox 
                       id={`team-${team.id}`}
                       checked={selectedTeams.includes(team.id)}
                       onCheckedChange={() => handleTeamToggle(team.id)}
+                      className="mt-1"
                     />
-                    <Label htmlFor={`team-${team.id}`} className="cursor-pointer flex-1">
-                      <div>
-                        <div className="font-medium">{team.name}</div>
-                        <div className="text-xs text-gray-500">
+                    <div className="flex-1 min-w-0">
+                      <Label htmlFor={`team-${team.id}`} className="cursor-pointer">
+                        <div className="font-medium text-sm">{team.name}</div>
+                        <div className="text-xs text-gray-500 mt-1">
                           {team.division} • {team.seasonName} • {team.clubName}
                         </div>
-                      </div>
-                    </Label>
+                      </Label>
+                    </div>
                   </div>
                 ))
               ) : (
-                <div className="text-sm text-gray-500 text-center py-2">
+                <div className="text-sm text-gray-500 text-center py-4">
                   No teams available
                 </div>
               )}
@@ -200,7 +204,7 @@ export default function PlayerTeamsManager({
           </div>
         </div>
         
-        <div className="flex justify-end gap-2">
+        <div className="flex justify-end gap-2 pt-4 border-t">
           <Button variant="outline" onClick={onClose} disabled={isSubmitting}>
             Cancel
           </Button>
