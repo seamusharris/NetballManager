@@ -54,7 +54,7 @@ export default function PlayerDetails() {
     queryFn: () => apiClient.get('/api/games'),
   });
 
-  // Fetch all opponents with club context
+  // Fetch all opponents with club context  
   const { data: opponents = [], isLoading: isLoadingOpponents } = useQuery<any[]>({
     queryKey: ['/api/opponents'],
     queryFn: () => apiClient.get('/api/opponents'),
@@ -300,12 +300,12 @@ export default function PlayerDetails() {
           gameGoals += stat.goalsFor || 0;
           gameGoalsAgainst += stat.goalsAgainst || 0;
           gameMissedGoals += stat.missedGoals || 0;
-          gameRebounds += gameRebounds || 0;
-          gameIntercepts += gameIntercepts || 0;
-          gameBadPasses += gameBadPasses || 0;
-          gameHandlingErrors += gameHandlingErrors || 0;
-          gamePickUps += gamePickUps || 0;
-          gameInfringements += gameInfringements || 0;
+          gameRebounds += stat.rebounds || 0;
+          gameIntercepts += stat.intercepts || 0;
+          gameBadPasses += stat.badPass || 0;
+          gameHandlingErrors += stat.handlingError || 0;
+          gamePickUps += stat.pickUp || 0;
+          gameInfringements += stat.infringement || 0;
         }
 
         // Only use rating from quarter 1 if player was on court
