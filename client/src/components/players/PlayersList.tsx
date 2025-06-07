@@ -32,6 +32,7 @@ import { ArrowDown, ArrowUp, ArrowUpDown, Search } from 'lucide-react';
 import { Game, Player, Position, GameStat } from '@shared/schema';
 import { cn, getInitials, positionGroups } from '@/lib/utils';
 import { allPositions } from '@shared/schema';
+import { apiClient } from '@/lib/apiClient';
 
 interface PlayersListProps {
   players: Player[];
@@ -97,8 +98,7 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
 
       // Fetch stats for each completed game
       const statsPromises = gameIds.map(async (gameId: number) => {
-        const response = await fetch(`/api/games/${gameId}/stats?_t=${Date.now()}`);
-        const stats = await response.json();
+        const stats = await apiClient.get(`/api/games/${gameId}/stats?_t=${Date.now()}`);
         return { gameId, stats };
       });
 
@@ -127,8 +127,7 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
 
       // Fetch rosters for each game to count games played
       const rosterPromises = gameIds.map(async (gameId: number) => {
-        const response = await fetch(`/api/games/${gameId}/rosters`);
-        const rosters = await response.json();
+        const rosters = await apiClient.get(`/api/games/${gameId}/rosters`);
         return { gameId, rosters };
       });
 
