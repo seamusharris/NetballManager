@@ -367,7 +367,7 @@ export default function PlayerDetails() {
     onSuccess: () => {
       // Navigate to players list first
       navigate('/players');
-      
+
       // Invalidate queries to update the list
       queryClient.invalidateQueries({ queryKey: ['/api/players'] });
 
@@ -379,7 +379,7 @@ export default function PlayerDetails() {
     onError: (error: any) => {
       // Navigate back even on error to avoid being stuck on deleted player page
       navigate('/players');
-      
+
       toast({
         title: "Error",
         description: error.message || "Failed to delete player",
@@ -396,7 +396,7 @@ export default function PlayerDetails() {
   };
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, ...data }: any) => apiClient.patch(`/api/players/${id}`, data),
+    mutationFn: (data: any) => apiClient.patch(`/api/players/${playerId}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/players/${playerId}`] });
       queryClient.invalidateQueries({ queryKey: ['/api/players'] });
@@ -416,11 +416,13 @@ export default function PlayerDetails() {
   });
 
   const handleEditPlayer = () => {
+    if (updateMutation.isPending) return; // Prevent opening if update is pending
     setIsEditModalOpen(true);
   };
 
   const handleUpdatePlayer = (data: any) => {
-    updateMutation.mutate({ id: playerId, ...data });
+    if (updateMutation.isPending) return; // Prevent duplicate calls
+    updateMutation.mutate(data);
   };
 
   // Get the player's avatar color
@@ -1051,7 +1053,7 @@ export default function PlayerDetails() {
         </Tabs>
       </div>
 
-      
+
 
       {/* Season Manager Modal */}
       {isSeasonManagerOpen && player && (
