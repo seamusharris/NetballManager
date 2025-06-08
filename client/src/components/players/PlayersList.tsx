@@ -34,27 +34,13 @@ import { cn, getInitials, positionGroups } from '@/lib/utils';
 import { allPositions } from '@shared/schema';
 import { apiClient } from '@/lib/apiClient';
 import { useClub } from '@/contexts/ClubContext';
+import { usePlayerStatsMapping, PlayerStats } from '@/hooks/usePlayerStatsMapping';
 
 interface PlayersListProps {
   players: Player[];
   isLoading: boolean;
   onEdit: (player: Player) => void;
   onDelete: (id: number) => void;
-}
-
-interface PlayerStats {
-  playerId: number;
-  gamesPlayed: number;
-  goals: number;
-  goalsAgainst: number;
-  missedGoals: number;
-  rebounds: number;
-  intercepts: number;
-  badPass: number;
-  handlingError: number;
-  pickUp: number;
-  infringement: number;
-  rating: number;
 }
 
 type SortField = 'name' | 'gamesPlayed' | 'goals' | 'goalsAgainst' | 'missedGoals' | 
@@ -68,7 +54,7 @@ interface SortConfig {
 
 export default function PlayersList({ players, isLoading: isPlayersLoading, onEdit, onDelete }: PlayersListProps) {
   const { currentClubId } = useClub();
-  
+
   // Track players being deleted to prevent double-clicks
   const [deletingPlayerIds, setDeletingPlayerIds] = useState<Set<number>>(new Set());
   const [searchQuery, setSearchQuery] = useState('');
@@ -76,7 +62,6 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
   const [statusFilter, setStatusFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [sortConfig, setSortConfig] = useState<SortConfig>({ field: 'name', direction: 'asc' });
-  const [playerStatsMap, setPlayerStatsMap] = useState<Record<number, PlayerStats>>({});
   const [_, navigate] = useLocation();
   const itemsPerPage = 20;
 
@@ -100,7 +85,7 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
       if (gameIds.length === 0) return {};
 
       console.log(`PlayersList: Using batch endpoint for stats fetch of ${gameIds.length} completed games`);
-      
+
       try {
         // Use batch endpoint for better performance and cache consistency
         const batchResponse = await apiClient.post('/api/games/stats/batch', {
@@ -110,7 +95,7 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
         return batchResponse;
       } catch (error) {
         console.error('PlayersList: Batch stats fetch failed, falling back to individual requests:', error);
-        
+
         // Fallback to individual requests
         const statsMap: Record<number, GameStat[]> = {};
         for (const gameId of gameIds) {
@@ -161,203 +146,8 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
   // Combined loading state
   const isLoading = isPlayersLoading || isLoadingStats || isLoadingRosters || isLoadingGames;
 
-  // When game stats or players change, recalculate player statistics
-  useEffect(() => {
-    if (!gameStatsMap || isLoading || players.length === 0) return;
-
-    const newPlayerStatsMap: Record<number, PlayerStats> = {};
-
-    // Initialize all players with zeros
-    players.forEach(player => {
-      newPlayerStatsMap[player.id] = {
-        playerId: player.id,
-        gamesPlayed: 0,
-        goals: 0,
-        goalsAgainst: 0,
-        missedGoals: 0,
-        rebounds: 0,
-        intercepts: 0,
-        badPass: 0,
-        handlingError: 0,
-        pickUp: 0,
-        infringement: 0,
-        rating: 5.0
-      };
-    });
-
-    // Count games played only from roster entries to ensure consistency
-    // A player has played if they appear in the roster with a position
-    if (gameRostersMap && Object.keys(gameRostersMap).length > 0) {
-
-      // Track which games each player participated in
-      const playerGameIds: Record<number, Set<number>> = {};
-
-      // Initialize sets for each player
-      players.forEach(player => {
-        playerGameIds[player.id] = new Set();
-      });
-
-      // Only process game rosters to find participation (ignore stats)
-      Object.entries(gameRostersMap).forEach(([gameIdStr, rosters]) => {
-        const gameId = parseInt(gameIdStr);
-
-        // For each roster entry in this game
-        if (Array.isArray(rosters)) {
-          rosters.forEach((roster: any) => {
-            const playerId = roster.playerId;
-
-            // If player is assigned to a position in any quarter, count them as having played
-            if (playerId && roster.position && playerGameIds[playerId]) {
-              playerGameIds[playerId].add(gameId);
-            }
-          });
-        }
-      });
-
-      // Update games played count for each player
-      players.forEach(player => {
-        if (playerGameIds[player.id] && newPlayerStatsMap[player.id]) {
-          newPlayerStatsMap[player.id].gamesPlayed = playerGameIds[player.id].size;
-        }
-      });
-    }
-
-    // Process all game stats - summing across ALL completed games for total stats
-    if (Object.keys(gameStatsMap).length > 0) {
-      // Process combined stats from all games
-      const allGameStats = Object.values(gameStatsMap).flatMap(stats => stats);
-
-      // Process stats using a de-duplication approach to handle duplicate records
-      // Create a map to track the most recent stat entry for each player in each quarter of each game
-      const dedupedStats: Record<number, Record<string, GameStat>> = {};
-
-      console.log('PlayersList: Processing stats from gameStatsMap:', Object.keys(gameStatsMap).length, 'games');
-
-      // In the position-based model, we need to map position stats to players using roster data
-      Object.entries(gameStatsMap).forEach(([gameIdStr, stats]) => {
-        const gameId = parseInt(gameIdStr);
-        const gameRosters = gameRostersMap[gameId] || [];
-
-        // Process each stat entry for this game
-        stats.forEach(stat => {
-          if (!stat || !stat.position || !stat.quarter || !stat.gameId) return;
-
-          // Find which player was playing this position in this quarter using roster data
-          const rosterEntry = gameRosters.find((r: any) => 
-            r.position === stat.position && 
-            r.quarter === stat.quarter
-          );
-
-          // Skip if no player was assigned to this position
-          if (!rosterEntry || !rosterEntry.playerId) {
-            console.log(`PlayersList: No roster entry found for position ${stat.position}, quarter ${stat.quarter} in game ${gameId}`);
-            return;
-          }
-
-          console.log(`PlayersList: Mapping stat for position ${stat.position}, quarter ${stat.quarter} to player ${rosterEntry.playerId}`);
-
-          const playerId = rosterEntry.playerId;
-
-          // Skip if this player is not in our tracked players
-          if (!newPlayerStatsMap[playerId]) return;
-
-          const uniqueKey = `${stat.gameId}-${stat.quarter}-${stat.position}`; // Unique key per game, quarter, position
-
-          // Initialize player's stats map if needed
-          if (!dedupedStats[playerId]) {
-            dedupedStats[playerId] = {};
-          }
-
-          // Keep only the most recent stat for this position, player, and quarter in this game
-          if (!dedupedStats[playerId][uniqueKey] || 
-              stat.id > dedupedStats[playerId][uniqueKey].id) {
-            dedupedStats[playerId][uniqueKey] = stat;
-          }
-        });
-      });
-
-      // Now process only the de-duplicated stats to get player totals across all games
-      Object.entries(dedupedStats).forEach(([playerIdStr, playerQuarterStats]) => {
-        const playerId = parseInt(playerIdStr);
-        if (!newPlayerStatsMap[playerId]) return;
-
-        Object.values(playerQuarterStats).forEach(stat => {
-          // Add this player's stats based on the position they played
-          const oldGoals = newPlayerStatsMap[playerId].goals;
-          newPlayerStatsMap[playerId].goals += stat.goalsFor || 0;
-          newPlayerStatsMap[playerId].goalsAgainst += stat.goalsAgainst || 0;
-          newPlayerStatsMap[playerId].missedGoals += stat.missedGoals || 0;
-          newPlayerStatsMap[playerId].rebounds += stat.rebounds || 0;
-          newPlayerStatsMap[playerId].intercepts += stat.intercepts || 0;
-          newPlayerStatsMap[playerId].badPass += stat.badPass || 0;
-          newPlayerStatsMap[playerId].handlingError += stat.handlingError || 0;
-          newPlayerStatsMap[playerId].pickUp += stat.pickUp || 0;
-          newPlayerStatsMap[playerId].infringement += stat.infringement || 0;
-          
-          if (stat.goalsFor && stat.goalsFor > 0) {
-            console.log(`PlayersList: Added ${stat.goalsFor} goals for player ${playerId} (was ${oldGoals}, now ${newPlayerStatsMap[playerId].goals})`);
-          }
-        });
-      });
-
-      console.log('PlayersList: Final calculated stats sample:', Object.values(newPlayerStatsMap).slice(0, 3));
-    }
-
-    // Process player ratings from position-based stats - use the most recent quarter 1 stats
-    players.forEach(player => {
-      if (!newPlayerStatsMap[player.id]) return;
-
-      // Find all positions this player has played in the first quarter of any game
-      let mostRecentRating = null;
-      let mostRecentDate = new Date(0); // Start with oldest possible date
-
-      // Look through all games
-      Object.entries(gameRostersMap || {}).forEach(([gameIdStr, rosters]) => {
-        const gameId = parseInt(gameIdStr);
-        const gameDate = new Date(games.find(g => g.id === gameId)?.date || '');
-
-        // Find quarter 1 roster entries for this player
-        const playerQ1Rosters = rosters.filter((r: any) => 
-          r.playerId === player.id && 
-          r.quarter === 1 && 
-          r.position // Make sure they had a position
-        );
-
-        // For each position this player played in quarter 1
-        playerQ1Rosters.forEach((roster: any) => {
-          // Find the stats for this position and quarter
-          const gameStats = gameStatsMap?.[gameId] || [];
-          const positionStat = gameStats.find(s => 
-            s.position === roster.position && 
-            s.quarter === 1 &&
-            s.rating !== null && 
-            s.rating !== undefined
-          );
-
-          // If found and has a rating and is more recent than what we have
-          if (positionStat?.rating !== undefined && positionStat?.rating !== null && gameDate > mostRecentDate) {
-            mostRecentRating = positionStat.rating;
-            mostRecentDate = gameDate;
-          }
-        });
-      });
-
-      // Update with the most recent rating we found, or calculate a default
-      if (mostRecentRating !== null) {
-        newPlayerStatsMap[player.id].rating = mostRecentRating;
-      } else {
-        // Calculate default rating based on performance stats
-        const calculatedRating = 5 + 
-          (newPlayerStatsMap[player.id].goals * 0.2) +
-          (newPlayerStatsMap[player.id].rebounds * 0.3) + 
-          (newPlayerStatsMap[player.id].intercepts * 0.4);
-
-        newPlayerStatsMap[player.id].rating = Math.min(10, Math.max(1, calculatedRating));
-      }
-    });
-
-    setPlayerStatsMap(newPlayerStatsMap);
-  }, [gameStatsMap, gameRostersMap, isLoading, players]);
+  // Calculate player statistics using shared hook
+  const playerStatsMap = usePlayerStatsMapping(players, gameStatsMap, gameRostersMap);
 
   // Filter players based on search and filters
   const filteredPlayers = players.filter(player => {
