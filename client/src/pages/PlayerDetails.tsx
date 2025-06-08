@@ -56,11 +56,7 @@ export default function PlayerDetails() {
     queryFn: () => apiClient.get('/api/games'),
   });
 
-  // Fetch all opponents with club context  
-  const { data: opponents = [], isLoading: isLoadingOpponents } = useQuery<any[]>({
-    queryKey: ['/api/opponents'],
-    queryFn: () => apiClient.get('/api/opponents'),
-  });
+  // No longer need opponents - using team-based system
 
   // Fetch all seasons for the seasons manager
   const { data: seasons = [], isLoading: isLoadingSeasons } = useQuery<Season[]>({
@@ -207,9 +203,8 @@ export default function PlayerDetails() {
       // Get stats for this game if available
       const stats: GameStat[] = allGameStats[gameId] || [];
 
-      // Find opponent name from opponent ID
-      const opponent = opponents.find(o => o.id === game.opponentId);
-      const opponentName = opponent ? opponent.teamName : `Team #${game.opponentId}`;
+      // Get opponent team name from game data (team-based system)
+      const opponentName = game.awayTeamName || game.homeTeamName || `Unknown Team`;
 
       // Count positions played in this game (only count actual playing positions, not "off")
       gameRosters.forEach((roster: any) => {
