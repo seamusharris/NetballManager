@@ -21,7 +21,7 @@ import { ActionButton } from '@/components/ui/ActionButton';
 import { PageActions } from '@/components/layout/PageActions';
 
 export default function Players() {
-  const { currentClub, hasPermission, isLoading: clubLoading, switchToClub } = useClub();
+  const { currentClub, hasPermission, isLoading: clubLoading, switchClub } = useClub();
 
   // Don't render anything until club context is fully loaded
   if (clubLoading || !currentClub) {
@@ -45,7 +45,7 @@ export default function Players() {
     if (clubIdFromUrl && !isNaN(Number(clubIdFromUrl))) {
       const targetClubId = Number(clubIdFromUrl);
       if (currentClub?.id !== targetClubId) {
-        switchToClub(targetClubId);
+        switchClub(targetClubId);
       }
     }
   }, [params.clubId, currentClub?.id, switchToClub]);
