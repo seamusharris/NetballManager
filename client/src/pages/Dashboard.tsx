@@ -16,7 +16,7 @@ import RecentFormWidget from '@/components/dashboard/RecentFormWidget';
 import PlayerAnalyticsWidget from '@/components/dashboard/PlayerAnalyticsWidget';
 import TopPlayersWidget from '@/components/dashboard/TopPlayersWidget';
 import QuarterPerformanceWidget from '@/components/dashboard/QuarterPerformanceWidget';
-import UpcomingGameRecommendations from '@/components/dashboard/UpcomingGameRecommendations';
+import { UpcomingGameRecommendations } from '@/components/dashboard/UpcomingGameRecommendations';
 import AdvancedTeamAnalytics from '@/components/dashboard/AdvancedTeamAnalytics';
 import DashboardSummary from '@/components/dashboard/DashboardSummary';
 
