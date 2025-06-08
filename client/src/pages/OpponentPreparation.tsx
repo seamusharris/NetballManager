@@ -308,7 +308,7 @@ export default function OpponentPreparation() {
               <div>
                 <Select value={selectedOpponent} onValueChange={setSelectedOpponent}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Choose an opponent team to analyze" />
+                    <SelectValue placeholder="Select an opponent team to analyze..." />
                   </SelectTrigger>
                   <SelectContent>
                     {opponents.map(opponent => (
