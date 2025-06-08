@@ -107,7 +107,7 @@ export default function ClubDashboard() {
   const completedGames = games.filter(game => game.statusIsCompleted);
   const upcomingGames = games.filter(game => !game.statusIsCompleted);
   const totalPlayers = players.length; // Count all players, not just active ones
-  const activePlayers = players.filter(player => player.isActive);
+  const activePlayers = players.filter(player => player.active);
 
   // Team performance metrics
   const teamPerformance = activeTeams.map(team => {
