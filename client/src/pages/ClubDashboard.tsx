@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet';
 import { useLocation } from 'wouter';
@@ -55,6 +54,19 @@ export default function ClubDashboard() {
     gcTime: 60 * 60 * 1000 // 1 hour
   });
 
+  // Fetch user's club access
+  const { data: userClubs = [], isLoading: isLoadingClubs } = useQuery<any[]>({
+    queryKey: ['user-clubs'],
+    queryFn: () => apiClient.get('/api/user/clubs'),
+  });
+
+  // Fetch current club details - only if we have a valid club ID that the user has access to
+  const { data: currentClub = null, isLoading: isLoadingClub } = useQuery<any>({
+    queryKey: ['club', currentClubId],
+    queryFn: () => apiClient.get(`/api/clubs/${currentClubId}`),
+    enabled: !!currentClubId && userClubs.some(club => club.clubId === currentClubId),
+  });
+
   // Centralized stats fetching for completed games only
   const completedGameIds = useMemo(() => {
     return games?.filter(game => 
@@ -68,7 +80,7 @@ export default function ClubDashboard() {
       if (completedGameIds.length === 0) return {};
 
       console.log(`ClubDashboard: Using batch endpoint for ${completedGameIds.length} completed games`);
-      
+
       try {
         // Use batch endpoint for better performance
         const batchResponse = await apiClient.post('/api/games/stats/batch', {
@@ -78,7 +90,7 @@ export default function ClubDashboard() {
         return batchResponse;
       } catch (error) {
         console.error('ClubDashboard: Batch stats fetch failed, falling back to individual requests:', error);
-        
+
         // Fallback to individual requests
         const statsMap: Record<number, any[]> = {};
         for (const gameId of completedGameIds) {
@@ -160,7 +172,7 @@ export default function ClubDashboard() {
   );
 
   // Now handle loading states after all hooks are called
-  const isLoading = isLoadingPlayers || isLoadingGames || isLoadingTeams || isLoadingSeasons || isLoadingActiveSeason || isLoadingStats;
+  const isLoading = isLoadingPlayers || isLoadingGames || isLoadingTeams || isLoadingSeasons || isLoadingActiveSeason || isLoadingStats || isLoadingClubs || isLoadingClub;
 
   if (clubLoading || !currentClubId) {
     return (
