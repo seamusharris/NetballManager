@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -33,7 +32,7 @@ export function ActionButton({
 }: ActionButtonProps) {
   // Get the action-specific class
   const actionClass = ACTION_STYLES[action];
-  
+
   // Override variant if not specified to use action styling
   const buttonVariant = variant || (action === 'delete' ? 'destructive' : 'default');
 
@@ -45,7 +44,7 @@ export function ActionButton({
       size={size}
       variant={buttonVariant}
     >
-      {icon && <span className="mr-2">{icon}</span>}
+      {icon && <span className="mr-2">{React.createElement(icon, { className: "h-4 w-4" })}</span>}
       {loading ? (
         <>
           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2" />
