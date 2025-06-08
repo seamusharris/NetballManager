@@ -166,6 +166,15 @@ export default function Teams() {
                     <Button
                       variant="outline"
                       size="sm"
+                      onClick={() => setLocation(`/players/${team.id}`)}
+                      className="group-hover:border-blue-500 group-hover:text-blue-600 transition-all duration-300"
+                    >
+                      <Users className="h-4 w-4 mr-2" />
+                      Players
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
                       onClick={() => {
                         setEditingTeam(team);
                         setShowForm(true);
