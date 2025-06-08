@@ -61,8 +61,8 @@ export default function ClubDashboard() {
   });
 
   // Fetch current club details - only if we have a valid club ID that the user has access to
-  const { data: currentClub = null, isLoading: isLoadingClub } = useQuery<any>({
-    queryKey: ['club', currentClubId],
+  const { data: clubDetails = null, isLoading: isLoadingClubDetails } = useQuery<any>({
+    queryKey: ['club-details', currentClubId],
     queryFn: () => apiClient.get(`/api/clubs/${currentClubId}`),
     enabled: !!currentClubId && userClubs.some(club => club.clubId === currentClubId),
   });
@@ -172,7 +172,7 @@ export default function ClubDashboard() {
   );
 
   // Now handle loading states after all hooks are called
-  const isLoading = isLoadingPlayers || isLoadingGames || isLoadingTeams || isLoadingSeasons || isLoadingActiveSeason || isLoadingStats || isLoadingClubs || isLoadingClub;
+  const isLoading = isLoadingPlayers || isLoadingGames || isLoadingTeams || isLoadingSeasons || isLoadingActiveSeason || isLoadingStats || isLoadingClubs || isLoadingClubDetails;
 
   if (clubLoading || !currentClubId) {
     return (
