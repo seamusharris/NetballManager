@@ -48,9 +48,6 @@ class ApiClient {
   }
 
   async request<T>(method: string, endpoint: string, data?: any, customHeaders?: Record<string, string>): Promise<T> {
-    console.log(`\n=== API CLIENT REQUEST START ===`);
-    console.log(`API Client: ${method} ${endpoint} at ${new Date().toISOString()}`);
-
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };
@@ -59,87 +56,36 @@ class ApiClient {
     const clubId = getCurrentClubId();
     if (clubId) {
       headers['x-current-club-id'] = clubId;
-      console.log(`API Client: Added club header: ${clubId}`);
-    } else {
-      console.log(`API Client: No club ID available`);
     }
 
     // Add team context header if available
     const teamId = getCurrentTeamId();
     if (teamId) {
       headers['x-current-team-id'] = teamId;
-      console.log(`API Client: Added team header: ${teamId}`);
-    } else {
-      console.log(`API Client: No team ID available`);
     }
 
     // Merge custom headers
     if (customHeaders) {
       Object.assign(headers, customHeaders);
-      console.log(`API Client: Added custom headers:`, customHeaders);
-    }
-
-    console.log('API Client: All headers being sent:', headers);
-    console.log(`API Client: Final headers:`, headers);
-
-    if (data) {
-      const dataString = JSON.stringify(data);
-      console.log('API Client: Request data size:', dataString.length + ' bytes');
-      console.log(`API Client: Request data:`, JSON.stringify(data, null, 2));
-    } else {
-      console.log('API Client: No request data.');
     }
 
     try {
-      console.log(`API Client: Making fetch request to ${this.baseURL}${endpoint}`);
-
       const response = await fetch(`${this.baseURL}${endpoint}`, {
         method,
         headers,
         body: data ? JSON.stringify(data) : undefined,
       });
 
-      console.log(`API Client: Response status: ${response.status} ${response.statusText} at ${new Date().toISOString()}`);
-      const responseHeaders: { [key: string]: string } = {};
-      response.headers.forEach((value, key) => {
-        responseHeaders[key] = value;
-      });
-      console.log('API Client: Response headers:', responseHeaders);
-
       if (!response.ok) {
         const errorText = await response.text();
-        console.error(`API Client: ERROR Response body:`, errorText);
-        console.error(`API Client: ERROR Details:`, {
-          status: response.status,
-          statusText: response.statusText,
-          body: errorText,
-          url: `${this.baseURL}${endpoint}`,
-          method,
-          headers,
-          requestData: data
-        });
-        console.log(`=== API CLIENT REQUEST ERROR END ===\n`);
+        console.error(`API Error: ${method} ${endpoint} - ${response.status}: ${errorText}`);
         throw new Error(`HTTP ${response.status}: ${errorText}`);
       }
 
       const result = await response.json();
-      console.log(`API Client: SUCCESS Response:`, result);
-      console.log(`=== API CLIENT REQUEST SUCCESS END ===\n`);
       return result;
     } catch (error) {
-      console.error(`API Client: Request failed with error:`, error);
-      console.error('\n=== API CLIENT ERROR ===');
-      console.error('API Client Error at:', new Date().toISOString());
-      console.error('API Client Error details:', {
-        endpoint: `${this.baseURL}${endpoint}`,
-        method,
-        headers,
-        data,
-        error: error instanceof Error ? { message: error.message, stack: error.stack } : error
-      });
-      console.error('API Client Error message:', error instanceof Error ? error.message : String(error));
-      console.error('API Client Error stack:', error instanceof Error ? error.stack : undefined);
-      console.log(`=== API CLIENT REQUEST FAILURE END ===\n`);
+      console.error(`API Request failed: ${method} ${endpoint}`, error);
       throw error;
     }
   }

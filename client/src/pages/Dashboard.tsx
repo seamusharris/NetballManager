@@ -1,7 +1,7 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/apiClient';
-import { useClubContext } from '@/contexts/ClubContext';
+import { useClub } from '@/contexts/ClubContext';
 import { PageHeader } from '@/components/ui/page-header';
 import { SectionHeader } from '@/components/ui/section-header';
 import { ContentBox } from '@/components/ui/content-box';
@@ -21,7 +21,7 @@ import AdvancedTeamAnalytics from '@/components/dashboard/AdvancedTeamAnalytics'
 import DashboardSummary from '@/components/dashboard/DashboardSummary';
 
 export default function Dashboard() {
-  const { currentClubId, currentTeamId } = useClubContext();
+  const { currentClubId, currentTeamId } = useClub();
 
   const { data: team } = useQuery({
     queryKey: ['team', currentTeamId],
