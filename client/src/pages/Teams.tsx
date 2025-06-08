@@ -153,14 +153,14 @@ export default function Teams() {
                     </div>
                   </div>
 
-                  <div className="flex gap-2">
+                  <div className="grid grid-cols-2 gap-2">
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => setLocation(`/dashboard/${team.id}`)}
-                      className="flex-1 group-hover:border-primary group-hover:text-primary transition-all duration-300"
+                      className="group-hover:border-primary group-hover:text-primary transition-all duration-300"
                     >
-                      <Activity className="h-4 w-4 mr-2" />
+                      <Activity className="h-4 w-4 mr-1" />
                       Dashboard
                     </Button>
                     <Button
@@ -169,7 +169,7 @@ export default function Teams() {
                       onClick={() => setLocation(`/players/${team.id}`)}
                       className="group-hover:border-blue-500 group-hover:text-blue-600 transition-all duration-300"
                     >
-                      <Users className="h-4 w-4 mr-2" />
+                      <Users className="h-4 w-4 mr-1" />
                       Players
                     </Button>
                     <Button
