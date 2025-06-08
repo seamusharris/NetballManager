@@ -615,8 +615,8 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
                   </TableRow>
                 ) : paginatedPlayers.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-4 text-gray-500 border-b">
-                      No player statistics available
+                    <TableCell colSpan={14} className="text-center py-4 text-gray-500 border-b">
+                      No players found
                     </TableCell>
                   </TableRow>
                 ) : (

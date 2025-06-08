@@ -203,7 +203,7 @@ export default function PlayerDetails() {
       // Get stats for this game if available
       const stats: GameStat[] = allGameStats[gameId] || [];
 
-      // Get opponent team name from game data (team-based system)
+      // Get opponent team name from game data (use the team we're playing against)
       const opponentName = game.awayTeamName || game.homeTeamName || `Unknown Team`;
 
       // Count positions played in this game (only count actual playing positions, not "off")
@@ -296,10 +296,10 @@ export default function PlayerDetails() {
           gameMissedGoals += stat.missedGoals || 0;
           gameRebounds += stat.rebounds || 0;
           gameIntercepts += stat.intercepts || 0;
-          gameBadPasses += stat.badPass || 0;
-          gameHandlingErrors += stat.handlingError || 0;
-          gamePickUps += stat.pickUp || 0;
-          gameInfringements += stat.infringement || 0;
+          gameBadPasses += stat.badPasses || 0;
+          gameHandlingErrors += stat.handlingErrors || 0;
+          gamePickUps += stat.pickUps || 0;
+          gameInfringements += stat.infringements || 0;
         }
 
         // Only use rating from quarter 1 if player was on court
