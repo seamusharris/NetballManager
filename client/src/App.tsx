@@ -31,6 +31,7 @@ import GameDetails from "./pages/GameDetails";
 // Lazy load components
 const StatsDebug = lazy(() => import("./pages/StatsDebug"));
 const PerformanceDemo = lazy(() => import("./pages/PerformanceDemo"));
+import OpponentPreparation from '@/pages/OpponentPreparation';
 
 /**
  * Loading spinner component for suspense fallbacks
@@ -119,7 +120,7 @@ function Router() {
           </ErrorBoundary>
         </Route>
         <Route path="/team-analysis" component={withErrorBoundary(TeamAnalysis, 'TeamAnalysis')} />
-        <Route path="/opponent-preparation" component={lazy(() => import('./pages/OpponentPreparation'))} />
+        <Route path="/opponent-preparation" component={OpponentPreparation} />
         <Route path="/performance-demo" component={PerformanceDemo} />
         <Route path="/game-result-examples" component={GameResultExamples} />
         <Route component={withErrorBoundary(NotFound, 'NotFound')} />
