@@ -784,4 +784,23 @@ export class DatabaseStorage implements IStorage {
         firstName: row.first_name,
         lastName: row.last_name,
         dateOfBirth: row.date_of_birth,
-        positionPreferences: typeof row.position_preferences
+        positionPreferences: typeof row.position_preferences === 'string' 
+          ? JSON.parse(row.position_preferences) 
+          : row.position_preferences || [],
+        active: row.active,
+        avatarColor: row.avatar_color,
+        joinedDate: row.joined_date,
+        clubNotes: row.club_notes,
+        isActiveInClub: row.is_active_in_club
+      }));
+
+      return players;
+    } catch (error) {
+      console.error('Error fetching club players:', error);
+      return [];
+    }
+  }
+}
+
+// Create a singleton instance
+export const storage = new DatabaseStorage();
