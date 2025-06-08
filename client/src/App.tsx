@@ -119,6 +119,7 @@ function Router() {
           </ErrorBoundary>
         </Route>
         <Route path="/team-analysis" component={withErrorBoundary(TeamAnalysis, 'TeamAnalysis')} />
+        <Route path="/opponent-preparation" component={lazy(() => import('./pages/OpponentPreparation'))} />
         <Route path="/performance-demo" component={PerformanceDemo} />
         <Route path="/game-result-examples" component={GameResultExamples} />
         <Route component={withErrorBoundary(NotFound, 'NotFound')} />
