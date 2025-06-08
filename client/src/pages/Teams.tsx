@@ -14,10 +14,7 @@ import { apiClient } from '@/lib/apiClient';
 import { useToast } from '@/hooks/use-toast';
 
 // Import new UI standards
-import { PageTemplate } from '@/components/layout/PageTemplate';
-import { ContentSection } from '@/components/layout/ContentSection';
-import { ActionButton } from '@/components/ui/ActionButton';
-import { PageActions } from '@/components/layout/PageActions';
+import { PageTemplate, ContentSection, ActionButton } from '@/components/ui/ui-standards';
 
 export default function Teams() {
   const [, setLocation] = useLocation();
@@ -136,17 +133,17 @@ export default function Teams() {
         title={pageTitle}
         subtitle={pageSubtitle}
         breadcrumbs={breadcrumbs}
-        showBackButton={true}
-        backButtonProps={{ fallbackPath: '/dashboard' }}
         actions={
-          <PageActions>
-            <ActionButton action="create" onClick={() => setIsDialogOpen(true)} icon={Plus}>
-              Add Team
-            </ActionButton>
-          </PageActions>
+          <ActionButton action="create" onClick={() => setIsDialogOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Add Team
+          </ActionButton>
         }
       >
-        <ContentSection variant="elevated">
+        <ContentSection 
+          title="Active Teams"
+          description="Manage your club's teams and their players"
+        >
           <TeamsList
             teams={teams.filter(team => team.name !== 'BYE')}
             onEdit={setEditingTeam}

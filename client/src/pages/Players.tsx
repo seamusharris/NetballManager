@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams } from "wouter";
@@ -285,7 +284,7 @@ export default function Players() {
       if (is404Error) {
         // Player was already removed, treat as success and refresh all relevant data
         toast({ title: 'Success', description: 'Player removed from team' });
-        
+
         // Comprehensive cache invalidation to ensure available players list updates
         queryClient.invalidateQueries({ queryKey: ['team-players', teamId] });
         queryClient.invalidateQueries({ queryKey: ['team-available-players', teamId, activeSeason?.id] });
@@ -293,7 +292,7 @@ export default function Players() {
         queryClient.invalidateQueries({ queryKey: ['unassigned-players'] });
         queryClient.invalidateQueries({ queryKey: ['players'] });
         queryClient.invalidateQueries({ queryKey: ['clubs', currentClub?.id, 'players'] });
-        
+
         // Force refetch of available players
         queryClient.refetchQueries({ queryKey: ['team-available-players', teamId, activeSeason?.id] });
       } else {
