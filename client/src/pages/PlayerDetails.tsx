@@ -28,6 +28,7 @@ import PlayerClubsManager from '@/components/players/PlayerClubsManager';
 import PlayerSeasonsManager from '@/components/players/PlayerSeasonsManager';
 import PlayerTeamsManager from '@/components/players/PlayerTeamsManager';
 import { isGameValidForStatistics } from '@/lib/gameFilters';
+import { useClub } from '@/contexts/ClubContext';
 
 export default function PlayerDetails() {
   const { id } = useParams<{ id: string }>();
@@ -35,6 +36,7 @@ export default function PlayerDetails() {
   const [_, navigate] = useLocation();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { currentClubId } = useClub();
   const [selectedTab, setSelectedTab] = useState("overview");
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isSeasonManagerOpen, setIsSeasonManagerOpen] = useState(false);
@@ -66,72 +68,69 @@ export default function PlayerDetails() {
     queryFn: () => apiClient.get('/api/seasons'),
   });
 
-  // Define data type for player game data
-  interface PlayerGameData {
-    stats: Record<number, GameStat[]>;
-    rosters: Record<number, any[]>;
-  }
+  // Get completed games that allow statistics
+  const completedGames = (games as Game[]).filter(game => 
+    game.gameStatus?.isCompleted === true && game.gameStatus?.allowsStatistics !== false
+  );
+  const completedGameIds = completedGames.map(game => game.id);
 
-  // Fetch all player stats and roster participation
-  const { data: playerGameData = { stats: {}, rosters: {} }, isLoading: isLoadingStats } = useQuery<PlayerGameData>({
-    queryKey: ['playerAllGameData', playerId],
+  // Use Team Dashboard's cache keys to share data - stats
+  const { data: allGameStats = {}, isLoading: isLoadingStats } = useQuery<Record<number, GameStat[]>>({
+    queryKey: ['centralizedStats', currentClubId, completedGameIds.join(',')],
     queryFn: async () => {
-      if (isNaN(playerId)) return { stats: {}, rosters: {} };
+      if (completedGameIds.length === 0) return {};
 
-      const completedGames = (games as Game[]).filter(game => game.gameStatus?.isCompleted === true);
-      const gameIds = completedGames.map(game => game.id);
+      console.log(`PlayerDetails: Using Team Dashboard cache for stats fetch of ${completedGameIds.length} completed games`);
+      const statsMap: Record<number, GameStat[]> = {};
 
-      if (gameIds.length === 0) {
-        return { stats: {}, rosters: {} };
+      // Fetch stats for all completed games
+      for (const gameId of completedGameIds) {
+        try {
+          const stats = await apiClient.get(`/api/games/${gameId}/stats`);
+          statsMap[gameId] = stats || [];
+        } catch (error) {
+          console.error(`PlayerDetails: Error fetching stats for game ${gameId}:`, error);
+          statsMap[gameId] = [];
+        }
       }
 
-      // Fetch stats for each completed game
-      const statsPromises = gameIds.map(async (gameId) => {
-        const allStats = await apiClient.get(`/api/games/${gameId}/stats?_t=${Date.now()}`) as GameStat[];
-
-        // With position-based stats, we need to get player's positions from roster
-        // and then find stats for those positions
-        return { gameId, stats: allStats };
-      });
-
-      // Fetch roster data for each completed game to check participation
-      const rosterPromises = gameIds.map(async (gameId) => {
-        const allRosters = await apiClient.get(`/api/games/${gameId}/rosters?_t=${Date.now()}`);
-        // Filter rosters for only this player
-        const playerRosters = allRosters.filter((roster: any) => roster.playerId === playerId);
-        // Remove debug log once we've identified the issue
-        return { gameId, rosters: playerRosters };
-      });
-
-      const statsResults = await Promise.all(statsPromises);
-      const rosterResults = await Promise.all(rosterPromises);
-
-      // Create a map of game ID to stats array
-      const statsMap: Record<number, GameStat[]> = {};
-      statsResults.forEach(result => {
-        if (result.stats.length > 0) {
-          statsMap[result.gameId] = result.stats;
-        }
-      });
-
-      // Create a map of game ID to roster array
-      const rostersMap: Record<number, any[]> = {};
-      rosterResults.forEach(result => {
-        if (result.rosters.length > 0) {
-          rostersMap[result.gameId] = result.rosters;
-        }
-      });
-
-      return { stats: statsMap, rosters: rostersMap };
+      console.log(`PlayerDetails: Centralized stats fetch completed for ${Object.keys(statsMap).length} games`);
+      return statsMap;
     },
-    enabled: !isNaN(playerId) && (games as Game[]).length > 0,
+    enabled: !!currentClubId && completedGameIds.length > 0,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 15 * 60 * 1000, // 15 minutes
   });
 
-  // Extract the individual data pieces with proper types
-  const allGameStats: Record<number, GameStat[]> = playerGameData.stats;
-  const allGameRosters: Record<number, any[]> = playerGameData.rosters;
+  // Use Team Dashboard's cache keys to share data - rosters
+  const { data: allGameRosters = {}, isLoading: isLoadingRosters } = useQuery<Record<number, any[]>>({
+    queryKey: ['centralizedRosters', currentClubId, completedGameIds.join(',')],
+    queryFn: async () => {
+      if (completedGameIds.length === 0) return {};
 
-  const isLoading = isLoadingPlayer || isLoadingGames || isLoadingStats;
+      console.log(`PlayerDetails: Using Team Dashboard cache for roster fetch of ${completedGameIds.length} games`);
+      const rostersMap: Record<number, any[]> = {};
+
+      // Fetch rosters for all completed games
+      for (const gameId of completedGameIds) {
+        try {
+          const roster = await apiClient.get(`/api/games/${gameId}/rosters`);
+          rostersMap[gameId] = roster || [];
+        } catch (error) {
+          console.error(`PlayerDetails: Error fetching roster for game ${gameId}:`, error);
+          rostersMap[gameId] = [];
+        }
+      }
+
+      console.log(`PlayerDetails: Centralized roster fetch completed for ${Object.keys(rostersMap).length} games`);
+      return rostersMap;
+    },
+    enabled: !!currentClubId && completedGameIds.length > 0,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 15 * 60 * 1000, // 15 minutes
+  });
+
+  const isLoading = isLoadingPlayer || isLoadingGames || isLoadingStats || isLoadingRosters;
 
   // Calculate aggregate stats
   const calculateAggregateStats = () => {
