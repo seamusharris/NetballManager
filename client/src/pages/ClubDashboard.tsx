@@ -1,3 +1,4 @@
+
 import { useQuery } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet';
 import { useLocation } from 'wouter';
@@ -13,11 +14,11 @@ export default function ClubDashboard() {
   const { currentClub, currentClubId, isLoading: clubLoading } = useClub();
   const [, navigate] = useLocation();
 
-  // All hooks must be called before any conditional returns
+  // Always call all hooks - handle enabled state through query options
   const { data: players = [], isLoading: isLoadingPlayers } = useQuery<any[]>({
     queryKey: ['club-players', currentClubId],
     queryFn: () => apiClient.get('/api/players'),
-    enabled: !!currentClubId,
+    enabled: !!currentClubId && !clubLoading,
     staleTime: 10 * 60 * 1000, // 10 minutes
     gcTime: 30 * 60 * 1000 // 30 minutes
   });
@@ -25,7 +26,7 @@ export default function ClubDashboard() {
   const { data: games = [], isLoading: isLoadingGames, error: gamesError } = useQuery<any[]>({
     queryKey: ['games', currentClubId, 'club-wide'],
     queryFn: () => apiClient.get('/api/games', { 'x-club-wide': 'true' }),
-    enabled: !!currentClubId,
+    enabled: !!currentClubId && !clubLoading,
     staleTime: 10 * 60 * 1000, // 10 minutes (increased)
     gcTime: 30 * 60 * 1000 // 30 minutes (increased)
   });
@@ -33,7 +34,7 @@ export default function ClubDashboard() {
   const { data: teams = [], isLoading: isLoadingTeams } = useQuery<any[]>({
     queryKey: ['teams', currentClubId],
     queryFn: () => apiClient.get('/api/teams'),
-    enabled: !!currentClubId,
+    enabled: !!currentClubId && !clubLoading,
     staleTime: 10 * 60 * 1000, // 10 minutes
     gcTime: 30 * 60 * 1000 // 30 minutes
   });
@@ -41,7 +42,7 @@ export default function ClubDashboard() {
   const { data: seasons = [], isLoading: isLoadingSeasons } = useQuery<any[]>({
     queryKey: ['/api/seasons', currentClubId],
     queryFn: () => apiClient.get('/api/seasons'),
-    enabled: !!currentClubId,
+    enabled: !!currentClubId && !clubLoading,
     staleTime: 15 * 60 * 1000, // 15 minutes (seasons change infrequently)
     gcTime: 60 * 60 * 1000 // 1 hour
   });
@@ -49,15 +50,17 @@ export default function ClubDashboard() {
   const { data: activeSeason, isLoading: isLoadingActiveSeason } = useQuery<any>({
     queryKey: ['/api/seasons/active', currentClubId],
     queryFn: () => apiClient.get('/api/seasons/active'),
-    enabled: !!currentClubId,
+    enabled: !!currentClubId && !clubLoading,
     staleTime: 15 * 60 * 1000, // 15 minutes
     gcTime: 60 * 60 * 1000 // 1 hour
   });
 
   // Centralized stats fetching for completed games only
-  const completedGameIds = games?.filter(game => 
-    game.statusIsCompleted && game.statusAllowsStatistics
-  ).map(game => game.id) || [];
+  const completedGameIds = useMemo(() => {
+    return games?.filter(game => 
+      game.statusIsCompleted && game.statusAllowsStatistics
+    ).map(game => game.id) || [];
+  }, [games]);
 
   const { data: centralizedStats = {}, isLoading: isLoadingStats } = useQuery({
     queryKey: ['club-centralizedStats', currentClubId, completedGameIds.join(',')],
@@ -90,36 +93,10 @@ export default function ClubDashboard() {
         return statsMap;
       }
     },
-    enabled: !!currentClubId && completedGameIds.length > 0,
+    enabled: !!currentClubId && !clubLoading && completedGameIds.length > 0,
     staleTime: 10 * 60 * 1000, // 10 minutes (increased for better caching)
     gcTime: 30 * 60 * 1000 // 30 minutes (increased for better caching)
   });
-
-  const isLoading = isLoadingPlayers || isLoadingGames || isLoadingTeams || isLoadingSeasons || isLoadingActiveSeason || isLoadingStats;
-
-  // Handle club loading state after all hooks are called
-  if (clubLoading || !currentClubId) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <Loader2 className="mx-auto h-8 w-8 animate-spin" />
-          <p className="mt-2 text-sm text-muted-foreground">Loading club data...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <h2 className="text-xl font-semibold mb-2">Loading Club Dashboard</h2>
-          <p className="text-muted-foreground">Please wait while we load your club data...</p>
-        </div>
-      </div>
-    );
-  }
 
   // Calculate club-wide metrics (memoized to prevent unnecessary recalculations)
   const { activeTeams, completedGames, upcomingGames, totalPlayers, activePlayers } = useMemo(() => {
@@ -181,6 +158,32 @@ export default function ClubDashboard() {
       .slice(0, 5),
     [completedGames]
   );
+
+  // Now handle loading states after all hooks are called
+  const isLoading = isLoadingPlayers || isLoadingGames || isLoadingTeams || isLoadingSeasons || isLoadingActiveSeason || isLoadingStats;
+
+  if (clubLoading || !currentClubId) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <Loader2 className="mx-auto h-8 w-8 animate-spin" />
+          <p className="mt-2 text-sm text-muted-foreground">Loading club data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <h2 className="text-xl font-semibold mb-2">Loading Club Dashboard</h2>
+          <p className="text-muted-foreground">Please wait while we load your club data...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
