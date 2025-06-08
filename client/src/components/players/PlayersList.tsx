@@ -86,8 +86,10 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
     queryFn: () => apiClient.get('/api/games'),
   });
 
-  // Get only completed games
-  const completedGames = games.filter(game => game.completed);
+  // Get completed games that allow statistics (standardized filtering)
+  const completedGames = games.filter(game => 
+    game.gameStatus?.isCompleted === true && game.gameStatus?.allowsStatistics !== false
+  );
   const gameIds = completedGames.map(game => game.id);
   const enableQuery = gameIds.length > 0;
 

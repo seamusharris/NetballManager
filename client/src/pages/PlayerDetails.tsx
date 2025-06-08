@@ -56,8 +56,6 @@ export default function PlayerDetails() {
     queryFn: () => apiClient.get('/api/games'),
   });
 
-  // No longer need opponents - using team-based system
-
   // Fetch all seasons for the seasons manager
   const { data: seasons = [], isLoading: isLoadingSeasons } = useQuery<Season[]>({
     queryKey: ['/api/seasons'],
@@ -296,10 +294,10 @@ export default function PlayerDetails() {
           gameMissedGoals += stat.missedGoals || 0;
           gameRebounds += stat.rebounds || 0;
           gameIntercepts += stat.intercepts || 0;
-          gameBadPasses += stat.badPasses || 0;
-          gameHandlingErrors += stat.handlingErrors || 0;
-          gamePickUps += stat.pickUps || 0;
-          gameInfringements += stat.infringements || 0;
+          gameBadPasses += stat.badPass || 0;
+          gameHandlingErrors += stat.handlingError || 0;
+          gamePickUps += stat.pickUp || 0;
+          gameInfringements += stat.infringement || 0;
         }
 
         // Only use rating from quarter 1 if player was on court
@@ -828,8 +826,25 @@ export default function PlayerDetails() {
                                     {game.goalsAgainst}
                                   </TableCell>
                                   <TableCell className="px-2 py-2 whitespace-nowrap text-sm text-center font-mono border-r">
-                                    {/* Using missedGoals from extra data we can extract */}
-                                    {allGameStats[game.gameId]?.reduce((sum, stat) => sum + (stat.missedGoals || 0), 0) || 0}
+                                    {/* Calculate missedGoals from position stats for this player */}
+                                    {(() => {
+                                      const gameRosters = allGameRosters[game.gameId] || [];
+                                      const gameStats = allGameStats[game.gameId] || [];
+                                      let playerMissedGoals = 0;
+                                      
+                                      gameRosters.forEach((roster: any) => {
+                                        if (roster.playerId === playerId) {
+                                          const positionStat = gameStats.find(s => 
+                                            s.position === roster.position && s.quarter === roster.quarter
+                                          );
+                                          if (positionStat) {
+                                            playerMissedGoals += positionStat.missedGoals || 0;
+                                          }
+                                        }
+                                      });
+                                      
+                                      return playerMissedGoals;
+                                    })()}
                                   </TableCell>
 
                                   {/* Defense stats */}
@@ -840,22 +855,90 @@ export default function PlayerDetails() {
                                     {game.rebounds}
                                   </TableCell>
                                   <TableCell className="px-2 py-2 whitespace-nowrap text-sm text-center font-mono border-r">
-                                    {/* Using pickUp from extra data we can extract */}
-                                    {allGameStats[game.gameId]?.reduce((sum, stat) => sum + (stat.pickUp || 0), 0) || 0}
+                                    {/* Calculate pickUp from position stats for this player */}
+                                    {(() => {
+                                      const gameRosters = allGameRosters[game.gameId] || [];
+                                      const gameStats = allGameStats[game.gameId] || [];
+                                      let playerPickUps = 0;
+                                      
+                                      gameRosters.forEach((roster: any) => {
+                                        if (roster.playerId === playerId) {
+                                          const positionStat = gameStats.find(s => 
+                                            s.position === roster.position && s.quarter === roster.quarter
+                                          );
+                                          if (positionStat) {
+                                            playerPickUps += positionStat.pickUp || 0;
+                                          }
+                                        }
+                                      });
+                                      
+                                      return playerPickUps;
+                                    })()}
                                   </TableCell>
 
                                   {/* Errors stats */}
                                   <TableCell className="px-2 py-2 whitespace-nowrap text-sm text-center font-mono">
-                                    {/* Using badPass from extra data we can extract */}
-                                    {allGameStats[game.gameId]?.reduce((sum, stat) => sum + (stat.badPass || 0), 0) || 0}
+                                    {/* Calculate badPass from position stats for this player */}
+                                    {(() => {
+                                      const gameRosters = allGameRosters[game.gameId] || [];
+                                      const gameStats = allGameStats[game.gameId] || [];
+                                      let playerBadPasses = 0;
+                                      
+                                      gameRosters.forEach((roster: any) => {
+                                        if (roster.playerId === playerId) {
+                                          const positionStat = gameStats.find(s => 
+                                            s.position === roster.position && s.quarter === roster.quarter
+                                          );
+                                          if (positionStat) {
+                                            playerBadPasses += positionStat.badPass || 0;
+                                          }
+                                        }
+                                      });
+                                      
+                                      return playerBadPasses;
+                                    })()}
                                   </TableCell>
                                   <TableCell className="px-2 py-2 whitespace-nowrap text-sm text-center font-mono">
-                                    {/* Using handlingError from extra data we can extract */}
-                                    {allGameStats[game.gameId]?.reduce((sum, stat) => sum + (stat.handlingError || 0), 0) || 0}
+                                    {/* Calculate handlingError from position stats for this player */}
+                                    {(() => {
+                                      const gameRosters = allGameRosters[game.gameId] || [];
+                                      const gameStats = allGameStats[game.gameId] || [];
+                                      let playerHandlingErrors = 0;
+                                      
+                                      gameRosters.forEach((roster: any) => {
+                                        if (roster.playerId === playerId) {
+                                          const positionStat = gameStats.find(s => 
+                                            s.position === roster.position && s.quarter === roster.quarter
+                                          );
+                                          if (positionStat) {
+                                            playerHandlingErrors += positionStat.handlingError || 0;
+                                          }
+                                        }
+                                      });
+                                      
+                                      return playerHandlingErrors;
+                                    })()}
                                   </TableCell>
                                   <TableCell className="px-2 py-2 whitespace-nowrap text-sm text-center font-mono border-r">
-                                    {/* Using infringement from extra data we can extract */}
-                                    {allGameStats[game.gameId]?.reduce((sum, stat) => sum + (stat.infringement || 0), 0) || 0}
+                                    {/* Calculate infringement from position stats for this player */}
+                                    {(() => {
+                                      const gameRosters = allGameRosters[game.gameId] || [];
+                                      const gameStats = allGameStats[game.gameId] || [];
+                                      let playerInfringements = 0;
+                                      
+                                      gameRosters.forEach((roster: any) => {
+                                        if (roster.playerId === playerId) {
+                                          const positionStat = gameStats.find(s => 
+                                            s.position === roster.position && s.quarter === roster.quarter
+                                          );
+                                          if (positionStat) {
+                                            playerInfringements += positionStat.infringement || 0;
+                                          }
+                                        }
+                                      });
+                                      
+                                      return playerInfringements;
+                                    })()}
                                   </TableCell>
                                 </TableRow>
                               )
