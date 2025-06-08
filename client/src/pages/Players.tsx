@@ -48,7 +48,7 @@ export default function Players() {
         switchClub(targetClubId);
       }
     }
-  }, [params.clubId, currentClub?.id, switchToClub]);
+  }, [params.clubId, currentClub?.id, switchClub]);
 
   // Determine if this is team-specific or club-wide players
   const teamId = params.teamId ? parseInt(params.teamId) : null;
