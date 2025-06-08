@@ -62,15 +62,15 @@ export default function PlayerDetails() {
     queryFn: () => apiClient.get('/api/seasons'),
   });
 
-  // Get completed games that allow statistics
+  // Get completed games using same filtering as Team Dashboard PlayerAnalyticsWidget
   const completedGames = (games as Game[]).filter(game => 
-    game.gameStatus?.isCompleted === true && game.gameStatus?.allowsStatistics !== false
+    game.statusIsCompleted === true && game.statusAllowsStatistics === true
   );
   const completedGameIds = completedGames.map(game => game.id);
 
-  // Use Team Dashboard's cache keys to share data - stats
+  // Use Team Dashboard's exact cache keys to share data - stats
   const { data: allGameStats = {}, isLoading: isLoadingStats } = useQuery<Record<number, GameStat[]>>({
-    queryKey: ['centralizedStats', currentClubId, completedGameIds.join(',')],
+    queryKey: ['club-centralizedStats', currentClubId, completedGameIds.join(',')],
     queryFn: async () => {
       if (completedGameIds.length === 0) return {};
 
@@ -96,9 +96,9 @@ export default function PlayerDetails() {
     gcTime: 15 * 60 * 1000, // 15 minutes
   });
 
-  // Use Team Dashboard's cache keys to share data - rosters
+  // Use Team Dashboard's exact cache keys to share data - rosters
   const { data: allGameRosters = {}, isLoading: isLoadingRosters } = useQuery<Record<number, any[]>>({
-    queryKey: ['centralizedRosters', currentClubId, completedGameIds.join(',')],
+    queryKey: ['club-centralizedRosters', currentClubId, completedGameIds.join(',')],
     queryFn: async () => {
       if (completedGameIds.length === 0) return {};
 
