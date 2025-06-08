@@ -13,7 +13,19 @@ export default function ClubDashboard() {
   const { currentClub, currentClubId, isLoading: clubLoading } = useClub();
   const [, navigate] = useLocation();
 
-  // Queries with proper club context and shared cache keys
+  // Early return for loading states - before any other hooks
+  if (clubLoading || !currentClubId) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <Loader2 className="mx-auto h-8 w-8 animate-spin" />
+          <p className="mt-2 text-sm text-muted-foreground">Loading club data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Now all hooks can be safely called
   const { data: players = [], isLoading: isLoadingPlayers } = useQuery<any[]>({
     queryKey: ['club-players', currentClubId],
     queryFn: () => apiClient.get('/api/players'),
@@ -94,17 +106,6 @@ export default function ClubDashboard() {
     staleTime: 10 * 60 * 1000, // 10 minutes (increased for better caching)
     gcTime: 30 * 60 * 1000 // 30 minutes (increased for better caching)
   });
-
-  if (clubLoading || !currentClubId) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <Loader2 className="mx-auto h-8 w-8 animate-spin" />
-          <p className="mt-2 text-sm text-muted-foreground">Loading club data...</p>
-        </div>
-      </div>
-    );
-  }
 
   const isLoading = isLoadingPlayers || isLoadingGames || isLoadingTeams || isLoadingSeasons || isLoadingActiveSeason || isLoadingStats;
 
