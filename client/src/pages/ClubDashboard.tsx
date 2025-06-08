@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet';
 import { useLocation } from 'wouter';
+import { useMemo } from 'react';
 import { TEAM_NAME } from '@/lib/settings';
 import { useClub } from '@/contexts/ClubContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,37 +13,45 @@ export default function ClubDashboard() {
   const { currentClub, currentClubId, isLoading: clubLoading } = useClub();
   const [, navigate] = useLocation();
 
-  // Queries with proper club context
+  // Queries with proper club context and shared cache keys
   const { data: players = [], isLoading: isLoadingPlayers } = useQuery<any[]>({
     queryKey: ['club-players', currentClubId],
     queryFn: () => apiClient.get('/api/players'),
     enabled: !!currentClubId,
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 30 * 60 * 1000 // 30 minutes
   });
 
   const { data: games = [], isLoading: isLoadingGames, error: gamesError } = useQuery<any[]>({
     queryKey: ['games', currentClubId, 'club-wide'],
     queryFn: () => apiClient.get('/api/games', { 'x-club-wide': 'true' }),
     enabled: !!currentClubId,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 15 * 60 * 1000 // 15 minutes
+    staleTime: 10 * 60 * 1000, // 10 minutes (increased)
+    gcTime: 30 * 60 * 1000 // 30 minutes (increased)
   });
 
   const { data: teams = [], isLoading: isLoadingTeams } = useQuery<any[]>({
     queryKey: ['teams', currentClubId],
     queryFn: () => apiClient.get('/api/teams'),
     enabled: !!currentClubId,
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 30 * 60 * 1000 // 30 minutes
   });
 
   const { data: seasons = [], isLoading: isLoadingSeasons } = useQuery<any[]>({
     queryKey: ['/api/seasons', currentClubId],
     queryFn: () => apiClient.get('/api/seasons'),
     enabled: !!currentClubId,
+    staleTime: 15 * 60 * 1000, // 15 minutes (seasons change infrequently)
+    gcTime: 60 * 60 * 1000 // 1 hour
   });
 
   const { data: activeSeason, isLoading: isLoadingActiveSeason } = useQuery<any>({
     queryKey: ['/api/seasons/active', currentClubId],
     queryFn: () => apiClient.get('/api/seasons/active'),
     enabled: !!currentClubId,
+    staleTime: 15 * 60 * 1000, // 15 minutes
+    gcTime: 60 * 60 * 1000 // 1 hour
   });
 
   // Centralized stats fetching for completed games only
@@ -55,26 +64,35 @@ export default function ClubDashboard() {
     queryFn: async () => {
       if (completedGameIds.length === 0) return {};
 
-      console.log(`ClubDashboard centralizing stats fetch for ${completedGameIds.length} completed games`);
-      const statsMap: Record<number, any[]> = {};
-
-      // Fetch stats for completed games only
-      for (const gameId of completedGameIds) {
-        try {
-          const stats = await apiClient.get(`/api/games/${gameId}/stats`);
-          statsMap[gameId] = stats || [];
-        } catch (error) {
-          console.error(`Error fetching stats for game ${gameId}:`, error);
-          statsMap[gameId] = [];
+      console.log(`ClubDashboard: Using batch endpoint for ${completedGameIds.length} completed games`);
+      
+      try {
+        // Use batch endpoint for better performance
+        const batchResponse = await apiClient.post('/api/games/stats/batch', {
+          gameIds: completedGameIds
+        });
+        console.log(`ClubDashboard: Batch stats fetch completed for ${Object.keys(batchResponse).length} games`);
+        return batchResponse;
+      } catch (error) {
+        console.error('ClubDashboard: Batch stats fetch failed, falling back to individual requests:', error);
+        
+        // Fallback to individual requests
+        const statsMap: Record<number, any[]> = {};
+        for (const gameId of completedGameIds) {
+          try {
+            const stats = await apiClient.get(`/api/games/${gameId}/stats`);
+            statsMap[gameId] = stats || [];
+          } catch (error) {
+            console.error(`ClubDashboard: Error fetching stats for game ${gameId}:`, error);
+            statsMap[gameId] = [];
+          }
         }
+        return statsMap;
       }
-
-      console.log(`ClubDashboard centralized stats fetch completed for ${Object.keys(statsMap).length} games`);
-      return statsMap;
     },
     enabled: !!currentClubId && completedGameIds.length > 0,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 15 * 60 * 1000 // 15 minutes
+    staleTime: 10 * 60 * 1000, // 10 minutes (increased for better caching)
+    gcTime: 30 * 60 * 1000 // 30 minutes (increased for better caching)
   });
 
   if (clubLoading || !currentClubId) {
@@ -102,15 +120,19 @@ export default function ClubDashboard() {
     );
   }
 
-  // Calculate club-wide metrics
-  const activeTeams = teams.filter(team => team.isActive && team.name !== 'BYE');
-  const completedGames = games.filter(game => game.statusIsCompleted);
-  const upcomingGames = games.filter(game => !game.statusIsCompleted);
-  const totalPlayers = players.length; // Count all players, not just active ones
-  const activePlayers = players.filter(player => player.active);
+  // Calculate club-wide metrics (memoized to prevent unnecessary recalculations)
+  const { activeTeams, completedGames, upcomingGames, totalPlayers, activePlayers } = useMemo(() => {
+    return {
+      activeTeams: teams.filter(team => team.isActive && team.name !== 'BYE'),
+      completedGames: games.filter(game => game.statusIsCompleted),
+      upcomingGames: games.filter(game => !game.statusIsCompleted),
+      totalPlayers: players.length, // Count all players, not just active ones
+      activePlayers: players.filter(player => player.active)
+    };
+  }, [teams, games, players]);
 
-  // Team performance metrics
-  const teamPerformance = activeTeams.map(team => {
+  // Team performance metrics (memoized to prevent unnecessary recalculations)
+  const teamPerformance = useMemo(() => activeTeams.map(team => {
     // Filter games where this team is playing (either home or away)
     // Note: using the correct field names from the server response
     const teamGames = games.filter(game => 
@@ -149,12 +171,15 @@ export default function ClubDashboard() {
     console.log(`ClubDashboard: Team ${team.name} final performance:`, teamPerf);
 
     return teamPerf;
-  });
+  }), [activeTeams, games, centralizedStats]);
 
-  // Recent games across all teams
-  const recentGames = completedGames
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-    .slice(0, 5);
+  // Recent games across all teams (memoized)
+  const recentGames = useMemo(() => 
+    completedGames
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .slice(0, 5),
+    [completedGames]
+  );
 
   return (
     <>

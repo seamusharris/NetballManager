@@ -67,7 +67,7 @@ export default function Dashboard() {
 
   // Centralized roster fetching for all games
   const { data: centralizedRosters = {}, isLoading: isLoadingRosters } = useQuery({
-    queryKey: ['centralizedRosters', currentClubId, games?.map(g => g.id).join(',')],
+    queryKey: ['club-centralizedRosters', currentClubId, games?.map(g => g.id).join(',')],
     queryFn: async () => {
       if (!games || games.length === 0) return {};
 
@@ -89,8 +89,8 @@ export default function Dashboard() {
       return rostersMap;
     },
     enabled: !!currentClubId && !!games && games.length > 0,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 15 * 60 * 1000 // 15 minutes
+    staleTime: 10 * 60 * 1000, // 10 minutes (increased)
+    gcTime: 30 * 60 * 1000 // 30 minutes (increased)
   });
 
   // Centralized stats fetching for completed games only
@@ -99,7 +99,7 @@ export default function Dashboard() {
   ).map(game => game.id) || [];
 
   const { data: centralizedStats = {}, isLoading: isLoadingStats } = useQuery({
-    queryKey: ['centralizedStats', currentClubId, completedGameIds.join(',')],
+    queryKey: ['club-centralizedStats', currentClubId, completedGameIds.join(',')],
     queryFn: async () => {
       if (completedGameIds.length === 0) return {};
 
@@ -121,8 +121,8 @@ export default function Dashboard() {
       return statsMap;
     },
     enabled: !!currentClubId && completedGameIds.length > 0,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 15 * 60 * 1000 // 15 minutes
+    staleTime: 10 * 60 * 1000, // 10 minutes (increased)
+    gcTime: 30 * 60 * 1000 // 30 minutes (increased)
   });
 
   // NOW we can do conditional returns after all hooks are called
