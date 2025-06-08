@@ -74,26 +74,35 @@ export default function PlayerDetails() {
     queryFn: async () => {
       if (completedGameIds.length === 0) return {};
 
-      console.log(`PlayerDetails: Using Team Dashboard cache for stats fetch of ${completedGameIds.length} completed games`);
-      const statsMap: Record<number, GameStat[]> = {};
-
-      // Fetch stats for all completed games
-      for (const gameId of completedGameIds) {
-        try {
-          const stats = await apiClient.get(`/api/games/${gameId}/stats`);
-          statsMap[gameId] = stats || [];
-        } catch (error) {
-          console.error(`PlayerDetails: Error fetching stats for game ${gameId}:`, error);
-          statsMap[gameId] = [];
+      console.log(`PlayerDetails: Using batch endpoint for stats fetch of ${completedGameIds.length} completed games`);
+      
+      try {
+        // Use batch endpoint for better performance and cache consistency
+        const batchResponse = await apiClient.post('/api/games/stats/batch', {
+          gameIds: completedGameIds
+        });
+        console.log(`PlayerDetails: Batch stats fetch completed for ${Object.keys(batchResponse).length} games`);
+        return batchResponse;
+      } catch (error) {
+        console.error('PlayerDetails: Batch stats fetch failed, falling back to individual requests:', error);
+        
+        // Fallback to individual requests
+        const statsMap: Record<number, GameStat[]> = {};
+        for (const gameId of completedGameIds) {
+          try {
+            const stats = await apiClient.get(`/api/games/${gameId}/stats`);
+            statsMap[gameId] = stats || [];
+          } catch (error) {
+            console.error(`PlayerDetails: Error fetching stats for game ${gameId}:`, error);
+            statsMap[gameId] = [];
+          }
         }
+        return statsMap;
       }
-
-      console.log(`PlayerDetails: Centralized stats fetch completed for ${Object.keys(statsMap).length} games`);
-      return statsMap;
     },
     enabled: !!currentClubId && completedGameIds.length > 0,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 15 * 60 * 1000, // 15 minutes
+    staleTime: 10 * 60 * 1000, // 10 minutes (increased for better caching)
+    gcTime: 30 * 60 * 1000, // 30 minutes (increased for better caching)
   });
 
   // Use Team Dashboard's exact cache keys to share data - rosters
@@ -102,7 +111,7 @@ export default function PlayerDetails() {
     queryFn: async () => {
       if (completedGameIds.length === 0) return {};
 
-      console.log(`PlayerDetails: Using Team Dashboard cache for roster fetch of ${completedGameIds.length} games`);
+      console.log(`PlayerDetails: Using individual requests for roster fetch of ${completedGameIds.length} games`);
       const rostersMap: Record<number, any[]> = {};
 
       // Fetch rosters for all completed games
@@ -120,8 +129,8 @@ export default function PlayerDetails() {
       return rostersMap;
     },
     enabled: !!currentClubId && completedGameIds.length > 0,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 15 * 60 * 1000, // 15 minutes
+    staleTime: 10 * 60 * 1000, // 10 minutes (increased for better caching)
+    gcTime: 30 * 60 * 1000, // 30 minutes (increased for better caching)
   });
 
   const isLoading = isLoadingPlayer || isLoadingGames || isLoadingStats || isLoadingRosters;
