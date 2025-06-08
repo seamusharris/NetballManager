@@ -1,4 +1,3 @@
-
 /**
  * Widget Standardization Guide
  * 
@@ -28,26 +27,19 @@ export const WIDGET_SPACING = {
   sectionMargin: 'mt-6',
   itemMargin: 'mt-4',
   smallMargin: 'mt-2',
-  
+
   // Padding
   containerPadding: 'p-6',
   contentPadding: 'p-4',
   smallPadding: 'p-3',
-  
+
   // Gaps
   gridGap: 'gap-4',
   smallGap: 'gap-2',
-  
+
   // Text spacing
   titleMargin: 'mb-1',
   descriptionMargin: 'mb-2',
-} as const;
-
-// Standard typography classes
-export const WIDGET_TYPOGRAPHY = {
-  title: 'text-lg font-semibold text-gray-800',
-  subtitle: 'text-sm font-medium text-gray-600',
-  description: 'text-sm text-gray-600',
   label: 'text-xs text-gray-500 font-medium',
   value: 'text-xl font-bold text-gray-700',
   smallValue: 'text-lg font-semibold text-gray-700',
@@ -90,14 +82,50 @@ export const SPACING_STANDARDS = {
   widgetGap: 'mb-6',       // Between widgets
   contentGap: 'mb-4',      // Between content items
   smallGap: 'mb-2',        // Between related items
-  
+
   // Padding standards
   pagePadding: 'p-6',      // Main page content
   widgetPadding: 'p-4',    // Widget content
   boxPadding: 'p-3',       // Small boxes
-  
+
   // Grid gaps
   gridGap: 'gap-6',        // Main grid layouts
   smallGridGap: 'gap-4',   // Compact grids
   tightGridGap: 'gap-2',   // Very compact layouts
+} as const;
+
+// Helper function to get action button class
+export function getActionButtonClass(action: keyof typeof ACTION_STYLES): string {
+  return ACTION_STYLES[action];
+}
+
+// Page template helper functions
+export const PAGE_HELPERS = {
+  // Create breadcrumb items for common navigation patterns
+  createBreadcrumbs: (items: Array<{label: string, href?: string, onClick?: () => void}>) => items,
+
+  // Generate page title with club/team context
+  createPageTitle: (baseName: string, teamName?: string, clubName?: string) => {
+    if (teamName) return `${baseName} - ${teamName}`;
+    if (clubName) return `${baseName} - ${clubName}`;
+    return baseName;
+  },
+
+  // Generate page subtitle with context
+  createPageSubtitle: (description: string, context?: string) => {
+    return context ? `${description} • ${context}` : description;
+  }
+} as const;
+
+// Content section helper functions
+export const CONTENT_HELPERS = {
+  // Standard section configurations
+  getSectionConfig: (type: 'main' | 'sidebar' | 'footer') => {
+    const configs = {
+      main: { variant: 'default' as const, spacing: 'default' as const },
+      sidebar: { variant: 'bordered' as const, spacing: 'compact' as const },
+      footer: { variant: 'default' as const, spacing: 'loose' as const }
+    };
+    return configs[type];
+  }
 } as const;
