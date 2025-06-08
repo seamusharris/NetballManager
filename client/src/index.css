@@ -110,6 +110,13 @@ input[type=number] {
     --sidebar-border: var(--netball-court-blue-dark);
     --sidebar-ring: 0 0% 100%;
     
+    /* Action colors for consistent UI */
+    --action-create: var(--netball-green);      /* Green for create/add */
+    --action-edit: var(--netball-court-blue);   /* Blue for edit/modify */
+    --action-delete: var(--netball-red);        /* Red for delete/remove */
+    --action-manage: var(--netball-orange);     /* Orange for manage/settings */
+    --action-view: var(--neutral-600);          /* Gray for view/details */
+    
     /* Status colors for wins/losses */
     --status-win: var(--netball-green);
     --status-loss: var(--netball-red);
@@ -215,6 +222,107 @@ input[type=number] {
 }
 
 @layer components {
+  /* Page structure utilities */
+  .page-container {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6;
+  }
+  
+  .content-section {
+    @apply mb-8; /* 32px between major sections */
+  }
+  
+  .page-header-section {
+    @apply mb-8 pb-4 border-b border-border;
+  }
+  
+  /* Typography hierarchy - enhanced */
+  .page-header {
+    @apply text-3xl md:text-4xl font-bold text-foreground tracking-tight;
+    line-height: 1.2;
+  }
+  
+  .page-subtitle {
+    @apply text-lg text-muted-foreground mt-2;
+  }
+  
+  .section-header {
+    @apply text-xl md:text-2xl font-semibold text-foreground mb-4 tracking-tight;
+  }
+  
+  .widget-header {
+    @apply text-lg font-semibold text-foreground mb-3;
+  }
+  
+  /* Content box standards */
+  .content-box {
+    @apply bg-card rounded-lg border border-border shadow-sm p-6;
+  }
+  
+  .content-box-sm {
+    @apply bg-card rounded-lg border border-border shadow-sm p-4;
+  }
+  
+  .widget-container {
+    @apply bg-card rounded-lg border border-border shadow-sm p-4;
+  }
+  
+  .data-box {
+    @apply bg-muted/30 rounded-md border border-border p-3;
+  }
+  
+  /* Action button color utilities */
+  .btn-create {
+    @apply bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 
+           text-white shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-[0.98] 
+           font-medium px-6 py-2.5 rounded-lg transition-all duration-200 
+           focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:ring-offset-2;
+  }
+  
+  .btn-edit {
+    @apply bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 
+           text-white shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-[0.98] 
+           font-medium px-6 py-2.5 rounded-lg transition-all duration-200 
+           focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:ring-offset-2;
+  }
+  
+  .btn-delete {
+    @apply bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 
+           text-white shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-[0.98] 
+           font-medium px-6 py-2.5 rounded-lg transition-all duration-200 
+           focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:ring-offset-2;
+  }
+  
+  .btn-manage {
+    @apply bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 
+           text-white shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-[0.98] 
+           font-medium px-6 py-2.5 rounded-lg transition-all duration-200 
+           focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:ring-offset-2;
+  }
+  
+  .btn-view {
+    @apply bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 
+           text-white shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-[0.98] 
+           font-medium px-6 py-2.5 rounded-lg transition-all duration-200 
+           focus:outline-none focus:ring-2 focus:ring-gray-500/50 focus:ring-offset-2;
+  }
+  
+  /* Breadcrumb navigation */
+  .breadcrumb-nav {
+    @apply flex items-center space-x-2 text-sm text-muted-foreground mb-4;
+  }
+  
+  .breadcrumb-item {
+    @apply hover:text-foreground transition-colors duration-200 cursor-pointer;
+  }
+  
+  .breadcrumb-separator {
+    @apply text-muted-foreground/50;
+  }
+  
+  .breadcrumb-current {
+    @apply text-foreground font-medium;
+  }
+  
   /* Sidebar styling */
   .sidebar-link {
     @apply flex items-center gap-3 px-4 py-3 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent transition-all duration-200 font-medium;

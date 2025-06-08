@@ -53,9 +53,51 @@ export const WIDGET_TYPOGRAPHY = {
   smallValue: 'text-lg font-semibold text-gray-700',
 } as const;
 
+// Action color standards (use with button components)
+export const ACTION_STYLES = {
+  create: 'btn-create',
+  edit: 'btn-edit',
+  delete: 'btn-delete',
+  manage: 'btn-manage',
+  view: 'btn-view',
+} as const;
+
 // Standard component classes
 export const WIDGET_COMPONENTS = {
-  statBox: 'text-center bg-gray-100 p-3 rounded-lg border border-gray-200',
-  chartContainer: 'bg-gray-50 rounded-lg border border-gray-200',
-  contentBox: 'p-3 bg-gray-50 rounded-lg border border-gray-200',
+  statBox: 'text-center bg-muted/30 p-3 rounded-lg border border-border',
+  chartContainer: 'bg-card rounded-lg border border-border shadow-sm p-4',
+  contentBox: 'content-box',
+  contentBoxSm: 'content-box-sm',
+  widgetContainer: 'widget-container',
+  dataBox: 'data-box',
+} as const;
+
+// Standard page structure classes
+export const PAGE_STRUCTURE = {
+  container: 'page-container',
+  section: 'content-section',
+  headerSection: 'page-header-section',
+  pageTitle: 'page-header',
+  pageSubtitle: 'page-subtitle',
+  sectionTitle: 'section-header',
+  widgetTitle: 'widget-header',
+} as const;
+
+// Standard spacing utilities 
+export const SPACING_STANDARDS = {
+  // Use these for consistent spacing throughout the app
+  sectionGap: 'mb-8',      // Between major page sections
+  widgetGap: 'mb-6',       // Between widgets
+  contentGap: 'mb-4',      // Between content items
+  smallGap: 'mb-2',        // Between related items
+  
+  // Padding standards
+  pagePadding: 'p-6',      // Main page content
+  widgetPadding: 'p-4',    // Widget content
+  boxPadding: 'p-3',       // Small boxes
+  
+  // Grid gaps
+  gridGap: 'gap-6',        // Main grid layouts
+  smallGridGap: 'gap-4',   // Compact grids
+  tightGridGap: 'gap-2',   // Very compact layouts
 } as const;
