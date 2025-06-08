@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, Plus, Users, Trophy, Calendar, Activity } from 'lucide-react';
 import { apiClient } from '@/lib/apiClient';
-import { TeamForm } from '@/components/teams/TeamForm';
+import TeamForm from '@/components/teams/TeamForm';
 import { TEAM_NAME } from '@/lib/settings';
 import { PageTemplate, ContentSection, ActionButton } from '@/components/ui/ui-standards';
 
