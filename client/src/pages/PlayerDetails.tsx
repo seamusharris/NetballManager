@@ -70,7 +70,7 @@ export default function PlayerDetails() {
 
   // Use Team Dashboard's exact cache keys to share data - stats
   const { data: allGameStats = {}, isLoading: isLoadingStats } = useQuery<Record<number, GameStat[]>>({
-    queryKey: ['club-centralizedStats', currentClubId, completedGameIds.join(',')],
+    queryKey: ['centralized-stats', currentClubId, completedGameIds.sort().join(',')],
     queryFn: async () => {
       if (completedGameIds.length === 0) return {};
 
@@ -98,7 +98,7 @@ export default function PlayerDetails() {
 
   // Use Team Dashboard's exact cache keys to share data - rosters
   const { data: allGameRosters = {}, isLoading: isLoadingRosters } = useQuery<Record<number, any[]>>({
-    queryKey: ['club-centralizedRosters', currentClubId, completedGameIds.join(',')],
+    queryKey: ['centralized-rosters', currentClubId, completedGameIds.sort().join(',')],
     queryFn: async () => {
       if (completedGameIds.length === 0) return {};
 

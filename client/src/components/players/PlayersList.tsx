@@ -95,7 +95,7 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
 
   // Use Team Dashboard's exact cache keys to share data
   const { data: gameStatsMap, isLoading: isLoadingStats } = useQuery<Record<number, GameStat[]>>({
-    queryKey: ['club-centralizedStats', currentClubId, gameIds.join(',')],
+    queryKey: ['centralized-stats', currentClubId, gameIds.sort().join(',')],
     queryFn: async () => {
       if (gameIds.length === 0) return {};
 
@@ -123,7 +123,7 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
 
   // Use Team Dashboard's exact cache keys to share roster data
   const { data: gameRostersMap, isLoading: isLoadingRosters } = useQuery<Record<number, any[]>>({
-    queryKey: ['club-centralizedRosters', currentClubId, gameIds.join(',')],
+    queryKey: ['centralized-rosters', currentClubId, gameIds.sort().join(',')],
     queryFn: async () => {
       if (gameIds.length === 0) return {};
 

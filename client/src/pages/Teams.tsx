@@ -1,184 +1,215 @@
-import React, { useState, useEffect } from 'react';
-import { useStandardQuery } from '@/hooks/use-standard-query';
-import { Button } from '@/components/ui/button';
-import { PageTemplate, ContentSection, ActionButton } from '@/components/ui/ui-standards';
-import { CrudDialog } from '@/components/ui/crud-dialog';
-import TeamForm from '@/components/teams/TeamForm';
-import { TeamsList } from '@/components/teams/TeamsList';
-import { Plus } from 'lucide-react';
-import { Team, Season } from '@shared/schema';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
 import { useLocation } from 'wouter';
+import { Helmet } from 'react-helmet';
 import { useClub } from '@/contexts/ClubContext';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Loader2, Plus, Users, Trophy, Calendar, Activity } from 'lucide-react';
 import { apiClient } from '@/lib/apiClient';
-import { useToast } from '@/hooks/use-toast';
+import { TeamForm } from '@/components/teams/TeamForm';
+import { TEAM_NAME } from '@/lib/settings';
+import { PageTemplate, ContentSection, ActionButton } from '@/components/ui/ui-standards';
 
 export default function Teams() {
   const [, setLocation] = useLocation();
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingTeam, setEditingTeam] = useState<Team | null>(null);
-  const { currentClubId, currentClub } = useClub();
+  const { currentClub, currentClubId, isLoading: clubLoading } = useClub();
+  const [showForm, setShowForm] = useState(false);
+  const [editingTeam, setEditingTeam] = useState<any>(null);
   const queryClient = useQueryClient();
 
-  // Fetch teams for current club using same pattern as players
-  const { data: teams = [], isLoading: isLoadingTeams, error } = useStandardQuery<(Team & { seasonName?: string; seasonYear?: number })[]>({
-    endpoint: '/api/teams',
-    queryKey: ['teams', currentClubId]
+  const { data: teams = [], isLoading: isLoadingTeams } = useQuery<any[]>({
+    queryKey: ['teams', currentClubId],
+    queryFn: () => apiClient.get('/api/teams'),
+    enabled: !!currentClubId,
   });
 
-  // Fetch seasons for the form using same pattern
-  const { data: seasons = [] } = useStandardQuery<Season[]>({
-    endpoint: '/api/seasons'
+  const { data: seasons = [] } = useQuery<any[]>({
+    queryKey: ['/api/seasons', currentClubId],
+    queryFn: () => apiClient.get('/api/seasons'),
+    enabled: !!currentClubId,
   });
 
-  const { toast } = useToast();
-
-  // Direct mutations like Seasons - no useCrudMutations to avoid 404 handling issues
-  const createMutation = useMutation({
-    mutationFn: (data: any) => apiClient.post('/api/teams', data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['teams'] });
-      toast({
-        title: "Success",
-        description: "Team created successfully",
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to create team",
-        variant: "destructive",
-      });
-    },
+  const { data: activeSeason } = useQuery<any>({
+    queryKey: ['/api/seasons/active', currentClubId],
+    queryFn: () => apiClient.get('/api/seasons/active'),
+    enabled: !!currentClubId,
   });
 
-  const updateMutation = useMutation({
-    mutationFn: ({ id, ...data }: any) => apiClient.patch(`/api/teams/${id}`, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['teams'] });
-      toast({
-        title: "Success",
-        description: "Team updated successfully",
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to update team",
-        variant: "destructive",
-      });
-    },
-  });
-
-  // Delete mutation handled separately like Seasons to avoid 404 issues
-  const deleteMutation = useMutation({
+  const deleteTeamMutation = useMutation({
     mutationFn: (teamId: number) => apiClient.delete(`/api/teams/${teamId}`),
     onSuccess: () => {
-      // Invalidate and refetch teams query to update the list
-      queryClient.invalidateQueries({ queryKey: ['teams', currentClubId] });
-
-      toast({
-        title: "Success",
-        description: "Team deleted successfully",
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to delete team",
-        variant: "destructive",
-      });
+      queryClient.invalidateQueries({ queryKey: ['teams'] });
     },
   });
 
-  const handleCreate = (data: any) => {
-    createMutation.mutate(data, {
-      onSuccess: () => setIsDialogOpen(false)
-    });
-  };
+  if (clubLoading || !currentClubId) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <Loader2 className="mx-auto h-8 w-8 animate-spin" />
+          <p className="mt-2 text-sm text-muted-foreground">Loading club data...</p>
+        </div>
+      </div>
+    );
+  }
 
-  const handleUpdate = (data: any) => {
-    if (editingTeam) {
-      updateMutation.mutate({ id: editingTeam.id, ...data }, {
-        onSuccess: () => setEditingTeam(null)
-      });
-    }
-  };
-
-  const handleDelete = (teamId: number) => {
-    if (deleteMutation.isPending) return; // Prevent duplicate calls
-    if (confirm('Are you sure you want to delete this team?')) {
-      deleteMutation.mutate(teamId);
-    }
-  };
-
-  const handleManagePlayers = (teamId: number) => {
-    setLocation(`/teams/${teamId}/players`);
-  };
-
-  // Generate page context
-  const pageTitle = 'Teams';
-  const pageSubtitle = `Manage your club's teams across different seasons - ${currentClub?.name}`;
-  const breadcrumbs = [
-    { label: 'Dashboard', href: '/dashboard' },
-    { label: 'Teams' }
-  ];
+  if (isLoadingTeams) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <h2 className="text-xl font-semibold mb-2">Loading Teams</h2>
+          <p className="text-muted-foreground">Please wait while we load your teams...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <>
-      <PageTemplate
-        title={pageTitle}
-        subtitle={pageSubtitle}
-        breadcrumbs={breadcrumbs}
-        actions={
-          <ActionButton action="create" onClick={() => setIsDialogOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Add Team
-          </ActionButton>
-        }
-      >
-        <ContentSection 
-          title="Active Teams"
-          description="Manage your club's teams and their players"
+    <PageTemplate
+      title="Teams"
+      description={`Manage teams for ${currentClub?.name}`}
+      breadcrumbs={[
+        { label: 'Dashboard', href: '/club-dashboard' },
+        { label: 'Teams', href: '/teams' }
+      ]}
+      actions={
+        <ActionButton
+          onClick={() => setShowForm(true)}
+          icon={Plus}
+          variant="primary"
         >
-          <TeamsList
-            teams={teams.filter(team => team.name !== 'BYE')}
-            onEdit={setEditingTeam}
-            onDelete={handleDelete}
-            onManagePlayers={handleManagePlayers}
-            isLoading={isLoadingTeams}
-          />
-        </ContentSection>
-      </PageTemplate>
+          Add Team
+        </ActionButton>
+      }
+      status={activeSeason?.name || 'No Active Season'}
+    >
+      <ContentSection title="Team Management">
+        {/* Team Form */}
+        {showForm && (
+          <Card className="border-2 border-primary/20 shadow-lg">
+            <CardHeader className="bg-gradient-to-r from-primary/10 to-primary/5">
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                {editingTeam ? 'Edit Team' : 'Add New Team'}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-6">
+              <TeamForm
+                team={editingTeam}
+                onSuccess={() => {
+                  setShowForm(false);
+                  setEditingTeam(null);
+                }}
+                onCancel={() => {
+                  setShowForm(false);
+                  setEditingTeam(null);
+                }}
+              />
+            </CardContent>
+          </Card>
+        )}
 
-      <CrudDialog
-        isOpen={isDialogOpen}
-        onClose={() => setIsDialogOpen(false)}
-        title="Create Team"
-      >
-        <TeamForm
-          seasons={seasons}
-          clubId={currentClub?.id}
-          onSubmit={handleCreate}
-          onCancel={() => setIsDialogOpen(false)}
-          isSubmitting={createMutation.isPending}
-        />
-      </CrudDialog>
+        {/* Teams Grid */}
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {teams.map((team) => (
+            <Card key={team.id} className="group hover:shadow-lg transition-all duration-300 border-2 hover:border-primary/30">
+              <CardHeader className="bg-gradient-to-br from-slate-50 to-slate-100 group-hover:from-primary/5 group-hover:to-primary/10 transition-all duration-300">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-primary/10 group-hover:bg-primary/20 rounded-full flex items-center justify-center transition-colors duration-300">
+                      <span className="text-primary font-bold text-lg">
+                        {team.name.charAt(0)}
+                      </span>
+                    </div>
+                    <div>
+                      <CardTitle className="text-lg group-hover:text-primary transition-colors duration-300">
+                        {team.name}
+                      </CardTitle>
+                      <p className="text-sm text-muted-foreground">{team.division}</p>
+                    </div>
+                  </div>
+                  <Badge variant={team.isActive ? "default" : "secondary"} className="transition-all duration-300">
+                    {team.isActive ? "Active" : "Inactive"}
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4 text-center">
+                    <div className="p-3 bg-blue-50 rounded-lg group-hover:bg-blue-100 transition-colors duration-300">
+                      <div className="font-bold text-xl text-blue-700">
+                        {team.seasonName ? seasons.find(s => s.name === team.seasonName)?.year || 'N/A' : 'N/A'}
+                      </div>
+                      <div className="text-xs text-blue-600">Season</div>
+                    </div>
+                    <div className="p-3 bg-green-50 rounded-lg group-hover:bg-green-100 transition-colors duration-300">
+                      <div className="font-bold text-xl text-green-700">
+                        <Calendar className="h-5 w-5 mx-auto" />
+                      </div>
+                      <div className="text-xs text-green-600">Schedule</div>
+                    </div>
+                  </div>
 
-      <CrudDialog
-        isOpen={!!editingTeam}
-        onClose={() => setEditingTeam(null)}
-        title="Edit Team"
-      >
-        <TeamForm
-          team={editingTeam || undefined}
-          seasons={seasons}
-          clubId={currentClub?.id}
-          onSubmit={handleUpdate}
-          onCancel={() => setEditingTeam(null)}
-          isSubmitting={updateMutation.isPending}
-        />
-      </CrudDialog>
-    </>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setLocation(`/dashboard/${team.id}`)}
+                      className="flex-1 group-hover:border-primary group-hover:text-primary transition-all duration-300"
+                    >
+                      <Activity className="h-4 w-4 mr-2" />
+                      Dashboard
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setEditingTeam(team);
+                        setShowForm(true);
+                      }}
+                      className="group-hover:border-yellow-500 group-hover:text-yellow-600 transition-all duration-300"
+                    >
+                      Edit
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => deleteTeamMutation.mutate(team.id)}
+                      disabled={deleteTeamMutation.isPending}
+                      className="group-hover:border-red-500 group-hover:text-red-600 transition-all duration-300"
+                    >
+                      {deleteTeamMutation.isPending ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        'Delete'
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {teams.length === 0 && (
+          <Card className="p-12 text-center border-2 border-dashed border-gray-300">
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Users className="h-8 w-8 text-gray-400" />
+            </div>
+            <h3 className="text-xl font-semibold mb-2">No teams yet</h3>
+            <p className="text-muted-foreground mb-4">
+              Get started by adding your first team to the club.
+            </p>
+            <Button onClick={() => setShowForm(true)} className="flex items-center gap-2">
+              <Plus className="h-4 w-4" />
+              Add First Team
+            </Button>
+          </Card>
+        )}
+      </ContentSection>
+    </PageTemplate>
   );
 }

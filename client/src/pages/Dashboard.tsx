@@ -67,7 +67,7 @@ export default function Dashboard() {
 
   // Centralized roster fetching for all games
   const { data: centralizedRosters = {}, isLoading: isLoadingRosters } = useQuery({
-    queryKey: ['club-centralizedRosters', currentClubId, games?.map(g => g.id).join(',')],
+    queryKey: ['centralized-rosters', currentClubId, games?.map(g => g.id).sort().join(',')],
     queryFn: async () => {
       if (!games || games.length === 0) return {};
 
@@ -99,7 +99,7 @@ export default function Dashboard() {
   ).map(game => game.id) || [];
 
   const { data: centralizedStats = {}, isLoading: isLoadingStats } = useQuery({
-    queryKey: ['club-centralizedStats', currentClubId, completedGameIds.join(',')],
+    queryKey: ['centralized-stats', currentClubId, completedGameIds.sort().join(',')],
     queryFn: async () => {
       if (completedGameIds.length === 0) return {};
 
