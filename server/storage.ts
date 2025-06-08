@@ -1,6 +1,3 @@
-The code is modified to include team assignments in the getPlayersByClub method.
-```
-```replit_final_file
 import {
   users, type User, type InsertUser,
   players, type Player, type InsertPlayer,
