@@ -335,31 +335,31 @@ export default function Players() {
           subtitle={pageSubtitle}
           breadcrumbs={breadcrumbs}
           actions={
-            <PageActions>
-              <div className="w-64">
-                <Select
-                  value={teamId?.toString() || ""}
-                  onValueChange={(value) => {
-                    const newTeamId = parseInt(value);
-                    navigate(`/teams/${newTeamId}/players`);
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Switch Team" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {allTeams
-                      .filter(team => team.name !== 'BYE')
-                      .map(team => (
-                        <SelectItem key={team.id} value={team.id.toString()}>
-                          {team.name} {team.division && `(${team.division})`}
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </PageActions>
-          }
+          <>
+            <div className="w-64">
+              <Select
+                value={teamId?.toString() || ""}
+                onValueChange={(value) => {
+                  const newTeamId = parseInt(value);
+                  navigate(`/teams/${newTeamId}/players`);
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Switch Team" />
+                </SelectTrigger>
+                <SelectContent>
+                  {allTeams
+                    .filter(team => team.name !== 'BYE')
+                    .map(team => (
+                      <SelectItem key={team.id} value={team.id.toString()}>
+                        {team.name} {team.division && `(${team.division})`}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </>
+        }
         >
           {/* Current Team Players */}
           <ContentSection 
@@ -481,7 +481,7 @@ export default function Players() {
         subtitle={pageSubtitle}
         breadcrumbs={breadcrumbs}
         actions={
-          <PageActions>
+          <>
             {/* Team Filter Dropdown */}
             <div className="w-64">
               <Select
@@ -526,7 +526,7 @@ export default function Players() {
                 />
               </DialogContent>
             </Dialog>
-          </PageActions>
+          </>
         }
       >
         <ContentSection variant="elevated">
