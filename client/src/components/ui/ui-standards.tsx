@@ -60,10 +60,8 @@ interface BreadcrumbsProps {
 export function Breadcrumbs({ items }: BreadcrumbsProps) {
   return (
     <nav className="breadcrumb-nav">
-      <Link href="/dashboard">
-        <a className="breadcrumb-item">
-          <Home size={16} />
-        </a>
+      <Link href="/dashboard" className="breadcrumb-item">
+        <Home size={16} />
       </Link>
 
       {items.map((item, index) => (
@@ -71,17 +69,10 @@ export function Breadcrumbs({ items }: BreadcrumbsProps) {
           <ChevronRight size={16} className="breadcrumb-separator" />
           {index === items.length - 1 ? (
             <span className="breadcrumb-current">{item.label}</span>
-          ) : item.href ? (
-            <Link href={item.href}>
-              <a className="breadcrumb-item">{item.label}</a>
-            </Link>
           ) : (
-            <button 
-              className="breadcrumb-item"
-              onClick={item.onClick}
-            >
+            <Link href={item.href || '#'} className="breadcrumb-item">
               {item.label}
-            </button>
+            </Link>
           )}
         </React.Fragment>
       ))}

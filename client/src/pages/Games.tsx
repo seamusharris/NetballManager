@@ -11,12 +11,10 @@ import { useLocation } from 'wouter';
 import { useClub } from '@/contexts/ClubContext';
 import { Badge } from '@/components/ui/badge';
 import { TeamSwitcher } from '@/components/layout/TeamSwitcher';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 // Import new UI standards
-import { PageTemplate } from '@/components/layout/PageTemplate';
-import { ContentSection } from '@/components/layout/ContentSection';
-import { ActionButton } from '@/components/ui/ActionButton';
-import { PageActions } from '@/components/layout/PageActions';
+import { PageTemplate, ContentBox, ActionButton, ResponsiveGrid } from '@/components/ui/ui-standards';
 
 interface QueryParams {
   status?: string;
@@ -189,7 +187,7 @@ export default function Games() {
         subtitle={pageSubtitle}
         breadcrumbs={breadcrumbs}
         actions={
-          <PageActions>
+          <>
             <div className="text-sm text-muted-foreground">
               Team Filter (Optional):
             </div>
@@ -201,10 +199,10 @@ export default function Games() {
             >
               Add Game
             </ActionButton>
-          </PageActions>
+          </>
         }
       >
-        <ContentSection variant="elevated">
+        <ContentBox>
           <GamesList 
             games={games} 
             opponents={[]} // Legacy prop - no longer used but component expects it
@@ -216,7 +214,7 @@ export default function Games() {
             showFilters={true}
             showActions={true}
           />
-        </ContentSection>
+        </ContentBox>
       </PageTemplate>
 
       <CrudDialog
