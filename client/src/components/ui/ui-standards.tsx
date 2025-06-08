@@ -1,5 +1,5 @@
-
 import React from 'react';
+import { Link } from 'wouter';
 import { ChevronRight, Home } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -33,7 +33,7 @@ export function PageTemplate({
   return (
     <div className={cn("page-container", className)}>
       {breadcrumbs && <Breadcrumbs items={breadcrumbs} />}
-      
+
       <div className="page-header-section">
         <div className="flex items-start justify-between">
           <div>
@@ -43,7 +43,7 @@ export function PageTemplate({
           {actions && <div className="flex items-center gap-3">{actions}</div>}
         </div>
       </div>
-      
+
       {children}
     </div>
   );
@@ -60,24 +60,27 @@ interface BreadcrumbsProps {
 export function Breadcrumbs({ items }: BreadcrumbsProps) {
   return (
     <nav className="breadcrumb-nav">
-      <Home 
-        size={16} 
-        className="breadcrumb-item" 
-        onClick={() => window.location.href = '/dashboard'} 
-      />
-      
+      <Link href="/dashboard">
+        <Home 
+          size={16} 
+          className="breadcrumb-item" 
+        />
+      </Link>
+
       {items.map((item, index) => (
         <React.Fragment key={index}>
           <ChevronRight size={16} className="breadcrumb-separator" />
           {index === items.length - 1 ? (
             <span className="breadcrumb-current">{item.label}</span>
           ) : (
-            <span 
-              className="breadcrumb-item"
-              onClick={item.onClick || (() => item.href && (window.location.href = item.href))}
-            >
-              {item.label}
-            </span>
+            <Link href={item.href || ''}>
+              <span 
+                className="breadcrumb-item"
+                onClick={item.onClick}
+              >
+                {item.label}
+              </span>
+            </Link>
           )}
         </React.Fragment>
       ))}
@@ -142,7 +145,7 @@ export function ContentBox({
   size = 'default'
 }: ContentBoxProps) {
   const boxClass = size === 'sm' ? 'content-box-sm' : 'content-box';
-  
+
   return (
     <div className={cn(boxClass, className)}>
       {(title || actions) && (
@@ -177,13 +180,13 @@ export function ActionButton({ action, children, className, size = 'default', ..
     manage: 'btn-manage',
     view: 'btn-view'
   };
-  
+
   const sizeClasses = {
     sm: 'px-4 py-2 text-sm',
     default: 'px-6 py-2.5',
     lg: 'px-8 py-3 text-lg'
   };
-  
+
   return (
     <button 
       className={cn(
@@ -233,7 +236,7 @@ export function DataGrid({ children, columns = 1, className }: DataGridProps) {
     3: 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3',
     4: 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4'
   };
-  
+
   return (
     <div className={cn('grid gap-6', gridCols[columns as keyof typeof gridCols], className)}>
       {children}
