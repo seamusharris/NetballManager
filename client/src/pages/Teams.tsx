@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useStandardQuery } from '@/hooks/use-standard-query';
 import { Button } from '@/components/ui/button';
-import { PageTemplate, ContentBox, ActionButton } from '@/components/ui/ui-standards';
+import { PageTemplate, ContentSection, ActionButton } from '@/components/ui/ui-standards';
 import { CrudDialog } from '@/components/ui/crud-dialog';
 import TeamForm from '@/components/teams/TeamForm';
 import { TeamsList } from '@/components/teams/TeamsList';
@@ -12,9 +12,6 @@ import { useClub } from '@/contexts/ClubContext';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/apiClient';
 import { useToast } from '@/hooks/use-toast';
-
-// Import new UI standards
-import { PageTemplate, ContentSection, ActionButton } from '@/components/ui/ui-standards';
 
 export default function Teams() {
   const [, setLocation] = useLocation();
