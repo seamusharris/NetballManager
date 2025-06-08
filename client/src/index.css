@@ -215,59 +215,6 @@ input[type=number] {
 }
 
 @layer components {
-  /* Design System Base Classes */
-  .netball-green {
-    color: hsl(var(--netball-green));
-  }
-  
-  .bg-netball-green {
-    background-color: hsl(var(--netball-green));
-  }
-  
-  .bg-netball-green-dark {
-    background-color: hsl(var(--netball-green-dark));
-  }
-  
-  .border-netball-green {
-    border-color: hsl(var(--netball-green));
-  }
-  
-  .bg-netball-court-blue {
-    background-color: hsl(var(--netball-court-blue));
-  }
-  
-  .bg-netball-court-blue-dark {
-    background-color: hsl(var(--netball-court-blue-dark));
-  }
-  
-  .border-netball-court-blue {
-    border-color: hsl(var(--netball-court-blue));
-  }
-  
-  .bg-netball-red {
-    background-color: hsl(var(--netball-red));
-  }
-  
-  .bg-netball-red-dark {
-    background-color: hsl(var(--netball-red-dark));
-  }
-  
-  .border-netball-red {
-    border-color: hsl(var(--netball-red));
-  }
-  
-  .bg-netball-orange {
-    background-color: hsl(var(--netball-orange));
-  }
-  
-  .bg-netball-orange-dark {
-    background-color: hsl(var(--netball-orange-dark));
-  }
-  
-  .border-netball-orange {
-    border-color: hsl(var(--netball-orange));
-  }
-
   /* Sidebar styling */
   .sidebar-link {
     @apply flex items-center gap-3 px-4 py-3 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent transition-all duration-200 font-medium;
@@ -284,32 +231,7 @@ input[type=number] {
            transition-all duration-200 bg-background;
   }
   
-  /* Page Layout Classes */
-  .page-layout {
-    @apply container mx-auto px-6 py-8 space-y-8;
-  }
-  
-  .page-section {
-    @apply space-y-6;
-  }
-  
-  .content-grid {
-    @apply grid gap-6;
-  }
-  
-  .content-grid-2 {
-    @apply grid grid-cols-1 lg:grid-cols-2 gap-6;
-  }
-  
-  .content-grid-3 {
-    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6;
-  }
-  
-  .content-grid-4 {
-    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6;
-  }
-  
-  /* Card components - Legacy support */
+  /* Card components */
   .page-card {
     @apply bg-card rounded-xl shadow-sm border border-border p-6 
            hover:shadow-md transition-all duration-200 backdrop-blur-sm;

@@ -22,7 +22,7 @@ import DataManagement from "@/pages/DataManagement";
 import Settings from "@/pages/Settings";
 import Seasons from "@/pages/Seasons";
 import NotFound from "@/pages/not-found";
-import { useClub, ClubProvider } from '@/contexts/ClubContext';
+import { useClub } from '@/contexts/ClubContext';
 import { apiClient } from '@/lib/apiClient';
 
 // Import GameDetails directly for now
@@ -128,6 +128,8 @@ function Router() {
     </Layout>
   );
 }
+
+import { ClubProvider } from '@/contexts/ClubContext';
 
 function App() {
   return (
