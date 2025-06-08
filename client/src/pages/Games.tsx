@@ -1,6 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import GameForm from '@/components/games/GameForm';
 import { GamesList } from '@/components/games/GamesList';
@@ -11,11 +11,14 @@ import { Game, Player } from '@shared/schema';
 import { useToast } from '@/hooks/use-toast';
 import { useLocation } from 'wouter';
 import { useClub } from '@/contexts/ClubContext';
-import { BackButton } from '@/components/ui/back-button';
 import { Badge } from '@/components/ui/badge';
-import { TEAM_NAME } from '@/lib/settings';
 import { TeamSwitcher } from '@/components/layout/TeamSwitcher';
 
+// Import new UI standards
+import { PageTemplate } from '@/components/layout/PageTemplate';
+import { ContentSection } from '@/components/layout/ContentSection';
+import { ActionButton } from '@/components/ui/ActionButton';
+import { PageActions } from '@/components/layout/PageActions';
 
 interface QueryParams {
   status?: string;
@@ -169,37 +172,41 @@ export default function Games() {
     queryFn: () => apiRequest('GET', '/api/teams/all')
   });
 
+  // Generate page title with context
+  const pageTitle = currentTeam ? `Games - ${currentTeam.name}` : 'Games';
+  const pageSubtitle = currentTeamId 
+    ? `Manage and view game schedules and results for ${currentTeam?.name || 'Selected Team'}`
+    : 'Manage and view game schedules and results';
+
+  // Generate breadcrumbs
+  const breadcrumbs = [
+    { label: 'Dashboard', href: '/dashboard' },
+    { label: 'Games' }
+  ];
+
   return (
     <>
-      <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle>Games</CardTitle>
-                <CardDescription>
-                  Manage and view game schedules and results
-                  {currentTeamId && (
-                    <span className="ml-2 text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                      Filtered by {currentTeam?.name || 'Selected Team'}
-                    </span>
-                  )}
-                </CardDescription>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="text-sm text-muted-foreground">
-                  Team Filter (Optional):
-                </div>
-                <TeamSwitcher />
-              </div>
+      <PageTemplate
+        title={pageTitle}
+        subtitle={pageSubtitle}
+        breadcrumbs={breadcrumbs}
+        actions={
+          <PageActions>
+            <div className="text-sm text-muted-foreground">
+              Team Filter (Optional):
             </div>
-          </CardHeader>
-        <CardContent>
-          <div className="flex justify-end pb-4">
-            <Button onClick={() => setIsDialogOpen(true)}>
-              <Plus className="w-4 h-4 mr-2" />
+            <TeamSwitcher />
+            <ActionButton 
+              action="create" 
+              onClick={() => setIsDialogOpen(true)}
+              icon={Plus}
+            >
               Add Game
-            </Button>
-          </div>
+            </ActionButton>
+          </PageActions>
+        }
+      >
+        <ContentSection variant="elevated">
           <GamesList 
             games={games} 
             opponents={[]} // Legacy prop - no longer used but component expects it
@@ -211,8 +218,8 @@ export default function Games() {
             showFilters={true}
             showActions={true}
           />
-        </CardContent>
-      </Card>
+        </ContentSection>
+      </PageTemplate>
 
       <CrudDialog
         isOpen={isDialogOpen}

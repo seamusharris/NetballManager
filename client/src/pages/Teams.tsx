@@ -1,6 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
 import { useStandardQuery } from '@/hooks/use-standard-query';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { CrudDialog } from '@/components/ui/crud-dialog';
 import TeamForm from '@/components/teams/TeamForm';
@@ -8,11 +8,16 @@ import { TeamsList } from '@/components/teams/TeamsList';
 import { Plus } from 'lucide-react';
 import { Team, Season } from '@shared/schema';
 import { useLocation } from 'wouter';
-import { BackButton } from '@/components/ui/back-button';
 import { useClub } from '@/contexts/ClubContext';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/apiClient';
 import { useToast } from '@/hooks/use-toast';
+
+// Import new UI standards
+import { PageTemplate } from '@/components/layout/PageTemplate';
+import { ContentSection } from '@/components/layout/ContentSection';
+import { ActionButton } from '@/components/ui/ActionButton';
+import { PageActions } from '@/components/layout/PageActions';
 
 export default function Teams() {
   const [, setLocation] = useLocation();
@@ -117,38 +122,40 @@ export default function Teams() {
     setLocation(`/teams/${teamId}/players`);
   };
 
+  // Generate page context
+  const pageTitle = 'Teams';
+  const pageSubtitle = `Manage your club's teams across different seasons - ${currentClub?.name}`;
+  const breadcrumbs = [
+    { label: 'Dashboard', href: '/dashboard' },
+    { label: 'Teams' }
+  ];
+
   return (
     <>
-      <div className="container mx-auto p-6">
-        <BackButton fallbackPath="/dashboard" className="mb-4">
-          Back to Dashboard
-        </BackButton>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Teams</CardTitle>
-            <CardDescription>
-              Manage your club's teams across different seasons
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex justify-end pb-4">
-              <Button onClick={() => setIsDialogOpen(true)}>
-                <Plus className="w-4 h-4 mr-2" />
-                Add Team
-              </Button>
-            </div>
-
-            <TeamsList
-              teams={teams.filter(team => team.name !== 'BYE')}
-              onEdit={setEditingTeam}
-              onDelete={handleDelete}
-              onManagePlayers={handleManagePlayers}
-              isLoading={isLoadingTeams}
-            />
-          </CardContent>
-        </Card>
-      </div>
+      <PageTemplate
+        title={pageTitle}
+        subtitle={pageSubtitle}
+        breadcrumbs={breadcrumbs}
+        showBackButton={true}
+        backButtonProps={{ fallbackPath: '/dashboard' }}
+        actions={
+          <PageActions>
+            <ActionButton action="create" onClick={() => setIsDialogOpen(true)} icon={Plus}>
+              Add Team
+            </ActionButton>
+          </PageActions>
+        }
+      >
+        <ContentSection variant="elevated">
+          <TeamsList
+            teams={teams.filter(team => team.name !== 'BYE')}
+            onEdit={setEditingTeam}
+            onDelete={handleDelete}
+            onManagePlayers={handleManagePlayers}
+            isLoading={isLoadingTeams}
+          />
+        </ContentSection>
+      </PageTemplate>
 
       <CrudDialog
         isOpen={isDialogOpen}

@@ -1,10 +1,10 @@
+
 import { useState, useEffect, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams } from "wouter";
 import { Helmet } from 'react-helmet';
 import PlayersList from '@/components/players/PlayersList';
 import { useClub } from '@/contexts/ClubContext';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -16,6 +16,12 @@ import { useToast } from '@/hooks/use-toast';
 import { useLocation } from 'wouter';
 import { apiClient } from '@/lib/apiClient';
 import { useCrudMutations } from '@/hooks/use-crud-mutations';
+
+// Import new UI standards
+import { PageTemplate } from '@/components/layout/PageTemplate';
+import { ContentSection } from '@/components/layout/ContentSection';
+import { ActionButton } from '@/components/ui/ActionButton';
+import { PageActions } from '@/components/layout/PageActions';
 
 export default function Players() {
   const { currentClub, hasPermission, isLoading: clubLoading, switchToClub } = useClub();
@@ -305,8 +311,19 @@ export default function Players() {
 
   if (teamId) {
     // Team-specific view with management capabilities
-    // Display available players (for team view) - use unassigned players from new endpoint
-  const availablePlayers = teamId ? availablePlayersForTeam : [];
+    const availablePlayers = teamId ? availablePlayersForTeam : [];
+
+    // Generate page context for team view
+    const pageTitle = teamData?.name ? `Players - ${teamData.name}` : 'Team Players';
+    const pageSubtitle = teamData?.division 
+      ? `Manage players for ${teamData.name} (${teamData.division})`
+      : 'Manage team players';
+
+    const breadcrumbs = [
+      { label: 'Dashboard', href: '/dashboard' },
+      { label: 'Teams', href: '/teams' },
+      { label: teamData?.name || 'Team' }
+    ];
 
     return (
       <>
@@ -314,21 +331,12 @@ export default function Players() {
           <title>Team Players | Team Manager</title>
         </Helmet>
 
-        <div className="space-y-6">
-          {/* Team Header with Dropdown */}
-          <div className="mb-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">
-                  {teamData?.name || 'Team Players'}
-                </h1>
-                {teamData?.division && (
-                  <p className="text-lg text-gray-600 mt-1">
-                    {teamData.division}
-                  </p>
-                )}
-              </div>
-              {/* Team Switcher Dropdown */}
+        <PageTemplate
+          title={pageTitle}
+          subtitle={pageSubtitle}
+          breadcrumbs={breadcrumbs}
+          actions={
+            <PageActions>
               <div className="w-64">
                 <Select
                   value={teamId?.toString() || ""}
@@ -342,7 +350,7 @@ export default function Players() {
                   </SelectTrigger>
                   <SelectContent>
                     {allTeams
-                      .filter(team => team.name !== 'BYE') // Filter out BYE teams
+                      .filter(team => team.name !== 'BYE')
                       .map(team => (
                         <SelectItem key={team.id} value={team.id.toString()}>
                           {team.name} {team.division && `(${team.division})`}
@@ -351,141 +359,130 @@ export default function Players() {
                   </SelectContent>
                 </Select>
               </div>
-            </div>
-          </div>
-
+            </PageActions>
+          }
+        >
           {/* Current Team Players */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="flex items-center justify-between">
-                <span>Current Team Players</span>
-                <Badge variant="secondary">{teamPlayers?.length || 0} players</Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-6">
-              {!teamPlayers || teamPlayers.length === 0 ? (
-                <p className="text-gray-500 text-center py-4">No players assigned to this team yet.</p>
-              ) : (
-                <div className="grid gap-3">
-                  {teamPlayers.map((player) => (
-                    <PlayerBox
-                      key={player.id}
-                      player={player}
-                      stats={[
-                        { label: 'Games', value: Math.floor(Math.random() * 15) + 5 },
-                        { label: 'Goals', value: Math.floor(Math.random() * 25) + 2 },
-                        { label: 'Rating', value: (Math.random() * 4 + 6).toFixed(1) }
-                      ]}
-                      actions={
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removePlayerFromTeam.mutate(player.id)}
-                          disabled={removingPlayerIds.has(player.id)}
-                          className="text-red-600 hover:text-red-700 hover:bg-red-50 disabled:opacity-50 h-8 w-8 p-0"
-                        >
-                          {removingPlayerIds.has(player.id) ? (
-                            <UserMinus className="h-4 w-4" />
-                          ) : (
-                            <span className="text-lg font-bold">−</span>
-                          )}
-                        </Button>
-                      }
-                    />
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <ContentSection 
+            title="Current Team Players"
+            actions={<Badge variant="secondary">{teamPlayers?.length || 0} players</Badge>}
+            variant="elevated"
+          >
+            {!teamPlayers || teamPlayers.length === 0 ? (
+              <p className="text-gray-500 text-center py-4">No players assigned to this team yet.</p>
+            ) : (
+              <div className="grid gap-3">
+                {teamPlayers.map((player) => (
+                  <PlayerBox
+                    key={player.id}
+                    player={player}
+                    stats={[
+                      { label: 'Games', value: Math.floor(Math.random() * 15) + 5 },
+                      { label: 'Goals', value: Math.floor(Math.random() * 25) + 2 },
+                      { label: 'Rating', value: (Math.random() * 4 + 6).toFixed(1) }
+                    ]}
+                    actions={
+                      <ActionButton
+                        action="delete"
+                        size="sm"
+                        onClick={() => removePlayerFromTeam.mutate(player.id)}
+                        disabled={removingPlayerIds.has(player.id)}
+                      >
+                        {removingPlayerIds.has(player.id) ? 'Removing...' : 'Remove'}
+                      </ActionButton>
+                    }
+                  />
+                ))}
+              </div>
+            )}
+          </ContentSection>
 
           {/* Available Players to Add */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="flex items-center justify-between">
-                <span>Available Players</span>
-                <div className="flex items-center space-x-2">
-                  <Dialog open={isAddPlayerDialogOpen} onOpenChange={setIsAddPlayerDialogOpen}>
-                    <DialogTrigger asChild>
-                      <Button variant="outline" size="sm">
-                        <UserPlus className="h-4 w-4 mr-1" />
-                        Add New Player
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Add New Player</DialogTitle>
-                      </DialogHeader>
-                      <PlayerForm
-                        clubId={currentClubId}
-                        teamId={teamId}
-                        onSuccess={() => {
-                          queryClient.invalidateQueries({ queryKey: ['team-players', teamId] });
-                          queryClient.invalidateQueries({ queryKey: ['unassigned-players', activeSeason?.id] });
-                          toast({ title: 'Success', description: 'Player created successfully' });
-                          setIsAddPlayerDialogOpen(false);
-                        }}
-                        onCancel={() => setIsAddPlayerDialogOpen(false)}
-                      />
-                    </DialogContent>
-                  </Dialog>
-                  <Badge variant="outline">{availablePlayers.length} available</Badge>
-                </div>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-6">
-              {availablePlayers.length === 0 ? (
-                <p className="text-gray-500 text-center py-4">
-                  No unassigned players available. All active players are already assigned to teams this season.
-                  <br />
-                  <span className="text-sm">Use "Add New Player" to create a new player for this team.</span>
-                </p>
-              ) : (
-                <div className="grid gap-3">
-                  {availablePlayers.map((player) => (
-                    <PlayerBox
-                      key={player.id}
-                      player={player}
-                      actions={
-                        <Button
-                          variant="default"
-                          size="sm"
-                          onClick={() => addPlayerToTeam.mutate(player.id)}
-                          disabled={addingPlayerIds.has(player.id)}
-                        >
-                          {addingPlayerIds.has(player.id) ? (
-                            <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                          ) : (
-                            <UserPlus className="h-4 w-4 mr-1" />
-                          )}
-                          {addingPlayerIds.has(player.id) ? 'Adding...' : 'Add to Team'}
-                        </Button>
-                      }
+          <ContentSection 
+            title="Available Players"
+            actions={
+              <PageActions spacing="tight">
+                <Dialog open={isAddPlayerDialogOpen} onOpenChange={setIsAddPlayerDialogOpen}>
+                  <DialogTrigger asChild>
+                    <ActionButton action="create" size="sm" icon={UserPlus}>
+                      Add New Player
+                    </ActionButton>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Add New Player</DialogTitle>
+                    </DialogHeader>
+                    <PlayerForm
+                      clubId={currentClubId}
+                      teamId={teamId}
+                      onSuccess={() => {
+                        queryClient.invalidateQueries({ queryKey: ['team-players', teamId] });
+                        queryClient.invalidateQueries({ queryKey: ['unassigned-players', activeSeason?.id] });
+                        toast({ title: 'Success', description: 'Player created successfully' });
+                        setIsAddPlayerDialogOpen(false);
+                      }}
+                      onCancel={() => setIsAddPlayerDialogOpen(false)}
                     />
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+                  </DialogContent>
+                </Dialog>
+                <Badge variant="outline">{availablePlayers.length} available</Badge>
+              </PageActions>
+            }
+            variant="elevated"
+          >
+            {availablePlayers.length === 0 ? (
+              <p className="text-gray-500 text-center py-4">
+                No unassigned players available. All active players are already assigned to teams this season.
+                <br />
+                <span className="text-sm">Use "Add New Player" to create a new player for this team.</span>
+              </p>
+            ) : (
+              <div className="grid gap-3">
+                {availablePlayers.map((player) => (
+                  <PlayerBox
+                    key={player.id}
+                    player={player}
+                    actions={
+                      <ActionButton
+                        action="create"
+                        size="sm"
+                        onClick={() => addPlayerToTeam.mutate(player.id)}
+                        disabled={addingPlayerIds.has(player.id)}
+                        icon={UserPlus}
+                      >
+                        {addingPlayerIds.has(player.id) ? 'Adding...' : 'Add to Team'}
+                      </ActionButton>
+                    }
+                  />
+                ))}
+              </div>
+            )}
+          </ContentSection>
+        </PageTemplate>
       </>
     );
   }
 
   // Regular club players view
+  const pageTitle = 'Players';
+  const pageSubtitle = `Manage your club's players - ${currentClub?.name}`;
+  const breadcrumbs = [
+    { label: 'Dashboard', href: '/dashboard' },
+    { label: 'Players' }
+  ];
+
   return (
     <>
       <Helmet>
         <title>Players | Team Manager</title>
       </Helmet>
 
-      <div className="space-y-6">
-        {/* Header with Team Filter and Add Player Button */}
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Players</h1>
-            <p className="text-lg text-gray-600 mt-1">Manage your club's players</p>
-          </div>
-          <div className="flex items-center gap-4">
+      <PageTemplate
+        title={pageTitle}
+        subtitle={pageSubtitle}
+        breadcrumbs={breadcrumbs}
+        actions={
+          <PageActions>
             {/* Team Filter Dropdown */}
             <div className="w-64">
               <Select
@@ -498,7 +495,7 @@ export default function Players() {
                 <SelectContent>
                   <SelectItem value="all">All Teams</SelectItem>
                   {allTeams
-                    .filter(team => team.name !== 'BYE') // Filter out BYE teams
+                    .filter(team => team.name !== 'BYE')
                     .map(team => (
                       <SelectItem key={team.id} value={team.id.toString()}>
                         {team.name} {team.division && `(${team.division})`}
@@ -508,39 +505,40 @@ export default function Players() {
               </Select>
             </div>
             <Dialog open={isAddPlayerDialogOpen} onOpenChange={setIsAddPlayerDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <UserPlus className="h-4 w-4 mr-2" />
-                Add New Player
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Add New Player</DialogTitle>
-              </DialogHeader>
-              <PlayerForm
-                clubId={currentClubId}
-                teamId={undefined} // No team context for club-wide player creation
-                onSuccess={() => {
-                  queryClient.invalidateQueries({ queryKey: ['players'] });
-                  queryClient.invalidateQueries({ queryKey: ['clubs', currentClub?.id, 'players'] });
-                  toast({ title: 'Success', description: 'Player created successfully' });
-                  setIsAddPlayerDialogOpen(false);
-                }}
-                onCancel={() => setIsAddPlayerDialogOpen(false)}
-              />
-            </DialogContent>
-          </Dialog>
-          </div>
-        </div>
-
-        <PlayersList
-          players={filteredPlayers}
-          isLoading={isLoading}
-          onEdit={() => {}} // Placeholder function - edit functionality handled by navigation
-          onDelete={() => {}} // Placeholder function - delete functionality handled elsewhere
-        />
-      </div>
+              <DialogTrigger asChild>
+                <ActionButton action="create" icon={UserPlus}>
+                  Add New Player
+                </ActionButton>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Add New Player</DialogTitle>
+                </DialogHeader>
+                <PlayerForm
+                  clubId={currentClubId}
+                  teamId={undefined}
+                  onSuccess={() => {
+                    queryClient.invalidateQueries({ queryKey: ['players'] });
+                    queryClient.invalidateQueries({ queryKey: ['clubs', currentClub?.id, 'players'] });
+                    toast({ title: 'Success', description: 'Player created successfully' });
+                    setIsAddPlayerDialogOpen(false);
+                  }}
+                  onCancel={() => setIsAddPlayerDialogOpen(false)}
+                />
+              </DialogContent>
+            </Dialog>
+          </PageActions>
+        }
+      >
+        <ContentSection variant="elevated">
+          <PlayersList
+            players={filteredPlayers}
+            isLoading={isLoading}
+            onEdit={() => {}} // Placeholder function - edit functionality handled by navigation
+            onDelete={() => {}} // Placeholder function - delete functionality handled elsewhere
+          />
+        </ContentSection>
+      </PageTemplate>
     </>
   );
 }
