@@ -1,3 +1,6 @@
+The code is modified to include team assignments in the getPlayersByClub method.
+```
+```replit_final_file
 import {
   users, type User, type InsertUser,
   players, type Player, type InsertPlayer,
@@ -89,7 +92,6 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getPlayersByClub(clubId: number): Promise<Player[]> {
-
     // First try to use the club_players table if it exists
     try {
       const directResult = await db.execute(sql`
@@ -168,7 +170,7 @@ export class DatabaseStorage implements IStorage {
 
   async createPlayer(insertPlayer: InsertPlayer): Promise<Player> {
     console.log("DatabaseStorage.createPlayer: Starting with data:", JSON.stringify(insertPlayer, null, 2));
-    
+
     // Get existing player colors to avoid duplicates
     const existingPlayers = await this.getPlayers();
     const usedColors = existingPlayers.map(p => p.avatarColor).filter(Boolean);
@@ -785,61 +787,4 @@ export class DatabaseStorage implements IStorage {
         firstName: row.first_name,
         lastName: row.last_name,
         dateOfBirth: row.date_of_birth,
-        positionPreferences: typeof row.position_preferences === 'string' 
-          ? JSON.parse(row.position_preferences) 
-          : row.position_preferences || [],
-        active: row.active,
-        avatarColor: row.avatar_color,
-        joinedDate: row.joined_date,
-        clubNotes: row.club_notes,
-        isActiveInClub: row.is_active_in_club
-      }));
-
-
-      return players;
-    } catch (error) {
-      console.error(`Error getting club players for club ${clubId}:`, error);
-      return [];
-    }
-  }
-
-  async createGame(data: any): Promise<any> {
-    // Ensure required fields for team-based games
-    const gameData = {
-      ...data,
-      // Remove any legacy opponent fields
-      opponentId: undefined,
-      completed: undefined,
-      isBye: undefined,
-      teamScore: undefined,
-      opponentScore: undefined
-    };
-
-    const result = await db.insert(games).values(gameData).returning();
-    return result[0];
-  }
-
-  // Opponents system has been removed - use team-based system instead
-}
-
-export async function getPlayers(): Promise<any[]> {
-    try {
-        const result = await db.select().from(players);
-        return result;
-    } catch (error) {
-        console.error("Error fetching players:", error);
-        return [];
-    }
-}
-
-
-
-// Export a single instance of DatabaseStorage
-export const storage = new DatabaseStorage();
-
-// Add some sample data for demonstration if none exists
-async function initSampleData() {
-}
-
-// Initialize sample data
-initSampleData().catch(console.error);
+        positionPreferences: typeof row.position_preferences
