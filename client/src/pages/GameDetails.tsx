@@ -1236,13 +1236,21 @@ export default function GameDetails() {
                            teams.some(t => t.id === game.awayTeamId);
 
     if (isInterClubGame) {
-      // If current team is the away team, flip the scores
-      if (currentTeam.id === game.awayTeamId) {
-        return { teamScore: finalOpponentScore, opponentScore: finalTeamScore };
-      } else {
-        // If current team is the home team, do not flip
-        return { teamScore: finalTeamScore, opponentScore: finalOpponentScore };
-      }
+      // For inter-club games, the stats are saved with team context
+      // So we need to calculate scores based on the current team's perspective
+      
+      // Get stats for current team and opponent team
+      const currentTeamStats = gameStats?.filter(stat => stat.teamId === currentTeam.id) || [];
+      const opponentTeamId = currentTeam.id === game.homeTeamId ? game.awayTeamId : game.homeTeamId;
+      const opponentTeamStats = gameStats?.filter(stat => stat.teamId === opponentTeamId) || [];
+      
+      // Calculate our score (goals we scored)
+      const ourScore = currentTeamStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
+      
+      // Calculate opponent score (goals they scored, which appears as our goalsAgainst)
+      const theirScore = currentTeamStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
+      
+      return { teamScore: ourScore, opponentScore: theirScore };
     }
 
     return { teamScore: finalTeamScore, opponentScore: finalOpponentScore };
