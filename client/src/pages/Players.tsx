@@ -39,16 +39,17 @@ export default function Players() {
   const { toast } = useToast();
   const [location, navigate] = useLocation();
 
-  // Handle club ID from URL parameter
+  // Handle club ID from URL parameter (but not team ID)
   useEffect(() => {
     const clubIdFromUrl = params.clubId;
-    if (clubIdFromUrl && !isNaN(Number(clubIdFromUrl))) {
+    // Only switch clubs if we have a clubId parameter that's not a team ID
+    if (clubIdFromUrl && !isNaN(Number(clubIdFromUrl)) && !params.teamId) {
       const targetClubId = Number(clubIdFromUrl);
       if (currentClub?.id !== targetClubId) {
         switchClub(targetClubId);
       }
     }
-  }, [params.clubId, currentClub?.id, switchClub]);
+  }, [params.clubId, currentClub?.id, switchClub, params.teamId]);
 
   // Determine if this is team-specific or club-wide players
   const teamId = params.teamId ? parseInt(params.teamId) : null;
