@@ -16,6 +16,9 @@ import { Helmet } from 'react-helmet';
 import { BackButton } from '@/components/ui/back-button';
 import { clearGameCache, clearAllCache } from '@/lib/scoresCache';
 import { PageTemplate } from '@/components/layout/PageTemplate';
+import { AlertTriangle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 // Stat types that can be tracked
 type StatType = 'goalsFor' | 'goalsAgainst' | 'missedGoals' | 'rebounds' | 
@@ -187,6 +190,8 @@ export default function LiveStats() {
   const [undoStack, setUndoStack] = useState<PositionStats[]>([]);
   const [redoStack, setRedoStack] = useState<PositionStats[]>([]);
   const [saveInProgress, setSaveInProgress] = useState<boolean>(false);
+  const [showCompletedWarning, setShowCompletedWarning] = useState(false);
+  const [pendingStatChange, setPendingStatChange] = useState<any>(null);
 
   // Fetch game details - use direct game endpoint to bypass team filtering
   const { data: game, isLoading: gameLoading } = useQuery({
@@ -240,6 +245,9 @@ export default function LiveStats() {
   const opponentDisplayName = hasTeamContext 
     ? (isCurrentTeamHome ? awayTeamName : homeTeamName)
     : awayTeamName;
+
+    // Check if game is completed
+    const isGameCompleted = game?.gameStatus?.isCompleted === true;
 
   // Check if game is forfeit and redirect if needed
   useEffect(() => {
@@ -344,6 +352,17 @@ export default function LiveStats() {
 
   // Record a new stat (local only - no API call)
   const recordStat = (position: Position, stat: StatType, value: number = 1) => {
+
+    // If game is completed, require confirmation
+    if (isGameCompleted) {
+        setPendingStatChange({ position, stat, value });
+        return;
+    }
+
+    executeStatChange(position, stat, value);
+  };
+
+  const executeStatChange = (position: Position, stat: StatType, value: number = 1) => {
     console.log(`Recording stat ${stat} for position ${position} in Q${currentQuarter}: ${value > 0 ? 'add' : 'remove'}`);
 
     // Save current state for undo
@@ -368,6 +387,13 @@ export default function LiveStats() {
       console.log(`Updated ${position}-Q${currentQuarter} ${stat} from ${currentValue} to ${newValue}`);
       return newStats;
     });
+  };
+
+  const handleConfirmStatChange = () => {
+    if (pendingStatChange) {
+      const { position, stat, value } = pendingStatChange;
+      executeStatChange(position, stat, value);
+    }
   };
 
   // Undo last action
@@ -612,19 +638,24 @@ export default function LiveStats() {
     }
   });
 
-  // Save all stats function that uses the mutation
-  const saveAllStats = () => {
-    if (!positionStats || Object.keys(positionStats).length === 0) {
-      toast({
-        title: "Nothing to save",
-        description: "No statistics have been recorded yet.",
-        variant: "destructive"
-      });
-      return;
-    }
+    // Save all stats function - handle confirmation for completed games
+    const saveAllStats = () => {
+        if (!positionStats || Object.keys(positionStats).length === 0) {
+            toast({
+                title: "Nothing to save",
+                description: "No statistics have been recorded yet.",
+                variant: "destructive"
+            });
+            return;
+        }
 
-    saveAllStatsMutation.mutate();
-  };
+        if (isGameCompleted) {
+            // For completed games, show confirmation dialog
+            setShowCompletedWarning(true); // Trigger warning
+        } else {
+            saveAllStatsMutation.mutate(); // Proceed directly for non-completed
+        }
+    };
 
   // Get quarter total for a specific stat - using position stats
   const getQuarterTotal = (stat: StatType): number => {
@@ -713,7 +744,7 @@ export default function LiveStats() {
 
     // Function to handle stat updates
     const handleStatChange = (change: number) => {
-      recordStat(position, stat, change);
+        recordStat(position, stat, change);
     };
 
     return (
@@ -795,19 +826,28 @@ export default function LiveStats() {
     );
   }
 
-  // Build breadcrumbs
-  const breadcrumbs = [
-    { label: 'Games', href: '/games' },
-    { 
-      label: `Round ${game?.round || gameId} vs ${opponentDisplayName}`, 
-      href: `/game/${gameId}` 
-    },
-    { label: 'Live Stats' }
-  ];
+    // Build breadcrumbs
+    const breadcrumbs = [
+        { label: 'Games', href: '/games' },
+        {
+            label: `Round ${game?.round || gameId} vs ${opponentDisplayName}`,
+            href: `/game/${gameId}`
+        },
+        { label: 'Live Stats' }
+    ];
 
   // Page actions (reset and save buttons)
   const pageActions = (
     <div className="flex space-x-2">
+
+        {isGameCompleted && (
+            <Alert className="border-amber-200 bg-amber-50">
+                <AlertTriangle className="h-4 w-4 text-amber-600" />
+                <AlertDescription className="text-amber-800">
+                    <strong>Warning:</strong> This game is marked as completed. Editing statistics will require confirmation to prevent accidental changes.
+                </AlertDescription>
+            </Alert>
+        )}
       <Button
         variant="outline"
         size="sm"
@@ -828,16 +868,48 @@ export default function LiveStats() {
         Reset All Stats
       </Button>
 
-      <Button
-        variant="default"
-        size="sm"
-        onClick={saveAllStats}
-        disabled={saveInProgress}
-        className="bg-blue-600 hover:bg-blue-700 text-white"
-      >
-        <Save className="h-4 w-4 mr-1" />
-        Save All Stats
-      </Button>
+        {isGameCompleted ? (
+            <AlertDialog>
+                <AlertDialogTrigger asChild>
+                    <Button
+                        disabled={saveInProgress}
+                        className="bg-amber-600 hover:bg-amber-700 text-white"
+                    >
+                        <AlertTriangle className="h-4 w-4 mr-1" />
+                        Save All Stats (Completed)
+                    </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle className="flex items-center gap-2">
+                            <AlertTriangle className="h-5 w-5 text-amber-600" />
+                            Confirm Save to Completed Game
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This game is marked as completed. Are you sure you want to save the statistics?
+                            This change will affect final scores and records.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={saveAllStats} className="bg-amber-600 hover:bg-amber-700">
+                            Yes, Save Stats
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+        ) : (
+            <Button
+                variant="default"
+                size="sm"
+                onClick={saveAllStats}
+                disabled={saveInProgress}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+                <Save className="h-4 w-4 mr-1" />
+                Save All Stats
+            </Button>
+        )}
     </div>
   );
 
@@ -1007,6 +1079,28 @@ export default function LiveStats() {
           );
         })}
       </div>
+
+        {/* Confirmation Dialog for Completed Game Edits */}
+        <AlertDialog open={!!pendingStatChange} onOpenChange={() => setPendingStatChange(null)}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle className="flex items-center gap-2">
+                        <AlertTriangle className="h-5 w-5 text-amber-600" />
+                        Confirm Edit to Completed Game
+                    </AlertDialogTitle>
+                    <AlertDialogDescription>
+                        This game is marked as completed. Are you sure you want to modify the statistics?
+                        This change will affect final scores and records.
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleConfirmStatChange} className="bg-amber-600 hover:bg-amber-700">
+                        Yes, Edit Stats
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
     </PageTemplate>
   );
 }

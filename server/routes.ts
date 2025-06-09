@@ -594,7 +594,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const gameStatsData = await storage.getGameStatsByGame(game.id);
 
         rosters.push(...gameRosters);
-        gameStats.push(...gameStatsData);
+        gameStats.push<pad><pad><pad><pad><pad><pad><pad><pad>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+(...gameStatsData);
       }
 
       // Create the backup object
@@ -2840,6 +2858,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: 'Failed to fetch games' });
     }
   });
+
+  // Update game statistics
+  app.put("/api/games/:id/stats", requireClubAccess(), async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const gameId = parseInt(req.params.id);
+    const { stats, confirmCompleted } = req.body;
+
+    // Check if game is completed and require confirmation
+    const gameResult = await db.execute(sql`
+      SELECT g.*, gs.is_completed, gs.display_name as status_display_name
+      FROM games g 
+      LEFT JOIN game_statuses gs ON g.status_id = gs.id
+      WHERE g.id = ${gameId}
+    `);
+
+    if (gameResult.rows.length === 0) {
+      return res.status(404).json({ error: "Game not found" });
+    }
+
+    const game = gameResult.rows[0];
+
+    // If game is completed and no confirmation provided, require confirmation
+    if (game.is_completed && !confirmCompleted) {
+      return res.status(400).json({ 
+        error: "This game is completed. Please confirm you want to edit completed game statistics.",
+        requiresConfirmation: true,
+        gameStatus: game.status_display_name
+      });
+    }
 
   // Create HTTP server
   const httpServer = createServer(app);

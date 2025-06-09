@@ -211,7 +211,7 @@ class UnifiedStatisticsService {
 
   private async fallbackIndividualFetch(gameIds: number[]): Promise<Record<number, GameStat[]>> {
     const statsMap: Record<number, GameStat[]> = {};
-    
+
     // Use apiRequest for individual game stats to ensure proper authentication
     const results = await Promise.allSettled(
       gameIds.map(id => apiRequest('GET', `/api/games/${id}/stats`))
@@ -435,6 +435,31 @@ class UnifiedStatisticsService {
     performance.rating = ratingCount > 0 ? Math.round(totalRating / ratingCount) : 5;
 
     return performance;
+  }
+
+  /**
+   * Save game statistics
+   */
+  async saveGameStatistics(gameId: number, stats: any[], useTransaction = true, confirmCompleted = false): Promise<void> {
+    const response = await apiRequest.put(`/games/${gameId}/stats`, { 
+      stats,
+      useTransaction,
+      confirmCompleted
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+
+      // If game is completed and confirmation required, throw special error
+      if (errorData.requiresConfirmation) {
+        const error = new Error(errorData.error) as any;
+        error.requiresConfirmation = true;
+        error.gameStatus = errorData.gameStatus;
+        throw error;
+      }
+
+      throw new Error(errorData.error || 'Failed to save statistics');
+    }
   }
 
   }
