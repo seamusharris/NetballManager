@@ -44,8 +44,9 @@ class GameScoreService {
     if (gameId && !officialScores) {
       try {
         const response = await apiClient.get(`/api/games/${gameId}/scores`);
-        if (response && response.scores && response.scores.length > 0) {
-          return this.createScoresFromOfficial(response.scores, homeTeamId, awayTeamId, currentTeamId);
+        if (response && Array.isArray(response) && response.length > 0) {
+          console.log(`Using official scores for game ${gameId}:`, response);
+          return this.createScoresFromOfficial(response, homeTeamId, awayTeamId, currentTeamId);
         }
       } catch (error) {
         console.log(`No official scores found for game ${gameId}, using calculated scores`);
