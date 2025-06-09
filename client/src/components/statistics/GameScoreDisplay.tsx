@@ -104,12 +104,31 @@ export function GameScoreDisplay({ gameId, compact = false, preloadedStats, fall
     );
   }
 
+  // Convert between different score formats
+  const displayScores = (() => {
+    if (!scores) return null;
+
+    // Handle new gameScoreService format (has quarterScores array)
+    if (scores.quarterScores && Array.isArray(scores.quarterScores)) {
+      return {
+        quarterScores: scores.quarterScores.reduce((acc: any, q: any) => {
+          acc[q.quarter.toString()] = { for: q.teamScore, against: q.opponentScore };
+          return acc;
+        }, {}),
+        finalScore: { for: scores.totalTeamScore, against: scores.totalOpponentScore }
+      };
+    }
+
+    // Handle legacy statisticsService format (already in correct format)
+    return scores;
+  })();
+
   // Render compact view for lists and tables
   if (compact) {
     // Determine win/loss/draw status
-    const isWin = scores.finalScore.for > scores.finalScore.against;
-    const isLoss = scores.finalScore.for < scores.finalScore.against;
-    const isDraw = scores.finalScore.for === scores.finalScore.against;
+    const isWin = displayScores.finalScore.for > displayScores.finalScore.against;
+    const isLoss = displayScores.finalScore.for < displayScores.finalScore.against;
+    const isDraw = displayScores.finalScore.for === displayScores.finalScore.against;
 
     // Set background color based on game result
     const bgColor = isWin 
@@ -121,9 +140,9 @@ export function GameScoreDisplay({ gameId, compact = false, preloadedStats, fall
     return (
       <div className="font-semibold text-left">
         <div className={`inline-flex items-center px-3 py-1 rounded border text-gray-900 ${bgColor}`}>
-          <span className={isWin ? "font-bold" : ""}>{scores.finalScore.for}</span>
+          <span className={isWin ? "font-bold" : ""}>{displayScores.finalScore.for}</span>
           <span className="mx-2">-</span>
-          <span className={isLoss ? "font-bold" : ""}>{scores.finalScore.against}</span>
+          <span className={isLoss ? "font-bold" : ""}>{displayScores.finalScore.against}</span>
         </div>
       </div>
     );
@@ -131,7 +150,7 @@ export function GameScoreDisplay({ gameId, compact = false, preloadedStats, fall
 
   // Render full score breakdown
 
-  
+
 
   return (
     <Card>
@@ -139,9 +158,9 @@ export function GameScoreDisplay({ gameId, compact = false, preloadedStats, fall
         <CardTitle className="flex justify-between items-center">
           <span>Final Score</span>
           <span>
-            <span className="text-green-600 text-2xl font-bold">{scores.finalScore.for}</span>
+            <span className="text-green-600 text-2xl font-bold">{displayScores.finalScore.for}</span>
             <span className="mx-2">-</span>
-            <span className="text-red-600 text-2xl font-bold">{scores.finalScore.against}</span>
+            <span className="text-red-600 text-2xl font-bold">{displayScores.finalScore.against}</span>
           </span>
         </CardTitle>
       </CardHeader>
@@ -156,7 +175,7 @@ export function GameScoreDisplay({ gameId, compact = false, preloadedStats, fall
             </TableRow>
           </TableHeader>
           <TableBody>
-            {Object.entries(scores.quarterScores).map(([quarter, score]) => (
+            {Object.entries(displayScores.quarterScores).map(([quarter, score]) => (
               <TableRow key={quarter}>
                 <TableCell className="font-medium">Q{quarter}</TableCell>
                 <TableCell className="text-right text-green-600">{score.for}</TableCell>
@@ -168,11 +187,11 @@ export function GameScoreDisplay({ gameId, compact = false, preloadedStats, fall
             ))}
             <TableRow className="font-bold">
               <TableCell>Total</TableCell>
-              <TableCell className="text-right text-green-600">{scores.finalScore.for}</TableCell>
-              <TableCell className="text-right text-red-600">{scores.finalScore.against}</TableCell>
+              <TableCell className="text-right text-green-600">{displayScores.finalScore.for}</TableCell>
+              <TableCell className="text-right text-red-600">{displayScores.finalScore.against}</TableCell>
               <TableCell className="text-right">
-                {scores.finalScore.for - scores.finalScore.against > 0 && '+'}
-                {scores.finalScore.for - scores.finalScore.against}
+                {displayScores.finalScore.for - displayScores.finalScore.against > 0 && '+'}
+                {displayScores.finalScore.for - displayScores.finalScore.against}
               </TableCell>
             </TableRow>
           </TableBody>
