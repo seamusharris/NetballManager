@@ -145,7 +145,7 @@ export default function TopPlayersWidget({
       });
     }
 
-    // Process game stats - for Top Players we use live stats (like Team Performance)
+    // Process game stats - for Top Players we use live stats
     if (Object.keys(gameStatsMap).length > 0) {
       const dedupedStats: Record<number, Record<string, GameStat>> = {};
 
@@ -153,20 +153,23 @@ export default function TopPlayersWidget({
         const gameId = parseInt(gameIdStr);
         const gameRosters = gameRostersMap?.[gameId] || [];
 
-        // For Top Players, use all stats regardless of team (club-wide view)
+        // Build roster lookup for this game
+        const rosterLookup: Record<string, number> = {};
+        gameRosters.forEach((r: any) => {
+          if (r.position && r.quarter && r.playerId) {
+            const key = `${r.position}-${r.quarter}`;
+            rosterLookup[key] = r.playerId;
+          }
+        });
+
+        // Process stats with proper roster matching
         stats.forEach(stat => {
           if (!stat || !stat.position || !stat.quarter || !stat.gameId) return;
 
-          const rosterEntry = gameRosters.find((r: any) => 
-            r.position === stat.position && 
-            r.quarter === stat.quarter
-          );
+          const rosterKey = `${stat.position}-${stat.quarter}`;
+          const playerId = rosterLookup[rosterKey];
 
-          if (!rosterEntry || !rosterEntry.playerId) return;
-
-          const playerId = rosterEntry.playerId;
-
-          if (!newPlayerStatsMap[playerId]) return;
+          if (!playerId || !newPlayerStatsMap[playerId]) return;
 
           const uniqueKey = `${stat.gameId}-${stat.quarter}-${stat.position}`;
 
@@ -193,41 +196,40 @@ export default function TopPlayersWidget({
       });
     }
 
-    // Process player ratings
+    // Process player ratings - calculate average rating across all quarters played
     players.forEach(player => {
       if (!newPlayerStatsMap[player.id]) return;
 
-      let mostRecentRating = null;
-      let mostRecentDate = new Date(0);
+      let totalRating = 0;
+      let ratingCount = 0;
 
+      // Look through all games and quarters for this player's ratings
       Object.entries(gameRostersMap || {}).forEach(([gameIdStr, rosters]) => {
         const gameId = parseInt(gameIdStr);
-        const gameDate = new Date(games.find(g => g.id === gameId)?.date || '');
+        const gameStats = gameStatsMap[gameId] || [];
 
-        const playerQ1Rosters = rosters.filter((r: any) => 
-          r.playerId === player.id && 
-          r.quarter === 1 && 
-          r.position
-        );
+        // Find all roster entries for this player in this game
+        const playerRosters = rosters.filter((r: any) => r.playerId === player.id);
 
-        playerQ1Rosters.forEach((roster: any) => {
-          const gameStats = gameStatsMap[gameId] || [];
+        playerRosters.forEach((roster: any) => {
+          // Find the corresponding stat for this position/quarter
           const positionStat = gameStats.find((s: GameStat) => 
             s.position === roster.position && 
-            s.quarter === 1 &&
+            s.quarter === roster.quarter &&
             s.rating !== null && 
-            s.rating !== undefined
+            s.rating !== undefined &&
+            s.rating > 0
           );
 
-          if (positionStat?.rating !== undefined && positionStat?.rating !== null && gameDate > mostRecentDate) {
-            mostRecentRating = positionStat.rating;
-            mostRecentDate = gameDate;
+          if (positionStat?.rating) {
+            totalRating += positionStat.rating;
+            ratingCount++;
           }
         });
       });
 
-      if (mostRecentRating !== null) {
-        newPlayerStatsMap[player.id].rating = mostRecentRating;
+      if (ratingCount > 0) {
+        newPlayerStatsMap[player.id].rating = totalRating / ratingCount;
       } else {
         // Calculate rating based on performance stats with better baseline
         const playerStats = newPlayerStatsMap[player.id];
