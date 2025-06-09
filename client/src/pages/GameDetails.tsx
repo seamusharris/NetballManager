@@ -439,98 +439,7 @@ const PlayerStatsByQuarter = ({ roster, players, gameStats }: { roster: any[], p
   );
 };
 
-// Calculate quarter by quarter scores
-  const calculateQuarterScores = (gameStats: any[], game: any, teams: any[], currentTeam: any) => {
-    // Check for fixed scores from game status first
-    if (game && game.statusTeamGoals !== null && game.statusOpponentGoals !== null) {
-      return [
-        { quarter: 1, teamScore: game.statusTeamGoals, opponentScore: game.statusOpponentGoals },
-        { quarter: 2, teamScore: 0, opponentScore: 0 },
-        { quarter: 3, teamScore: 0, opponentScore: 0 },
-        { quarter: 4, teamScore: 0, opponentScore: 0 }
-      ];
-    }
 
-    // Special handling for forfeit games - use consistent scoring for forfeit games
-    if (game && game.statusName && game.statusName.startsWith('forfeit-')) {
-      const isWin = game.statusName === 'forfeit-win';
-
-      // For forfeit-loss: 5 goals in Q1 against GK and 5 in Q1 against GD
-      // For forfeit-win: GS and GA score 5 goals each in Q1
-      return [
-        { quarter: 1, teamScore: isWin ? 10 : 0, opponentScore: isWin ? 0 : 10 },
-        { quarter: 2, teamScore: 0, opponentScore: 0 },
-        { quarter: 3, teamScore: 0, opponentScore: 0 },
-        { quarter: 4, teamScore: 0, opponentScore: 0 }
-      ];
-    }
-
-    // Check if this is an inter-club game (both teams from same club)
-    const isInterClubGame = game && game.homeTeamId && game.awayTeamId && 
-                           teams.some(t => t.id === game.homeTeamId) && 
-                           teams.some(t => t.id === game.awayTeamId);
-
-    if (isInterClubGame && currentTeam) {
-      // For inter-club games, calculate scores using reconciled data quarter by quarter
-      const quarterScores = [];
-
-      for (let quarter = 1; quarter <= 4; quarter++) {
-        const quarterStats = gameStats.filter(stat => stat.quarter === quarter);
-
-        // Get stats for both teams for this quarter
-        const homeStats = quarterStats.filter(stat => stat.teamId === game.homeTeamId);
-        const awayStats = quarterStats.filter(stat => stat.teamId === game.awayTeamId);
-
-        const homeTeamStats = {
-          teamId: game.homeTeamId,
-          goalsFor: homeStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0),
-          goalsAgainst: homeStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0)
-        };
-
-        const awayTeamStats = {
-          teamId: game.awayTeamId,
-          goalsFor: awayStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0),
-          goalsAgainst: awayStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0)
-        };
-
-        // Get reconciled scores for this quarter
-        const reconciledScore = getReconciledScore(homeTeamStats, awayTeamStats, 'average');
-
-        // Return scores from current team's perspective
-        if (currentTeam.id === game.homeTeamId) {
-          quarterScores.push({
-            quarter,
-            teamScore: reconciledScore.homeScore,
-            opponentScore: reconciledScore.awayScore
-          });
-        } else {
-          quarterScores.push({
-            quarter,
-            teamScore: reconciledScore.awayScore,
-            opponentScore: reconciledScore.homeScore
-          });
-        }
-      }
-
-      return quarterScores;
-    }
-
-    // Regular game calculation (single team perspective)
-    const quarterScores = [];
-    for (let quarter = 1; quarter <= 4; quarter++) {
-      const quarterStats = gameStats.filter(stat => stat.quarter === quarter);
-      const teamScore = quarterStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
-      const opponentScore = quarterStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
-
-      quarterScores.push({
-        quarter,
-        teamScore,
-        opponentScore
-      });
-    }
-
-    return quarterScores;
-  };
 
 // Court position roster component
 const CourtPositionRoster = ({ roster, players, gameStats, quarter: initialQuarter = 1 }) => {
@@ -1245,16 +1154,21 @@ export default function GameDetails() {
   const isInterClub = homeTeamId && awayTeamId && teams.some(t => t.id === homeTeamId) && teams.some(t => t.id === awayTeamId);
 
   // Calculate scores using the unified service with current team context
-  const gameScores = gameScoreService.gameScoreService.calculateGameScores(
-    gameStats || [], 
-    game?.status, 
-    { teamGoals: game?.statusTeamGoals, opponentGoals: game?.statusOpponentGoals },
-    isInterClub,
-    homeTeamId,
-    awayTeamId,
-    currentTeam?.id,
-    undefined // officialScores - will be fetched internally by the service
-  );
+  const gameScores = useMemo(() => {
+    if (!gameStats || !game) return { quarterScores: [], totalTeamScore: 0, totalOpponentScore: 0 };
+    
+    return gameScoreService.gameScoreService.calculateGameScores(
+      gameStats, 
+      game.status, 
+      { teamGoals: game.statusTeamGoals, opponentGoals: game.statusOpponentGoals },
+      isInterClub,
+      homeTeamId,
+      awayTeamId,
+      currentTeam?.id,
+      undefined, // officialScores - will be fetched internally by the service
+      game.id
+    );
+  }, [gameStats, game, isInterClub, homeTeamId, awayTeamId, currentTeam?.id]);
 
   const { quarterScores, totalTeamScore, totalOpponentScore } = gameScores;
 
