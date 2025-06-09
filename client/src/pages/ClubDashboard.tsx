@@ -9,6 +9,7 @@ import { Loader2, Trophy, Users, Calendar, TrendingUp, Target, Award } from 'luc
 import { apiClient } from '@/lib/apiClient';
 import { Badge } from '@/components/ui/badge';
 import { ClubSwitcher } from '@/components/layout/ClubSwitcher';
+import RecentGames from '@/components/dashboard/RecentGames';
 
 export default function ClubDashboard() {
   const { currentClub, currentClubId, isLoading: clubLoading } = useClub();
