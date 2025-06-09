@@ -72,6 +72,8 @@ export default function GameForm({
     },
   });
 
+  const { watch } = form;
+
   console.log("GameForm useEffect triggered:", {
     game: game ? { id: game.id, statusId: game.statusId, homeTeamId: game.homeTeamId } : null,
     activeSeason: activeSeason ? { id: activeSeason.id, name: activeSeason.name } : null,
