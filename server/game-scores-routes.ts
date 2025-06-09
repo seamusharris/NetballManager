@@ -1,14 +1,13 @@
 
-import express from 'express';
+import { Express } from 'express';
 import { db } from './db';
 import { gameScores, games } from '@shared/schema';
 import { eq, sql } from 'drizzle-orm';
 import { authMiddleware } from './auth-middleware';
 
-const router = express.Router();
-
-// Get official scores for a game
-router.get('/api/games/:gameId/scores', authMiddleware, async (req, res) => {
+export function registerGameScoresRoutes(app: Express) {
+  // Get official scores for a game
+  app.get('/api/games/:gameId/scores', authMiddleware, async (req, res) => {
   try {
     const gameId = parseInt(req.params.gameId);
     
@@ -28,7 +27,7 @@ router.get('/api/games/:gameId/scores', authMiddleware, async (req, res) => {
 });
 
 // Create or update official scores for a game
-router.post('/api/games/:gameId/scores', authMiddleware, async (req, res) => {
+  app.post('/api/games/:gameId/scores', authMiddleware, async (req, res) => {
   try {
     const gameId = parseInt(req.params.gameId);
     const { quarter, homeScore, awayScore, notes } = req.body;
@@ -108,7 +107,7 @@ router.post('/api/games/:gameId/scores', authMiddleware, async (req, res) => {
 });
 
 // Delete official scores
-router.delete('/api/games/:gameId/scores', authMiddleware, async (req, res) => {
+  app.delete('/api/games/:gameId/scores', authMiddleware, async (req, res) => {
   try {
     const gameId = parseInt(req.params.gameId);
     
@@ -122,4 +121,4 @@ router.delete('/api/games/:gameId/scores', authMiddleware, async (req, res) => {
   }
 });
 
-export default router;
+}
