@@ -19,7 +19,7 @@ const formSchema = insertGameSchema.extend({
   statusId: z.string().min(1, "Game status is required"),
   seasonId: z.string().min(1, "Season is required"),
   homeTeamId: z.string().min(1, "Home team is required"),
-  awayTeamId: z.string().min(1, "Away team is required"),
+  awayTeamId: z.string().optional(), // Make optional to allow BYE games
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -107,6 +107,14 @@ export default function GameForm({
     }
   }, [game, activeSeason, form]);
 
+  // Watch for status changes to clear away team when switching to BYE
+  const watchedStatusId = watch("statusId");
+  useEffect(() => {
+    if (watchedStatusId === "6") { // BYE status
+      form.setValue("awayTeamId", "");
+    }
+  }, [watchedStatusId, form]);
+
   const formValues = form.watch();
   console.log("GameForm rendering with data:", {
     gameStatuses: gameStatuses?.length || 0,
@@ -134,6 +142,7 @@ export default function GameForm({
     // Check if this is a BYE game (status 6)
     const isByeGame = parseInt(values.statusId) === 6;
     
+    // Only require away team for non-BYE games
     if (!isByeGame && !values.awayTeamId) {
       form.setError("awayTeamId", { message: "Please select an away team for regular games" });
       return;
@@ -146,7 +155,7 @@ export default function GameForm({
       statusId: parseInt(values.statusId),
       seasonId: parseInt(values.seasonId),
       homeTeamId: parseInt(values.homeTeamId),
-      awayTeamId: isByeGame ? null : parseInt(values.awayTeamId),
+      awayTeamId: isByeGame ? null : (values.awayTeamId ? parseInt(values.awayTeamId) : null),
       isBye: isByeGame
     };
 
