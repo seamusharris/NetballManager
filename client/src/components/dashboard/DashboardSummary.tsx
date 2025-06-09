@@ -240,7 +240,9 @@ export default function DashboardSummary({
             <TopPlayersWidget 
               players={players} 
               games={filteredGames}
-              centralizedStats={centralizedStats}
+              seasonFilter={selectedSeasonId}
+              activeSeason={activeSeason}
+              teamId={currentTeam?.id}
             />
             <PlayerAvailabilityWidget 
               games={filteredGames}

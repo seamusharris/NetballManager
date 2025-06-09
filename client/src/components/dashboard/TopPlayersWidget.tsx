@@ -14,6 +14,7 @@ interface TopPlayersWidgetProps {
   className?: string;
   seasonFilter?: string;
   activeSeason?: any;
+  teamId?: number; // Optional team ID for filtering
 }
 
 interface PlayerStats {
@@ -30,19 +31,29 @@ export default function TopPlayersWidget({
   games, 
   className, 
   seasonFilter, 
-  activeSeason 
+  activeSeason,
+  teamId 
 }: TopPlayersWidgetProps): JSX.Element {
   const [playerStatsMap, setPlayerStatsMap] = useState<Record<number, PlayerStats>>({});
 
-  // Filter games by selected season and get valid games for statistics
+  // Filter games by selected season and team
   const filteredGames = games.filter(game => {
+    // Season filter
+    let passesSeasonFilter = true;
     if (seasonFilter === 'current' && activeSeason) {
-      return game.seasonId === activeSeason.id;
+      passesSeasonFilter = game.seasonId === activeSeason.id;
     } else if (seasonFilter && seasonFilter !== 'current') {
       const seasonId = parseInt(seasonFilter);
-      return game.seasonId === seasonId;
+      passesSeasonFilter = game.seasonId === seasonId;
     }
-    return true;
+
+    // Team filter - only apply if teamId is provided
+    let passesTeamFilter = true;
+    if (teamId) {
+      passesTeamFilter = game.homeTeamId === teamId || game.awayTeamId === teamId;
+    }
+
+    return passesSeasonFilter && passesTeamFilter;
   });
 
   // Filter for completed games that allow statistics using game status table
@@ -93,8 +104,34 @@ export default function TopPlayersWidget({
 
     const newPlayerStatsMap: Record<number, PlayerStats> = {};
 
-    // Initialize all players with zeros
-    players.forEach(player => {
+    // Initialize players with zeros - filter by team if teamId provided
+    const relevantPlayers = teamId ? [] : players; // We'll populate this from roster data if teamId is provided
+    const playerIdsInTeam = new Set<number>();
+
+    // If we have a teamId, we need to find which players actually played for this team
+    if (teamId && gameRostersMap && Object.keys(gameRostersMap).length > 0) {
+      Object.entries(gameRostersMap).forEach(([gameIdStr, rosters]) => {
+        const gameId = parseInt(gameIdStr);
+        const game = validGames.find(g => g.id === gameId);
+        
+        // Only consider games where this team played
+        if (game && (game.homeTeamId === teamId || game.awayTeamId === teamId)) {
+          rosters.forEach((roster: any) => {
+            if (roster.playerId && roster.position && 
+                ['GS', 'GA', 'WA', 'C', 'WD', 'GD', 'GK'].includes(roster.position)) {
+              playerIdsInTeam.add(roster.playerId);
+            }
+          });
+        }
+      });
+    }
+
+    // Initialize player stats for relevant players
+    const playersToProcess = teamId ? 
+      players.filter(player => playerIdsInTeam.has(player.id)) : 
+      players;
+
+    playersToProcess.forEach(player => {
       newPlayerStatsMap[player.id] = {
         playerId: player.id,
         gamesPlayed: 0,
@@ -105,18 +142,24 @@ export default function TopPlayersWidget({
       };
     });
 
-    // Count games played from roster data
+    // Count games played from roster data - only for team-relevant games
     if (gameRostersMap && Object.keys(gameRostersMap).length > 0) {
       const playerGameIds: Record<number, Set<number>> = {};
 
-      players.forEach(player => {
+      playersToProcess.forEach(player => {
         playerGameIds[player.id] = new Set();
       });
 
       Object.entries(gameRostersMap).forEach(([gameIdStr, rosters]) => {
         const gameId = parseInt(gameIdStr);
+        const game = validGames.find(g => g.id === gameId);
+        
+        // Only count games where this team played (if teamId filter is active)
+        const shouldCountGame = teamId ? 
+          (game && (game.homeTeamId === teamId || game.awayTeamId === teamId)) : 
+          true;
 
-        if (Array.isArray(rosters)) {
+        if (shouldCountGame && Array.isArray(rosters)) {
           const playersOnCourt: Record<number, boolean> = {};
 
           rosters.forEach((roster: any) => {
@@ -138,7 +181,7 @@ export default function TopPlayersWidget({
         }
       });
 
-      players.forEach(player => {
+      playersToProcess.forEach(player => {
         if (playerGameIds[player.id] && newPlayerStatsMap[player.id]) {
           newPlayerStatsMap[player.id].gamesPlayed = playerGameIds[player.id].size;
         }
@@ -151,6 +194,15 @@ export default function TopPlayersWidget({
 
       Object.entries(gameStatsMap).forEach(([gameIdStr, stats]) => {
         const gameId = parseInt(gameIdStr);
+        const game = validGames.find(g => g.id === gameId);
+        
+        // Only process stats for team-relevant games
+        const shouldProcessGame = teamId ? 
+          (game && (game.homeTeamId === teamId || game.awayTeamId === teamId)) : 
+          true;
+
+        if (!shouldProcessGame) return;
+
         const gameRosters = gameRostersMap?.[gameId] || [];
 
         // Build roster lookup for this game
@@ -196,16 +248,25 @@ export default function TopPlayersWidget({
       });
     }
 
-    // Process player ratings - calculate average rating across all quarters played
-    players.forEach(player => {
+    // Process player ratings - calculate average rating across all quarters played in team-relevant games
+    playersToProcess.forEach(player => {
       if (!newPlayerStatsMap[player.id]) return;
 
       let totalRating = 0;
       let ratingCount = 0;
 
-      // Look through all games and quarters for this player's ratings
+      // Look through team-relevant games and quarters for this player's ratings
       Object.entries(gameRostersMap || {}).forEach(([gameIdStr, rosters]) => {
         const gameId = parseInt(gameIdStr);
+        const game = validGames.find(g => g.id === gameId);
+        
+        // Only include ratings from team-relevant games
+        const shouldIncludeRating = teamId ? 
+          (game && (game.homeTeamId === teamId || game.awayTeamId === teamId)) : 
+          true;
+
+        if (!shouldIncludeRating) return;
+
         const gameStats = gameStatsMap[gameId] || [];
 
         // Find all roster entries for this player in this game
@@ -258,8 +319,12 @@ export default function TopPlayersWidget({
     setPlayerStatsMap(newPlayerStatsMap);
   }, [gameStatsMap, gameRostersMap, isLoading, players, games]);
 
-  // Get top 5 players by rating
-  const topPlayers = players
+  // Get top 5 players by rating - use only players relevant to the team
+  const playersToShow = teamId ? 
+    players.filter(player => playerStatsMap[player.id]?.gamesPlayed > 0) : 
+    players;
+
+  const topPlayers = playersToShow
     .map(player => ({
       ...player,
       stats: playerStatsMap[player.id] || {
@@ -271,6 +336,7 @@ export default function TopPlayersWidget({
         rating: 5.0
       }
     }))
+    .filter(player => !teamId || player.stats.gamesPlayed > 0) // Only show players who have played if team filter is active
     .sort((a, b) => b.stats.rating - a.stats.rating)
     .slice(0, 5);
 
