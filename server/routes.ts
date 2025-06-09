@@ -1932,6 +1932,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Log the request body to diagnose issues
       console.log("Creating game stat with data:", statData);
 
+      // Validate that teamId is provided
+      if (!statData.teamId) {
+        return res.status(400).json({ message: "teamId is required for game statistics" });
+      }
+
       // Ensure the rating is properly handled
       if (statData.rating === undefined || statData.rating === '') {
         statData.rating = null;
@@ -1957,10 +1962,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Stats are now recorded directly against positions without requiring roster context
 
       try {
-        // Check for existing stat
+        // Check for existing stat with team context
         const existingStats = await storage.getGameStatsByGame(parsedData.data.gameId);
         const duplicate = existingStats.find(s => 
           s.gameId === parsedData.data.gameId && 
+          s.teamId === parsedData.data.teamId &&
           s.position === parsedData.data.position && 
           s.quarter === parsedData.data.quarter
         );

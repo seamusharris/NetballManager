@@ -785,6 +785,7 @@ export class DatabaseStorage implements IStorage {
         lastName: row.last_name,
         dateOfBirth: row.date_of_birth,
         positionPreferences: typeof row.position_preferences === 'string' 
+```typescript
           ? JSON.parse(row.position_preferences) 
           : row.position_preferences || [],
         active: row.active,

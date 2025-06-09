@@ -466,6 +466,15 @@ export default function LiveStats() {
       console.log('=== SAVING ALL POSITION STATS ===');
       console.log('Position stats to save:', positionStats);
 
+      // Determine the team ID for these stats
+      const teamId = isCurrentTeamHome ? game.homeTeamId : game.awayTeamId;
+      
+      if (!teamId) {
+        throw new Error('Cannot determine team context for saving stats');
+      }
+
+      console.log(`Saving stats for team ID: ${teamId} (${isCurrentTeamHome ? 'home' : 'away'})`);
+
       const updates = [];
 
       // Convert position stats to API calls
@@ -478,9 +487,11 @@ export default function LiveStats() {
           return;
         }
 
-        // Check if a stat already exists for this position/quarter
+        // Check if a stat already exists for this team/position/quarter
         const existingStat = existingStats?.find(s => 
-          s.position === position && s.quarter === quarter
+          s.position === position && 
+          s.quarter === quarter &&
+          s.teamId === teamId
         );
 
         if (existingStat) {
@@ -503,6 +514,7 @@ export default function LiveStats() {
           if (hasNonZeroStats) {
             const createPromise = apiClient.post(`/api/games/${gameId}/stats`, {
               gameId: parseInt(gameId),
+              teamId: teamId,
               position: position,
               quarter: quarter,
               goalsFor: stats.goalsFor || 0,
