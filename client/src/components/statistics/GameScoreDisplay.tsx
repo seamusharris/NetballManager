@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useGameStatistics } from './hooks/useGameStatistics';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -47,7 +47,7 @@ export function GameScoreDisplay({ gameId, compact = false, preloadedStats, fall
 
   if (error) {
     console.error('Error loading game stats:', error);
-    
+
     // For completed games with no stats or any stats-related errors, show a dash instead of error
     const errorMessage = error.message?.toLowerCase() || '';
     const isStatsError = errorMessage.includes('no stats') || 
@@ -56,7 +56,7 @@ export function GameScoreDisplay({ gameId, compact = false, preloadedStats, fall
                         errorMessage.includes('stats not available') ||
                         errorMessage.includes('no goal stats') ||
                         errorMessage.includes('no statistics');
-    
+
     if (isStatsError) {
       return compact ? (
         <div className="text-muted-foreground">
@@ -68,7 +68,7 @@ export function GameScoreDisplay({ gameId, compact = false, preloadedStats, fall
         </div>
       );
     }
-    
+
     // Only show "Score Error" for actual technical errors, not missing data
     return compact ? (
       <div className="text-destructive">
@@ -115,6 +115,31 @@ export function GameScoreDisplay({ gameId, compact = false, preloadedStats, fall
   }
 
   // Render full score breakdown
+  
+  const filteredGameStats = useMemo(() => {
+    if (!gameStats || !currentTeam?.id) return gameStats || [];
+
+    // For inter-club games, only use stats from the current team
+    if (isInterClub) {
+      return gameStats.filter(stat => stat.teamId === currentTeam.id);
+    }
+
+    // For regular games, use all stats
+    return gameStats;
+  }, [gameStats, currentTeam?.id, isInterClub]);
+
+  // Calculate scores using the game score service
+  const gameScores = gameScoreService.gameScoreService.calculateGameScores(
+    filteredGameStats, 
+    game?.status, 
+    { teamGoals: game?.statusTeamGoals, opponentGoals: game?.statusOpponentGoals },
+    isInterClub,
+    homeTeamId,
+    awayTeamId,
+    currentTeam?.id,
+    officialScores
+  );
+
   return (
     <Card>
       <CardHeader>
