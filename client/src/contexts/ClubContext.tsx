@@ -53,7 +53,8 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
     console.log('ClubProvider: Initializing with stored club ID:', clubId);
 
     if (clubId && !isNaN(clubId)) {
-      // Set API client context immediately during initialization
+      // Note: We can't validate against userClubs here since they haven't loaded yet
+      // Validation will happen in the useEffect when userClubs are available
       apiClient.setClubContext({ currentClubId: clubId });
       console.log('ClubProvider: API client initialized with club ID:', clubId);
       return clubId;
@@ -110,8 +111,18 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
         if (storedClubId) {
           const storedId = parseInt(storedClubId, 10);
           const isValidClub = userClubs.some(club => club.clubId === storedId);
-          targetClubId = isValidClub ? storedId : userClubs[0].clubId;
-          console.log('ClubContext: Using stored club ID:', storedId, 'valid:', isValidClub);
+          if (isValidClub) {
+            targetClubId = storedId;
+            console.log('ClubContext: Using valid stored club ID:', storedId);
+          } else {
+            console.warn('ClubContext: Stored club ID', storedId, 'is invalid. Available clubs:', userClubs.map(c => c.clubId));
+            // Clear invalid stored club ID
+            localStorage.removeItem('currentClubId');
+            // Prefer Warrandyte (54) if available, otherwise use first club
+            const warrandyteClub = userClubs.find(club => club.clubId === 54);
+            targetClubId = warrandyteClub ? 54 : userClubs[0].clubId;
+            console.log('ClubContext: Reset to valid club:', targetClubId);
+          }
         } else {
           // Prefer Warrandyte (54) if available, otherwise use first club
           const warrandyteClub = userClubs.find(club => club.clubId === 54);
@@ -139,6 +150,26 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
     }
   }, [userClubs, queryClient, currentClubId, isLoadingClubs, isInitialized]);
 
+  // Validate current club ID against user's available clubs
+  useEffect(() => {
+    if (Array.isArray(userClubs) && userClubs.length > 0 && currentClubId !== null) {
+      const hasAccess = userClubs.some(club => club.clubId === currentClubId);
+      if (!hasAccess) {
+        console.error('ClubContext: Current club ID', currentClubId, 'is not in user clubs:', userClubs.map(c => c.clubId));
+        console.log('ClubContext: Forcing reset to valid club');
+        
+        // Reset to first available club
+        const validClubId = userClubs[0].clubId;
+        localStorage.setItem('currentClubId', validClubId.toString());
+        apiClient.setClubContext({ currentClubId: validClubId });
+        setCurrentClubId(validClubId);
+        
+        // Invalidate queries to refresh data
+        queryClient.invalidateQueries();
+      }
+    }
+  }, [userClubs, currentClubId, queryClient]);
+
   // Keep API client in sync with currentClubId and currentTeamId changes
   useEffect(() => {
     console.log('ClubContext: Updating apiClient context to:', { currentClubId, currentTeamId });
@@ -153,6 +184,26 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
   const switchClub = useCallback((clubId: number) => {
     console.log('ClubContext: Switching club from', currentClubId, 'to', clubId);
 
+    // Validate that the user has access to this club
+    if (!Array.isArray(userClubs) || userClubs.length === 0) {
+      console.error('ClubContext: Cannot switch club - no user clubs available');
+      return;
+    }
+
+    const hasAccess = userClubs.some(club => club.clubId === clubId);
+    if (!hasAccess) {
+      console.error('ClubContext: Access denied to club', clubId, 'Available clubs:', userClubs.map(c => c.clubId));
+      
+      // Reset to a valid club instead
+      const validClubId = userClubs[0].clubId;
+      console.log('ClubContext: Resetting to valid club:', validClubId);
+      
+      localStorage.setItem('currentClubId', validClubId.toString());
+      apiClient.setClubContext({ currentClubId: validClubId });
+      setCurrentClubId(validClubId);
+      return;
+    }
+
     // Update all three synchronously to prevent race conditions
     localStorage.setItem('currentClubId', clubId.toString());
     apiClient.setClubContext({ currentClubId: clubId });
@@ -166,7 +217,7 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
     queryClient.refetchQueries({ queryKey: ['games'] });
 
     console.log('ClubContext: Club switch completed to:', clubId);
-  }, [currentClubId, queryClient]);
+  }, [currentClubId, queryClient, userClubs]);
 
   const hasPermission = (permission: keyof UserClubAccess['permissions']) => {
     if (!currentClubId || !Array.isArray(userClubs)) return false;
