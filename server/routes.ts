@@ -594,25 +594,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const gameStatsData = await storage.getGameStatsByGame(game.id);
 
         rosters.push(...gameRosters);
-        gameStats.push<pad><pad><pad><pad><pad><pad><pad><pad>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-(...gameStatsData);
+        gameStats.push(...gameStatsData);
       }
 
       // Create the backup object
