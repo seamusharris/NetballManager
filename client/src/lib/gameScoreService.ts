@@ -115,43 +115,6 @@ class GameScoreService {
     const quarterScores = Array.from({ length: 4 }, (_, i) => ({
       quarter: i + 1,
       teamScore: i === 0 ? (isWin ? 10 : 0) : 0,
-
-
-  private createScoresFromOfficial(
-    officialScores: OfficialGameScore[], 
-    homeTeamId?: number, 
-    awayTeamId?: number
-  ): GameScores {
-    // Create quarter scores from official data
-    const quarterScores: QuarterScore[] = [];
-
-    // Ensure we have scores for all 4 quarters
-    for (let quarter = 1; quarter <= 4; quarter++) {
-      // Find scores for this quarter for both teams
-      const homeTeamScore = officialScores.find(s => s.quarter === quarter && s.teamId === homeTeamId)?.score || 0;
-      const awayTeamScore = officialScores.find(s => s.quarter === quarter && s.teamId === awayTeamId)?.score || 0;
-
-      quarterScores.push({
-        quarter,
-        teamScore: homeTeamScore, // From perspective of home team
-        opponentScore: awayTeamScore
-      });
-    }
-
-    const totalTeamScore = quarterScores.reduce((sum, q) => sum + q.teamScore, 0);
-    const totalOpponentScore = quarterScores.reduce((sum, q) => sum + q.opponentScore, 0);
-
-    const result = totalTeamScore > totalOpponentScore ? 'win' : 
-                   totalTeamScore < totalOpponentScore ? 'loss' : 'draw';
-
-    return {
-      quarterScores,
-      totalTeamScore,
-      totalOpponentScore,
-      result
-    };
-  }
-
       opponentScore: i === 0 ? (isWin ? 0 : 10) : 0
     }));
 
@@ -228,6 +191,42 @@ class GameScoreService {
       }
     };
   }
+
+  
+  private createScoresFromOfficial(
+    officialScores: OfficialGameScore[], 
+    homeTeamId?: number, 
+    awayTeamId?: number
+  ): GameScores {
+    // Create quarter scores from official data
+    const quarterScores: QuarterScore[] = [];
+
+    // Ensure we have scores for all 4 quarters
+    for (let quarter = 1; quarter <= 4; quarter++) {
+      // Find scores for this quarter for both teams
+      const homeTeamScore = officialScores.find(s => s.quarter === quarter && s.teamId === homeTeamId)?.score || 0;
+      const awayTeamScore = officialScores.find(s => s.quarter === quarter && s.teamId === awayTeamId)?.score || 0;
+
+      quarterScores.push({
+        quarter,
+        teamScore: homeTeamScore, // From perspective of home team
+        opponentScore: awayTeamScore
+      });
+    }
+
+    const totalTeamScore = quarterScores.reduce((sum, q) => sum + q.teamScore, 0);
+    const totalOpponentScore = quarterScores.reduce((sum, q) => sum + q.opponentScore, 0);
+
+    const result = totalTeamScore > totalOpponentScore ? 'win' : 
+                   totalTeamScore < totalOpponentScore ? 'loss' : 'draw';
+
+    return {
+      quarterScores,
+      totalTeamScore,
+      totalOpponentScore,
+      result
+    };
+  }
 }
 
 export const gameScoreService = new GameScoreService();
@@ -263,3 +262,4 @@ export async function calculateGameScores(
     opponentScore: goalsAgainst,
     source: 'calculated'
   };
+}
