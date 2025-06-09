@@ -16,14 +16,6 @@ export function GameScoreDisplay({ gameId, compact = false, preloadedStats, fall
   // Accept even empty arrays as valid preloaded data to prevent API calls
   const hasPreloadedStats = preloadedStats && Array.isArray(preloadedStats);
 
-  // Only fetch if we don't have preloaded stats
-  // For compact mode (lists), we should rely on preloaded stats when available
-  const { scores, isLoading, error } = useGameStatistics(
-    gameId, 
-    false, // Never force fresh fetch in compact mode
-    hasPreloadedStats ? preloadedStats : undefined
-  );
-
   if (isLoading) {
     return compact ? (
       <div className="flex space-x-2">
@@ -116,29 +108,25 @@ export function GameScoreDisplay({ gameId, compact = false, preloadedStats, fall
 
   // Render full score breakdown
   
+  const { rawStats, scores, isLoading, error } = useGameStatistics(
+    gameId, 
+    false, // Never force fresh fetch in compact mode
+    hasPreloadedStats ? preloadedStats : undefined
+  );
+
   const filteredGameStats = useMemo(() => {
-    if (!gameStats || !currentTeam?.id) return gameStats || [];
+    if (!rawStats || !scores?.currentTeam?.id) return rawStats || [];
 
     // For inter-club games, only use stats from the current team
-    if (isInterClub) {
-      return gameStats.filter(stat => stat.teamId === currentTeam.id);
+    if (scores?.isInterClub) {
+      return rawStats.filter(stat => stat.teamId === scores.currentTeam.id);
     }
 
     // For regular games, use all stats
-    return gameStats;
-  }, [gameStats, currentTeam?.id, isInterClub]);
+    return rawStats;
+  }, [rawStats, scores?.currentTeam?.id, scores?.isInterClub]);
 
-  // Calculate scores using the game score service
-  const gameScores = gameScoreService.gameScoreService.calculateGameScores(
-    filteredGameStats, 
-    game?.status, 
-    { teamGoals: game?.statusTeamGoals, opponentGoals: game?.statusOpponentGoals },
-    isInterClub,
-    homeTeamId,
-    awayTeamId,
-    currentTeam?.id,
-    officialScores
-  );
+  
 
   return (
     <Card>
