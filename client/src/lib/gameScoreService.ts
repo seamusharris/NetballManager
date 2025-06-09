@@ -12,6 +12,16 @@ export interface QuarterScore {
 export interface GameScores {
   quarterScores: QuarterScore[];
   totalTeamScore: number;
+
+
+export interface OfficialGameScore {
+  quarter: number;
+  homeScore: number;
+  awayScore: number;
+  notes?: string;
+}
+
+
   totalOpponentScore: number;
   result: 'win' | 'loss' | 'draw';
 }
@@ -23,8 +33,13 @@ class GameScoreService {
     statusScores?: { teamGoals: number | null, opponentGoals: number | null },
     isInterClub: boolean = false,
     homeTeamId?: number,
-    awayTeamId?: number
+    awayTeamId?: number,
+    officialScores?: OfficialGameScore[]
   ): GameScores {
+    // PRIORITY 1: Use official scores if available
+    if (officialScores && officialScores.length > 0) {
+      return this.createScoresFromOfficial(officialScores, homeTeamId, awayTeamId);
+    }
     // Handle games with fixed scores from status (forfeit, etc.)
     if (statusScores && statusScores.teamGoals !== null && statusScores.opponentGoals !== null) {
       return this.createFixedScores(statusScores.teamGoals, statusScores.opponentGoals);
@@ -102,6 +117,50 @@ class GameScoreService {
     const quarterScores = Array.from({ length: 4 }, (_, i) => ({
       quarter: i + 1,
       teamScore: i === 0 ? (isWin ? 10 : 0) : 0,
+
+
+  private createScoresFromOfficial(
+    officialScores: OfficialGameScore[], 
+    homeTeamId?: number, 
+    awayTeamId?: number
+  ): GameScores {
+    // Create quarter scores from official data
+    const quarterScores: QuarterScore[] = [];
+    
+    // Ensure we have scores for all 4 quarters
+    for (let quarter = 1; quarter <= 4; quarter++) {
+      const officialQuarter = officialScores.find(s => s.quarter === quarter);
+      
+      if (officialQuarter) {
+        quarterScores.push({
+          quarter,
+          teamScore: officialQuarter.homeScore,
+          opponentScore: officialQuarter.awayScore
+        });
+      } else {
+        // No official score for this quarter, default to 0
+        quarterScores.push({
+          quarter,
+          teamScore: 0,
+          opponentScore: 0
+        });
+      }
+    }
+
+    const totalTeamScore = quarterScores.reduce((sum, q) => sum + q.teamScore, 0);
+    const totalOpponentScore = quarterScores.reduce((sum, q) => sum + q.opponentScore, 0);
+    
+    const result = totalTeamScore > totalOpponentScore ? 'win' : 
+                   totalTeamScore < totalOpponentScore ? 'loss' : 'draw';
+
+    return {
+      quarterScores,
+      totalTeamScore,
+      totalOpponentScore,
+      result
+    };
+  }
+
       opponentScore: i === 0 ? (isWin ? 0 : 10) : 0
     }));
 

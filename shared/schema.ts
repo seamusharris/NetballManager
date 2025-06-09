@@ -373,3 +373,25 @@ export const insertUserSchema = createInsertSchema(users).pick({
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
+
+
+// Official game scores table - independent of statistics
+export const gameScores = pgTable("game_scores", {
+  id: serial("id").primaryKey(),
+  gameId: integer("game_id").notNull().references(() => games.id, { onDelete: "cascade" }),
+  quarter: integer("quarter").notNull(), // 1-4
+  homeScore: integer("home_score").notNull().default(0),
+  awayScore: integer("away_score").notNull().default(0),
+  isOfficial: boolean("is_official").notNull().default(true), // Mark as official vs calculated
+  enteredBy: integer("entered_by").references(() => users.id), // Who entered these scores
+  enteredAt: timestamp("entered_at").defaultNow().notNull(),
+  notes: text("notes"), // Optional notes about the quarter
+}, (table) => {
+  return {
+    gameQuarterUnique: unique().on(table.gameId, table.quarter)
+  };
+});
+
+export const insertGameScoreSchema = createInsertSchema(gameScores).omit({ id: true });
+export type InsertGameScore = z.infer<typeof insertGameScoreSchema>;
+export type GameScore = typeof gameScores.$inferSelect;

@@ -47,6 +47,98 @@ export async function registerRoutes(app: Express): Promise<Server> {
     // For development, simulate an authenticated user with access to all clubs
     if (!req.user) {
       try {
+
+
+  // Official Game Scores endpoints
+  app.get('/api/games/:gameId/scores', async (req, res) => {
+    try {
+      const gameId = parseInt(req.params.gameId);
+      if (isNaN(gameId)) {
+        return res.status(400).json({ error: 'Invalid game ID' });
+      }
+
+      const scores = await db.select().from(schema.gameScores)
+        .where(eq(schema.gameScores.gameId, gameId))
+        .orderBy(schema.gameScores.quarter);
+
+      res.json(scores);
+    } catch (error) {
+      console.error('Error fetching game scores:', error);
+      res.status(500).json({ error: 'Failed to fetch game scores' });
+    }
+  });
+
+  app.post('/api/games/:gameId/scores', async (req, res) => {
+    try {
+      const gameId = parseInt(req.params.gameId);
+      if (isNaN(gameId)) {
+        return res.status(400).json({ error: 'Invalid game ID' });
+      }
+
+      const { quarter, homeScore, awayScore, notes } = req.body;
+      
+      // Validate quarter
+      if (!quarter || quarter < 1 || quarter > 4) {
+        return res.status(400).json({ error: 'Quarter must be between 1 and 4' });
+      }
+
+      // Validate scores
+      if (homeScore < 0 || awayScore < 0) {
+        return res.status(400).json({ error: 'Scores cannot be negative' });
+      }
+
+      // Insert or update the score for this quarter
+      const result = await db.insert(schema.gameScores)
+        .values({
+          gameId,
+          quarter,
+          homeScore: homeScore || 0,
+          awayScore: awayScore || 0,
+          notes,
+          enteredBy: 1 // TODO: Get from authenticated user
+        })
+        .onConflictDoUpdate({
+          target: [schema.gameScores.gameId, schema.gameScores.quarter],
+          set: {
+            homeScore: homeScore || 0,
+            awayScore: awayScore || 0,
+            notes,
+            enteredAt: new Date()
+          }
+        })
+        .returning();
+
+      res.json(result[0]);
+    } catch (error) {
+      console.error('Error saving game score:', error);
+      res.status(500).json({ error: 'Failed to save game score' });
+    }
+  });
+
+  app.delete('/api/games/:gameId/scores/:quarter', async (req, res) => {
+    try {
+      const gameId = parseInt(req.params.gameId);
+      const quarter = parseInt(req.params.quarter);
+      
+      if (isNaN(gameId) || isNaN(quarter)) {
+        return res.status(400).json({ error: 'Invalid game ID or quarter' });
+      }
+
+      await db.delete(schema.gameScores)
+        .where(
+          and(
+            eq(schema.gameScores.gameId, gameId),
+            eq(schema.gameScores.quarter, quarter)
+          )
+        );
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error deleting game score:', error);
+      res.status(500).json({ error: 'Failed to delete game score' });
+    }
+  });
+
         // Check database health first
         const isHealthy = await checkPoolHealth();
         if (!isHealthy) {
