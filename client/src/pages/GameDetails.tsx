@@ -1153,6 +1153,13 @@ export default function GameDetails() {
   const awayTeamId = game?.awayTeamId;
   const isInterClub = homeTeamId && awayTeamId && teams.some(t => t.id === homeTeamId) && teams.some(t => t.id === awayTeamId);
 
+  // Fetch official scores
+  const { data: officialScores } = useQuery({
+    queryKey: ['/api/games', gameId, 'scores'],
+    queryFn: () => apiClient.get(`/api/games/${gameId}/scores`),
+    enabled: !isNaN(gameId)
+  });
+
   // Calculate scores using the unified service with current team context
   const gameScores = useMemo(() => {
     if (!gameStats || !game) return { quarterScores: [], totalTeamScore: 0, totalOpponentScore: 0 };
@@ -1160,7 +1167,8 @@ export default function GameDetails() {
     // Ensure we always pass the current team ID for consistent perspective
     const effectiveCurrentTeamId = currentTeam?.id || currentClub?.id;
     
-    return gameScoreService.gameScoreService.calculateGameScores(
+    // Use synchronous version with official scores if available
+    return gameScoreService.gameScoreService.calculateGameScoresSync(
       gameStats, 
       game.status, 
       { teamGoals: game.statusTeamGoals, opponentGoals: game.statusOpponentGoals },
@@ -1168,10 +1176,9 @@ export default function GameDetails() {
       homeTeamId,
       awayTeamId,
       effectiveCurrentTeamId,
-      undefined, // officialScores - will be fetched internally by the service
-      game.id
+      officialScores || undefined
     );
-  }, [gameStats, game, isInterClub, homeTeamId, awayTeamId, currentTeam?.id, currentClub?.id]);
+  }, [gameStats, game, isInterClub, homeTeamId, awayTeamId, currentTeam?.id, currentClub?.id, officialScores]);
 
   const { quarterScores, totalTeamScore, totalOpponentScore } = gameScores;
 
