@@ -33,6 +33,17 @@ router.post('/api/games/:gameId/scores', authMiddleware, async (req, res) => {
     const gameId = parseInt(req.params.gameId);
     const { quarter, homeScore, awayScore, notes } = req.body;
 
+    console.log('POST /api/games/scores - gameId:', gameId, 'quarter:', quarter, 'homeScore:', homeScore, 'awayScore:', awayScore);
+
+    // Validate input
+    if (!quarter || quarter < 1 || quarter > 4) {
+      return res.status(400).json({ error: 'Invalid quarter number' });
+    }
+
+    if (homeScore === undefined || awayScore === undefined) {
+      return res.status(400).json({ error: 'Both home and away scores are required' });
+    }
+
     // First, get the game to know which teams are involved
     const game = await db.select()
       .from(games)
@@ -87,10 +98,12 @@ router.post('/api/games/:gameId/scores', authMiddleware, async (req, res) => {
       .from(gameScores)
       .where(eq(gameScores.gameId, gameId));
 
+    console.log('Successfully saved scores for game', gameId, 'quarter', quarter);
     res.json(updatedScores);
   } catch (error) {
     console.error('Error saving game scores:', error);
-    res.status(500).json({ error: 'Failed to save game scores' });
+    console.error('Stack trace:', error.stack);
+    res.status(500).json({ error: 'Failed to save game scores', details: error.message });
   }
 });
 

@@ -76,7 +76,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const { quarter, homeScore, awayScore, notes } = req.body;
-      
+
       // Validate quarter
       if (!quarter || quarter < 1 || quarter > 4) {
         return res.status(400).json({ error: 'Quarter must be between 1 and 4' });
@@ -119,7 +119,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const gameId = parseInt(req.params.gameId);
       const quarter = parseInt(req.params.quarter);
-      
+
       if (isNaN(gameId) || isNaN(quarter)) {
         return res.status(400).json({ error: 'Invalid game ID or quarter' });
       }
@@ -885,8 +885,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Validate that clubIds is an array
       if (!Array.isArray(clubIds)) {
-        return res.status(400).json({ message: "clubIds must be an array" });
-      }
+        return res.status(400).json({ message: "clubIds must be an array" });      }
 
       const client = await pool.connect();
 
@@ -2436,11 +2435,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Register game permissions routes
   registerGamePermissionsRoutes(app);
+  // Register game scores routes
+  // Register game scores routes
+  // Register game scores routes
+  const { registerGameScoresRoutes } = await import('./game-scores-routes');
+  registerGameScoresRoutes(app);
 
   // Grant Warrandyte access to all games endpoint
   app.post('/api/admin/grant-warrandyte-access', async (req, res) => {
     try {
-      const { grantWarrandyteAccessToAllGames } = await import('./grant-warrandyte-access');
+      const { grantWarrandyteAccessToAllGames } = await import('./grant-warrandyteaccess');
       await grantWarrandyteAccessToAllGames();
       res.json({ message: 'Successfully granted Warrandyte access to all games' });
     } catch (error) {
@@ -2970,26 +2974,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // For inter-club games, check for score discrepancies and warn
       const updatedStats = await storage.getGameStatsByGame(gameId);
       let mismatchWarning = null;
-      
+
       if (updatedStats.length > 0) {
         const teamIds = [...new Set(updatedStats.map(s => s.teamId))];
         if (teamIds.length > 1) {
           // This is an inter-club game - check for mismatches
           const team1Stats = updatedStats.filter(s => s.teamId === teamIds[0]);
           const team2Stats = updatedStats.filter(s => s.teamId === teamIds[1]);
-          
+
           const team1Totals = {
             teamId: teamIds[0],
             goalsFor: team1Stats.reduce((sum, s) => sum + (s.goalsFor || 0), 0),
             goalsAgainst: team1Stats.reduce((sum, s) => sum + (s.goalsAgainst || 0), 0)
           };
-          
+
           const team2Totals = {
             teamId: teamIds[1],
             goalsFor: team2Stats.reduce((sum, s) => sum + (s.goalsFor || 0), 0),
             goalsAgainst: team2Stats.reduce((sum, s) => sum + (s.goalsAgainst || 0), 0)
           };
-          
+
           // Check if scores match (team1's goalsFor should equal team2's goalsAgainst)
           if (team1Totals.goalsFor !== team2Totals.goalsAgainst || 
               team1Totals.goalsAgainst !== team2Totals.goalsFor) {

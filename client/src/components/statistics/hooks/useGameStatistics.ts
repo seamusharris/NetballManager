@@ -29,7 +29,7 @@ export function useGameStatistics(gameId: number, forceFresh: boolean = false, p
     queryKey: [`/api/games/${gameId}/stats`],
     queryFn: () => apiRequest('GET', `/api/games/${gameId}/stats`),
     enabled: !!gameId && !hasPreloadedStats && (!hasCachedScores || forceFresh),
-    staleTime: forceFresh ? 0 : 15 * 60 * 1000, // 0 for fresh, 15 minutes otherwise
+    staleTime: forceFresh ? 0 : 15 * 60 * 60 * 1000, // 0 for fresh, 15 minutes otherwise
     gcTime: 30 * 60 * 1000, // Keep in cache for 30 minutes
   });
 
