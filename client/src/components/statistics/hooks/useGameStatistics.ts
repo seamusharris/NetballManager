@@ -3,7 +3,7 @@ import { statisticsService, GameScores } from '@/lib/statisticsService';
 import { GameStat } from '@shared/schema';
 import { getCachedScores } from '@/lib/scoresCache';
 import { apiRequest } from '@/lib/apiClient';
-import { gameScoreService, OfficialGameScore } from '@/lib/gameScoreService';
+import { useClub } from '@/contexts/ClubContext';
 
 /**
  * Custom hook to fetch game statistics with enhanced caching
@@ -12,6 +12,8 @@ import { gameScoreService, OfficialGameScore } from '@/lib/gameScoreService';
  * @param preloadedStats - Optional preloaded stats to avoid API calls
  */
 export function useGameStatistics(gameId: number, forceFresh: boolean = false, preloadedStats?: GameStat[]) {
+  const { currentTeam } = useClub();
+  
   // Create a unique key for freshness tracking (only when forcing fresh data)
   const freshQueryKey = forceFresh ? `fresh-${Date.now()}` : 'cached';
 
@@ -34,50 +36,21 @@ export function useGameStatistics(gameId: number, forceFresh: boolean = false, p
     gcTime: 30 * 60 * 1000, // Keep in cache for 30 minutes
   });
 
-  // Fetch official scores first (highest priority)
-  const { 
-    data: officialScores, 
-    isLoading: isLoadingOfficialScores 
-  } = useQuery({
-    queryKey: ['/api/games', gameId, 'scores'],
-    queryFn: () => apiRequest('GET', `/api/games/${gameId}/scores`),
-    enabled: !!gameId,
-    staleTime: forceFresh ? 0 : 5 * 60 * 1000, // 5 minutes for official scores
-    gcTime: 30 * 60 * 1000,
-  });
-
-  // Enhanced calculation of game scores with official scores prioritization
+  // Enhanced calculation of game scores with global caching and preloaded stats
   const { 
     data: scores, 
     isLoading: isLoadingScores,
     error: scoresError
   } = useQuery({
-    queryKey: ['gameScores', gameId, freshQueryKey, hasPreloadedStats ? 'preloaded' : 'api', officialScores?.length || 0],
+    queryKey: ['gameScores', gameId, currentTeam?.id || 'no-team', freshQueryKey, hasPreloadedStats ? 'preloaded' : 'api'],
     queryFn: async () => {
-      // PRIORITY 1: Use official scores if available
-      if (officialScores && officialScores.length > 0) {
-        console.log(`useGameStatistics: Using official scores for game ${gameId} (${officialScores.length} score entries)`);
-        // We need game data to determine home/away team IDs for proper score calculation
-        const gameData = await apiRequest('GET', `/api/games/${gameId}`);
-        return gameScoreService.calculateGameScores(
-          [], // Empty stats since we're using official scores
-          gameData.status,
-          null, // No status scores
-          true, // Assume inter-club for proper calculation
-          gameData.homeTeamId,
-          gameData.awayTeamId,
-          gameData.homeTeamId, // Default perspective
-          officialScores
-        );
-      }
-
-      // PRIORITY 2: Use preloaded stats if available
+      // Fast path: use preloaded stats if available
       if (hasPreloadedStats) {
         console.log(`useGameStatistics: Using preloaded stats for game ${gameId} (${preloadedStats.length} stats)`);
         return Promise.resolve(statisticsService.calculateScoresFromStats(preloadedStats, gameId));
       }
 
-      // PRIORITY 3: Check global cache first if we're not forcing fresh data
+      // Fast path: check global cache first if we're not forcing fresh data
       if (!forceFresh) {
         const cached = getCachedScores(gameId);
         if (cached) {
@@ -85,13 +58,12 @@ export function useGameStatistics(gameId: number, forceFresh: boolean = false, p
           return Promise.resolve(cached);
         }
       }
-      
-      // PRIORITY 4: Calculate from fresh stats
-      return statisticsService.calculateGameScores(gameId, forceFresh);
+      // Otherwise calculate normally with team context (which will also update the cache)
+      return statisticsService.calculateGameScores(gameId, forceFresh, currentTeam?.id);
     },
-    enabled: !!gameId,
-    staleTime: hasPreloadedStats && !officialScores?.length ? Infinity : (forceFresh ? 0 : 15 * 60 * 1000),
-    gcTime: 30 * 60 * 1000,
+    enabled: !!gameId, // Always enable the query, let the queryFn handle preloaded stats
+    staleTime: hasPreloadedStats ? Infinity : (forceFresh ? 0 : 15 * 60 * 1000), // Never expire preloaded stats
+    gcTime: 30 * 60 * 1000, // Keep in cache for 30 minutes
   });
 
   // Optimized position stats calculation with preloaded data
@@ -134,8 +106,7 @@ export function useGameStatistics(gameId: number, forceFresh: boolean = false, p
 
   // Combine loading and error states - be more forgiving with errors when we have preloaded data
   const isLoading = isLoadingScores || isLoadingPositionStats || isLoadingPlayerStats || 
-                   (isLoadingRawStats && !hasCachedScores && !hasPreloadedStats) ||
-                   isLoadingOfficialScores;
+                   (isLoadingRawStats && !hasCachedScores && !hasPreloadedStats);
 
   // Only report errors if we don't have any alternative data source
   const error = hasPreloadedStats ? null : (rawStatsError || scoresError || positionStatsError || playerStatsError);

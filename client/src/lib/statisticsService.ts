@@ -462,6 +462,68 @@ class UnifiedStatisticsService {
     }
   }
 
+  async calculateGameScores(gameId: number, forceFresh: boolean = false, currentTeamId?: number): Promise<GameScores> {
+    const cacheKey = `gameScores-${gameId}-${currentTeamId || 'global'}`;
+
+    // Check cache first unless forcing fresh
+    if (!forceFresh && this.cache.has(cacheKey)) {
+      const cached = this.cache.get(cacheKey)!;
+      if (Date.now() - cached.timestamp < this.cacheTimeout) {
+        return cached.data;
+      }
+    }
+
+    try {
+      // First, try to get official scores
+      let officialScores: OfficialGameScore[] = [];
+      try {
+        officialScores = await apiRequest('GET', `/api/games/${gameId}/scores`);
+      } catch (error) {
+        console.log('No official scores found, will calculate from stats');
+      }
+
+      // Get game details for context
+      const game = await apiRequest('GET', `/api/games/${gameId}`);
+
+      // If we have official scores, use them with proper team context
+      if (officialScores && officialScores.length > 0) {
+        const scores = gameScoreService.calculateGameScores(
+          [], // No stats needed for official scores
+          game.status,
+          game.statusScores,
+          game.isInterClub,
+          game.homeTeamId,
+          game.awayTeamId,
+          currentTeamId, // Pass the current team context
+          officialScores
+        );
+
+        // Cache and return
+        this.cache.set(cacheKey, { data: scores, timestamp: Date.now() });
+        return scores;
+      }
+
+      // Fall back to calculated scores from stats
+      const stats = await apiRequest('GET', `/api/games/${gameId}/stats`);
+
+      const scores = gameScoreService.calculateGameScores(
+        stats,
+        game.status,
+        game.statusScores,
+        game.isInterClub,
+        game.homeTeamId,
+        game.awayTeamId,
+        currentTeamId // Pass the current team context
+      );
+
+      // Cache the result
+      this.cache.set(cacheKey, { data: scores, timestamp: Date.now() });
+      return scores;
+    } catch (error) {
+      console.error('Error calculating game scores:', error);
+      throw error;
+    }
+  }
   }
 
 // Interfaces
