@@ -37,6 +37,7 @@ interface QuarterStats {
   handlingError: number;
   pickUp: number;
   infringement: number;
+  rating: number | null;
 }
 
 // Position-based stats by quarter - key format: "position-quarter" (e.g., "GS-1", "GA-2")
@@ -54,7 +55,8 @@ const emptyQuarterStats = {
   badPass: 0,
   handlingError: 0,
   pickUp: 0,
-  infringement: 0
+  infringement: 0,
+  rating: null
 };
 
 // Get color for each netball position - colors coordinate with position roles
@@ -320,6 +322,14 @@ export default function LiveStats() {
               }
             }
           });
+
+          // Handle rating separately as it can be null
+          if (stat.rating !== undefined) {
+            initialStats[key].rating = stat.rating;
+            if (stat.rating !== null) {
+              console.log(`Setting rating = ${stat.rating} for ${stat.position} in Q${stat.quarter}`);
+            }
+          }
         });
       }
 
@@ -362,6 +372,32 @@ export default function LiveStats() {
     }
 
     executeStatChange(position, stat, value);
+  };
+
+  // Update player rating for a position in current quarter
+  const updateRating = (position: Position, rating: number | null) => {
+    console.log(`Updating rating for ${position} in Q${currentQuarter}: ${rating}`);
+
+    // Save current state for undo
+    setUndoStack([...undoStack, JSON.parse(JSON.stringify(positionStats))]);
+    setRedoStack([]);
+
+    const key = getPositionQuarterKey(position, currentQuarter);
+
+    setPositionStats(prev => {
+      const newStats = JSON.parse(JSON.stringify(prev));
+
+      // Initialize if needed
+      if (!newStats[key]) {
+        newStats[key] = { ...emptyQuarterStats };
+      }
+
+      // Update the rating
+      newStats[key].rating = rating;
+
+      console.log(`Updated ${position}-Q${currentQuarter} rating to ${rating}`);
+      return newStats;
+    });
   };
 
   const executeStatChange = (position: Position, stat: StatType, value: number = 1) => {
@@ -560,7 +596,8 @@ export default function LiveStats() {
             badPass: stats.badPass || 0,
             handlingError: stats.handlingError || 0,
             pickUp: stats.pickUp || 0,
-            infringement: stats.infringement || 0
+            infringement: stats.infringement || 0,
+            rating: stats.rating
           });
           updates.push(updatePromise);
         } else {
@@ -580,7 +617,8 @@ export default function LiveStats() {
               badPass: stats.badPass || 0,
               handlingError: stats.handlingError || 0,
               pickUp: stats.pickUp || 0,
-              infringement: stats.infringement || 0
+              infringement: stats.infringement || 0,
+              rating: stats.rating
             });
             updates.push(createPromise);
           }
@@ -1038,6 +1076,50 @@ export default function LiveStats() {
                         <p className="font-semibold text-sm">Unassigned</p>
                       )}
                       <p className="text-xs text-muted-foreground">{positionLabels[position]}</p>
+                    </div>
+
+                    {/* Player Rating */}
+                    <div className="flex flex-col items-center min-w-[80px]">
+                      <p className="text-xs font-medium mb-1">Rating</p>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-6 w-6 p-0"
+                          onClick={() => {
+                            const currentRating = positionStats[getPositionQuarterKey(position, currentQuarter)]?.rating || 5;
+                            updateRating(position, Math.max(0, currentRating - 1));
+                          }}
+                          disabled={(positionStats[getPositionQuarterKey(position, currentQuarter)]?.rating || 5) <= 0}
+                        >
+                          <Minus className="h-3 w-3" />
+                        </Button>
+
+                        <input
+                          type="number"
+                          min="0"
+                          max="10"
+                          className="w-12 h-6 text-center text-sm border border-gray-300 rounded"
+                          value={positionStats[getPositionQuarterKey(position, currentQuarter)]?.rating || 5}
+                          onChange={(e) => {
+                            const value = e.target.value === '' ? null : Math.min(10, Math.max(0, parseInt(e.target.value)));
+                            updateRating(position, value);
+                          }}
+                        />
+
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-6 w-6 p-0"
+                          onClick={() => {
+                            const currentRating = positionStats[getPositionQuarterKey(position, currentQuarter)]?.rating || 5;
+                            updateRating(position, Math.min(10, currentRating + 1));
+                          }}
+                          disabled={(positionStats[getPositionQuarterKey(position, currentQuarter)]?.rating || 5) >= 10}
+                        >
+                          <Plus className="h-3 w-3" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
 
