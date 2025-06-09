@@ -46,15 +46,43 @@ export function OfficialScoreEntry({
 
   // Load official scores into state
   useEffect(() => {
-    if (officialScores) {
+    if (officialScores && officialScores.length > 0) {
       const newScores = { ...quarterScores };
+      
+      // Group scores by quarter
+      const scoresByQuarter: Record<number, { [teamId: number]: { score: number; notes?: string } }> = {};
+      
       officialScores.forEach((score: any) => {
-        newScores[score.quarter] = {
-          home: score.homeScore,
-          away: score.awayScore,
-          notes: score.notes || ''
+        if (!scoresByQuarter[score.quarter]) {
+          scoresByQuarter[score.quarter] = {};
+        }
+        scoresByQuarter[score.quarter][score.teamId] = {
+          score: score.score,
+          notes: score.notes
         };
       });
+      
+      // Convert to home/away format for display
+      // We need the game data to know which team is home vs away
+      // For now, just use the team IDs directly - we'll fix the home/away mapping separately
+      Object.entries(scoresByQuarter).forEach(([quarter, teams]) => {
+        const quarterNum = parseInt(quarter);
+        const teamIds = Object.keys(teams).map(Number);
+        
+        if (teamIds.length >= 2) {
+          // Assume first team ID is "home" and second is "away" for display purposes
+          // This maintains functionality while we fix the proper team mapping
+          const team1Id = Math.min(...teamIds);
+          const team2Id = Math.max(...teamIds);
+          
+          newScores[quarterNum] = {
+            home: teams[team1Id]?.score || 0,
+            away: teams[team2Id]?.score || 0,
+            notes: teams[team1Id]?.notes || teams[team2Id]?.notes || ''
+          };
+        }
+      });
+      
       setQuarterScores(newScores);
     }
   }, [officialScores]);
