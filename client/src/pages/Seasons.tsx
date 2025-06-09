@@ -8,17 +8,19 @@ import { apiClient } from '@/lib/apiClient';
 import SeasonForm from '@/components/seasons/SeasonForm';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { Season } from '@shared/schema';
-import { BackButton } from '@/components/ui/back-button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
+import { PageTemplate } from '@/components/layout/PageTemplate';
+import { useNavigate } from '@tanstack/react-router';
 
 export default function Seasons() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingSeason, setEditingSeason] = useState<Season | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   // Fetch seasons using standard query (like Teams)
   const { data: seasons = [], isLoading } = useStandardQuery<Season[]>({
@@ -145,21 +147,20 @@ export default function Seasons() {
       return a.displayOrder - b.displayOrder;
     });
 
+  const breadcrumbs = [
+    { label: 'Dashboard', onClick: () => navigate({ to: '/dashboard' }) },
+    { label: 'Seasons' }
+  ];
+
   return (
     <>
-      <div className="container mx-auto p-6">
-        <BackButton fallbackPath="/dashboard" className="mb-4">
-          Back to Dashboard
-        </BackButton>
-
+      <PageTemplate
+        title="Seasons"
+        subtitle="Manage your club's seasons and set the active season"
+        breadcrumbs={breadcrumbs}
+      >
         <Card>
-          <CardHeader>
-            <CardTitle>Seasons</CardTitle>
-            <CardDescription>
-              Manage your club's seasons and set the active season
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
+          <CardContent className="pt-6">
             <div className="flex justify-end pb-4">
               <Button onClick={() => setIsDialogOpen(true)}>
                 <Plus className="w-4 h-4 mr-2" />
@@ -257,7 +258,7 @@ export default function Seasons() {
             )}
           </CardContent>
         </Card>
-      </div>
+      </PageTemplate>
 
       <CrudDialog
         isOpen={isDialogOpen}
