@@ -11,7 +11,9 @@ export interface QuarterScore {
 export interface GameScores {
   quarterScores: QuarterScore[];
   totalTeamScore: number;
-
+  totalOpponentScore: number;
+  result: 'win' | 'loss' | 'draw';
+}
 
 export interface OfficialGameScore {
   id?: number;
@@ -20,11 +22,6 @@ export interface OfficialGameScore {
   quarter: number;
   score: number;
   notes?: string;
-}
-
-
-  totalOpponentScore: number;
-  result: 'win' | 'loss' | 'draw';
 }
 
 class GameScoreService {
