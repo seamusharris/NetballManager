@@ -133,7 +133,7 @@ export default function GameForm({
     const isByeGame = parseInt(values.statusId) === 6;
     
     if (!isByeGame && !values.awayTeamId) {
-      form.setError("awayTeamId", { message: "Please select an away team" });
+      form.setError("awayTeamId", { message: "Please select an away team for regular games" });
       return;
     }
 
@@ -145,6 +145,7 @@ export default function GameForm({
       seasonId: parseInt(values.seasonId),
       homeTeamId: parseInt(values.homeTeamId),
       awayTeamId: isByeGame ? null : parseInt(values.awayTeamId),
+      isBye: isByeGame
     };
 
     if (isEditing && game) {
