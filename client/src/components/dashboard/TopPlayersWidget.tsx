@@ -145,14 +145,15 @@ export default function TopPlayersWidget({
       });
     }
 
-    // Process game stats
+    // Process game stats - for Top Players we use live stats (like Team Performance)
     if (Object.keys(gameStatsMap).length > 0) {
       const dedupedStats: Record<number, Record<string, GameStat>> = {};
 
       Object.entries(gameStatsMap).forEach(([gameIdStr, stats]) => {
         const gameId = parseInt(gameIdStr);
-        const gameRosters = gameRostersMap[gameId] || [];
+        const gameRosters = gameRostersMap?.[gameId] || [];
 
+        // For Top Players, use all stats regardless of team (club-wide view)
         stats.forEach(stat => {
           if (!stat || !stat.position || !stat.quarter || !stat.gameId) return;
 
@@ -228,12 +229,27 @@ export default function TopPlayersWidget({
       if (mostRecentRating !== null) {
         newPlayerStatsMap[player.id].rating = mostRecentRating;
       } else {
-        const calculatedRating = 5 + 
-          (newPlayerStatsMap[player.id].goals * 0.2) +
-          (newPlayerStatsMap[player.id].rebounds * 0.3) + 
-          (newPlayerStatsMap[player.id].intercepts * 0.4);
+        // Calculate rating based on performance stats with better baseline
+        const playerStats = newPlayerStatsMap[player.id];
+        const gamesPlayed = playerStats.gamesPlayed;
+        
+        if (gamesPlayed > 0) {
+          // Average per game performance
+          const avgGoals = playerStats.goals / gamesPlayed;
+          const avgRebounds = playerStats.rebounds / gamesPlayed;
+          const avgIntercepts = playerStats.intercepts / gamesPlayed;
+          
+          // Better rating calculation starting from 6.0 baseline
+          const calculatedRating = 6.0 + 
+            (avgGoals * 0.3) +
+            (avgRebounds * 0.2) + 
+            (avgIntercepts * 0.3);
 
-        newPlayerStatsMap[player.id].rating = Math.min(10, Math.max(1, calculatedRating));
+          newPlayerStatsMap[player.id].rating = Math.min(10, Math.max(5, calculatedRating));
+        } else {
+          // Default rating for players with no games
+          newPlayerStatsMap[player.id].rating = 6.0;
+        }
       }
     });
 
