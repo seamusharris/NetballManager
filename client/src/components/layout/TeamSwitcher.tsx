@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
@@ -13,8 +12,9 @@ interface TeamSwitcherProps {
 export function TeamSwitcher({ mode = 'optional', className, onTeamChange }: TeamSwitcherProps) {
   const { currentTeamId, currentTeam, clubTeams, setCurrentTeamId } = useClub();
 
-  // Don't render if hidden mode or only one team (excluding BYE teams)
-  const validTeams = clubTeams.filter(team => team.name !== 'BYE');
+  // Don't render if hidden mode or only one team
+  const validTeams = clubTeams.filter(team => team.isActive !== false);
+
   if (mode === 'hidden' || validTeams.length <= 1) {
     return null;
   }

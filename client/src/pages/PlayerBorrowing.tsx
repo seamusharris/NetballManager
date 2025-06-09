@@ -200,11 +200,13 @@ export default function PlayerBorrowing() {
                     <SelectValue placeholder="Select team that needs player" />
                   </SelectTrigger>
                   <SelectContent>
-                    {teams.map((team) => (
-                      <SelectItem key={team.id} value={team.id.toString()}>
-                        {team.name} ({team.division || 'No Division'})
-                      </SelectItem>
-                    ))}
+                    {teams
+                      .filter(team => team.isActive !== false)
+                      .map((team) => (
+                        <SelectItem key={team.id} value={team.id.toString()}>
+                          {team.name} ({team.division || 'No Division'})
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
               </div>

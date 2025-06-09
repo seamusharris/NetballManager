@@ -298,13 +298,15 @@ export default function GameForm({
                       {isLoadingAllTeams ? (
                         <SelectItem value="loading" disabled>Loading teams...</SelectItem>
                       ) : allClubTeams && allClubTeams.length > 0 ? (
-                        allClubTeams.map(team => (
-                          <SelectItem key={team.id} value={team.id.toString()}>
-                            {team.clubName && team.clubName !== 'Warrandyte Netball Club' 
-                              ? `${team.clubName} - ${team.name}` 
-                              : team.name}
-                          </SelectItem>
-                        ))
+                        allClubTeams
+                          .filter(team => team.isActive !== false)
+                          .map(team => (
+                            <SelectItem key={team.id} value={team.id.toString()}>
+                              {team.clubName && team.clubName !== 'Warrandyte Netball Club' 
+                                ? `${team.clubName} - ${team.name}` 
+                                : team.name}
+                            </SelectItem>
+                          ))
                       ) : (
                         <SelectItem value="loading" disabled>Loading teams...</SelectItem>
                       )}

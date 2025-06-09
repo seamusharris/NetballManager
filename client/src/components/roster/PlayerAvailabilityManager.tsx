@@ -321,7 +321,6 @@ export default function PlayerAvailabilityManager({
                   <SelectItem value="no-games" disabled>No games available</SelectItem>
                 ) : (
                   [...games]
-                    .filter(game => !game.isBye)
                     .sort((a, b) => (a.round || 0) - (b.round || 0))
                     .map(game => (
                       <SelectItem key={game.id} value={game.id.toString()}>
