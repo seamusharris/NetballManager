@@ -20,6 +20,7 @@ export default function Dashboard() {
     currentClub, 
     currentClubId, 
     currentTeamId, 
+    currentTeam,
     clubTeams, 
     setCurrentTeamId,
     isLoading: clubLoading 
@@ -140,7 +141,7 @@ export default function Dashboard() {
   }
 
   // For Team Dashboard, require team selection - show prompt if no team selected
-  if (!currentTeamId && clubTeams.length > 1) {
+  if (!currentTeamId || !currentTeam) {
     return (
       <>
         <Helmet>
