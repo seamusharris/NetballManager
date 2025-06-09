@@ -38,7 +38,7 @@ import { Separator } from '@/components/ui/separator';
 import { formatDate, cn, tailwindToHex, convertTailwindToHex } from '@/lib/utils';
 import { TeamSwitcher } from '@/components/layout/TeamSwitcher';
 import { ScoreMismatchWarning } from '@/components/games/ScoreMismatchWarning';
-import { validateInterClubScores, getScoreDiscrepancyWarning } from '@/lib/scoreValidation';
+import { validateInterClubScores, getScoreDiscrepancyWarning, getReconciledScore } from '@/lib/scoreValidation';
 
 // Helper functions for player colors
 const getPlayerColorForBorder = (avatarColor?: string): string => {
@@ -149,7 +149,6 @@ import { GameStatusButton } from '@/components/games/GameStatusButton';
 import LiveStatsButton from '@/components/games/LiveStatsButton';
 import { apiClient } from '@/lib/apiClient';
 import { useClub } from '@/contexts/ClubContext';
-import { validateInterClubScores, getReconciledScore } from '@/lib/scoreValidation';
 import * as gameScoreService from '@/lib/gameScoreService';
 
 // Function to get opponent name
