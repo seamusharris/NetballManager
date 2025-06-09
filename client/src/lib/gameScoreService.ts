@@ -63,14 +63,39 @@ class GameScoreService {
       for (let quarter = 1; quarter <= 4; quarter++) {
         const quarterStats = gameStats.filter(stat => stat.quarter === quarter);
 
-        // Get stats for current team and opponent team
-        const currentTeamStats = quarterStats.filter(stat => stat.teamId === currentTeamId);
-        const opponentTeamId = currentTeamId === homeTeamId ? awayTeamId : homeTeamId;
-        const opponentStats = quarterStats.filter(stat => stat.teamId === opponentTeamId);
+        // Get stats for both teams
+        const homeTeamStats = quarterStats.filter(stat => stat.teamId === homeTeamId);
+        const awayTeamStats = quarterStats.filter(stat => stat.teamId === awayTeamId);
 
-        // Calculate scores from current team's perspective
-        const teamScore = currentTeamStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
-        const opponentScore = currentTeamStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
+        // Calculate home and away scores - prioritize home team stats, fallback to away team stats if needed
+        let homeScore = 0;
+        let awayScore = 0;
+
+        // For home score: prioritize home team's "goalsFor", fallback to away team's "goalsAgainst"
+        if (homeTeamStats.length > 0) {
+          homeScore = homeTeamStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
+        } else if (awayTeamStats.length > 0) {
+          homeScore = awayTeamStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
+        }
+
+        // For away score: prioritize home team's "goalsAgainst", fallback to away team's "goalsFor"
+        if (homeTeamStats.length > 0) {
+          awayScore = homeTeamStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
+        } else if (awayTeamStats.length > 0) {
+          awayScore = awayTeamStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
+        }
+
+        // Convert to current team perspective
+        let teamScore: number;
+        let opponentScore: number;
+
+        if (currentTeamId === homeTeamId) {
+          teamScore = homeScore;
+          opponentScore = awayScore;
+        } else {
+          teamScore = awayScore;
+          opponentScore = homeScore;
+        }
 
         quarterScores.push({
           quarter,
