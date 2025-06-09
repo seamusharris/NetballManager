@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, Trophy, Users, Calendar, TrendingUp, Target, Award } from 'lucide-react';
 import { apiClient } from '@/lib/apiClient';
 import { Badge } from '@/components/ui/badge';
+import { ClubSwitcher } from '@/components/layout/ClubSwitcher';
 
 export default function ClubDashboard() {
   const { currentClub, currentClubId, isLoading: clubLoading } = useClub();
@@ -208,9 +209,12 @@ export default function ClubDashboard() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="space-y-1">
-            <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-              Club Dashboard
-            </h1>
+            <div className="flex items-center gap-4 mb-2">
+              <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+                Club Dashboard
+              </h1>
+              <ClubSwitcher />
+            </div>
             <p className="text-lg text-muted-foreground">
               Overview of {currentClub?.name} performance across all teams
             </p>
