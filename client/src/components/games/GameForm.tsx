@@ -269,41 +269,53 @@ export default function GameForm({
             )}
           />
 
-          <FormField
-            control={form.control}
-            name="awayTeamId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel required>Away Team</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select away team" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {isLoadingAllTeams ? (
-                      <SelectItem value="loading" disabled>Loading teams...</SelectItem>
-                    ) : allClubTeams && allClubTeams.length > 0 ? (
-                      allClubTeams.map(team => (
-                        <SelectItem key={team.id} value={team.id.toString()}>
-                          {team.clubName && team.clubName !== 'Warrandyte Netball Club' 
-                            ? `${team.clubName} - ${team.name}` 
-                            : team.name}
-                        </SelectItem>
-                      ))
-                    ) : (
-                      <SelectItem value="loading" disabled>Loading teams...</SelectItem>
-                    )}
-                  </SelectContent>
-                </Select>
-                <FormDescription>
-                  The away team for this game (can be from any club)
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          {/* Only show away team selector for non-BYE games */}
+          {watch("statusId") !== 6 && (
+            <FormField
+              control={form.control}
+              name="awayTeamId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel required>Away Team</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select away team" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {isLoadingAllTeams ? (
+                        <SelectItem value="loading" disabled>Loading teams...</SelectItem>
+                      ) : allClubTeams && allClubTeams.length > 0 ? (
+                        allClubTeams.map(team => (
+                          <SelectItem key={team.id} value={team.id.toString()}>
+                            {team.clubName && team.clubName !== 'Warrandyte Netball Club' 
+                              ? `${team.clubName} - ${team.name}` 
+                              : team.name}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <SelectItem value="loading" disabled>Loading teams...</SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
+                  <FormDescription>
+                    The away team for this game (can be from any club)
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
+
+          {/* Show info for BYE games */}
+          {watch("statusId") === 6 && (
+            <div className="p-4 bg-blue-50 border border-blue-200 rounded-md">
+              <p className="text-sm text-blue-800">
+                <strong>BYE Game:</strong> No away team needed. This is a bye round for the selected home team.
+              </p>
+            </div>
+          )}
 
           <FormField
             control={form.control}

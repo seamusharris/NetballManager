@@ -283,14 +283,6 @@ export function registerTeamRoutes(app: Express) {
     try {
       const teamId = parseInt(req.params.id);
 
-      // Check if this is a BYE team
-      const { isByeTeam } = await import('./bye-team-manager');
-      if (await isByeTeam(teamId)) {
-        return res.status(400).json({ 
-          message: "BYE teams cannot be deleted as they are required for the system to function properly." 
-        });
-      }
-
       // Check if team has any games
       const games = await db.execute(sql`
         SELECT COUNT(*) as count FROM games 

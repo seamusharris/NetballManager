@@ -1531,50 +1531,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Handle BYE games using null away_team_id
       if (req.body.isBye === true || req.body.statusId === 6) { // statusId 6 is 'bye'
-        try {
-          // Ensure we have a home team
-          if (!req.body.homeTeamId) {
-            return res.status(400).json({ 
-              message: "Home team is required for BYE games" 
-            });
-          }
-
-          // Find the season_id from the home team
-          const homeTeam = await db.execute(sql`
-            SELECT season_id, club_id FROM teams WHERE id = ${req.body.homeTeamId}
-          `);
-
-          if (homeTeam.rows.length === 0) {
-            return res.status(400).json({ 
-              message: "Home team not found" 
-            });
-          }
-
-          const season_id = homeTeam.rows[0].season_id;
-
-          const gameData = {
-            date: req.body.date,
-            time: req.body.time,
-            homeTeamId: req.body.homeTeamId,
-            awayTeamId: null, // BYE games have no away team
-            statusId: 6, // BYE status
-            seasonId: season_id,
-            round: req.body.round || null,
-            venue: req.body.venue || null,
-            isInterClub: false,
-            notes: req.body.notes || 'BYE round'
-          };
-
-          const game = await storage.createGame(gameData);
-          console.log("Created BYE game:", game);
-          return res.status(201).json(game);
-        } catch (dbError) {
-          console.error("Database BYE game error:", dbError);
-          return res.status(500).json({ 
-            message: "Failed to create BYE game", 
-            error: (dbError as Error).message
+        // Ensure we have a home team
+        if (!req.body.homeTeamId) {
+          return res.status(400).json({ 
+            message: "Home team is required for BYE games" 
           });
         }
+
+        // Find the season_id from the home team
+        const homeTeam = await db.execute(sql`
+          SELECT season_id, club_id FROM teams WHERE id = ${req.body.homeTeamId}
+        `);
+
+        if (homeTeam.rows.length === 0) {
+          return res.status(400).json({ 
+            message: "Home team not found" 
+          });
+        }
+
+        const season_id = homeTeam.rows[0].season_id;
+
+        const gameData = {
+          date: req.body.date,
+          time: req.body.time,
+          homeTeamId: req.body.homeTeamId,
+          awayTeamId: null, // BYE games have no away team
+          statusId: 6, // BYE status
+          seasonId: season_id,
+          round: req.body.round || null,
+          venue: req.body.venue || null,
+          isInterClub: false,
+          notes: req.body.notes || 'BYE round'
+        };
+
+        const game = await storage.createGame(gameData);
+        console.log("Created BYE game:", game);
+        return res.status(201).json(game);
       } else {
         // For regular games, ensure we have both home and away teams
         if (!req.body.homeTeamId || !req.body.awayTeamId) {
