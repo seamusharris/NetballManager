@@ -461,7 +461,57 @@ const PlayerStatsByQuarter = ({ roster, players, gameStats }: { roster: any[], p
       ];
     }
 
-    // Regular game calculation
+    // Check if this is an inter-club game (both teams from same club)
+    const isInterClubGame = game && game.homeTeamId && game.awayTeamId && 
+                           teams.some(t => t.id === game.homeTeamId) && 
+                           teams.some(t => t.id === game.awayTeamId);
+
+    if (isInterClubGame && currentTeam) {
+      // For inter-club games, calculate scores using reconciled data quarter by quarter
+      const quarterScores = [];
+      
+      for (let quarter = 1; quarter <= 4; quarter++) {
+        const quarterStats = gameStats.filter(stat => stat.quarter === quarter);
+        
+        // Get stats for both teams for this quarter
+        const homeStats = quarterStats.filter(stat => stat.teamId === game.homeTeamId);
+        const awayStats = quarterStats.filter(stat => stat.teamId === game.awayTeamId);
+        
+        const homeTeamStats = {
+          teamId: game.homeTeamId,
+          goalsFor: homeStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0),
+          goalsAgainst: homeStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0)
+        };
+        
+        const awayTeamStats = {
+          teamId: game.awayTeamId,
+          goalsFor: awayStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0),
+          goalsAgainst: awayStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0)
+        };
+        
+        // Get reconciled scores for this quarter
+        const reconciledScore = getReconciledScore(homeTeamStats, awayTeamStats, 'average');
+        
+        // Return scores from current team's perspective
+        if (currentTeam.id === game.homeTeamId) {
+          quarterScores.push({
+            quarter,
+            teamScore: reconciledScore.homeScore,
+            opponentScore: reconciledScore.awayScore
+          });
+        } else {
+          quarterScores.push({
+            quarter,
+            teamScore: reconciledScore.awayScore,
+            opponentScore: reconciledScore.homeScore
+          });
+        }
+      }
+      
+      return quarterScores;
+    }
+
+    // Regular game calculation (single team perspective)
     const quarterScores = [];
     for (let quarter = 1; quarter <= 4; quarter++) {
       const quarterStats = gameStats.filter(stat => stat.quarter === quarter);
