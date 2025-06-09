@@ -40,7 +40,6 @@ export function usePlayerStatsMapping(
         goals: 0,
         goalsAgainst: 0,
         missedGoals: 0,
-        missedGoals: 0,
         rebounds: 0,
         intercepts: 0,
         badPass: 0,
