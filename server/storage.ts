@@ -593,12 +593,21 @@ export class DatabaseStorage implements IStorage {
 
   // Game Stats methods
   async getGameStatsByGame(gameId: number, teamId?: number): Promise<GameStat[]> {
-    if (teamId) {
-      return await db.select().from(gameStats).where(
-        and(eq(gameStats.gameId, gameId), eq(gameStats.teamId, teamId))
-      );
+    try {
+      if (teamId) {
+        return await db.select().from(gameStats).where(
+          and(eq(gameStats.gameId, gameId), eq(gameStats.teamId, teamId))
+        );
+      }
+      return await db.select().from(gameStats).where(eq(gameStats.gameId, gameId));
+    } catch (error) {
+      // Handle case where team_id column doesn't exist yet
+      if (error.message?.includes('column "team_id" does not exist')) {
+        console.log(`team_id column missing for game ${gameId}, returning all stats`);
+        return await db.select().from(gameStats).where(eq(gameStats.gameId, gameId));
+      }
+      throw error;
     }
-    return await db.select().from(gameStats).where(eq(gameStats.gameId, gameId));
   }
 
   async getGameStat(id: number): Promise<GameStat | undefined> {
