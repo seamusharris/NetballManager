@@ -436,7 +436,7 @@ const PlayerStatsByQuarter = ({ roster, players, gameStats }: { roster: any[], p
 };
 
 // Calculate quarter by quarter scores
-  const calculateQuarterScores = (gameStats: any[], game: any, teams: any[]) => {
+  const calculateQuarterScores = (gameStats: any[], game: any, teams: any[], currentTeam: any) => {
     // Check for fixed scores from game status first
     if (game && game.statusTeamGoals !== null && game.statusOpponentGoals !== null) {
       return [
@@ -1232,8 +1232,8 @@ export default function GameDetails() {
   // Calculate quarter scores
   const quarterScores = useMemo(() => {
     if (!gameStats || !game) return [];
-    return calculateQuarterScores(gameStats, game, teams);
-  }, [gameStats, game, teams]);
+    return calculateQuarterScores(gameStats, game, teams, currentTeam);
+  }, [gameStats, game, teams, currentTeam]);
 
   // Debug game data
   useEffect(() => {
