@@ -857,7 +857,8 @@ export default function LiveStats() {
                   </Button>
                 ))}
               </div>
-                      </CardHeader>
+            </div>
+          </CardHeader>
           <CardContent className="py-1">
             <div className="flex justify-between items-center">
               <div>
