@@ -1276,13 +1276,13 @@ export default function GameDetails() {
   }
 
   // Calculate quarter scores and cumulative scores for display
-  const scoringByQuarter = quarterScores.map(q => ({
+  const scoringByQuarter = quarterScores?.map(q => ({
     quarter: q.quarter,
     teamScore: q.teamScore,
     opponentScore: q.opponentScore
-  }));
+  })) || [];
 
-  const cumulativeScores = quarterScores.map((_, index) => {
+  const cumulativeScores = quarterScores?.map((_, index) => {
     const cumulativeTeamScore = quarterScores.slice(0, index + 1).reduce((sum, q) => sum + q.teamScore, 0);
     const cumulativeOpponentScore = quarterScores.slice(0, index + 1).reduce((sum, q) => sum + q.opponentScore, 0);
     return {
@@ -1290,7 +1290,7 @@ export default function GameDetails() {
       cumulativeTeamScore,
       cumulativeOpponentScore
     };
-  });
+  }) || [];
 
   // Debug game data
   useEffect(() => {
@@ -1329,8 +1329,8 @@ export default function GameDetails() {
   //const opponentName = getOpponentName(opponents || [], game.opponentId); // Removed opponentName
 
   // Helper function to get score display with correct team context
-  const finalTeamScore = quarterScores.reduce((sum, q) => sum + q.teamScore, 0);
-  const finalOpponentScore = quarterScores.reduce((sum, q) => sum + q.opponentScore, 0);
+  const finalTeamScore = quarterScores?.reduce((sum, q) => sum + q.teamScore, 0) || 0;
+  const finalOpponentScore = quarterScores?.reduce((sum, q) => sum + q.opponentScore, 0) || 0;
 
   // Determine if we need to flip the perspective for inter-club games
   const getCorrectScoreContext = () => {
