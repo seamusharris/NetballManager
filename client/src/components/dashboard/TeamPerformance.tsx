@@ -6,6 +6,7 @@ import { getWinLoseLabel } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/apiClient';
 import { BaseWidget } from '@/components/ui/base-widget';
+import { gameScoreService } from '@/lib/gameScoreService';
 
 interface TeamPerformanceProps {
   games: Game[];

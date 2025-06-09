@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Link } from 'wouter';
 import { Game } from '@shared/schema';
 import { formatShortDate, formatDate } from '@/lib/utils';
@@ -37,72 +36,26 @@ export function GameResultCard({
   currentTeamId,
   clubTeams = []
 }: GameResultCardProps) {
-  
-  // Calculate scores using the unified gameScoreService
-  const getScores = (): [number, number] => {
-    if (gameStats.length === 0) {
-      return [0, 0];
+
+  // Calculate scores if we have stats
+  const scores = useMemo(() => {
+    if (!gameStats || gameStats.length === 0) return null;
+
+    try {
+      return gameScoreService.calculateGameScoresSync(
+        gameStats, 
+        game.statusName, 
+        undefined, // statusScores
+        game.isInterClub,
+        game.homeTeamId,
+        game.awayTeamId,
+        currentTeamId
+      );
+    } catch (error) {
+      console.error('Error calculating game scores:', error);
+      return null;
     }
-
-    // Determine if this is an inter-club game
-    const isInterClub = game.homeTeamId && game.awayTeamId && 
-                       clubTeams.some(t => t.id === game.homeTeamId) && 
-                       clubTeams.some(t => t.id === game.awayTeamId);
-
-    // For now, use synchronous calculation (official scores fetching will be added in a future enhancement)
-    // This properly handles inter-club games without double-counting
-    const quarterScores = [];
-    
-    if (isInterClub && game.homeTeamId && game.awayTeamId && currentTeamId) {
-      // Inter-club game: calculate from both teams' perspectives
-      for (let quarter = 1; quarter <= 4; quarter++) {
-        const quarterStats = gameStats.filter(stat => stat.quarter === quarter);
-        
-        const homeTeamStats = quarterStats.filter(stat => stat.teamId === game.homeTeamId);
-        const awayTeamStats = quarterStats.filter(stat => stat.teamId === game.awayTeamId);
-        
-        let homeScore = 0;
-        let awayScore = 0;
-        
-        if (homeTeamStats.length > 0) {
-          homeScore = homeTeamStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
-          awayScore = homeTeamStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
-        } else if (awayTeamStats.length > 0) {
-          homeScore = awayTeamStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
-          awayScore = awayTeamStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
-        }
-        
-        quarterScores.push({
-          quarter,
-          teamScore: currentTeamId === game.homeTeamId ? homeScore : awayScore,
-          opponentScore: currentTeamId === game.homeTeamId ? awayScore : homeScore
-        });
-      }
-    } else {
-      // Regular game: filter by current team if specified
-      for (let quarter = 1; quarter <= 4; quarter++) {
-        let quarterStats = gameStats.filter(stat => stat.quarter === quarter);
-        
-        if (currentTeamId) {
-          quarterStats = quarterStats.filter(stat => stat.teamId === currentTeamId);
-        }
-        
-        const teamScore = quarterStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
-        const opponentScore = quarterStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
-        
-        quarterScores.push({
-          quarter,
-          teamScore,
-          opponentScore
-        });
-      }
-    }
-
-    const totalTeamScore = quarterScores.reduce((sum, q) => sum + q.teamScore, 0);
-    const totalOpponentScore = quarterScores.reduce((sum, q) => sum + q.opponentScore, 0);
-
-    return [totalTeamScore, totalOpponentScore];
-  };
+  }, [gameStats, game.statusName, game.isInterClub, game.homeTeamId, game.awayTeamId, currentTeamId]);
 
   // Get opponent name
   const getOpponentName = (): string => {
@@ -115,10 +68,9 @@ export function GameResultCard({
   };
 
   // Get result styling
-  const [teamScore, opponentScore] = getScores();
-  const isWin = teamScore > opponentScore;
-  const isLoss = teamScore < opponentScore;
-  const isDraw = teamScore === opponentScore;
+  const isWin = scores && scores.result === 'win';
+  const isLoss = scores && scores.result === 'loss';
+  const isDraw = scores && scores.result === 'draw';
 
   const getResultClass = () => {
     if (isWin) return 'border-green-500 bg-green-50';
@@ -179,7 +131,7 @@ export function GameResultCard({
         <div className={cn('font-semibold text-gray-800 truncate', config.textSize)}>
           vs {getOpponentName()}
         </div>
-        
+
         {/* Details row */}
         <div className="flex items-center gap-2 mt-1">
           {config.showDate && (
@@ -187,7 +139,7 @@ export function GameResultCard({
               {layout === 'wide' ? formatDate(game.date) : formatShortDate(game.date)}
             </span>
           )}
-          
+
           {config.showRound && game.round && (
             <GameBadge variant="round" size={layout === 'narrow' ? 'sm' : 'default'}>
               {layout === 'narrow' ? `R${game.round}` : `Round ${game.round}`}
@@ -197,15 +149,14 @@ export function GameResultCard({
       </div>
 
       {/* Right side - Score */}
-      {showScore && (
-        <div className="flex-shrink-0">
+      {scores && (
           <ScoreBadge 
-            teamScore={teamScore} 
-            opponentScore={opponentScore} 
-            size={config.badgeSize}
+            teamScore={scores.totalTeamScore} 
+            opponentScore={scores.totalOpponentScore}
+            result={scores.result}
+            className="ml-auto"
           />
-        </div>
-      )}
+        )}
     </div>
   );
 
