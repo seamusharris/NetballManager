@@ -22,6 +22,9 @@ export interface OfficialGameScore {
   quarter: number;
   score: number;
   notes?: string;
+  enteredAt?: string;
+  updatedAt?: string;
+  enteredBy?: number;
 }
 
 class GameScoreService {
@@ -37,7 +40,7 @@ class GameScoreService {
   ): GameScores {
     // PRIORITY 1: Use official scores if available
     if (officialScores && officialScores.length > 0) {
-      return this.createScoresFromOfficial(officialScores, homeTeamId, awayTeamId);
+      return this.createScoresFromOfficial(officialScores, homeTeamId, awayTeamId, currentTeamId);
     }
     // Handle games with fixed scores from status (forfeit, etc.)
     if (statusScores && statusScores.teamGoals !== null && statusScores.opponentGoals !== null) {
@@ -209,7 +212,8 @@ class GameScoreService {
   private createScoresFromOfficial(
     officialScores: OfficialGameScore[], 
     homeTeamId?: number, 
-    awayTeamId?: number
+    awayTeamId?: number,
+    currentTeamId?: number
   ): GameScores {
     // Create quarter scores from official data
     const quarterScores: QuarterScore[] = [];
@@ -220,10 +224,28 @@ class GameScoreService {
       const homeTeamScore = officialScores.find(s => s.quarter === quarter && s.teamId === homeTeamId)?.score || 0;
       const awayTeamScore = officialScores.find(s => s.quarter === quarter && s.teamId === awayTeamId)?.score || 0;
 
+      // Determine scores from the perspective of the current team
+      let teamScore: number;
+      let opponentScore: number;
+
+      if (currentTeamId === homeTeamId) {
+        // Current team is home team
+        teamScore = homeTeamScore;
+        opponentScore = awayTeamScore;
+      } else if (currentTeamId === awayTeamId) {
+        // Current team is away team
+        teamScore = awayTeamScore;
+        opponentScore = homeTeamScore;
+      } else {
+        // Default to home team perspective if no current team specified
+        teamScore = homeTeamScore;
+        opponentScore = awayTeamScore;
+      }
+
       quarterScores.push({
         quarter,
-        teamScore: homeTeamScore, // From perspective of home team
-        opponentScore: awayTeamScore
+        teamScore,
+        opponentScore
       });
     }
 

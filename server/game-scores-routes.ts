@@ -31,65 +31,63 @@ router.get('/api/games/:gameId/scores', authMiddleware, async (req, res) => {
 router.post('/api/games/:gameId/scores', authMiddleware, async (req, res) => {
   try {
     const gameId = parseInt(req.params.gameId);
-    const {
-      homeTeamQ1, homeTeamQ2, homeTeamQ3, homeTeamQ4,
-      awayTeamQ1, awayTeamQ2, awayTeamQ3, awayTeamQ4,
-      notes
-    } = req.body;
+    const { quarter, homeScore, awayScore, notes } = req.body;
 
-    // Calculate totals
-    const homeTeamTotal = homeTeamQ1 + homeTeamQ2 + homeTeamQ3 + homeTeamQ4;
-    const awayTeamTotal = awayTeamQ1 + awayTeamQ2 + awayTeamQ3 + awayTeamQ4;
-
-    // Check if scores already exist
-    const existingScores = await db.select()
-      .from(gameScores)
-      .where(eq(gameScores.gameId, gameId))
+    // First, get the game to know which teams are involved
+    const game = await db.select()
+      .from(games)
+      .where(eq(games.id, gameId))
       .limit(1);
 
-    if (existingScores.length > 0) {
-      // Update existing scores
-      const updatedScores = await db.update(gameScores)
-        .set({
-          homeTeamQ1,
-          homeTeamQ2,
-          homeTeamQ3,
-          homeTeamQ4,
-          awayTeamQ1,
-          awayTeamQ2,
-          awayTeamQ3,
-          awayTeamQ4,
-          homeTeamTotal,
-          awayTeamTotal,
-          notes,
-          updatedAt: sql`CURRENT_TIMESTAMP`,
-        })
-        .where(eq(gameScores.gameId, gameId))
-        .returning();
-
-      res.json(updatedScores[0]);
-    } else {
-      // Create new scores
-      const newScores = await db.insert(gameScores)
-        .values({
-          gameId,
-          homeTeamQ1,
-          homeTeamQ2,
-          homeTeamQ3,
-          homeTeamQ4,
-          awayTeamQ1,
-          awayTeamQ2,
-          awayTeamQ3,
-          awayTeamQ4,
-          homeTeamTotal,
-          awayTeamTotal,
-          enteredBy: req.user?.id,
-          notes,
-        })
-        .returning();
-
-      res.json(newScores[0]);
+    if (game.length === 0) {
+      return res.status(404).json({ error: 'Game not found' });
     }
+
+    const { homeTeamId, awayTeamId } = game[0];
+
+    // Insert or update home team score for this quarter
+    await db.insert(gameScores)
+      .values({
+        gameId,
+        teamId: homeTeamId,
+        quarter,
+        score: homeScore,
+        enteredBy: req.user?.id,
+        notes: notes || null,
+      })
+      .onConflictDoUpdate({
+        target: [gameScores.gameId, gameScores.teamId, gameScores.quarter],
+        set: {
+          score: homeScore,
+          updatedAt: sql`CURRENT_TIMESTAMP`,
+          notes: notes || null,
+        }
+      });
+
+    // Insert or update away team score for this quarter
+    await db.insert(gameScores)
+      .values({
+        gameId,
+        teamId: awayTeamId,
+        quarter,
+        score: awayScore,
+        enteredBy: req.user?.id,
+        notes: null, // Notes only on home team entry to avoid duplication
+      })
+      .onConflictDoUpdate({
+        target: [gameScores.gameId, gameScores.teamId, gameScores.quarter],
+        set: {
+          score: awayScore,
+          updatedAt: sql`CURRENT_TIMESTAMP`,
+        }
+      });
+
+    // Return the updated scores for this quarter
+    const updatedScores = await db.select()
+      .from(gameScores)
+      .where(eq(gameScores.gameId, gameId));
+
+    res.json(updatedScores);
   } catch (error) {
     console.error('Error saving game scores:', error);
     res.status(500).json({ error: 'Failed to save game scores' });
