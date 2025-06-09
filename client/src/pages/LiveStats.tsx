@@ -830,8 +830,7 @@ export default function LiveStats() {
     // Build breadcrumbs
     const breadcrumbs = [
         { label: 'Games', href: '/games' },
-        {```text
-{
+        {
             label: `Round ${game?.round || gameId} vs ${opponentDisplayName}`,
             href: `/game/${gameId}`
         },
