@@ -150,6 +150,7 @@ import LiveStatsButton from '@/components/games/LiveStatsButton';
 import { apiClient } from '@/lib/apiClient';
 import { useClub } from '@/contexts/ClubContext';
 import { validateInterClubScores, getReconciledScore } from '@/lib/scoreValidation';
+import * as gameScoreService from '@/lib/gameScoreService';
 
 // Function to get opponent name
 const getOpponentName = (opponents: any[], opponentId: number | null) => {
@@ -1231,8 +1232,6 @@ export default function GameDetails() {
     refetchOnMount: 'always' // Always refetch when component mounts
   });
 
-  // Import the gameScoreService
-  import * as gameScoreService from '@/lib/gameScoreService';
   const homeTeamId = game?.homeTeamId;
   const awayTeamId = game?.awayTeamId;
   const isInterClub = homeTeamId && awayTeamId && teams.some(t => t.id === homeTeamId) && teams.some(t => t.id === awayTeamId);
