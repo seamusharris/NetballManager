@@ -3,6 +3,14 @@ import { useParams, Link } from 'wouter';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet';
 import { TEAM_NAME } from '@/lib/settings';
+import { 
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbSeparator,
+  BreadcrumbPage,
+} from '@/components/ui/breadcrumb';
 import { StatItemBox } from '@/components/games/StatItemBox';
 import { PositionStatsBox } from '@/components/games/PositionStatsBox';
 import { PositionBox } from '@/components/games/PositionBox';
@@ -137,6 +145,7 @@ import {
 import { GameStatusButton } from '@/components/games/GameStatusButton';
 import LiveStatsButton from '@/components/games/LiveStatsButton';
 import { apiClient } from '@/lib/apiClient';
+import { useClub } from '@/contexts/ClubContext';
 
 // Function to get opponent name
 const getOpponentName = (opponents: any[], opponentId: number | null) => {
@@ -933,7 +942,7 @@ const StatisticsByPosition = ({ gameStats }) => {
 };
 
 // Quarter scores display
-const QuarterScores = ({ quarterScores, gameStatus }) => {
+const QuarterScores = ({ quarterScores, gameStatus, contextualTeamScore, contextualOpponentScore }) => {
   // Reshape the data to be quarter-by-quarter for easier rendering
   const scoringByQuarter = useMemo(() => {
     return quarterScores.reduce((acc, current, index) => {
@@ -946,9 +955,9 @@ const QuarterScores = ({ quarterScores, gameStatus }) => {
     }, []);
   }, [quarterScores]);
 
-  // Calculate total scores
-  const totalTeamScore = quarterScores.reduce((sum, q) => sum + q.teamScore, 0);
-  const totalOpponentScore = quarterScores.reduce((sum, q) => sum + q.opponentScore, 0);
+  // Use contextual scores instead of raw scores
+  const totalTeamScore = contextualTeamScore;
+  const totalOpponentScore = contextualOpponentScore;
 
   // Calculate cumulative scores by quarter
   const cumulativeScores = useMemo(() => {
@@ -1044,6 +1053,7 @@ export default function GameDetails() {
   const gameId = parseInt(id);
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { currentTeam } = useClub();
 
   // State for edit game dialog
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -1209,24 +1219,51 @@ export default function GameDetails() {
   const isForfeitGame = game.status === 'forfeit-win' || game.status === 'forfeit-loss';
   //const opponentName = getOpponentName(opponents || [], game.opponentId); // Removed opponentName
 
-  // Helper function to get score display
+  // Helper function to get score display with correct team context
   const finalTeamScore = quarterScores.reduce((sum, q) => sum + q.teamScore, 0);
   const finalOpponentScore = quarterScores.reduce((sum, q) => sum + q.opponentScore, 0);
 
-  const result = finalTeamScore > finalOpponentScore ? 'Win' : 
-                 finalTeamScore < finalOpponentScore ? 'Loss' : 'Draw';
+  // Determine if we need to flip the perspective for inter-club games
+  const getCorrectScoreContext = () => {
+    if (!game || !currentTeam) {
+      return { teamScore: finalTeamScore, opponentScore: finalOpponentScore };
+    }
+
+    // Check if this is an inter-club game (both teams from same club)
+    const isInterClubGame = game.homeTeamId && game.awayTeamId && 
+                           teams.some(t => t.id === game.homeTeamId) && 
+                           teams.some(t => t.id === game.awayTeamId);
+
+    if (isInterClubGame) {
+      // If current team is the away team, flip the scores
+      if (currentTeam.id === game.awayTeamId) {
+        return { teamScore: finalOpponentScore, opponentScore: finalTeamScore };
+      }
+    }
+
+    return { teamScore: finalTeamScore, opponentScore: finalOpponentScore };
+  };
+
+  const { teamScore: contextualTeamScore, opponentScore: contextualOpponentScore } = getCorrectScoreContext();
+  const result = contextualTeamScore > contextualOpponentScore ? 'Win' : 
+                 contextualTeamScore < contextualOpponentScore ? 'Loss' : 'Draw';
 
   const getScoreDisplay = () => {
     if (!game) return "- -";
 
     // Show fixed scores from status if available
     if (game.statusTeamGoals !== null && game.statusOpponentGoals !== null) {
+      // For fixed scores, also consider team context
+      if (currentTeam && game.awayTeamId === currentTeam.id && 
+          teams.some(t => t.id === game.homeTeamId) && teams.some(t => t.id === game.awayTeamId)) {
+        return `${game.statusOpponentGoals}-${game.statusTeamGoals}`;
+      }
       return `${game.statusTeamGoals}-${game.statusOpponentGoals}`;
     }
 
     // Show actual scores for completed games
     if (game.statusIsCompleted) {
-      return `${finalTeamScore}-${finalOpponentScore}`;
+      return `${contextualTeamScore}-${contextualOpponentScore}`;
     }
 
     // Show dash for upcoming games or games without statistics
@@ -1238,6 +1275,35 @@ export default function GameDetails() {
       <Helmet>
         <title>Game Details | Netball Stats Tracker</title>
       </Helmet>
+
+      {/* Breadcrumbs */}
+      <div className="mb-6">
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link href="/dashboard">Dashboard</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link href="/games">Games</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>
+                {game?.statusName === 'bye' || game?.isBye ? (
+                  'BYE Round'
+                ) : (
+                  `${game?.homeTeamName || 'Home'} vs ${game?.awayTeamName || 'Away'}`
+                )}
+              </BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+      </div>
 
       <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-gray-50 p-6 rounded-lg">
         <div>
@@ -1428,7 +1494,12 @@ export default function GameDetails() {
       </div>
 
       {/* Show quarter scores summary */}
-      <QuarterScores quarterScores={quarterScores} gameStatus={game?.status} />
+      <QuarterScores 
+        quarterScores={quarterScores} 
+        gameStatus={game?.status} 
+        contextualTeamScore={contextualTeamScore}
+        contextualOpponentScore={contextualOpponentScore}
+      />
 
       <div className="mt-8">
         <Tabs value={activeTab} onValueChange={setActiveTab}>

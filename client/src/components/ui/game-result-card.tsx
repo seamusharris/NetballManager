@@ -19,6 +19,8 @@ interface GameResultCardProps {
   showRound?: boolean;
   showScore?: boolean;
   compact?: boolean;
+  currentTeamId?: number;
+  clubTeams?: any[];
 }
 
 export function GameResultCard({ 
@@ -30,10 +32,12 @@ export function GameResultCard({
   showDate = true,
   showRound = true,
   showScore = true,
-  compact = false
+  compact = false,
+  currentTeamId,
+  clubTeams = []
 }: GameResultCardProps) {
   
-  // Calculate scores from game stats
+  // Calculate scores from game stats with team context
   const getScores = (): [number, number] => {
     if (gameStats.length === 0) {
       return [0, 0];
@@ -76,8 +80,19 @@ export function GameResultCard({
     });
 
     // Calculate total goals
-    const teamScore = Object.values(quarterGoals).reduce((sum, q) => sum + q.for, 0);
-    const opponentScore = Object.values(quarterGoals).reduce((sum, q) => sum + q.against, 0);
+    let teamScore = Object.values(quarterGoals).reduce((sum, q) => sum + q.for, 0);
+    let opponentScore = Object.values(quarterGoals).reduce((sum, q) => sum + q.against, 0);
+
+    // Check if we need to flip scores for inter-club games
+    if (currentTeamId && game.homeTeamId && game.awayTeamId && clubTeams.length > 0) {
+      const isInterClubGame = clubTeams.some(t => t.id === game.homeTeamId) && 
+                             clubTeams.some(t => t.id === game.awayTeamId);
+      
+      if (isInterClubGame && currentTeamId === game.awayTeamId) {
+        // Flip scores if we're viewing from the away team's perspective
+        return [opponentScore, teamScore];
+      }
+    }
 
     return [teamScore, opponentScore];
   };
