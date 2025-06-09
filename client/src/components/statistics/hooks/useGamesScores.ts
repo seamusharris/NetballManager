@@ -172,7 +172,20 @@ export function useGamesScores(gameIds: number[], forceFresh = false) {
           };
         } else if (stats && stats.length > 0) {
           try {
-            scores = statisticsService.calculateScoresFromStats(stats, gameId);
+            // Use gameScoreService for consistent calculation
+            const { gameScoreService } = await import('@/lib/gameScoreService');
+            const gameScores = await gameScoreService.calculateGameScores(stats, game.status, undefined, false, undefined, undefined, undefined, undefined, gameId);
+            
+            // Convert to legacy format
+            const quarterScores: Record<string, { for: number; against: number }> = {};
+            gameScores.quarterScores.forEach(q => {
+              quarterScores[q.quarter.toString()] = { for: q.teamScore, against: q.opponentScore };
+            });
+
+            scores = {
+              quarterScores,
+              finalScore: { for: gameScores.totalTeamScore, against: gameScores.totalOpponentScore }
+            };
           } catch (error) {
             console.error(`Error calculating scores for game ${gameId}:`, error);
             return;

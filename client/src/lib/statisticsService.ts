@@ -28,43 +28,25 @@ class UnifiedStatisticsService {
 
   /**
    * Calculate scores directly from provided stats without API calls
+   * Delegates to gameScoreService for consistency
    */
-  calculateScoresFromStats(stats: GameStat[], gameId: number): GameScores {
-    if (!stats || stats.length === 0) {
-      return {
-        quarterScores: {
-          '1': { for: 0, against: 0 },
-          '2': { for: 0, against: 0 },
-          '3': { for: 0, against: 0 },
-          '4': { for: 0, against: 0 }
-        },
-        finalScore: { for: 0, against: 0 }
-      };
-    }
-
-    // Calculate scores by quarter
-    const quarterScores: Record<string, { for: number; against: number }> = {
-      '1': { for: 0, against: 0 },
-      '2': { for: 0, against: 0 },
-      '3': { for: 0, against: 0 },
-      '4': { for: 0, against: 0 }
-    };
-
-    stats.forEach(stat => {
-      const quarter = stat.quarter.toString();
-      if (quarterScores[quarter]) {
-        quarterScores[quarter].for += stat.goalsFor || 0;
-        quarterScores[quarter].against += stat.goalsAgainst || 0;
-      }
+  async calculateScoresFromStats(stats: GameStat[], gameId: number): Promise<GameScores> {
+    // Import gameScoreService dynamically to avoid circular dependencies
+    const { gameScoreService } = await import('./gameScoreService');
+    
+    // Convert to the new format expected by gameScoreService
+    const gameScores = await gameScoreService.calculateGameScores(stats, undefined, undefined, false, undefined, undefined, undefined, undefined, gameId);
+    
+    // Convert to legacy format for backward compatibility
+    const quarterScores: Record<string, { for: number; against: number }> = {};
+    gameScores.quarterScores.forEach(q => {
+      quarterScores[q.quarter.toString()] = { for: q.teamScore, against: q.opponentScore };
     });
 
-    // Calculate final score
-    const finalScore = {
-      for: Object.values(quarterScores).reduce((sum, q) => sum + q.for, 0),
-      against: Object.values(quarterScores).reduce((sum, q) => sum + q.against, 0)
+    return {
+      quarterScores,
+      finalScore: { for: gameScores.totalTeamScore, against: gameScores.totalOpponentScore }
     };
-
-    return { quarterScores, finalScore };
   }
 
   /**
@@ -551,6 +533,32 @@ export function clearAllStatisticsCaches(): void {
 
   import('./queryClient').then(({ queryClient }) => {
     queryClient.clear();
+  });
+}
+
+/**
+ * Utility to invalidate score-related caches when scores are updated
+ */
+export function invalidateScoreCaches(gameId: number): void {
+  // Clear local cache
+  invalidateGameCache(gameId);
+  
+  // Clear React Query caches for this specific game
+  import('./queryClient').then(({ queryClient }) => {
+    queryClient.invalidateQueries({
+      predicate: (query) => {
+        const queryKey = query.queryKey;
+        return queryKey.some(key => 
+          typeof key === 'string' && (
+            key.includes(`game-${gameId}`) ||
+            key.includes(`/games/${gameId}`) ||
+            key.includes(`gameId-${gameId}`) ||
+            key.includes('gameScores') ||
+            key.includes('batchGameStats')
+          )
+        );
+      }
+    });
   });
 }
 

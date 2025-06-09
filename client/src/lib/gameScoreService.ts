@@ -138,9 +138,14 @@ class GameScoreService {
     for (let quarter = 1; quarter <= 4; quarter++) {
       let quarterStats = gameStats.filter(stat => stat.quarter === quarter);
 
-      // If we have a current team ID, only use stats from that team
+      // Always filter by current team ID if available for consistent perspective
       if (currentTeamId) {
         quarterStats = quarterStats.filter(stat => stat.teamId === currentTeamId);
+      } else if (gameStats.length > 0 && gameStats[0].teamId) {
+        // Fallback to first team's perspective if no current team specified
+        const firstTeamId = gameStats[0].teamId;
+        quarterStats = quarterStats.filter(stat => stat.teamId === firstTeamId);
+        console.warn(`No currentTeamId provided, using team ${firstTeamId} perspective`);
       }
 
       const teamScore = quarterStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);

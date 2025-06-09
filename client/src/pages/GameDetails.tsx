@@ -1157,6 +1157,9 @@ export default function GameDetails() {
   const gameScores = useMemo(() => {
     if (!gameStats || !game) return { quarterScores: [], totalTeamScore: 0, totalOpponentScore: 0 };
     
+    // Ensure we always pass the current team ID for consistent perspective
+    const effectiveCurrentTeamId = currentTeam?.id || currentClub?.id;
+    
     return gameScoreService.gameScoreService.calculateGameScores(
       gameStats, 
       game.status, 
@@ -1164,11 +1167,11 @@ export default function GameDetails() {
       isInterClub,
       homeTeamId,
       awayTeamId,
-      currentTeam?.id,
+      effectiveCurrentTeamId,
       undefined, // officialScores - will be fetched internally by the service
       game.id
     );
-  }, [gameStats, game, isInterClub, homeTeamId, awayTeamId, currentTeam?.id]);
+  }, [gameStats, game, isInterClub, homeTeamId, awayTeamId, currentTeam?.id, currentClub?.id]);
 
   const { quarterScores, totalTeamScore, totalOpponentScore } = gameScores;
 
