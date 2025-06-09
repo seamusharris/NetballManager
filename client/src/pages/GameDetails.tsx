@@ -36,6 +36,7 @@ import {
 import { BackButton } from '@/components/ui/back-button';
 import { Separator } from '@/components/ui/separator';
 import { formatDate, cn, tailwindToHex, convertTailwindToHex } from '@/lib/utils';
+import { TeamSwitcher } from '@/components/layout/TeamSwitcher';
 
 // Helper functions for player colors
 const getPlayerColorForBorder = (avatarColor?: string): string => {
@@ -1238,6 +1239,9 @@ export default function GameDetails() {
       // If current team is the away team, flip the scores
       if (currentTeam.id === game.awayTeamId) {
         return { teamScore: finalOpponentScore, opponentScore: finalTeamScore };
+      } else {
+        // If current team is the home team, do not flip
+        return { teamScore: finalTeamScore, opponentScore: finalOpponentScore };
       }
     }
 
@@ -1304,6 +1308,9 @@ export default function GameDetails() {
           </BreadcrumbList>
         </Breadcrumb>
       </div>
+
+        {/* Team Context Switcher */}
+        <TeamSwitcher />
 
       <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-gray-50 p-6 rounded-lg">
         <div>
