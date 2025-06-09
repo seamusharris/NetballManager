@@ -466,6 +466,34 @@ export default function LiveStats() {
       console.log('=== SAVING ALL POSITION STATS ===');
       console.log('Position stats to save:', positionStats);
 
+      // Validate scores for inter-club games
+      if (game.isInterClub && game.homeTeamId && game.awayTeamId) {
+        const homeStats = Object.values(positionStats).filter(stat => stat.teamId === game.homeTeamId);
+        const awayStats = Object.values(positionStats).filter(stat => stat.teamId === game.awayTeamId);
+
+        const homeTeamTotals = {
+          teamId: game.homeTeamId,
+          goalsFor: homeStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0),
+          goalsAgainst: homeStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0)
+        };
+
+        const awayTeamTotals = {
+          teamId: game.awayTeamId,
+          goalsFor: awayStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0),
+          goalsAgainst: awayStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0)
+        };
+
+        const { validateInterClubScores, getScoreDiscrepancyWarning } = await import('@/lib/scoreValidation');
+        const validation = validateInterClubScores(homeTeamTotals, awayTeamTotals);
+        const warning = getScoreDiscrepancyWarning(validation);
+
+        if (warning) {
+          console.warn('Score mismatch detected:', warning);
+          // You could show a toast warning here
+          // toast({ title: "Score Mismatch", description: warning, variant: "destructive" });
+        }
+      }
+
       // Determine the team ID for these stats - use current team if available
       const teamId = currentTeam?.id || (isCurrentTeamHome ? game.homeTeamId : game.awayTeamId);
 
@@ -805,6 +833,7 @@ export default function LiveStats() {
         size="sm"
         onClick={saveAllStats}
         disabled={saveInProgress}
+```text
         className="bg-blue-600 hover:bg-blue-700 text-white"
       >
         <Save className="h-4 w-4 mr-1" />

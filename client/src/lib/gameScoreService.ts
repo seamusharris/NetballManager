@@ -1,6 +1,7 @@
 
 import { GameStat, Game, GameStatus } from '@shared/schema';
 import { getCachedScores, cacheScores, isCacheValid } from './scoresCache';
+import { validateInterClubScores, getReconciledScore, getScoreDiscrepancyWarning } from './scoreValidation';
 
 export interface QuarterScore {
   quarter: number;
@@ -16,7 +17,14 @@ export interface GameScores {
 }
 
 class GameScoreService {
-  calculateGameScores(stats: GameStat[], gameStatus?: GameStatus, statusScores?: { teamGoals: number | null, opponentGoals: number | null }): GameScores {
+  calculateGameScores(
+    stats: GameStat[], 
+    gameStatus?: GameStatus, 
+    statusScores?: { teamGoals: number | null, opponentGoals: number | null },
+    isInterClub: boolean = false,
+    homeTeamId?: number,
+    awayTeamId?: number
+  ): GameScores {
     // Handle games with fixed scores from status (forfeit, etc.)
     if (statusScores && statusScores.teamGoals !== null && statusScores.opponentGoals !== null) {
       return this.createFixedScores(statusScores.teamGoals, statusScores.opponentGoals);
@@ -33,16 +41,47 @@ class GameScoreService {
 
     const quarterScores: QuarterScore[] = [];
     
-    for (let quarter = 1; quarter <= 4; quarter++) {
-      const quarterStats = stats.filter(s => s.quarter === quarter);
-      const teamScore = quarterStats.reduce((sum, s) => sum + (s.goalsFor || 0), 0);
-      const opponentScore = quarterStats.reduce((sum, s) => sum + (s.goalsAgainst || 0), 0);
-      
-      quarterScores.push({
-        quarter,
-        teamScore,
-        opponentScore
-      });
+    // Handle inter-club games with potential score reconciliation
+    if (isInterClub && homeTeamId && awayTeamId) {
+      for (let quarter = 1; quarter <= 4; quarter++) {
+        const quarterStats = stats.filter(s => s.quarter === quarter);
+        const homeStats = quarterStats.filter(s => s.teamId === homeTeamId);
+        const awayStats = quarterStats.filter(s => s.teamId === awayTeamId);
+        
+        const homeTeamStats = {
+          teamId: homeTeamId,
+          goalsFor: homeStats.reduce((sum, s) => sum + (s.goalsFor || 0), 0),
+          goalsAgainst: homeStats.reduce((sum, s) => sum + (s.goalsAgainst || 0), 0)
+        };
+        
+        const awayTeamStats = {
+          teamId: awayTeamId,
+          goalsFor: awayStats.reduce((sum, s) => sum + (s.goalsFor || 0), 0),
+          goalsAgainst: awayStats.reduce((sum, s) => sum + (s.goalsAgainst || 0), 0)
+        };
+        
+        // Reconcile scores if there's a mismatch
+        const reconciledScore = getReconciledScore(homeTeamStats, awayTeamStats, 'average');
+        
+        quarterScores.push({
+          quarter,
+          teamScore: reconciledScore.homeScore,
+          opponentScore: reconciledScore.awayScore
+        });
+      }
+    } else {
+      // Standard single-team scoring
+      for (let quarter = 1; quarter <= 4; quarter++) {
+        const quarterStats = stats.filter(s => s.quarter === quarter);
+        const teamScore = quarterStats.reduce((sum, s) => sum + (s.goalsFor || 0), 0);
+        const opponentScore = quarterStats.reduce((sum, s) => sum + (s.goalsAgainst || 0), 0);
+        
+        quarterScores.push({
+          quarter,
+          teamScore,
+          opponentScore
+        });
+      }
     }
 
     const totalTeamScore = quarterScores.reduce((sum, q) => sum + q.teamScore, 0);
