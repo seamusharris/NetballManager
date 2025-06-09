@@ -104,11 +104,16 @@ export default function TeamPerformance({ games, className, activeSeason, select
           const game = games.find(g => g.id === gameId);
           if (!game) continue;
 
-          const gameStats = gameStatsMap[gameId] || [];
-          console.log(`TeamPerformance processing game ${gameId}:`, gameStats ? `${gameStats.length} stats` : 'no stats');
+          let gameStats = gameStatsMap[gameId] || [];
+          
+          // Filter stats by current team for single-team games
+          if (!game.isInterClub && game.currentTeamId) {
+            gameStats = gameStats.filter(stat => stat.teamId === game.currentTeamId);
+          }
+          
+          console.log(`TeamPerformance processing game ${gameId}:`, gameStats ? `${gameStats.length} stats for team ${game.currentTeamId}` : 'no stats');
 
           // For team performance, use live stats only (coach's record)
-          const { gameScoreService } = require('@/lib/gameScoreService');
           const scores = gameScoreService.calculateGameScoresSync(
             gameStats,
             game.statusName,
