@@ -154,6 +154,8 @@ export function OfficialScoreEntry({
                 size="sm"
                 onClick={() => setIsEditDialogOpen(true)}
                 className="border-orange-200 text-orange-700 hover:bg-orange-50 hover:text-orange-900"
+                data-edit-scores-button
+                style={{ display: 'none' }}
               >
                 <Edit className="h-4 w-4 mr-2" />
                 Edit Scores

@@ -1237,14 +1237,15 @@ export default function GameDetails() {
   const awayTeamId = game?.awayTeamId;
   const isInterClub = homeTeamId && awayTeamId && teams.some(t => t.id === homeTeamId) && teams.some(t => t.id === awayTeamId);
 
-  // Calculate scores using the unified service with home-priority for inter-club games
+  // Calculate scores using the unified service with current team context
   const gameScores = gameScoreService.gameScoreService.calculateGameScores(
     gameStats || [], 
     game?.status, 
     { teamGoals: game?.statusTeamGoals, opponentGoals: game?.statusOpponentGoals },
     isInterClub,
     homeTeamId,
-    awayTeamId
+    awayTeamId,
+    currentTeam?.id
   );
 
   const { quarterScores, totalTeamScore, totalOpponentScore } = gameScores;
@@ -1500,6 +1501,25 @@ export default function GameDetails() {
               Edit Game
             </Button>
 
+            {/* Edit Scores Button */}
+            {!game.isBye && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="border-orange-200 text-orange-700 hover:bg-orange-50 hover:text-orange-900"
+                onClick={() => {
+                  // Find the official score entry component and trigger its edit dialog
+                  const editButton = document.querySelector('[data-edit-scores-button]') as HTMLButtonElement;
+                  if (editButton) {
+                    editButton.click();
+                  }
+                }}
+              >
+                <Edit className="mr-2 h-4 w-4" />
+                Edit Scores
+              </Button>
+            )}
+
             {/* Delete Game Button */}
             <AlertDialog>
               <AlertDialogTrigger asChild>
@@ -1669,16 +1689,18 @@ export default function GameDetails() {
         {game && (
           <div className="space-y-6">
             <GameScoreDisplay gameId={gameId} preloadedStats={gameStats} />
-            
-            {/* Official Score Entry */}
-            {!game.isBye && (
-              <OfficialScoreEntry
-                gameId={gameId}
-                homeTeamName={game.homeTeamName || 'Home Team'}
-                awayTeamName={game.awayTeamName || 'Away Team'}
-                isReadOnly={false}
-              />
-            )}
+          </div>
+        )}
+
+        {/* Hidden Official Score Entry for dialog functionality */}
+        {game && !game.isBye && (
+          <div style={{ display: 'none' }}>
+            <OfficialScoreEntry
+              gameId={gameId}
+              homeTeamName={game.homeTeamName || 'Home Team'}
+              awayTeamName={game.awayTeamName || 'Away Team'}
+              isReadOnly={false}
+            />
           </div>
         )}
               {/* Court Positions */}
