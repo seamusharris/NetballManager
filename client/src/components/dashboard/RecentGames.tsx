@@ -8,6 +8,7 @@ import { GameResultCard } from '@/components/ui/game-result-card';
 import { ViewMoreButton } from '@/components/ui/view-more-button';
 import { RECENT_GAMES_COUNT } from '@/lib/constants';
 import { useClub } from '@/contexts/ClubContext';
+import { gameScoreService } from '@/lib/gameScoreService';
 
 interface RecentGamesProps {
   games: Game[];
