@@ -66,6 +66,8 @@ export default function PlayerAvailabilityManager({
 }: PlayerAvailabilityManagerProps) {
   const [availablePlayerIds, setAvailablePlayerIds] = useState<number[]>([]);
   const [isSaving, setIsSaving] = useState(false);
+  const [teamPlayers, setTeamPlayers] = useState<Player[]>([]);
+  const [isLoadingTeamPlayers, setIsLoadingTeamPlayers] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -87,6 +89,38 @@ export default function PlayerAvailabilityManager({
       setAvailablePlayerIds(activePlayerIds);
     }
   });
+
+  // Load team players for the selected game
+  useEffect(() => {
+    const loadTeamPlayers = async () => {
+      if (!gameId) {
+        setTeamPlayers([]);
+        return;
+      }
+
+      const selectedGame = games.find(g => g.id === gameId);
+      if (!selectedGame) {
+        setTeamPlayers([]);
+        return;
+      }
+
+      setIsLoadingTeamPlayers(true);
+      try {
+        // Get team players for the home team (the team we're managing)
+        const response = await apiClient.get(`/api/teams/${selectedGame.homeTeamId}/players`);
+        console.log(`Loaded ${response.length} team players for team ${selectedGame.homeTeamId}`);
+        setTeamPlayers(response);
+      } catch (error) {
+        console.error('Error loading team players:', error);
+        // Fallback to all club players if team players can't be loaded
+        setTeamPlayers(players);
+      } finally {
+        setIsLoadingTeamPlayers(false);
+      }
+    };
+
+    loadTeamPlayers();
+  }, [gameId, games, players]);
 
   // Invalidate and refetch availability data when gameId changes
   useEffect(() => {
@@ -110,25 +144,27 @@ export default function PlayerAvailabilityManager({
       return;
     }
 
-    // Wait for both availability loading to complete AND players to be loaded
-    if (isLoading || players.length === 0) {
+    // Wait for both availability loading to complete AND team players to be loaded
+    if (isLoading || isLoadingTeamPlayers || teamPlayers.length === 0) {
       return;
     }
 
     // Handle successful availability data
     if (availabilityData && Array.isArray(availabilityData.availablePlayerIds)) {
-      // Always use the exact availability data from the API - don't override it
-      setAvailablePlayerIds(availabilityData.availablePlayerIds);
-      onAvailabilityChange?.(availabilityData.availablePlayerIds);
+      // Filter availability data to only include team players
+      const teamPlayerIds = teamPlayers.map(p => p.id);
+      const filteredAvailableIds = availabilityData.availablePlayerIds.filter(id => teamPlayerIds.includes(id));
+      setAvailablePlayerIds(filteredAvailableIds);
+      onAvailabilityChange?.(filteredAvailableIds);
     } else if (availabilityError) {
-      // Only fallback to all active players if there's an actual error
-      const activePlayerIds = players.filter(p => p.active).map(p => p.id);
-      console.log('Setting fallback available players (error case):', activePlayerIds);
-      setAvailablePlayerIds(activePlayerIds);
-      onAvailabilityChange?.(activePlayerIds);
+      // Only fallback to active team players if there's an actual error
+      const activeTeamPlayerIds = teamPlayers.filter(p => p.active).map(p => p.id);
+      console.log('Setting fallback available team players (error case):', activeTeamPlayerIds);
+      setAvailablePlayerIds(activeTeamPlayerIds);
+      onAvailabilityChange?.(activeTeamPlayerIds);
     }
     // If still loading, don't set anything - wait for the data
-  }, [availabilityData, isLoading, availabilityError, players, gameId, onAvailabilityChange]);
+  }, [availabilityData, isLoading, availabilityError, teamPlayers, isLoadingTeamPlayers, gameId, onAvailabilityChange]);
 
 
 
@@ -198,18 +234,18 @@ export default function PlayerAvailabilityManager({
     }
   };
 
-  if (isLoading && players.length === 0) {
+  if (isLoading || isLoadingTeamPlayers) {
     return (
       <Card className="mb-6">
         <CardContent className="pt-6">
-          <div className="text-center">Loading player availability...</div>
+          <div className="text-center">Loading team players and availability...</div>
         </CardContent>
       </Card>
     );
   }
 
-  // Sort players by display name
-  const filteredPlayers = players
+  // Sort team players by display name
+  const filteredPlayers = teamPlayers
     .sort((a, b) => {
       const displayNameA = a.displayName || `${a.firstName} ${a.lastName}`;
       const displayNameB = b.displayName || `${b.firstName} ${b.lastName}`;
