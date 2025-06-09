@@ -173,8 +173,8 @@ export function useGamesScores(gameIds: number[], forceFresh = false) {
         } else if (stats && stats.length > 0) {
           try {
             // Use gameScoreService for consistent calculation
-            const { gameScoreService } = await import('@/lib/gameScoreService');
-            const gameScores = await gameScoreService.calculateGameScores(stats, game.status, undefined, false, undefined, undefined, undefined, undefined, gameId);
+            const { gameScoreService } = require('@/lib/gameScoreService');
+            const gameScores = gameScoreService.calculateGameScores(stats, game.status, undefined, false, undefined, undefined, undefined, undefined, gameId);
             
             // Convert to legacy format
             const quarterScores: Record<string, { for: number; against: number }> = {};
