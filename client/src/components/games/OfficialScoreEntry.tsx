@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Save, Edit, Trophy, Clock } from 'lucide-react';
 import { apiClient } from '@/lib/apiClient';
 import { useToast } from '@/hooks/use-toast';
@@ -27,6 +28,7 @@ export function OfficialScoreEntry({
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingQuarter, setEditingQuarter] = useState<number | null>(null);
   const [quarterScores, setQuarterScores] = useState<Record<number, { home: number, away: number, notes: string }>>({
     1: { home: 0, away: 0, notes: '' },
@@ -115,6 +117,7 @@ export function OfficialScoreEntry({
   const totalHome = Object.values(quarterScores).reduce((sum, q) => sum + q.home, 0);
   const totalAway = Object.values(quarterScores).reduce((sum, q) => sum + q.away, 0);
   const result = totalHome > totalAway ? 'Home Win' : totalHome < totalAway ? 'Away Win' : 'Draw';
+  const hasAnyOfficialScores = officialScores && officialScores.length > 0;
 
   if (isLoading) {
     return (
@@ -127,132 +130,232 @@ export function OfficialScoreEntry({
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Trophy className="h-5 w-5" />
-          Official Game Scores
-        </CardTitle>
-        <CardDescription>
-          Enter the official quarter-by-quarter scores for this game
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {/* Final Score Display */}
-        <div className="bg-gray-50 p-4 rounded-lg">
-          <div className="flex justify-between items-center mb-2">
-            <span className="font-medium">{homeTeamName}</span>
-            <span className="text-2xl font-bold">{totalHome}</span>
-          </div>
-          <div className="flex justify-between items-center mb-3">
-            <span className="font-medium">{awayTeamName}</span>
-            <span className="text-2xl font-bold">{totalAway}</span>
-          </div>
-          <div className="text-center">
-            <Badge variant={result === 'Draw' ? 'secondary' : 'default'}>
-              {result}
-            </Badge>
-          </div>
-        </div>
-
-        {/* Quarter by Quarter Entry */}
-        <div className="space-y-4">
-          {[1, 2, 3, 4].map(quarter => {
-            const isEditing = editingQuarter === quarter;
-            const scores = quarterScores[quarter];
-            const hasOfficialScore = officialScores?.some((s: any) => s.quarter === quarter);
-
-            return (
-              <div key={quarter} className="border rounded-lg p-4">
-                <div className="flex justify-between items-center mb-3">
-                  <div className="flex items-center gap-2">
-                    <Clock className="h-4 w-4" />
-                    <span className="font-medium">Quarter {quarter}</span>
-                    {hasOfficialScore && (
-                      <Badge variant="outline" className="text-xs">
-                        Official
-                      </Badge>
-                    )}
-                  </div>
-                  {!isReadOnly && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setEditingQuarter(isEditing ? null : quarter)}
-                    >
-                      <Edit className="h-4 w-4 mr-1" />
-                      {isEditing ? 'Cancel' : 'Edit'}
-                    </Button>
-                  )}
-                </div>
-
-                {isEditing ? (
-                  <div className="space-y-3">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor={`home-${quarter}`}>{homeTeamName}</Label>
-                        <Input
-                          id={`home-${quarter}`}
-                          type="number"
-                          min="0"
-                          value={scores.home}
-                          onChange={(e) => handleScoreChange(quarter, 'home', e.target.value)}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor={`away-${quarter}`}>{awayTeamName}</Label>
-                        <Input
-                          id={`away-${quarter}`}
-                          type="number"
-                          min="0"
-                          value={scores.away}
-                          onChange={(e) => handleScoreChange(quarter, 'away', e.target.value)}
-                        />
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor={`notes-${quarter}`}>Notes (optional)</Label>
-                      <Textarea
-                        id={`notes-${quarter}`}
-                        placeholder="Any notes about this quarter..."
-                        value={scores.notes}
-                        onChange={(e) => handleNotesChange(quarter, e.target.value)}
-                        rows={2}
-                      />
-                    </div>
-
-                    <Button
-                      onClick={() => handleSaveQuarter(quarter)}
-                      disabled={saveScoreMutation.isPending}
-                      className="w-full"
-                    >
-                      <Save className="h-4 w-4 mr-2" />
-                      Save Quarter {quarter}
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span>{homeTeamName}</span>
-                      <span className="font-bold">{scores.home}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>{awayTeamName}</span>
-                      <span className="font-bold">{scores.away}</span>
-                    </div>
-                    {scores.notes && (
-                      <div className="text-sm text-gray-600 mt-2">
-                        <strong>Notes:</strong> {scores.notes}
-                      </div>
-                    )}
-                  </div>
+    <>
+      <Card>
+        <CardHeader>
+          <div className="flex justify-between items-start">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Trophy className="h-5 w-5" />
+                Official Game Scores
+                {hasAnyOfficialScores && (
+                  <Badge variant="outline" className="ml-2">
+                    Recorded
+                  </Badge>
                 )}
+              </CardTitle>
+              <CardDescription>
+                Official quarter-by-quarter scores for this game
+              </CardDescription>
+            </div>
+            {!isReadOnly && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsEditDialogOpen(true)}
+                className="border-orange-200 text-orange-700 hover:bg-orange-50 hover:text-orange-900"
+              >
+                <Edit className="h-4 w-4 mr-2" />
+                Edit Scores
+              </Button>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent>
+          {hasAnyOfficialScores ? (
+            <div className="space-y-4">
+              {/* Final Score Display */}
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="font-medium">{homeTeamName}</span>
+                  <span className="text-2xl font-bold">{totalHome}</span>
+                </div>
+                <div className="flex justify-between items-center mb-3">
+                  <span className="font-medium">{awayTeamName}</span>
+                  <span className="text-2xl font-bold">{totalAway}</span>
+                </div>
+                <div className="text-center">
+                  <Badge variant={result === 'Draw' ? 'secondary' : 'default'}>
+                    {result}
+                  </Badge>
+                </div>
               </div>
-            );
-          })}
-        </div>
-      </CardContent>
-    </Card>
+
+              {/* Quarter Summary */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <h4 className="font-medium text-sm text-gray-700">Quarter Scores</h4>
+                  <div className="grid grid-cols-4 gap-2 text-center text-sm">
+                    {[1, 2, 3, 4].map(quarter => (
+                      <div key={quarter} className="bg-white border rounded p-2">
+                        <div className="text-xs text-gray-500 mb-1">Q{quarter}</div>
+                        <div className="font-medium">
+                          {quarterScores[quarter].home}-{quarterScores[quarter].away}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <h4 className="font-medium text-sm text-gray-700">Running Total</h4>
+                  <div className="grid grid-cols-4 gap-2 text-center text-sm">
+                    {[1, 2, 3, 4].map(quarter => {
+                      const runningHome = Object.entries(quarterScores)
+                        .filter(([q]) => parseInt(q) <= quarter)
+                        .reduce((sum, [, scores]) => sum + scores.home, 0);
+                      const runningAway = Object.entries(quarterScores)
+                        .filter(([q]) => parseInt(q) <= quarter)
+                        .reduce((sum, [, scores]) => sum + scores.away, 0);
+                      
+                      return (
+                        <div key={quarter} className="bg-white border rounded p-2">
+                          <div className="text-xs text-gray-500 mb-1">Q{quarter}</div>
+                          <div className="font-medium">
+                            {runningHome}-{runningAway}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              <Trophy className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p className="mb-2">No official scores recorded</p>
+              <p className="text-sm">Click "Edit Scores" to add quarter-by-quarter scores</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Edit Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Official Scores</DialogTitle>
+            <DialogDescription>
+              Enter the official quarter-by-quarter scores for this game
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-6 py-4">
+            {/* Final Score Display */}
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="flex justify-between items-center mb-2">
+                <span className="font-medium">{homeTeamName}</span>
+                <span className="text-2xl font-bold">{totalHome}</span>
+              </div>
+              <div className="flex justify-between items-center mb-3">
+                <span className="font-medium">{awayTeamName}</span>
+                <span className="text-2xl font-bold">{totalAway}</span>
+              </div>
+              <div className="text-center">
+                <Badge variant={result === 'Draw' ? 'secondary' : 'default'}>
+                  {result}
+                </Badge>
+              </div>
+            </div>
+
+            {/* Quarter by Quarter Entry */}
+            <div className="space-y-4">
+              {[1, 2, 3, 4].map(quarter => {
+                const isEditing = editingQuarter === quarter;
+                const scores = quarterScores[quarter];
+                const hasOfficialScore = officialScores?.some((s: any) => s.quarter === quarter);
+
+                return (
+                  <div key={quarter} className="border rounded-lg p-4">
+                    <div className="flex justify-between items-center mb-3">
+                      <div className="flex items-center gap-2">
+                        <Clock className="h-4 w-4" />
+                        <span className="font-medium">Quarter {quarter}</span>
+                        {hasOfficialScore && (
+                          <Badge variant="outline" className="text-xs">
+                            Official
+                          </Badge>
+                        )}
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setEditingQuarter(isEditing ? null : quarter)}
+                      >
+                        <Edit className="h-4 w-4 mr-1" />
+                        {isEditing ? 'Cancel' : 'Edit'}
+                      </Button>
+                    </div>
+
+                    {isEditing ? (
+                      <div className="space-y-3">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <Label htmlFor={`home-${quarter}`}>{homeTeamName}</Label>
+                            <Input
+                              id={`home-${quarter}`}
+                              type="number"
+                              min="0"
+                              value={scores.home}
+                              onChange={(e) => handleScoreChange(quarter, 'home', e.target.value)}
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor={`away-${quarter}`}>{awayTeamName}</Label>
+                            <Input
+                              id={`away-${quarter}`}
+                              type="number"
+                              min="0"
+                              value={scores.away}
+                              onChange={(e) => handleScoreChange(quarter, 'away', e.target.value)}
+                            />
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <Label htmlFor={`notes-${quarter}`}>Notes (optional)</Label>
+                          <Textarea
+                            id={`notes-${quarter}`}
+                            placeholder="Any notes about this quarter..."
+                            value={scores.notes}
+                            onChange={(e) => handleNotesChange(quarter, e.target.value)}
+                            rows={2}
+                          />
+                        </div>
+
+                        <Button
+                          onClick={() => handleSaveQuarter(quarter)}
+                          disabled={saveScoreMutation.isPending}
+                          className="w-full"
+                        >
+                          <Save className="h-4 w-4 mr-2" />
+                          Save Quarter {quarter}
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <span>{homeTeamName}</span>
+                          <span className="font-bold">{scores.home}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>{awayTeamName}</span>
+                          <span className="font-bold">{scores.away}</span>
+                        </div>
+                        {scores.notes && (
+                          <div className="text-sm text-gray-600 mt-2">
+                            <strong>Notes:</strong> {scores.notes}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
