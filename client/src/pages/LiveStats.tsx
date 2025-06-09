@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams, useLocation } from 'wouter';
 import { apiClient } from '@/lib/apiClient';
 import { useToast } from '@/hooks/use-toast';
+import { useClub } from '@/contexts/ClubContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
@@ -177,6 +178,7 @@ export default function LiveStats() {
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { currentTeam, clubTeams } = useClub();
 
   // State for tracking the game - now using position-quarter keys
   const [currentQuarter, setCurrentQuarter] = useState<number>(1);
@@ -221,6 +223,22 @@ export default function LiveStats() {
     queryKey: ['/api/players'],
     queryFn: () => apiClient.get('/api/players'),
   });
+
+  // Determine team context - check if current team is home or away
+  const isCurrentTeamHome = game?.homeTeamId === currentTeam?.id;
+  const isCurrentTeamAway = game?.awayTeamId === currentTeam?.id;
+  const hasTeamContext = isCurrentTeamHome || isCurrentTeamAway;
+
+  // Get team names for display
+  const currentTeamName = currentTeam?.name || 'Our Team';
+  const homeTeamName = clubTeams?.find(t => t.id === game?.homeTeamId)?.name || game?.homeTeamName || 'Home Team';
+  const awayTeamName = clubTeams?.find(t => t.id === game?.awayTeamId)?.name || game?.awayTeamName || opponent?.teamName || 'Away Team';
+  
+  // Determine display names based on team context
+  const ourTeamDisplayName = hasTeamContext ? currentTeamName : homeTeamName;
+  const opponentDisplayName = hasTeamContext 
+    ? (isCurrentTeamHome ? awayTeamName : homeTeamName)
+    : awayTeamName;
 
   // Check if game is forfeit and redirect if needed
   useEffect(() => {
@@ -593,6 +611,31 @@ export default function LiveStats() {
     return total;
   };
 
+  // Get contextual scores based on team perspective
+  const getContextualQuarterScores = () => {
+    const ourScore = getQuarterTotal('goalsFor');
+    const theirScore = getQuarterTotal('goalsAgainst');
+    
+    // If current team is away, flip the scores
+    if (hasTeamContext && isCurrentTeamAway) {
+      return { ourScore: theirScore, theirScore: ourScore };
+    }
+    
+    return { ourScore, theirScore };
+  };
+
+  const getContextualGameScores = () => {
+    const ourScore = getGameTotal('goalsFor');
+    const theirScore = getGameTotal('goalsAgainst');
+    
+    // If current team is away, flip the scores
+    if (hasTeamContext && isCurrentTeamAway) {
+      return { ourScore: theirScore, theirScore: ourScore };
+    }
+    
+    return { ourScore, theirScore };
+  };
+
   // Common stats to show in the top row
   const commonStats: StatType[] = ['intercepts', 'badPass', 'handlingError', 'infringement', 'pickUp'];
 
@@ -710,7 +753,7 @@ export default function LiveStats() {
         <div>
           <h1 className="text-xl md:text-2xl font-bold">Live Stats Tracking</h1>
           <p className="text-muted-foreground text-sm md:text-base">
-            Round {game.round} | {formatShortDate(game.date)} vs {opponent ? opponent.teamName : game.opponentName || "Opponent"}
+            Round {game.round} | {formatShortDate(game.date)} vs {opponentDisplayName}
           </p>
         </div>
 
@@ -763,13 +806,13 @@ export default function LiveStats() {
           <CardContent className="py-1">
             <div className="flex justify-between items-center">
               <div>
-                <p className="text-xs md:text-sm text-muted-foreground">Our Team</p>
-                <p className="text-2xl md:text-3xl font-bold">{getGameTotal('goalsFor')}</p>
+                <p className="text-xs md:text-sm text-muted-foreground">{ourTeamDisplayName}</p>
+                <p className="text-2xl md:text-3xl font-bold">{getContextualGameScores().ourScore}</p>
               </div>
               <div className="text-xl md:text-2xl font-bold">-</div>
               <div className="text-right">
-                <p className="text-xs md:text-sm text-muted-foreground">{opponent ? opponent.teamName : game.opponentName || "Opponent"}</p>
-                <p className="text-2xl md:text-3xl font-bold">{getGameTotal('goalsAgainst')}</p>
+                <p className="text-xs md:text-sm text-muted-foreground">{opponentDisplayName}</p>
+                <p className="text-2xl md:text-3xl font-bold">{getContextualGameScores().theirScore}</p>
               </div>
             </div>
           </CardContent>
@@ -798,7 +841,7 @@ export default function LiveStats() {
             <div className="flex justify-between items-center">
               <div>
                 <p className="text-xs md:text-sm text-muted-foreground">Quarter Score</p>
-                <p className="text-xl md:text-2xl font-bold">{getQuarterTotal('goalsFor')} - {getQuarterTotal('goalsAgainst')}</p>
+                <p className="text-xl md:text-2xl font-bold">{getContextualQuarterScores().ourScore} - {getContextualQuarterScores().theirScore}</p>
               </div>
               <div className="flex gap-1">
                 <Button
