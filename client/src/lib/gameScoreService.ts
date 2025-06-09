@@ -1,7 +1,7 @@
 import { GameStat, Game, GameStatus } from '@shared/schema';
 import { getCachedScores, cacheScores, isCacheValid } from './scoresCache';
 import { validateInterClubScores, getReconciledScore, getScoreDiscrepancyWarning } from './scoreValidation';
-import { apiClient } from '@shared/apiClient';
+import { apiClient } from './apiClient';
 
 export interface QuarterScore {
   quarter: number;
