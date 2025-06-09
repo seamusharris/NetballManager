@@ -185,7 +185,10 @@ export default function Games() {
       <PageTemplate
         title={pageTitle}
         subtitle={pageSubtitle}
-        breadcrumbs={breadcrumbs}
+        breadcrumbs={[
+          { label: 'Dashboard', href: '/dashboard' },
+          { label: 'Games' }
+        ]}
         actions={
           <>
             <div className="text-sm text-muted-foreground">

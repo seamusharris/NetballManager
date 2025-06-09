@@ -1,6 +1,6 @@
-
 import React from 'react';
-import { ChevronRight, Home } from 'lucide-react';
+import { useLocation } from 'wouter';
+import { ChevronRight, Home, ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { BackButton } from '@/components/ui/back-button';
 import { PAGE_STRUCTURE, SPACING_STANDARDS } from '@/components/dashboard/widget-standards';
@@ -47,9 +47,9 @@ export function PageTemplate({
           className={backButtonProps?.className}
         />
       )}
-      
+
       {breadcrumbs && <Breadcrumbs items={breadcrumbs} />}
-      
+
       <div className={PAGE_STRUCTURE.headerSection}>
         <div className="flex items-start justify-between">
           <div>
@@ -59,7 +59,7 @@ export function PageTemplate({
           {actions && <div className="flex items-center gap-3">{actions}</div>}
         </div>
       </div>
-      
+
       <div className={SPACING_STANDARDS.sectionGap}>
         {children}
       </div>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'wouter';
+import { useLocation } from 'wouter';
 import { ChevronRight, Home } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -58,13 +58,16 @@ interface BreadcrumbsProps {
 }
 
 export function Breadcrumbs({ items }: BreadcrumbsProps) {
+  const [, navigate] = useLocation();
+
   return (
     <nav className="breadcrumb-nav">
-      <Link to="/dashboard">
-        <a className="breadcrumb-item">
-          <Home size={16} />
-        </a>
-      </Link>
+      <button 
+        onClick={() => navigate('/dashboard')}
+        className="breadcrumb-item flex items-center"
+      >
+        <Home size={16} />
+      </button>
 
       {items.map((item, index) => (
         <React.Fragment key={index}>
@@ -72,9 +75,19 @@ export function Breadcrumbs({ items }: BreadcrumbsProps) {
           {index === items.length - 1 ? (
             <span className="breadcrumb-current">{item.label}</span>
           ) : item.href ? (
-            <Link to={item.href}>
-              <a className="breadcrumb-item">{item.label}</a>
-            </Link>
+            <button 
+              onClick={() => navigate(item.href!)}
+              className="breadcrumb-item"
+            >
+              {item.label}
+            </button>
+          ) : item.onClick ? (
+            <button 
+              onClick={item.onClick}
+              className="breadcrumb-item"
+            >
+              {item.label}
+            </button>
           ) : (
             <span className="breadcrumb-item">{item.label}</span>
           )}

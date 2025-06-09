@@ -72,8 +72,8 @@ export default function Teams() {
       title="Teams"
       description={`Manage teams for ${currentClub?.name}`}
       breadcrumbs={[
-        { label: 'Dashboard', href: '/club-dashboard' },
-        { label: 'Teams', href: '/teams' }
+        { label: 'Dashboard', href: '/dashboard' },
+        { label: 'Teams' }
       ]}
       actions={
         <ActionButton
