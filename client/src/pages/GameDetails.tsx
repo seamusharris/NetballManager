@@ -151,7 +151,7 @@ import { GameScoreDisplay } from '@/components/statistics/GameScoreDisplay';
 import { OfficialScoreEntry } from '@/components/games/OfficialScoreEntry';
 import { apiClient } from '@/lib/apiClient';
 import { useClub } from '@/contexts/ClubContext';
-import * as gameScoreService from '@/lib/gameScoreService';
+import { gameScoreService } from '@/lib/gameScoreService';
 
 // Function to get opponent name
 const getOpponentName = (opponents: any[], opponentId: number | null) => {
