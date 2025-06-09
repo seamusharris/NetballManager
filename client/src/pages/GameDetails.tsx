@@ -1001,6 +1001,9 @@ const StatisticsByPosition = ({ gameStats }) => {
 const QuarterScores = ({ quarterScores, gameStatus, contextualTeamScore, contextualOpponentScore }) => {
   // Reshape the data to be quarter-by-quarter for easier rendering
   const scoringByQuarter = useMemo(() => {
+    if (!quarterScores || !Array.isArray(quarterScores)) {
+      return [];
+    }
     return quarterScores.reduce((acc, current, index) => {
       acc.push({
         quarter: index + 1,
@@ -1017,6 +1020,10 @@ const QuarterScores = ({ quarterScores, gameStatus, contextualTeamScore, context
 
   // Calculate cumulative scores by quarter
   const cumulativeScores = useMemo(() => {
+    if (!scoringByQuarter || scoringByQuarter.length === 0) {
+      return [];
+    }
+    
     let teamRunningTotal = 0;
     let opponentRunningTotal = 0;
 
