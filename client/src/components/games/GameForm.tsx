@@ -138,10 +138,10 @@ export default function GameForm({
       form.setError("homeTeamId", { message: "Please select a home team" });
       return;
     }
-    
+
     // Check if this is a BYE game (status 6)
     const isByeGame = parseInt(values.statusId) === 6;
-    
+
     // Only require away team for non-BYE games
     if (!isByeGame && !values.awayTeamId) {
       form.setError("awayTeamId", { message: "Please select an away team for regular games" });
@@ -281,7 +281,7 @@ export default function GameForm({
           />
 
           {/* Only show away team selector for non-BYE games */}
-          {watch("statusId") !== 6 && (
+          {watch("statusId") !== "6" && (
             <FormField
               control={form.control}
               name="awayTeamId"
@@ -320,7 +320,7 @@ export default function GameForm({
           )}
 
           {/* Show info for BYE games */}
-          {watch("statusId") === 6 && (
+          {watch("statusId") === "6" && (
             <div className="p-4 bg-blue-50 border border-blue-200 rounded-md">
               <p className="text-sm text-blue-800">
                 <strong>BYE Game:</strong> No away team needed. This is a bye round for the selected home team.
