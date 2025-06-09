@@ -1245,7 +1245,8 @@ export default function GameDetails() {
     isInterClub,
     homeTeamId,
     awayTeamId,
-    currentTeam?.id
+    currentTeam?.id,
+    undefined // officialScores - will be fetched internally by the service
   );
 
   const { quarterScores, totalTeamScore, totalOpponentScore } = gameScores;

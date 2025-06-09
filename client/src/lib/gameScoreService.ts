@@ -32,7 +32,8 @@ class GameScoreService {
     isInterClub: boolean = false,
     homeTeamId?: number,
     awayTeamId?: number,
-    currentTeamId?: number
+    currentTeamId?: number,
+    officialScores?: OfficialGameScore[]
   ): GameScores {
     // PRIORITY 1: Use official scores if available
     if (officialScores && officialScores.length > 0) {
