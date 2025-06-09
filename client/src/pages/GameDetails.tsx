@@ -1236,11 +1236,10 @@ export default function GameDetails() {
   const isInterClub = homeTeamId && awayTeamId && teams.some(t => t.id === homeTeamId) && teams.some(t => t.id === awayTeamId);
 
   // Calculate scores using the unified service with home-priority for inter-club games
-  const gameScores = gameScoreService.calculateGameScores(
+  const gameScores = gameScoreService.gameScoreService.calculateGameScores(
     gameStats || [], 
     game?.status, 
-    game?.statusTeamGoals,
-    game?.statusOpponentGoals,
+    { teamGoals: game?.statusTeamGoals, opponentGoals: game?.statusOpponentGoals },
     isInterClub,
     homeTeamId,
     awayTeamId
