@@ -1236,21 +1236,38 @@ export default function GameDetails() {
                            teams.some(t => t.id === game.awayTeamId);
 
     if (isInterClubGame) {
-      // For inter-club games, the stats are saved with team context
-      // So we need to calculate scores based on the current team's perspective
+      // For inter-club games, we need to use the reconciled scores from the gameScoreService
+      // Import the score validation functions
+      const { validateInterClubScores, getReconciledScore } = require('@/lib/scoreValidation');
       
-      // Get stats for current team and opponent team
-      const currentTeamStats = gameStats?.filter(stat => stat.teamId === currentTeam.id) || [];
-      const opponentTeamId = currentTeam.id === game.homeTeamId ? game.awayTeamId : game.homeTeamId;
-      const opponentTeamStats = gameStats?.filter(stat => stat.teamId === opponentTeamId) || [];
+      // Get stats for both teams
+      const homeTeamStats = gameStats?.filter(stat => stat.teamId === game.homeTeamId) || [];
+      const awayTeamStats = gameStats?.filter(stat => stat.teamId === game.awayTeamId) || [];
       
-      // Calculate our score (goals we scored)
-      const ourScore = currentTeamStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
+      // Calculate team totals
+      const homeTeamTotals = {
+        teamId: game.homeTeamId,
+        goalsFor: homeTeamStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0),
+        goalsAgainst: homeTeamStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0)
+      };
       
-      // Calculate opponent score (goals they scored, which appears as our goalsAgainst)
-      const theirScore = currentTeamStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
+      const awayTeamTotals = {
+        teamId: game.awayTeamId,
+        goalsFor: awayTeamStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0),
+        goalsAgainst: awayTeamStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0)
+      };
       
-      return { teamScore: ourScore, opponentScore: theirScore };
+      // Get reconciled scores (this handles mismatches consistently)
+      const reconciledScore = getReconciledScore(homeTeamTotals, awayTeamTotals, 'average');
+      
+      // Return scores from current team's perspective
+      if (currentTeam.id === game.homeTeamId) {
+        // We are home team
+        return { teamScore: reconciledScore.homeScore, opponentScore: reconciledScore.awayScore };
+      } else {
+        // We are away team
+        return { teamScore: reconciledScore.awayScore, opponentScore: reconciledScore.homeScore };
+      }
     }
 
     return { teamScore: finalTeamScore, opponentScore: finalOpponentScore };
