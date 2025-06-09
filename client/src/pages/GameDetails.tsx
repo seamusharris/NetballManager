@@ -1287,14 +1287,31 @@ export default function GameDetails() {
                            teams.some(t => t.id === game.awayTeamId);
 
     if (isInterClubGame) {
-      // For inter-club games, get stats for the current team only (like dashboard and live stats)
-      const currentTeamStats = gameStats?.filter(stat => stat.teamId === currentTeam.id) || [];
+      // For inter-club games, use reconciled scores to ensure consistency
+      const homeTeamStats = gameStats?.filter(stat => stat.teamId === game.homeTeamId) || [];
+      const awayTeamStats = gameStats?.filter(stat => stat.teamId === game.awayTeamId) || [];
       
-      // Calculate scores from current team's perspective
-      const teamScore = currentTeamStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
-      const opponentScore = currentTeamStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
+      const homeTeamTotals = {
+        teamId: game.homeTeamId,
+        goalsFor: homeTeamStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0),
+        goalsAgainst: homeTeamStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0)
+      };
       
-      return { teamScore, opponentScore };
+      const awayTeamTotals = {
+        teamId: game.awayTeamId,
+        goalsFor: awayTeamStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0),
+        goalsAgainst: awayTeamStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0)
+      };
+      
+      // Get reconciled scores using the validation service
+      const reconciledScore = getReconciledScore(homeTeamTotals, awayTeamTotals, 'average');
+      
+      // Return scores from current team's perspective
+      if (currentTeam.id === game.homeTeamId) {
+        return { teamScore: reconciledScore.homeScore, opponentScore: reconciledScore.awayScore };
+      } else {
+        return { teamScore: reconciledScore.awayScore, opponentScore: reconciledScore.homeScore };
+      }
     }
 
     return { teamScore: finalTeamScore, opponentScore: finalOpponentScore };
