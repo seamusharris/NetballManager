@@ -13,7 +13,6 @@ import { TeamPositionAnalysis } from '@/components/dashboard/TeamPositionAnalysi
 import { UpcomingGameRecommendations } from '@/components/dashboard/UpcomingGameRecommendations';
 import { TeamSwitcher } from '@/components/layout/TeamSwitcher';
 import { useEffect } from 'react';
-import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 
 export default function Dashboard() {
   const params = useParams();
@@ -213,11 +212,6 @@ export default function Dashboard() {
       </Helmet>
 
       <div className="container py-8 mx-auto space-y-8">
-      <Breadcrumbs
-          segments={[
-            { label: 'Dashboard', href: '/dashboard' },
-          ]}
-        />
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="space-y-1">
