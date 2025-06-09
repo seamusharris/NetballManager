@@ -31,21 +31,14 @@ export async function createGameScoresTable(): Promise<boolean> {
       CREATE TABLE game_scores (
         id SERIAL PRIMARY KEY,
         game_id INTEGER NOT NULL REFERENCES games(id) ON DELETE CASCADE,
-        home_team_q1 INTEGER NOT NULL DEFAULT 0,
-        home_team_q2 INTEGER NOT NULL DEFAULT 0,
-        home_team_q3 INTEGER NOT NULL DEFAULT 0,
-        home_team_q4 INTEGER NOT NULL DEFAULT 0,
-        away_team_q1 INTEGER NOT NULL DEFAULT 0,
-        away_team_q2 INTEGER NOT NULL DEFAULT 0,
-        away_team_q3 INTEGER NOT NULL DEFAULT 0,
-        away_team_q4 INTEGER NOT NULL DEFAULT 0,
-        home_team_total INTEGER NOT NULL DEFAULT 0,
-        away_team_total INTEGER NOT NULL DEFAULT 0,
+        team_id INTEGER NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
+        quarter INTEGER NOT NULL CHECK (quarter >= 1 AND quarter <= 4),
+        score INTEGER NOT NULL DEFAULT 0,
         entered_by INTEGER REFERENCES users(id),
         entered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
         notes TEXT,
-        UNIQUE(game_id)
+        UNIQUE(game_id, team_id, quarter)
       );
     `);
 
@@ -54,6 +47,9 @@ export async function createGameScoresTable(): Promise<boolean> {
     // Create indexes for performance
     await db.execute(sql`
       CREATE INDEX IF NOT EXISTS idx_game_scores_game_id ON game_scores(game_id);
+    `);
+    await db.execute(sql`
+      CREATE INDEX IF NOT EXISTS idx_game_scores_team_id ON game_scores(team_id);
     `);
     await db.execute(sql`
       CREATE INDEX IF NOT EXISTS idx_game_scores_entered_by ON game_scores(entered_by);

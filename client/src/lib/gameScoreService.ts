@@ -14,9 +14,11 @@ export interface GameScores {
 
 
 export interface OfficialGameScore {
+  id?: number;
+  gameId: number;
+  teamId: number;
   quarter: number;
-  homeScore: number;
-  awayScore: number;
+  score: number;
   notes?: string;
 }
 
@@ -128,22 +130,15 @@ class GameScoreService {
 
     // Ensure we have scores for all 4 quarters
     for (let quarter = 1; quarter <= 4; quarter++) {
-      const officialQuarter = officialScores.find(s => s.quarter === quarter);
+      // Find scores for this quarter for both teams
+      const homeTeamScore = officialScores.find(s => s.quarter === quarter && s.teamId === homeTeamId)?.score || 0;
+      const awayTeamScore = officialScores.find(s => s.quarter === quarter && s.teamId === awayTeamId)?.score || 0;
 
-      if (officialQuarter) {
-        quarterScores.push({
-          quarter,
-          teamScore: officialQuarter.homeScore,
-          opponentScore: officialQuarter.awayScore
-        });
-      } else {
-        // No official score for this quarter, default to 0
-        quarterScores.push({
-          quarter,
-          teamScore: 0,
-          opponentScore: 0
-        });
-      }
+      quarterScores.push({
+        quarter,
+        teamScore: homeTeamScore, // From perspective of home team
+        opponentScore: awayTeamScore
+      });
     }
 
     const totalTeamScore = quarterScores.reduce((sum, q) => sum + q.teamScore, 0);

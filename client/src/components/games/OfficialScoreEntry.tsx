@@ -273,15 +273,12 @@ interface OfficialScoreEntryProps {
   onScoresSaved?: () => void;
 }
 
+interface TeamQuarterScores {
+  [key: string]: number; // Format: "teamId-quarter" -> score
+}
+
 interface GameScores {
-  homeTeamQ1: number;
-  homeTeamQ2: number;
-  homeTeamQ3: number;
-  homeTeamQ4: number;
-  awayTeamQ1: number;
-  awayTeamQ2: number;
-  awayTeamQ3: number;
-  awayTeamQ4: number;
+  scores: TeamQuarterScores;
   homeTeamTotal: number;
   awayTeamTotal: number;
   notes?: string;

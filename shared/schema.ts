@@ -271,27 +271,20 @@ export const insertGamePermissionSchema = createInsertSchema(gamePermissions).om
 export type InsertGamePermission = z.infer<typeof insertGamePermissionSchema>;
 export type GamePermission = typeof gamePermissions.$inferSelect;
 
-// Official game scores table - authoritative scoring system
+// Official game scores table - team-based scoring system
 export const gameScores = pgTable("game_scores", {
   id: serial("id").primaryKey(),
   gameId: integer("game_id").notNull().references(() => games.id, { onDelete: "cascade" }),
-  homeTeamQ1: integer("home_team_q1").notNull().default(0),
-  homeTeamQ2: integer("home_team_q2").notNull().default(0),
-  homeTeamQ3: integer("home_team_q3").notNull().default(0),
-  homeTeamQ4: integer("home_team_q4").notNull().default(0),
-  awayTeamQ1: integer("away_team_q1").notNull().default(0),
-  awayTeamQ2: integer("away_team_q2").notNull().default(0),
-  awayTeamQ3: integer("away_team_q3").notNull().default(0),
-  awayTeamQ4: integer("away_team_q4").notNull().default(0),
-  homeTeamTotal: integer("home_team_total").notNull().default(0),
-  awayTeamTotal: integer("away_team_total").notNull().default(0),
+  teamId: integer("team_id").notNull().references(() => teams.id, { onDelete: "cascade" }),
+  quarter: integer("quarter").notNull(), // 1-4
+  score: integer("score").notNull().default(0),
   enteredBy: integer("entered_by").references(() => users.id), // Who entered the official scores
   enteredAt: timestamp("entered_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
-  notes: text("notes"), // Any notes about the official scoring
+  notes: text("notes"), // Any notes about the quarter scoring
 }, (table) => {
   return {
-    gameUnique: unique().on(table.gameId) // One official score per game
+    gameTeamQuarterUnique: unique().on(table.gameId, table.teamId, table.quarter) // One score per game/team/quarter
   };
 });
 
