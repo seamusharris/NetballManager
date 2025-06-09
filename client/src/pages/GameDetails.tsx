@@ -147,6 +147,7 @@ import { GameStatusButton } from '@/components/games/GameStatusButton';
 import LiveStatsButton from '@/components/games/LiveStatsButton';
 import { apiClient } from '@/lib/apiClient';
 import { useClub } from '@/contexts/ClubContext';
+import { validateInterClubScores, getReconciledScore } from '@/lib/scoreValidation';
 
 // Function to get opponent name
 const getOpponentName = (opponents: any[], opponentId: number | null) => {
@@ -1237,8 +1238,7 @@ export default function GameDetails() {
 
     if (isInterClubGame) {
       // For inter-club games, we need to use the reconciled scores from the gameScoreService
-      // Import the score validation functions
-      const { validateInterClubScores, getReconciledScore } = require('@/lib/scoreValidation');
+      // Use the imported score validation functions
       
       // Get stats for both teams
       const homeTeamStats = gameStats?.filter(stat => stat.teamId === game.homeTeamId) || [];
