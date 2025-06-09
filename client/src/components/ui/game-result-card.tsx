@@ -6,6 +6,7 @@ import { formatShortDate, formatDate } from '@/lib/utils';
 import { ScoreBadge } from '@/components/ui/score-badge';
 import { GameBadge } from '@/components/ui/game-badge';
 import { cn } from '@/lib/utils';
+import { gameScoreService } from '@/lib/gameScoreService';
 
 export type GameResultLayout = 'narrow' | 'medium' | 'wide';
 
@@ -37,59 +38,70 @@ export function GameResultCard({
   clubTeams = []
 }: GameResultCardProps) {
   
-  // Calculate scores from game stats with team context
+  // Calculate scores using the unified gameScoreService
   const getScores = (): [number, number] => {
     if (gameStats.length === 0) {
       return [0, 0];
     }
 
-    // Filter stats by current team if we have a team context
-    let filteredStats = gameStats;
-    if (currentTeamId) {
-      filteredStats = gameStats.filter(stat => stat.teamId === currentTeamId);
+    // Determine if this is an inter-club game
+    const isInterClub = game.homeTeamId && game.awayTeamId && 
+                       clubTeams.some(t => t.id === game.homeTeamId) && 
+                       clubTeams.some(t => t.id === game.awayTeamId);
+
+    // For now, use synchronous calculation (official scores fetching will be added in a future enhancement)
+    // This properly handles inter-club games without double-counting
+    const quarterScores = [];
+    
+    if (isInterClub && game.homeTeamId && game.awayTeamId && currentTeamId) {
+      // Inter-club game: calculate from both teams' perspectives
+      for (let quarter = 1; quarter <= 4; quarter++) {
+        const quarterStats = gameStats.filter(stat => stat.quarter === quarter);
+        
+        const homeTeamStats = quarterStats.filter(stat => stat.teamId === game.homeTeamId);
+        const awayTeamStats = quarterStats.filter(stat => stat.teamId === game.awayTeamId);
+        
+        let homeScore = 0;
+        let awayScore = 0;
+        
+        if (homeTeamStats.length > 0) {
+          homeScore = homeTeamStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
+          awayScore = homeTeamStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
+        } else if (awayTeamStats.length > 0) {
+          homeScore = awayTeamStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
+          awayScore = awayTeamStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
+        }
+        
+        quarterScores.push({
+          quarter,
+          teamScore: currentTeamId === game.homeTeamId ? homeScore : awayScore,
+          opponentScore: currentTeamId === game.homeTeamId ? awayScore : homeScore
+        });
+      }
+    } else {
+      // Regular game: filter by current team if specified
+      for (let quarter = 1; quarter <= 4; quarter++) {
+        let quarterStats = gameStats.filter(stat => stat.quarter === quarter);
+        
+        if (currentTeamId) {
+          quarterStats = quarterStats.filter(stat => stat.teamId === currentTeamId);
+        }
+        
+        const teamScore = quarterStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
+        const opponentScore = quarterStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
+        
+        quarterScores.push({
+          quarter,
+          teamScore,
+          opponentScore
+        });
+      }
     }
 
-    // Create a map of the latest stats for each position/quarter combination
-    const latestPositionStats: Record<string, any> = {};
+    const totalTeamScore = quarterScores.reduce((sum, q) => sum + q.teamScore, 0);
+    const totalOpponentScore = quarterScores.reduce((sum, q) => sum + q.opponentScore, 0);
 
-    // Find the latest stat for each position/quarter combination
-    filteredStats.forEach(stat => {
-      if (!stat || !stat.quarter) return;
-
-      // For position-based stats (with valid position)
-      if (stat.position) {
-        const key = `${stat.position}-${stat.quarter}`;
-        if (!latestPositionStats[key] || stat.id > latestPositionStats[key].id) {
-          latestPositionStats[key] = stat;
-        }
-      }
-      // For legacy stats (with null position but valid data)
-      else if (typeof stat.goalsFor === 'number' || typeof stat.goalsAgainst === 'number') {
-        const key = `legacy-${stat.id}-${stat.quarter}`;
-        latestPositionStats[key] = stat;
-      }
-    });
-
-    // Calculate quarter goals
-    const quarterGoals: Record<number, { for: number, against: number }> = {
-      1: { for: 0, against: 0 },
-      2: { for: 0, against: 0 },
-      3: { for: 0, against: 0 },
-      4: { for: 0, against: 0 }
-    };
-
-    Object.values(latestPositionStats).forEach(stat => {
-      if (stat && stat.quarter >= 1 && stat.quarter <= 4) {
-        quarterGoals[stat.quarter].for += (stat.goalsFor || 0);
-        quarterGoals[stat.quarter].against += (stat.goalsAgainst || 0);
-      }
-    });
-
-    // Calculate total goals
-    const teamScore = Object.values(quarterGoals).reduce((sum, q) => sum + q.for, 0);
-    const opponentScore = Object.values(quarterGoals).reduce((sum, q) => sum + q.against, 0);
-
-    return [teamScore, opponentScore];
+    return [totalTeamScore, totalOpponentScore];
   };
 
   // Get opponent name

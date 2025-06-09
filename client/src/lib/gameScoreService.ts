@@ -1,6 +1,7 @@
 import { GameStat, Game, GameStatus } from '@shared/schema';
 import { getCachedScores, cacheScores, isCacheValid } from './scoresCache';
 import { validateInterClubScores, getReconciledScore, getScoreDiscrepancyWarning } from './scoreValidation';
+import { apiClient } from '@shared/apiClient';
 
 export interface QuarterScore {
   quarter: number;
@@ -28,7 +29,7 @@ export interface OfficialGameScore {
 }
 
 class GameScoreService {
-  calculateGameScores(
+  async calculateGameScores(
     gameStats: any[], 
     gameStatus?: string, 
     statusScores?: { teamGoals: number | null, opponentGoals: number | null },
@@ -36,9 +37,22 @@ class GameScoreService {
     homeTeamId?: number,
     awayTeamId?: number,
     currentTeamId?: number,
-    officialScores?: OfficialGameScore[]
-  ): GameScores {
-    // PRIORITY 1: Use official scores if available
+    officialScores?: OfficialGameScore[],
+    gameId?: number
+  ): Promise<GameScores> {
+    // PRIORITY 1: Try to fetch official scores if gameId is provided
+    if (gameId && !officialScores) {
+      try {
+        const response = await apiClient.get(`/api/games/${gameId}/scores`);
+        if (response && response.scores && response.scores.length > 0) {
+          return this.createScoresFromOfficial(response.scores, homeTeamId, awayTeamId, currentTeamId);
+        }
+      } catch (error) {
+        console.log(`No official scores found for game ${gameId}, using calculated scores`);
+      }
+    }
+    
+    // Use provided official scores if available
     if (officialScores && officialScores.length > 0) {
       return this.createScoresFromOfficial(officialScores, homeTeamId, awayTeamId, currentTeamId);
     }
