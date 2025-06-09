@@ -13,7 +13,7 @@ import { useClub } from '@/contexts/ClubContext';
  */
 export function useGameStatistics(gameId: number, forceFresh: boolean = false, preloadedStats?: GameStat[]) {
   const { currentTeam } = useClub();
-  
+
   // Create a unique key for freshness tracking (only when forcing fresh data)
   const freshQueryKey = forceFresh ? `fresh-${Date.now()}` : 'cached';
 
@@ -58,8 +58,8 @@ export function useGameStatistics(gameId: number, forceFresh: boolean = false, p
           return Promise.resolve(cached);
         }
       }
-      // Otherwise calculate normally with team context (which will also update the cache)
-      return statisticsService.calculateGameScores(gameId, forceFresh, currentTeam?.id);
+      // Fall back to calculated scores from stats
+      return statisticsService.calculateGameScores(gameId, forceFresh);
     },
     enabled: !!gameId, // Always enable the query, let the queryFn handle preloaded stats
     staleTime: hasPreloadedStats ? Infinity : (forceFresh ? 0 : 15 * 60 * 1000), // Never expire preloaded stats
