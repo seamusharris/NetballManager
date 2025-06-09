@@ -63,7 +63,7 @@ export function GameResultCard({
     } else {
       // For performance displays, use live stats only
       if (!gameStats || gameStats.length === 0) return null;
-      
+
       try {
         return gameScoreService.calculateGameScoresSync(
           gameStats, 

@@ -1,3 +1,6 @@
+The code changes primarily focus on fixing the import and usage of the gameScoreService in the GamesList component to resolve a scoring error.
+```
+```replit_final_file
 import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { isForfeitGame } from '@/lib/utils';
@@ -45,6 +48,7 @@ import { GameStatusButton } from './GameStatusBadge';
 import { GameStatusDialog } from './GameStatusDialog';
 import { useClub } from '@/contexts/ClubContext';
 import { TeamSwitcher } from '@/components/layout/TeamSwitcher';
+import { gameScoreService } from '@/lib/gameScoreService';
 
 interface GamesListProps {
   games: Game[];
@@ -300,7 +304,7 @@ export function GamesList({
 
     // For inter-club games, we need to check if we're home or away to get the right score perspective
     const isHomeTeam = game.homeClubId === currentClubId;
-    
+
     if (isHomeTeam) {
       // We are the home team, so our score is 'for' and opponent is 'against'
       return {
@@ -602,14 +606,14 @@ export function GamesList({
                               const currentClubId = currentClub?.id;
                               let teamScore = game.statusTeamGoals;
                               let opponentScore = game.statusOpponentGoals;
-                              
+
                               // For inter-club games, adjust score orientation based on home/away
                               if (currentClubId && game.awayClubId === currentClubId) {
                                 // We are away team, so flip the scores
                                 teamScore = game.statusOpponentGoals;
                                 opponentScore = game.statusTeamGoals;
                               }
-                              
+
                               const isWin = teamScore > opponentScore;
                               const isLoss = teamScore < opponentScore;
                               const bgColor = isWin 
