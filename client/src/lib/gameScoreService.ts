@@ -60,8 +60,8 @@ class GameScoreService {
           goalsAgainst: awayStats.reduce((sum, s) => sum + (s.goalsAgainst || 0), 0)
         };
         
-        // Reconcile scores if there's a mismatch
-        const reconciledScore = getReconciledScore(homeTeamStats, awayTeamStats, 'average');
+        // Reconcile scores using home-priority for consistency
+        const reconciledScore = getReconciledScore(homeTeamStats, awayTeamStats, 'home-priority');
         
         quarterScores.push({
           quarter,

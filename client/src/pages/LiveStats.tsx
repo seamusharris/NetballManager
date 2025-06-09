@@ -19,6 +19,8 @@ import { PageTemplate } from '@/components/layout/PageTemplate';
 import { AlertTriangle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { gameScoreService } from '@/lib/gameScoreService';
+import { validateInterClubScores, getScoreDiscrepancyWarning } from '@/lib/scoreValidation';
 
 // Stat types that can be tracked
 type StatType = 'goalsFor' | 'goalsAgainst' | 'missedGoals' | 'rebounds' | 
@@ -509,7 +511,6 @@ export default function LiveStats() {
           goalsAgainst: awayStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0)
         };
 
-        const { validateInterClubScores, getScoreDiscrepancyWarning } = await import('@/lib/scoreValidation');
         const validation = validateInterClubScores(homeTeamTotals, awayTeamTotals);
         const warning = getScoreDiscrepancyWarning(validation);
 
@@ -829,7 +830,8 @@ export default function LiveStats() {
     // Build breadcrumbs
     const breadcrumbs = [
         { label: 'Games', href: '/games' },
-        {
+        {```text
+{
             label: `Round ${game?.round || gameId} vs ${opponentDisplayName}`,
             href: `/game/${gameId}`
         },

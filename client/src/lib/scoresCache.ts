@@ -59,13 +59,13 @@ const CACHE_EXPIRATION = CACHE_SETTINGS.SCORE_CACHE_EXPIRATION;
  */
 function generateStatsHash(stats: GameStat[]): string {
   if (!stats || !stats.length) return 'empty';
-  
+
   // Sort stats to ensure consistent hash regardless of order
   const sortedStats = [...stats].sort((a, b) => {
     if (a.position !== b.position) return a.position.localeCompare(b.position);
     return a.quarter - b.quarter;
   });
-  
+
   // Build a hash string that captures key stats values
   return sortedStats.map(stat => {
     const values = [
@@ -93,14 +93,14 @@ function hasForfeitStatus(gameStatus: string | null): boolean {
 export function isCacheValid(gameId: number, stats?: GameStat[], gameStatus?: string | null): boolean {
   const cached = globalScoresCache[gameId];
   if (!cached) return false;
-  
+
   // Special handling for forfeit games - cache remains valid
   if (gameStatus && hasForfeitStatus(gameStatus)) {
     return true;
   }
-  
+
   const now = Date.now();
-  
+
   // If stats are provided, check if they've changed
   if (stats && stats.length > 0) {
     const newHash = generateStatsHash(stats);
@@ -108,7 +108,7 @@ export function isCacheValid(gameId: number, stats?: GameStat[], gameStatus?: st
       return false;
     }
   }
-  
+
   // Check if cache has expired
   return (now - cached.timestamp) < CACHE_EXPIRATION;
 }
@@ -137,7 +137,7 @@ export function cacheScores(
   gameStatus?: string | null
 ): void {
   const statsHash = stats ? generateStatsHash(stats) : 'no-stats';
-  
+
   globalScoresCache[gameId] = {
     scores,
     timestamp: Date.now(),

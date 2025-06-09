@@ -2871,8 +2871,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Process the statistics update
-      // Add your statistics update logic here
-      res.json({ success: true, message: "Statistics updated successfully" });
+      for (const stat of stats) {
+        await storage.updateGameStat(stat.id, stat);
+      }
+
+      // For inter-club games, check for score discrepancies and warn
+      const updatedStats = await storage.getGameStatsByGame(gameId);
+      let mismatchWarning = null;
+      
+      if (updatedStats.length > 0) {
+        const teamIds = [...new Set(updatedStats.map(s => s.teamId))];
+        if (teamIds.length > 1) {
+          // This is an inter-club game - check for mismatches
+          const team1Stats = updatedStats.filter(s => s.teamId === teamIds[0]);
+          const team2Stats = updatedStats.filter(s => s.teamId === teamIds[1]);
+          
+          const team1Totals = {
+            teamId: teamIds[0],
+            goalsFor: team1Stats.reduce((sum, s) => sum + (s.goalsFor || 0), 0),
+            goalsAgainst: team1Stats.reduce((sum, s) => sum + (s.goalsAgainst || 0), 0)
+          };
+          
+          const team2Totals = {
+            teamId: teamIds[1],
+            goalsFor: team2Stats.reduce((sum, s) => sum + (s.goalsFor || 0), 0),
+            goalsAgainst: team2Stats.reduce((sum, s) => sum + (s.goalsAgainst || 0), 0)
+          };
+          
+          // Check if scores match (team1's goalsFor should equal team2's goalsAgainst)
+          if (team1Totals.goalsFor !== team2Totals.goalsAgainst || 
+              team1Totals.goalsAgainst !== team2Totals.goalsFor) {
+            mismatchWarning = `Score mismatch detected: Team ${teamIds[0]} recorded ${team1Totals.goalsFor} for/${team1Totals.goalsAgainst} against, but Team ${teamIds[1]} recorded ${team2Totals.goalsFor} for/${team2Totals.goalsAgainst} against`;
+          }
+        }
+      }
+
+      res.json({ 
+        success: true, 
+        message: "Statistics updated successfully",
+        mismatchWarning 
+      });
     } catch (error) {
       console.error('Error updating game statistics:', error);
       res.status(500).json({ error: 'Failed to update game statistics' });

@@ -37,6 +37,8 @@ import { BackButton } from '@/components/ui/back-button';
 import { Separator } from '@/components/ui/separator';
 import { formatDate, cn, tailwindToHex, convertTailwindToHex } from '@/lib/utils';
 import { TeamSwitcher } from '@/components/layout/TeamSwitcher';
+import { ScoreMismatchWarning } from '@/components/games/ScoreMismatchWarning';
+import { validateInterClubScores, getScoreDiscrepancyWarning } from '@/lib/scoreValidation';
 
 // Helper functions for player colors
 const getPlayerColorForBorder = (avatarColor?: string): string => {
@@ -469,29 +471,29 @@ const PlayerStatsByQuarter = ({ roster, players, gameStats }: { roster: any[], p
     if (isInterClubGame && currentTeam) {
       // For inter-club games, calculate scores using reconciled data quarter by quarter
       const quarterScores = [];
-      
+
       for (let quarter = 1; quarter <= 4; quarter++) {
         const quarterStats = gameStats.filter(stat => stat.quarter === quarter);
-        
+
         // Get stats for both teams for this quarter
         const homeStats = quarterStats.filter(stat => stat.teamId === game.homeTeamId);
         const awayStats = quarterStats.filter(stat => stat.teamId === game.awayTeamId);
-        
+
         const homeTeamStats = {
           teamId: game.homeTeamId,
           goalsFor: homeStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0),
           goalsAgainst: homeStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0)
         };
-        
+
         const awayTeamStats = {
           teamId: game.awayTeamId,
           goalsFor: awayStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0),
           goalsAgainst: awayStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0)
         };
-        
+
         // Get reconciled scores for this quarter
         const reconciledScore = getReconciledScore(homeTeamStats, awayTeamStats, 'average');
-        
+
         // Return scores from current team's perspective
         if (currentTeam.id === game.homeTeamId) {
           quarterScores.push({
@@ -507,7 +509,7 @@ const PlayerStatsByQuarter = ({ roster, players, gameStats }: { roster: any[], p
           });
         }
       }
-      
+
       return quarterScores;
     }
 
@@ -1229,11 +1231,65 @@ export default function GameDetails() {
     refetchOnMount: 'always' // Always refetch when component mounts
   });
 
-  // Calculate quarter scores
-  const quarterScores = useMemo(() => {
-    if (!gameStats || !game) return [];
-    return calculateQuarterScores(gameStats, game, teams, currentTeam);
-  }, [gameStats, game, teams, currentTeam]);
+  // Import the gameScoreService
+  import * as gameScoreService from '@/lib/gameScoreService';
+  const homeTeamId = game?.homeTeamId;
+  const awayTeamId = game?.awayTeamId;
+  const isInterClub = homeTeamId && awayTeamId && teams.some(t => t.id === homeTeamId) && teams.some(t => t.id === awayTeamId);
+
+  // Calculate scores using the unified service with home-priority for inter-club games
+  const gameScores = gameScoreService.calculateGameScores(
+    gameStats || [], 
+    game?.status, 
+    game?.statusTeamGoals,
+    game?.statusOpponentGoals,
+    isInterClub,
+    homeTeamId,
+    awayTeamId
+  );
+
+  const { quarterScores, totalTeamScore, totalOpponentScore } = gameScores;
+
+  // Check for score mismatches in inter-club games
+  let scoreMismatchWarning = null;
+  if (isInterClub && homeTeamId && awayTeamId && gameStats && gameStats.length > 0) {
+    const homeStats = gameStats.filter(s => s.teamId === homeTeamId);
+    const awayStats = gameStats.filter(s => s.teamId === awayTeamId);
+
+    const homeTeamStats = {
+      teamId: homeTeamId,
+      goalsFor: homeStats.reduce((sum, s) => sum + (s.goalsFor || 0), 0),
+      goalsAgainst: homeStats.reduce((sum, s) => sum + (s.goalsAgainst || 0), 0)
+    };
+
+    const awayTeamStats = {
+      teamId: awayTeamId,
+      goalsFor: awayStats.reduce((sum, s) => sum + (s.goalsFor || 0), 0),
+      goalsAgainst: awayStats.reduce((sum, s) => sum + (s.goalsAgainst || 0), 0)
+    };
+
+    const validation = validateInterClubScores(homeTeamStats, awayTeamStats);
+    if (validation.hasDiscrepancy) {
+      scoreMismatchWarning = getScoreDiscrepancyWarning(validation);
+    }
+  }
+
+  // Calculate quarter scores and cumulative scores for display
+  const scoringByQuarter = quarterScores.map(q => ({
+    quarter: q.quarter,
+    teamScore: q.teamScore,
+    opponentScore: q.opponentScore
+  }));
+
+  const cumulativeScores = quarterScores.map((_, index) => {
+    const cumulativeTeamScore = quarterScores.slice(0, index + 1).reduce((sum, q) => sum + q.teamScore, 0);
+    const cumulativeOpponentScore = quarterScores.slice(0, index + 1).reduce((sum, q) => sum + q.opponentScore, 0);
+    return {
+      quarter: index + 1,
+      cumulativeTeamScore,
+      cumulativeOpponentScore
+    };
+  });
 
   // Debug game data
   useEffect(() => {
@@ -1290,22 +1346,22 @@ export default function GameDetails() {
       // For inter-club games, use reconciled scores to ensure consistency
       const homeTeamStats = gameStats?.filter(stat => stat.teamId === game.homeTeamId) || [];
       const awayTeamStats = gameStats?.filter(stat => stat.teamId === game.awayTeamId) || [];
-      
+
       const homeTeamTotals = {
         teamId: game.homeTeamId,
         goalsFor: homeTeamStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0),
         goalsAgainst: homeTeamStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0)
       };
-      
+
       const awayTeamTotals = {
         teamId: game.awayTeamId,
         goalsFor: awayTeamStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0),
         goalsAgainst: awayTeamStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0)
       };
-      
+
       // Get reconciled scores using the validation service
       const reconciledScore = getReconciledScore(homeTeamTotals, awayTeamTotals, 'average');
-      
+
       // Return scores from current team's perspective
       if (currentTeam.id === game.homeTeamId) {
         return { teamScore: reconciledScore.homeScore, opponentScore: reconciledScore.awayScore };
@@ -1573,8 +1629,8 @@ export default function GameDetails() {
       <QuarterScores 
         quarterScores={quarterScores} 
         gameStatus={game?.status} 
-        contextualTeamScore={contextualTeamScore}
-        contextualOpponentScore={contextualOpponentScore}
+        contextualTeamScore={totalTeamScore}
+        contextualOpponentScore={totalOpponentScore}
       />
 
       <div className="mt-8">
@@ -1600,6 +1656,22 @@ export default function GameDetails() {
 
           <TabsContent value="overview" className="mt-6">
             <div className="space-y-6">
+        {scoreMismatchWarning && (
+          <div className="mb-4">
+            <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+              <div className="flex items-center">
+                <div className="text-amber-600 mr-2">⚠️</div>
+                <div className="text-amber-800 text-sm">{scoreMismatchWarning}</div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {game && (
+          <div>
+            <ScoreDisplay />
+          </div>
+        )}
               {/* Court Positions */}
               <Card>
                 <CardHeader>
