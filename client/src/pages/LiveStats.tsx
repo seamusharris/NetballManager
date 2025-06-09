@@ -629,11 +629,7 @@ export default function LiveStats() {
     const ourScore = getQuarterTotal('goalsFor');
     const theirScore = getQuarterTotal('goalsAgainst');
 
-    // If current team is away, flip the scores
-    if (hasTeamContext && isCurrentTeamAway) {
-      return { ourScore: theirScore, theirScore: ourScore };
-    }
-
+    // For inter-club games, don't flip scores - goalsFor is always our score, goalsAgainst is always their score
     return { ourScore, theirScore };
   };
 
@@ -641,11 +637,7 @@ export default function LiveStats() {
     const ourScore = getGameTotal('goalsFor');
     const theirScore = getGameTotal('goalsAgainst');
 
-    // If current team is away, flip the scores
-    if (hasTeamContext && isCurrentTeamAway) {
-      return { ourScore: theirScore, theirScore: ourScore };
-    }
-
+    // For inter-club games, don't flip scores - goalsFor is always our score, goalsAgainst is always their score
     return { ourScore, theirScore };
   };
 
