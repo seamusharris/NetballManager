@@ -466,14 +466,14 @@ export default function LiveStats() {
       console.log('=== SAVING ALL POSITION STATS ===');
       console.log('Position stats to save:', positionStats);
 
-      // Determine the team ID for these stats
-      const teamId = isCurrentTeamHome ? game.homeTeamId : game.awayTeamId;
+      // Determine the team ID for these stats - use current team if available
+      const teamId = currentTeam?.id || (isCurrentTeamHome ? game.homeTeamId : game.awayTeamId);
 
       if (!teamId) {
         throw new Error('Cannot determine team context for saving stats');
       }
 
-      console.log(`Saving stats for team ID: ${teamId} (${isCurrentTeamHome ? 'home' : 'away'})`);
+      console.log(`Saving stats for team ID: ${teamId} (current team: ${currentTeam?.name}, ${isCurrentTeamHome ? 'home' : 'away'})`);
 
       const updates = [];
 
@@ -541,6 +541,10 @@ export default function LiveStats() {
       console.log('All position stats saved successfully');
     },
     onSuccess: () => {
+      // Clear the global scores cache first to force recalculation
+      clearGameCache(gameId);
+      console.log(`Cleared score cache for game ${gameId} after saving stats`);
+
       // Invalidate and refetch relevant queries immediately
       queryClient.invalidateQueries({ queryKey: ['/api/games', gameId, 'stats'] });
       queryClient.invalidateQueries({ queryKey: [`/api/games/${gameId}/stats`] });
@@ -556,9 +560,11 @@ export default function LiveStats() {
 
       // Also invalidate the games list to ensure score updates
       queryClient.invalidateQueries({ queryKey: ['/api/games'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/games', gameId] });
 
-      // Clear the global scores cache for this specific game
-      clearGameCache(gameId);
+      // Clear all cached scores to force fresh calculation everywhere
+      queryClient.removeQueries({ queryKey: ['gameScores'] });
+      queryClient.removeQueries({ queryKey: ['batchGameStats'] });
 
       toast({
         title: "Success",
@@ -629,7 +635,14 @@ export default function LiveStats() {
     const ourScore = getQuarterTotal('goalsFor');
     const theirScore = getQuarterTotal('goalsAgainst');
 
-    // For inter-club games, don't flip scores - goalsFor is always our score, goalsAgainst is always their score
+    // If current team is away, we need to flip the display perspective
+    // goalsFor should show as our score, goalsAgainst as their score
+    // But for inter-club games, the stats are saved with the correct team context
+    if (hasTeamContext && isCurrentTeamAway) {
+      // For away team perspective, our goals are in goalsFor, opponent goals in goalsAgainst
+      return { ourScore, theirScore };
+    }
+
     return { ourScore, theirScore };
   };
 
@@ -637,7 +650,12 @@ export default function LiveStats() {
     const ourScore = getGameTotal('goalsFor');
     const theirScore = getGameTotal('goalsAgainst');
 
-    // For inter-club games, don't flip scores - goalsFor is always our score, goalsAgainst is always their score
+    // If current team is away, we need to flip the display perspective
+    if (hasTeamContext && isCurrentTeamAway) {
+      // For away team perspective, our goals are in goalsFor, opponent goals in goalsAgainst
+      return { ourScore, theirScore };
+    }
+
     return { ourScore, theirScore };
   };
 
