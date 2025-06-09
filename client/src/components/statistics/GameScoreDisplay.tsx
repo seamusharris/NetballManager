@@ -16,13 +16,27 @@ export function GameScoreDisplay({ gameId, compact = false, preloadedStats, fall
   // Accept even empty arrays as valid preloaded data to prevent API calls
   const hasPreloadedStats = preloadedStats && Array.isArray(preloadedStats);
 
-  // Get statistics data first
+  // Get statistics data first - ALL HOOKS MUST BE CALLED UNCONDITIONALLY
   const { rawStats, scores, isLoading, error } = useGameStatistics(
     gameId, 
     false, // Never force fresh fetch in compact mode
     hasPreloadedStats ? preloadedStats : undefined
   );
 
+  // Move useMemo to top to ensure hooks are always called in same order
+  const filteredGameStats = useMemo(() => {
+    if (!rawStats || !scores?.currentTeam?.id) return rawStats || [];
+
+    // For inter-club games, only use stats from the current team
+    if (scores?.isInterClub) {
+      return rawStats.filter(stat => stat.teamId === scores.currentTeam.id);
+    }
+
+    // For regular games, use all stats
+    return rawStats;
+  }, [rawStats, scores?.currentTeam?.id, scores?.isInterClub]);
+
+  // Handle loading state
   if (isLoading) {
     return compact ? (
       <div className="flex space-x-2">
@@ -44,6 +58,7 @@ export function GameScoreDisplay({ gameId, compact = false, preloadedStats, fall
     );
   }
 
+  // Handle error state
   if (error) {
     console.error('Error loading game stats:', error);
 
@@ -80,6 +95,7 @@ export function GameScoreDisplay({ gameId, compact = false, preloadedStats, fall
     );
   }
 
+  // Handle no scores
   if (!scores) {
     return (
       <div className="text-muted-foreground">
@@ -114,18 +130,6 @@ export function GameScoreDisplay({ gameId, compact = false, preloadedStats, fall
   }
 
   // Render full score breakdown
-  
-  const filteredGameStats = useMemo(() => {
-    if (!rawStats || !scores?.currentTeam?.id) return rawStats || [];
-
-    // For inter-club games, only use stats from the current team
-    if (scores?.isInterClub) {
-      return rawStats.filter(stat => stat.teamId === scores.currentTeam.id);
-    }
-
-    // For regular games, use all stats
-    return rawStats;
-  }, [rawStats, scores?.currentTeam?.id, scores?.isInterClub]);
 
   
 
