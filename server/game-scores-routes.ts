@@ -14,14 +14,13 @@ router.get('/api/games/:gameId/scores', authMiddleware, async (req, res) => {
     
     const scores = await db.select()
       .from(gameScores)
-      .where(eq(gameScores.gameId, gameId))
-      .limit(1);
+      .where(eq(gameScores.gameId, gameId));
     
     if (scores.length === 0) {
-      return res.json(null); // No official scores entered yet
+      return res.json([]); // No official scores entered yet - return empty array
     }
     
-    res.json(scores[0]);
+    res.json(scores);
   } catch (error) {
     console.error('Error fetching game scores:', error);
     res.status(500).json({ error: 'Failed to fetch game scores' });

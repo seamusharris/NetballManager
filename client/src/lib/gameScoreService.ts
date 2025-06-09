@@ -52,55 +52,41 @@ class GameScoreService {
     if (statusString === 'forfeit-loss') {
       return this.createForfeitScores(false);
     }
-    
-    // For inter-club games, calculate reconciled scores from current team's perspective
+
+    // For inter-club games, calculate scores using reconciled data quarter by quarter
     if (isInterClub && homeTeamId && awayTeamId && currentTeamId) {
       const quarterScores = [];
 
       for (let quarter = 1; quarter <= 4; quarter++) {
         const quarterStats = gameStats.filter(stat => stat.quarter === quarter);
 
-        const homeStats = quarterStats.filter(stat => stat.teamId === homeTeamId);
-        const awayStats = quarterStats.filter(stat => stat.teamId === awayTeamId);
+        // Get stats for current team and opponent team
+        const currentTeamStats = quarterStats.filter(stat => stat.teamId === currentTeamId);
+        const opponentTeamId = currentTeamId === homeTeamId ? awayTeamId : homeTeamId;
+        const opponentStats = quarterStats.filter(stat => stat.teamId === opponentTeamId);
 
-        const homeTeamStats = {
-          teamId: homeTeamId,
-          goalsFor: homeStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0),
-          goalsAgainst: homeStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0)
-        };
+        // Calculate scores from current team's perspective
+        const teamScore = currentTeamStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
+        const opponentScore = currentTeamStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
 
-        const awayTeamStats = {
-          teamId: awayTeamId,
-          goalsFor: awayStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0),
-          goalsAgainst: awayStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0)
-        };
-
-        // Use reconciled scores
-        const reconciledScore = getReconciledScore(homeTeamStats, awayTeamStats, 'average');
-
-        // Return from current team's perspective
-        if (currentTeamId === homeTeamId) {
-          quarterScores.push({
-            quarter,
-            teamScore: reconciledScore.homeScore,
-            opponentScore: reconciledScore.awayScore
-          });
-        } else {
-          quarterScores.push({
-            quarter,
-            teamScore: reconciledScore.awayScore,
-            opponentScore: reconciledScore.homeScore
-          });
-        }
+        quarterScores.push({
+          quarter,
+          teamScore,
+          opponentScore
+        });
       }
 
       const totalTeamScore = quarterScores.reduce((sum, q) => sum + q.teamScore, 0);
       const totalOpponentScore = quarterScores.reduce((sum, q) => sum + q.opponentScore, 0);
 
+      const result = totalTeamScore > totalOpponentScore ? 'win' : 
+                     totalTeamScore < totalOpponentScore ? 'loss' : 'draw';
+
       return {
         quarterScores,
         totalTeamScore,
         totalOpponentScore,
+        result
       };
     }
 
