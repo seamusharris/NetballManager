@@ -221,3 +221,30 @@ export const queryClient = new QueryClient({
     },
   },
 });
+
+// Cache configuration by data type
+export const CACHE_CONFIG = {
+  // Base entity data - stable, long-lived
+  STABLE: {
+    staleTime: 15 * 60 * 1000,    // 15 minutes
+    gcTime: 60 * 60 * 1000,       // 1 hour
+  },
+
+  // Game data - medium volatility
+  MEDIUM: {
+    staleTime: 10 * 60 * 1000,    // 10 minutes
+    gcTime: 30 * 60 * 1000,       // 30 minutes
+  },
+
+  // Statistics - high volatility during live games
+  LIVE: {
+    staleTime: 2 * 60 * 1000,     // 2 minutes
+    gcTime: 15 * 60 * 1000,       // 15 minutes
+  },
+
+  // Computed/analysis data - depends on other data
+  COMPUTED: {
+    staleTime: 5 * 60 * 1000,     // 5 minutes
+    gcTime: 20 * 60 * 1000,       // 20 minutes
+  }
+};
