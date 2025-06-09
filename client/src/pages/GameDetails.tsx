@@ -147,6 +147,7 @@ import {
 } from '@/lib/statisticsService';
 import { GameStatusButton } from '@/components/games/GameStatusButton';
 import LiveStatsButton from '@/components/games/LiveStatsButton';
+import { GameScoreDisplay } from '@/components/statistics/GameScoreDisplay';
 import { apiClient } from '@/lib/apiClient';
 import { useClub } from '@/contexts/ClubContext';
 import * as gameScoreService from '@/lib/gameScoreService';
@@ -1666,7 +1667,7 @@ export default function GameDetails() {
 
         {game && (
           <div>
-            <ScoreDisplay />
+            <GameScoreDisplay gameId={gameId} preloadedStats={gameStats} />
           </div>
         )}
               {/* Court Positions */}
