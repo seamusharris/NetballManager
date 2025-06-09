@@ -13,14 +13,14 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { PageTemplate } from '@/components/layout/PageTemplate';
-import { useNavigate } from '@tanstack/react-router';
+import { useLocation } from 'wouter';
 
 export default function Seasons() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingSeason, setEditingSeason] = useState<Season | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const navigate = useNavigate();
+  const [, navigate] = useLocation();
 
   // Fetch seasons using standard query (like Teams)
   const { data: seasons = [], isLoading } = useStandardQuery<Season[]>({
@@ -148,7 +148,7 @@ export default function Seasons() {
     });
 
   const breadcrumbs = [
-    { label: 'Dashboard', onClick: () => navigate({ to: '/dashboard' }) },
+    { label: 'Dashboard', onClick: () => navigate('/dashboard') },
     { label: 'Seasons' }
   ];
 
