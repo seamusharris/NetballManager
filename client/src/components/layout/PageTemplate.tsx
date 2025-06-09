@@ -1,9 +1,17 @@
 import React from 'react';
 import { useLocation } from 'wouter';
-import { ChevronRight, Home, ArrowLeft } from 'lucide-react';
+import { Home, ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { BackButton } from '@/components/ui/back-button';
 import { PAGE_STRUCTURE, SPACING_STANDARDS } from '@/components/dashboard/widget-standards';
+import {
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb';
 
 // ============================================================================
 // PAGE TEMPLATE COMPONENT
@@ -26,7 +34,6 @@ interface PageTemplateProps {
 interface BreadcrumbItem {
   label: string;
   href?: string;
-  onClick?: () => void;
 }
 
 export function PageTemplate({ 
@@ -76,26 +83,38 @@ interface BreadcrumbsProps {
 }
 
 function Breadcrumbs({ items }: BreadcrumbsProps) {
+  const [, navigate] = useLocation();
+
   return (
-    <nav className="breadcrumb-nav">
-      <Home className="h-4 w-4" />
-      {items.map((item, index) => (
-        <React.Fragment key={index}>
-          <ChevronRight className="h-4 w-4 breadcrumb-separator" />
-          {item.href || item.onClick ? (
-            <button
-              onClick={item.onClick}
-              className="breadcrumb-item"
-            >
-              {item.label}
-            </button>
-          ) : (
-            <span className={index === items.length - 1 ? "breadcrumb-current" : "breadcrumb-item"}>
-              {item.label}
-            </span>
-          )}
-        </React.Fragment>
-      ))}
-    </nav>
+    <Breadcrumb className="mb-6">
+      <BreadcrumbList>
+        <BreadcrumbItem>
+          <BreadcrumbLink 
+            onClick={() => navigate('/dashboard')}
+            className="cursor-pointer flex items-center"
+          >
+            <Home className="h-4 w-4" />
+          </BreadcrumbLink>
+        </BreadcrumbItem>
+        
+        {items.map((item, index) => (
+          <React.Fragment key={index}>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              {index === items.length - 1 ? (
+                <BreadcrumbPage>{item.label}</BreadcrumbPage>
+              ) : (
+                <BreadcrumbLink 
+                  onClick={() => item.href && navigate(item.href)}
+                  className={item.href ? "cursor-pointer" : ""}
+                >
+                  {item.label}
+                </BreadcrumbLink>
+              )}
+            </BreadcrumbItem>
+          </React.Fragment>
+        ))}
+      </BreadcrumbList>
+    </Breadcrumb>
   );
 }

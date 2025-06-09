@@ -1,101 +1,19 @@
 import React from 'react';
-import { useLocation } from 'wouter';
-import { ChevronRight, Home } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { PageTemplate as BasePageTemplate } from '@/components/layout/PageTemplate';
 
 // ============================================================================
 // PAGE STRUCTURE COMPONENTS
 // ============================================================================
 
-interface PageTemplateProps {
-  title: string;
-  subtitle?: string;
-  breadcrumbs?: BreadcrumbItem[];
-  actions?: React.ReactNode;
-  children: React.ReactNode;
-  className?: string;
-}
-
-interface BreadcrumbItem {
-  label: string;
-  href?: string;
-  onClick?: () => void;
-}
-
-export function PageTemplate({ 
-  title, 
-  subtitle, 
-  breadcrumbs, 
-  actions, 
-  children, 
-  className 
-}: PageTemplateProps) {
-  return (
-    <div className={cn("page-container", className)}>
-      {breadcrumbs && <Breadcrumbs items={breadcrumbs} />}
-
-      <div className="page-header-section">
-        <div className="flex items-start justify-between">
-          <div>
-            <h1 className="page-header">{title}</h1>
-            {subtitle && <p className="page-subtitle">{subtitle}</p>}
-          </div>
-          {actions && <div className="flex items-center gap-3">{actions}</div>}
-        </div>
-      </div>
-
-      {children}
-    </div>
-  );
-}
+// Re-export the standardized PageTemplate
+export const PageTemplate = BasePageTemplate;
 
 // ============================================================================
-// BREADCRUMB NAVIGATION
+// BREADCRUMB NAVIGATION (Deprecated - use PageTemplate)
 // ============================================================================
 
-interface BreadcrumbsProps {
-  items: BreadcrumbItem[];
-}
-
-export function Breadcrumbs({ items }: BreadcrumbsProps) {
-  const [, navigate] = useLocation();
-
-  return (
-    <nav className="breadcrumb-nav">
-      <button 
-        onClick={() => navigate('/dashboard')}
-        className="breadcrumb-item flex items-center"
-      >
-        <Home size={16} />
-      </button>
-
-      {items.map((item, index) => (
-        <React.Fragment key={index}>
-          <ChevronRight size={16} className="breadcrumb-separator" />
-          {index === items.length - 1 ? (
-            <span className="breadcrumb-current">{item.label}</span>
-          ) : item.href ? (
-            <button 
-              onClick={() => navigate(item.href!)}
-              className="breadcrumb-item"
-            >
-              {item.label}
-            </button>
-          ) : item.onClick ? (
-            <button 
-              onClick={item.onClick}
-              className="breadcrumb-item"
-            >
-              {item.label}
-            </button>
-          ) : (
-            <span className="breadcrumb-item">{item.label}</span>
-          )}
-        </React.Fragment>
-      ))}
-    </nav>
-  );
-}
+// Breadcrumb functionality moved to PageTemplate - use that instead
 
 // ============================================================================
 // CONTENT SECTIONS
