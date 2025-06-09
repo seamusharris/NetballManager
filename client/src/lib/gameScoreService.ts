@@ -268,12 +268,16 @@ class GameScoreService {
       let teamScore: number;
       let opponentScore: number;
 
-      if (currentTeamId === awayTeamId) {
+      if (currentTeamId && currentTeamId === homeTeamId) {
+        // Current team is home team - show from home perspective
+        teamScore = homeTeamScore;
+        opponentScore = awayTeamScore;
+      } else if (currentTeamId && currentTeamId === awayTeamId) {
         // Current team is away team - show from away perspective
         teamScore = awayTeamScore;
         opponentScore = homeTeamScore;
       } else {
-        // Default to home team perspective (covers both home team and no current team cases)
+        // No current team or current team not found - default to home perspective
         teamScore = homeTeamScore;
         opponentScore = awayTeamScore;
       }
