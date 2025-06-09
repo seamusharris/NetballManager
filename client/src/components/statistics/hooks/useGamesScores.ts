@@ -1,3 +1,4 @@
+
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { statisticsService, GameScores, GameStat } from '@/lib/statisticsService';
@@ -8,7 +9,6 @@ import {
   clearGameCache 
 } from '@/lib/scoresCache';
 import { useClub } from '@/contexts/ClubContext';
-import { calculateGameScores } from '@/lib/gameScores';
 import { gameScoreService } from '@/lib/gameScoreService';
 
 /**
@@ -85,8 +85,6 @@ export function useGamesScores(gameIds: number[], forceFresh = false) {
     retryDelay: 5000, // Wait 5 seconds before retry
   });
 
-  const { data: batchStats, isLoading, error } = batchStatsQuery;
-
   const gamesQuery = useQuery({
     queryKey: ['games', currentClub?.id || 'no-club'],
     queryFn: async () => {
@@ -120,65 +118,77 @@ export function useGamesScores(gameIds: number[], forceFresh = false) {
     retryDelay: 5000,
   });
 
+  const { data: batchStats, isLoading } = batchStatsQuery;
   const { data: games = [] } = gamesQuery;
 
-  // Create a separate query for scores that can handle async operations
-  const scoresQuery = useQuery({
-    queryKey: ['gameScoresWithOfficial', stableGameIds.join(','), currentClub?.id || 'no-club', forceFresh ? 'fresh' : 'cached'],
-    queryFn: async () => {
-      if (!shouldFetch || !batchStats || !games) {
-        return {};
-      }
+  const scoresMap: Record<number, GameScores | undefined> = useMemo(() => {
+    if (!shouldFetch || !batchStats || !games) {
+      return {};
+    }
 
-      const newScoresMap: Record<number, any> = {};
+    if (Object.keys(batchStats).length === 0) {
+      console.warn('useGamesScores: No batch stats available.');
+      return {};
+    }
 
-      // Process games sequentially to handle async official score fetching
-      for (const gameId of stableGameIds) {
-        const game = games.find(g => g.id === gameId);
-        const gameStats = batchStats[gameId] || [];
+    if (games.length === 0) {
+      console.warn('useGamesScores: No games available.');
+      return {};
+    }
 
-        if (game && gameStats) {
-          try {
-            // Use the unified gameScoreService which prioritizes official scores
-            const scores = await gameScoreService.calculateGameScores(
-              gameStats,
-              game.status,
-              { teamGoals: game.statusTeamGoals, opponentGoals: game.statusOpponentGoals },
-              game.isInterClub,
-              game.homeTeamId,
-              game.awayTeamId,
-              currentClub?.id, // This will be used as currentTeamId for perspective
-              undefined, // officialScores - will be fetched internally
-              gameId // Pass gameId so official scores can be fetched
-            );
+    const newScoresMap: Record<number, GameScores | undefined> = {};
 
-            // Convert to legacy format expected by GamesList
-            const legacyScores = {
-              finalScore: {
-                for: scores.totalTeamScore,
-                against: scores.totalOpponentScore
-              },
-              quarterScores: scores.quarterScores.reduce((acc, q) => {
-                acc[q.quarter.toString()] = { for: q.teamScore, against: q.opponentScore };
-                return acc;
-              }, {} as any)
-            };
+    stableGameIds.forEach(gameId => {
+      const game = games.find(g => g.id === gameId);
+      const stats = batchStats[gameId] || [];
 
-            newScoresMap[gameId] = legacyScores;
-          } catch (error) {
-            console.error(`Error calculating scores for game ${gameId}:`, error);
+      if (game) {
+        if (!forceFresh) {
+          const cached = getCachedScores(gameId, stats, game.status);
+          if (cached) {
+            newScoresMap[gameId] = cached;
+            return;
           }
         }
+
+        let scores: GameScores;
+
+        // Check if game has fixed scores from status (forfeit, etc.)
+        if (game.statusTeamGoals !== null && game.statusTeamGoals !== undefined &&
+            game.statusOpponentGoals !== null && game.statusOpponentGoals !== undefined) {
+          const quarterScores = {
+            '1': { for: game.statusTeamGoals, against: game.statusOpponentGoals },
+            '2': { for: 0, against: 0 },
+            '3': { for: 0, against: 0 },
+            '4': { for: 0, against: 0 }
+          };
+
+          scores = {
+            quarterScores,
+            finalScore: {
+              for: game.statusTeamGoals,
+              against: game.statusOpponentGoals
+            }
+          };
+        } else if (stats && stats.length > 0) {
+          try {
+            scores = statisticsService.calculateScoresFromStats(stats, gameId);
+          } catch (error) {
+            console.error(`Error calculating scores for game ${gameId}:`, error);
+            return;
+          }
+        } else {
+          console.warn(`No stats available for completed game ${gameId}`);
+          return;
+        }
+
+        cacheScores(gameId, scores, stats, game.status);
+        newScoresMap[gameId] = scores;
       }
+    });
 
-      return newScoresMap;
-    },
-    enabled: shouldFetch && !!batchStats && !!games,
-    staleTime: forceFresh ? 0 : 15 * 60 * 1000,
-    gcTime: 30 * 60 * 1000,
-  });
-
-  const scoresMap = scoresQuery.data || {};
+    return newScoresMap;
+  }, [batchStats, games, stableGameIds, forceFresh, shouldFetch]);
 
   const invalidateGame = (gameId: number) => {
     queryClient.invalidateQueries({ queryKey: ['gameScores', gameId] });
@@ -194,7 +204,7 @@ export function useGamesScores(gameIds: number[], forceFresh = false) {
   return {
     scoresMap,
     isLoading: shouldFetch ? isLoading : false,
-    hasError: shouldFetch ? error !== undefined : false,
+    hasError: shouldFetch ? batchStatsQuery.error !== undefined : false,
     invalidateGame,
     invalidateAll
   };
