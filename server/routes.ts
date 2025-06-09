@@ -1539,36 +1539,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
             });
           }
 
-          // Find the BYE team for the same club and season as the home team
+          // Find the season_id from the home team
           const homeTeam = await db.execute(sql`
-            SELECT club_id, season_id FROM teams WHERE id = ${req.body.homeTeamId}
+            SELECT season_id, club_id FROM teams WHERE id = ${req.body.homeTeamId}
           `);
 
           if (homeTeam.rows.length === 0) {
-            return res.status(400).json({ message: "Invalid home team" });
-          }
-
-          const { club_id, season_id } = homeTeam.rows[0];
-
-          const byeTeam = await db.execute(sql`
-            SELECT id FROM teams 
-            WHERE club_id = ${club_id} 
-            AND season_id = ${season_id} 
-            AND name = 'Bye'
-            LIMIT 1
-          `);
-
-          if (byeTeam.rows.length === 0) {
             return res.status(400).json({ 
-              message: "Bye team not found for this club and season" 
+              message: "Home team not found" 
             });
           }
+
+          const season_id = homeTeam.rows[0].season_id;
 
           const gameData = {
             date: req.body.date,
             time: req.body.time,
             homeTeamId: req.body.homeTeamId,
-            awayTeamId: byeTeam.rows[0].id,
+            awayTeamId: null, // BYE games have no away team
             statusId: 6, // BYE status
             seasonId: season_id,
             round: req.body.round || null,
@@ -2596,9 +2584,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Step 3: Check player_seasons table entries
       const playerSeasonsCheck = await db.execute(sql`
         SELECT ps.player_id, ps.season_id, p.display_name
-        FROM player_seasons ps
-        JOIN players p ON ps.player_id = p.id
+        FROM players p
         JOIN club_players cp ON p.id = cp.player_id
+        JOIN player_seasons ps ON p.id = ps.player_id
         WHERE cp.club_id = ${clubId}
         ORDER BY ps.season_id, p.display_name
       `);

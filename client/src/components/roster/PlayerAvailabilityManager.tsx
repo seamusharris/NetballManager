@@ -1,3 +1,7 @@
+The code changes focus on filtering player availability to only show players assigned to the specific team, improving the accuracy of the PlayerAvailabilityManager component.
+```
+
+```replit_final_file
 import { useState, useEffect } from 'react';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';

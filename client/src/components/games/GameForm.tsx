@@ -128,7 +128,11 @@ export default function GameForm({
       form.setError("homeTeamId", { message: "Please select a home team" });
       return;
     }
-    if (!values.awayTeamId) {
+    
+    // Check if this is a BYE game (status 6)
+    const isByeGame = parseInt(values.statusId) === 6;
+    
+    if (!isByeGame && !values.awayTeamId) {
       form.setError("awayTeamId", { message: "Please select an away team" });
       return;
     }
@@ -140,7 +144,7 @@ export default function GameForm({
       statusId: parseInt(values.statusId),
       seasonId: parseInt(values.seasonId),
       homeTeamId: parseInt(values.homeTeamId),
-      awayTeamId: parseInt(values.awayTeamId),
+      awayTeamId: isByeGame ? null : parseInt(values.awayTeamId),
     };
 
     if (isEditing && game) {
