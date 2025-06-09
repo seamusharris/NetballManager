@@ -148,6 +148,7 @@ import {
 import { GameStatusButton } from '@/components/games/GameStatusButton';
 import LiveStatsButton from '@/components/games/LiveStatsButton';
 import { GameScoreDisplay } from '@/components/statistics/GameScoreDisplay';
+import { OfficialScoreEntry } from '@/components/games/OfficialScoreEntry';
 import { apiClient } from '@/lib/apiClient';
 import { useClub } from '@/contexts/ClubContext';
 import * as gameScoreService from '@/lib/gameScoreService';
@@ -1666,8 +1667,18 @@ export default function GameDetails() {
         )}
 
         {game && (
-          <div>
+          <div className="space-y-6">
             <GameScoreDisplay gameId={gameId} preloadedStats={gameStats} />
+            
+            {/* Official Score Entry */}
+            {!game.isBye && (
+              <OfficialScoreEntry
+                gameId={gameId}
+                homeTeamName={game.homeTeamName || 'Home Team'}
+                awayTeamName={game.awayTeamName || 'Away Team'}
+                isReadOnly={false}
+              />
+            )}
           </div>
         )}
               {/* Court Positions */}
