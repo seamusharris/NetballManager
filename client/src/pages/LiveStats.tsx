@@ -831,8 +831,6 @@ export default function LiveStats() {
     return (
       <div className="container py-6">
         <h1 className="text-2xl font-bold mb-4">Game not found</h1>
-        <replit_final_file>
-This change initializes all position ratings to 5 by default.
         <p>The requested game could not be found. Please check the game ID and try again.</p>
         <Button className="mt-4" onClick={() => navigate('/games')}>
           Back to Games
