@@ -1,7 +1,4 @@
-The code changes focus on filtering player availability to only show players assigned to the specific team, improving the accuracy of the PlayerAvailabilityManager component.
-```
 
-```replit_final_file
 import { useState, useEffect } from 'react';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
@@ -75,8 +72,6 @@ export default function PlayerAvailabilityManager({
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-
-
   // Use centralized data loading for availability
   const { 
     data: availabilityData, 
@@ -141,8 +136,6 @@ export default function PlayerAvailabilityManager({
 
   // Effect to load availability data and set fallbacks
   useEffect(() => {
-
-
     // Only proceed if we have a valid gameId
     if (!gameId) {
       return;
@@ -170,8 +163,6 @@ export default function PlayerAvailabilityManager({
     // If still loading, don't set anything - wait for the data
   }, [availabilityData, isLoading, availabilityError, teamPlayers, isLoadingTeamPlayers, gameId, onAvailabilityChange]);
 
-
-
   // Early return if no gameId - moved after ALL hooks
   if (!gameId) {
     console.log('PlayerAvailabilityManager: No game ID provided');
@@ -183,7 +174,6 @@ export default function PlayerAvailabilityManager({
       </Card>
     );
   }
-
 
   const selectedGame = games.find(game => game.id === gameId);
   const opponent = selectedGame?.opponentId ? opponents.find(o => o.id === selectedGame.opponentId) : null;
@@ -315,7 +305,7 @@ export default function PlayerAvailabilityManager({
 
         <div className="flex justify-between items-center mt-4">
           <div className="flex items-center gap-4">
-            {/* Game selection dropdown */}
+            {/* Game selection dropdown - only show games for current team */}
             <Select 
               value={gameId?.toString() || ''} 
               onValueChange={(value) => {
@@ -417,7 +407,7 @@ export default function PlayerAvailabilityManager({
           ) : (
             <div className="col-span-full py-6 text-center text-gray-500">
               <XCircle className="mx-auto h-8 w-8 text-gray-400" />
-              <p className="mt-2">No players found matching your search</p>
+              <p className="mt-2">No players found for this team</p>
             </div>
           )}
         </div>
