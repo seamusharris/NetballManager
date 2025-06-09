@@ -12,6 +12,7 @@ import PlayerAvailabilityManager from '@/components/roster/PlayerAvailabilityMan
 import { useLocation, useParams } from 'wouter';
 import { Game, Player, Opponent } from '@shared/schema';
 import { useClub } from '@/contexts/ClubContext';
+import { PageTemplate } from '@/components/layout/PageTemplate';
 
 export default function Roster() {
   const params = useParams();
@@ -161,34 +162,40 @@ export default function Roster() {
     </div>
   );
 
+  const breadcrumbs = [
+    { label: 'Dashboard', href: '/dashboard' },
+    { label: 'Roster' }
+  ];
+
+  const pageActions = selectedGameId && currentStep !== 'game-selection' && (
+    <div className="flex gap-2">
+      <Button
+        variant="outline"
+        onClick={() => setCurrentStep('availability')}
+        className="flex items-center gap-2"
+      >
+        <Users className="h-4 w-4" />
+        Availability
+      </Button>
+      <Button
+        variant="outline"
+        onClick={() => setCurrentStep('roster')}
+        disabled={availablePlayerIds.length === 0}
+        className="flex items-center gap-2"
+      >
+        <ClipboardList className="h-4 w-4" />
+        Roster
+      </Button>
+    </div>
+  );
+
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-heading font-bold text-neutral-dark">Roster Management</h1>
-
-        {selectedGameId && currentStep !== 'game-selection' && (
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setCurrentStep('availability')}
-              className="flex items-center gap-2"
-            >
-              <Users className="h-4 w-4" />
-              Availability
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => setCurrentStep('roster')}
-              disabled={availablePlayerIds.length === 0}
-              className="flex items-center gap-2"
-            >
-              <ClipboardList className="h-4 w-4" />
-              Roster
-            </Button>
-          </div>
-        )}
-      </div>
-
+    <PageTemplate
+      title="Roster Management"
+      subtitle={`Manage game rosters for ${currentClub?.name || 'your club'}`}
+      breadcrumbs={breadcrumbs}
+      actions={pageActions}
+    >
       {renderStepIndicator()}
 
       {selectedGame && (
@@ -259,7 +266,6 @@ export default function Roster() {
           availablePlayerIds={availablePlayerIds}
         />
       )}
-
-    </div>
+    </PageTemplate>
   );
 }
