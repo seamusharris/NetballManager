@@ -1,6 +1,4 @@
-The code changes primarily focus on fixing the import and usage of the gameScoreService in the GamesList component to resolve a scoring error.
-```
-```replit_final_file
+
 import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { isForfeitGame } from '@/lib/utils';
@@ -405,8 +403,6 @@ export function GamesList({
               </div>
 
               <div className="flex gap-3 items-center">
-
-
                 {/* Status Filter */}
                 <div className="w-[140px]">
                   <Select value={statusFilter} onValueChange={setStatusFilter}>
