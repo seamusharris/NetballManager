@@ -16,6 +16,13 @@ export function GameScoreDisplay({ gameId, compact = false, preloadedStats, fall
   // Accept even empty arrays as valid preloaded data to prevent API calls
   const hasPreloadedStats = preloadedStats && Array.isArray(preloadedStats);
 
+  // Get statistics data first
+  const { rawStats, scores, isLoading, error } = useGameStatistics(
+    gameId, 
+    false, // Never force fresh fetch in compact mode
+    hasPreloadedStats ? preloadedStats : undefined
+  );
+
   if (isLoading) {
     return compact ? (
       <div className="flex space-x-2">
@@ -108,12 +115,6 @@ export function GameScoreDisplay({ gameId, compact = false, preloadedStats, fall
 
   // Render full score breakdown
   
-  const { rawStats, scores, isLoading, error } = useGameStatistics(
-    gameId, 
-    false, // Never force fresh fetch in compact mode
-    hasPreloadedStats ? preloadedStats : undefined
-  );
-
   const filteredGameStats = useMemo(() => {
     if (!rawStats || !scores?.currentTeam?.id) return rawStats || [];
 
