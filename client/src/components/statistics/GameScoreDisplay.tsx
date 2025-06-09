@@ -185,16 +185,7 @@ export function GameScoreDisplay({ gameId, compact = false, preloadedStats, fall
                 </TableCell>
               </TableRow>
             ))}
-            <TableRow className="font-bold">
-              <TableCell>Total</TableCell>
-              <TableCell className="text-right text-green-600">{displayScores.finalScore.for}</TableCell>
-              <TableCell className="text-right text-red-600">{displayScores.finalScore.against}</TableCell>
-              <TableCell className="text-right">
-                {displayScores.finalScore.for - displayScores.finalScore.against > 0 && '+'}
-                {displayScores.finalScore.for - displayScores.finalScore.against}
-              </TableCell>
-            </TableRow>
-          </TableBody>
+</TableBody>
         </Table>
       </CardContent>
     </Card>
