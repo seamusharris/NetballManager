@@ -15,6 +15,7 @@ import { Save, Undo, Redo, Plus, Minus, RefreshCw, RotateCcw } from 'lucide-reac
 import { Helmet } from 'react-helmet';
 import { BackButton } from '@/components/ui/back-button';
 import { clearGameCache, clearAllCache } from '@/lib/scoresCache';
+import { PageTemplate } from '@/components/layout/PageTemplate';
 
 // Stat types that can be tracked
 type StatType = 'goalsFor' | 'goalsAgainst' | 'missedGoals' | 'rebounds' | 
@@ -232,8 +233,8 @@ export default function LiveStats() {
   // Get team names for display
   const currentTeamName = currentTeam?.name || 'Our Team';
   const homeTeamName = clubTeams?.find(t => t.id === game?.homeTeamId)?.name || game?.homeTeamName || 'Home Team';
-  const awayTeamName = clubTeams?.find(t => t.id === game?.awayTeamId)?.name || game?.awayTeamName || opponent?.teamName || 'Away Team';
-  
+  const awayTeamName = clubTeams?.find(t => t.id === game?.awayTeamId)?.name || opponent?.teamName || 'Away Team';
+
   // Determine display names based on team context
   const ourTeamDisplayName = hasTeamContext ? currentTeamName : homeTeamName;
   const opponentDisplayName = hasTeamContext 
@@ -615,24 +616,24 @@ export default function LiveStats() {
   const getContextualQuarterScores = () => {
     const ourScore = getQuarterTotal('goalsFor');
     const theirScore = getQuarterTotal('goalsAgainst');
-    
+
     // If current team is away, flip the scores
     if (hasTeamContext && isCurrentTeamAway) {
       return { ourScore: theirScore, theirScore: ourScore };
     }
-    
+
     return { ourScore, theirScore };
   };
 
   const getContextualGameScores = () => {
     const ourScore = getGameTotal('goalsFor');
     const theirScore = getGameTotal('goalsAgainst');
-    
+
     // If current team is away, flip the scores
     if (hasTeamContext && isCurrentTeamAway) {
       return { ourScore: theirScore, theirScore: ourScore };
     }
-    
+
     return { ourScore, theirScore };
   };
 
@@ -744,58 +745,67 @@ export default function LiveStats() {
     );
   }
 
+  // Build breadcrumbs
+  const breadcrumbs = [
+    { label: 'Games', href: '/games' },
+    { 
+      label: `Round ${game?.round || gameId} vs ${opponentDisplayName}`, 
+      href: `/game/${gameId}` 
+    },
+    { label: 'Live Stats' }
+  ];
+
+  // Page actions (reset and save buttons)
+  const pageActions = (
+    <div className="flex space-x-2">
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={resetCurrentQuarter}
+        className="border-amber-500 text-amber-700 hover:bg-amber-50 hover:text-amber-900"
+      >
+        <RotateCcw className="h-4 w-4 mr-1" />
+        Reset Quarter {currentQuarter}
+      </Button>
+
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={resetAllStats}
+        className="border-red-500 text-red-700 hover:bg-red-50 hover:text-red-900"
+      >
+        <RefreshCw className="h-4 w-4 mr-1" />
+        Reset All Stats
+      </Button>
+
+      <Button
+        variant="default"
+        size="sm"
+        onClick={saveAllStats}
+        disabled={saveInProgress}
+        className="bg-blue-600 hover:bg-blue-700 text-white"
+      >
+        <Save className="h-4 w-4 mr-1" />
+        Save All Stats
+      </Button>
+    </div>
+  );
+
   return (
-    <div className="container py-3 px-2 md:py-4 md:px-4">
+    <PageTemplate
+      title="Live Stats Tracking"
+      subtitle={`Round ${game.round} | ${formatShortDate(game.date)} vs ${opponentDisplayName}`}
+      breadcrumbs={breadcrumbs}
+      actions={pageActions}
+      showBackButton={true}
+      backButtonProps={{ 
+        fallbackPath: `/game/${gameId}`,
+        className: "border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+      }}
+    >
       <Helmet>
         <title>Live Stats Tracking | NetballManager</title>
       </Helmet>
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-3 gap-1">
-        <div>
-          <h1 className="text-xl md:text-2xl font-bold">Live Stats Tracking</h1>
-          <p className="text-muted-foreground text-sm md:text-base">
-            Round {game.round} | {formatShortDate(game.date)} vs {opponentDisplayName}
-          </p>
-        </div>
-
-        <div className="flex justify-between items-center gap-2 w-full">
-          <BackButton fallbackPath={`/game/${gameId}`} className="border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-gray-900">
-            Back to Game
-          </BackButton>
-
-          <div className="flex space-x-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={resetCurrentQuarter}
-              className="border-amber-500 text-amber-700 hover:bg-amber-50 hover:text-amber-900"
-            >
-              <RotateCcw className="h-4 w-4 mr-1" />
-              Reset Quarter {currentQuarter}
-            </Button>
-
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={resetAllStats}
-              className="border-red-500 text-red-700 hover:bg-red-50 hover:text-red-900"
-            >
-              <RefreshCw className="h-4 w-4 mr-1" />
-              Reset All Stats
-            </Button>
-
-            <Button
-              variant="default"
-              size="sm"
-              onClick={saveAllStats}
-              disabled={saveInProgress}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
-            >
-              <Save className="h-4 w-4 mr-1" />
-              Save All Stats
-            </Button>
-          </div>
-        </div>
-      </div>
 
       {/* Game scoreboard - optimized for all tablet sizes */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
@@ -835,8 +845,7 @@ export default function LiveStats() {
                   </Button>
                 ))}
               </div>
-            </div>
-          </CardHeader>
+                      </CardHeader>
           <CardContent className="py-1">
             <div className="flex justify-between items-center">
               <div>
@@ -947,6 +956,6 @@ export default function LiveStats() {
           );
         })}
       </div>
-    </div>
+    </PageTemplate>
   );
 }
