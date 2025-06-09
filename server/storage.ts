@@ -592,7 +592,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Game Stats methods
-  async getGameStatsByGame(gameId: number): Promise<GameStat[]> {
+  async getGameStatsByGame(gameId: number, teamId?: number): Promise<GameStat[]> {
+    if (teamId) {
+      return await db.select().from(gameStats).where(
+        and(eq(gameStats.gameId, gameId), eq(gameStats.teamId, teamId))
+      );
+    }
     return await db.select().from(gameStats).where(eq(gameStats.gameId, gameId));
   }
 
@@ -785,7 +790,6 @@ export class DatabaseStorage implements IStorage {
         lastName: row.last_name,
         dateOfBirth: row.date_of_birth,
         positionPreferences: typeof row.position_preferences === 'string' 
-```typescript
           ? JSON.parse(row.position_preferences) 
           : row.position_preferences || [],
         active: row.active,

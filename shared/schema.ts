@@ -120,10 +120,10 @@ export type Roster = typeof rosters.$inferSelect;
 // Game statistics model - fully position-based with team context
 export const gameStats = pgTable("game_stats", {
   id: serial("id").primaryKey(),
-  gameId: integer("game_id").notNull(),
-  teamId: integer("team_id").notNull().references(() => teams.id), // Track which team these stats belong to
-  position: text("position").$type<Position>().notNull(), // Position is the primary organizing concept
-  quarter: integer("quarter").notNull(), // 1-4
+  gameId: integer("game_id").notNull().references(() => games.id),
+  teamId: integer("team_id").notNull().references(() => teams.id),
+  position: text("position").$type<Position>().notNull(),
+  quarter: integer("quarter").notNull(),
   goalsFor: integer("goals_for").notNull().default(0),
   goalsAgainst: integer("goals_against").notNull().default(0),
   missedGoals: integer("missed_goals").notNull().default(0),

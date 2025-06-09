@@ -468,7 +468,7 @@ export default function LiveStats() {
 
       // Determine the team ID for these stats
       const teamId = isCurrentTeamHome ? game.homeTeamId : game.awayTeamId;
-      
+
       if (!teamId) {
         throw new Error('Cannot determine team context for saving stats');
       }
