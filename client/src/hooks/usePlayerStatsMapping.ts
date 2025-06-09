@@ -1,4 +1,3 @@
-
 import { useMemo } from 'react';
 import { GameStat, Player, Roster } from '@shared/schema';
 
@@ -27,10 +26,10 @@ export function usePlayerStatsMapping(
   gameStatsMap: Record<number, GameStat[]>,
   gameRostersMap: Record<number, Roster[]>
 ): Record<number, PlayerStats> {
-  
+
   return useMemo(() => {
     console.log('usePlayerStatsMapping: Starting calculation for', players?.length || 0, 'players');
-    
+
     const playerStatsMap: Record<number, PlayerStats> = {};
 
     // Initialize all players with zeros
@@ -68,14 +67,14 @@ export function usePlayerStatsMapping(
     // First pass: determine games played from roster entries
     Object.entries(gameRostersMap).forEach(([gameIdStr, rosters]) => {
       const gameId = parseInt(gameIdStr);
-      
+
       if (Array.isArray(rosters)) {
         rosters.forEach((roster: Roster) => {
           const playerId = roster.playerId;
-          
+
           if (playerId && roster.position && playerGameIds[playerId]) {
             playerGameIds[playerId].add(gameId);
-            
+
             // Count quarters by position
             if (playerStatsMap[playerId]?.quartersByPosition) {
               playerStatsMap[playerId].quartersByPosition[roster.position]++;
@@ -152,6 +151,69 @@ export function usePlayerStatsMapping(
           playerStatsMap[playerId].infringement += stat.infringement || 0;
         }
       });
+    });
+
+    // Calculate ratings by averaging all quarters where player was on court
+    players?.forEach(player => {
+      if (!playerStatsMap[player.id]) return;
+
+      let totalRating = 0;
+      let ratingCount = 0;
+
+      // Find all ratings for this player across all games and quarters
+      Object.entries(gameRostersMap || {}).forEach(([gameIdStr, rosters]) => {
+        const gameId = parseInt(gameIdStr);
+        const gameStats = gameStatsMap[gameId] || [];
+
+        // Find all roster entries for this player (all quarters)
+        const playerRosters = rosters.filter((r: Roster) => 
+          r.playerId === player.id && 
+          r.position &&
+          ['GS', 'GA', 'WA', 'C', 'WD', 'GD', 'GK'].includes(r.position) // Only actual playing positions
+        );
+
+        playerRosters.forEach((roster: Roster) => {
+          // Find the stat for this position and quarter
+          const positionStat = gameStats.find((s: any) => 
+            s.position === roster.position && 
+            s.quarter === roster.quarter &&
+            s.rating !== null && 
+            s.rating !== undefined
+          );
+
+          if (positionStat?.rating !== undefined && positionStat?.rating !== null) {
+            totalRating += positionStat.rating;
+            ratingCount++;
+          }
+        });
+      });
+
+      // Update with the average rating we calculated, or calculate a default
+      if (ratingCount > 0) {
+        playerStatsMap[player.id].rating = totalRating / ratingCount;
+      } else {
+        // Calculate rating based on performance stats with better baseline
+        const playerStats = playerStatsMap[player.id];
+        const gamesPlayed = playerStats.gamesPlayed;
+
+        if (gamesPlayed > 0) {
+          // Average per game performance - more generous scoring
+          const avgGoals = playerStats.goals / gamesPlayed;
+          const avgRebounds = playerStats.rebounds / gamesPlayed;
+          const avgIntercepts = playerStats.intercepts / gamesPlayed;
+
+          // Better rating calculation starting from 7.0 baseline for active players
+          const calculatedRating = 7.0 + 
+            (avgGoals * 0.4) +
+            (avgRebounds * 0.3) + 
+            (avgIntercepts * 0.4);
+
+          playerStatsMap[player.id].rating = Math.min(10, Math.max(6, calculatedRating));
+        } else {
+          // Default rating for players with no games
+          playerStatsMap[player.id].rating = 7.0;
+        }
+      }
     });
 
     console.log('usePlayerStatsMapping: Calculation complete. Stats for', Object.keys(playerStatsMap).length, 'players');

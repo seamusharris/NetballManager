@@ -274,6 +274,10 @@ export default function PlayerDetails() {
         };
       });
 
+      // Track ratings for this specific game
+      let gameRatingSum = 0;
+      let gameRatingCount = 0;
+
       stats.forEach((stat: GameStat) => {
         // In position-based model, we need to match stats to the positions the player played
         // Only process stats for positions the player actually played in this quarter
@@ -307,15 +311,21 @@ export default function PlayerDetails() {
           gameHandlingErrors += stat.handlingError || 0;
           gamePickUps += stat.pickUp || 0;
           gameInfringements += stat.infringement || 0;
-        }
 
-        // Only use rating from quarter 1 if player was on court
-        if (stat.quarter === 1 && typeof stat.rating === 'number' && positionsByQuarter[1]) {
-          gameRating = stat.rating;
-          ratingSum += stat.rating;
-          ratingCount++;
+          // Track ratings for this specific game
+          if (typeof stat.rating === 'number') {
+            gameRatingSum += stat.rating;
+            gameRatingCount++;
+            ratingSum += stat.rating; // Also add to overall rating sum
+            ratingCount++; // And overall rating count
+          }
         }
       });
+
+      // Calculate average rating for this game
+      if (gameRatingCount > 0) {
+        gameRating = gameRatingSum / gameRatingCount;
+      }
 
       // Add to totals
       totalGoals += gameGoals;
