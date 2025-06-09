@@ -275,8 +275,9 @@ export function GamesList({
   };
 
   const getOpponentName = (game: any) => {
-    // Determine if we are home or away team and show the opponent
-    const currentClubId = 54; // TODO: Get from context
+    // Use current club context to determine opponent
+    const currentClubId = currentClub?.id;
+    if (!currentClubId) return "TBA";
 
     // Check if this is our home game (we are the home team)
     if (game.homeClubId === currentClubId && game.awayTeamName) {
@@ -290,6 +291,31 @@ export function GamesList({
 
     // Fallback - if we can't determine, show away team name
     return game.awayTeamName || "TBA";
+  };
+
+  // Helper to determine if we are home or away team and get correct score orientation
+  const getGameScoreForTeam = (game: any, scores: any) => {
+    const currentClubId = currentClub?.id;
+    if (!currentClubId || !scores) return null;
+
+    // For inter-club games, we need to check if we're home or away to get the right score perspective
+    const isHomeTeam = game.homeClubId === currentClubId;
+    
+    if (isHomeTeam) {
+      // We are the home team, so our score is 'for' and opponent is 'against'
+      return {
+        teamScore: scores.finalScore.for,
+        opponentScore: scores.finalScore.against,
+        isWin: scores.finalScore.for > scores.finalScore.against
+      };
+    } else {
+      // We are the away team, so our score is 'against' and opponent is 'for'
+      return {
+        teamScore: scores.finalScore.against,
+        opponentScore: scores.finalScore.for,
+        isWin: scores.finalScore.against > scores.finalScore.for
+      };
+    }
   };
 
   // Enhance games with opponent data for search filtering
@@ -573,8 +599,19 @@ export function GamesList({
                           {/* Handle forfeit games with fixed scores */}
                           {(game.statusTeamGoals !== null && game.statusOpponentGoals !== null) ? (
                             (() => {
-                              const isWin = game.statusTeamGoals > game.statusOpponentGoals;
-                              const isLoss = game.statusTeamGoals < game.statusOpponentGoals;
+                              const currentClubId = currentClub?.id;
+                              let teamScore = game.statusTeamGoals;
+                              let opponentScore = game.statusOpponentGoals;
+                              
+                              // For inter-club games, adjust score orientation based on home/away
+                              if (currentClubId && game.awayClubId === currentClubId) {
+                                // We are away team, so flip the scores
+                                teamScore = game.statusOpponentGoals;
+                                opponentScore = game.statusTeamGoals;
+                              }
+                              
+                              const isWin = teamScore > opponentScore;
+                              const isLoss = teamScore < opponentScore;
                               const bgColor = isWin 
                                 ? "bg-green-100 border-green-200" 
                                 : isLoss 
@@ -584,9 +621,9 @@ export function GamesList({
                               return (
                                 <div className="font-semibold text-left">
                                   <div className={`inline-flex items-center px-3 py-1 rounded border text-gray-900 ${bgColor}`}>
-                                    <span className={isWin ? "font-bold" : ""}>{game.statusTeamGoals}</span>
+                                    <span className={isWin ? "font-bold" : ""}>{teamScore}</span>
                                     <span className="mx-2">-</span>
-                                    <span className={isLoss ? "font-bold" : ""}>{game.statusOpponentGoals}</span>
+                                    <span className={isLoss ? "font-bold" : ""}>{opponentScore}</span>
                                   </div>
                                 </div>
                               );
@@ -601,8 +638,13 @@ export function GamesList({
                                 return <span className="text-red-500 text-sm">Invalid Score Data</span>;
                               }
 
-                              const isWin = scores.finalScore.for > scores.finalScore.against;
-                              const isLoss = scores.finalScore.for < scores.finalScore.against;
+                              const gameScore = getGameScoreForTeam(game, scores);
+                              if (!gameScore) {
+                                return <span className="text-red-500 text-sm">Score Error</span>;
+                              }
+
+                              const { teamScore, opponentScore, isWin } = gameScore;
+                              const isLoss = teamScore < opponentScore;
 
                               const bgColor = isWin 
                                 ? "bg-green-100 border-green-200" 
@@ -613,9 +655,9 @@ export function GamesList({
                               return (
                                 <div className="font-semibold text-left">
                                   <div className={`inline-flex items-center px-3 py-1 rounded border text-gray-900 ${bgColor}`}>
-                                    <span className={isWin ? "font-bold" : ""}>{scores.finalScore.for}</span>
+                                    <span className={isWin ? "font-bold" : ""}>{teamScore}</span>
                                     <span className="mx-2">-</span>
-                                    <span className={isLoss ? "font-bold" : ""}>{scores.finalScore.against}</span>
+                                    <span className={isLoss ? "font-bold" : ""}>{opponentScore}</span>
                                   </div>
                                 </div>
                               );
