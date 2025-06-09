@@ -1529,7 +1529,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log("Game creation request:", req.body);
 
-      // Handle BYE games using BYE teams
+      // Handle BYE games using null away_team_id
       if (req.body.isBye === true || req.body.statusId === 6) { // statusId 6 is 'bye'
         try {
           // Ensure we have a home team
@@ -1650,35 +1650,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('Updating game with ID:', id);
       console.log('Update payload:', req.body);
 
-      // Handle BYE game updates using team-based system
+      // Handle BYE game updates using null away_team_id
       if (req.body.statusId === 6) { // BYE status
-        // For BYE games, ensure away team is a BYE team
-        if (req.body.awayTeamId && req.body.homeTeamId) {
-          const awayTeam = await db.execute(sql`
-            SELECT name FROM teams WHERE id = ${req.body.awayTeamId}
-          `);
-
-          if (awayTeam.rows.length > 0 && awayTeam.rows[0].name !== 'Bye') {
-            // Find the correct Bye team for the home team's club and season
-            const homeTeam = await db.execute(sql`
-              SELECT club_id, season_id FROM teams WHERE id = ${req.body.homeTeamId}
-            `);
-
-            if (homeTeam.rows.length > 0) {
-              const byeTeam = await db.execute(sql`
-                SELECT id FROM teams 
-                WHERE club_id = ${homeTeam.rows[0].club_id} 
-                AND season_id = ${homeTeam.rows[0].season_id} 
-                AND name = 'Bye'
-                LIMIT 1
-              `);
-
-              if (byeTeam.rows.length > 0) {
-                req.body.awayTeamId = byeTeam.rows[0].id;
-              }
-            }
-          }
-        }
+        // For BYE games, set away_team_id to null
+        req.body.awayTeamId = null;
       } else if (req.body.statusId && req.body.statusId !== 6) {
         // For non-BYE games, ensure both teams are set and neither is a BYE team
         if (!req.body.homeTeamId || !req.body.awayTeamId) {
