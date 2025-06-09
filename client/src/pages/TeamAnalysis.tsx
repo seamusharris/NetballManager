@@ -15,6 +15,7 @@ import { useState, useEffect } from 'react';
 import { PlayerCombinationAnalysis } from '@/components/dashboard/PlayerCombinationAnalysis';
 import { TeamPositionAnalysis } from '@/components/dashboard/TeamPositionAnalysis';
 import { TeamSwitcher } from '@/components/layout/TeamSwitcher';
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
 
 interface OpponentTeamData {
   teamId: number;
@@ -592,6 +593,19 @@ export default function TeamAnalysis() {
       </Helmet>
 
       <div className="container py-6 mx-auto space-y-6">
+        {/* Breadcrumbs */}
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink href="/dashboard">Dashboard</BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>Team Analysis</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="space-y-1">
