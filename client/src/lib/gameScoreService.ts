@@ -1,4 +1,3 @@
-
 import { GameStat, Game, GameStatus } from '@shared/schema';
 import { getCachedScores, cacheScores, isCacheValid } from './scoresCache';
 import { validateInterClubScores, getReconciledScore, getScoreDiscrepancyWarning } from './scoreValidation';
@@ -55,29 +54,29 @@ class GameScoreService {
     }
 
     const quarterScores: QuarterScore[] = [];
-    
+
     // Handle inter-club games with potential score reconciliation
     if (isInterClub && homeTeamId && awayTeamId) {
       for (let quarter = 1; quarter <= 4; quarter++) {
         const quarterStats = stats.filter(s => s.quarter === quarter);
         const homeStats = quarterStats.filter(s => s.teamId === homeTeamId);
         const awayStats = quarterStats.filter(s => s.teamId === awayTeamId);
-        
+
         const homeTeamStats = {
           teamId: homeTeamId,
           goalsFor: homeStats.reduce((sum, s) => sum + (s.goalsFor || 0), 0),
           goalsAgainst: homeStats.reduce((sum, s) => sum + (s.goalsAgainst || 0), 0)
         };
-        
+
         const awayTeamStats = {
           teamId: awayTeamId,
           goalsFor: awayStats.reduce((sum, s) => sum + (s.goalsFor || 0), 0),
           goalsAgainst: awayStats.reduce((sum, s) => sum + (s.goalsAgainst || 0), 0)
         };
-        
+
         // Reconcile scores using home-priority for consistency
         const reconciledScore = getReconciledScore(homeTeamStats, awayTeamStats, 'home-priority');
-        
+
         quarterScores.push({
           quarter,
           teamScore: reconciledScore.homeScore,
@@ -90,7 +89,7 @@ class GameScoreService {
         const quarterStats = stats.filter(s => s.quarter === quarter);
         const teamScore = quarterStats.reduce((sum, s) => sum + (s.goalsFor || 0), 0);
         const opponentScore = quarterStats.reduce((sum, s) => sum + (s.goalsAgainst || 0), 0);
-        
+
         quarterScores.push({
           quarter,
           teamScore,
@@ -101,7 +100,7 @@ class GameScoreService {
 
     const totalTeamScore = quarterScores.reduce((sum, q) => sum + q.teamScore, 0);
     const totalOpponentScore = quarterScores.reduce((sum, q) => sum + q.opponentScore, 0);
-    
+
     const result = totalTeamScore > totalOpponentScore ? 'win' : 
                    totalTeamScore < totalOpponentScore ? 'loss' : 'draw';
 
@@ -126,11 +125,11 @@ class GameScoreService {
   ): GameScores {
     // Create quarter scores from official data
     const quarterScores: QuarterScore[] = [];
-    
+
     // Ensure we have scores for all 4 quarters
     for (let quarter = 1; quarter <= 4; quarter++) {
       const officialQuarter = officialScores.find(s => s.quarter === quarter);
-      
+
       if (officialQuarter) {
         quarterScores.push({
           quarter,
@@ -149,7 +148,7 @@ class GameScoreService {
 
     const totalTeamScore = quarterScores.reduce((sum, q) => sum + q.teamScore, 0);
     const totalOpponentScore = quarterScores.reduce((sum, q) => sum + q.opponentScore, 0);
-    
+
     const result = totalTeamScore > totalOpponentScore ? 'win' : 
                    totalTeamScore < totalOpponentScore ? 'loss' : 'draw';
 
@@ -199,11 +198,11 @@ class GameScoreService {
 
     // Calculate new scores
     const scores = this.calculateGameScores(stats || [], gameStatus, statusScores);
-    
+
     // Cache the result
     const legacyFormat = this.convertToLegacyFormat(scores);
     cacheScores(gameId, legacyFormat, stats, gameStatus);
-    
+
     return scores;
   }
 
@@ -240,3 +239,35 @@ class GameScoreService {
 }
 
 export const gameScoreService = new GameScoreService();
+/**
+ * Calculates game scores, prioritizing official scores over calculated stats
+ * Returns the total goals for and against for the team
+ */
+export async function calculateGameScores(
+  gameStats: GameStat[], 
+  gameStatus?: string,
+  useHomePriority = false,
+  gameId?: number
+): Promise<{ teamScore: number; opponentScore: number; source: 'official' | 'calculated' }> {
+
+  // First, try to get official scores if gameId is provided
+  if (gameId) {
+    try {
+      const officialScores = await apiClient.get(`/api/games/${gameId}/scores`);
+      if (officialScores) {
+        // For now, return home team perspective - this could be enhanced based on current team context
+        return {
+          teamScore: officialScores.homeTeamTotal,
+          opponentScore: officialScores.awayTeamTotal,
+          source: 'official'
+        };
+      }
+    } catch (error) {
+      console.log('No official scores found, falling back to calculated scores');
+    }
+  }
+  return { 
+    teamScore: goalsFor, 
+    opponentScore: goalsAgainst,
+    source: 'calculated'
+  };
