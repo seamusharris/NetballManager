@@ -563,7 +563,7 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
           );
           
           if (playerPositionInQ1?.position) {
-            // Create a new stat record for quarter 1 with the rating
+            // Create a new stat record for quarter 1 with the rating (default to 5 if not provided)
             const createRatingPromise = apiRequest(`/api/games/${gameId}/stats`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -580,7 +580,7 @@ export default function SimpleStats({ gameId, players, rosters, gameStats }: Sim
                 handlingError: 0,
                 pickUp: 0,
                 infringement: 0,
-                rating: rating
+                rating: rating || 5  // Default to 5 if no rating provided
               })
             });
             ratingPromises.push(createRatingPromise);

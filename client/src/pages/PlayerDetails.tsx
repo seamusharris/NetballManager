@@ -75,7 +75,7 @@ export default function PlayerDetails() {
       if (completedGameIds.length === 0) return {};
 
       console.log(`PlayerDetails: Using batch endpoint for stats fetch of ${completedGameIds.length} completed games`);
-      
+
       try {
         // Use batch endpoint for better performance and cache consistency
         const batchResponse = await apiClient.post('/api/games/stats/batch', {
@@ -85,7 +85,7 @@ export default function PlayerDetails() {
         return batchResponse;
       } catch (error) {
         console.error('PlayerDetails: Batch stats fetch failed, falling back to individual requests:', error);
-        
+
         // Fallback to individual requests
         const statsMap: Record<number, GameStat[]> = {};
         for (const gameId of completedGameIds) {
@@ -307,10 +307,10 @@ export default function PlayerDetails() {
           gameMissedGoals += stat.missedGoals || 0;
           gameRebounds += stat.rebounds || 0;
           gameIntercepts += stat.intercepts || 0;
-          gameBadPasses += stat.badPass || 0;
-          gameHandlingErrors += stat.handlingError || 0;
-          gamePickUps += stat.pickUp || 0;
-          gameInfringements += stat.infringement || 0;
+          gameBadPasses += stat.badPasses || 0;
+          gameHandlingErrors += stat.handlingErrors || 0;
+          gamePickUps += stat.pickUps || 0;
+          gameInfringements += stat.infringements || 0;
 
           // Track ratings for this specific game
           if (typeof stat.rating === 'number') {
@@ -772,7 +772,7 @@ export default function PlayerDetails() {
                               <TableHead className="text-center px-1 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
                                 Int
                               </TableHead>
-                              <TableHead className="text-center px-1 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                              <TableHead className="text-center px-1 py-2 text-xs font-mediumtext-gray-500 uppercase tracking-wider border-b">
                                 Reb
                               </TableHead>
                               <TableHead className="text-center px-1 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-r">
@@ -850,7 +850,7 @@ export default function PlayerDetails() {
                                       const gameRosters = allGameRosters[game.gameId] || [];
                                       const gameStats = allGameStats[game.gameId] || [];
                                       let playerMissedGoals = 0;
-                                      
+
                                       gameRosters.forEach((roster: any) => {
                                         if (roster.playerId === playerId) {
                                           const positionStat = gameStats.find(s => 
@@ -861,7 +861,7 @@ export default function PlayerDetails() {
                                           }
                                         }
                                       });
-                                      
+
                                       return playerMissedGoals;
                                     })()}
                                   </TableCell>
@@ -879,7 +879,7 @@ export default function PlayerDetails() {
                                       const gameRosters = allGameRosters[game.gameId] || [];
                                       const gameStats = allGameStats[game.gameId] || [];
                                       let playerPickUps = 0;
-                                      
+
                                       gameRosters.forEach((roster: any) => {
                                         if (roster.playerId === playerId) {
                                           const positionStat = gameStats.find(s => 
@@ -890,7 +890,7 @@ export default function PlayerDetails() {
                                           }
                                         }
                                       });
-                                      
+
                                       return playerPickUps;
                                     })()}
                                   </TableCell>
@@ -902,7 +902,7 @@ export default function PlayerDetails() {
                                       const gameRosters = allGameRosters[game.gameId] || [];
                                       const gameStats = allGameStats[game.gameId] || [];
                                       let playerBadPasses = 0;
-                                      
+
                                       gameRosters.forEach((roster: any) => {
                                         if (roster.playerId === playerId) {
                                           const positionStat = gameStats.find(s => 
@@ -913,7 +913,7 @@ export default function PlayerDetails() {
                                           }
                                         }
                                       });
-                                      
+
                                       return playerBadPasses;
                                     })()}
                                   </TableCell>
@@ -923,7 +923,7 @@ export default function PlayerDetails() {
                                       const gameRosters = allGameRosters[game.gameId] || [];
                                       const gameStats = allGameStats[game.gameId] || [];
                                       let playerHandlingErrors = 0;
-                                      
+
                                       gameRosters.forEach((roster: any) => {
                                         if (roster.playerId === playerId) {
                                           const positionStat = gameStats.find(s => 
@@ -934,7 +934,7 @@ export default function PlayerDetails() {
                                           }
                                         }
                                       });
-                                      
+
                                       return playerHandlingErrors;
                                     })()}
                                   </TableCell>
@@ -944,7 +944,7 @@ export default function PlayerDetails() {
                                       const gameRosters = allGameRosters[game.gameId] || [];
                                       const gameStats = allGameStats[game.gameId] || [];
                                       let playerInfringements = 0;
-                                      
+
                                       gameRosters.forEach((roster: any) => {
                                         if (roster.playerId === playerId) {
                                           const positionStat = gameStats.find(s => 
@@ -955,7 +955,7 @@ export default function PlayerDetails() {
                                           }
                                         }
                                       });
-                                      
+
                                       return playerInfringements;
                                     })()}
                                   </TableCell>

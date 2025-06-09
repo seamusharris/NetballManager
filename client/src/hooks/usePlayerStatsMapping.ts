@@ -40,6 +40,7 @@ export function usePlayerStatsMapping(
         goals: 0,
         goalsAgainst: 0,
         missedGoals: 0,
+        missedGoals: 0,
         rebounds: 0,
         intercepts: 0,
         badPass: 0,
@@ -192,27 +193,7 @@ export function usePlayerStatsMapping(
       if (ratingCount > 0) {
         playerStatsMap[player.id].rating = totalRating / ratingCount;
       } else {
-        // Calculate rating based on performance stats with better baseline
-        const playerStats = playerStatsMap[player.id];
-        const gamesPlayed = playerStats.gamesPlayed;
-
-        if (gamesPlayed > 0) {
-          // Average per game performance - more generous scoring
-          const avgGoals = playerStats.goals / gamesPlayed;
-          const avgRebounds = playerStats.rebounds / gamesPlayed;
-          const avgIntercepts = playerStats.intercepts / gamesPlayed;
-
-          // Better rating calculation starting from 7.0 baseline for active players
-          const calculatedRating = 7.0 + 
-            (avgGoals * 0.4) +
-            (avgRebounds * 0.3) + 
-            (avgIntercepts * 0.4);
-
-          playerStatsMap[player.id].rating = Math.min(10, Math.max(6, calculatedRating));
-        } else {
-          // Default rating for players with no games
-          playerStatsMap[player.id].rating = 7.0;
-        }
+        playerStatsMap[player.id].rating = 5.0; //Default to 5 if there are no explicit ratings
       }
     });
 
