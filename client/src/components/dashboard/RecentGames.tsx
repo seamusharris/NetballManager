@@ -7,6 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import { GameResultCard } from '@/components/ui/game-result-card';
 import { ViewMoreButton } from '@/components/ui/view-more-button';
 import { RECENT_GAMES_COUNT } from '@/lib/constants';
+import { useClub } from '@/contexts/ClubContext';
 
 interface RecentGamesProps {
   games: Game[];
@@ -15,9 +16,12 @@ interface RecentGamesProps {
   seasonFilter?: string;
   activeSeason?: any;
   centralizedStats?: Record<number, any[]>;
+  teams?: any[];
 }
 
-export default function RecentGames({ games, opponents, className, seasonFilter, activeSeason, centralizedStats }: RecentGamesProps) {
+export default function RecentGames({ games, opponents, className, seasonFilter, activeSeason, centralizedStats, teams }: RecentGamesProps) {
+  const { currentTeam } = useClub();
+
   // Filter for recent completed games using the new status system
   const recentGames = games
     .filter(game => {
@@ -60,6 +64,8 @@ export default function RecentGames({ games, opponents, className, seasonFilter,
                 showRound={true}
                 showScore={true}
                 className="mb-2"
+                currentTeamId={currentTeam?.id}
+                clubTeams={teams || []}
               />
             ))
           )}

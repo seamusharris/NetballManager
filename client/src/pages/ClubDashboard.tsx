@@ -373,31 +373,13 @@ export default function ClubDashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {recentGames.map((game) => (
-                <div key={game.id} className="flex items-center justify-between p-3 border rounded">
-                  <div className="flex items-center gap-3">
-                    <div className="text-sm">
-                      <div className="font-medium">
-                        {game.homeTeamName} vs {game.awayTeamName}
-                      </div>
-                      <div className="text-muted-foreground">
-                        {new Date(game.date).toLocaleDateString()} • {game.seasonName}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {game.statusTeamGoals !== null && game.statusOpponentGoals !== null ? (
-                      <Badge variant="outline">
-                        {game.statusTeamGoals}-{game.statusOpponentGoals}
-                      </Badge>
-                    ) : (
-                      <Badge variant="secondary">
-                        {game.statusDisplayName}
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-              ))}
+              <RecentGames 
+              games={games} 
+              opponents={[]} 
+              className="md:col-span-2" 
+              centralizedStats={centralizedStats}
+              teams={teams}
+            />
               {recentGames.length === 0 && (
                 <div className="text-center py-8 text-muted-foreground">
                   No recent games to display

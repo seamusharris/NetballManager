@@ -43,11 +43,17 @@ export function GameResultCard({
       return [0, 0];
     }
 
+    // Filter stats by current team if we have a team context
+    let filteredStats = gameStats;
+    if (currentTeamId) {
+      filteredStats = gameStats.filter(stat => stat.teamId === currentTeamId);
+    }
+
     // Create a map of the latest stats for each position/quarter combination
     const latestPositionStats: Record<string, any> = {};
 
     // Find the latest stat for each position/quarter combination
-    gameStats.forEach(stat => {
+    filteredStats.forEach(stat => {
       if (!stat || !stat.quarter) return;
 
       // For position-based stats (with valid position)
@@ -80,19 +86,8 @@ export function GameResultCard({
     });
 
     // Calculate total goals
-    let teamScore = Object.values(quarterGoals).reduce((sum, q) => sum + q.for, 0);
-    let opponentScore = Object.values(quarterGoals).reduce((sum, q) => sum + q.against, 0);
-
-    // Check if we need to flip scores for inter-club games
-    if (currentTeamId && game.homeTeamId && game.awayTeamId && clubTeams.length > 0) {
-      const isInterClubGame = clubTeams.some(t => t.id === game.homeTeamId) && 
-                             clubTeams.some(t => t.id === game.awayTeamId);
-      
-      if (isInterClubGame && currentTeamId === game.awayTeamId) {
-        // Flip scores if we're viewing from the away team's perspective
-        return [opponentScore, teamScore];
-      }
-    }
+    const teamScore = Object.values(quarterGoals).reduce((sum, q) => sum + q.for, 0);
+    const opponentScore = Object.values(quarterGoals).reduce((sum, q) => sum + q.against, 0);
 
     return [teamScore, opponentScore];
   };
