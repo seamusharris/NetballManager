@@ -180,7 +180,6 @@ export const UIStandards = {
   ContentSection,
   ContentBox,
   ActionButton,
-  Breadcrumbs,
   EmptyState,
   DataGrid,
 };
