@@ -1160,16 +1160,16 @@ export default function GameDetails() {
     enabled: !isNaN(gameId)
   });
 
-  // Calculate scores using the unified service with current team context
+  // Calculate scores using official score priority for game details
   const gameScores = useMemo(() => {
-    if (!gameStats || !game) return { quarterScores: [], totalTeamScore: 0, totalOpponentScore: 0 };
+    if (!game) return { quarterScores: [], totalTeamScore: 0, totalOpponentScore: 0 };
     
     // Ensure we always pass the current team ID for consistent perspective
     const effectiveCurrentTeamId = currentTeam?.id || currentClub?.id;
     
-    // Use synchronous version with official scores if available
-    return gameScoreService.gameScoreService.calculateGameScoresSync(
-      gameStats, 
+    // Game details should prioritize official scores
+    return gameScoreService.calculateGameScoresSync(
+      gameStats || [], 
       game.status, 
       { teamGoals: game.statusTeamGoals, opponentGoals: game.statusOpponentGoals },
       isInterClub,

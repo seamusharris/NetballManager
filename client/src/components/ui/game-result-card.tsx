@@ -14,6 +14,8 @@ interface GameResultCardProps {
   layout?: GameResultLayout;
   className?: string;
   gameStats?: any[];
+  officialScores?: any[];
+  useOfficialPriority?: boolean;
   showLink?: boolean;
   showDate?: boolean;
   showRound?: boolean;
@@ -28,6 +30,8 @@ export function GameResultCard({
   layout = 'medium',
   className,
   gameStats = [],
+  officialScores,
+  useOfficialPriority = false,
   showLink = true,
   showDate = true,
   showRound = true,
@@ -37,25 +41,45 @@ export function GameResultCard({
   clubTeams = []
 }: GameResultCardProps) {
 
-  // Calculate scores if we have stats
+  // Calculate scores using appropriate priority
   const scores = useMemo(() => {
-    if (!gameStats || gameStats.length === 0) return null;
-
-    try {
-      return gameScoreService.calculateGameScoresSync(
-        gameStats, 
-        game.statusName, 
-        undefined, // statusScores
-        game.isInterClub,
-        game.homeTeamId,
-        game.awayTeamId,
-        currentTeamId
-      );
-    } catch (error) {
-      console.error('Error calculating game scores:', error);
-      return null;
+    if (useOfficialPriority) {
+      // For official displays (recent games, etc), use official score priority
+      try {
+        return gameScoreService.calculateGameScoresSync(
+          gameStats, 
+          game.statusName, 
+          { teamGoals: game.statusTeamGoals, opponentGoals: game.statusOpponentGoals },
+          game.isInterClub,
+          game.homeTeamId,
+          game.awayTeamId,
+          currentTeamId,
+          officialScores
+        );
+      } catch (error) {
+        console.error('Error calculating official scores:', error);
+        return null;
+      }
+    } else {
+      // For performance displays, use live stats only
+      if (!gameStats || gameStats.length === 0) return null;
+      
+      try {
+        return gameScoreService.calculateGameScoresSync(
+          gameStats, 
+          game.statusName, 
+          undefined, // Don't use status scores for performance displays
+          game.isInterClub,
+          game.homeTeamId,
+          game.awayTeamId,
+          currentTeamId
+        );
+      } catch (error) {
+        console.error('Error calculating live stats scores:', error);
+        return null;
+      }
     }
-  }, [gameStats, game.statusName, game.isInterClub, game.homeTeamId, game.awayTeamId, currentTeamId]);
+  }, [gameStats, officialScores, useOfficialPriority, game.statusName, game.statusTeamGoals, game.statusOpponentGoals, game.isInterClub, game.homeTeamId, game.awayTeamId, currentTeamId]);
 
   // Get opponent name
   const getOpponentName = (): string => {
@@ -182,4 +206,13 @@ export function MediumGameResultCard(props: Omit<GameResultCardProps, 'layout'>)
 
 export function WideGameResultCard(props: Omit<GameResultCardProps, 'layout'>) {
   return <GameResultCard {...props} layout="wide" />;
+}
+
+// Convenience components for different use cases
+export function OfficialGameResultCard(props: Omit<GameResultCardProps, 'useOfficialPriority'>) {
+  return <GameResultCard {...props} useOfficialPriority={true} />;
+}
+
+export function PerformanceGameResultCard(props: Omit<GameResultCardProps, 'useOfficialPriority'>) {
+  return <GameResultCard {...props} useOfficialPriority={false} />;
 }

@@ -107,17 +107,17 @@ export default function TeamPerformance({ games, className, activeSeason, select
           const gameStats = gameStatsMap[gameId] || [];
           console.log(`TeamPerformance processing game ${gameId}:`, gameStats ? `${gameStats.length} stats` : 'no stats');
 
-          // Use gameScoreService to get the correct scores (official or calculated)
+          // For team performance, use live stats only (coach's record)
           const { gameScoreService } = require('@/lib/gameScoreService');
           const scores = gameScoreService.calculateGameScoresSync(
             gameStats,
             game.statusName,
-            { teamGoals: game.statusTeamGoals, opponentGoals: game.statusOpponentGoals },
+            undefined, // Don't use status scores for performance
             game.isInterClub,
             game.homeTeamId,
             game.awayTeamId,
             game.currentTeamId,
-            undefined // Let it fetch official scores internally
+            undefined // Don't use official scores for performance
           );
 
           // If we have any scores (official or calculated), count this game

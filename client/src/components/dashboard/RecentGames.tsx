@@ -8,7 +8,7 @@ import { GameResultCard } from '@/components/ui/game-result-card';
 import { ViewMoreButton } from '@/components/ui/view-more-button';
 import { RECENT_GAMES_COUNT } from '@/lib/constants';
 import { useClub } from '@/contexts/ClubContext';
-import { gameScoreService } from '@/lib/gameScoreService';
+import { apiClient } from '@/lib/apiClient';
 
 interface RecentGamesProps {
   games: Game[];
@@ -39,9 +39,33 @@ export default function RecentGames({ games, opponents, className, seasonFilter,
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, RECENT_GAMES_COUNT);
 
-  // Use centralized stats if available, otherwise empty object
-  const allGameStats = centralizedStats || {};
-  const isLoading = false; // Don't wait for stats to show the games
+  // For recent games, we'll fetch official scores and use the priority system
+  const { data: officialScoresMap = {} } = useQuery({
+    queryKey: ['official-scores-batch', recentGames.map(g => g.id)],
+    queryFn: async () => {
+      const scoresMap: Record<number, any> = {};
+      
+      // Fetch official scores for each game
+      await Promise.all(
+        recentGames.map(async (game) => {
+          try {
+            const officialScores = await apiClient.get(`/api/games/${game.id}/scores`);
+            if (officialScores && Array.isArray(officialScores) && officialScores.length > 0) {
+              scoresMap[game.id] = officialScores;
+            }
+          } catch (error) {
+            // No official scores available, will fall back to live stats
+          }
+        })
+      );
+      
+      return scoresMap;
+    },
+    enabled: recentGames.length > 0,
+    staleTime: 5 * 60 * 1000 // 5 minutes
+  });
+
+  const isLoading = false;
 
   return (
     <BaseWidget 
@@ -60,7 +84,9 @@ export default function RecentGames({ games, opponents, className, seasonFilter,
                 key={game.id}
                 game={game}
                 layout="medium"
-                gameStats={allGameStats[game.id] || []}
+                gameStats={centralizedStats?.[game.id] || []}
+                officialScores={officialScoresMap[game.id]}
+                useOfficialPriority={true}
                 showDate={true}
                 showRound={true}
                 showScore={true}
