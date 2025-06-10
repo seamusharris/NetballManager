@@ -660,7 +660,7 @@ export default function ComponentExamples() {
             </CardContent>
           </Card>
         </section>
-</div>
-    
+      </div>
+    </PageTemplate>
   );
 }
