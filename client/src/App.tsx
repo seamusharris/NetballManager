@@ -68,6 +68,7 @@ import PositionRotationExamples from './pages/PositionRotationExamples';
 import TeamFormationExamples from './pages/TeamFormationExamples';
 import ScoreProgressionExamples from './pages/ScoreProgressionExamples';
 import SubstitutionFlowExamples from './pages/SubstitutionFlowExamples';
+import RosterManagementExamples from './pages/RosterManagementExamples';
 
 /**
  * Loading spinner component for suspense fallbacks
@@ -186,6 +187,7 @@ function Router() {
         <Route path="/team-formation-examples" component={TeamFormationExamples} />
         <Route path="/score-progression-examples" component={ScoreProgressionExamples} />
         <Route path="/substitution-flow-examples" component={SubstitutionFlowExamples} />
+        <Route path="/roster-management-examples" component={RosterManagementExamples} />
         <Route component={withErrorBoundary(NotFound, 'NotFound')} />
       </Switch>
     </Layout>

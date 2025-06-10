@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PageTemplate } from '@/components/layout/PageTemplate';
 import { Link } from 'wouter';
@@ -63,6 +62,14 @@ const examples: ExampleSection[] = [
     description: 'Court display components with various layouts and configurations for game visualization.',
     path: '/court-layout-examples',
     icon: <Target className="h-5 w-5" />,
+    category: 'Components',
+    status: 'Complete'
+  },
+  {
+    title: 'Roster Management',
+    description: 'Different interfaces for assigning players to positions.',
+    path: '/roster-management-examples',
+    icon: <Users className="h-5 w-5" />,
     category: 'Components',
     status: 'Complete'
   },
@@ -272,7 +279,7 @@ const examples: ExampleSection[] = [
     category: 'Sport-Specific',
     status: 'Complete'
   },
-  
+
   // Layouts
   {
     title: 'Page Layouts',
@@ -418,7 +425,7 @@ export default function ComponentExamples() {
                     <p className="text-gray-600 text-sm mb-4">
                       {example.description}
                     </p>
-                    
+
                     {example.status === 'Complete' ? (
                       <Link href={example.path}>
                         <div className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors duration-200">
@@ -454,7 +461,7 @@ export default function ComponentExamples() {
                   success green (#10B981), warning orange (#F59E0B), and danger red (#EF4444).
                 </p>
               </div>
-              
+
               <div>
                 <h4 className="font-semibold mb-2">Spacing Standards</h4>
                 <p className="text-sm text-gray-600 mb-3">
@@ -462,7 +469,7 @@ export default function ComponentExamples() {
                   padding, margins, and gap spacing throughout the application.
                 </p>
               </div>
-              
+
               <div>
                 <h4 className="font-semibold mb-2">Typography Scale</h4>
                 <p className="text-sm text-gray-600 mb-3">
@@ -470,7 +477,7 @@ export default function ComponentExamples() {
                   ensuring readability across different screen sizes and contexts.
                 </p>
               </div>
-              
+
               <div>
                 <h4 className="font-semibold mb-2">Interactive States</h4>
                 <p className="text-sm text-gray-600 mb-3">
