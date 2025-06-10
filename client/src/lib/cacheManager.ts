@@ -31,6 +31,9 @@ export class CacheManager {
       .filter(query => Date.now() - query.state.dataUpdatedAt > staleTime)
       .forEach(query => this.queryClient.removeQueries({ queryKey: query.queryKey }));
   }
+
+  // Club switching cache invalidation removed to prevent race conditions
+  // Cache will be managed naturally through query key changes
 }
 
 // Global cache manager instance

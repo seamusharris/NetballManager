@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/apiClient';
-import { cacheManager } from '@/lib/cacheManager';
+
 import { CACHE_KEYS } from '@/lib/cacheKeys';
 
 interface Club {
@@ -165,10 +165,8 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
     setCurrentTeamId(null);
     localStorage.removeItem('current-team-id');
 
-    // Intelligent cache invalidation
-    if (cacheManager) {
-      cacheManager.invalidateOnClubSwitch(clubId, oldClubId);
-    }
+    // Cache invalidation disabled to prevent race conditions
+    // Let React Query handle cache naturally through query key changes
 
     console.log('ClubContext: Club switch completed to:', clubId);
   }, [currentClubId, userClubs]);
