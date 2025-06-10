@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { useClub } from '@/contexts/ClubContext';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useLocation, useRoute } from 'wouter';
 import { useState } from 'react';
 
 interface TeamSwitcherProps {
@@ -13,8 +13,7 @@ interface TeamSwitcherProps {
 
 export function TeamSwitcher({ mode = 'optional', className, onTeamChange }: TeamSwitcherProps) {
   const { currentTeamId, currentTeam, clubTeams, setCurrentTeamId } = useClub();
-  const navigate = useNavigate();
-  const location = useLocation();
+  const [location, setLocation] = useLocation();
   const [open, setOpen] = useState(false); // Add state to control the dropdown
 
   // Don't render if hidden mode or only one team
@@ -60,9 +59,8 @@ export function TeamSwitcher({ mode = 'optional', className, onTeamChange }: Tea
     // Force a small delay to ensure context propagates before navigation
     setTimeout(() => {
       if (mode === 'required') {
-        const currentPath = location.pathname; // Access pathname property
-        if (currentPath.includes('/dashboard/team')) {
-          navigate(`/dashboard/team/${numericTeamId}`);
+        if (location.includes('/dashboard/team')) {
+          setLocation(`/dashboard/team/${numericTeamId}`);
         }
       }
     }, 10);
