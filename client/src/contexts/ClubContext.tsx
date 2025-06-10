@@ -339,7 +339,7 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
   });
 
   return (
-    ClubContext.Provider value={contextValue}>
+    <ClubContext.Provider value={contextValue}>
       {children}
     </ClubContext.Provider>
   );
