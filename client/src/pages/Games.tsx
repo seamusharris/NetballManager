@@ -53,6 +53,13 @@ export default function Games() {
     }
   }, []);
 
+  // Fetch teams first (needed for auto-select effect)
+  const { data: teams = [], isLoading: isLoadingTeams } = useQuery<any[]>({
+    queryKey: ['teams', currentClubId],
+    queryFn: () => apiClient.get('/api/teams'),
+    enabled: !!currentClubId,
+  });
+
   // Auto-select team from URL if provided
   useEffect(() => {
     if (teamIdFromUrl && teams.length > 0 && currentClub?.setCurrentTeam) {
@@ -67,12 +74,6 @@ export default function Games() {
   const { data: games = [], isLoading: isLoadingGames } = useQuery<any[]>({
     queryKey: ['games', currentClubId, teamIdFromUrl || currentTeamId],
     queryFn: () => apiClient.get('/api/games'),
-    enabled: !!currentClubId,
-  });
-
-  const { data: teams = [], isLoading: isLoadingTeams } = useQuery<any[]>({
-    queryKey: ['teams', currentClubId],
-    queryFn: () => apiClient.get('/api/teams'),
     enabled: !!currentClubId,
   });
 
