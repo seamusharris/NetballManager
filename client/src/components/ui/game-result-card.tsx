@@ -14,7 +14,7 @@ interface GameResultCardProps {
   layout?: GameResultLayout;
   className?: string;
   gameStats?: any[];
-  officialScores?: any[];
+  centralizedScores?: any[];
   useOfficialPriority?: boolean;
   showLink?: boolean;
   showDate?: boolean;
@@ -30,7 +30,7 @@ export function GameResultCard({
   layout = 'medium',
   className,
   gameStats = [],
-  officialScores,
+  centralizedScores,
   useOfficialPriority = false,
   showLink = true,
   showDate = true,
@@ -54,13 +54,13 @@ export function GameResultCard({
         game.homeTeamId,
         game.awayTeamId,
         currentTeamId,
-        useOfficialPriority ? officialScores : undefined
+        useOfficialPriority ? centralizedScores : undefined
       );
     } catch (error) {
       // Silently handle errors to avoid console clutter
       return null;
     }
-  }, [gameStats, officialScores, useOfficialPriority, game, currentTeamId]);
+  }, [gameStats, centralizedScores, useOfficialPriority, game, currentTeamId]);
 
   // Get opponent name
   const getOpponentName = (): string => {
