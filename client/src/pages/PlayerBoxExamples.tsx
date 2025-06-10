@@ -236,3 +236,206 @@ export default function PlayerBoxExamples() {
     </div>
   );
 }
+import React from 'react';
+import { PageTemplate } from '@/components/layout/PageTemplate';
+import { PlayerBox } from '@/components/ui/player-box';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
+export default function PlayerBoxExamples() {
+  // Example player data
+  const examplePlayers = [
+    {
+      id: 1,
+      displayName: "Sarah Johnson",
+      firstName: "Sarah",
+      lastName: "Johnson",
+      positionPreferences: ["GA", "GS"],
+      avatarColor: "bg-blue-500",
+      active: true
+    },
+    {
+      id: 2,
+      displayName: "Emma Wilson",
+      firstName: "Emma", 
+      lastName: "Wilson",
+      positionPreferences: ["C", "WA", "WD"],
+      avatarColor: "bg-green-500",
+      active: true
+    },
+    {
+      id: 3,
+      displayName: "Kate Brown",
+      firstName: "Kate",
+      lastName: "Brown", 
+      positionPreferences: ["GK", "GD"],
+      avatarColor: "bg-purple-500",
+      active: true
+    },
+    {
+      id: 4,
+      displayName: "Lily Chen",
+      firstName: "Lily",
+      lastName: "Chen",
+      positionPreferences: ["GA", "WA"],
+      avatarColor: "bg-pink-500",
+      active: false
+    }
+  ];
+
+  return (
+    <PageTemplate title="Player Box Examples" breadcrumbs={[{ label: "Player Box Examples" }]}>
+      <div className="space-y-8">
+        <div className="prose max-w-none">
+          <p>Different styles and configurations for the PlayerBox component.</p>
+        </div>
+
+        {/* Default Style */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Default Player Boxes</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {examplePlayers.map(player => (
+                <PlayerBox key={player.id} player={player} />
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Compact Style */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Compact Style</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
+              {examplePlayers.map(player => (
+                <div key={player.id} className="scale-75">
+                  <PlayerBox player={player} />
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* With Custom Styling */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Custom Styling Examples</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="border-2 border-blue-200 rounded-lg p-4">
+                  <h4 className="font-semibold mb-2">Highlighted Active Player</h4>
+                  <PlayerBox player={examplePlayers[0]} className="border-blue-400 shadow-lg" />
+                </div>
+                
+                <div className="border-2 border-gray-200 rounded-lg p-4 opacity-60">
+                  <h4 className="font-semibold mb-2">Inactive Player Style</h4>
+                  <PlayerBox player={examplePlayers[3]} className="opacity-50" />
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Different Sizes */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Size Variations</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              <div>
+                <h4 className="font-semibold mb-2">Large (1.25x)</h4>
+                <div className="flex flex-wrap gap-4">
+                  {examplePlayers.slice(0, 2).map(player => (
+                    <div key={player.id} className="scale-125">
+                      <PlayerBox player={player} />
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              <div>
+                <h4 className="font-semibold mb-2">Small (0.8x)</h4>
+                <div className="flex flex-wrap gap-2">
+                  {examplePlayers.map(player => (
+                    <div key={player.id} className="scale-80">
+                      <PlayerBox player={player} />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Interactive Examples */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Interactive Player Boxes</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {examplePlayers.map(player => (
+                <div 
+                  key={player.id} 
+                  className="cursor-pointer transition-transform hover:scale-105"
+                  onClick={() => alert(`Clicked on ${player.displayName}`)}
+                >
+                  <PlayerBox player={player} className="hover:shadow-lg" />
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Position-focused Display */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Position-Focused Layout</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div>
+                <h4 className="font-semibold mb-2">Attackers</h4>
+                <div className="flex flex-wrap gap-4">
+                  {examplePlayers.filter(p => 
+                    p.positionPreferences.some(pos => ['GA', 'GS', 'WA'].includes(pos))
+                  ).map(player => (
+                    <PlayerBox key={player.id} player={player} className="border-orange-300" />
+                  ))}
+                </div>
+              </div>
+              
+              <div>
+                <h4 className="font-semibold mb-2">Defenders</h4>
+                <div className="flex flex-wrap gap-4">
+                  {examplePlayers.filter(p => 
+                    p.positionPreferences.some(pos => ['GK', 'GD', 'WD'].includes(pos))
+                  ).map(player => (
+                    <PlayerBox key={player.id} player={player} className="border-red-300" />
+                  ))}
+                </div>
+              </div>
+              
+              <div>
+                <h4 className="font-semibold mb-2">Center Court</h4>
+                <div className="flex flex-wrap gap-4">
+                  {examplePlayers.filter(p => 
+                    p.positionPreferences.includes('C')
+                  ).map(player => (
+                    <PlayerBox key={player.id} player={player} className="border-green-300" />
+                  ))}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </PageTemplate>
+  );
+}

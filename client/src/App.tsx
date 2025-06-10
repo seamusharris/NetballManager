@@ -146,7 +146,7 @@ function AppContent() {
       );
     }
 
-    return <Router />);
+    return <Router />;
   } catch (error) {
     console.error('AppContent error:', error);
     return (
