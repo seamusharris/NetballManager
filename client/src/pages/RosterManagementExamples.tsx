@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { Helmet } from 'react-helmet';
 import { PageTemplate } from '@/components/layout/PageTemplate';
@@ -6,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Users, 
   RotateCcw, 
@@ -21,27 +19,32 @@ import {
   Eye,
   Edit
 } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 // Mock data
 const samplePlayers = [
-  { id: 1, name: "Sarah J", positions: ["GS", "GA"], color: "bg-red-500" },
-  { id: 2, name: "Emma K", positions: ["WA", "C"], color: "bg-blue-500" },
-  { id: 3, name: "Lucy M", positions: ["C", "WD"], color: "bg-green-500" },
-  { id: 4, name: "Kate R", positions: ["WD", "GD"], color: "bg-purple-500" },
-  { id: 5, name: "Amy T", positions: ["GD", "GK"], color: "bg-orange-500" },
-  { id: 6, name: "Zoe L", positions: ["GK", "GD"], color: "bg-pink-500" },
-  { id: 7, name: "Mia B", positions: ["GA", "WA"], color: "bg-teal-500" },
-  { id: 8, name: "Ella C", positions: ["WA", "C", "WD"], color: "bg-yellow-500" },
-  { id: 9, name: "Ava D", positions: ["C", "WA"], color: "bg-indigo-500" },
-  { id: 10, name: "Lily F", positions: ["GS", "GA", "WA"], color: "bg-cyan-500" }
+  { id: 1, name: "Sarah J", positions: ["GS", "GA"], color: "bg-red-500", displayName: "Sarah J" },
+  { id: 2, name: "Emma K", positions: ["WA", "C"], color: "bg-blue-500", displayName: "Emma K" },
+  { id: 3, name: "Lucy M", positions: ["C", "WD"], color: "bg-green-500", displayName: "Lucy M" },
+  { id: 4, name: "Kate R", positions: ["WD", "GD"], color: "bg-purple-500", displayName: "Kate R" },
+  { id: 5, name: "Amy T", positions: ["GD", "GK"], color: "bg-orange-500", displayName: "Amy T" },
+  { id: 6, name: "Zoe L", positions: ["GK", "GD"], color: "bg-pink-500", displayName: "Zoe L" },
+  { id: 7, name: "Mia B", positions: ["GA", "WA"], color: "bg-teal-500", displayName: "Mia B" },
+  { id: 8, name: "Ella C", positions: ["WA", "C", "WD"], color: "bg-yellow-500", displayName: "Ella C" },
+  { id: 9, name: "Ava D", positions: ["C", "WA"], color: "bg-indigo-500", displayName: "Ava D" },
+  { id: 10, name: "Lily F", positions: ["GS", "GA", "WA"], color: "bg-cyan-500", displayName: "Lily F" }
 ];
 
 const positions = ["GS", "GA", "WA", "C", "WD", "GD", "GK"];
 
 // Drag and Drop Interface
 function DragDropRoster() {
-  const [assignments, setAssignments] = useState<Record<string, number | null>>({
-    GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null
+  const [currentQuarter, setCurrentQuarter] = useState(1);
+  const [assignments, setAssignments] = useState<Record<number, Record<string, number | null>>>({
+    1: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
+    2: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
+    3: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
+    4: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null }
   });
   const [draggedPlayer, setDraggedPlayer] = useState<number | null>(null);
 
@@ -55,105 +58,232 @@ function DragDropRoster() {
 
   const handleDrop = (position: string) => {
     if (draggedPlayer) {
-      // Remove player from previous position
-      const newAssignments = { ...assignments };
-      Object.keys(newAssignments).forEach(pos => {
-        if (newAssignments[pos] === draggedPlayer) {
-          newAssignments[pos] = null;
+      // Remove player from previous position in current quarter
+      const newAssignments = {
+        ...assignments,
+        [currentQuarter]: { ...assignments[currentQuarter] }
+      };
+      Object.keys(newAssignments[currentQuarter]).forEach(pos => {
+        if (newAssignments[currentQuarter][pos] === draggedPlayer) {
+          newAssignments[currentQuarter][pos] = null;
         }
       });
-      newAssignments[position] = draggedPlayer;
+      newAssignments[currentQuarter][position] = draggedPlayer;
       setAssignments(newAssignments);
     }
     setDraggedPlayer(null);
   };
 
-  const assignedPlayerIds = Object.values(assignments).filter(id => id !== null);
+  const currentQuarterAssignments = assignments[currentQuarter];
+  const assignedPlayerIds = Object.values(currentQuarterAssignments).filter(id => id !== null);
   const availablePlayers = samplePlayers.filter(p => !assignedPlayerIds.includes(p.id));
 
-  return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-2 gap-6">
-        {/* Available Players */}
-        <div>
-          <h4 className="font-semibold mb-3 flex items-center gap-2">
-            <Users className="h-4 w-4" />
-            Available Players
-          </h4>
-          <div className="grid grid-cols-2 gap-2">
+  // Summaries
+  const playerSummary = samplePlayers.reduce((acc, player) => {
+    const quartersPlayed = Object.entries(assignments).reduce((qtrs, [quarter, quarterAssignments]) => {
+      if (Object.values(quarterAssignments).includes(player.id)) {
+        qtrs.push(parseInt(quarter));
+      }
+      return qtrs;
+    }, [] as number[]);
+
+    const positionsPlayed = positions.filter(pos => {
+      return Object.values(assignments).some(quarterAssignments => {
+        return quarterAssignments[pos] === player.id;
+      });
+    });
+
+    acc[player.id] = {
+      totalQuarters: quartersPlayed.length,
+      quarters: quartersPlayed,
+      positions: positionsPlayed
+    };
+    return acc;
+  }, {});
+
+  const positionSummary = positions.reduce((acc, position) => {
+    const playersForPosition = Object.values(assignments).reduce((players, quarterAssignments) => {
+      const playerId = quarterAssignments[position];
+      if (playerId && !players.includes(playerId)) {
+        players.push(playerId);
+      }
+      return players;
+    }, [] as number[]);
+
+    const quartersFilled = Object.entries(assignments).reduce((qtrs, [quarter, quarterAssignments]) => {
+      if (quarterAssignments[position] != null && !qtrs.includes(parseInt(quarter))) {
+        qtrs.push(parseInt(quarter));
+      }
+      return qtrs;
+    }, [] as number[]);
+
+    acc[position] = {
+      players: playersForPosition,
+      quarters: quartersFilled
+    };
+    return acc;
+  }, {});
+  
+
+return (
+    <Card>
+      <CardContent className="p-6">
+        <h3 className="text-lg font-semibold mb-4">Drag & Drop Roster Assignment</h3>
+
+        {/* Quarter Selection */}
+        <Tabs value={currentQuarter.toString()} onValueChange={(value) => setCurrentQuarter(parseInt(value))}>
+          <TabsList className="grid w-full grid-cols-4 mb-4">
+            <TabsTrigger value="1">Quarter 1</TabsTrigger>
+            <TabsTrigger value="2">Quarter 2</TabsTrigger>
+            <TabsTrigger value="3">Quarter 3</TabsTrigger>
+            <TabsTrigger value="4">Quarter 4</TabsTrigger>
+          </TabsList>
+
+          {[1, 2, 3, 4].map(quarter => (
+            <TabsContent key={quarter} value={quarter.toString()}>
+              {/* Court layout */}
+              <div className="grid grid-cols-3 gap-4 mb-6 bg-green-50 p-4 rounded-lg">
+                {/* Attacking Third */}
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium text-center">Attacking Third</h4>
+                  {['GS', 'GA'].map(position => (
+                    <div
+                      key={position}
+                      className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center min-h-[80px] bg-white"
+                      onDragOver={handleDragOver}
+                      onDrop={() => handleDrop(position)}
+                    >
+                      <div className="text-xs font-medium mb-2">{position}</div>
+                      {currentQuarterAssignments[position] && (
+                        <div className="bg-primary text-white rounded px-2 py-1 text-xs">
+                          {samplePlayers.find(p => p.id === currentQuarterAssignments[position])?.displayName}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Center Third */}
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium text-center">Center Third</h4>
+                  {['WA', 'C', 'WD'].map(position => (
+                    <div
+                      key={position}
+                      className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center min-h-[80px] bg-white"
+                      onDragOver={handleDragOver}
+                      onDrop={() => handleDrop(position)}
+                    >
+                      <div className="text-xs font-medium mb-2">{position}</div>
+                      {currentQuarterAssignments[position] && (
+                        <div className="bg-primary text-white rounded px-2 py-1 text-xs">
+                          {samplePlayers.find(p => p.id === currentQuarterAssignments[position])?.displayName}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Defending Third */}
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium text-center">Defending Third</h4>
+                  {['GD', 'GK'].map(position => (
+                    <div
+                      key={position}
+                      className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center min-h-[80px] bg-white"
+                      onDragOver={handleDragOver}
+                      onDrop={() => handleDrop(position)}
+                    >
+                      <div className="text-xs font-medium mb-2">{position}</div>
+                      {currentQuarterAssignments[position] && (
+                        <div className="bg-primary text-white rounded px-2 py-1 text-xs">
+                          {samplePlayers.find(p => p.id === currentQuarterAssignments[position])?.displayName}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </TabsContent>
+          ))}
+        </Tabs>
+
+        {/* Available players for current quarter */}
+        <div className="mb-6">
+          <h4 className="text-sm font-medium mb-2">Available Players (Quarter {currentQuarter})</h4>
+          <div className="flex flex-wrap gap-2">
             {availablePlayers.map(player => (
               <div
                 key={player.id}
                 draggable
                 onDragStart={() => handleDragStart(player.id)}
-                className="flex items-center gap-2 p-2 border rounded-lg cursor-grab hover:bg-gray-50 active:cursor-grabbing"
+                className="bg-gray-100 border rounded px-3 py-2 cursor-move hover:bg-gray-200 text-sm"
               >
-                <Avatar className="h-8 w-8">
-                  <AvatarFallback className={`${player.color} text-white text-xs`}>
-                    {player.name.split(' ').map(n => n[0]).join('')}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <div className="font-medium text-sm">{player.name}</div>
-                  <div className="text-xs text-gray-500">
-                    {player.positions.join(', ')}
-                  </div>
-                </div>
+                {player.displayName}
               </div>
             ))}
           </div>
         </div>
 
-        {/* Court Positions */}
-        <div>
-          <h4 className="font-semibold mb-3 flex items-center gap-2">
-            <Target className="h-4 w-4" />
-            Court Positions
-          </h4>
-          <div className="grid grid-cols-1 gap-2">
-            {positions.map(position => {
-              const assignedPlayer = assignments[position] 
-                ? samplePlayers.find(p => p.id === assignments[position])
-                : null;
-
-              return (
-                <div
-                  key={position}
-                  onDragOver={handleDragOver}
-                  onDrop={() => handleDrop(position)}
-                  className="flex items-center justify-between p-3 border-2 border-dashed border-gray-300 rounded-lg min-h-[60px] hover:border-blue-400 transition-colors"
-                >
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="w-8 text-center">
-                      {position}
-                    </Badge>
-                    {assignedPlayer && (
-                      <div className="flex items-center gap-2">
-                        <Avatar className="h-8 w-8">
-                          <AvatarFallback className={`${assignedPlayer.color} text-white text-xs`}>
-                            {assignedPlayer.name.split(' ').map(n => n[0]).join('')}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className="font-medium">{assignedPlayer.name}</span>
+        {/* Game Summary */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Player Summary */}
+          <div>
+            <h4 className="text-sm font-medium mb-3">Player Summary</h4>
+            <div className="space-y-2 max-h-64 overflow-y-auto">
+              {samplePlayers.map(player => {
+                const stats = playerSummary[player.id];
+                return (
+                  <div key={player.id} className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                    <div>
+                      <div className="font-medium text-sm">{player.displayName}</div>
+                      <div className="text-xs text-gray-500">
+                        Positions: {stats.positions.join(', ') || 'None'}
                       </div>
-                    )}
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm font-medium">{stats.totalQuarters}/4 quarters</div>
+                      <div className="text-xs text-gray-500">
+                        Q{stats.quarters.sort().join(', Q') || 'None'}
+                      </div>
+                    </div>
                   </div>
-                  {assignedPlayer && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setAssignments(prev => ({ ...prev, [position]: null }))}
-                    >
-                      <Minus className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Position Summary */}
+          <div>
+            <h4 className="text-sm font-medium mb-3">Position Summary</h4>
+            <div className="space-y-2">
+              {['GS', 'GA', 'WA', 'C', 'WD', 'GD', 'GK'].map(position => {
+                const stats = positionSummary[position];
+                const playerNames = stats.players.map(id => 
+                  samplePlayers.find(p => p.id === id)?.displayName
+                ).filter(Boolean);
+
+                return (
+                  <div key={position} className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                    <div>
+                      <div className="font-medium text-sm">{position}</div>
+                      <div className="text-xs text-gray-500">
+                        {playerNames.join(', ') || 'No players assigned'}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm font-medium">{stats.players.length} players</div>
+                      <div className="text-xs text-gray-500">
+                        {stats.quarters.length}/4 quarters filled
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -166,20 +296,20 @@ function GridRoster() {
   const handlePlayerClick = (playerId: number, position: string) => {
     setAssignments(prev => {
       const newAssignments = { ...prev };
-      
+
       // If position is already taken by this player, remove them
       if (newAssignments[position] === playerId) {
         newAssignments[position] = null;
         return newAssignments;
       }
-      
+
       // Remove player from any other position
       Object.keys(newAssignments).forEach(pos => {
         if (newAssignments[pos] === playerId) {
           newAssignments[pos] = null;
         }
       });
-      
+
       newAssignments[position] = playerId;
       return newAssignments;
     });
@@ -220,7 +350,7 @@ function GridRoster() {
                 {positions.map(position => {
                   const isAssigned = assignments[position] === player.id;
                   const canPlay = player.positions.includes(position);
-                  
+
                   return (
                     <td key={position} className="border border-gray-200 p-2 text-center">
                       <Button
@@ -265,14 +395,14 @@ function VisualCourtRoster() {
     if (selectedPosition) {
       setAssignments(prev => {
         const newAssignments = { ...prev };
-        
+
         // Remove player from other positions
         Object.keys(newAssignments).forEach(pos => {
           if (newAssignments[pos] === playerId) {
             newAssignments[pos] = null;
           }
         });
-        
+
         newAssignments[selectedPosition] = playerId;
         return newAssignments;
       });
@@ -294,14 +424,14 @@ function VisualCourtRoster() {
             <div className="absolute top-2 left-2 w-20 h-20 border border-white rounded-full"></div>
             <div className="absolute bottom-2 right-2 w-20 h-20 border border-white rounded-full"></div>
           </div>
-          
+
           {/* Position markers */}
           {positions.map(position => {
             const layout = courtLayout[position];
             const assignedPlayer = assignments[position] 
               ? samplePlayers.find(p => p.id === assignments[position])
               : null;
-            
+
             return (
               <div
                 key={position}
@@ -348,7 +478,7 @@ function VisualCourtRoster() {
             const currentPosition = Object.keys(assignments).find(
               pos => assignments[pos] === player.id
             );
-            
+
             return (
               <div
                 key={player.id}
@@ -504,7 +634,7 @@ function MultiQuarterRoster() {
           <div className="space-y-2">
             {samplePlayers.map(player => {
               const quarterCount = getPlayerQuarterCount(player.id);
-              
+
               return (
                 <div key={player.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
                   <div className="flex items-center gap-2">
