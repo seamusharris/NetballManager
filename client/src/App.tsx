@@ -51,6 +51,23 @@ import TimelineExamples from './pages/TimelineExamples';
 import StatisticsCardExamples from './pages/StatisticsCardExamples';
 import TooltipExamples from './pages/TooltipExamples';
 import DropdownExamples from './pages/DropdownExamples';
+import NavigationExamples from './pages/NavigationExamples';
+import TableExamples from './pages/TableExamples';
+import ListExamples from './pages/ListExamples';
+import ModalExamples from './pages/ModalExamples';
+import SearchExamples from './pages/SearchExamples';
+import LoadingExamples from './pages/LoadingExamples';
+import ErrorExamples from './pages/ErrorExamples';
+import ToastExamples from './pages/ToastExamples';
+import SplitViewExamples from './pages/SplitViewExamples';
+import GridExamples from './pages/GridExamples';
+import CardCollectionExamples from './pages/CardCollectionExamples';
+import TournamentBracketExamples from './pages/TournamentBracketExamples';
+import MatchTimelineExamples from './pages/MatchTimelineExamples';
+import PositionRotationExamples from './pages/PositionRotationExamples';
+import TeamFormationExamples from './pages/TeamFormationExamples';
+import ScoreProgressionExamples from './pages/ScoreProgressionExamples';
+import SubstitutionFlowExamples from './pages/SubstitutionFlowExamples';
 
 /**
  * Loading spinner component for suspense fallbacks
@@ -148,27 +165,27 @@ function Router() {
         </Route>
         <Route path="/layout-examples" component={LayoutExamples} />
         <Route path="/color-examples" component={ColorExamples} />
-        <Route path="/navigation-examples" component={() => import('./pages/NavigationExamples').then(m => m.default)} />
-        <Route path="/table-examples" component={() => import('./pages/TableExamples').then(m => m.default)} />
-        <Route path="/list-examples" component={() => import('./pages/ListExamples').then(m => m.default)} />
+        <Route path="/navigation-examples" component={NavigationExamples} />
+        <Route path="/table-examples" component={TableExamples} />
+        <Route path="/list-examples" component={ListExamples} />
         <Route path="/timeline-examples" component={TimelineExamples} />
         <Route path="/statistics-card-examples" component={StatisticsCardExamples} />
-        <Route path="/modal-examples" component={() => import('./pages/ModalExamples').then(m => m.default)} />
+        <Route path="/modal-examples" component={ModalExamples} />
         <Route path="/tooltip-examples" component={TooltipExamples} />
         <Route path="/dropdown-examples" component={DropdownExamples} />
-        <Route path="/search-examples" component={() => import('./pages/SearchExamples').then(m => m.default)} />
-        <Route path="/loading-examples" component={() => import('./pages/LoadingExamples').then(m => m.default)} />
-        <Route path="/error-examples" component={() => import('./pages/ErrorExamples').then(m => m.default)} />
-        <Route path="/toast-examples" component={() => import('./pages/ToastExamples').then(m => m.default)} />
-        <Route path="/split-view-examples" component={() => import('./pages/SplitViewExamples').then(m => m.default)} />
-        <Route path="/grid-examples" component={() => import('./pages/GridExamples').then(m => m.default)} />
-        <Route path="/card-collection-examples" component={() => import('./pages/CardCollectionExamples').then(m => m.default)} />
-        <Route path="/tournament-bracket-examples" component={() => import('./pages/TournamentBracketExamples').then(m => m.default)} />
-        <Route path="/match-timeline-examples" component={() => import('./pages/MatchTimelineExamples').then(m => m.default)} />
-        <Route path="/position-rotation-examples" component={() => import('./pages/PositionRotationExamples').then(m => m.default)} />
-        <Route path="/team-formation-examples" component={() => import('./pages/TeamFormationExamples').then(m => m.default)} />
-        <Route path="/score-progression-examples" component={() => import('./pages/ScoreProgressionExamples').then(m => m.default)} />
-        <Route path="/substitution-flow-examples" component={() => import('./pages/SubstitutionFlowExamples').then(m => m.default)} />
+        <Route path="/search-examples" component={SearchExamples} />
+        <Route path="/loading-examples" component={LoadingExamples} />
+        <Route path="/error-examples" component={ErrorExamples} />
+        <Route path="/toast-examples" component={ToastExamples} />
+        <Route path="/split-view-examples" component={SplitViewExamples} />
+        <Route path="/grid-examples" component={GridExamples} />
+        <Route path="/card-collection-examples" component={CardCollectionExamples} />
+        <Route path="/tournament-bracket-examples" component={TournamentBracketExamples} />
+        <Route path="/match-timeline-examples" component={MatchTimelineExamples} />
+        <Route path="/position-rotation-examples" component={PositionRotationExamples} />
+        <Route path="/team-formation-examples" component={TeamFormationExamples} />
+        <Route path="/score-progression-examples" component={ScoreProgressionExamples} />
+        <Route path="/substitution-flow-examples" component={SubstitutionFlowExamples} />
         <Route component={withErrorBoundary(NotFound, 'NotFound')} />
       </Switch>
     </Layout>
