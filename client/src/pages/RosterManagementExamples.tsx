@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   Users, 
   RotateCcw, 
@@ -189,29 +190,32 @@ return (
               <Trash2 className="h-4 w-4 mr-1" />
               Reset All
             </Button>
-            <div className="flex items-center gap-1">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  const sourceQuarter = currentQuarter === 1 ? 4 : currentQuarter - 1;
-                  handleCopyQuarter(sourceQuarter, currentQuarter);
-                }}
-              >
-                <ChevronLeft className="h-4 w-4" />
-                Copy Previous
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  const targetQuarter = currentQuarter === 4 ? 1 : currentQuarter + 1;
-                  handleCopyQuarter(currentQuarter, targetQuarter);
-                }}
-              >
-                Copy Next
-                <ChevronRight className="h-4 w-4" />
-              </Button>
+            
+            {/* Copy Quarter Controls - like in the main roster manager */}
+            <div className="flex items-center gap-2 flex-wrap">
+              {[1, 2, 3, 4].map(sourceQuarter => (
+                <Select
+                  key={sourceQuarter}
+                  onValueChange={(value) => {
+                    if (value) {
+                      handleCopyQuarter(sourceQuarter, parseInt(value));
+                    }
+                  }}
+                >
+                  <SelectTrigger className="w-[140px] text-xs">
+                    <SelectValue placeholder={`Copy Q${sourceQuarter} to...`} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[1, 2, 3, 4]
+                      .filter(q => q !== sourceQuarter)
+                      .map(targetQuarter => (
+                        <SelectItem key={targetQuarter} value={targetQuarter.toString()}>
+                          Quarter {targetQuarter}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              ))}
             </div>
           </div>
         </div>
