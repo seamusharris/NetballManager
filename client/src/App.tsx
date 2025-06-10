@@ -150,6 +150,7 @@ function Router() {
         <Route path="/statistics-examples" component={lazy(() => import('./pages/StatisticsExamples'))} />
         <Route path="/timeline-examples" component={lazy(() => import('./pages/TimelineExamples'))} />
         <Route path="/sport-specific-examples" component={lazy(() => import('./pages/SportSpecificExamples'))} />
+        <Route path="/component-examples" component={lazy(() => import('./pages/ComponentExamples'))} />
         <Route component={withErrorBoundary(NotFound, 'NotFound')} />
       </Switch>
     </Layout>
