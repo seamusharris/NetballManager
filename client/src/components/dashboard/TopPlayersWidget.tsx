@@ -333,20 +333,15 @@ export default function TopPlayersWidget({
         rating: 6.0
       }
     }))
-    // For team filtering: show players with game data if available, otherwise show all players
+    // For team filtering: if teamId is provided, show all players (the roster filtering above already handled team membership)
     .filter(player => {
-      if (!teamId) return true; // No team filter, show everyone
-      
-      // Count how many players actually have game statistics
-      const playersWithGameData = playersToShow.filter(p => (playerStatsMap[p.id]?.gamesPlayed || 0) > 0);
-      
-      // If we have fewer than 3 players with game data, show all players (roster data might be incomplete)
-      if (playersWithGameData.length < 3) {
-        return true;
+      if (!teamId) {
+        // No team filter, only show players with game data
+        return player.stats.gamesPlayed > 0;
       }
       
-      // If we have enough players with game data, only show those who have played
-      return player.stats.gamesPlayed > 0;
+      // Team filter is applied, show all players that made it through roster filtering
+      return true;
     })
     .sort((a, b) => b.stats.rating - a.stats.rating)
     .slice(0, 5);
