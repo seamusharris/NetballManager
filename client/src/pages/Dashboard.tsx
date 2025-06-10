@@ -14,8 +14,25 @@ import { UpcomingGameRecommendations } from '@/components/dashboard/UpcomingGame
 import { TeamSwitcher } from '@/components/layout/TeamSwitcher';
 import { useEffect, useState } from 'react';
 import { useRequestMonitor } from '@/hooks/use-request-monitor';
+import React from 'react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export default function Dashboard() {
+  // Check if ClubContext is available before using it
+  const clubContext = React.useContext(require('@/contexts/ClubContext').ClubContext);
+
+  if (!clubContext) {
+    return (
+      <div className="container mx-auto p-6">
+        <Alert>
+          <AlertDescription>
+            Loading club context... Please wait.
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
   const params = useParams();
   const { 
     currentClub, 
@@ -102,7 +119,7 @@ export default function Dashboard() {
           includeRosters: true,
           includeScores: true
         });
-        
+
         console.log('Dashboard batch data result:', result);
         return result;
       } catch (error) {

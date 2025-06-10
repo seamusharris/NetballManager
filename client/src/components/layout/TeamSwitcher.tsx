@@ -32,7 +32,9 @@ export function TeamSwitcher({ mode = 'optional', className, onTeamChange }: Tea
   const handleTeamChange = (value: string) => {
     console.log('TeamSwitcher: Handling team change to:', value);
     const teamId = value === 'all' ? null : parseInt(value, 10);
-
+    
+    console.log('TeamSwitcher: Setting current team ID to:', teamId);
+    
     // Process the team change immediately
     setCurrentTeamId(teamId);
     onTeamChange?.(teamId);

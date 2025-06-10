@@ -129,12 +129,26 @@ const queryClient = new QueryClient({
 // Initialize cache manager
 initializeCacheManager(queryClient);
 
+function AppContent() {
+  const { isInitialized } = useClub();
+  
+  if (!isInitialized) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <LoadingSpinner message="Initializing application..." />
+      </div>
+    );
+  }
+  
+  return <Router />;
+}
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ClubProvider>
         <TooltipProvider>
-          <Router />
+          <AppContent />
           <Toaster />
         </TooltipProvider>
       </ClubProvider>

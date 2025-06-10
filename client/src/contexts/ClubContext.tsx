@@ -45,7 +45,7 @@ interface ClubContextType {
   isInitialized: boolean;
 }
 
-const ClubContext = createContext<ClubContextType | undefined>(undefined);
+export const ClubContext = createContext<ClubContextType | undefined>(undefined);
 
 export function ClubProvider({ children }: { children: React.ReactNode }) {
   // Initialize state synchronously and ensure API client is immediately in sync
