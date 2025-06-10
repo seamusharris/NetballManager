@@ -62,8 +62,17 @@ export function GameResultCard({
     }
   }, [gameStats, centralizedScores, useOfficialPriority, game, currentTeamId]);
 
-  // Get opponent name
+  // Check if this is a BYE game
+  const isByeGame = game.isBye || 
+                   game.awayTeamName === 'Bye' || 
+                   game.homeTeamName === 'Bye' ||
+                   (!game.awayTeamName && !game.homeTeamName);
+
   const getOpponentName = (): string => {
+    // Handle team-based system with proper BYE detection
+    if (isByeGame) {
+      return 'Bye';
+    }
     if (game.awayTeamName && game.awayTeamName !== 'Bye') {
       return game.awayTeamName;
     } else if (game.homeTeamName) {
@@ -148,11 +157,11 @@ export function GameResultCard({
   };
 
     const getOpponentDisplay = (): string => {
-      if (game.isBye) {
-          return "Bye";
-      }
-      return `vs ${getOpponentName()}`;
-    };
+    if (isByeGame) {
+      return "Bye";
+    }
+    return `vs ${getOpponentName()}`;
+  };
 
   const CardContent = () => (
     <div 

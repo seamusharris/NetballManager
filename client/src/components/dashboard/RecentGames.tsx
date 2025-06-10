@@ -67,7 +67,7 @@ export default function RecentGames({ games, opponents, className, seasonFilter,
                 showRound={true}
                 showScore={true}
                 className="mb-2"
-                currentTeamId={currentTeam?.id}
+                currentTeamId={clubWide ? null : currentTeam?.id}
                 clubTeams={teams || []}
               />
             ))
