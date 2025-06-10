@@ -917,6 +917,422 @@ export default function ChartExamples() {
           </div>
         </section>
 
+        {/* Circular Progress Charts */}
+        <section>
+          <h2 className="text-2xl font-bold mb-6">Circular Progress Charts</h2>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            {/* Win Rate Progress */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Trophy className="h-5 w-5" />
+                  <span>Win Rate Progress</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex justify-center">
+                  <div className="relative w-32 h-32">
+                    <svg width="128" height="128" className="transform -rotate-90">
+                      <circle
+                        cx="64"
+                        cy="64"
+                        r="56"
+                        stroke="#e5e7eb"
+                        strokeWidth="8"
+                        fill="none"
+                      />
+                      <circle
+                        cx="64"
+                        cy="64"
+                        r="56"
+                        stroke="#22c55e"
+                        strokeWidth="8"
+                        fill="none"
+                        strokeDasharray={`${(78 / 100) * 352} 352`}
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-green-600">78%</div>
+                        <div className="text-xs text-gray-500">Win Rate</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-4 text-center">
+                  <div className="text-sm text-gray-600">7 wins, 2 losses, 1 draw</div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Performance Rating */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Star className="h-5 w-5" />
+                  <span>Performance Rating</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex justify-center">
+                  <div className="relative w-32 h-32">
+                    <svg width="128" height="128" className="transform -rotate-90">
+                      <circle
+                        cx="64"
+                        cy="64"
+                        r="56"
+                        stroke="#e5e7eb"
+                        strokeWidth="8"
+                        fill="none"
+                      />
+                      <circle
+                        cx="64"
+                        cy="64"
+                        r="56"
+                        stroke="#3b82f6"
+                        strokeWidth="8"
+                        fill="none"
+                        strokeDasharray={`${(85 / 100) * 352} 352`}
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-blue-600">85</div>
+                        <div className="text-xs text-gray-500">Rating</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-4 text-center">
+                  <div className="text-sm text-gray-600">Season Average</div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Goal Efficiency */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Target className="h-5 w-5" />
+                  <span>Goal Efficiency</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex justify-center">
+                  <div className="relative w-32 h-32">
+                    <svg width="128" height="128" className="transform -rotate-90">
+                      <circle
+                        cx="64"
+                        cy="64"
+                        r="56"
+                        stroke="#e5e7eb"
+                        strokeWidth="8"
+                        fill="none"
+                      />
+                      <circle
+                        cx="64"
+                        cy="64"
+                        r="56"
+                        stroke="#f59e0b"
+                        strokeWidth="8"
+                        fill="none"
+                        strokeDasharray={`${(92 / 100) * 352} 352`}
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-amber-600">92%</div>
+                        <div className="text-xs text-gray-500">Efficiency</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-4 text-center">
+                  <div className="text-sm text-gray-600">Goals/Attempts</div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </section>
+
+        {/* Horizontal Bar Progress Charts */}
+        <section>
+          <h2 className="text-2xl font-bold mb-6">Horizontal Progress Bars</h2>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            
+            {/* Goals Performance */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Target className="h-5 w-5" />
+                  <span>Goals Performance</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600 min-w-[80px]">Goals For</span>
+                    <div className="flex-1 mx-3">
+                      <div className="bg-gray-200 rounded-full h-4 relative overflow-hidden">
+                        <div 
+                          className="bg-gradient-to-r from-green-400 to-green-600 h-full rounded-full transition-all duration-1000"
+                          style={{ width: '75%' }}
+                        />
+                      </div>
+                    </div>
+                    <span className="text-lg font-bold text-green-600 min-w-[40px] text-right">
+                      15.2
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600 min-w-[80px]">Goals Against</span>
+                    <div className="flex-1 mx-3">
+                      <div className="bg-gray-200 rounded-full h-4 relative overflow-hidden">
+                        <div 
+                          className="bg-gradient-to-r from-red-400 to-red-600 h-full rounded-full transition-all duration-1000"
+                          style={{ width: '60%' }}
+                        />
+                      </div>
+                    </div>
+                    <span className="text-lg font-bold text-red-600 min-w-[40px] text-right">
+                      12.1
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between pt-2 border-t border-gray-200">
+                    <span className="text-sm text-gray-600">Goal Ratio</span>
+                    <span className="text-lg font-bold text-blue-600">
+                      126%
+                    </span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Season Progress */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Calendar className="h-5 w-5" />
+                  <span>Season Progress</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex justify-between text-sm text-gray-600">
+                    <span>Games Played</span>
+                    <span>10 / 14</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-6">
+                    <div 
+                      className="bg-blue-500 h-6 rounded-full flex items-center justify-end pr-3"
+                      style={{ width: '71%' }}
+                    >
+                      <span className="text-sm text-white font-bold">
+                        71%
+                      </span>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 text-center text-sm">
+                    <div>
+                      <div className="font-bold text-green-600">7</div>
+                      <div className="text-gray-500">Wins</div>
+                    </div>
+                    <div>
+                      <div className="font-bold text-red-600">2</div>
+                      <div className="text-gray-500">Losses</div>
+                    </div>
+                    <div>
+                      <div className="font-bold text-amber-600">1</div>
+                      <div className="text-gray-500">Draws</div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </section>
+
+        {/* Mini Performance Radars */}
+        <section>
+          <h2 className="text-2xl font-bold mb-6">Mini Performance Radars</h2>
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            
+            {Array.from({length: 4}, (_, index) => {
+              const playerNames = ['Sarah J', 'Emma W', 'Kate B', 'Lily C'];
+              const playerColors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444'];
+              return (
+                <Card key={index}>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm text-center">{playerNames[index]}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex justify-center">
+                      <svg width="120" height="120" viewBox="0 0 120 120">
+                        {/* Background grid */}
+                        <circle cx="60" cy="60" r="45" stroke="#e5e7eb" strokeWidth="1" fill="none" />
+                        <circle cx="60" cy="60" r="30" stroke="#e5e7eb" strokeWidth="1" fill="none" />
+                        <circle cx="60" cy="60" r="15" stroke="#e5e7eb" strokeWidth="1" fill="none" />
+                        
+                        {/* Axes */}
+                        <line x1="60" y1="15" x2="60" y2="105" stroke="#e5e7eb" strokeWidth="1" />
+                        <line x1="15" y1="60" x2="105" y2="60" stroke="#e5e7eb" strokeWidth="1" />
+                        
+                        {/* Performance polygon */}
+                        <polygon
+                          points={`60,${30 + Math.random() * 20} ${75 + Math.random() * 15},60 60,${75 + Math.random() * 15} ${45 - Math.random() * 15},60`}
+                          fill={`${playerColors[index]}40`}
+                          stroke={playerColors[index]}
+                          strokeWidth="2"
+                        />
+                        
+                        {/* Labels */}
+                        <text x="60" y="10" fontSize="10" fill="#6b7280" textAnchor="middle">Goals</text>
+                        <text x="110" y="65" fontSize="10" fill="#6b7280" textAnchor="middle">Pass</text>
+                        <text x="60" y="115" fontSize="10" fill="#6b7280" textAnchor="middle">Def</text>
+                        <text x="10" y="65" fontSize="10" fill="#6b7280" textAnchor="middle">Move</text>
+                      </svg>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* Gradient Bar Charts */}
+        <section>
+          <h2 className="text-2xl font-bold mb-6">Gradient Bar Charts</h2>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <BarChart className="h-5 w-5" />
+                <span>Position Performance Distribution</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {[
+                  { position: 'GS', value: 88, games: 12 },
+                  { position: 'GA', value: 76, games: 8 },
+                  { position: 'WA', value: 82, games: 15 },
+                  { position: 'C', value: 79, games: 10 },
+                  { position: 'WD', value: 85, games: 14 },
+                  { position: 'GD', value: 71, games: 6 },
+                  { position: 'GK', value: 69, games: 5 }
+                ].map((pos, index) => (
+                  <div key={pos.position} className="flex items-center space-x-4">
+                    <span className="w-8 text-sm font-medium">{pos.position}</span>
+                    <div className="flex-1 bg-gray-200 rounded-full h-6">
+                      <div 
+                        className="bg-gradient-to-r from-blue-500 to-purple-500 h-6 rounded-full flex items-center justify-between px-3"
+                        style={{ width: `${pos.value}%` }}
+                      >
+                        <span className="text-white text-sm font-bold">{pos.value}%</span>
+                        <span className="text-white text-xs">{pos.games}g</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+
+        {/* Small Metric Displays */}
+        <section>
+          <h2 className="text-2xl font-bold mb-6">Compact Metric Displays</h2>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            {/* Goals Distribution Pie */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm text-center">Goals Distribution</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex justify-center">
+                  <svg width="80" height="80" viewBox="0 0 80 80">
+                    {/* Team goals: 60% */}
+                    <path d="M 40 40 L 40 10 A 30 30 0 1 1 65.98 55 Z" fill="#3b82f6" />
+                    {/* Opponent goals: 40% */}
+                    <path d="M 40 40 L 65.98 55 A 30 30 0 0 1 40 10 Z" fill="#ef4444" />
+                    <circle cx="40" cy="40" r="12" fill="white" />
+                    <text x="40" y="45" textAnchor="middle" className="text-sm font-bold fill-current">
+                      60%
+                    </text>
+                  </svg>
+                </div>
+                <div className="flex justify-center space-x-4 mt-2">
+                  <div className="flex items-center space-x-1">
+                    <div className="w-3 h-3 bg-blue-500 rounded"></div>
+                    <span className="text-xs text-gray-600">For</span>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <div className="w-3 h-3 bg-red-500 rounded"></div>
+                    <span className="text-xs text-gray-600">Against</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Performance Heatmap */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm text-center">Performance Matrix</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-3 gap-1">
+                  {['Win%', 'Goals', 'Def'].map((metric, index) => {
+                    const values = [78, 85, 71];
+                    const colors = ['bg-green-500', 'bg-blue-500', 'bg-amber-500'];
+                    return (
+                      <div key={index} className="text-center">
+                        <div 
+                          className={`w-12 h-12 ${colors[index]} rounded flex items-center justify-center text-white text-xs font-bold mx-auto`}
+                        >
+                          {values[index]}
+                        </div>
+                        <div className="text-xs text-gray-500 mt-1">{metric}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Trend Indicators */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm text-center">Recent Trends</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {[
+                    { label: 'Goals', value: '+5%', trend: 'up' },
+                    { label: 'Defense', value: '+12%', trend: 'up' },
+                    { label: 'Turnovers', value: '-8%', trend: 'down' }
+                  ].map((item, index) => (
+                    <div key={index} className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600">{item.label}</span>
+                      <div className={`flex items-center space-x-1 ${item.trend === 'up' ? 'text-green-600' : 'text-red-600'}`}>
+                        {item.trend === 'up' ? (
+                          <TrendingUp className="w-4 h-4" />
+                        ) : (
+                          <TrendingDown className="w-4 h-4" />
+                        )}
+                        <span className="text-sm font-bold">{item.value}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </section>
+
         {/* Interactive Chart Guidelines */}
         <section>
           <h2 className="text-2xl font-bold mb-6">Chart Implementation Guidelines</h2>
@@ -958,6 +1374,8 @@ export default function ChartExamples() {
                     <div><strong>Scatter Plots:</strong> Correlations (time vs performance)</div>
                     <div><strong>Area Charts:</strong> Cumulative data (statistics over seasons)</div>
                     <div><strong>Heatmaps:</strong> Pattern identification (performance matrices)</div>
+                    <div><strong>Progress Charts:</strong> Goal completion and performance tracking</div>
+                    <div><strong>Gradient Bars:</strong> Visual emphasis on performance levels</div>
                   </div>
                 </div>
               </div>
