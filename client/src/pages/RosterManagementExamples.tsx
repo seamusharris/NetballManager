@@ -17,7 +17,8 @@ import {
   ChevronRight,
   ChevronLeft,
   Eye,
-  Edit
+  Edit,
+  Trash2
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -72,6 +73,35 @@ function DragDropRoster() {
       setAssignments(newAssignments);
     }
     setDraggedPlayer(null);
+  };
+
+  // Reset functions
+  const handleResetQuarter = () => {
+    const newAssignments = {
+      ...assignments,
+      [currentQuarter]: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null }
+    };
+    setAssignments(newAssignments);
+  };
+
+  const handleResetAll = () => {
+    setAssignments({
+      1: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
+      2: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
+      3: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
+      4: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null }
+    });
+  };
+
+  // Copy quarter function
+  const handleCopyQuarter = (sourceQuarter: number, targetQuarter: number) => {
+    if (sourceQuarter === targetQuarter) return;
+    
+    const newAssignments = {
+      ...assignments,
+      [targetQuarter]: { ...assignments[sourceQuarter] }
+    };
+    setAssignments(newAssignments);
   };
 
   const currentQuarterAssignments = assignments[currentQuarter];
@@ -130,14 +160,71 @@ return (
       <CardContent className="p-6">
         <h3 className="text-lg font-semibold mb-4">Drag & Drop Roster Assignment</h3>
 
-        {/* Quarter Selection */}
+        {/* Quarter Selection and Controls */}
+        <div className="flex items-center justify-between mb-4">
+          <Tabs value={currentQuarter.toString()} onValueChange={(value) => setCurrentQuarter(parseInt(value))}>
+            <TabsList className="grid grid-cols-4">
+              <TabsTrigger value="1">Quarter 1</TabsTrigger>
+              <TabsTrigger value="2">Quarter 2</TabsTrigger>
+              <TabsTrigger value="3">Quarter 3</TabsTrigger>
+              <TabsTrigger value="4">Quarter 4</TabsTrigger>
+            </TabsList>
+          </Tabs>
+
+          {/* Quarter Management Controls */}
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleResetQuarter}
+            >
+              <RotateCcw className="h-4 w-4 mr-1" />
+              Reset Quarter
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleResetAll}
+            >
+              <Trash2 className="h-4 w-4 mr-1" />
+              Reset All
+            </Button>
+            <div className="flex items-center gap-1">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const sourceQuarter = currentQuarter === 1 ? 4 : currentQuarter - 1;
+                  handleCopyQuarter(sourceQuarter, currentQuarter);
+                }}
+              >
+                <ChevronLeft className="h-4 w-4" />
+                Copy Previous
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const targetQuarter = currentQuarter === 4 ? 1 : currentQuarter + 1;
+                  handleCopyQuarter(currentQuarter, targetQuarter);
+                }}
+              >
+                Copy Next
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+
         <Tabs value={currentQuarter.toString()} onValueChange={(value) => setCurrentQuarter(parseInt(value))}>
-          <TabsList className="grid w-full grid-cols-4 mb-4">
-            <TabsTrigger value="1">Quarter 1</TabsTrigger>
-            <TabsTrigger value="2">Quarter 2</TabsTrigger>
-            <TabsTrigger value="3">Quarter 3</TabsTrigger>
-            <TabsTrigger value="4">Quarter 4</TabsTrigger>
-          </TabsList>
+          <div className="hidden">
+            <TabsList className="grid w-full grid-cols-4 mb-4">
+              <TabsTrigger value="1">Quarter 1</TabsTrigger>
+              <TabsTrigger value="2">Quarter 2</TabsTrigger>
+              <TabsTrigger value="3">Quarter 3</TabsTrigger>
+              <TabsTrigger value="4">Quarter 4</TabsTrigger>
+            </TabsList>
+          </div>
 
           {[1, 2, 3, 4].map(quarter => (
             <TabsContent key={quarter} value={quarter.toString()}>
@@ -229,9 +316,13 @@ return (
           {/* Player Summary */}
           <div>
             <h4 className="text-sm font-medium mb-3">Player Summary</h4>
-            <div className="space-y-2 max-h-64 overflow-y-auto">
+            <div className="space-y-2">
               {samplePlayers.map(player => {
                 const stats = playerSummary[player.id];
+                const quarterDisplay = stats.quarters.length > 0 
+                  ? `Q${stats.quarters.sort().join(', Q')}` 
+                  : 'No quarters';
+                
                 return (
                   <div key={player.id} className="flex justify-between items-center p-2 bg-gray-50 rounded">
                     <div>
@@ -243,7 +334,7 @@ return (
                     <div className="text-right">
                       <div className="text-sm font-medium">{stats.totalQuarters}/4 quarters</div>
                       <div className="text-xs text-gray-500">
-                        Q{stats.quarters.sort().join(', Q') || 'None'}
+                        {quarterDisplay}
                       </div>
                     </div>
                   </div>
