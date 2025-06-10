@@ -47,6 +47,10 @@ import ChartExamples from './pages/ChartExamples';
 const CourtLayoutExamples = lazy(() => import('./pages/CourtLayoutExamples'));
 import LayoutExamples from './pages/LayoutExamples';
 import ColorExamples from './pages/ColorExamples';
+import TimelineExamples from './pages/TimelineExamples';
+import StatisticsCardExamples from './pages/StatisticsCardExamples';
+import TooltipExamples from './pages/TooltipExamples';
+import DropdownExamples from './pages/DropdownExamples';
 
 /**
  * Loading spinner component for suspense fallbacks
@@ -147,11 +151,11 @@ function Router() {
         <Route path="/navigation-examples" component={() => import('./pages/NavigationExamples').then(m => m.default)} />
         <Route path="/table-examples" component={() => import('./pages/TableExamples').then(m => m.default)} />
         <Route path="/list-examples" component={() => import('./pages/ListExamples').then(m => m.default)} />
-        <Route path="/timeline-examples" component={() => import('./pages/TimelineExamples').then(m => m.default)} />
-        <Route path="/statistics-card-examples" component={() => import('./pages/StatisticsCardExamples').then(m => m.default)} />
+        <Route path="/timeline-examples" component={TimelineExamples} />
+        <Route path="/statistics-card-examples" component={StatisticsCardExamples} />
         <Route path="/modal-examples" component={() => import('./pages/ModalExamples').then(m => m.default)} />
-        <Route path="/tooltip-examples" component={() => import('./pages/TooltipExamples').then(m => m.default)} />
-        <Route path="/dropdown-examples" component={() => import('./pages/DropdownExamples').then(m => m.default)} />
+        <Route path="/tooltip-examples" component={TooltipExamples} />
+        <Route path="/dropdown-examples" component={DropdownExamples} />
         <Route path="/search-examples" component={() => import('./pages/SearchExamples').then(m => m.default)} />
         <Route path="/loading-examples" component={() => import('./pages/LoadingExamples').then(m => m.default)} />
         <Route path="/error-examples" component={() => import('./pages/ErrorExamples').then(m => m.default)} />
