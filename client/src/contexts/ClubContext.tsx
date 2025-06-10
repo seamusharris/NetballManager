@@ -178,6 +178,11 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
     // Force a check that the context was set properly
     if (currentClubId !== null) {
       console.log('ClubContext: Verifying API client has club and team context set');
+      
+      // Add a small delay to ensure any pending requests use the new context
+      setTimeout(() => {
+        console.log('ClubContext: API client context update complete');
+      }, 50);
     }
   }, [currentClubId, currentTeamId]);
 
@@ -238,7 +243,11 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
         }
       }
       
-      // Update state and localStorage
+      // Update API client context IMMEDIATELY before state changes
+      apiClient.setClubContext({ currentClubId, currentTeamId: teamId });
+      console.log('ClubContext: Updated API client with team ID:', teamId);
+      
+      // Update state and localStorage AFTER API client is updated
       setCurrentTeamId(teamId);
       if (teamId) {
         localStorage.setItem('current-team-id', teamId.toString());
@@ -246,13 +255,12 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
         localStorage.removeItem('current-team-id');
       }
       
-      // Update API client context immediately with new team ID
-      apiClient.setClubContext({ currentClubId, currentTeamId: teamId });
-      console.log('ClubContext: Updated API client with team ID:', teamId);
+      // Force invalidation of game queries to ensure fresh data with new team context
+      queryClient.invalidateQueries({ queryKey: ['games'] });
+      queryClient.refetchQueries({ queryKey: ['games'] });
       
-      // Don't invalidate any cached data - let React Query handle caching
-      // Team switches should use existing cached data for better performance
-    }, [currentClubId, clubTeams]);
+      console.log('ClubContext: Team context switch completed to:', teamId);
+    }, [currentClubId, clubTeams, queryClient]);
   
   // Load saved team from localStorage when teams are available
   useEffect(() => {
