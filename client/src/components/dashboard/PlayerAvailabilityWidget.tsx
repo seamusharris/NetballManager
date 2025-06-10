@@ -52,9 +52,9 @@ export default function PlayerAvailabilityWidget({
         const firstGame = upcomingGames[0];
         const teamId = firstGame.homeTeamId; // Assuming we're usually the home team
         
-        const response = await fetch(`/api/teams/${teamId}/players`);
-        if (response.ok) {
-          const teamPlayerData = await response.json();
+        const response = await apiClient.get(`/api/teams/${teamId}/players`);
+        if (response.success) {
+          const teamPlayerData = response.data;
           setTeamPlayers(teamPlayerData);
           console.log('Fetched team players:', teamPlayerData.length, 'for team:', teamId);
         } else {
