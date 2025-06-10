@@ -120,7 +120,7 @@ export class CacheManager {
   }
 
   // Helper to check if a key should be invalidated during club switch
-  shouldInvalidateOnClubSwitch: (key: string, newClubId: number, oldClubId: number | null): boolean => {
+  shouldInvalidateOnClubSwitch(key: string, newClubId: number, oldClubId: number | null): boolean {
     // Add your logic here to determine invalidation
     return false;
   }
