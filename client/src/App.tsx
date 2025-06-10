@@ -145,6 +145,11 @@ function Router() {
         <Route path="/layout-examples" component={LayoutExamples} />
         <Route path="/color-examples" component={ColorExamples} />
         <Route path="/navigation-examples" component={lazy(() => import('./pages/NavigationExamples'))} />
+        <Route path="/table-examples" component={lazy(() => import('./pages/TableExamples'))} />
+        <Route path="/modal-examples" component={lazy(() => import('./pages/ModalExamples'))} />
+        <Route path="/statistics-examples" component={lazy(() => import('./pages/StatisticsExamples'))} />
+        <Route path="/timeline-examples" component={lazy(() => import('./pages/TimelineExamples'))} />
+        <Route path="/sport-specific-examples" component={lazy(() => import('./pages/SportSpecificExamples'))} />
         <Route component={withErrorBoundary(NotFound, 'NotFound')} />
       </Switch>
     </Layout>
