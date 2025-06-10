@@ -46,6 +46,7 @@ import { GameStatusDialog } from './GameStatusDialog';
 import { useClub } from '@/contexts/ClubContext';
 import { TeamSwitcher } from '@/components/layout/TeamSwitcher';
 import { gameScoreService } from '@/lib/gameScoreService';
+import { GameResultCard } from '@/components/ui/game-result-card';
 
 interface GamesListProps {
   games: Game[];
@@ -61,6 +62,7 @@ interface GamesListProps {
   showActions?: boolean;
   maxRows?: number;
   title?: string;
+  teams?: any[];
 }
 
 // Shared function for filtering games by status and search query
@@ -100,7 +102,8 @@ export function GamesList({
   showActions = true,
   maxRows,
   title,
-  className
+  className,
+  teams = []
 }: GamesListProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -381,6 +384,11 @@ export function GamesList({
     setLocation(path);
   };
 
+    // Centralized statistics retrieval (simulated or actual)
+    const centralizedStats = {}; // Example: replace with actual centralized statistics retrieval
+    const centralizedScores = {}; // Example: replace with actual centralized statistics retrieval
+    const currentTeamId = currentClub?.teams?.[0]?.id;
+
   return (
     <div className="space-y-6">
       {/* Filters - only show if not dashboard or showFilters is true */}
@@ -539,203 +547,71 @@ export function GamesList({
                   </TableCell>
                 </TableRow>
               ) : (
-                finalGames.map(game => (
-                  <TableRow 
-                    key={game.id}
-                    className={`cursor-pointer ${isDashboard ? 'hover:bg-gray-50 transition-colors' : 'hover:bg-gray-50'}`}
-                    onClick={() => navigate(`/game/${game.id}`)}
-                  >
-                    <TableCell className={`px-6 py-4 whitespace-nowrap ${isDashboard ? 'border-r' : ''}`}>
-                      <div className="flex flex-col">
-                        <span className="font-medium text-gray-900">{formatDate(game.date)}</span>
-                        {!isDashboard && <span className="text-sm text-gray-500">{game.time}</span>}
-                        {isDashboard && <div className="text-xs text-gray-500">{game.time}</div>}
-                      </div>
-                    </TableCell>
-                    <TableCell className={`px-6 py-4 whitespace-nowrap ${isDashboard ? 'border-r text-center' : ''}`}>
-                      {game.round ? (
-                        <div className="font-medium">
-                          <Badge variant="outline" className="px-2 py-1 rounded-full bg-blue-100 text-blue-700 border-blue-200">
-                            {isDashboard ? game.round : `Round ${game.round}`}
-                          </Badge>
-                        </div>
-                      ) : (
-                        <span className="text-gray-400">--</span>
-                      )}
-                    </TableCell>
-                    <TableCell className={`px-6 py-4 whitespace-nowrap ${isDashboard ? 'border-r' : ''}`}>
-                      {getGameStatus(game).name === 'bye' ? (
-                        <div className="font-medium text-gray-500">⸺</div>
-                      ) : (
-                        <div className="font-medium">{getOpponentName(game)}</div>
-                      )}
-                    </TableCell>
-                    <TableCell className={`px-6 py-4 whitespace-nowrap ${isDashboard ? 'border-r text-center' : ''}`}>
-                      <div className="flex items-center gap-2">
-                        {getGameStatus(game).name === 'bye' ? (
-                          <Badge
-                            variant="outline"
-                            className="px-2 py-1 text-xs rounded-full font-semibold bg-gray-200 text-gray-700"
+                finalGames.map((game) => (
+                <div key={game.id} className="relative group">
+                  <GameResultCard
+                    game={game}
+                    layout="wide"
+                    gameStats={centralizedStats?.[game.id] || []}
+                    officialScores={centralizedScores?.[game.id]}
+                    useOfficialPriority={true}
+                    showDate={true}
+                    showRound={true}
+                    showScore={true}
+                    showLink={false}
+                    className="mb-3"
+                    currentTeamId={currentTeamId}
+                    clubTeams={teams || []}
+                  />
+
+                  {/* Action buttons overlay */}
+                  {showActions && (
+                    <div className="absolute top-3 right-3 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => onViewStats(game.id)}
+                        className="bg-white/90 hover:bg-white shadow-sm"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => onEdit(game)}
+                        className="bg-white/90 hover:bg-white shadow-sm"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            className="bg-white/90 hover:bg-white shadow-sm text-red-600 hover:text-red-800"
                           >
-                            BYE
-                          </Badge>
-                        ) : (
-                          <GameStatusButton 
-                            game={{
-                              ...game,
-                              gameStatus: getGameStatus(game)
-                            }}
-                            withDialog={false}
-                          />
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell className={`px-6 py-4 whitespace-nowrap ${isDashboard ? 'text-center' : ''}`}>
-                      {getGameStatus(game).name === 'bye' ? (
-                        <div className="font-medium text-gray-500">⸺</div>
-                      ) : getGameStatus(game).isCompleted ? (
-                        <div className="text-center">
-                          {/* Handle forfeit games with fixed scores */}
-                          {(game.statusTeamGoals !== null && game.statusOpponentGoals !== null) ? (
-                            (() => {
-                              const currentClubId = currentClub?.id;
-                              let teamScore = game.statusTeamGoals;
-                              let opponentScore = game.statusOpponentGoals;
-
-                              // For inter-club games, adjust score orientation based on home/away
-                              if (currentClubId && game.awayClubId === currentClubId) {
-                                // We are away team, so flip the scores
-                                teamScore = game.statusOpponentGoals;
-                                opponentScore = game.statusTeamGoals;
-                              }
-
-                              const isWin = teamScore > opponentScore;
-                              const isLoss = teamScore < opponentScore;
-                              const bgColor = isWin 
-                                ? "bg-green-100 border-green-200" 
-                                : isLoss 
-                                  ? "bg-red-100 border-red-200" 
-                                  : "bg-amber-100 border-amber-200";
-
-                              return (
-                                <div className="font-semibold text-left">
-                                  <div className={`inline-flex items-center px-3 py-1 rounded border text-gray-900 ${bgColor}`}>
-                                    <span className={isWin ? "font-bold" : ""}>{teamScore}</span>
-                                    <span className="mx-2">-</span>
-                                    <span className={isLoss ? "font-bold" : ""}>{opponentScore}</span>
-                                  </div>
-                                </div>
-                              );
-                            })()
-                          ) : scoresMap && scoresMap[game.id] ? (
-                            (() => {
-                              const scores = scoresMap[game.id];
-
-                              // Validate scores data structure
-                              if (!scores.finalScore || typeof scores.finalScore.for !== 'number' || typeof scores.finalScore.against !== 'number') {
-                                console.error(`Invalid scores data for game ${game.id}:`, scores);
-                                return <span className="text-red-500 text-sm">Invalid Score Data</span>;
-                              }
-
-                              const gameScore = getGameScoreForTeam(game, scores);
-                              if (!gameScore) {
-                                return <span className="text-red-500 text-sm">Score Error</span>;
-                              }
-
-                              const { teamScore, opponentScore, isWin } = gameScore;
-                              const isLoss = teamScore < opponentScore;
-
-                              const bgColor = isWin 
-                                ? "bg-green-100 border-green-200" 
-                                : isLoss 
-                                  ? "bg-red-100 border-red-200" 
-                                  : "bg-amber-100 border-amber-200";
-
-                              return (
-                                <div className="font-semibold text-left">
-                                  <div className={`inline-flex items-center px-3 py-1 rounded border text-gray-900 ${bgColor}`}>
-                                    <span className={isWin ? "font-bold" : ""}>{teamScore}</span>
-                                    <span className="mx-2">-</span>
-                                    <span className={isLoss ? "font-bold" : ""}>{opponentScore}</span>
-                                  </div>
-                                </div>
-                              );
-                            })()
-                          ) : isLoadingScores ? (
-                            <div className="flex space-x-2">
-                              <div className="h-6 w-12 bg-gray-200 animate-pulse rounded" />
-                              <span className="mx-1">-</span>
-                              <div className="h-6 w-12 bg-gray-200 animate-pulse rounded" />
-                            </div>
-                          ) : (
-                            <span className="text-red-500 text-sm">Score Error</span>
-                          )}
-                        </div>
-                      ) : (
-                        <div className="font-medium text-gray-500">—</div>
-                      )}
-                    </TableCell>
-
-                    {/* Actions column - only for non-dashboard */}
-                    {showActions && !isDashboard && (
-                      <TableCell className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center space-x-2" onClick={(e) => e.stopPropagation()}>
-                          {onEdit && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => onEdit(game)}
-                              className="h-8 w-8 p-0"
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                          )}
-                          {onViewStats && getGameStatus(game).isCompleted && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => onViewStats(game.id)}
-                              className="h-8 w-8 p-0"
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                          )}
-                          {onDelete && (
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    This action cannot be undone. This will permanently delete the game
-                                    and remove all associated data from our servers.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction
-                                    onClick={() => onDelete(game.id)}
-                                    className="bg-red-600 hover:bg-red-700"
-                                  >
-                                    Delete
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          )}
-                        </div>
-                      </TableCell>
-                    )}
-                  </TableRow>
-                ))
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete Game</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Are you sure you want to delete this game? This action cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => onDelete(game.id)}>
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                  )}
+                </div>
+              ))
               )}
             </TableBody>
           </Table>

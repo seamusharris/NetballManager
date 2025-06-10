@@ -216,6 +216,7 @@ export default function Games() {
             isDashboard={false}
             showFilters={true}
             showActions={true}
+            teams={teams}
           />
         </ContentBox>
       </PageTemplate>
