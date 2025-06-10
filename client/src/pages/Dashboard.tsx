@@ -209,9 +209,10 @@ export default function Dashboard() {
     );
   }
 
-  // More intelligent loading state - don't block on batch data if we have core data
+  // Improved loading state - wait for both core data AND batch data for better UX
   const hasBasicData = players.length > 0 && games.length > 0;
-  const isLoading = (isLoadingPlayers || isLoadingGames || isLoadingSeasons || isLoadingActiveSeason) && !hasBasicData;
+  const hasBatchData = batchData && (Object.keys(batchData.stats || {}).length > 0 || gameIdsArray.length === 0);
+  const isLoading = (isLoadingPlayers || isLoadingGames || isLoadingSeasons || isLoadingActiveSeason || isLoadingBatchData) && (!hasBasicData || !hasBatchData);
 
   // Show error state if any query fails
   if (playersError || gamesError || seasonsError || activeSeasonError) {
