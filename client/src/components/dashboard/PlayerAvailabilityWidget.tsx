@@ -83,7 +83,17 @@ export default function PlayerAvailabilityWidget({
       try {
         for (const game of upcomingGames) {
           try {
-            const response = await fetch(`/api/games/${game.id}/availability`);
+            // Add team context headers for proper team-specific availability
+            const headers: HeadersInit = {
+              'Content-Type': 'application/json'
+            };
+
+            // Get team ID from the game (assuming we're the home team)
+            if (game.homeTeamId) {
+              headers['x-current-team-id'] = game.homeTeamId.toString();
+            }
+
+            const response = await fetch(`/api/games/${game.id}/availability`, { headers });
             if (response.ok) {
               const data = await response.json();
               // Handle different response formats
