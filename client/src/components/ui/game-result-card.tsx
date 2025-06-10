@@ -197,8 +197,8 @@ export function GameResultCard({
 
       {/* Right side - Score */}
       {showScore && (
-        (game.isBye || !game.statusIsCompleted) ? (
-          <div className="ml-auto px-3 py-1 text-sm font-medium text-white bg-gray-800 rounded border border-gray-200">
+        (isByeGame || !game.statusIsCompleted) ? (
+          <div className="ml-auto px-3 py-1 text-sm font-medium text-white bg-gray-600 rounded">
             —
           </div>
         ) : scores ? (
