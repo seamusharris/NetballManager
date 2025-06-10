@@ -231,7 +231,7 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
   };
 
     // Enhanced team context switching with minimal cache invalidation
-  const setCurrentTeamId = useCallback((teamId: number | null) => {
+  const handleSetCurrentTeamId = useCallback((teamId: number | null) => {
     console.log('ClubContext: Setting team to:', teamId);
 
     if (teamId !== null) {
@@ -260,13 +260,13 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
       // Validate that the saved team exists in current club's teams
       const teamExists = clubTeams.some(team => team.id === teamId);
       if (teamExists) {
-        setCurrentTeamId(teamId);
+        handleSetCurrentTeamId(teamId);
       } else {
         // Clear invalid saved team ID
         localStorage.removeItem('current-team-id');
       }
     }
-  }, [currentTeamId, clubTeams]);
+  }, [currentTeamId, clubTeams, handleSetCurrentTeamId]);
 
   // Get current team object
   const currentTeam = useMemo(() => {
@@ -288,7 +288,7 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
     userClubs,
     clubTeams,
     switchClub,
-    setCurrentTeamId,
+    setCurrentTeamId: handleSetCurrentTeamId,
     hasPermission,
     isLoading: isLoadingClubs || (!!currentClubId && isLoadingClub) || isLoadingTeams,
     isInitialized,
