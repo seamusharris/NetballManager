@@ -148,30 +148,8 @@ export class UnifiedDataFetcher {
     });
   }
 
-  /**
-   * Intelligent cache invalidation
-   */
-  invalidateRelatedData(gameId: number, clubId: number, dataType: 'stats' | 'roster' | 'scores' | 'all' = 'all') {
-    const patterns = [];
-
-    if (dataType === 'stats' || dataType === 'all') {
-      patterns.push(CACHE_KEYS.gameStats(gameId));
-      patterns.push(['centralized-stats', clubId]);
-    }
-
-    if (dataType === 'roster' || dataType === 'all') {
-      patterns.push(CACHE_KEYS.gameRoster(gameId));
-      patterns.push(['centralized-rosters', clubId]);
-    }
-
-    if (dataType === 'scores' || dataType === 'all') {
-      patterns.push([`/api/games/${gameId}/scores`]);
-    }
-
-    patterns.forEach(pattern => {
-      queryClient.invalidateQueries({ queryKey: pattern });
-    });
-  }
+  // Cache invalidation removed - should be handled at mutation points
+  // (when actually saving/updating data) rather than during data fetching
 }
 
 export const dataFetcher = UnifiedDataFetcher.getInstance();
