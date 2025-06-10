@@ -133,6 +133,21 @@ export function GameResultCard({
 
   const config = getLayoutConfig();
 
+  // Helper function for timeline round badge styling
+  const getRoundBadgeVariant = () => {
+    if (game.statusIsCompleted) return "round-timeline";
+    return "round-pill"; // Default for upcoming games
+  };
+
+  const getRoundBadgeClass = () => {
+    if (game.statusIsCompleted) {
+      if (isWin) return "bg-green-200 text-green-800";
+      if (isLoss) return "bg-red-200 text-red-800";
+      return "bg-yellow-200 text-yellow-800"; // draws
+    }
+    return "bg-blue-200 text-blue-800"; // upcoming games
+  };
+
   // Display score or placeholder
   const getScoreDisplay = () => {
     if (!game) return "- -";
@@ -198,7 +213,10 @@ export function GameResultCard({
           )}
 
           {config.showRound && game.round && (
-            <GameBadge variant="round" size={layout === 'narrow' ? 'sm' : 'default'}>
+            <GameBadge 
+              variant="round-pill" 
+              size={layout === 'narrow' ? 'sm' : 'default'}
+            >
               {layout === 'narrow' ? `R${game.round}` : `Round ${game.round}`}
             </GameBadge>
           )}
