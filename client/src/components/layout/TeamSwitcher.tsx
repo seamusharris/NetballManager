@@ -45,25 +45,14 @@ export function TeamSwitcher({ mode = 'optional', className, onTeamChange }: Tea
     onTeamChange?.(teamId);
   };
 
-  const handleTeamSelect = (teamId: string) => {
-    const numericTeamId = parseInt(teamId, 10);
-
-    console.log('TeamSwitcher: Selecting team:', numericTeamId);
-
+  const handleTeamSelect = (value: string) => {
+    console.log('TeamSwitcher: Selecting team:', value);
+    
     // Close the dropdown first
     setOpen(false);
-
-    // Update team context - this should trigger immediate re-renders
-    setCurrentTeamId(numericTeamId);
-
-    // Force a small delay to ensure context propagates before navigation
-    setTimeout(() => {
-      if (mode === 'required') {
-        if (location.includes('/dashboard/team')) {
-          setLocation(`/dashboard/team/${numericTeamId}`);
-        }
-      }
-    }, 10);
+    
+    // Use the existing handleTeamChange logic which properly handles the selection
+    handleTeamChange(value);
   };
 
 
