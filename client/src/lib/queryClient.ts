@@ -204,23 +204,16 @@ import { QueryClient } from '@tanstack/react-query';
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes
-      gcTime: 1000 * 60 * 30, // 30 minutes
+      staleTime: 10 * 60 * 1000, // 10 minutes
+      gcTime: 30 * 60 * 1000, // 30 minutes
       refetchOnWindowFocus: false,
-      refetchOnMount: false, // Use cached data when available
+      refetchOnMount: 'always',
+      refetchOnReconnect: 'always',
       retry: (failureCount, error: any) => {
-        // Don't retry on 404s or other client errors
+        // Don't retry on 4xx errors (client errors)
         if (error?.status >= 400 && error?.status < 500) {
           return false;
         }
-        return failureCount < 3;
-      },
-      // Enable request deduplication
-      networkMode: 'online',
-      queryFn: getQueryFn({ on401: "throw" }),
-      refetchOnWindowFocus: false,
-      retry: (failureCount, error) => {
-        // Don't retry on 4xx errors (client errors)
         if (error && typeof error === 'object' && 'message' in error) {
           const message = error.message.toLowerCase();
           if (message.includes('400') || message.includes('401') || 
@@ -231,13 +224,8 @@ export const queryClient = new QueryClient({
         return failureCount < 3;
       },
       retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-      // Differentiated stale times by data type
-      staleTime: 10 * 60 * 1000, // 10 minutes default
-      // Longer cache time to preserve data between navigations
-      gcTime: 30 * 60 * 1000, // 30 minutes default
-      // Enable background refetching for better UX
-      refetchOnMount: 'always',
-      refetchOnReconnect: 'always',
+      networkMode: 'online',
+      queryFn: getQueryFn({ on401: "throw" }),
     },
     mutations: {
       retry: 2,
