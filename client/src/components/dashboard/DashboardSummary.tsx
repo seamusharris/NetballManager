@@ -33,13 +33,14 @@ import { TeamPositionAnalysis } from './TeamPositionAnalysis';
 import { UpcomingGameRecommendations } from './UpcomingGameRecommendations';
 
 interface DashboardSummaryProps {
-  players: Player[];
+  players: any[];
   games: Game[];
-  seasons: Season[];
-  activeSeason: Season | null;
+  seasons: any[];
+  activeSeason?: any;
   isLoading: boolean;
   centralizedRosters?: Record<number, any[]>;
   centralizedStats?: Record<number, any[]>;
+  centralizedScores?: Record<number, any[]>;
   isBatchDataLoading?: boolean;
 }
 
@@ -49,9 +50,10 @@ export default function DashboardSummary({
   seasons,
   activeSeason,
   isLoading,
-  centralizedRosters = {},
-  centralizedStats = {},
-  isBatchDataLoading = false
+  centralizedRosters,
+  centralizedStats,
+  centralizedScores,
+  isBatchDataLoading
 }: DashboardSummaryProps) {
   const [selectedSeasonId, setSelectedSeasonId] = useState<string>('current');
   const queryClient = useQueryClient();
@@ -222,6 +224,7 @@ export default function DashboardSummary({
               seasonFilter={selectedSeasonId} 
               activeSeason={activeSeason}
               centralizedStats={centralizedStats}
+              centralizedScores={centralizedScores}
             />
             <UpcomingGames 
               games={upcomingGames} 

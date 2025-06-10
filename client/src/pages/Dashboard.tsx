@@ -259,6 +259,7 @@ export default function Dashboard() {
           isLoading={isLoading}
           centralizedRosters={gameRostersMap}
           centralizedStats={gameStatsMap}
+          centralizedScores={gameScoresMap}
           isBatchDataLoading={isLoadingBatchData}
         />
       </div>
