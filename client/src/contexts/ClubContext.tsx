@@ -255,8 +255,14 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
         localStorage.removeItem('current-team-id');
       }
       
-      // Force invalidation of game queries to ensure fresh data with new team context
-      queryClient.invalidateQueries({ queryKey: ['games'] });
+      // Cancel any in-flight queries to prevent stale data from completing
+      queryClient.cancelQueries({ queryKey: ['games'] });
+      queryClient.cancelQueries({ queryKey: ['stats'] });
+      
+      // Remove stale data immediately to prevent flash of incorrect content
+      queryClient.removeQueries({ queryKey: ['games'] });
+      
+      // Force fresh fetch with new context
       queryClient.refetchQueries({ queryKey: ['games'] });
       
       console.log('ClubContext: Team context switch completed to:', teamId);

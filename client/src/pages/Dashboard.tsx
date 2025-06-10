@@ -49,7 +49,8 @@ export default function Dashboard() {
   const { data: games = [], isLoading: isLoadingGames, error: gamesError } = useQuery<any[]>({
     queryKey: ['games', currentClubId, currentTeamId],
     queryFn: () => apiClient.get('/api/games'),
-    enabled: !!currentClubId,
+    enabled: !!currentClubId && !isTeamSwitching,
+    staleTime: 0, // Always consider data stale to ensure fresh fetches
   });
 
   // Opponents system has been completely removed
@@ -175,7 +176,17 @@ export default function Dashboard() {
     );
   }
 
-  const isLoading = isLoadingPlayers || isLoadingGames || isLoadingSeasons || isLoadingActiveSeason || isLoadingRosters || isLoadingStats;
+  // Add a brief loading state when team context is changing to prevent stale data flash
+  const [isTeamSwitching, setIsTeamSwitching] = useState(false);
+  
+  useEffect(() => {
+    // When currentTeamId changes, set switching state briefly
+    setIsTeamSwitching(true);
+    const timer = setTimeout(() => setIsTeamSwitching(false), 300);
+    return () => clearTimeout(timer);
+  }, [currentTeamId]);
+
+  const isLoading = isLoadingPlayers || isLoadingGames || isLoadingSeasons || isLoadingActiveSeason || isLoadingRosters || isLoadingStats || isTeamSwitching;
 
   // Show error state if any query fails
   if (playersError || gamesError || seasonsError || activeSeasonError) {
