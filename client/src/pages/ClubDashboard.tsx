@@ -374,6 +374,7 @@ export default function ClubDashboard() {
               className="md:col-span-2" 
               centralizedStats={centralizedStats}
               teams={teams}
+              clubWide={true}
             />
               {recentGames.length === 0 && (
                 <div className="text-center py-8 text-muted-foreground">

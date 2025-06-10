@@ -19,9 +19,10 @@ interface RecentGamesProps {
   centralizedStats?: Record<number, any[]>;
   teams?: any[];
   centralizedScores?: Record<number, any[]>;
+  clubWide?: boolean; // When true, don't filter by current team
 }
 
-export default function RecentGames({ games, opponents, className, seasonFilter, activeSeason, centralizedStats, teams, centralizedScores }: RecentGamesProps) {
+export default function RecentGames({ games, opponents, className, seasonFilter, activeSeason, centralizedStats, teams, centralizedScores, clubWide }: RecentGamesProps) {
   const { currentTeam } = useClub();
 
   // Filter for recent completed games using the new status system

@@ -1,4 +1,3 @@
-
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { statisticsService, GameScores, GameStat } from '@/lib/statisticsService';
@@ -181,7 +180,7 @@ export function useGamesScores(gameIds: number[], forceFresh = false) {
               currentClub?.currentTeam?.id || currentClub?.teams?.[0]?.id // Use club context for team ID
               // No official scores parameter - let it calculate from stats
             );
-            
+
             // Convert to legacy format
             const quarterScores: Record<string, { for: number; against: number }> = {};
             gameScores.quarterScores.forEach(q => {
@@ -231,4 +230,15 @@ export function useGamesScores(gameIds: number[], forceFresh = false) {
     invalidateGame,
     invalidateAll
   };
+}
+
+export function useGamesScores(
+  games: any[],
+  centralizedStats: Record<number, any[]> = {},
+  useOfficialPriority: boolean = true,
+  teamIdOverride?: number | null // null = no team filtering, undefined = use context
+) {
+  const { currentClub } = useClub();
+  const contextTeamId = currentClub?.currentTeam?.id;
+  const currentTeamId = teamIdOverride !== undefined ? teamIdOverride : contextTeamId;
 }
