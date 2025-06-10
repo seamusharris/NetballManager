@@ -46,6 +46,15 @@ export default function Dashboard() {
     }
   }, [params.teamId, currentTeamId, setCurrentTeamId, clubTeams]);
 
+  // Debug team switching
+  useEffect(() => {
+    console.log('Dashboard: Team context updated:', {
+      currentTeamId,
+      currentTeamName: currentTeam?.name,
+      clubTeamsCount: clubTeams.length
+    });
+  }, [currentTeamId, currentTeam, clubTeams]);
+
   // Call ALL hooks first, before any conditional returns
   const { data: players = [], isLoading: isLoadingPlayers, error: playersError } = useQuery<any[]>({
     queryKey: ['players', currentClubId, currentTeamId],
@@ -261,6 +270,7 @@ export default function Dashboard() {
           centralizedStats={gameStatsMap}
           centralizedScores={gameScoresMap}
           isBatchDataLoading={isLoadingBatchData}
+          teams={clubTeams}
         />
       </div>
     </>

@@ -285,7 +285,7 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
     if (currentClubId && teamId !== currentTeamId) {
       console.log('ClubContext: Invalidating team-specific cache data for switch');
       
-      // Invalidate team-specific queries immediately
+      // Invalidate team-specific queries immediately with more aggressive approach
       const teamSpecificPatterns = [
         ['games', currentClubId],
         ['players', currentClubId],
@@ -300,10 +300,16 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
           exact: false 
         });
       });
+
+      // Force refetch of critical queries
+      queryClient.refetchQueries({
+        queryKey: ['games', currentClubId, teamId],
+        exact: false
+      });
     }
 
     console.log('ClubContext: Team context switch completed to:', teamId);
-    }, [currentClubId, clubTeams]);
+    }, [currentClubId, currentTeamId, queryClient]);
 
   // Load saved team from localStorage when teams are available
   useEffect(() => {

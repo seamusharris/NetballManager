@@ -25,12 +25,11 @@ export default function RecentGames({ games, opponents, className, seasonFilter,
   const { currentTeam } = useClub();
 
   // Filter for recent completed games using the new status system
-  const recentGames = games
+  const recentGames = (games || [])
     .filter(game => {
-      // Use the primary status field from the team-based system
       const isCompleted = game.statusIsCompleted === true;
 
-      console.log('Game ' + game.id + ' completion check:', {
+      console.log(`Game ${game.id} completion check:`, {
         statusIsCompleted: game.statusIsCompleted,
         finalResult: isCompleted
       });
