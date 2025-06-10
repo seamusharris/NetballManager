@@ -315,12 +315,25 @@ export default function TopPlayersWidget({
       }
     });
 
+    console.log('TopPlayersWidget: Final playerStatsMap:', Object.entries(newPlayerStatsMap).map(([id, stats]) => ({
+      playerId: id,
+      displayName: players.find(p => p.id === parseInt(id))?.displayName,
+      gamesPlayed: stats.gamesPlayed,
+      goals: stats.goals,
+      rating: stats.rating
+    })));
+    
     setPlayerStatsMap(newPlayerStatsMap);
   }, [gameStatsMap, gameRostersMap, isLoading, players, games]);
 
   // Get players to show - filter by team membership if teamId is provided
   const playersToShow = teamId ? 
-    players.filter(player => playerStatsMap[player.id] && playerStatsMap[player.id].gamesPlayed > 0) : // Only players with stats who actually played
+    players.filter(player => {
+      const hasStats = playerStatsMap[player.id];
+      const hasGames = hasStats && hasStats.gamesPlayed > 0;
+      console.log(`TopPlayersWidget: Player ${player.displayName} - hasStats: ${!!hasStats}, gamesPlayed: ${hasStats?.gamesPlayed || 0}, hasGames: ${hasGames}`);
+      return hasGames;
+    }) : // Only players with stats who actually played
     players;
 
   const topPlayers = playersToShow
