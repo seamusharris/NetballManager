@@ -61,22 +61,8 @@ import TeamAnalysis from '@/pages/TeamAnalysis';
 import GameResultExamples from '@/pages/GameResultExamples';
 
 function Router() {
-  // Component to sync API client with club context
-  const ApiClientSync = () => {
-    const { currentClub } = useClub();
-
-    useEffect(() => {
-      if (currentClub?.id) {
-        apiClient.setClubContext({ currentClubId: currentClub.id });
-      }
-    }, [currentClub?.id]);
-
-    return null;
-  };
-
   return (
     <Layout>
-      <ApiClientSync />
       <Switch>
         <Route path="/" component={withErrorBoundary(ClubDashboard, 'ClubDashboard')} />
         <Route path="/team-dashboard" component={withErrorBoundary(Dashboard, 'Dashboard')} />
