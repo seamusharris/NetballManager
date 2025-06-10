@@ -48,7 +48,7 @@ export default function Dashboard() {
 
   // Force re-render when currentTeamId changes
   const [teamRenderKey, setTeamRenderKey] = useState(0);
-  
+
   useEffect(() => {
     console.log('Dashboard: currentTeamId changed to:', currentTeamId);
     // Force component re-render by updating key
@@ -79,8 +79,8 @@ export default function Dashboard() {
     queryKey: ['games', currentClubId, currentTeamId],
     queryFn: () => apiClient.get('/api/games'),
     enabled: !!currentClubId,
-    staleTime: 5 * 60 * 1000, // 5 minutes - games don't change frequently
-    gcTime: 30 * 60 * 1000, // 30 minutes cache time
+    staleTime: 30 * 60 * 1000, // 30 minutes - invalidation handles updates
+    gcTime: 60 * 60 * 1000, // 1 hour garbage collection
   });
 
   // Opponents system has been completely removed
@@ -132,8 +132,8 @@ export default function Dashboard() {
       }
     },
     enabled: !!currentClubId && !!currentTeamId && gameIdsArray.length > 0 && !isLoadingGames,
-    staleTime: 10 * 60 * 1000, // Increased to 10 minutes for better caching across navigation
-    gcTime: 30 * 60 * 1000, // Increased garbage collection time
+    staleTime: 30 * 60 * 1000, // 30 minutes - invalidation handles updates  
+    gcTime: 60 * 60 * 1000, // 1 hour garbage collection
     refetchOnWindowFocus: false,
     refetchOnMount: false, // Don't refetch on mount to use cached data when possible
     refetchOnReconnect: false, // Don't refetch on reconnect
