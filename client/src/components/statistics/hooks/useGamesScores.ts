@@ -178,7 +178,7 @@ export function useGamesScores(gameIds: number[], forceFresh = false) {
               false, // isInterClub
               game.homeTeamId,
               game.awayTeamId,
-              game.teamId // currentTeamId - use the game's team context
+              currentClub?.currentTeam?.id || currentClub?.teams?.[0]?.id // Use club context for team ID
             );
             
             // Convert to legacy format
