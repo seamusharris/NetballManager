@@ -32,14 +32,10 @@ export function TeamSwitcher({ mode = 'optional', className, onTeamChange }: Tea
     console.log('TeamSwitcher: Handling team change to:', value);
     const teamId = value === 'all' ? null : parseInt(value, 10);
     
-    // Ensure the team change is processed synchronously
+    // Process the team change immediately
     setCurrentTeamId(teamId);
-    
-    // Small delay to ensure context propagation before callback
-    setTimeout(() => {
-      onTeamChange?.(teamId);
-      console.log('TeamSwitcher: Team change completed to:', teamId);
-    }, 100);
+    onTeamChange?.(teamId);
+    console.log('TeamSwitcher: Team change completed to:', teamId);
   };
 
   return (
