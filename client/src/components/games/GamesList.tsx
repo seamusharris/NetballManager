@@ -378,8 +378,6 @@ export function GamesList({
   };
 
     // Use the scores we already calculated via useGamesScores hook
-    const centralizedStats = scoresResult?.statsMap || {};
-    const centralizedScores = scoresMap;
     const currentTeamId = currentClub?.currentTeam?.id || currentClub?.teams?.[0]?.id;
 
   return (
@@ -464,8 +462,8 @@ export function GamesList({
                   <GameResultCard
                     game={game}
                     layout="wide"
-                    gameStats={centralizedStats?.[game.id] || []}
-                    officialScores={centralizedScores?.[game.id]}
+                    gameStats={[]}
+                    centralizedScores={scoresMap?.[game.id]}
                     useOfficialPriority={true}
                     showDate={true}
                     showRound={true}
