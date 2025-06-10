@@ -108,20 +108,45 @@ export default function TopPlayersWidget({
 
     // If we have a teamId, we need to find which players actually played for this team
     if (teamId && gameRostersMap && Object.keys(gameRostersMap).length > 0) {
+      console.log('TopPlayersWidget: DIAGNOSTIC - Inspecting roster data structure');
+      
       Object.entries(gameRostersMap).forEach(([gameIdStr, rosters]) => {
         const gameId = parseInt(gameIdStr);
         const game = validGames.find(g => g.id === gameId);
 
         // Only consider games where this team played
         if (game && (game.homeTeamId === teamId || game.awayTeamId === teamId)) {
-          rosters.forEach((roster: any) => {
+          console.log(`TopPlayersWidget: Game ${gameId} roster entries (${rosters.length}):`, rosters);
+          
+          if (rosters.length > 0) {
+            console.log(`TopPlayersWidget: Sample roster entry structure:`, {
+              keys: Object.keys(rosters[0]),
+              sample: rosters[0]
+            });
+          }
+          
+          rosters.forEach((roster: any, index: number) => {
+            console.log(`TopPlayersWidget: Roster entry ${index}:`, {
+              id: roster.id,
+              gameId: roster.gameId,
+              playerId: roster.playerId,
+              position: roster.position,
+              quarter: roster.quarter,
+              allKeys: Object.keys(roster)
+            });
+            
             if (roster.playerId && roster.position && 
                 ['GS', 'GA', 'WA', 'C', 'WD', 'GD', 'GK'].includes(roster.position)) {
               playerIdsInTeam.add(roster.playerId);
+              console.log(`TopPlayersWidget: Added player ${roster.playerId} to team set`);
+            } else {
+              console.log(`TopPlayersWidget: Skipped roster entry - playerId: ${roster.playerId}, position: ${roster.position}`);
             }
           });
         }
       });
+      
+      console.log(`TopPlayersWidget: Final playerIdsInTeam set size: ${playerIdsInTeam.size}`, Array.from(playerIdsInTeam));
     }
 
     // Initialize player stats for relevant players
