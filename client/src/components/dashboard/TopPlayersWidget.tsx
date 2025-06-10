@@ -111,7 +111,7 @@ export default function TopPlayersWidget({
       Object.entries(gameRostersMap).forEach(([gameIdStr, rosters]) => {
         const gameId = parseInt(gameIdStr);
         const game = validGames.find(g => g.id === gameId);
-        
+
         // Only consider games where this team played
         if (game && (game.homeTeamId === teamId || game.awayTeamId === teamId)) {
           rosters.forEach((roster: any) => {
@@ -152,7 +152,7 @@ export default function TopPlayersWidget({
       Object.entries(gameRostersMap).forEach(([gameIdStr, rosters]) => {
         const gameId = parseInt(gameIdStr);
         const game = validGames.find(g => g.id === gameId);
-        
+
         // Only count games where this team played (if teamId filter is active)
         const shouldCountGame = teamId ? 
           (game && (game.homeTeamId === teamId || game.awayTeamId === teamId)) : 
@@ -194,7 +194,7 @@ export default function TopPlayersWidget({
       Object.entries(gameStatsMap).forEach(([gameIdStr, stats]) => {
         const gameId = parseInt(gameIdStr);
         const game = validGames.find(g => g.id === gameId);
-        
+
         // Only process stats for team-relevant games
         const shouldProcessGame = teamId ? 
           (game && (game.homeTeamId === teamId || game.awayTeamId === teamId)) : 
@@ -258,7 +258,7 @@ export default function TopPlayersWidget({
       Object.entries(gameRostersMap || {}).forEach(([gameIdStr, rosters]) => {
         const gameId = parseInt(gameIdStr);
         const game = validGames.find(g => g.id === gameId);
-        
+
         // Only include ratings from team-relevant games
         const shouldIncludeRating = teamId ? 
           (game && (game.homeTeamId === teamId || game.awayTeamId === teamId)) : 
@@ -294,13 +294,13 @@ export default function TopPlayersWidget({
         // Calculate rating based on performance stats with better baseline
         const playerStats = newPlayerStatsMap[player.id];
         const gamesPlayed = playerStats.gamesPlayed;
-        
+
         if (gamesPlayed > 0) {
           // Average per game performance
           const avgGoals = playerStats.goals / gamesPlayed;
           const avgRebounds = playerStats.rebounds / gamesPlayed;
           const avgIntercepts = playerStats.intercepts / gamesPlayed;
-          
+
           // Better rating calculation starting from 6.0 baseline
           const calculatedRating = 6.0 + 
             (avgGoals * 0.3) +
@@ -318,8 +318,10 @@ export default function TopPlayersWidget({
     setPlayerStatsMap(newPlayerStatsMap);
   }, [gameStatsMap, gameRostersMap, isLoading, players, games]);
 
-  // Get top 5 players by rating - use only players relevant to the team
-  const playersToShow = players;
+  // Get players to show - filter by team membership if teamId is provided
+  const playersToShow = teamId ? 
+    players.filter(player => playerStatsMap[player.id] && playerStatsMap[player.id].gamesPlayed > 0) : // Only players with stats who actually played
+    players;
 
   const topPlayers = playersToShow
     .map(player => ({
@@ -339,7 +341,7 @@ export default function TopPlayersWidget({
         // No team filter, only show players with game data
         return player.stats.gamesPlayed > 0;
       }
-      
+
       // Team filter is applied, show all players that made it through roster filtering
       return true;
     })
