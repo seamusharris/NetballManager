@@ -27,18 +27,8 @@ export default function Dashboard() {
     isLoading: clubLoading 
   } = useClub();
 
-  // Add team switching state early to prevent initialization errors (but don't block queries)
-  const [isTeamSwitching, setIsTeamSwitching] = useState(false);
-  
   // Monitor request performance
   const requestMetrics = useRequestMonitor('Dashboard');
-
-  useEffect(() => {
-    // When currentTeamId changes, set switching state briefly for UI feedback only
-    setIsTeamSwitching(true);
-    const timer = setTimeout(() => setIsTeamSwitching(false), 50); // Reduced to 50ms for faster switching
-    return () => clearTimeout(timer);
-  }, [currentTeamId]);
 
   // Handle teamId from URL parameter
   useEffect(() => {
@@ -67,7 +57,7 @@ export default function Dashboard() {
   const { data: games = [], isLoading: isLoadingGames, error: gamesError } = useQuery({
     queryKey: ['games', currentClubId, currentTeamId],
     queryFn: () => apiClient.get('/api/games'),
-    enabled: !!currentClubId && !isTeamSwitching,
+    enabled: !!currentClubId,
     staleTime: 5 * 60 * 1000, // 5 minutes - games don't change frequently
     gcTime: 30 * 60 * 1000, // 30 minutes cache time
   });
@@ -120,7 +110,7 @@ export default function Dashboard() {
         throw error;
       }
     },
-    enabled: !!currentClubId && !!currentTeamId && gameIdsArray.length > 0 && !isTeamSwitching && !isLoadingGames,
+    enabled: !!currentClubId && !!currentTeamId && gameIdsArray.length > 0 && !isLoadingGames,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 30 * 60 * 1000, // 30 minutes
     refetchOnWindowFocus: false,

@@ -23,7 +23,7 @@ export function TeamSwitcher({ mode = 'optional', className, onTeamChange }: Tea
   useEffect(() => {
     if (mode === 'required' && !currentTeamId && validTeams.length > 0) {
       const firstTeam = validTeams[0];
-      // Process immediately without delay
+      console.log('TeamSwitcher: Auto-selecting first team:', firstTeam.id, firstTeam.name);
       setCurrentTeamId(firstTeam.id);
       onTeamChange?.(firstTeam.id);
     }

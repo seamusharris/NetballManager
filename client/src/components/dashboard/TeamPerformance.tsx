@@ -108,8 +108,12 @@ export default function TeamPerformance({ games, className, activeSeason, select
           let gameStats = gameStatsMap[gameId] || [];
 
           // Filter stats by current team - always filter for consistency
-          if (game.currentTeamId) {
-            gameStats = gameStats.filter(stat => stat.teamId === game.currentTeamId);
+          const teamIdToFilter = game.currentTeamId || currentTeamId;
+          if (teamIdToFilter) {
+            gameStats = gameStats.filter(stat => stat.teamId === teamIdToFilter);
+            console.log(`TeamPerformance processing game ${gameId}:`, `${gameStats.length} stats for team ${teamIdToFilter}`);
+          } else {
+            console.log(`TeamPerformance processing game ${gameId}:`, `${gameStats.length} stats for team undefined`);
           }
 
           console.log(`TeamPerformance processing game ${gameId}:`, gameStats ? `${gameStats.length} stats for team ${game.currentTeamId}` : 'no stats');
