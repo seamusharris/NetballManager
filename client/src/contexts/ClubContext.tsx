@@ -187,11 +187,12 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
       localStorage.removeItem('current-team-id');
     }
 
-    // Update state immediately - this will trigger re-renders
-    setCurrentTeamId(teamId);
-    
-    // Update API client context immediately
+    // Update API client context with the NEW team ID immediately
+    // This ensures API calls use the correct context before React re-renders
     apiClient.setClubContext({ currentClubId, currentTeamId: teamId });
+
+    // Update state after API client is set
+    setCurrentTeamId(teamId);
 
     // Force cache invalidation for team-specific data
     if (cacheManager) {
