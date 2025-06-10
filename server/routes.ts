@@ -1887,9 +1887,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/games/:gameId/availability", async (req, res) => {
     try {
       const gameId = Number(req.params.gameId);
-      const { playerAvailabilityStorage } = await import('./player-availability-storage');
+      const teamId = req.headers['x-current-team-id'] ? Number(req.headers['x-current-team-id']) : undefined;
 
-      const availablePlayerIds = await playerAvailabilityStorage.getPlayerAvailabilityForGame(gameId);
+      const { playerAvailabilityStorage } = await import('./player-availability-storage');
+      const availablePlayerIds = await playerAvailabilityStorage.getPlayerAvailabilityForGame(gameId, teamId);
       res.json({ availablePlayerIds });
     } catch (error) {
       console.error('Error fetching player availability:', error);

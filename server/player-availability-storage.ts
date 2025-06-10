@@ -1,4 +1,3 @@
-
 import { db } from './db';
 import { sql } from 'drizzle-orm';
 
@@ -13,7 +12,7 @@ export interface PlayerAvailability {
 
 export class PlayerAvailabilityStorage {
 
-  async getPlayerAvailabilityForGame(gameId: number): Promise<number[]> {
+  async getPlayerAvailabilityForGame(gameId: number, teamId?: number): Promise<number[]> {
     try {
       console.log(`Checking for existing availability records for game ${gameId}`);
 
@@ -25,15 +24,31 @@ export class PlayerAvailabilityStorage {
       const hasExistingRecords = parseInt(existingRecords.rows[0].count) > 0;
 
       if (!hasExistingRecords) {
-        console.log(`No availability records found for game ${gameId}, returning all active players as available by default`);
+        if (teamId) {
+          console.log(`No availability records found for game ${gameId}, returning team ${teamId} players as available by default`);
 
-        // Get all active players and return them as available (don't create records)
-        const playersResult = await db.execute(sql`
-          SELECT id FROM players WHERE active = true
-        `);
+          // Get the specific team's players and return them as available (don't create records)
+          const teamPlayersResult = await db.execute(sql`
+            SELECT p.id 
+            FROM players p
+            JOIN team_players tp ON p.id = tp.player_id
+            WHERE tp.team_id = ${teamId} 
+              AND p.active = true
+          `);
 
-        console.log(`Returning ${playersResult.rows.length} active players as available by default for game ${gameId}`);
-        return playersResult.rows.map(row => row.id as number);
+          console.log(`Returning ${teamPlayersResult.rows.length} active team players as available by default for game ${gameId}`);
+          return teamPlayersResult.rows.map(row => row.id as number);
+        } else {
+          console.log(`No availability records found for game ${gameId}, returning all active players as available by default`);
+
+          // Fallback to all active players if no team specified
+          const playersResult = await db.execute(sql`
+            SELECT id FROM players WHERE active = true
+          `);
+
+          console.log(`Returning ${playersResult.rows.length} active players as available by default for game ${gameId}`);
+          return playersResult.rows.map(row => row.id as number);
+        }
       } else {
         console.log(`Found existing availability records for game ${gameId}`);
       }
@@ -51,14 +66,27 @@ export class PlayerAvailabilityStorage {
     } catch (error) {
       console.error('Error fetching player availability:', error);
 
-      // Fallback: return all active players as available
+      // Fallback: return team players if teamId provided, otherwise all active players
       try {
-        const playersResult = await db.execute(sql`
-          SELECT id FROM players WHERE active = true
-        `);
+        if (teamId) {
+          const teamPlayersResult = await db.execute(sql`
+            SELECT p.id 
+            FROM players p
+            JOIN team_players tp ON p.id = tp.player_id
+            WHERE tp.team_id = ${teamId} 
+              AND p.active = true
+          `);
 
-        console.log(`Fallback: returning ${playersResult.rows.length} active players as available`);
-        return playersResult.rows.map(row => row.id as number);
+          console.log(`Fallback: returning ${teamPlayersResult.rows.length} active team players as available`);
+          return teamPlayersResult.rows.map(row => row.id as number);
+        } else {
+          const playersResult = await db.execute(sql`
+            SELECT id FROM players WHERE active = true
+          `);
+
+          console.log(`Fallback: returning ${playersResult.rows.length} active players as available`);
+          return playersResult.rows.map(row => row.id as number);
+        }
       } catch (fallbackError) {
         console.error('Fallback also failed:', fallbackError);
         return [];
