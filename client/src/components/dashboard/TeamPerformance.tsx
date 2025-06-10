@@ -7,6 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/apiClient';
 import { BaseWidget } from '@/components/ui/base-widget';
 import { gameScoreService } from '@/lib/gameScoreService';
+import { useClub } from '@/contexts/ClubContext';
 
 interface TeamPerformanceProps {
   games: Game[];
@@ -17,6 +18,7 @@ interface TeamPerformanceProps {
 }
 
 export default function TeamPerformance({ games, className, activeSeason, selectedSeason, centralizedStats }: TeamPerformanceProps) {
+  const { currentTeamId } = useClub();
   const [quarterPerformance, setQuarterPerformance] = useState<{
     avgTeamScoreByQuarter: Record<number, number>;
     avgOpponentScoreByQuarter: Record<number, number>;
@@ -107,16 +109,15 @@ export default function TeamPerformance({ games, className, activeSeason, select
 
           let gameStats = gameStatsMap[gameId] || [];
 
-          // Filter stats by current team - always filter for consistency
-          const teamIdToFilter = game.currentTeamId || currentTeamId;
-          if (teamIdToFilter) {
-            gameStats = gameStats.filter(stat => stat.teamId === teamIdToFilter);
-            console.log(`TeamPerformance processing game ${gameId}:`, `${gameStats.length} stats for team ${teamIdToFilter}`);
+          // Filter stats by current team - use the team ID from the context
+          if (currentTeamId && gameStats.length > 0) {
+            gameStats = gameStats.filter(stat => stat.teamId === currentTeamId);
+            console.log(`TeamPerformance processing game ${gameId}:`, `${gameStats.length} stats for team ${currentTeamId}`);
           } else {
-            console.log(`TeamPerformance processing game ${gameId}:`, `${gameStats.length} stats for team undefined`);
+            console.log(`TeamPerformance processing game ${gameId}:`, `${gameStats.length} total stats, no team filtering (currentTeamId: ${currentTeamId})`);
           }
 
-          console.log(`TeamPerformance processing game ${gameId}:`, gameStats ? `${gameStats.length} stats for team ${game.currentTeamId}` : 'no stats');
+          console.log(`TeamPerformance processing game ${gameId}:`, gameStats ? `${gameStats.length} stats after filtering` : 'no stats');
 
           // For team performance, use live stats only (coach's record)
           const scores = gameScoreService.calculateGameScoresSync(
@@ -126,7 +127,7 @@ export default function TeamPerformance({ games, className, activeSeason, select
             game.isInterClub,
             game.homeTeamId,
             game.awayTeamId,
-            game.currentTeamId,
+            currentTeamId, // Use current team ID from context
             undefined // Don't use official scores for performance
           );
 
