@@ -1,4 +1,3 @@
-
 import { queryClient } from './queryClient';
 import { apiClient } from './apiClient';
 import { CACHE_KEYS, normalizeGameIds } from './cacheKeys';
@@ -28,12 +27,12 @@ export class UnifiedDataFetcher {
    */
   async batchFetchGameData(options: BatchFetchOptions) {
     const { gameIds, clubId, teamId, includeStats = true, includeRosters = true, includeScores = true } = options;
-    
+
     if (gameIds.length === 0) return {};
 
     // Create batch key for deduplication
     const batchKey = `${clubId}-${teamId || 'all'}-${gameIds.sort().join(',')}-${includeStats}-${includeRosters}-${includeScores}`;
-    
+
     // Return existing promise if batch is already in progress
     if (this.pendingBatches.has(batchKey)) {
       return this.pendingBatches.get(batchKey);
@@ -41,7 +40,7 @@ export class UnifiedDataFetcher {
 
     const batchPromise = this.executeBatchFetch(options);
     this.pendingBatches.set(batchKey, batchPromise);
-    
+
     // Clean up after completion
     batchPromise.finally(() => {
       this.pendingBatches.delete(batchKey);
@@ -59,7 +58,7 @@ export class UnifiedDataFetcher {
       try {
         const statsResponse = await apiClient.post('/api/games/stats/batch', { gameIds });
         results.stats = statsResponse;
-        
+
         // Cache individual game stats
         Object.entries(statsResponse).forEach(([gameId, stats]) => {
           queryClient.setQueryData(
@@ -81,10 +80,10 @@ export class UnifiedDataFetcher {
             .then(roster => ({ gameId, roster }))
             .catch(error => ({ gameId, roster: [], error }))
         );
-        
+
         const rosterResults = await Promise.all(rosterPromises);
         results.rosters = {};
-        
+
         rosterResults.forEach(({ gameId, roster }) => {
           results.rosters[gameId] = roster;
           queryClient.setQueryData(
@@ -106,10 +105,10 @@ export class UnifiedDataFetcher {
             .then(scores => ({ gameId, scores }))
             .catch(error => ({ gameId, scores: [], error }))
         );
-        
+
         const scoreResults = await Promise.all(scorePromises);
         results.scores = {};
-        
+
         scoreResults.forEach(({ gameId, scores }) => {
           results.scores[gameId] = scores;
           queryClient.setQueryData(
@@ -148,17 +147,17 @@ export class UnifiedDataFetcher {
    */
   invalidateRelatedData(gameId: number, clubId: number, dataType: 'stats' | 'roster' | 'scores' | 'all' = 'all') {
     const patterns = [];
-    
+
     if (dataType === 'stats' || dataType === 'all') {
       patterns.push(CACHE_KEYS.gameStats(gameId));
       patterns.push(['centralized-stats', clubId]);
     }
-    
+
     if (dataType === 'roster' || dataType === 'all') {
       patterns.push(CACHE_KEYS.gameRoster(gameId));
       patterns.push(['centralized-rosters', clubId]);
     }
-    
+
     if (dataType === 'scores' || dataType === 'all') {
       patterns.push([`/api/games/${gameId}/scores`]);
     }

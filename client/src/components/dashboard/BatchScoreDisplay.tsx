@@ -50,31 +50,29 @@ export default function BatchScoreDisplay({ games, className }: BatchScoreDispla
   useEffect(() => {
     async function loadAndCacheBatchStats() {
       if (!gameIds || gameIds.length === 0) {
-
+        console.log('BatchScoreDisplay: No game IDs to process');
         return;
       }
 
       try {
+        console.log('BatchScoreDisplay: Loading stats for games:', gameIds);
 
-
-        // Only proceed if we have valid game IDs
-        if (!gameIds || gameIds.length === 0) {
-
-          return;
-        }
-        const response = await fetch(`/api/games/stats/batch?gameIds=${gameIds.join(',')}`, {
+        // Use POST method to match the server endpoint
+        const response = await fetch('/api/games/stats/batch', {
+          method: 'POST',
           headers: {
+            'Content-Type': 'application/json',
             'x-current-club-id': currentClub?.id?.toString() || '',
           },
+          body: JSON.stringify({ gameIds }),
         });
+        
         if (!response.ok) {
           throw new Error(`Failed to fetch batch stats: ${response.statusText}`);
         }
-        const batchData = await response.json();
-
-        // Use the service to fetch stats in a batch
-        // const batchStats = await statisticsService.getBatchGameStats(gameIds);
-        const batchStats = batchData;
+        const batchStats = await response.json();
+        
+        console.log('BatchScoreDisplay: Received batch stats:', Object.keys(batchStats));
 
         // Process results in the same way as the individual calls
         completedGames.forEach(game => {

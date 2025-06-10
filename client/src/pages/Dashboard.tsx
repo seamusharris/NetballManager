@@ -94,34 +94,57 @@ export default function Dashboard() {
   const gameIds = gameIdsArray.join(',');
 
   // Use unified data fetcher for better performance with proper dependency management
-  const { data: batchData, isLoading: isLoadingBatchData } = useQuery({
+  const { data: batchData, isLoading: isLoadingBatchData, error: batchDataError } = useQuery({
     queryKey: ['dashboard-batch-data', currentClubId, currentTeamId, gameIds],
     queryFn: async () => {
       if (gameIdsArray.length === 0) return { stats: {}, rosters: {}, scores: {} };
 
-      console.log(`Dashboard fetching batch data for ${gameIdsArray.length} games`);
+      console.log(`Dashboard fetching batch data for ${gameIdsArray.length} games:`, gameIdsArray);
 
-      const { dataFetcher } = await import('@/lib/unifiedDataFetcher');
-      return await dataFetcher.batchFetchGameData({
-        gameIds,
-        clubId: currentClubId!,
-        teamId: currentTeamId,
-        includeStats: true,
-        includeRosters: true,
-        includeScores: true
-      });
+      try {
+        const { dataFetcher } = await import('@/lib/unifiedDataFetcher');
+        const result = await dataFetcher.batchFetchGameData({
+          gameIds,
+          clubId: currentClubId!,
+          teamId: currentTeamId,
+          includeStats: true,
+          includeRosters: true,
+          includeScores: true
+        });
+        
+        console.log('Dashboard batch data result:', result);
+        return result;
+      } catch (error) {
+        console.error('Dashboard batch data fetch error:', error);
+        throw error;
+      }
     },
     enabled: !!currentClubId && !!currentTeamId && gameIdsArray.length > 0 && !isTeamSwitching && !isLoadingGames,
-    staleTime: 10 * 60 * 1000, // 10 minutes - increased for better caching
-    gcTime: 60 * 60 * 1000, // 1 hour garbage collection
-    refetchOnWindowFocus: false, // Prevent unnecessary refetches
-    refetchOnMount: false, // Use cached data when available
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes
+    refetchOnWindowFocus: false,
+    refetchOnMount: true, // Always fetch fresh data on mount
   });
 
   const gameStatsMap = batchData?.stats || {};
   const gameRostersMap = batchData?.rosters || {};
   const gameScoresMap = batchData?.scores || {};
   const isLoadingStats = isLoadingBatchData;
+
+  // Debug batch data
+  useEffect(() => {
+    if (batchData) {
+      console.log('Dashboard received batch data:', {
+        statsGames: Object.keys(batchData.stats || {}),
+        rostersGames: Object.keys(batchData.rosters || {}),
+        scoresGames: Object.keys(batchData.scores || {}),
+        totalGames: gameIdsArray.length
+      });
+    }
+    if (batchDataError) {
+      console.error('Dashboard batch data error:', batchDataError);
+    }
+  }, [batchData, batchDataError, gameIdsArray.length]);
 
   // NOW we can do conditional returns after all hooks are called
   if (clubLoading || !currentClubId) {

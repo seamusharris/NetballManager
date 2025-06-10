@@ -105,12 +105,12 @@ export default function TeamPerformance({ games, className, activeSeason, select
           if (!game) continue;
 
           let gameStats = gameStatsMap[gameId] || [];
-          
+
           // Filter stats by current team for single-team games
           if (!game.isInterClub && game.currentTeamId) {
             gameStats = gameStats.filter(stat => stat.teamId === game.currentTeamId);
           }
-          
+
           console.log(`TeamPerformance processing game ${gameId}:`, gameStats ? `${gameStats.length} stats for team ${game.currentTeamId}` : 'no stats');
 
           // For team performance, use live stats only (coach's record)
