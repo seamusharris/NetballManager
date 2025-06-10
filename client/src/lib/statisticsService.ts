@@ -34,8 +34,8 @@ class UnifiedStatisticsService {
     // Import gameScoreService dynamically to avoid circular dependencies
     const { gameScoreService } = await import('./gameScoreService');
     
-    // Convert to the new format expected by gameScoreService
-    const gameScores = await gameScoreService.calculateGameScores(stats, undefined, undefined, false, undefined, undefined, undefined, undefined, gameId);
+    // Use synchronous version for consistency
+    const gameScores = gameScoreService.calculateGameScoresSync(stats, undefined, undefined, false, undefined, undefined, undefined, undefined);
     
     // Convert to legacy format for backward compatibility
     const quarterScores: Record<string, { for: number; against: number }> = {};

@@ -81,14 +81,11 @@ export default function ClubDashboard() {
     queryFn: async () => {
       if (completedGameIds.length === 0) return {};
 
-      console.log(`ClubDashboard: Using batch endpoint for ${completedGameIds.length} completed games`);
-
       try {
         // Use batch endpoint for better performance
         const batchResponse = await apiClient.post('/api/games/stats/batch', {
           gameIds: completedGameIds
         });
-        console.log(`ClubDashboard: Batch stats fetch completed for ${Object.keys(batchResponse).length} games`);
         return batchResponse;
       } catch (error) {
         console.error('ClubDashboard: Batch stats fetch failed, falling back to individual requests:', error);
@@ -138,7 +135,6 @@ export default function ClubDashboard() {
       // Use game statistics which are always from our team's perspective
       const gameStats = centralizedStats[game.id] || [];
       if (gameStats.length === 0) {
-        console.log(`ClubDashboard: No stats found for game ${game.id}`);
         return false;
       }
 

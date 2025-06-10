@@ -108,12 +108,12 @@ export default function TeamPerformance({ games, className, activeSeason, select
           // Filter stats by current team - use the team ID from the context
           if (currentTeamId && gameStats.length > 0) {
             gameStats = gameStats.filter(stat => stat.teamId === currentTeamId);
-            console.log(`TeamPerformance processing game ${gameId}:`, `${gameStats.length} stats for team ${currentTeamId}`);
+            
           } else {
-            console.log(`TeamPerformance processing game ${gameId}:`, `${gameStats.length} total stats, no team filtering (currentTeamId: ${currentTeamId})`);
+            
           }
 
-          console.log(`TeamPerformance processing game ${gameId}:`, gameStats ? `${gameStats.length} stats after filtering` : 'no stats');
+          
 
           // For team performance, use live stats only (coach's record)
           const scores = gameScoreService.calculateGameScoresSync(
@@ -182,7 +182,7 @@ export default function TeamPerformance({ games, className, activeSeason, select
         ? Math.round((totalTeamScore / totalOpponentScore) * 100)
         : 0;
 
-      console.log(`Team Performance: ${actualGamesWithStats} games with correct scores, ${totalTeamScore} total goals for, ${totalOpponentScore} total goals against`);
+      // Performance calculation completed
 
       setQuarterPerformance({
         avgTeamScoreByQuarter,

@@ -41,51 +41,23 @@ export function GameResultCard({
   clubTeams = []
 }: GameResultCardProps) {
 
-  // Calculate scores using appropriate priority
+  // Calculate scores using centralized gameScoreService
   const scores = useMemo(() => {
     if (!game) return null;
 
     try {
-      if (useOfficialPriority && officialScores && officialScores.length > 0) {
-        return gameScoreService.calculateGameScoresSync(
-          [], // Empty stats when using official scores
-          game.statusName, 
-          { teamGoals: game.statusTeamGoals, opponentGoals: game.statusOpponentGoals },
-          game.isInterClub,
-          game.homeTeamId,
-          game.awayTeamId,
-          currentTeamId,
-          officialScores
-        );
-      } else if (gameStats && Array.isArray(gameStats) && gameStats.length > 0) {
-        return gameScoreService.calculateGameScoresSync(
-          gameStats, 
-          game.statusName, 
-          { teamGoals: game.statusTeamGoals, opponentGoals: game.statusOpponentGoals },
-          game.isInterClub,
-          game.homeTeamId,
-          game.awayTeamId,
-          currentTeamId
-        );
-      } else if (game.statusTeamGoals !== null && game.statusOpponentGoals !== null) {
-        // Use status scores if available (forfeit games, etc.)
-        return gameScoreService.calculateGameScoresSync(
-          [], 
-          game.statusName, 
-          { teamGoals: game.statusTeamGoals, opponentGoals: game.statusOpponentGoals },
-          game.isInterClub,
-          game.homeTeamId,
-          game.awayTeamId,
-          currentTeamId
-        );
-      }
-
-      return null;
+      return gameScoreService.calculateGameScoresSync(
+        gameStats || [], 
+        game.statusName, 
+        { teamGoals: game.statusTeamGoals, opponentGoals: game.statusOpponentGoals },
+        game.isInterClub,
+        game.homeTeamId,
+        game.awayTeamId,
+        currentTeamId,
+        useOfficialPriority ? officialScores : undefined
+      );
     } catch (error) {
-      // Only log errors in development to reduce console clutter
-      if (process.env.NODE_ENV === 'development') {
-        console.error(`Error calculating scores for game ${game.id}:`, error);
-      }
+      // Silently handle errors to avoid console clutter
       return null;
     }
   }, [gameStats, officialScores, useOfficialPriority, game, currentTeamId]);
