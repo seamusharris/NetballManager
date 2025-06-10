@@ -48,6 +48,7 @@ export default function Dashboard() {
       // Check if the team exists in the current club
       const teamExists = clubTeams?.some(team => team.id === targetTeamId);
       if (teamExists && currentTeamId !== targetTeamId) {
+        console.log(`Dashboard: Switching to team ${targetTeamId} from URL`);
         setCurrentTeamId(targetTeamId);
       }
     }
@@ -104,7 +105,7 @@ export default function Dashboard() {
       try {
         const { dataFetcher } = await import('@/lib/unifiedDataFetcher');
         const result = await dataFetcher.batchFetchGameData({
-          gameIds,
+          gameIds: gameIdsArray, // Use gameIdsArray instead of gameIds string
           clubId: currentClubId!,
           teamId: currentTeamId,
           includeStats: true,

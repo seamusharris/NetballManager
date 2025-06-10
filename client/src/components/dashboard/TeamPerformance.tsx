@@ -76,6 +76,7 @@ export default function TeamPerformance({ games, className, activeSeason, select
 
   console.log('TeamPerformance: Using centralized stats for games:', completedGameIds);
   console.log('TeamPerformance: Available centralized stats for games:', Object.keys(gameStatsMap));
+  console.log('TeamPerformance: Sample stats data:', gameStatsMap[completedGameIds[0]] || 'No data for first game');
 
   // Calculate team performance metrics from game stats and official scores
   useEffect(() => {
@@ -106,8 +107,8 @@ export default function TeamPerformance({ games, className, activeSeason, select
 
           let gameStats = gameStatsMap[gameId] || [];
 
-          // Filter stats by current team for single-team games
-          if (!game.isInterClub && game.currentTeamId) {
+          // Filter stats by current team - always filter for consistency
+          if (game.currentTeamId) {
             gameStats = gameStats.filter(stat => stat.teamId === game.currentTeamId);
           }
 

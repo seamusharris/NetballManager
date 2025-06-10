@@ -3,7 +3,7 @@ import { apiClient } from './apiClient';
 import { CACHE_KEYS, normalizeGameIds } from './cacheKeys';
 
 interface BatchFetchOptions {
-  gameIds: number[];
+  gameIds: number[] | string;
   clubId: number;
   teamId?: number;
   includeStats?: boolean;
@@ -50,7 +50,13 @@ export class UnifiedDataFetcher {
   }
 
   private async executeBatchFetch(options: BatchFetchOptions) {
-    const { gameIds, clubId, teamId, includeStats, includeRosters, includeScores } = options;
+    const { clubId, teamId, includeStats, includeRosters, includeScores } = options;
+    
+    // Normalize gameIds to array format
+    const gameIds = Array.isArray(options.gameIds) 
+      ? options.gameIds 
+      : options.gameIds.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id));
+      
     const results: any = {};
 
     // Batch fetch stats
