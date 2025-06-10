@@ -80,13 +80,13 @@ export function GameResultCard({
   const getResultClass = () => {
     if (isWin) return 'border-green-500 bg-green-50';
     if (isLoss) return 'border-red-500 bg-red-50';
-    return 'border-yellow-500 bg-yellow-50';
+    return 'border-gray-500 bg-gray-50';
   };
 
   const getHoverClass = () => {
     if (isWin) return 'hover:bg-green-100';
     if (isLoss) return 'hover:bg-red-100';
-    return 'hover:bg-yellow-100';
+    return 'hover:bg-gray-100';
   };
 
   // Layout configurations
@@ -147,6 +147,13 @@ export function GameResultCard({
     return "- -";
   };
 
+    const getOpponentDisplay = (): string => {
+      if (game.isBye) {
+          return "Bye";
+      }
+      return `vs ${getOpponentName()}`;
+    };
+
   const CardContent = () => (
     <div 
       className={cn(
@@ -160,7 +167,7 @@ export function GameResultCard({
       {/* Left side - Opponent and details */}
       <div className="flex-1 min-w-0">
         <div className={cn('font-semibold text-gray-800 truncate', config.textSize)}>
-          vs {getOpponentName()}
+          {getOpponentDisplay()}
         </div>
 
         {/* Details row */}
@@ -180,14 +187,28 @@ export function GameResultCard({
       </div>
 
       {/* Right side - Score */}
-      {scores && (
+      {showScore && (
+        game.isBye ? (
+          <div className="ml-auto px-3 py-1 text-sm font-medium text-gray-600 bg-gray-100 rounded-full">
+            —
+          </div>
+        ) : !game.statusIsCompleted ? (
+          <div className="ml-auto px-3 py-1 text-sm font-medium text-gray-600 bg-gray-100 rounded-full">
+            —
+          </div>
+        ) : scores ? (
           <ScoreBadge 
             teamScore={scores.totalTeamScore} 
             opponentScore={scores.totalOpponentScore}
             result={scores.result}
             className="ml-auto"
           />
-        )}
+        ) : (
+          <div className="ml-auto px-3 py-1 text-sm font-medium text-gray-500 bg-gray-50 rounded-full border border-gray-200">
+            —
+          </div>
+        )
+      )}
     </div>
   );
 
