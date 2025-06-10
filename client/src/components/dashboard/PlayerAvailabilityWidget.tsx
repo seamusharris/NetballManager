@@ -7,6 +7,7 @@ import { BaseWidget } from '@/components/ui/base-widget';
 import { Game, Player } from '@shared/schema';
 import { formatShortDate } from '@/lib/utils';
 import { apiClient } from '@/lib/apiClient';
+import { useClub } from '@/contexts/ClubContext';
 
 interface PlayerAvailabilityWidgetProps {
   games: Game[];
@@ -25,6 +26,7 @@ export default function PlayerAvailabilityWidget({
   players,
   className 
 }: PlayerAvailabilityWidgetProps) {
+  const { currentTeamId } = useClub();
   const [availabilityData, setAvailabilityData] = useState<Record<number, GameAvailability>>({});
   const [loading, setLoading] = useState(false);
   const [teamPlayers, setTeamPlayers] = useState<Player[]>([]);
@@ -42,21 +44,22 @@ export default function PlayerAvailabilityWidget({
     games: games.map(g => ({ id: g.id, date: g.date, completed: g.completed }))
   });
 
-  // Fetch current team players
+  // Fetch current team players using Club context
   useEffect(() => {
     const fetchTeamPlayers = async () => {
-      if (upcomingGames.length === 0) return;
+      if (!currentTeamId || upcomingGames.length === 0) {
+        setTeamPlayers(players);
+        return;
+      }
 
       try {
-        // Get the team ID from the first upcoming game
-        const firstGame = upcomingGames[0];
-        const teamId = firstGame.homeTeamId; // Assuming we're usually the home team
-        
-        const response = await apiClient.get(`/api/teams/${teamId}/players`);
+        console.log('PlayerAvailabilityWidget: Fetching team players for team:', currentTeamId);
+
+        const response = await apiClient.get(`/api/teams/${currentTeamId}/players`);
         if (response.success) {
           const teamPlayerData = response.data;
           setTeamPlayers(teamPlayerData);
-          console.log('Fetched team players:', teamPlayerData.length, 'for team:', teamId);
+          console.log('Fetched team players:', teamPlayerData.length, 'for team:', currentTeamId);
         } else {
           // Fallback to all players if team-specific fetch fails
           console.log('Failed to fetch team players, using all players as fallback');
@@ -65,12 +68,13 @@ export default function PlayerAvailabilityWidget({
       } catch (error) {
         console.error('Error fetching team players:', error);
         // Fallback to all players on error
+        console.log('Failed to fetch team players, using all players as fallback');
         setTeamPlayers(players);
       }
     };
 
     fetchTeamPlayers();
-  }, [upcomingGames.length, players]);
+  }, [currentTeamId, upcomingGames.length, players]);
 
   // Fetch availability data for upcoming games
   useEffect(() => {
@@ -84,17 +88,8 @@ export default function PlayerAvailabilityWidget({
       try {
         for (const game of upcomingGames) {
           try {
-            // Add team context headers for proper team-specific availability
-            const headers: HeadersInit = {
-              'Content-Type': 'application/json'
-            };
+            console.log(`Fetching availability for game ${game.id} with team ${currentTeamId}`);
 
-            // Use the home team ID from the game for team context
-            if (game.homeTeamId) {
-              headers['x-current-team-id'] = game.homeTeamId.toString();
-            }
-
-            console.log(`Fetching availability for game ${game.id} with team ${game.homeTeamId}`);
             const response = await apiClient.get(`/api/games/${game.id}/availability`);
             if (response.success) {
               const data = response.data;
@@ -103,7 +98,7 @@ export default function PlayerAvailabilityWidget({
               // Filter to only include team players
               const teamPlayerIds = teamPlayers.map(p => p.id);
               const availableTeamPlayerIds = availablePlayerIds.filter(id => teamPlayerIds.includes(id));
-              
+
               newAvailabilityData[game.id] = {
                 gameId: game.id,
                 availableCount: availableTeamPlayerIds.length || totalActiveTeamPlayers,
@@ -138,7 +133,7 @@ export default function PlayerAvailabilityWidget({
     };
 
     fetchAvailability();
-  }, [upcomingGames.length, teamPlayers.length]);
+  }, [upcomingGames.length, teamPlayers.length, currentTeamId]);
 
   const getAvailabilityStatus = (available: number, total: number) => {
     const percentage = total > 0 ? (available / total) * 100 : 0;
