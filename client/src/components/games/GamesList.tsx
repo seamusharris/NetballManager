@@ -377,10 +377,10 @@ export function GamesList({
     setLocation(path);
   };
 
-    // Centralized statistics retrieval (simulated or actual)
-    const centralizedStats = {}; // Example: replace with actual centralized statistics retrieval
-    const centralizedScores = {}; // Example: replace with actual centralized statistics retrieval
-    const currentTeamId = currentClub?.teams?.[0]?.id;
+    // Use the scores we already calculated via useGamesScores hook
+    const centralizedStats = scoresResult?.statsMap || {};
+    const centralizedScores = scoresMap;
+    const currentTeamId = currentClub?.currentTeam?.id || currentClub?.teams?.[0]?.id;
 
   return (
     <div className="space-y-6">
