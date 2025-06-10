@@ -265,7 +265,7 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
     }
   }, [setCurrentTeamId, queryClient, currentTeamId, currentClubId]);
 
-  // Enhanced team context switching with minimal cache invalidation
+  // Enhanced team context switching with proper cache preservation
   const handleSetCurrentTeamId = useCallback((teamId: number | null) => {
     console.log('ClubContext: Setting team to:', teamId, 'from:', currentTeamId);
 
@@ -285,39 +285,34 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
       localStorage.removeItem('current-team-id');
     }
 
-    // Update state immediately
-    setCurrentTeamId(teamId);
-
-    // Sync API client headers immediately with the new team ID
-    apiClient.setClubContext({ currentClubId, currentTeamId: teamId });
-    console.log('ClubContext: API client team context updated to:', teamId);
-
-    // Use debounced cache invalidation to prevent excessive API calls
-    const debouncedInvalidation = setTimeout(() => {
-      console.log('ClubContext: Team changed from', previousTeamId, 'to', teamId, '- invalidating cache');
+    // Update state immediately - use functional update to ensure synchronicity
+    setCurrentTeamId(() => {
+      console.log('ClubContext: React state updated to team:', teamId);
       
-      // Only invalidate specific team-dependent queries
-      const teamSpecificPatterns = [
-        ['dashboard-batch-data', currentClubId],
-        ['players', currentClubId]
+      // Sync API client headers immediately with the new team ID
+      apiClient.setClubContext({ currentClubId, currentTeamId: teamId });
+      console.log('ClubContext: API client team context updated to:', teamId);
+      
+      return teamId;
+    });
+
+    // Minimal cache invalidation - only invalidate data that's truly stale
+    if (previousTeamId !== null && teamId !== null && previousTeamId !== teamId) {
+      console.log('ClubContext: Team switched from', previousTeamId, 'to', teamId, '- preserving cache where possible');
+      
+      // Use smart cache invalidation - only remove queries that are truly team-specific
+      // and can't be reused between teams
+      const staleQueries = [
+        ['dashboard-batch-data', currentClubId, previousTeamId], // Only the previous team's batch data
       ];
 
-      teamSpecificPatterns.forEach(pattern => {
+      staleQueries.forEach(queryKey => {
         queryClient.removeQueries({ 
-          queryKey: pattern,
-          exact: false 
+          queryKey,
+          exact: true // Only remove exact matches to preserve other data
         });
       });
-
-      // Immediately refetch only essential data
-      queryClient.invalidateQueries({ 
-        queryKey: ['dashboard-batch-data', currentClubId],
-        exact: false 
-      });
-    }, 50); // Small delay to batch invalidations
-
-    // Store debounce timer for cleanup
-    return () => clearTimeout(debouncedInvalidation);
+    }
 
   }, [currentClubId, currentTeamId, queryClient]);
 

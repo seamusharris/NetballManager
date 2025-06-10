@@ -28,23 +28,22 @@ export class CacheManager {
 
     console.log(`CacheManager: Switching team from ${oldTeamId} to ${newTeamId} for club ${clubId}`);
 
-    // Invalidate all team-related queries for this club to ensure consistency
+    // Only invalidate specific team data that can't be reused
+    // Keep club-level data and data that can be filtered client-side
     const teamSpecificPatterns = [
-      ['games', clubId],
-      ['players', clubId], 
-      ['dashboard-batch-data', clubId],
-      ['batch-game-data', clubId],
-      ['team-performance', clubId],
-      ['dashboard', clubId]
+      ['dashboard-batch-data', clubId, oldTeamId], // Only old team's batch data
     ];
 
     for (const pattern of teamSpecificPatterns) {
-      await this.queryClient.invalidateQueries({ 
+      await this.queryClient.removeQueries({ 
         queryKey: pattern, 
-        exact: false 
+        exact: true // Only remove exact matches
       });
-      console.log(`CacheManager: Invalidated pattern:`, pattern);
+      console.log(`CacheManager: Removed specific pattern:`, pattern);
     }
+
+    // Preserve games, players, and other data that can be filtered client-side
+    console.log(`CacheManager: Preserved club-level cache for better performance`);
   }
 
   // Prefetch critical data

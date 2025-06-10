@@ -41,13 +41,11 @@ export function TeamSwitcher({ mode = 'optional', className, onTeamChange }: Tea
     
     console.log('TeamSwitcher: Setting current team ID to:', teamId);
     
-    // Use React's batching to ensure all updates happen together
-    React.startTransition(() => {
-      setCurrentTeamId(teamId);
-      onTeamChange?.(teamId);
-    });
+    // Update immediately without React transition to prevent delay
+    setCurrentTeamId(teamId);
+    onTeamChange?.(teamId);
     
-    console.log('TeamSwitcher: Team change initiated to:', teamId);
+    console.log('TeamSwitcher: Team change completed to:', teamId);
   };
 
   return (
