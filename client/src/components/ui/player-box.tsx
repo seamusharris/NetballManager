@@ -93,8 +93,8 @@ export function PlayerBox({
   const playerColor = getPlayerColorHex(player.avatarColor);
   const lightBackgroundColor = `${playerColor}15`; // Add transparency for background
 
-  return (
-    <div className={`flex items-center space-x-4 ${className}`}>
+  const playerBoxContent = (
+    <div className="flex items-center space-x-4">
       {/* Avatar Circle - matching Player of the Match style */}
       <div 
         className={`${avatarSizes[size]} rounded-full flex items-center justify-center text-white font-bold shadow-md flex-shrink-0 ${player.avatarColor || 'bg-gray-700'}`}
@@ -158,12 +158,21 @@ export function PlayerBox({
           </div>
         )}
         
-        {actions && (
-          <div className="flex items-center space-x-2 ml-4">
-            {actions}
-          </div>
-        )}
+        
       </div>
     </div>
   );
+
+  if (actions) {
+    return (
+      <div className={`space-y-3 ${className}`}>
+        {playerBoxContent}
+        <div className="flex items-center justify-end space-x-2">
+          {actions}
+        </div>
+      </div>
+    );
+  }
+
+  return <div className={className}>{playerBoxContent}</div>;
 }

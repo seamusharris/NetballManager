@@ -131,9 +131,9 @@ export function TeamBox({
     );
   }
 
-  return (
+  const teamBoxContent = (
     <div 
-      className={`${sizeClasses[size]} rounded-lg border-2 ${className}`}
+      className={`${sizeClasses[size]} rounded-lg border-2`}
       style={{ 
         backgroundColor: lightBackgroundColor,
         borderColor: teamColor
@@ -232,12 +232,20 @@ export function TeamBox({
         </div>
       )}
 
-      {/* Actions */}
-      {actions && (
-        <div className="flex items-center justify-end space-x-2 pt-2 border-t border-gray-200">
-          {actions}
-        </div>
-      )}
+      
     </div>
   );
+
+  if (actions) {
+    return (
+      <div className={`space-y-3 ${className}`}>
+        {teamBoxContent}
+        <div className="flex items-center justify-end space-x-2">
+          {actions}
+        </div>
+      </div>
+    );
+  }
+
+  return <div className={className}>{teamBoxContent}</div>;
 }
