@@ -39,6 +39,7 @@ import RoundBadgeExamples from '@/pages/RoundBadgeExamples';
 import PlayerBoxExamples from './pages/PlayerBoxExamples';
 import TeamBoxExamples from './pages/TeamBoxExamples';
 import ActionButtonExamples from './pages/ActionButtonExamples';
+import ComponentExamples from '@/pages/ComponentExamples';
 
 /**
  * Loading spinner component for suspense fallbacks
@@ -119,7 +120,8 @@ function Router() {
         <Route path="/round-badge-examples" component={withErrorBoundary(RoundBadgeExamples, 'RoundBadgeExamples')} />
         <Route path="/player-box-examples" component={withErrorBoundary(PlayerBoxExamples, 'PlayerBoxExamples')} />
         <Route path="/team-box-examples" component={withErrorBoundary(TeamBoxExamples, 'TeamBoxExamples')} />
-        <Route path="/action-button-examples" component={withErrorBoundary(ActionButtonExamples, 'ActionButtonExamples')} />
+        <Route path="/action-button-examples" component={ActionButtonExamples} />
+        <Route path="/component-examples" component={ComponentExamples} />
         <Route component={withErrorBoundary(NotFound, 'NotFound')} />
       </Switch>
     </Layout>
