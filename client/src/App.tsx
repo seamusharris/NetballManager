@@ -144,6 +144,27 @@ function Router() {
         </Route>
         <Route path="/layout-examples" component={LayoutExamples} />
         <Route path="/color-examples" component={ColorExamples} />
+        <Route path="/navigation-examples" component={() => import('./pages/NavigationExamples').then(m => m.default)} />
+        <Route path="/table-examples" component={() => import('./pages/TableExamples').then(m => m.default)} />
+        <Route path="/list-examples" component={() => import('./pages/ListExamples').then(m => m.default)} />
+        <Route path="/timeline-examples" component={() => import('./pages/TimelineExamples').then(m => m.default)} />
+        <Route path="/statistics-card-examples" component={() => import('./pages/StatisticsCardExamples').then(m => m.default)} />
+        <Route path="/modal-examples" component={() => import('./pages/ModalExamples').then(m => m.default)} />
+        <Route path="/tooltip-examples" component={() => import('./pages/TooltipExamples').then(m => m.default)} />
+        <Route path="/dropdown-examples" component={() => import('./pages/DropdownExamples').then(m => m.default)} />
+        <Route path="/search-examples" component={() => import('./pages/SearchExamples').then(m => m.default)} />
+        <Route path="/loading-examples" component={() => import('./pages/LoadingExamples').then(m => m.default)} />
+        <Route path="/error-examples" component={() => import('./pages/ErrorExamples').then(m => m.default)} />
+        <Route path="/toast-examples" component={() => import('./pages/ToastExamples').then(m => m.default)} />
+        <Route path="/split-view-examples" component={() => import('./pages/SplitViewExamples').then(m => m.default)} />
+        <Route path="/grid-examples" component={() => import('./pages/GridExamples').then(m => m.default)} />
+        <Route path="/card-collection-examples" component={() => import('./pages/CardCollectionExamples').then(m => m.default)} />
+        <Route path="/tournament-bracket-examples" component={() => import('./pages/TournamentBracketExamples').then(m => m.default)} />
+        <Route path="/match-timeline-examples" component={() => import('./pages/MatchTimelineExamples').then(m => m.default)} />
+        <Route path="/position-rotation-examples" component={() => import('./pages/PositionRotationExamples').then(m => m.default)} />
+        <Route path="/team-formation-examples" component={() => import('./pages/TeamFormationExamples').then(m => m.default)} />
+        <Route path="/score-progression-examples" component={() => import('./pages/ScoreProgressionExamples').then(m => m.default)} />
+        <Route path="/substitution-flow-examples" component={() => import('./pages/SubstitutionFlowExamples').then(m => m.default)} />
         <Route component={withErrorBoundary(NotFound, 'NotFound')} />
       </Switch>
     </Layout>
