@@ -32,7 +32,7 @@ export default function Dashboard() {
   useEffect(() => {
     // When currentTeamId changes, set switching state briefly for UI feedback only
     setIsTeamSwitching(true);
-    const timer = setTimeout(() => setIsTeamSwitching(false), 100); // Reduced from 300ms to 100ms
+    const timer = setTimeout(() => setIsTeamSwitching(false), 50); // Reduced to 50ms for faster switching
     return () => clearTimeout(timer);
   }, [currentTeamId]);
 
@@ -54,16 +54,16 @@ export default function Dashboard() {
     queryKey: ['players', currentClubId, currentTeamId],
     queryFn: () => apiClient.get('/api/players'),
     enabled: !!currentClubId && !!currentTeamId,
-    staleTime: 10 * 60 * 1000, // 10 minutes cache for players
-    gcTime: 30 * 60 * 1000, // 30 minutes garbage collection
+    staleTime: 15 * 60 * 1000, // 15 minutes cache for players - increased for better team switching
+    gcTime: 60 * 60 * 1000, // 1 hour garbage collection - increased
   });
 
   const { data: games = [], isLoading: isLoadingGames, error: gamesError } = useQuery<any[]>({
     queryKey: ['games', currentClubId, currentTeamId],
     queryFn: () => apiClient.get('/api/games'),
     enabled: !!currentClubId && !!currentTeamId,
-    staleTime: 5 * 60 * 1000, // 5 minutes cache for better performance
-    gcTime: 15 * 60 * 1000, // 15 minutes garbage collection
+    staleTime: 15 * 60 * 1000, // 15 minutes cache - increased for better team switching
+    gcTime: 45 * 60 * 1000, // 45 minutes garbage collection - increased
   });
 
   // Opponents system has been completely removed
@@ -72,76 +72,93 @@ export default function Dashboard() {
     queryKey: ['seasons', currentClubId],
     queryFn: () => apiClient.get('/api/seasons'),
     enabled: !!currentClubId,
-    staleTime: 30 * 60 * 1000, // 30 minutes cache for seasons (rarely change)
-    gcTime: 60 * 60 * 1000, // 1 hour garbage collection
+    staleTime: 60 * 60 * 1000, // 1 hour cache for seasons (rarely change) - increased
+    gcTime: 2 * 60 * 60 * 1000, // 2 hours garbage collection - increased
   });
 
   const { data: activeSeason, isLoading: isLoadingActiveSeason, error: activeSeasonError } = useQuery<any>({
     queryKey: ['seasons', 'active', currentClubId],
     queryFn: () => apiClient.get('/api/seasons/active'),
     enabled: !!currentClubId,
-    staleTime: 30 * 60 * 1000, // 30 minutes cache for active season
-    gcTime: 60 * 60 * 1000, // 1 hour garbage collection
+    staleTime: 60 * 60 * 1000, // 1 hour cache for active season - increased
+    gcTime: 2 * 60 * 60 * 1000, // 2 hours garbage collection - increased
   });
 
-  // Centralized roster fetching for all games
+  // Centralized roster fetching for all games - only when games data is stable
+  const gameIds = games?.map(g => g.id).sort().join(',') || '';
   const { data: centralizedRosters = {}, isLoading: isLoadingRosters } = useQuery({
-    queryKey: ['centralized-rosters', currentClubId, currentTeamId, games?.map(g => g.id).sort().join(',')],
+    queryKey: ['centralized-rosters', currentClubId, currentTeamId, gameIds],
     queryFn: async () => {
       if (!games || games.length === 0) return {};
 
       console.log(`Dashboard centralizing roster fetch for ${games.length} games`);
       const rostersMap: Record<number, any[]> = {};
 
-      // Fetch rosters for all games
-      for (const game of games) {
+      // Fetch rosters for all games in parallel for better performance
+      const rosterPromises = games.map(async (game) => {
         try {
           const roster = await apiClient.get(`/api/games/${game.id}/rosters`);
-          rostersMap[game.id] = roster || [];
+          return { gameId: game.id, roster: roster || [] };
         } catch (error) {
           console.error(`Error fetching roster for game ${game.id}:`, error);
-          rostersMap[game.id] = [];
+          return { gameId: game.id, roster: [] };
         }
-      }
+      });
+
+      const rosterResults = await Promise.all(rosterPromises);
+      rosterResults.forEach(({ gameId, roster }) => {
+        rostersMap[gameId] = roster;
+      });
 
       console.log(`Dashboard centralized roster fetch completed for ${Object.keys(rostersMap).length} games`);
       return rostersMap;
     },
-    enabled: !!currentClubId && !!currentTeamId && !!games && games.length > 0,
-    staleTime: 15 * 60 * 1000, // 15 minutes (increased for better caching)
-    gcTime: 45 * 60 * 1000 // 45 minutes (increased)
+    enabled: !!currentClubId && !!currentTeamId && !!games && games.length > 0 && !isLoadingGames,
+    staleTime: 30 * 60 * 1000, // 30 minutes (increased significantly for better caching)
+    gcTime: 2 * 60 * 60 * 1000 // 2 hours (increased significantly)
   });
 
   // Centralized stats fetching for completed games only
   const completedGameIds = games?.filter(game => 
     game.statusIsCompleted && game.statusAllowsStatistics
-  ).map(game => game.id) || [];
+  ).map(game => game.id).sort() || [];
+  
+  const completedGameIdsKey = completedGameIds.join(',');
 
   const { data: centralizedStats = {}, isLoading: isLoadingStats } = useQuery({
-    queryKey: ['centralized-stats', currentClubId, currentTeamId, completedGameIds.sort().join(',')],
+    queryKey: ['centralized-stats', currentClubId, currentTeamId, completedGameIdsKey],
     queryFn: async () => {
       if (completedGameIds.length === 0) return {};
 
       console.log(`Dashboard centralizing stats fetch for ${completedGameIds.length} completed games`);
-      const statsMap: Record<number, any[]> = {};
-
-      // Fetch stats for completed games only
-      for (const gameId of completedGameIds) {
-        try {
-          const stats = await apiClient.get(`/api/games/${gameId}/stats`);
-          statsMap[gameId] = stats || [];
-        } catch (error) {
-          console.error(`Error fetching stats for game ${gameId}:`, error);
-          statsMap[gameId] = [];
+      
+      // Use batch endpoint for better performance
+      try {
+        const statsMap = await apiClient.post('/api/games/stats/batch', {
+          gameIds: completedGameIds
+        });
+        console.log(`Dashboard batch stats fetch completed for ${Object.keys(statsMap).length} games`);
+        return statsMap;
+      } catch (error) {
+        console.error('Error in batch stats fetch, falling back to individual requests:', error);
+        
+        // Fallback to individual requests if batch fails
+        const statsMap: Record<number, any[]> = {};
+        for (const gameId of completedGameIds) {
+          try {
+            const stats = await apiClient.get(`/api/games/${gameId}/stats`);
+            statsMap[gameId] = stats || [];
+          } catch (error) {
+            console.error(`Error fetching stats for game ${gameId}:`, error);
+            statsMap[gameId] = [];
+          }
         }
+        return statsMap;
       }
-
-      console.log(`Dashboard centralized stats fetch completed for ${Object.keys(statsMap).length} games`);
-      return statsMap;
     },
-    enabled: !!currentClubId && !!currentTeamId && completedGameIds.length > 0,
-    staleTime: 15 * 60 * 1000, // 15 minutes (increased for better caching)
-    gcTime: 45 * 60 * 1000 // 45 minutes (increased)
+    enabled: !!currentClubId && !!currentTeamId && completedGameIds.length > 0 && !isLoadingGames,
+    staleTime: 30 * 60 * 1000, // 30 minutes (increased significantly for better caching)
+    gcTime: 2 * 60 * 60 * 1000 // 2 hours (increased significantly)
   });
 
   // NOW we can do conditional returns after all hooks are called

@@ -157,13 +157,13 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
       if (!hasAccess) {
         console.error('ClubContext: Current club ID', currentClubId, 'is not in user clubs:', userClubs.map(c => c.clubId));
         console.log('ClubContext: Forcing reset to valid club');
-        
+
         // Reset to first available club
         const validClubId = userClubs[0].clubId;
         localStorage.setItem('currentClubId', validClubId.toString());
         apiClient.setClubContext({ currentClubId: validClubId });
         setCurrentClubId(validClubId);
-        
+
         // Invalidate queries to refresh data
         queryClient.invalidateQueries();
       }
@@ -178,7 +178,7 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
     // Force a check that the context was set properly
     if (currentClubId !== null) {
       console.log('ClubContext: Verifying API client has club and team context set');
-      
+
       // Add a small delay to ensure any pending requests use the new context
       setTimeout(() => {
         console.log('ClubContext: API client context update complete');
@@ -198,11 +198,11 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
     const hasAccess = userClubs.some(club => club.clubId === clubId);
     if (!hasAccess) {
       console.error('ClubContext: Access denied to club', clubId, 'Available clubs:', userClubs.map(c => c.clubId));
-      
+
       // Reset to a valid club instead
       const validClubId = userClubs[0].clubId;
       console.log('ClubContext: Resetting to valid club:', validClubId);
-      
+
       localStorage.setItem('currentClubId', validClubId.toString());
       apiClient.setClubContext({ currentClubId: validClubId });
       setCurrentClubId(validClubId);
@@ -230,44 +230,28 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
     return clubAccess?.permissions[permission] || false;
   };
 
-    // Handle team selection
-    const handleSetCurrentTeamId = useCallback((teamId: number | null) => {
-      console.log('ClubContext: Setting team ID to:', teamId);
-      
-      // Validate team exists in current club if teamId is provided
-      if (teamId && clubTeams.length > 0) {
-        const teamExists = clubTeams.some(team => team.id === teamId);
-        if (!teamExists) {
-          console.error('ClubContext: Team', teamId, 'does not exist in current club teams');
-          return;
-        }
-      }
-      
-      // Update API client context IMMEDIATELY before state changes
-      apiClient.setClubContext({ currentClubId, currentTeamId: teamId });
-      console.log('ClubContext: Updated API client with team ID:', teamId);
-      
-      // Update state and localStorage AFTER API client is updated
-      setCurrentTeamId(teamId);
-      if (teamId) {
-        localStorage.setItem('current-team-id', teamId.toString());
-      } else {
-        localStorage.removeItem('current-team-id');
-      }
-      
-      // Cancel any in-flight queries to prevent stale data from completing
-      queryClient.cancelQueries({ queryKey: ['games'] });
-      queryClient.cancelQueries({ queryKey: ['stats'] });
-      
-      // Remove stale data immediately to prevent flash of incorrect content
-      queryClient.removeQueries({ queryKey: ['games'] });
-      
-      // Force fresh fetch with new context
-      queryClient.refetchQueries({ queryKey: ['games'] });
-      
-      console.log('ClubContext: Team context switch completed to:', teamId);
-    }, [currentClubId, clubTeams, queryClient]);
-  
+    // Enhanced team context switching with minimal cache invalidation
+  const setCurrentTeamId = useCallback((teamId: number | null) => {
+    console.log('ClubContext: Setting team to:', teamId);
+
+    if (teamId !== null) {
+      localStorage.setItem('current-team-id', teamId.toString());
+    } else {
+      localStorage.removeItem('current-team-id');
+    }
+
+    setCurrentTeamId(teamId);
+
+    // Sync API client headers immediately
+    apiClient.setClubContext({ currentClubId, currentTeamId: teamId });
+    console.log('ClubContext: API client team context updated to:', teamId);
+
+
+    // Instead of invalidating, let React Query handle cache based on query keys
+    // This preserves cached data and only refetches when truly necessary
+    console.log('ClubContext: Team context switch completed to:', teamId, '- cache preserved');
+    }, [currentClubId, clubTeams]);
+
   // Load saved team from localStorage when teams are available
   useEffect(() => {
     const savedTeamId = localStorage.getItem('current-team-id');
@@ -304,7 +288,7 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
     userClubs,
     clubTeams,
     switchClub,
-    setCurrentTeamId: handleSetCurrentTeamId,
+    setCurrentTeamId,
     hasPermission,
     isLoading: isLoadingClubs || (!!currentClubId && isLoadingClub) || isLoadingTeams,
     isInitialized,
