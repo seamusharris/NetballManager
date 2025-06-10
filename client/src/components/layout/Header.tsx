@@ -45,6 +45,9 @@ export default function Header({ setIsMobileOpen, isTablet }: HeaderProps) {
     { path: '/game-result-examples', label: 'Game Result Examples', icon: <Calendar className="h-5 w-5" /> },
     { path: '/round-badge-examples', label: 'Round Badge Examples', icon: <Trophy className="h-5 w-5" /> },
     { path: '/player-box-examples', label: 'PlayerBox Examples', icon: <Users className="h-5 w-5" /> },
+    { path: '/action-button-examples', label: 'Action Button Examples', icon: <SettingsIcon className="h-5 w-5" /> },
+    { path: '/dashboard-examples', label: 'Dashboard Examples', icon: <BarChart className="h-5 w-5" /> },
+    { path: '/component-examples', label: 'All Examples', icon: <Zap className="h-5 w-5" /> },
     { path: '/settings', label: 'Settings', icon: <SettingsIcon className="h-5 w-5" /> },
   ];
 

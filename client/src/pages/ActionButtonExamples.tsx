@@ -302,6 +302,121 @@ export default function ActionButtonExamples() {
           </div>
         </section>
 
+        {/* Inside Box Actions */}
+        <section>
+          <h2 className="text-2xl font-semibold mb-6">Actions Inside Colored Boxes</h2>
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-lg font-medium mb-3">Integrated Team Actions</h3>
+              <TeamBox 
+                team={sampleTeam}
+                showStats={true}
+                stats={[
+                  { label: "Games", value: 12 },
+                  { label: "Wins", value: 8 },
+                  { label: "Win Rate", value: "67%" }
+                ]}
+                actions={
+                  <div className="absolute top-2 right-2 flex gap-1">
+                    <Button size="sm" variant="secondary" className="bg-white/20 hover:bg-white/30 text-white border-white/30">
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    <Button size="sm" variant="secondary" className="bg-white/20 hover:bg-white/30 text-white border-white/30">
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button size="sm" variant="secondary" className="bg-white/20 hover:bg-white/30 text-white border-white/30">
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </div>
+                }
+                className="relative"
+              />
+            </div>
+
+            <div>
+              <h3 className="text-lg font-medium mb-3">Integrated Player Actions</h3>
+              <PlayerBox 
+                player={samplePlayer}
+                stats={sampleStats}
+                actions={
+                  <div className="absolute top-2 right-2 flex gap-1">
+                    <Button size="sm" variant="secondary" className="bg-white/20 hover:bg-white/30 text-white border-white/30">
+                      <Award className="h-4 w-4" />
+                    </Button>
+                    <Button size="sm" variant="secondary" className="bg-white/20 hover:bg-white/30 text-white border-white/30">
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button size="sm" variant="secondary" className="bg-white/20 hover:bg-white/30 text-white border-white/30">
+                      <Settings className="h-4 w-4" />
+                    </Button>
+                  </div>
+                }
+                className="relative"
+              />
+            </div>
+
+            <div>
+              <h3 className="text-lg font-medium mb-3">Corner Action Badges</h3>
+              <TeamBox 
+                team={sampleTeam}
+                actions={
+                  <div className="absolute top-3 right-3">
+                    <Button size="sm" variant="secondary" className="bg-white/90 hover:bg-white text-gray-700 shadow-sm">
+                      <TrendingUp className="h-4 w-4 mr-1" />
+                      Quick Stats
+                    </Button>
+                  </div>
+                }
+                className="relative"
+              />
+            </div>
+
+            <div>
+              <h3 className="text-lg font-medium mb-3">Floating Action Menu</h3>
+              <PlayerBox 
+                player={samplePlayer}
+                actions={
+                  <div className="absolute bottom-3 right-3">
+                    <Button size="sm" className="bg-black/70 hover:bg-black/80 text-white backdrop-blur-sm">
+                      <Play className="h-4 w-4 mr-1" />
+                      Quick Add
+                    </Button>
+                  </div>
+                }
+                className="relative"
+              />
+            </div>
+
+            <div>
+              <h3 className="text-lg font-medium mb-3">Overlay Actions with Semi-Transparent Background</h3>
+              <TeamBox 
+                team={sampleTeam}
+                showStats={true}
+                stats={[
+                  { label: "Recent Form", value: "W-W-L" },
+                  { label: "Rating", value: "8.5" }
+                ]}
+                actions={
+                  <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-all duration-200 group">
+                    <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex gap-1">
+                      <Button size="sm" variant="secondary" className="bg-white shadow-md">
+                        <Users className="h-4 w-4" />
+                      </Button>
+                      <Button size="sm" variant="secondary" className="bg-white shadow-md">
+                        <Calendar className="h-4 w-4" />
+                      </Button>
+                      <Button size="sm" variant="secondary" className="bg-white shadow-md">
+                        <Trophy className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                }
+                className="relative overflow-hidden"
+              />
+            </div>
+          </div>
+        </section>
+
         {/* Action Guidelines */}
         <section>
           <h2 className="text-2xl font-semibold mb-6">Action Button Guidelines</h2>
@@ -319,9 +434,20 @@ export default function ActionButtonExamples() {
             <div>
               <h4 className="font-semibold mb-2">Positioning:</h4>
               <ul className="text-sm space-y-1 text-gray-700">
-                <li>Actions are positioned below the colored content boxes</li>
-                <li>This maintains color consistency while keeping actions accessible</li>
+                <li><strong>External:</strong> Actions positioned below colored boxes for clear separation</li>
+                <li><strong>Integrated:</strong> Actions inside boxes using semi-transparent backgrounds</li>
+                <li><strong>Overlay:</strong> Hover-revealed actions with backdrop blur or shadows</li>
+                <li><strong>Corner badges:</strong> Small action buttons in corners for quick access</li>
                 <li>Primary actions on the left, secondary/destructive on the right</li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-2">Integration Techniques:</h4>
+              <ul className="text-sm space-y-1 text-gray-700">
+                <li><strong>Semi-transparent:</strong> bg-white/20 with white text for colored backgrounds</li>
+                <li><strong>High contrast:</strong> bg-white with dark text for maximum readability</li>
+                <li><strong>Backdrop blur:</strong> backdrop-blur-sm for floating effect</li>
+                <li><strong>Hover reveals:</strong> opacity-0 to opacity-100 on parent hover</li>
               </ul>
             </div>
           </div>
