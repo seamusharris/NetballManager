@@ -1,32 +1,16 @@
 import React from 'react';
 import { Helmet } from 'react-helmet';
 import { PageTemplate } from '@/components/layout/PageTemplate';
-import { TeamBox } from '@/components/ui/team-box';
-import { PlayerBox } from '@/components/ui/player-box';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card"
+import { TeamBox } from '@/components/ui/team-box';
 import { 
-  Edit, 
-  Trash2, 
-  Users, 
-  Calendar, 
-  Trophy, 
-  Target, 
-  TrendingUp, 
-  Eye, 
-  UserPlus, 
-  Award,
-  Settings,
-  Download,
-  Share,
-  Star,
-  MoreHorizontal,
-  Play,
-  BarChart3,
-  Clock,
-  Zap,
-  Plus
+  Users, Calendar, Trophy, Eye, Edit, Settings, 
+  Save, Trash2, Plus, Upload, Download, 
+  Star, Heart, Shield, AlertTriangle,
+  BarChart3, TrendingUp, Award, Target,
+  Play, MoreHorizontal
 } from 'lucide-react';
 
 export default function ActionButtonExamples() {
@@ -69,7 +53,7 @@ export default function ActionButtonExamples() {
       contactEmail: "emily.white@example.com"
     }
   ];
-  
+
   const samplePlayer = {
     id: 1,
     displayName: "Sarah Johnson",
@@ -538,13 +522,15 @@ export default function ActionButtonExamples() {
             </div>
           </div>
         </section>
-        
+
         {/* External Actions with Avatar Layout */}
         <section>
           <h2 className="text-2xl font-bold mb-6">External Actions with Avatar Layout</h2>
-          <Card>
+
+          {/* Player Cards with Right-Side Actions */}
+          <Card className="mb-6">
             <CardHeader>
-              <CardTitle>Player Cards with Side Actions</CardTitle>
+              <CardTitle>Player Cards - Standard Right Actions</CardTitle>
               <p className="text-sm text-muted-foreground">
                 Action buttons positioned on the right side, mirroring avatar placement for visual balance
               </p>
@@ -553,21 +539,16 @@ export default function ActionButtonExamples() {
               <div className="space-y-4">
                 {samplePlayers.slice(0, 4).map(player => (
                   <div key={player.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors">
-                    {/* Left side - Avatar and info */}
-                    <div className="flex items-center space-x-3">
-                      <div className={`w-12 h-12 rounded-full ${player.avatarColor} flex items-center justify-center text-white font-bold text-lg`}>
-                        {player.firstName[0]}
+                    {/* Left side - Player info with avatar */}
+                    <div className="flex items-center space-x-4">
+                      <div className={`w-10 h-10 ${player.avatarColor} rounded-full flex items-center justify-center text-white font-bold`}>
+                        {player.displayName.split(' ').map(n => n[0]).join('')}
                       </div>
                       <div>
-                        <h4 className="font-semibold">{player.displayName}</h4>
+                        <p className="font-semibold">{player.displayName}</p>
                         <p className="text-sm text-muted-foreground">
-                          {player.positionPreferences.join(', ')}
+                          {player.positionPreferences?.slice(0, 2).join(', ') || 'No positions'}
                         </p>
-                        <div className="flex items-center space-x-2 mt-1">
-                          <Badge variant={player.active ? "default" : "secondary"}>
-                            {player.active ? "Active" : "Inactive"}
-                          </Badge>
-                        </div>
                       </div>
                     </div>
 
@@ -581,6 +562,256 @@ export default function ActionButtonExamples() {
                       </Button>
                       <Button size="sm" variant="outline" className="btn-manage">
                         <Settings className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Team Cards with Right-Side Actions */}
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle>Team Cards - Right Side Action Groups</CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Team information with action buttons grouped on the right
+              </p>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {[
+                  { name: "WNC Dingoes", division: "13U/3s", status: "active", players: 12, wins: 8, losses: 2 },
+                  { name: "WNC Emus", division: "15U/1s", status: "active", players: 10, wins: 9, losses: 1 },
+                  { name: "WNC Kangaroos", division: "13U/1s", status: "inactive", players: 8, wins: 5, losses: 5 },
+                  { name: "Lyrebirds", division: "15U/2s", status: "active", players: 11, wins: 7, losses: 3 }
+                ].map((team, index) => (
+                  <div key={index} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors">
+                    {/* Left side - Team info with team avatar */}
+                    <div className="flex items-center space-x-4">
+                      <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center text-white font-bold text-lg">
+                        {team.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                      </div>
+                      <div>
+                        <p className="font-semibold text-lg">{team.name}</p>
+                        <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+                          <span>{team.division}</span>
+                          <span>•</span>
+                          <span>{team.players} players</span>
+                          <span>•</span>
+                          <span className="text-green-600">{team.wins}W</span>
+                          <span className="text-red-600">{team.losses}L</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Right side - Action button groups */}
+                    <div className="flex items-center space-x-3">
+                      <div className="flex space-x-1">
+                        <Button size="sm" variant="outline" className="btn-view">
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button size="sm" variant="outline" className="btn-edit">
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <div className="w-px h-6 bg-border"></div>
+                      <div className="flex space-x-1">
+                        <Button size="sm" variant="outline" className="btn-roster">
+                          <Users className="h-4 w-4" />
+                        </Button>
+                        <Button size="sm" variant="outline" className="btn-schedule">
+                          <Calendar className="h-4 w-4" />
+                        </Button>
+                        <Button size="sm" variant="outline" className="btn-stats">
+                          <BarChart3 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Game Cards with Right-Side Actions */}
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle>Game Cards - Contextual Right Actions</CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Game information with status-appropriate actions on the right
+              </p>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {[
+                  { id: 1, opponent: "Lightning Bolts", date: "2025-06-14", status: "upcoming", result: null, round: "R13" },
+                  { id: 2, opponent: "Thunder Cats", date: "2025-06-07", status: "completed", result: "W 45-32", round: "R12" },
+                  { id: 3, opponent: "Storm Eagles", date: "2025-05-31", status: "completed", result: "L 28-41", round: "R11" },
+                  { id: 4, opponent: "Fire Hawks", date: "2025-05-24", status: "cancelled", result: null, round: "R10" }
+                ].map((game) => (
+                  <div key={game.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors">
+                    {/* Left side - Game info with round avatar */}
+                    <div className="flex items-center space-x-4">
+                      <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-blue-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                        {game.round}
+                      </div>
+                      <div>
+                        <p className="font-semibold">{game.opponent}</p>
+                        <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                          <span>{game.date}</span>
+                          {game.result && (
+                            <>
+                              <span>•</span>
+                              <span className={game.result.startsWith('W') ? 'text-green-600 font-medium' : 'text-red-600 font-medium'}>
+                                {game.result}
+                              </span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Right side - Status-specific actions */}
+                    <div className="flex items-center space-x-2">
+                      {game.status === 'upcoming' && (
+                        <>
+                          <Button size="sm" variant="outline" className="btn-roster">
+                            <Users className="h-4 w-4" />
+                          </Button>
+                          <Button size="sm" variant="outline" className="btn-prep">
+                            <Target className="h-4 w-4" />
+                          </Button>
+                          <Button size="sm" className="btn-live">
+                            <Play className="h-4 w-4" />
+                          </Button>
+                        </>
+                      )}
+                      {game.status === 'completed' && (
+                        <>
+                          <Button size="sm" variant="outline" className="btn-stats">
+                            <BarChart3 className="h-4 w-4" />
+                          </Button>
+                          <Button size="sm" variant="outline" className="btn-view">
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button size="sm" variant="outline" className="btn-export">
+                            <Download className="h-4 w-4" />
+                          </Button>
+                        </>
+                      )}
+                      {game.status === 'cancelled' && (
+                        <>
+                          <Button size="sm" variant="outline" className="btn-reschedule">
+                            <Calendar className="h-4 w-4" />
+                          </Button>
+                          <Button size="sm" variant="outline" className="btn-edit">
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Compact List with Minimal Right Actions */}
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle>Compact Lists - Minimal Right Actions</CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Dense layouts with essential actions on the right
+              </p>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {[
+                  { name: "Sarah Johnson", role: "Goal Shooter", rating: 8.5, active: true },
+                  { name: "Emma Wilson", role: "Centre", rating: 8.2, active: true },
+                  { name: "Kate Brown", role: "Goal Keeper", rating: 8.1, active: false },
+                  { name: "Lily Chen", role: "Wing Attack", rating: 7.9, active: true },
+                  { name: "Amy Thompson", role: "Wing Defence", rating: 7.7, active: true },
+                  { name: "Zoe Martinez", role: "Goal Defence", rating: 7.5, active: false }
+                ].map((player, index) => (
+                  <div key={index} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/30 transition-colors">
+                    {/* Left side - Compact player info */}
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                        {player.name.split(' ').map(n => n[0]).join('')}
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2">
+                          <span className="font-medium">{player.name}</span>
+                          <span className="text-xs px-2 py-0.5 bg-muted rounded">{player.role}</span>
+                          <span className="text-sm text-muted-foreground">★ {player.rating}</span>
+                          {!player.active && (
+                            <span className="text-xs px-2 py-0.5 bg-orange-100 text-orange-600 rounded">Inactive</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Right side - Minimal actions */}
+                    <div className="flex items-center space-x-1">
+                      <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Floating Action Style */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Floating Style Right Actions</CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Actions that appear to float on the right with subtle shadows
+              </p>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {samplePlayers.slice(0, 3).map((player) => (
+                  <div key={player.id} className="relative p-4 border rounded-lg hover:bg-muted/50 transition-all group">
+                    {/* Left side - Player info */}
+                    <div className="flex items-center space-x-4 pr-32">
+                      <div className={`w-12 h-12 ${player.avatarColor} rounded-full flex items-center justify-center text-white font-bold`}>
+                        {player.displayName.split(' ').map(n => n[0]).join('')}
+                      </div>
+                      <div>
+                        <p className="font-semibold text-lg">{player.displayName}</p>
+                        <p className="text-sm text-muted-foreground">
+                          Preferred: {player.positionPreferences?.slice(0, 3).join(', ') || 'No positions'}
+                        </p>
+                        <div className="flex items-center space-x-2 mt-1">
+                          <Badge variant="secondary" size="sm">12 Games</Badge>
+                          <Badge variant="outline" size="sm">★ 8.2</Badge>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Right side - Floating actions                    <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button size="sm" variant="outline" className="shadow-md hover:shadow-lg transition-shadow">
+                        <Eye className="h-4 w-4 mr-1" />
+                        View
+                      </Button>
+                      <Button size="sm" variant="outline" className="shadow-md hover:shadow-lg transition-shadow">
+                        <Edit className="h-4 w-4 mr-1" />
+                        Edit
+                      </Button>
+                      <Button size="sm" className="shadow-md hover:shadow-lg transition-shadow">
+                        <Settings className="h-4 w-4 mr-1" />
+                        Manage
                       </Button>
                     </div>
                   </div>
