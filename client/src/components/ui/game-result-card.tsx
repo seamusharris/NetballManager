@@ -62,23 +62,26 @@ export function GameResultCard({
     }
   }, [gameStats, centralizedScores, useOfficialPriority, game, currentTeamId]);
 
-  // Check if this is a BYE game
-  const isByeGame = game.isBye || 
-                   game.awayTeamName === 'Bye' || 
-                   game.homeTeamName === 'Bye' ||
-                   (!game.awayTeamName && !game.homeTeamName);
+  // Check if this is a BYE game using game status
+  const isByeGame = game.statusId === 6 || game.statusName === 'bye';
 
   const getOpponentName = (): string => {
-    // Handle team-based system with proper BYE detection
+    // Handle BYE games
     if (isByeGame) {
       return 'Bye';
     }
-    if (game.awayTeamName && game.awayTeamName !== 'Bye') {
-      return game.awayTeamName;
-    } else if (game.homeTeamName) {
-      return game.homeTeamName;
+    
+    // For inter-club games, determine opponent based on current team
+    if (game.isInterClub && currentTeamId) {
+      if (game.homeTeamId === currentTeamId) {
+        return game.awayTeamName || 'Unknown';
+      } else if (game.awayTeamId === currentTeamId) {
+        return game.homeTeamName || 'Unknown';
+      }
     }
-    return 'Unknown Opponent';
+    
+    // Default fallback
+    return game.awayTeamName || game.homeTeamName || 'Unknown Opponent';
   };
 
   // Get result styling
@@ -160,6 +163,13 @@ export function GameResultCard({
     if (isByeGame) {
       return "Bye";
     }
+    
+    // For inter-club games, show Home vs Away format
+    if (game.isInterClub) {
+      return `${game.homeTeamName || 'Unknown'} vs ${game.awayTeamName || 'Unknown'}`;
+    }
+    
+    // For non-inter-club games, show vs opponent
     return `vs ${getOpponentName()}`;
   };
 
