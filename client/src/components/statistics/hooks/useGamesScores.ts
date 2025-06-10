@@ -171,7 +171,6 @@ export function useGamesScores(gameIds: number[], forceFresh = false) {
         } else if (stats && stats.length > 0) {
           try {
             // Use gameScoreService for consistent calculation
-            const { gameScoreService } = require('@/lib/gameScoreService');
             const gameScores = gameScoreService.calculateGameScores(stats, game.status, undefined, false, undefined, undefined, undefined, undefined, gameId);
             
             // Convert to legacy format
@@ -186,7 +185,11 @@ export function useGamesScores(gameIds: number[], forceFresh = false) {
             };
           } catch (error) {
             console.error(`Error calculating scores for game ${gameId}:`, error);
-            return;
+            // Don't return early - let the game show without scores rather than breaking
+            scores = {
+              quarterScores: {},
+              finalScore: { for: 0, against: 0 }
+            };
           }
         } else {
           console.warn(`No stats available for completed game ${gameId}`);
