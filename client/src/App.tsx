@@ -1,4 +1,4 @@
-import React, { Suspense, lazy, useEffect } from "react";
+import React, { Suspense, lazy, useEffect, startTransition } from "react";
 import { Switch, Route } from "wouter";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
@@ -133,7 +133,15 @@ function Router() {
         <Route path="/widget-examples" component={WidgetExamples} />
         <Route path="/form-examples" component={FormExamples} />
         <Route path="/chart-examples" component={ChartExamples} />
-        <Route path="/court-layout-examples" component={CourtLayoutExamples} />
+        <Route path="/court-layout-examples">
+          {() => (
+            <ErrorBoundary>
+              <Suspense fallback={<LoadingSpinner message="Loading Court Layout Examples..." />}>
+                <CourtLayoutExamples />
+              </Suspense>
+            </ErrorBoundary>
+          )}
+        </Route>
         <Route path="/layout-examples" component={LayoutExamples} />
         <Route path="/color-examples" component={ColorExamples} />
         <Route component={withErrorBoundary(NotFound, 'NotFound')} />

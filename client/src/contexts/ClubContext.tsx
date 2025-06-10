@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, startTransition } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/apiClient';
 
@@ -113,7 +113,9 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
       // Set everything synchronously
       localStorage.setItem('currentClubId', targetClubId.toString());
       apiClient.setClubContext({ currentClubId: targetClubId });
-      setCurrentClubId(targetClubId);
+      startTransition(() => {
+        setCurrentClubId(targetClubId);
+      });
       setIsInitialized(true);
 
       console.log('ClubContext: Initialization completed with club:', targetClubId);
@@ -159,10 +161,14 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
     // Update everything synchronously
     localStorage.setItem('currentClubId', clubId.toString());
     apiClient.setClubContext({ currentClubId: clubId });
-    setCurrentClubId(clubId);
+    startTransition(() => {
+      setCurrentClubId(clubId);
+    });
 
     // Clear team selection when switching clubs
-    setCurrentTeamId(null);
+    startTransition(() => {
+      setCurrentTeamId(null);
+    });
     localStorage.removeItem('current-team-id');
 
     // Cache invalidation disabled to prevent race conditions
@@ -190,7 +196,9 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
     apiClient.setClubContext({ currentClubId, currentTeamId: teamId });
 
     // Update state after API client is set
-    setCurrentTeamId(teamId);
+    startTransition(() => {
+      setCurrentTeamId(teamId);
+    });
 
     // Cache invalidation disabled to prevent race conditions
     // Let React Query handle cache naturally through query key changes
