@@ -77,6 +77,48 @@ export default function Games() {
     enabled: !!currentClubId,
   });
 
+  // Centralized batch data fetching (same as Dashboard)
+  const gameIdsArray = games?.map(g => g.id).sort() || [];
+  const gameIds = gameIdsArray.join(',');
+
+  const { data: batchData, isLoading: isLoadingBatchData } = useQuery({
+    queryKey: ['games-batch-data', currentClubId, teamIdFromUrl || currentTeamId, gameIds],
+    queryFn: async () => {
+      if (gameIdsArray.length === 0) return { stats: {}, rosters: {}, scores: {} };
+
+      console.log(`Games page fetching batch data for ${gameIdsArray.length} games with team ${teamIdFromUrl || currentTeamId}:`, gameIdsArray);
+
+      try {
+        const { dataFetcher } = await import('@/lib/unifiedDataFetcher');
+        const result = await dataFetcher.batchFetchGameData({
+          gameIds: gameIdsArray,
+          clubId: currentClubId!,
+          teamId: teamIdFromUrl || currentTeamId,
+          includeStats: true,
+          includeRosters: true,
+          includeScores: true
+        });
+
+        console.log('Games page batch data result for team', teamIdFromUrl || currentTeamId, ':', result);
+        return result;
+      } catch (error) {
+        console.error('Games page batch data fetch error:', error);
+        throw error;
+      }
+    },
+    enabled: !!currentClubId && !!(teamIdFromUrl || currentTeamId) && gameIdsArray.length > 0 && !isLoadingGames,
+    staleTime: 30 * 60 * 1000, // 30 minutes
+    gcTime: 60 * 60 * 1000, // 1 hour garbage collection
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    retry: false,
+  });
+
+  const gameStatsMap = batchData?.stats || {};
+  const gameRostersMap = batchData?.rosters || {};
+  const gameScoresMap = batchData?.scores || {};
+
   // Fetch seasons - no club context needed
   const { data: seasons = [] } = useQuery({
     queryKey: ['seasons'], 
@@ -231,7 +273,7 @@ export default function Games() {
           <GamesList 
             games={games} 
             opponents={[]} // Legacy prop - no longer used but component expects it
-            isLoading={isLoadingGames}
+            isLoading={isLoadingGames || isLoadingBatchData}
             onDelete={handleDelete} 
             onEdit={setEditingGame}
             onViewStats={handleViewStats}
@@ -239,6 +281,8 @@ export default function Games() {
             showFilters={true}
             showActions={true}
             teams={teams}
+            centralizedStats={gameStatsMap}
+            centralizedScores={gameScoresMap}
           />
         </ContentBox>
       </PageTemplate>

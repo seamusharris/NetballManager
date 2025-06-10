@@ -56,6 +56,8 @@ interface GamesListProps {
   maxRows?: number;
   title?: string;
   teams?: any[];
+  centralizedStats?: Record<number, any[]>;
+  centralizedScores?: Record<number, any>;
 }
 
 // Shared function for filtering games by status and search query
@@ -96,7 +98,9 @@ export function GamesList({
   maxRows,
   title,
   className,
-  teams = []
+  teams = [],
+  centralizedStats,
+  centralizedScores
 }: GamesListProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -142,15 +146,10 @@ export function GamesList({
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
   const [selectedGame, setSelectedGame] = useState<Game | null>(null);
 
-  // Fetch game stats for all completed games that allow statistics
-  const completedGameIds = games
-    .filter(game => {
-      const gameStatus = getGameStatus(game);
-      return gameStatus.isCompleted === true && gameStatus.allowsStatistics === true;
-    })
-    .map(game => game.id);
-
-  // Get all non-BYE game IDs for checking roster status
+  // Use centralized data when available, otherwise fall back to individual fetching (dashboard vs games page)
+  const scoresMap = centralizedScores || {};
+  
+  // For roster status checking (only for non-dashboard and when no centralized data)
   const nonByeGameIds = games
     .filter(game => {
       const gameStatus = getGameStatus(game);
@@ -158,7 +157,6 @@ export function GamesList({
     })
     .map(game => game.id);
 
-  // Use React Query to fetch roster data for all games to check if they're complete (only for non-dashboard)
   const { data: allRosterData, isLoading: isLoadingRosters } = useQuery({
     queryKey: ['allRosters', ...nonByeGameIds],
     queryFn: async () => {
@@ -185,20 +183,23 @@ export function GamesList({
 
       return rostersMap;
     },
-    enabled: nonByeGameIds.length > 0 && !isDashboard,
-    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
+    enabled: nonByeGameIds.length > 0 && !isDashboard && !centralizedScores, // Only fetch if no centralized data
+    staleTime: 5 * 60 * 1000,
   });
-
-  // Use the same efficient scores approach as the dashboard (always call hook but conditionally pass data)
-  const scoresResult = useGamesScores(currentClub?.id ? completedGameIds : []);
-  const scoresMap = scoresResult?.scoresMap || {};
-  const isLoadingScores = scoresResult?.isLoading || false;
 
   // Determine game stats status (only for non-dashboard)
   useEffect(() => {
     if (isDashboard || !scoresMap) return;
 
     const statsStatuses: Record<number, StatsStatus> = {};
+    
+    // Get completed games that allow statistics
+    const completedGameIds = games
+      .filter(game => {
+        const gameStatus = getGameStatus(game);
+        return gameStatus.isCompleted === true && gameStatus.allowsStatistics === true;
+      })
+      .map(game => game.id);
 
     // Check each completed game's stats status
     completedGameIds.forEach(gameId => {
@@ -214,7 +215,7 @@ export function GamesList({
     });
 
     setGameStatsStatus(statsStatuses);
-  }, [scoresMap, completedGameIds, isDashboard]);
+  }, [scoresMap, games, isDashboard]);
 
   // Calculate roster statuses (only for non-dashboard)
   useEffect(() => {
@@ -462,7 +463,7 @@ export function GamesList({
                   <GameResultCard
                     game={game}
                     layout="wide"
-                    gameStats={[]}
+                    gameStats={centralizedStats?.[game.id] || []}
                     centralizedScores={scoresMap?.[game.id]}
                     useOfficialPriority={true}
                     showDate={true}
