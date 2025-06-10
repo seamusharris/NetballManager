@@ -170,7 +170,7 @@ export function useGamesScores(gameIds: number[], forceFresh = false) {
           };
         } else if (stats && stats.length > 0) {
           try {
-            // Use sync version for React components
+            // Don't pass empty official scores arrays - let the service calculate from stats
             const gameScores = gameScoreService.calculateGameScoresSync(
               stats, 
               game.status, 
@@ -178,7 +178,8 @@ export function useGamesScores(gameIds: number[], forceFresh = false) {
               false, // isInterClub
               game.homeTeamId,
               game.awayTeamId,
-              currentClub?.currentTeam?.id || currentClub?.teams?.[0]?.id // Use club context for team ID
+              currentClub?.currentTeam?.id || currentClub?.teams?.[0]?.id, // Use club context for team ID
+              undefined // Don't pass empty official scores - let it calculate from stats
             );
             
             // Convert to legacy format
