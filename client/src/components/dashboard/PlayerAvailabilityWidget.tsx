@@ -47,7 +47,7 @@ export default function PlayerAvailabilityWidget({
   // Fetch current team players using Club context
   useEffect(() => {
     const fetchTeamPlayers = async () => {
-      if (!currentTeamId || upcomingGames.length === 0) {
+      if (!currentTeamId) {
         setTeamPlayers(players);
         return;
       }
@@ -56,15 +56,8 @@ export default function PlayerAvailabilityWidget({
         console.log('PlayerAvailabilityWidget: Fetching team players for team:', currentTeamId);
 
         const response = await apiClient.get(`/api/teams/${currentTeamId}/players`);
-        if (response.success) {
-          const teamPlayerData = response.data;
-          setTeamPlayers(teamPlayerData);
-          console.log('Fetched team players:', teamPlayerData.length, 'for team:', currentTeamId);
-        } else {
-          // Fallback to all players if team-specific fetch fails
-          console.log('Failed to fetch team players, using all players as fallback');
-          setTeamPlayers(players);
-        }
+        setTeamPlayers(response);
+        console.log('Fetched team players:', response.length, 'for team:', currentTeamId);
       } catch (error) {
         console.error('Error fetching team players:', error);
         // Fallback to all players on error
@@ -74,7 +67,7 @@ export default function PlayerAvailabilityWidget({
     };
 
     fetchTeamPlayers();
-  }, [currentTeamId, upcomingGames.length, players]);
+  }, [currentTeamId, players]);
 
   // Fetch availability data for upcoming games
   useEffect(() => {
@@ -91,28 +84,17 @@ export default function PlayerAvailabilityWidget({
             console.log(`Fetching availability for game ${game.id} with team ${currentTeamId}`);
 
             const response = await apiClient.get(`/api/games/${game.id}/availability`);
-            if (response.success) {
-              const data = response.data;
-              // Handle different response formats
-              const availablePlayerIds = Array.isArray(data) ? data : (data.availablePlayerIds || []);
-              // Filter to only include team players
-              const teamPlayerIds = teamPlayers.map(p => p.id);
-              const availableTeamPlayerIds = availablePlayerIds.filter(id => teamPlayerIds.includes(id));
+            // Handle different response formats
+            const availablePlayerIds = Array.isArray(response) ? response : (response.availablePlayerIds || []);
+            // Filter to only include team players
+            const teamPlayerIds = teamPlayers.map(p => p.id);
+            const availableTeamPlayerIds = availablePlayerIds.filter(id => teamPlayerIds.includes(id));
 
-              newAvailabilityData[game.id] = {
-                gameId: game.id,
-                availableCount: availableTeamPlayerIds.length || totalActiveTeamPlayers,
-                totalPlayers: totalActiveTeamPlayers
-              };
-            } else {
-              // No availability data or error, assume all team players are available
-              console.log(`No availability data for game ${game.id}, using team players fallback`);
-              newAvailabilityData[game.id] = {
-                gameId: game.id,
-                availableCount: totalActiveTeamPlayers,
-                totalPlayers: totalActiveTeamPlayers
-              };
-            }
+            newAvailabilityData[game.id] = {
+              gameId: game.id,
+              availableCount: availableTeamPlayerIds.length || totalActiveTeamPlayers,
+              totalPlayers: totalActiveTeamPlayers
+            };
           } catch (error) {
             console.error(`Error fetching availability for game ${game.id}:`, error);
             // On error, assume all team players are available
