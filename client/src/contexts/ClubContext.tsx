@@ -265,9 +265,9 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
     }
   }, [setCurrentTeamId, queryClient, currentTeamId, currentClubId]);
 
-  // Enhanced team context switching with minimal cache invalidation
+  // Enhanced team context switching with consistent cache invalidation
   const handleSetCurrentTeamId = useCallback((teamId: number | null) => {
-    console.log('ClubContext: Setting team to:', teamId);
+    console.log('ClubContext: Setting team to:', teamId, 'from:', currentTeamId);
 
     if (teamId !== null) {
       localStorage.setItem('current-team-id', teamId.toString());
@@ -281,9 +281,25 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
     apiClient.setClubContext({ currentClubId, currentTeamId: teamId });
     console.log('ClubContext: API client team context updated to:', teamId);
 
-    // Use intelligent cache invalidation for team switching
-    if (cacheManager && currentClubId) {
-      cacheManager.invalidateOnTeamSwitch(currentClubId, teamId, currentTeamId);
+    // Consistent cache invalidation for team switching - always invalidate team-specific data
+    if (currentClubId && teamId !== currentTeamId) {
+      console.log('ClubContext: Invalidating team-specific cache data for switch');
+      
+      // Invalidate team-specific queries immediately
+      const teamSpecificPatterns = [
+        ['games', currentClubId],
+        ['players', currentClubId],
+        ['dashboard-batch-data', currentClubId],
+        ['batch-game-data', currentClubId],
+        ['team-performance', currentClubId]
+      ];
+
+      teamSpecificPatterns.forEach(pattern => {
+        queryClient.invalidateQueries({ 
+          queryKey: pattern,
+          exact: false 
+        });
+      });
     }
 
     console.log('ClubContext: Team context switch completed to:', teamId);

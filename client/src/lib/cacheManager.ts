@@ -26,18 +26,24 @@ export class CacheManager {
   async invalidateOnTeamSwitch(clubId: number, newTeamId: number | null, oldTeamId: number | null) {
     if (newTeamId === oldTeamId) return;
 
-    console.log(`CacheManager: Switching team from ${oldTeamId} to ${newTeamId}`);
+    console.log(`CacheManager: Switching team from ${oldTeamId} to ${newTeamId} for club ${clubId}`);
 
-    // Only invalidate team-specific data
-    const teamSpecificKeys = [
-      ['games', clubId, oldTeamId],
-      ['players', clubId, oldTeamId],
-      ['batch-game-data', clubId, oldTeamId],
-      ['dashboard', clubId, oldTeamId]
+    // Invalidate all team-related queries for this club to ensure consistency
+    const teamSpecificPatterns = [
+      ['games', clubId],
+      ['players', clubId], 
+      ['dashboard-batch-data', clubId],
+      ['batch-game-data', clubId],
+      ['team-performance', clubId],
+      ['dashboard', clubId]
     ];
 
-    for (const key of teamSpecificKeys) {
-      this.queryClient.removeQueries({ queryKey: key, exact: false });
+    for (const pattern of teamSpecificPatterns) {
+      await this.queryClient.invalidateQueries({ 
+        queryKey: pattern, 
+        exact: false 
+      });
+      console.log(`CacheManager: Invalidated pattern:`, pattern);
     }
   }
 
