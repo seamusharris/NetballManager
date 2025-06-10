@@ -18,9 +18,10 @@ interface RecentGamesProps {
   activeSeason?: any;
   centralizedStats?: Record<number, any[]>;
   teams?: any[];
+  centralizedScores?: Record<number, any[]>;
 }
 
-export default function RecentGames({ games, opponents, className, seasonFilter, activeSeason, centralizedStats, teams }: RecentGamesProps) {
+export default function RecentGames({ games, opponents, className, seasonFilter, activeSeason, centralizedStats, teams, centralizedScores }: RecentGamesProps) {
   const { currentTeam } = useClub();
 
   // Filter for recent completed games using the new status system
@@ -39,8 +40,7 @@ export default function RecentGames({ games, opponents, className, seasonFilter,
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, RECENT_GAMES_COUNT);
 
-  // Use centralized scores data instead of separate API calls
-  const officialScoresMap = centralizedStats || {};
+  // Use centralized stats for game data
   const isLoading = false;
 
   return (
@@ -61,7 +61,7 @@ export default function RecentGames({ games, opponents, className, seasonFilter,
                 game={game}
                 layout="medium"
                 gameStats={centralizedStats?.[game.id] || []}
-                officialScores={officialScoresMap[game.id]}
+                officialScores={centralizedScores?.[game.id]}
                 useOfficialPriority={true}
                 showDate={true}
                 showRound={true}
