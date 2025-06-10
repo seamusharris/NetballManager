@@ -86,15 +86,16 @@ export default function Dashboard() {
   });
 
   // Centralized roster fetching for all games - only when games data is stable
-  const gameIds = games?.map(g => g.id).sort().join(',') || '';
+  const gameIdsArray = games?.map(g => g.id).sort() || [];
+  const gameIds = gameIdsArray.join(',');
 
   // Use unified data fetcher for better performance
   const { data: batchData, isLoading: isLoadingBatchData } = useQuery({
-    queryKey: ['dashboard-batch-data', currentClubId, currentTeamId, gameIds.sort().join(',')],
+    queryKey: ['dashboard-batch-data', currentClubId, currentTeamId, gameIds],
     queryFn: async () => {
-      if (gameIds.length === 0) return { stats: {}, rosters: {}, scores: {} };
+      if (gameIdsArray.length === 0) return { stats: {}, rosters: {}, scores: {} };
 
-      console.log(`Dashboard fetching batch data for ${gameIds.length} games`);
+      console.log(`Dashboard fetching batch data for ${gameIdsArray.length} games`);
 
       const { dataFetcher } = await import('@/lib/unifiedDataFetcher');
       return await dataFetcher.batchFetchGameData({
@@ -106,7 +107,7 @@ export default function Dashboard() {
         includeScores: true
       });
     },
-    enabled: !!currentClubId && gameIds.length > 0,
+    enabled: !!currentClubId && gameIdsArray.length > 0,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 30 * 60 * 1000, // 30 minutes
   });
