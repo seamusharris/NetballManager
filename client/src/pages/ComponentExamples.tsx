@@ -638,27 +638,468 @@ export default function ComponentExamples() {
           </div>
         </section>
 
-        {/* External Links */}
+        {/* Sport-Specific Components */}
         <section>
-          <h2 className="text-2xl font-bold mb-6">Related Examples</h2>
+          <h2 className="text-2xl font-bold mb-6">Sport-Specific Components</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+            {/* Player Components */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Player Components</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <h4 className="font-medium">Player Box</h4>
+                  <PlayerBox player={samplePlayer} />
+                </div>
+                <div className="space-y-2">
+                  <h4 className="font-medium">Player Avatar</h4>
+                  <div className="flex gap-2">
+                    {samplePlayers.slice(0, 4).map(player => (
+                      <PlayerAvatar key={player.id} player={player} size="md" />
+                    ))}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Team Components */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Team Components</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <h4 className="font-medium">Team Box</h4>
+                  <TeamBox team={sampleTeam} />
+                </div>
+                <div className="space-y-2">
+                  <h4 className="font-medium">Team Gallery</h4>
+                  <div className="space-y-2">
+                    {sampleTeams.slice(0, 2).map(team => (
+                      <TeamBox key={team.id} team={team} variant="compact" />
+                    ))}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Game Components */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Game Components</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <h4 className="font-medium">Game Badges</h4>
+                  <div className="flex gap-2">
+                    <GameBadge variant="round">Round 5</GameBadge>
+                    <GameBadge variant="status">Completed</GameBadge>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <h4 className="font-medium">Score Badges</h4>
+                  <div className="flex gap-2">
+                    <ScoreBadge homeScore={42} awayScore={38} />
+                    <ScoreBadge homeScore={35} awayScore={41} />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <h4 className="font-medium">Result Badges</h4>
+                  <div className="flex gap-2">
+                    <ResultBadge result="win" />
+                    <ResultBadge result="loss" />
+                    <ResultBadge result="draw" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Court Components */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Court Display</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <CourtDisplay 
+                  positions={{
+                    GS: samplePlayers[0],
+                    GA: samplePlayers[1],
+                    WA: samplePlayers[2],
+                    C: samplePlayers[3]
+                  }}
+                />
+              </CardContent>
+            </Card>
+
+            {/* Action Components */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Action Components</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <h4 className="font-medium">Action Buttons</h4>
+                  <div className="flex gap-2">
+                    <ActionButton
+                      icon={<Edit className="h-4 w-4" />}
+                      onClick={() => console.log('Edit clicked')}
+                      variant="edit"
+                    >
+                      Edit
+                    </ActionButton>
+                    <ActionButton
+                      icon={<Eye className="h-4 w-4" />}
+                      onClick={() => console.log('View clicked')}
+                      variant="view"
+                    >
+                      View
+                    </ActionButton>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <h4 className="font-medium">Base Widget</h4>
+                  <BaseWidget title="Performance" description="Player stats">
+                    <div className="p-4 text-center">
+                      <div className="text-2xl font-bold">87%</div>
+                      <div className="text-sm text-muted-foreground">Success Rate</div>
+                    </div>
+                  </BaseWidget>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Status Components */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Status & Loading</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <h4 className="font-medium">Loading States</h4>
+                  <LoadingState message="Loading game data..." />
+                </div>
+                <div className="space-y-2">
+                  <h4 className="font-medium">Error Display</h4>
+                  <ErrorDisplay 
+                    title="Connection Error"
+                    message="Unable to load data"
+                    onRetry={() => console.log('Retry clicked')}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </section>
+
+        {/* Tabs Examples */}
+        <section>
+          <h2 className="text-2xl font-bold mb-6">Tab Components</h2>
           <Card>
             <CardHeader>
-              <CardTitle>Court Layout Examples</CardTitle>
+              <CardTitle>Statistics Tabs</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
-                <p className="text-sm text-muted-foreground">
-                  View detailed court layout examples and position management similar to the game details page.
-                </p>
-                <Button asChild>
-                  <a href="/court-layout-examples">
-                    <Eye className="h-4 w-4 mr-2" />
-                    View Court Layouts
-                  </a>
-                </Button>
-              </div>
+              <Tabs defaultValue="overview" className="w-full">
+                <TabsList className="grid w-full grid-cols-4">
+                  <TabsTrigger value="overview">Overview</TabsTrigger>
+                  <TabsTrigger value="performance">Performance</TabsTrigger>
+                  <TabsTrigger value="statistics">Statistics</TabsTrigger>
+                  <TabsTrigger value="analysis">Analysis</TabsTrigger>
+                </TabsList>
+                <TabsContent value="overview" className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <h4 className="font-medium">Games Played</h4>
+                      <div className="text-2xl font-bold">12</div>
+                    </div>
+                    <div className="space-y-2">
+                      <h4 className="font-medium">Win Rate</h4>
+                      <div className="text-2xl font-bold">75%</div>
+                    </div>
+                  </div>
+                </TabsContent>
+                <TabsContent value="performance" className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Performance Rating</Label>
+                    <Progress value={78} />
+                    <div className="text-sm text-muted-foreground">78% - Above Average</div>
+                  </div>
+                </TabsContent>
+                <TabsContent value="statistics" className="space-y-4">
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="text-center">
+                      <div className="text-lg font-bold">156</div>
+                      <div className="text-sm text-muted-foreground">Goals</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-lg font-bold">42</div>
+                      <div className="text-sm text-muted-foreground">Intercepts</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-lg font-bold">89%</div>
+                      <div className="text-sm text-muted-foreground">Accuracy</div>
+                    </div>
+                  </div>
+                </TabsContent>
+                <TabsContent value="analysis" className="space-y-4">
+                  <Alert>
+                    <TrendingUp className="h-4 w-4" />
+                    <AlertDescription>
+                      Performance has improved by 15% over the last 4 games.
+                    </AlertDescription>
+                  </Alert>
+                </TabsContent>
+              </Tabs>
             </CardContent>
           </Card>
+        </section>
+
+        {/* Alert Examples */}
+        <section>
+          <h2 className="text-2xl font-bold mb-6">Alerts & Notifications</h2>
+          <div className="space-y-4">
+            <Alert>
+              <Trophy className="h-4 w-4" />
+              <AlertDescription>
+                Great job! Your team won their last 3 games in a row.
+              </AlertDescription>
+            </Alert>
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                Warning: Several players are unavailable for the next game.
+              </AlertDescription>
+            </Alert>
+            <Alert className="border-green-200 bg-green-50">
+              <Check className="h-4 w-4 text-green-600" />
+              <AlertDescription className="text-green-800">
+                All game statistics have been successfully submitted.
+              </AlertDescription>
+            </Alert>
+          </div>
+        </section>
+
+        {/* Calendar Example */}
+        <section>
+          <h2 className="text-2xl font-bold mb-6">Calendar & Date Selection</h2>
+          <Card>
+            <CardHeader>
+              <CardTitle>Game Scheduling</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Calendar
+                mode="single"
+                selected={date}
+                onSelect={setDate}
+                className="rounded-md border"
+              />
+            </CardContent>
+          </Card>
+        </section>
+
+        {/* Collapsible Example */}
+        <section>
+          <h2 className="text-2xl font-bold mb-6">Collapsible Content</h2>
+          <Card>
+            <CardHeader>
+              <CardTitle>Game Details</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Collapsible>
+                <CollapsibleTrigger asChild>
+                  <Button variant="outline" className="w-full justify-between">
+                    Show Quarter Statistics
+                    <ChevronDown className="h-4 w-4" />
+                  </Button>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="space-y-2 mt-2">
+                  <div className="grid grid-cols-4 gap-2 text-sm">
+                    <div className="p-2 border rounded">Q1: 10-8</div>
+                    <div className="p-2 border rounded">Q2: 12-9</div>
+                    <div className="p-2 border rounded">Q3: 8-11</div>
+                    <div className="p-2 border rounded">Q4: 12-10</div>
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
+            </CardContent>
+          </Card>
+        </section>
+
+        {/* External Links */}
+        <section>
+          <h2 className="text-2xl font-bold mb-6">Component Example Pages</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            
+            <Card>
+              <CardHeader>
+                <CardTitle>Specialized Examples</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Button asChild variant="outline" className="w-full justify-start">
+                  <a href="/action-button-examples">
+                    <Settings className="h-4 w-4 mr-2" />
+                    Action Button Examples
+                  </a>
+                </Button>
+                <Button asChild variant="outline" className="w-full justify-start">
+                  <a href="/player-box-examples">
+                    <Users className="h-4 w-4 mr-2" />
+                    Player Box Examples
+                  </a>
+                </Button>
+                <Button asChild variant="outline" className="w-full justify-start">
+                  <a href="/team-box-examples">
+                    <Shield className="h-4 w-4 mr-2" />
+                    Team Box Examples
+                  </a>
+                </Button>
+                <Button asChild variant="outline" className="w-full justify-start">
+                  <a href="/round-badge-examples">
+                    <Award className="h-4 w-4 mr-2" />
+                    Round Badge Examples
+                  </a>
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Layout & Design</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Button asChild variant="outline" className="w-full justify-start">
+                  <a href="/layout-examples">
+                    <Eye className="h-4 w-4 mr-2" />
+                    Layout Examples
+                  </a>
+                </Button>
+                <Button asChild variant="outline" className="w-full justify-start">
+                  <a href="/color-examples">
+                    <Target className="h-4 w-4 mr-2" />
+                    Color Examples
+                  </a>
+                </Button>
+                <Button asChild variant="outline" className="w-full justify-start">
+                  <a href="/navigation-examples">
+                    <HelpCircle className="h-4 w-4 mr-2" />
+                    Navigation Examples
+                  </a>
+                </Button>
+                <Button asChild variant="outline" className="w-full justify-start">
+                  <a href="/court-layout-examples">
+                    <Target className="h-4 w-4 mr-2" />
+                    Court Layout Examples
+                  </a>
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Data & Widgets</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Button asChild variant="outline" className="w-full justify-start">
+                  <a href="/chart-examples">
+                    <BarChart3 className="h-4 w-4 mr-2" />
+                    Chart Examples
+                  </a>
+                </Button>
+                <Button asChild variant="outline" className="w-full justify-start">
+                  <a href="/widget-examples">
+                    <Trophy className="h-4 w-4 mr-2" />
+                    Widget Examples
+                  </a>
+                </Button>
+                <Button asChild variant="outline" className="w-full justify-start">
+                  <a href="/dashboard-examples">
+                    <BarChart3 className="h-4 w-4 mr-2" />
+                    Dashboard Examples
+                  </a>
+                </Button>
+                <Button asChild variant="outline" className="w-full justify-start">
+                  <a href="/form-examples">
+                    <Edit className="h-4 w-4 mr-2" />
+                    Form Examples
+                  </a>
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Sport-Specific</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Button asChild variant="outline" className="w-full justify-start">
+                  <a href="/game-result-examples">
+                    <Trophy className="h-4 w-4 mr-2" />
+                    Game Result Examples
+                  </a>
+                </Button>
+                <Button asChild variant="outline" className="w-full justify-start">
+                  <a href="/statistics-examples">
+                    <BarChart3 className="h-4 w-4 mr-2" />
+                    Statistics Examples
+                  </a>
+                </Button>
+                <Button asChild variant="outline" className="w-full justify-start">
+                  <a href="/sport-specific-examples">
+                    <Play className="h-4 w-4 mr-2" />
+                    Sport Specific Examples
+                  </a>
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Advanced Examples</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Button asChild variant="outline" className="w-full justify-start">
+                  <a href="/table-examples">
+                    <BarChart3 className="h-4 w-4 mr-2" />
+                    Table Examples
+                  </a>
+                </Button>
+                <Button asChild variant="outline" className="w-full justify-start">
+                  <a href="/modal-examples">
+                    <Eye className="h-4 w-4 mr-2" />
+                    Modal Examples
+                  </a>
+                </Button>
+                <Button asChild variant="outline" className="w-full justify-start">
+                  <a href="/timeline-examples">
+                    <Clock className="h-4 w-4 mr-2" />
+                    Timeline Examples
+                  </a>
+                </Button>
+                <Button asChild variant="outline" className="w-full justify-start">
+                  <a href="/design-system-examples">
+                    <Settings className="h-4 w-4 mr-2" />
+                    Design System Examples
+                  </a>
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Performance & Debug</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Button asChild variant="outline" className="w-full justify-start">
+                  <a href="/performance-demo">
+                    <TrendingUp className="h-4 w-4 mr-2" />
+                    Performance Demo
+                  </a>
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
         </section>
       </div>
     </PageTemplate>
