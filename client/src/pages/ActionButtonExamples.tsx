@@ -10,7 +10,8 @@ import {
   Save, Trash2, Plus, Upload, Download, 
   Star, Heart, Shield, AlertTriangle,
   BarChart3, TrendingUp, Award, Target,
-  Play, MoreHorizontal
+  Play, MoreHorizontal, UserPlus, Share,
+  Zap, Clock
 } from 'lucide-react';
 
 export default function ActionButtonExamples() {
@@ -800,7 +801,8 @@ export default function ActionButtonExamples() {
                       </div>
                     </div>
 
-                    {/* Right side - Floating actions                    <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    {/* Right side - Floating actions */}
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       <Button size="sm" variant="outline" className="shadow-md hover:shadow-lg transition-shadow">
                         <Eye className="h-4 w-4 mr-1" />
                         View
