@@ -9,24 +9,8 @@ export interface ApiResponse<T = any> {
 
 import { useClub } from '../contexts/ClubContext';
 
-// Get current club ID for requests
-function getCurrentClubId(): string | null {
-  // Try to get from localStorage first (use consistent key with ClubContext)
-  const savedClubId = localStorage.getItem('currentClubId');
-  if (savedClubId) {
-    return savedClubId;
-  }
-  return null;
-}
-
-// Get current team ID for requests
-function getCurrentTeamId(): string | null {
-  const savedTeamId = localStorage.getItem('current-team-id');
-  if (savedTeamId) {
-    return savedTeamId;
-  }
-  return null;
-}
+// These functions are no longer used - context is set via setClubContext()
+// Keeping them for potential future use but they should not be called in request method
 
 // Create a singleton API client that can access club context
 interface ClubContext {
@@ -56,21 +40,19 @@ class ApiClient {
     };
 
     // Add club context header if available
-    const clubId = getCurrentClubId();
-    if (clubId) {
-      headers['x-current-club-id'] = clubId;
-      console.log(`API Client: Added club header: ${clubId}`);
+    if (this.clubContext.currentClubId) {
+      headers['x-current-club-id'] = this.clubContext.currentClubId.toString();
+      console.log(`API Client: Added club header: ${this.clubContext.currentClubId}`);
     } else {
-      console.log(`API Client: No club ID available`);
+      console.log(`API Client: No club ID available in context`);
     }
 
     // Add team context header if available
-    const teamId = getCurrentTeamId();
-    if (teamId) {
-      headers['x-current-team-id'] = teamId;
-      console.log(`API Client: Added team header: ${teamId}`);
+    if (this.clubContext.currentTeamId) {
+      headers['x-current-team-id'] = this.clubContext.currentTeamId.toString();
+      console.log(`API Client: Added team header: ${this.clubContext.currentTeamId}`);
     } else {
-      console.log(`API Client: No team ID available`);
+      console.log(`API Client: No team ID available in context`);
     }
 
     // Merge custom headers
