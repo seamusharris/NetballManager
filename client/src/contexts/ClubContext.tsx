@@ -265,14 +265,20 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
     }
   }, [setCurrentTeamId, queryClient, currentTeamId, currentClubId]);
 
-  // Enhanced team context switching with consistent cache invalidation
+  // Enhanced team context switching with minimal cache invalidation
   const handleSetCurrentTeamId = useCallback((teamId: number | null) => {
     console.log('ClubContext: Setting team to:', teamId, 'from:', currentTeamId);
+
+    // Prevent unnecessary processing if team hasn't changed
+    if (teamId === currentTeamId) {
+      console.log('ClubContext: Team unchanged, skipping processing');
+      return;
+    }
 
     // Store the previous team ID for comparison
     const previousTeamId = currentTeamId;
 
-    // Update localStorage
+    // Update localStorage synchronously
     if (teamId !== null) {
       localStorage.setItem('current-team-id', teamId.toString());
     } else {
@@ -286,17 +292,14 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
     apiClient.setClubContext({ currentClubId, currentTeamId: teamId });
     console.log('ClubContext: API client team context updated to:', teamId);
 
-    // Always invalidate cache when team changes (including switching to/from null)
-    if (teamId !== previousTeamId) {
+    // Use debounced cache invalidation to prevent excessive API calls
+    const debouncedInvalidation = setTimeout(() => {
       console.log('ClubContext: Team changed from', previousTeamId, 'to', teamId, '- invalidating cache');
       
-      // Remove all team-specific cached data immediately
+      // Only invalidate specific team-dependent queries
       const teamSpecificPatterns = [
-        ['games', currentClubId],
-        ['players', currentClubId],
         ['dashboard-batch-data', currentClubId],
-        ['batch-game-data', currentClubId],
-        ['team-performance', currentClubId]
+        ['players', currentClubId]
       ];
 
       teamSpecificPatterns.forEach(pattern => {
@@ -306,24 +309,16 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
         });
       });
 
-      // Force immediate refetch of critical data with new team context
-      setTimeout(() => {
-        queryClient.invalidateQueries({ 
-          queryKey: ['games', currentClubId],
-          exact: false 
-        });
-        queryClient.invalidateQueries({ 
-          queryKey: ['players', currentClubId],
-          exact: false 
-        });
-        queryClient.invalidateQueries({ 
-          queryKey: ['dashboard-batch-data', currentClubId],
-          exact: false 
-        });
-      }, 10);
-    }
+      // Immediately refetch only essential data
+      queryClient.invalidateQueries({ 
+        queryKey: ['dashboard-batch-data', currentClubId],
+        exact: false 
+      });
+    }, 50); // Small delay to batch invalidations
 
-    console.log('ClubContext: Team context switch completed to:', teamId);
+    // Store debounce timer for cleanup
+    return () => clearTimeout(debouncedInvalidation);
+
   }, [currentClubId, currentTeamId, queryClient]);
 
   // Load saved team from localStorage when teams are available

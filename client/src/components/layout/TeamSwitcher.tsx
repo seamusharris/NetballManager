@@ -33,15 +33,21 @@ export function TeamSwitcher({ mode = 'optional', className, onTeamChange }: Tea
     console.log('TeamSwitcher: Handling team change to:', value);
     const teamId = value === 'all' ? null : parseInt(value, 10);
     
+    // Prevent unnecessary changes
+    if (teamId === currentTeamId) {
+      console.log('TeamSwitcher: Team already selected, skipping change');
+      return;
+    }
+    
     console.log('TeamSwitcher: Setting current team ID to:', teamId);
     
-    // Ensure the team change is processed immediately and completely
-    setCurrentTeamId(teamId);
+    // Use React's batching to ensure all updates happen together
+    React.startTransition(() => {
+      setCurrentTeamId(teamId);
+      onTeamChange?.(teamId);
+    });
     
-    // Call the optional callback
-    onTeamChange?.(teamId);
-    
-    console.log('TeamSwitcher: Team change completed to:', teamId);
+    console.log('TeamSwitcher: Team change initiated to:', teamId);
   };
 
   return (

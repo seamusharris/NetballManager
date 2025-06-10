@@ -96,11 +96,11 @@ export default function Dashboard() {
     gcTime: 2 * 60 * 60 * 1000, // 2 hours garbage collection - increased
   });
 
-  // Centralized roster fetching for all games - only when games data is stable and not switching teams
+  // Centralized roster fetching for all games - optimized for team switching
   const gameIdsArray = games?.map(g => g.id).sort() || [];
   const gameIds = gameIdsArray.join(',');
 
-  // Use unified data fetcher for better performance with proper dependency management
+  // Use unified data fetcher with optimized caching for team switching
   const { data: batchData, isLoading: isLoadingBatchData, error: batchDataError } = useQuery({
     queryKey: ['dashboard-batch-data', currentClubId, currentTeamId, gameIds],
     queryFn: async () => {
@@ -111,7 +111,7 @@ export default function Dashboard() {
       try {
         const { dataFetcher } = await import('@/lib/unifiedDataFetcher');
         const result = await dataFetcher.batchFetchGameData({
-          gameIds: gameIdsArray, // Use gameIdsArray instead of gameIds string
+          gameIds: gameIdsArray,
           clubId: currentClubId!,
           teamId: currentTeamId,
           includeStats: true,
@@ -127,10 +127,11 @@ export default function Dashboard() {
       }
     },
     enabled: !!currentClubId && !!currentTeamId && gameIdsArray.length > 0 && !isLoadingGames,
-    staleTime: 1 * 60 * 1000, // Reduced to 1 minute for better team switching
-    gcTime: 5 * 60 * 1000, // Reduced garbage collection time
+    staleTime: 2 * 60 * 1000, // Increased to 2 minutes to reduce refetching during team switches
+    gcTime: 10 * 60 * 1000, // Increased garbage collection time
     refetchOnWindowFocus: false,
-    refetchOnMount: true, // Always fetch fresh data on mount
+    refetchOnMount: false, // Don't refetch on mount to use cached data when possible
+    keepPreviousData: true, // Keep previous data while loading new data
   });
 
   const gameStatsMap = batchData?.stats || {};
