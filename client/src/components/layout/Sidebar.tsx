@@ -39,6 +39,7 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen, isTablet }: Sid
     { path: '/game-result-examples', label: 'Game Result Examples', icon: <Calendar className="w-5 h-5" /> },
     { path: '/round-badge-examples', label: 'Round Badge Examples', icon: <Trophy className="w-5 h-5" /> },
     { path: '/player-box-examples', label: 'PlayerBox Examples', icon: <Users className="w-5 h-5" /> },
+    { path: '/team-box-examples', label: 'TeamBox Examples', icon: <Users className="w-5 h-5" /> },
     { path: '/settings', label: 'Settings', icon: <SettingsIcon className="w-5 h-5" /> },
   ];
 
