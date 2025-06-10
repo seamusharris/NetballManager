@@ -129,18 +129,21 @@ export default function TopPlayersWidget({
             console.log(`TopPlayersWidget: Roster entry ${index}:`, {
               id: roster.id,
               gameId: roster.gameId,
-              playerId: roster.playerId,
+              playerId: roster.playerId || roster.player_id,
               position: roster.position,
               quarter: roster.quarter,
               allKeys: Object.keys(roster)
             });
             
-            if (roster.playerId && roster.position && 
+            // Try both playerId and player_id fields
+            const actualPlayerId = roster.playerId || roster.player_id;
+            
+            if (actualPlayerId && roster.position && 
                 ['GS', 'GA', 'WA', 'C', 'WD', 'GD', 'GK'].includes(roster.position)) {
-              playerIdsInTeam.add(roster.playerId);
-              console.log(`TopPlayersWidget: Added player ${roster.playerId} to team set`);
+              playerIdsInTeam.add(actualPlayerId);
+              console.log(`TopPlayersWidget: Added player ${actualPlayerId} to team set`);
             } else {
-              console.log(`TopPlayersWidget: Skipped roster entry - playerId: ${roster.playerId}, position: ${roster.position}`);
+              console.log(`TopPlayersWidget: Skipped roster entry - playerId: ${actualPlayerId}, position: ${roster.position}`);
             }
           });
         }
@@ -187,7 +190,8 @@ export default function TopPlayersWidget({
           const playersOnCourt: Record<number, boolean> = {};
 
           rosters.forEach((roster: any) => {
-            const playerId = roster.playerId;
+            // Try both playerId and player_id fields
+            const playerId = roster.playerId || roster.player_id;
 
             if (playerId && roster.position && 
                 ['GS', 'GA', 'WA', 'C', 'WD', 'GD', 'GK'].includes(roster.position) && 
@@ -232,9 +236,11 @@ export default function TopPlayersWidget({
         // Build roster lookup for this game
         const rosterLookup: Record<string, number> = {};
         gameRosters.forEach((r: any) => {
-          if (r.position && r.quarter && r.playerId) {
+          // Try both playerId and player_id fields
+          const playerId = r.playerId || r.player_id;
+          if (r.position && r.quarter && playerId) {
             const key = `${r.position}-${r.quarter}`;
-            rosterLookup[key] = r.playerId;
+            rosterLookup[key] = playerId;
           }
         });
 
@@ -294,7 +300,7 @@ export default function TopPlayersWidget({
         const gameStats = gameStatsMap[gameId] || [];
 
         // Find all roster entries for this player in this game
-        const playerRosters = rosters.filter((r: any) => r.playerId === player.id);
+        const playerRosters = rosters.filter((r: any) => (r.playerId || r.player_id) === player.id);
 
         playerRosters.forEach((roster: any) => {
           // Find the corresponding stat for this position/quarter
