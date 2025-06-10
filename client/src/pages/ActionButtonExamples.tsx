@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { TeamBox } from '@/components/ui/team-box';
+import { PlayerBox } from '@/components/ui/player-box';
 import { 
   Users, Calendar, Trophy, Eye, Edit, Settings, 
   Save, Trash2, Plus, Upload, Download, 
