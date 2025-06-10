@@ -12,7 +12,7 @@ import { PlayerCombinationAnalysis } from '@/components/dashboard/PlayerCombinat
 import { TeamPositionAnalysis } from '@/components/dashboard/TeamPositionAnalysis';
 import { UpcomingGameRecommendations } from '@/components/dashboard/UpcomingGameRecommendations';
 import { TeamSwitcher } from '@/components/layout/TeamSwitcher';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 export default function Dashboard() {
   const params = useParams();
@@ -25,6 +25,16 @@ export default function Dashboard() {
     setCurrentTeamId,
     isLoading: clubLoading 
   } = useClub();
+
+  // Add team switching state early to prevent initialization errors
+  const [isTeamSwitching, setIsTeamSwitching] = useState(false);
+  
+  useEffect(() => {
+    // When currentTeamId changes, set switching state briefly
+    setIsTeamSwitching(true);
+    const timer = setTimeout(() => setIsTeamSwitching(false), 300);
+    return () => clearTimeout(timer);
+  }, [currentTeamId]);
 
   // Handle teamId from URL parameter
   useEffect(() => {
@@ -175,16 +185,6 @@ export default function Dashboard() {
       </>
     );
   }
-
-  // Add a brief loading state when team context is changing to prevent stale data flash
-  const [isTeamSwitching, setIsTeamSwitching] = useState(false);
-  
-  useEffect(() => {
-    // When currentTeamId changes, set switching state briefly
-    setIsTeamSwitching(true);
-    const timer = setTimeout(() => setIsTeamSwitching(false), 300);
-    return () => clearTimeout(timer);
-  }, [currentTeamId]);
 
   const isLoading = isLoadingPlayers || isLoadingGames || isLoadingSeasons || isLoadingActiveSeason || isLoadingRosters || isLoadingStats || isTeamSwitching;
 
