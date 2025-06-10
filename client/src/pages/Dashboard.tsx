@@ -13,6 +13,7 @@ import { TeamPositionAnalysis } from '@/components/dashboard/TeamPositionAnalysi
 import { UpcomingGameRecommendations } from '@/components/dashboard/UpcomingGameRecommendations';
 import { TeamSwitcher } from '@/components/layout/TeamSwitcher';
 import { useEffect, useState } from 'react';
+import { useRequestMonitor } from '@/hooks/use-request-monitor';
 
 export default function Dashboard() {
   const params = useParams();
@@ -28,6 +29,9 @@ export default function Dashboard() {
 
   // Add team switching state early to prevent initialization errors (but don't block queries)
   const [isTeamSwitching, setIsTeamSwitching] = useState(false);
+  
+  // Monitor request performance
+  const requestMetrics = useRequestMonitor('Dashboard');
 
   useEffect(() => {
     // When currentTeamId changes, set switching state briefly for UI feedback only
@@ -85,11 +89,11 @@ export default function Dashboard() {
     gcTime: 2 * 60 * 60 * 1000, // 2 hours garbage collection - increased
   });
 
-  // Centralized roster fetching for all games - only when games data is stable
+  // Centralized roster fetching for all games - only when games data is stable and not switching teams
   const gameIdsArray = games?.map(g => g.id).sort() || [];
   const gameIds = gameIdsArray.join(',');
 
-  // Use unified data fetcher for better performance
+  // Use unified data fetcher for better performance with proper dependency management
   const { data: batchData, isLoading: isLoadingBatchData } = useQuery({
     queryKey: ['dashboard-batch-data', currentClubId, currentTeamId, gameIds],
     queryFn: async () => {
@@ -107,9 +111,11 @@ export default function Dashboard() {
         includeScores: true
       });
     },
-    enabled: !!currentClubId && gameIdsArray.length > 0,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 30 * 60 * 1000, // 30 minutes
+    enabled: !!currentClubId && !!currentTeamId && gameIdsArray.length > 0 && !isTeamSwitching && !isLoadingGames,
+    staleTime: 10 * 60 * 1000, // 10 minutes - increased for better caching
+    gcTime: 60 * 60 * 1000, // 1 hour garbage collection
+    refetchOnWindowFocus: false, // Prevent unnecessary refetches
+    refetchOnMount: false, // Use cached data when available
   });
 
   const gameStatsMap = batchData?.stats || {};
@@ -166,7 +172,9 @@ export default function Dashboard() {
     );
   }
 
-  const isLoading = isLoadingPlayers || isLoadingGames || isLoadingSeasons || isLoadingActiveSeason || isLoadingStats || isTeamSwitching;
+  // More intelligent loading state - don't block on batch data if we have core data
+  const hasBasicData = players.length > 0 && games.length > 0;
+  const isLoading = (isLoadingPlayers || isLoadingGames || isLoadingSeasons || isLoadingActiveSeason) && !hasBasicData;
 
   // Show error state if any query fails
   if (playersError || gamesError || seasonsError || activeSeasonError) {
@@ -235,6 +243,7 @@ export default function Dashboard() {
           isLoading={isLoading}
           centralizedRosters={gameRostersMap}
           centralizedStats={gameStatsMap}
+          isBatchDataLoading={isLoadingBatchData}
         />
       </div>
     </>

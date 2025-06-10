@@ -230,7 +230,36 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
     return clubAccess?.permissions[permission] || false;
   };
 
-    // Enhanced team context switching with minimal cache invalidation
+  // Enhanced team context switching with minimal cache invalidation
+  const setCurrentTeamIdEnhanced = useCallback((teamId: number | null) => {
+    console.log('ClubContext: Setting team to:', teamId);
+
+    // Only invalidate if the team actually changed
+    if (teamId !== currentTeamId) {
+      setCurrentTeamId(teamId);
+
+      // Delay cache invalidation to allow UI to update first
+      setTimeout(() => {
+        if (teamId !== null) {
+          // Only invalidate data that's actually team-specific and stale
+          const teamSpecificKeys = [
+            ['games', currentClubId, currentTeamId],
+            ['players', currentClubId, currentTeamId], 
+            ['dashboard-batch-data', currentClubId, currentTeamId]
+          ];
+
+          teamSpecificKeys.forEach(queryKey => {
+            queryClient.removeQueries({ 
+              queryKey,
+              exact: false 
+            });
+          });
+        }
+      }, 100); // Small delay to prevent hanging
+    }
+  }, [setCurrentTeamId, queryClient, currentTeamId, currentClubId]);
+
+  // Enhanced team context switching with minimal cache invalidation
   const handleSetCurrentTeamId = useCallback((teamId: number | null) => {
     console.log('ClubContext: Setting team to:', teamId);
 

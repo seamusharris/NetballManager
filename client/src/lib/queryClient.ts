@@ -199,9 +199,24 @@ export const getQueryFn: <T>(options: {
  * Optimized query client configuration with aggressive caching
  * for better performance across season switches
  */
+import { QueryClient } from '@tanstack/react-query';
+
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      gcTime: 1000 * 60 * 30, // 30 minutes
+      refetchOnWindowFocus: false,
+      refetchOnMount: false, // Use cached data when available
+      retry: (failureCount, error: any) => {
+        // Don't retry on 404s or other client errors
+        if (error?.status >= 400 && error?.status < 500) {
+          return false;
+        }
+        return failureCount < 3;
+      },
+      // Enable request deduplication
+      networkMode: 'always',
       queryFn: getQueryFn({ on401: "throw" }),
       refetchOnWindowFocus: false,
       retry: (failureCount, error) => {

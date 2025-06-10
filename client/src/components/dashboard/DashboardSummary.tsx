@@ -40,6 +40,7 @@ interface DashboardSummaryProps {
   isLoading: boolean;
   centralizedRosters?: Record<number, any[]>;
   centralizedStats?: Record<number, any[]>;
+  isBatchDataLoading?: boolean;
 }
 
 export default function DashboardSummary({ 
@@ -49,7 +50,8 @@ export default function DashboardSummary({
   activeSeason,
   isLoading,
   centralizedRosters = {},
-  centralizedStats = {}
+  centralizedStats = {},
+  isBatchDataLoading = false
 }: DashboardSummaryProps) {
   const [selectedSeasonId, setSelectedSeasonId] = useState<string>('current');
   const queryClient = useQueryClient();

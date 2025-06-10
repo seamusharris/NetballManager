@@ -1,0 +1,60 @@
+12:51:08 AM [vite] warning: Duplicate key "refetchOnWindowFocus" in object literal
+219|        networkMode: 'always',
+220|        queryFn: getQueryFn({ on401: "throw" }),
+221|        refetchOnWindowFocus: false,
+   |        ^
+222|        retry: (failureCount, error) => {
+223|          // Don't retry on 4xx errors (client errors)
+
+  Plugin: vite:esbuild
+  File: /home/runner/workspace/client/src/lib/queryClient.ts
+12:51:08 AM [vite] warning: Duplicate key "retry" in object literal
+220|        queryFn: getQueryFn({ on401: "throw" }),
+221|        refetchOnWindowFocus: false,
+222|        retry: (failureCount, error) => {
+   |        ^
+223|          // Don't retry on 4xx errors (client errors)
+224|          if (error && typeof error === 'object' && 'message' in error) {
+
+  Plugin: vite:esbuild
+  File: /home/runner/workspace/client/src/lib/queryClient.ts
+12:51:08 AM [vite] warning: Duplicate key "staleTime" in object literal
+230|        retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+231|        // Differentiated stale times by data type
+232|        staleTime: 10 * 60 * 1000, // 10 minutes default
+   |        ^
+233|        // Longer cache time to preserve data between navigations
+234|        gcTime: 30 * 60 * 1000, // 30 minutes default
+
+  Plugin: vite:esbuild
+  File: /home/runner/workspace/client/src/lib/queryClient.ts
+12:51:08 AM [vite] warning: Duplicate key "gcTime" in object literal
+232|        staleTime: 10 * 60 * 1000, // 10 minutes default
+233|        // Longer cache time to preserve data between navigations
+234|        gcTime: 30 * 60 * 1000, // 30 minutes default
+   |        ^
+235|        // Ensure network mode is online to prevent dispatcher issues
+236|        networkMode: 'online',
+
+  Plugin: vite:esbuild
+  File: /home/runner/workspace/client/src/lib/queryClient.ts
+12:51:08 AM [vite] warning: Duplicate key "networkMode" in object literal
+234|        gcTime: 30 * 60 * 1000, // 30 minutes default
+235|        // Ensure network mode is online to prevent dispatcher issues
+236|        networkMode: 'online',
+   |        ^
+237|        // Enable background refetching for better UX
+238|        refetchOnMount: 'always',
+
+  Plugin: vite:esbuild
+  File: /home/runner/workspace/client/src/lib/queryClient.ts
+12:51:08 AM [vite] warning: Duplicate key "refetchOnMount" in object literal
+236|        networkMode: 'online',
+237|        // Enable background refetching for better UX
+238|        refetchOnMount: 'always',
+   |        ^
+239|        refetchOnReconnect: 'always',
+240|      },
+
+  Plugin: vite:esbuild
+  File: /home/runner/workspace/client/src/lib/queryClient.ts
