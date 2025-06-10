@@ -41,6 +41,15 @@ export function GameResultCard({
   clubTeams = []
 }: GameResultCardProps) {
 
+  // Early return if no game data
+  if (!game) {
+    return (
+      <div className="border border-gray-200 rounded p-3 bg-gray-50">
+        <span className="text-gray-500">No game data available</span>
+      </div>
+    );
+  }
+
   // Calculate scores using centralized gameScoreService
   const scores = useMemo(() => {
     if (!game) return null;
