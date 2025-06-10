@@ -34,6 +34,8 @@ import GameDetails from "./pages/GameDetails";
 const StatsDebug = lazy(() => import("./pages/StatsDebug"));
 const PerformanceDemo = lazy(() => import("./pages/PerformanceDemo"));
 import OpponentPreparation from '@/pages/OpponentPreparation';
+import GameResultExamples from '@/pages/GameResultExamples';
+import RoundBadgeExamples from '@/pages/RoundBadgeExamples';
 
 /**
  * Loading spinner component for suspense fallbacks
@@ -60,7 +62,6 @@ function withErrorBoundary(Component: React.ComponentType<any>, name: string) {
 
 import PlayerBorrowing from '@/pages/PlayerBorrowing';
 import TeamAnalysis from '@/pages/TeamAnalysis';
-import GameResultExamples from '@/pages/GameResultExamples';
 
 function Router() {
   return (
@@ -111,7 +112,16 @@ function Router() {
         <Route path="/team-analysis" component={withErrorBoundary(TeamAnalysis, 'TeamAnalysis')} />
         <Route path="/opponent-preparation" component={OpponentPreparation} />
         <Route path="/performance-demo" component={PerformanceDemo} />
-        <Route path="/game-result-examples" component={GameResultExamples} />
+        <Route path="/game-result-examples" element={
+              <ErrorBoundary>
+                <GameResultExamples />
+              </ErrorBoundary>
+            } />
+            <Route path="/round-badge-examples" element={
+              <ErrorBoundary>
+                <RoundBadgeExamples />
+              </ErrorBoundary>
+            } />
         <Route component={withErrorBoundary(NotFound, 'NotFound')} />
       </Switch>
     </Layout>
@@ -133,7 +143,7 @@ initializeCacheManager(queryClient);
 function AppContent() {
   try {
     const { isInitialized } = useClub();
-    
+
     if (!isInitialized) {
       return (
         <div className="flex items-center justify-center min-h-screen">
@@ -141,7 +151,7 @@ function AppContent() {
         </div>
       );
     }
-    
+
     return <Router />;
   } catch (error) {
     console.error('AppContent error:', error);
