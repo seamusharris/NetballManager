@@ -112,16 +112,8 @@ function Router() {
         <Route path="/team-analysis" component={withErrorBoundary(TeamAnalysis, 'TeamAnalysis')} />
         <Route path="/opponent-preparation" component={OpponentPreparation} />
         <Route path="/performance-demo" component={PerformanceDemo} />
-        <Route path="/game-result-examples" element={
-              <ErrorBoundary>
-                <GameResultExamples />
-              </ErrorBoundary>
-            } />
-            <Route path="/round-badge-examples" element={
-              <ErrorBoundary>
-                <RoundBadgeExamples />
-              </ErrorBoundary>
-            } />
+        <Route path="/game-result-examples" component={withErrorBoundary(GameResultExamples, 'GameResultExamples')} />
+        <Route path="/round-badge-examples" component={withErrorBoundary(RoundBadgeExamples, 'RoundBadgeExamples')} />
         <Route component={withErrorBoundary(NotFound, 'NotFound')} />
       </Switch>
     </Layout>
