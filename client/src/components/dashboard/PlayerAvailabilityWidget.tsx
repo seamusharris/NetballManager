@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { BaseWidget } from '@/components/ui/base-widget';
 import { Game, Player } from '@shared/schema';
 import { formatShortDate } from '@/lib/utils';
+import { apiClient } from '@/lib/apiClient';
 
 interface PlayerAvailabilityWidgetProps {
   games: Game[];
@@ -88,14 +89,15 @@ export default function PlayerAvailabilityWidget({
               'Content-Type': 'application/json'
             };
 
-            // Get team ID from the game (assuming we're the home team)
+            // Use the home team ID from the game for team context
             if (game.homeTeamId) {
               headers['x-current-team-id'] = game.homeTeamId.toString();
             }
 
-            const response = await fetch(`/api/games/${game.id}/availability`, { headers });
-            if (response.ok) {
-              const data = await response.json();
+            console.log(`Fetching availability for game ${game.id} with team ${game.homeTeamId}`);
+            const response = await apiClient.get(`/api/games/${game.id}/availability`);
+            if (response.success) {
+              const data = response.data;
               // Handle different response formats
               const availablePlayerIds = Array.isArray(data) ? data : (data.availablePlayerIds || []);
               // Filter to only include team players
@@ -107,15 +109,9 @@ export default function PlayerAvailabilityWidget({
                 availableCount: availableTeamPlayerIds.length || totalActiveTeamPlayers,
                 totalPlayers: totalActiveTeamPlayers
               };
-            } else if (response.status === 404) {
-              // No availability data exists yet, assume all team players are available
-              newAvailabilityData[game.id] = {
-                gameId: game.id,
-                availableCount: totalActiveTeamPlayers,
-                totalPlayers: totalActiveTeamPlayers
-              };
             } else {
-              // Other error, fallback to showing all team players as available
+              // No availability data or error, assume all team players are available
+              console.log(`No availability data for game ${game.id}, using team players fallback`);
               newAvailabilityData[game.id] = {
                 gameId: game.id,
                 availableCount: totalActiveTeamPlayers,
