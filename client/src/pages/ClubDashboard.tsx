@@ -132,9 +132,7 @@ export default function ClubDashboard() {
     );
     const teamCompletedGames = teamGames.filter(game => game.statusIsCompleted);
 
-    console.log(`ClubDashboard: Team ${team.name} (ID: ${team.id}) has ${teamGames.length} total games, ${teamCompletedGames.length} completed games`);
-    console.log(`ClubDashboard: Available games for filtering:`, games.map(g => ({ id: g.id, homeTeamId: g.homeTeamId, awayTeamId: g.awayTeamId, homeTeamName: g.homeTeamName, awayTeamName: g.awayTeamName })));
-    console.log(`ClubDashboard: Team ${team.name} filtered games:`, teamGames.map(g => ({ id: g.id, homeTeamId: g.homeTeamId, awayTeamId: g.awayTeamId })));
+
 
     const wins = teamCompletedGames.filter(game => {
       // Use game statistics which are always from our team's perspective
@@ -148,7 +146,7 @@ export default function ClubDashboard() {
       const totalGoalsFor = gameStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
       const totalGoalsAgainst = gameStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
 
-      console.log(`ClubDashboard: Game ${game.id} - Goals for: ${totalGoalsFor}, Goals against: ${totalGoalsAgainst}`);
+
 
       return totalGoalsFor > totalGoalsAgainst;
     }).length;
@@ -160,7 +158,7 @@ export default function ClubDashboard() {
       winRate: teamCompletedGames.length > 0 ? (wins / teamCompletedGames.length) * 100 : 0
     };
 
-    console.log(`ClubDashboard: Team ${team.name} final performance:`, teamPerf);
+
 
     return teamPerf;
   }), [activeTeams, games, centralizedStats]);

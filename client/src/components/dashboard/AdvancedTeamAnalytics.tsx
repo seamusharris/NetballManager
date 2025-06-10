@@ -126,7 +126,7 @@ export default function AdvancedTeamAnalytics({
   const gameStatsMap = centralizedStats || {};
   const isLoading = false;
 
-  console.log('AdvancedTeamAnalytics: Using centralized stats for', completedGames.length, 'completed games');
+  
 
   // Calculate all advanced analytics
   useEffect(() => {

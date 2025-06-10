@@ -46,7 +46,6 @@ export function useGameStatistics(gameId: number, forceFresh: boolean = false, p
     queryFn: async () => {
       // Fast path: use preloaded stats if available
       if (hasPreloadedStats) {
-        console.log(`useGameStatistics: Using preloaded stats for game ${gameId} (${preloadedStats.length} stats)`);
         return Promise.resolve(statisticsService.calculateScoresFromStats(preloadedStats, gameId));
       }
 
@@ -54,7 +53,6 @@ export function useGameStatistics(gameId: number, forceFresh: boolean = false, p
       if (!forceFresh) {
         const cached = getCachedScores(gameId);
         if (cached) {
-          console.log(`useGameStatistics: Using cached scores for game ${gameId}`);
           return Promise.resolve(cached);
         }
       }
@@ -94,7 +92,6 @@ export function useGameStatistics(gameId: number, forceFresh: boolean = false, p
     queryKey: ['playerStats', gameId, freshQueryKey, hasPreloadedStats ? 'preloaded' : 'api'],
     queryFn: () => {
       if (hasPreloadedStats) {
-        console.log(`useGameStatistics: Using preloaded stats for player mapping game ${gameId}`);
         return Promise.resolve(statisticsService.mapStatsToPlayersFromStats(preloadedStats, gameId));
       }
       return statisticsService.mapStatsToPlayers(gameId, forceFresh);

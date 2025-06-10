@@ -46,12 +46,10 @@ export function useGamesScores(gameIds: number[], forceFresh = false) {
     queryKey,
     queryFn: async () => {
       if (!shouldFetch) {
-        console.log('useGamesScores: Skipping fetch - missing requirements');
         return {};
       }
 
       try {
-        console.log(`useGamesScores: Fetching batch stats for ${stableGameIds.length} games:`, stableGameIds);
 
         // Use the batch endpoint to get stats for all games at once
         const response = await fetch('/api/games/stats/batch', {

@@ -76,10 +76,6 @@ export default function TeamPerformance({ games, className, activeSeason, select
   const gameStatsMap = centralizedStats || {};
   const isLoading = false; // We don't need loading state when using centralized stats
 
-  console.log('TeamPerformance: Using centralized stats for games:', completedGameIds);
-  console.log('TeamPerformance: Available centralized stats for games:', Object.keys(gameStatsMap));
-  console.log('TeamPerformance: Sample stats data:', gameStatsMap[completedGameIds[0]] || 'No data for first game');
-
   // Calculate team performance metrics from game stats and official scores
   useEffect(() => {
     const calculatePerformance = async () => {

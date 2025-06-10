@@ -43,11 +43,12 @@ export function GameResultCard({
 
   // Calculate scores using appropriate priority
   const scores = useMemo(() => {
-    if (useOfficialPriority) {
-      // For official displays (recent games, etc), use official score priority
-      try {
+    if (!game) return null;
+
+    try {
+      if (useOfficialPriority && officialScores && officialScores.length > 0) {
         return gameScoreService.calculateGameScoresSync(
-          gameStats, 
+          [], // Empty stats when using official scores
           game.statusName, 
           { teamGoals: game.statusTeamGoals, opponentGoals: game.statusOpponentGoals },
           game.isInterClub,
@@ -56,30 +57,38 @@ export function GameResultCard({
           currentTeamId,
           officialScores
         );
-      } catch (error) {
-        console.error('Error calculating official scores:', error);
-        return null;
-      }
-    } else {
-      // For performance displays, use live stats only
-      if (!gameStats || gameStats.length === 0) return null;
-
-      try {
+      } else if (gameStats && Array.isArray(gameStats) && gameStats.length > 0) {
         return gameScoreService.calculateGameScoresSync(
           gameStats, 
           game.statusName, 
-          undefined, // Don't use status scores for performance displays
+          { teamGoals: game.statusTeamGoals, opponentGoals: game.statusOpponentGoals },
           game.isInterClub,
           game.homeTeamId,
           game.awayTeamId,
           currentTeamId
         );
-      } catch (error) {
-        console.error('Error calculating live stats scores:', error);
-        return null;
+      } else if (game.statusTeamGoals !== null && game.statusOpponentGoals !== null) {
+        // Use status scores if available (forfeit games, etc.)
+        return gameScoreService.calculateGameScoresSync(
+          [], 
+          game.statusName, 
+          { teamGoals: game.statusTeamGoals, opponentGoals: game.statusOpponentGoals },
+          game.isInterClub,
+          game.homeTeamId,
+          game.awayTeamId,
+          currentTeamId
+        );
       }
+
+      return null;
+    } catch (error) {
+      // Only log errors in development to reduce console clutter
+      if (process.env.NODE_ENV === 'development') {
+        console.error(`Error calculating scores for game ${game.id}:`, error);
+      }
+      return null;
     }
-  }, [gameStats, officialScores, useOfficialPriority, game.statusName, game.statusTeamGoals, game.statusOpponentGoals, game.isInterClub, game.homeTeamId, game.awayTeamId, currentTeamId]);
+  }, [gameStats, officialScores, useOfficialPriority, game, currentTeamId]);
 
   // Get opponent name
   const getOpponentName = (): string => {
@@ -139,6 +148,32 @@ export function GameResultCard({
   };
 
   const config = getLayoutConfig();
+
+  // Display score or placeholder
+  const getScoreDisplay = () => {
+    if (!game) return "- -";
+
+    // For BYE games, don't show scores
+    if (game.isBye) return "BYE";
+
+    // Show calculated scores if available
+    if (scores && scores.totalTeamScore !== undefined && scores.totalOpponentScore !== undefined) {
+      return `${scores.totalTeamScore}-${scores.totalOpponentScore}`;
+    }
+
+    // Show status scores if no calculated scores but status scores exist
+    if (game.statusTeamGoals !== null && game.statusOpponentGoals !== null) {
+      return `${game.statusTeamGoals}-${game.statusOpponentGoals}`;
+    }
+
+    // For completed games without scores, show placeholder
+    if (game.statusIsCompleted) {
+      return "0-0";
+    }
+
+    // Default for upcoming games
+    return "- -";
+  };
 
   const CardContent = () => (
     <div 
