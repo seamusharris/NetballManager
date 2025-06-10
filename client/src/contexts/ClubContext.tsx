@@ -192,10 +192,8 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
     // Update state after API client is set
     setCurrentTeamId(teamId);
 
-    // Force cache invalidation for team-specific data
-    if (cacheManager) {
-      cacheManager.invalidateTeamData(teamId, currentTeamId);
-    }
+    // Cache invalidation disabled to prevent race conditions
+    // Let React Query handle cache naturally through query key changes
 
     console.log('ClubContext: Team context updated to:', teamId);
   }, [currentClubId, currentTeamId]);
