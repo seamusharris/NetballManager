@@ -36,6 +36,7 @@ const PerformanceDemo = lazy(() => import("./pages/PerformanceDemo"));
 import OpponentPreparation from '@/pages/OpponentPreparation';
 import GameResultExamples from '@/pages/GameResultExamples';
 import RoundBadgeExamples from '@/pages/RoundBadgeExamples';
+import PlayerBoxExamples from './pages/PlayerBoxExamples';
 
 /**
  * Loading spinner component for suspense fallbacks
@@ -114,6 +115,7 @@ function Router() {
         <Route path="/performance-demo" component={PerformanceDemo} />
         <Route path="/game-result-examples" component={withErrorBoundary(GameResultExamples, 'GameResultExamples')} />
         <Route path="/round-badge-examples" component={withErrorBoundary(RoundBadgeExamples, 'RoundBadgeExamples')} />
+        <Route path="/player-box-examples" component={withErrorBoundary(PlayerBoxExamples, 'PlayerBoxExamples')} />
         <Route component={withErrorBoundary(NotFound, 'NotFound')} />
       </Switch>
     </Layout>
@@ -144,7 +146,7 @@ function AppContent() {
       );
     }
 
-    return <Router />;
+    return <Router />);
   } catch (error) {
     console.error('AppContent error:', error);
     return (
