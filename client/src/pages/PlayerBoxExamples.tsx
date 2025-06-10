@@ -236,10 +236,6 @@ export default function PlayerBoxExamples() {
     </div>
   );
 }
-import React from 'react';
-import { PageTemplate } from '@/components/layout/PageTemplate';
-import { PlayerBox } from '@/components/ui/player-box';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function PlayerBoxExamples() {
   // Example player data
