@@ -42,27 +42,7 @@ export function TeamSwitcher({ mode = 'optional', className, onTeamChange }: Tea
         onValueChange={handleTeamChange}
       >
         <SelectTrigger className="w-[200px]">
-          <SelectValue placeholder={mode === 'required' ? "Select team" : "All teams"}>
-            {currentTeam ? (
-              <div className="flex items-center space-x-2">
-                <span>{currentTeam.name}</span>
-                {currentTeam.name.includes('17') && (
-                  <Badge variant="secondary" className="text-xs">
-                    U17
-                  </Badge>
-                )}
-                {currentTeam.name.includes('15') && (
-                  <Badge variant="secondary" className="text-xs">
-                    U15
-                  </Badge>
-                )}
-              </div>
-            ) : (
-              <span className="text-muted-foreground">
-                {mode === 'required' ? "Select team" : "All teams"}
-              </span>
-            )}
-          </SelectValue>
+          <SelectValue placeholder={mode === 'required' ? "Select team" : "All teams"} />
         </SelectTrigger>
         <SelectContent>
           {mode === 'optional' && (
