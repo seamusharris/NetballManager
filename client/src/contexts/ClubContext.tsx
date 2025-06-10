@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/apiClient';
+import { cacheManager } from '@/lib/cacheManager';
+import { CACHE_KEYS } from '@/lib/cacheKeys';
 
 interface Club {
   id: number;
@@ -209,6 +211,9 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
+    // Store old club ID for cache management
+    const oldClubId = currentClubId;
+
     // Update all three synchronously to prevent race conditions
     localStorage.setItem('currentClubId', clubId.toString());
     apiClient.setClubContext({ currentClubId: clubId });
@@ -217,9 +222,10 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
       return clubId;
     });
 
-    // Invalidate and refetch queries
-    queryClient.invalidateQueries();
-    queryClient.refetchQueries({ queryKey: ['games'] });
+    // Use intelligent cache invalidation
+    if (cacheManager) {
+      cacheManager.invalidateOnClubSwitch(clubId, oldClubId);
+    }
 
     console.log('ClubContext: Club switch completed to:', clubId);
   }, [currentClubId, queryClient, userClubs]);
@@ -275,10 +281,12 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
     apiClient.setClubContext({ currentClubId, currentTeamId: teamId });
     console.log('ClubContext: API client team context updated to:', teamId);
 
+    // Use intelligent cache invalidation for team switching
+    if (cacheManager && currentClubId) {
+      cacheManager.invalidateOnTeamSwitch(currentClubId, teamId, currentTeamId);
+    }
 
-    // Instead of invalidating, let React Query handle cache based on query keys
-    // This preserves cached data and only refetches when truly necessary
-    console.log('ClubContext: Team context switch completed to:', teamId, '- cache preserved');
+    console.log('ClubContext: Team context switch completed to:', teamId);
     }, [currentClubId, clubTeams]);
 
   // Load saved team from localStorage when teams are available

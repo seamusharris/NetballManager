@@ -216,14 +216,17 @@ export const queryClient = new QueryClient({
         return failureCount < 3;
       },
       // Enable request deduplication
-      networkMode: 'always',
+      networkMode: 'online',
       queryFn: getQueryFn({ on401: "throw" }),
       refetchOnWindowFocus: false,
       retry: (failureCount, error) => {
         // Don't retry on 4xx errors (client errors)
         if (error && typeof error === 'object' && 'message' in error) {
-          const message = error.message as string;
-          if (message.includes('4')) return false;
+          const errorMessage = error.message.toLowerCase();
+          if (errorMessage.includes('400') || errorMessage.includes('401') || 
+              errorMessage.includes('403') || errorMessage.includes('404')) {
+            return false;
+          }
         }
         return failureCount < 3;
       },
@@ -232,8 +235,6 @@ export const queryClient = new QueryClient({
       staleTime: 10 * 60 * 1000, // 10 minutes default
       // Longer cache time to preserve data between navigations
       gcTime: 30 * 60 * 1000, // 30 minutes default
-      // Ensure network mode is online to prevent dispatcher issues
-      networkMode: 'online',
       // Enable background refetching for better UX
       refetchOnMount: 'always',
       refetchOnReconnect: 'always',
