@@ -40,6 +40,7 @@ import PlayerBoxExamples from './pages/PlayerBoxExamples';
 import TeamBoxExamples from './pages/TeamBoxExamples';
 import ActionButtonExamples from './pages/ActionButtonExamples';
 import ComponentExamples from '@/pages/ComponentExamples';
+import DashboardExamples from '@/pages/DashboardExamples';
 
 /**
  * Loading spinner component for suspense fallbacks
@@ -122,6 +123,7 @@ function Router() {
         <Route path="/team-box-examples" component={withErrorBoundary(TeamBoxExamples, 'TeamBoxExamples')} />
         <Route path="/action-button-examples" component={ActionButtonExamples} />
         <Route path="/component-examples" component={ComponentExamples} />
+        <Route path="/dashboard-examples" component={withErrorBoundary(DashboardExamples, 'DashboardExamples')} />
         <Route component={withErrorBoundary(NotFound, 'NotFound')} />
       </Switch>
     </Layout>
