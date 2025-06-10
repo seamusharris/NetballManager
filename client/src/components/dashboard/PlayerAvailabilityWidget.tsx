@@ -26,6 +26,7 @@ export default function PlayerAvailabilityWidget({
 }: PlayerAvailabilityWidgetProps) {
   const [availabilityData, setAvailabilityData] = useState<Record<number, GameAvailability>>({});
   const [loading, setLoading] = useState(false);
+  const [teamPlayers, setTeamPlayers] = useState<Player[]>([]);
 
   // Get upcoming games (next 3 games)
   const upcomingGames = games
@@ -40,14 +41,44 @@ export default function PlayerAvailabilityWidget({
     games: games.map(g => ({ id: g.id, date: g.date, completed: g.completed }))
   });
 
+  // Fetch current team players
+  useEffect(() => {
+    const fetchTeamPlayers = async () => {
+      if (upcomingGames.length === 0) return;
+
+      try {
+        // Get the team ID from the first upcoming game
+        const firstGame = upcomingGames[0];
+        const teamId = firstGame.homeTeamId; // Assuming we're usually the home team
+        
+        const response = await fetch(`/api/teams/${teamId}/players`);
+        if (response.ok) {
+          const teamPlayerData = await response.json();
+          setTeamPlayers(teamPlayerData);
+          console.log('Fetched team players:', teamPlayerData.length, 'for team:', teamId);
+        } else {
+          // Fallback to all players if team-specific fetch fails
+          console.log('Failed to fetch team players, using all players as fallback');
+          setTeamPlayers(players);
+        }
+      } catch (error) {
+        console.error('Error fetching team players:', error);
+        // Fallback to all players on error
+        setTeamPlayers(players);
+      }
+    };
+
+    fetchTeamPlayers();
+  }, [upcomingGames.length, players]);
+
   // Fetch availability data for upcoming games
   useEffect(() => {
     const fetchAvailability = async () => {
-      if (upcomingGames.length === 0 || players.length === 0) return;
+      if (upcomingGames.length === 0 || teamPlayers.length === 0) return;
 
       setLoading(true);
       const newAvailabilityData: Record<number, GameAvailability> = {};
-      const totalActivePlayers = players.filter(p => p.active).length;
+      const totalActiveTeamPlayers = teamPlayers.filter(p => p.active).length;
 
       try {
         for (const game of upcomingGames) {
@@ -57,34 +88,37 @@ export default function PlayerAvailabilityWidget({
               const data = await response.json();
               // Handle different response formats
               const availablePlayerIds = Array.isArray(data) ? data : (data.availablePlayerIds || []);
+              // Filter to only include team players
+              const teamPlayerIds = teamPlayers.map(p => p.id);
+              const availableTeamPlayerIds = availablePlayerIds.filter(id => teamPlayerIds.includes(id));
               
               newAvailabilityData[game.id] = {
                 gameId: game.id,
-                availableCount: availablePlayerIds.length || totalActivePlayers,
-                totalPlayers: totalActivePlayers
+                availableCount: availableTeamPlayerIds.length || totalActiveTeamPlayers,
+                totalPlayers: totalActiveTeamPlayers
               };
             } else if (response.status === 404) {
-              // No availability data exists yet, assume all players are available
+              // No availability data exists yet, assume all team players are available
               newAvailabilityData[game.id] = {
                 gameId: game.id,
-                availableCount: totalActivePlayers,
-                totalPlayers: totalActivePlayers
+                availableCount: totalActiveTeamPlayers,
+                totalPlayers: totalActiveTeamPlayers
               };
             } else {
-              // Other error, fallback to showing all players as available
+              // Other error, fallback to showing all team players as available
               newAvailabilityData[game.id] = {
                 gameId: game.id,
-                availableCount: totalActivePlayers,
-                totalPlayers: totalActivePlayers
+                availableCount: totalActiveTeamPlayers,
+                totalPlayers: totalActiveTeamPlayers
               };
             }
           } catch (error) {
             console.error(`Error fetching availability for game ${game.id}:`, error);
-            // On error, assume all players are available
+            // On error, assume all team players are available
             newAvailabilityData[game.id] = {
               gameId: game.id,
-              availableCount: totalActivePlayers,
-              totalPlayers: totalActivePlayers
+              availableCount: totalActiveTeamPlayers,
+              totalPlayers: totalActiveTeamPlayers
             };
           }
         }
@@ -98,7 +132,7 @@ export default function PlayerAvailabilityWidget({
     };
 
     fetchAvailability();
-  }, [upcomingGames.length, players.length]);
+  }, [upcomingGames.length, teamPlayers.length]);
 
   const getAvailabilityStatus = (available: number, total: number) => {
     const percentage = total > 0 ? (available / total) * 100 : 0;
