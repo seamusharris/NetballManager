@@ -44,6 +44,7 @@ import DashboardExamples from '@/pages/DashboardExamples';
 import WidgetExamples from './pages/WidgetExamples';
 import FormExamples from './pages/FormExamples';
 import ChartExamples from './pages/ChartExamples';
+const CourtLayoutExamples = lazy(() => import('./pages/CourtLayoutExamples'));
 import LayoutExamples from './pages/LayoutExamples';
 import ColorExamples from './pages/ColorExamples';
 
@@ -132,6 +133,7 @@ function Router() {
         <Route path="/widget-examples" component={WidgetExamples} />
         <Route path="/form-examples" component={FormExamples} />
         <Route path="/chart-examples" component={ChartExamples} />
+        <Route path="/court-layout-examples" component={CourtLayoutExamples} />
         <Route path="/layout-examples" component={LayoutExamples} />
         <Route path="/color-examples" component={ColorExamples} />
         <Route component={withErrorBoundary(NotFound, 'NotFound')} />

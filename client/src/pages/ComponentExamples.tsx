@@ -84,6 +84,14 @@ const examples: ExampleSection[] = [
     category: 'Patterns',
     status: 'Complete'
   },
+  {
+    title: 'Court Layouts',
+    description: 'Court display components with various layouts and configurations for game visualization.',
+    path: '/court-layout-examples',
+    icon: <Target className="h-5 w-5" />,
+    category: 'Components',
+    status: 'Complete'
+  },
   
   // Layouts
   {
