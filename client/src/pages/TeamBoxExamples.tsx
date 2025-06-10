@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Helmet } from 'react-helmet';
+import { PageTemplate } from '@/components/layout/PageTemplate';
 import { TeamBox } from '@/components/ui/team-box';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -124,14 +125,15 @@ export default function TeamBoxExamples() {
   ];
 
   return (
-    <div className="container mx-auto py-6">
-      <Helmet>
-        <title>TeamBox Examples - Emerald Netball</title>
-      </Helmet>
-      
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold tracking-tight">TeamBox Examples</h1>
-        <p className="text-muted-foreground mt-2">
+    <PageTemplate 
+      title="TeamBox Examples" 
+      breadcrumbs={[
+        { label: "Component Examples", href: "/component-examples" },
+        { label: "TeamBox Examples" }
+      ]}
+    >
+      <div className="prose max-w-none mb-6">
+        <p className="text-lg text-gray-700">
           Different layouts and configurations of the TeamBox component
         </p>
       </div>
@@ -344,6 +346,6 @@ export default function TeamBoxExamples() {
           </div>
         </section>
       </div>
-    </div>
+    </PageTemplate>
   );
 }

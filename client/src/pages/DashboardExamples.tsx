@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Helmet } from 'react-helmet';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -93,8 +92,16 @@ export default function DashboardExamples() {
   return (
     <PageTemplate 
       title="Dashboard Examples" 
-      breadcrumbs={[{ label: "Dashboard Examples" }]}
+      breadcrumbs={[
+        { label: "Component Examples", href: "/component-examples" },
+        { label: "Dashboard Examples" }
+      ]}
     >
+      <div className="prose max-w-none mb-8">
+        <p className="text-lg text-gray-700">
+          Comprehensive dashboard widget examples and layout patterns for consistent data presentation.
+        </p>
+      </div>
       <div className="space-y-8">
         <Helmet>
           <title>Dashboard Examples - Netball App</title>
@@ -372,7 +379,7 @@ export default function DashboardExamples() {
                     </div>
                   </div>
                 </div>
-                
+
                 <div>
                   <h4 className="font-semibold mb-3">Accent Colors</h4>
                   <div className="space-y-2">

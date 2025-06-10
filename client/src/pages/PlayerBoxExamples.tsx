@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Helmet } from 'react-helmet';
+import { PageTemplate } from '@/components/layout/PageTemplate';
 import { PlayerBox } from '@/components/ui/player-box';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -56,14 +57,15 @@ export default function PlayerBoxExamples() {
   ];
 
   return (
-    <div className="container mx-auto py-6">
-      <Helmet>
-        <title>PlayerBox Examples - Emerald Netball</title>
-      </Helmet>
-      
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold tracking-tight">PlayerBox Examples</h1>
-        <p className="text-muted-foreground mt-2">
+    <PageTemplate 
+      title="PlayerBox Examples" 
+      breadcrumbs={[
+        { label: "Component Examples", href: "/component-examples" },
+        { label: "PlayerBox Examples" }
+      ]}
+    >
+      <div className="prose max-w-none mb-6">
+        <p className="text-lg text-gray-700">
           Different layouts and configurations of the PlayerBox component
         </p>
       </div>
@@ -233,6 +235,6 @@ export default function PlayerBoxExamples() {
           </div>
         </section>
       </div>
-    </div>
+    </PageTemplate>
   );
 }

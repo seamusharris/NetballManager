@@ -1,27 +1,27 @@
-
 import React from 'react';
 import { Helmet } from 'react-helmet';
-import { GameBadge } from '@/components/ui/game-badge';
+import { PageTemplate } from '@/components/layout/PageTemplate';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function RoundBadgeExamples() {
   const roundNumber = "5";
 
   return (
-    <div className="container mx-auto py-6">
-      <Helmet>
-        <title>Round Badge Style Examples - Emerald Netball</title>
-      </Helmet>
-      
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold tracking-tight">Round Badge Style Options</h1>
-        <p className="text-muted-foreground mt-2">
-          Choose your preferred style for round indicators in game cards
+    <PageTemplate 
+      title="Round Badge Examples" 
+      breadcrumbs={[
+        { label: "Component Examples", href: "/component-examples" },
+        { label: "Round Badge Examples" }
+      ]}
+    >
+      <div className="prose max-w-none mb-6">
+        <p className="text-lg text-gray-700">
+          Different styles and configurations of round badges and status indicators
         </p>
       </div>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        
+
         {/* Current Style */}
         <Card>
           <CardHeader>
@@ -155,6 +155,6 @@ export default function RoundBadgeExamples() {
           <li><strong>Timeline:</strong> Adds meaning through color coding</li>
         </ul>
       </div>
-    </div>
+    </PageTemplate>
   );
 }

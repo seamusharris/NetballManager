@@ -59,14 +59,14 @@ const examples: ExampleSection[] = [
     status: 'Complete'
   },
   
-  // Patterns - Future examples
+  // Patterns
   {
     title: 'Dashboard Widgets',
     description: 'Standardized widget patterns for dashboards with consistent backgrounds and styling.',
     path: '/widget-examples',
     icon: <BarChart className="h-5 w-5" />,
     category: 'Patterns',
-    status: 'Planned'
+    status: 'Complete'
   },
   {
     title: 'Form Patterns',
@@ -74,7 +74,7 @@ const examples: ExampleSection[] = [
     path: '/form-examples',
     icon: <Target className="h-5 w-5" />,
     category: 'Patterns',
-    status: 'Planned'
+    status: 'Complete'
   },
   {
     title: 'Data Visualization',
@@ -82,7 +82,7 @@ const examples: ExampleSection[] = [
     path: '/chart-examples',
     icon: <BarChart className="h-5 w-5" />,
     category: 'Patterns',
-    status: 'Planned'
+    status: 'Complete'
   },
   
   // Layouts
@@ -92,7 +92,7 @@ const examples: ExampleSection[] = [
     path: '/layout-examples',
     icon: <Gamepad2 className="h-5 w-5" />,
     category: 'Layouts',
-    status: 'Planned'
+    status: 'Complete'
   },
   {
     title: 'Color Schemes',
@@ -100,7 +100,7 @@ const examples: ExampleSection[] = [
     path: '/color-examples',
     icon: <Palette className="h-5 w-5" />,
     category: 'Layouts',
-    status: 'Planned'
+    status: 'Complete'
   }
 ];
 

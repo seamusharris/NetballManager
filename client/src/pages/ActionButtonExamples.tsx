@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Helmet } from 'react-helmet';
+import { PageTemplate } from '@/components/layout/PageTemplate';
 import { TeamBox } from '@/components/ui/team-box';
 import { PlayerBox } from '@/components/ui/player-box';
 import { Button } from '@/components/ui/button';
@@ -52,15 +53,18 @@ export default function ActionButtonExamples() {
   ];
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <Helmet>
-        <title>Action Button Examples - Netball App</title>
-      </Helmet>
-
+    <PageTemplate 
+      title="Action Button Examples" 
+      breadcrumbs={[
+        { label: "Component Examples", href: "/component-examples" },
+        { label: "Action Button Examples" }
+      ]}
+    >
       <div className="space-y-12">
         <div className="prose max-w-none">
-          <h1>Action Button Examples</h1>
-          <p>Consistent action button patterns for team and player boxes.</p>
+          <p className="text-lg text-gray-700">
+            Consistent action button patterns for team and player boxes.
+          </p>
         </div>
 
         {/* Primary Actions */}
@@ -453,6 +457,6 @@ export default function ActionButtonExamples() {
           </div>
         </section>
       </div>
-    </div>
+    </PageTemplate>
   );
 }

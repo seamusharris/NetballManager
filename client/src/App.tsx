@@ -41,6 +41,11 @@ import TeamBoxExamples from './pages/TeamBoxExamples';
 import ActionButtonExamples from './pages/ActionButtonExamples';
 import ComponentExamples from '@/pages/ComponentExamples';
 import DashboardExamples from '@/pages/DashboardExamples';
+import WidgetExamples from './pages/WidgetExamples';
+import FormExamples from './pages/FormExamples';
+import ChartExamples from './pages/ChartExamples';
+import LayoutExamples from './pages/LayoutExamples';
+import ColorExamples from './pages/ColorExamples';
 
 /**
  * Loading spinner component for suspense fallbacks
@@ -123,7 +128,12 @@ function Router() {
         <Route path="/team-box-examples" component={withErrorBoundary(TeamBoxExamples, 'TeamBoxExamples')} />
         <Route path="/action-button-examples" component={ActionButtonExamples} />
         <Route path="/component-examples" component={ComponentExamples} />
-        <Route path="/dashboard-examples" component={withErrorBoundary(DashboardExamples, 'DashboardExamples')} />
+        <Route path="/dashboard-examples" component={DashboardExamples} />
+        <Route path="/widget-examples" component={WidgetExamples} />
+        <Route path="/form-examples" component={FormExamples} />
+        <Route path="/chart-examples" component={ChartExamples} />
+        <Route path="/layout-examples" component={LayoutExamples} />
+        <Route path="/color-examples" component={ColorExamples} />
         <Route component={withErrorBoundary(NotFound, 'NotFound')} />
       </Switch>
     </Layout>
