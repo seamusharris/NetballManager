@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Helmet } from 'react-helmet';
 import { PageTemplate } from '@/components/layout/PageTemplate';
@@ -6,6 +5,7 @@ import { TeamBox } from '@/components/ui/team-box';
 import { PlayerBox } from '@/components/ui/player-box';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card"
 import { 
   Edit, 
   Trash2, 
@@ -22,7 +22,11 @@ import {
   Share,
   Star,
   MoreHorizontal,
-  Play
+  Play,
+  BarChart3,
+  Clock,
+  Zap,
+  Plus
 } from 'lucide-react';
 
 export default function ActionButtonExamples() {
@@ -36,6 +40,36 @@ export default function ActionButtonExamples() {
     seasonName: "Autumn 2025"
   };
 
+  const sampleTeams = [
+    {
+      id: 1,
+      name: "Lightning Bolts",
+      division: "14U/2s",
+      seasonName: "Summer 2024",
+      description: "A competitive team known for their speed.",
+      coach: "Jane Smith",
+      contactEmail: "jane.smith@example.com"
+    },
+    {
+      id: 2,
+      name: "Net Burners",
+      division: "16U/1s",
+      seasonName: "Winter 2024",
+      description: "An aggressive team focused on strong offense.",
+      coach: "Mike Johnson",
+      contactEmail: "mike.johnson@example.com"
+    },
+    {
+      id: 3,
+      name: "Shooting Stars",
+      division: "18U/Premier",
+      seasonName: "Spring 2025",
+      description: "A skilled team with excellent accuracy.",
+      coach: "Emily White",
+      contactEmail: "emily.white@example.com"
+    }
+  ];
+  
   const samplePlayer = {
     id: 1,
     displayName: "Sarah Johnson",
@@ -45,6 +79,54 @@ export default function ActionButtonExamples() {
     avatarColor: "bg-blue-500",
     active: true
   };
+
+  const samplePlayers = [
+    {
+      id: 1,
+      displayName: "Sarah Johnson",
+      firstName: "Sarah",
+      lastName: "Johnson",
+      positionPreferences: ["GA", "GS"],
+      avatarColor: "bg-blue-500",
+      active: true
+    },
+    {
+      id: 2,
+      displayName: "Emma Wilson",
+      firstName: "Emma",
+      lastName: "Wilson",
+      positionPreferences: ["C"],
+      avatarColor: "bg-green-500",
+      active: true
+    },
+    {
+      id: 3,
+      displayName: "Kate Brown",
+      firstName: "Kate",
+      lastName: "Brown",
+      positionPreferences: ["GK"],
+      avatarColor: "bg-red-500",
+      active: false
+    },
+    {
+      id: 4,
+      displayName: "Lily Chen",
+      firstName: "Lily",
+      lastName: "Chen",
+      positionPreferences: ["WA"],
+      avatarColor: "bg-yellow-500",
+      active: true
+    },
+    {
+      id: 5,
+      displayName: "Amy Thompson",
+      firstName: "Amy",
+      lastName: "Thompson",
+      positionPreferences: ["WD"],
+      avatarColor: "bg-purple-500",
+      active: true
+    }
+  ];
 
   const sampleStats = [
     { label: "Goals", value: 32 },
@@ -234,7 +316,7 @@ export default function ActionButtonExamples() {
                     </div>
                   }
                 />
-                
+
                 <TeamBox 
                   team={{...sampleTeam, isActive: false}}
                   actions={
@@ -455,6 +537,353 @@ export default function ActionButtonExamples() {
               </ul>
             </div>
           </div>
+        </section>
+        
+        {/* External Actions with Avatar Layout */}
+        <section>
+          <h2 className="text-2xl font-bold mb-6">External Actions with Avatar Layout</h2>
+          <Card>
+            <CardHeader>
+              <CardTitle>Player Cards with Side Actions</CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Action buttons positioned on the right side, mirroring avatar placement for visual balance
+              </p>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {samplePlayers.slice(0, 4).map(player => (
+                  <div key={player.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors">
+                    {/* Left side - Avatar and info */}
+                    <div className="flex items-center space-x-3">
+                      <div className={`w-12 h-12 rounded-full ${player.avatarColor} flex items-center justify-center text-white font-bold text-lg`}>
+                        {player.firstName[0]}
+                      </div>
+                      <div>
+                        <h4 className="font-semibold">{player.displayName}</h4>
+                        <p className="text-sm text-muted-foreground">
+                          {player.positionPreferences.join(', ')}
+                        </p>
+                        <div className="flex items-center space-x-2 mt-1">
+                          <Badge variant={player.active ? "default" : "secondary"}>
+                            {player.active ? "Active" : "Inactive"}
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Right side - Action buttons */}
+                    <div className="flex items-center space-x-2">
+                      <Button size="sm" variant="outline" className="btn-view">
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button size="sm" variant="outline" className="btn-edit">
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button size="sm" variant="outline" className="btn-manage">
+                        <Settings className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+
+        {/* Enhanced Team Cards with Action Buttons */}
+        <section>
+          <h2 className="text-2xl font-bold mb-6">Enhanced Team Action Layouts</h2>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+            {/* Floating Action Buttons */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Floating Action Style</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Action buttons with floating appearance and hover effects
+                </p>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {sampleTeams.slice(0, 2).map(team => (
+                    <div key={team.id} className="relative p-4 border rounded-lg bg-gradient-to-r from-blue-50 to-purple-50 hover:shadow-md transition-all">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <h4 className="font-bold text-lg">{team.name}</h4>
+                          <p className="text-muted-foreground">{team.division}</p>
+                          <Badge className="mt-2">{team.seasonName}</Badge>
+                        </div>
+
+                        {/* Floating action cluster */}
+                        <div className="flex flex-col space-y-2">
+                          <Button size="sm" className="shadow-lg hover:shadow-xl transition-shadow bg-blue-600 hover:bg-blue-700">
+                            <BarChart3 className="h-4 w-4 mr-2" />
+                            Stats
+                          </Button>
+                          <Button size="sm" variant="outline" className="shadow-lg hover:shadow-xl transition-shadow">
+                            <Users className="h-4 w-4 mr-2" />
+                            Roster
+                          </Button>
+                          <Button size="sm" variant="outline" className="shadow-lg hover:shadow-xl transition-shadow">
+                            <Settings className="h-4 w-4 mr-2" />
+                            Manage
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Grouped Action Buttons */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Grouped Actions</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Related actions grouped together with visual separation
+                </p>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {sampleTeams.slice(0, 2).map(team => (
+                    <div key={team.id} className="p-4 border rounded-lg">
+                      <div className="flex items-center justify-between mb-4">
+                        <div>
+                          <h4 className="font-bold text-lg">{team.name}</h4>
+                          <p className="text-muted-foreground">{team.division}</p>
+                        </div>
+                        <Badge variant="outline">{team.seasonName}</Badge>
+                      </div>
+
+                      {/* Grouped action sections */}
+                      <div className="flex justify-between">
+                        {/* View actions */}
+                        <div className="flex space-x-2">
+                          <Button size="sm" variant="outline" className="btn-view">
+                            <Eye className="h-4 w-4 mr-1" />
+                            View
+                          </Button>
+                          <Button size="sm" variant="outline" className="btn-view">
+                            <BarChart3 className="h-4 w-4 mr-1" />
+                            Stats
+                          </Button>
+                        </div>
+
+                        {/* Management actions */}
+                        <div className="flex space-x-2">
+                          <Button size="sm" className="btn-edit">
+                            <Users className="h-4 w-4 mr-1" />
+                            Roster
+                          </Button>
+                          <Button size="sm" className="btn-manage">
+                            <Settings className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </section>
+
+        {/* Contextual Action Buttons */}
+        <section>
+          <h2 className="text-2xl font-bold mb-6">Contextual Action Patterns</h2>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+            {/* Success State Actions */}
+            <Card className="border-green-200 bg-green-50">
+              <CardHeader>
+                <CardTitle className="text-green-800">Success State</CardTitle>
+                <p className="text-sm text-green-600">Actions for successful/active items</p>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="p-3 bg-white rounded border">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">Active Team</p>
+                        <p className="text-sm text-muted-foreground">Lightning Bolts</p>
+                      </div>
+                      <div className="flex space-x-1">
+                        <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white">
+                          <Trophy className="h-4 w-4" />
+                        </Button>
+                        <Button size="sm" variant="outline" className="border-green-300">
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-3 bg-white rounded border">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">Recent Win</p>
+                        <p className="text-sm text-muted-foreground">vs Eagles 32-28</p>
+                      </div>
+                      <div className="flex space-x-1">
+                        <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white">
+                          <Award className="h-4 w-4" />
+                        </Button>
+                        <Button size="sm" variant="outline" className="border-green-300">
+                          <BarChart3 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Warning State Actions */}
+            <Card className="border-amber-200 bg-amber-50">
+              <CardHeader>
+                <CardTitle className="text-amber-800">Warning State</CardTitle>
+                <p className="text-sm text-amber-600">Actions requiring attention</p>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="p-3 bg-white rounded border">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">Incomplete Roster</p>
+                        <p className="text-sm text-muted-foreground">2 positions empty</p>
+                      </div>
+                      <div className="flex space-x-1">
+                        <Button size="sm" className="bg-amber-600 hover:bg-amber-700 text-white">
+                          <Users className="h-4 w-4" />
+                        </Button>
+                        <Button size="sm" variant="outline" className="border-amber-300">
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-3 bg-white rounded border">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">Game Tomorrow</p>
+                        <p className="text-sm text-muted-foreground">vs Panthers</p>
+                      </div>
+                      <div className="flex space-x-1">
+                        <Button size="sm" className="bg-amber-600 hover:bg-amber-700 text-white">
+                          <Clock className="h-4 w-4" />
+                        </Button>
+                        <Button size="sm" variant="outline" className="border-amber-300">
+                          <Settings className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Error State Actions */}
+            <Card className="border-red-200 bg-red-50">
+              <CardHeader>
+                <CardTitle className="text-red-800">Error State</CardTitle>
+                <p className="text-sm text-red-600">Actions for problematic items</p>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="p-3 bg-white rounded border">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">Inactive Player</p>
+                        <p className="text-sm text-muted-foreground">Lily Chen</p>
+                      </div>
+                      <div className="flex space-x-1">
+                        <Button size="sm" className="bg-red-600 hover:bg-red-700 text-white">
+                          <Zap className="h-4 w-4" />
+                        </Button>
+                        <Button size="sm" variant="outline" className="border-red-300">
+                          <Settings className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-3 bg-white rounded border">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">Missing Stats</p>
+                        <p className="text-sm text-muted-foreground">Game vs Tigers</p>
+                      </div>
+                      <div className="flex space-x-1">
+                        <Button size="sm" className="bg-red-600 hover:red-700 text-white">
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                        <Button size="sm" variant="outline" className="border-red-300">
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </section>
+
+        {/* Compact Action Buttons */}
+        <section>
+          <h2 className="text-2xl font-bold mb-6">Compact Action Layouts</h2>
+          <Card>
+            <CardHeader>
+              <CardTitle>Dense Information with Actions</CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Compact layouts with space-efficient action placement
+              </p>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {[
+                  { name: "Sarah Johnson", pos: "GA", rating: 8.5, games: 12, status: "active" },
+                  { name: "Emma Wilson", pos: "C", rating: 8.2, games: 10, status: "active" },
+                  { name: "Kate Brown", pos: "GK", rating: 8.1, games: 11, status: "injured" },
+                  { name: "Lily Chen", pos: "WA", rating: 7.9, games: 8, status: "inactive" },
+                  { name: "Amy Thompson", pos: "WD", rating: 7.7, games: 9, status: "active" }
+                ].map((player, index) => (
+                  <div key={index} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/30 transition-colors">
+                    <div className="flex items-center space-x-4">
+                      <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                        {player.name.split(' ').map(n => n[0]).join('')}
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-3">
+                          <span className="font-medium">{player.name}</span>
+                          <Badge variant="outline" className="text-xs">{player.pos}</Badge>
+                          <span className="text-sm text-muted-foreground">Rating: {player.rating}</span>
+                          <span className="text-sm text-muted-foreground">{player.games} games</span>
+                          <Badge variant={player.status === 'active' ? 'default' : player.status === 'injured' ? 'destructive' : 'secondary'} className="text-xs">
+                            {player.status}
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-1">
+                      <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                        <BarChart3 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
         </section>
       </div>
     </PageTemplate>
