@@ -104,8 +104,6 @@ export default function TopPlayersWidget({
 
     const newPlayerStatsMap: Record<number, PlayerStats> = {};
 
-    // Initialize players with zeros - filter by team if teamId provided
-    const relevantPlayers = teamId ? [] : players; // We'll populate this from roster data if teamId is provided
     const playerIdsInTeam = new Set<number>();
 
     // If we have a teamId, we need to find which players actually played for this team
@@ -127,8 +125,9 @@ export default function TopPlayersWidget({
     }
 
     // Initialize player stats for relevant players
+    // If teamId is provided but no players found in rosters, fall back to all players
     const playersToProcess = teamId ? 
-      players.filter(player => playerIdsInTeam.has(player.id)) : 
+      (playerIdsInTeam.size > 0 ? players.filter(player => playerIdsInTeam.has(player.id)) : players) : 
       players;
 
     playersToProcess.forEach(player => {
@@ -320,9 +319,7 @@ export default function TopPlayersWidget({
   }, [gameStatsMap, gameRostersMap, isLoading, players, games]);
 
   // Get top 5 players by rating - use only players relevant to the team
-  const playersToShow = teamId ? 
-    players.filter(player => playerStatsMap[player.id]?.gamesPlayed > 0) : 
-    players;
+  const playersToShow = players;
 
   const topPlayers = playersToShow
     .map(player => ({
@@ -333,10 +330,22 @@ export default function TopPlayersWidget({
         goals: 0,
         rebounds: 0,
         intercepts: 0,
-        rating: 5.0
+        rating: 6.0
       }
     }))
-    .filter(player => !teamId || player.stats.gamesPlayed > 0) // Only show players who have played if team filter is active
+    // For team filtering: only show players who have played games, but if no one has games, show all players with default ratings
+    .filter(player => {
+      if (!teamId) return true; // No team filter, show everyone
+      
+      const hasAnyPlayerWithGames = playersToShow.some(p => (playerStatsMap[p.id]?.gamesPlayed || 0) > 0);
+      if (!hasAnyPlayerWithGames) {
+        // No players have game data, show all players with default ratings
+        return true;
+      }
+      
+      // Some players have game data, only show those who have played
+      return player.stats.gamesPlayed > 0;
+    })
     .sort((a, b) => b.stats.rating - a.stats.rating)
     .slice(0, 5);
 
