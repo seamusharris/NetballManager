@@ -322,7 +322,7 @@ export default function TopPlayersWidget({
       goals: stats.goals,
       rating: stats.rating
     })));
-    
+
     setPlayerStatsMap(newPlayerStatsMap);
   }, [gameStatsMap, gameRostersMap, isLoading, players, games]);
 
@@ -348,15 +348,10 @@ export default function TopPlayersWidget({
         rating: 6.0
       }
     }))
-    // For team filtering: if teamId is provided, show all players (the roster filtering above already handled team membership)
+    // Filter players based on games played
     .filter(player => {
-      if (!teamId) {
-        // No team filter, only show players with game data
-        return player.stats.gamesPlayed > 0;
-      }
-
-      // Team filter is applied, show all players that made it through roster filtering
-      return true;
+      // Always require at least some game participation
+      return player.stats.gamesPlayed > 0;
     })
     .sort((a, b) => b.stats.rating - a.stats.rating)
     .slice(0, 5);
@@ -419,7 +414,6 @@ export default function TopPlayersWidget({
         <ViewMoreButton href="/players">
           View all players →
         </ViewMoreButton>
-      </div>
-    </BaseWidget>
+      </div>    </BaseWidget>
   );
 }
