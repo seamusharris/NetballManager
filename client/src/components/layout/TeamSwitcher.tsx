@@ -35,9 +35,12 @@ export function TeamSwitcher({ mode = 'optional', className, onTeamChange }: Tea
     
     console.log('TeamSwitcher: Setting current team ID to:', teamId);
     
-    // Process the team change immediately
+    // Ensure the team change is processed immediately and completely
     setCurrentTeamId(teamId);
+    
+    // Call the optional callback
     onTeamChange?.(teamId);
+    
     console.log('TeamSwitcher: Team change completed to:', teamId);
   };
 

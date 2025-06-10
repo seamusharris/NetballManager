@@ -269,23 +269,28 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
   const handleSetCurrentTeamId = useCallback((teamId: number | null) => {
     console.log('ClubContext: Setting team to:', teamId, 'from:', currentTeamId);
 
+    // Store the previous team ID for comparison
+    const previousTeamId = currentTeamId;
+
+    // Update localStorage
     if (teamId !== null) {
       localStorage.setItem('current-team-id', teamId.toString());
     } else {
       localStorage.removeItem('current-team-id');
     }
 
+    // Update state immediately
     setCurrentTeamId(teamId);
 
-    // Sync API client headers immediately
+    // Sync API client headers immediately with the new team ID
     apiClient.setClubContext({ currentClubId, currentTeamId: teamId });
     console.log('ClubContext: API client team context updated to:', teamId);
 
-    // Consistent cache invalidation for team switching - always invalidate team-specific data
-    if (currentClubId && teamId !== currentTeamId) {
-      console.log('ClubContext: Invalidating team-specific cache data for switch');
+    // Always invalidate cache when team changes (including switching to/from null)
+    if (teamId !== previousTeamId) {
+      console.log('ClubContext: Team changed from', previousTeamId, 'to', teamId, '- invalidating cache');
       
-      // Invalidate team-specific queries immediately with more aggressive approach
+      // Remove all team-specific cached data immediately
       const teamSpecificPatterns = [
         ['games', currentClubId],
         ['players', currentClubId],
@@ -295,21 +300,31 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
       ];
 
       teamSpecificPatterns.forEach(pattern => {
-        queryClient.invalidateQueries({ 
+        queryClient.removeQueries({ 
           queryKey: pattern,
           exact: false 
         });
       });
 
-      // Force refetch of critical queries
-      queryClient.refetchQueries({
-        queryKey: ['games', currentClubId, teamId],
-        exact: false
-      });
+      // Force immediate refetch of critical data with new team context
+      setTimeout(() => {
+        queryClient.invalidateQueries({ 
+          queryKey: ['games', currentClubId],
+          exact: false 
+        });
+        queryClient.invalidateQueries({ 
+          queryKey: ['players', currentClubId],
+          exact: false 
+        });
+        queryClient.invalidateQueries({ 
+          queryKey: ['dashboard-batch-data', currentClubId],
+          exact: false 
+        });
+      }, 10);
     }
 
     console.log('ClubContext: Team context switch completed to:', teamId);
-    }, [currentClubId, currentTeamId, queryClient]);
+  }, [currentClubId, currentTeamId, queryClient]);
 
   // Load saved team from localStorage when teams are available
   useEffect(() => {

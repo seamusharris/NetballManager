@@ -46,6 +46,11 @@ export default function Dashboard() {
     }
   }, [params.teamId, currentTeamId, setCurrentTeamId, clubTeams]);
 
+  // Force re-render when currentTeamId changes
+  useEffect(() => {
+    console.log('Dashboard: currentTeamId changed to:', currentTeamId);
+  }, [currentTeamId]);
+
   // Debug team switching
   useEffect(() => {
     console.log('Dashboard: Team context updated:', {
@@ -101,7 +106,7 @@ export default function Dashboard() {
     queryFn: async () => {
       if (gameIdsArray.length === 0) return { stats: {}, rosters: {}, scores: {} };
 
-      console.log(`Dashboard fetching batch data for ${gameIdsArray.length} games:`, gameIdsArray);
+      console.log(`Dashboard fetching batch data for ${gameIdsArray.length} games with team ${currentTeamId}:`, gameIdsArray);
 
       try {
         const { dataFetcher } = await import('@/lib/unifiedDataFetcher');
@@ -114,7 +119,7 @@ export default function Dashboard() {
           includeScores: true
         });
 
-        console.log('Dashboard batch data result:', result);
+        console.log('Dashboard batch data result for team', currentTeamId, ':', result);
         return result;
       } catch (error) {
         console.error('Dashboard batch data fetch error:', error);
@@ -122,8 +127,8 @@ export default function Dashboard() {
       }
     },
     enabled: !!currentClubId && !!currentTeamId && gameIdsArray.length > 0 && !isLoadingGames,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 30 * 60 * 1000, // 30 minutes
+    staleTime: 1 * 60 * 1000, // Reduced to 1 minute for better team switching
+    gcTime: 5 * 60 * 1000, // Reduced garbage collection time
     refetchOnWindowFocus: false,
     refetchOnMount: true, // Always fetch fresh data on mount
   });
