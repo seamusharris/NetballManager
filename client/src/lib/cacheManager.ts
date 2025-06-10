@@ -91,7 +91,7 @@ export class CacheManager {
   }
 
   // Invalidate team-specific cached data when switching teams
-  invalidateTeamData: (newTeamId: number | null, oldTeamId: number | null) => {
+  invalidateTeamData(newTeamId: number | null, oldTeamId: number | null) {
     if (!this.queryClient) return;
 
     console.log('CacheManager: Invalidating team data for team switch:', { newTeamId, oldTeamId });
@@ -117,7 +117,7 @@ export class CacheManager {
         return false;
       }
     });
-  },
+  }
 
   // Helper to check if a key should be invalidated during club switch
   shouldInvalidateOnClubSwitch: (key: string, newClubId: number, oldClubId: number | null): boolean => {
