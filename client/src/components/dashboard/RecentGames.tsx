@@ -74,7 +74,7 @@ export default function RecentGames({ games, opponents, className, seasonFilter,
         </div>
 
         {games.filter(game => game.statusIsCompleted === true).length > RECENT_GAMES_COUNT ? (
-          <ViewMoreButton href="/games?status=completed">
+          <ViewMoreButton href={`/games/${currentTeam?.id}?status=completed`}>
             View more →
           </ViewMoreButton>
         ) : (

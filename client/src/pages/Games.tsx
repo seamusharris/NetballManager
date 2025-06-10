@@ -7,7 +7,7 @@ import { GamesList } from '@/components/games/GamesList';
 import { apiRequest, apiClient } from '@/lib/apiClient';
 import { Game, Player } from '@shared/schema';
 import { useToast } from '@/hooks/use-toast';
-import { useLocation } from 'wouter';
+import { useLocation, useParams } from 'wouter';
 import { useClub } from '@/contexts/ClubContext';
 import { Badge } from '@/components/ui/badge';
 import { TeamSwitcher } from '@/components/layout/TeamSwitcher';
@@ -23,6 +23,8 @@ interface QueryParams {
 
 export default function Games() {
   const { currentClub, currentClubId, currentTeamId, currentTeam, isLoading: clubLoading } = useClub();
+  const params = useParams();
+  const teamIdFromUrl = params.teamId ? parseInt(params.teamId) : null;
 
   // Don't render anything until club context is fully loaded
   if (clubLoading || !currentClub) {
@@ -42,9 +44,28 @@ export default function Games() {
   const [editingGame, setEditingGame] = useState<Game | null>(null);
   const [, setLocation] = useLocation();
 
+  // Handle status filter from URL parameter
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const statusParam = searchParams.get('status');
+    if (statusParam && ['upcoming', 'completed', 'in-progress', 'forfeit-win', 'forfeit-loss', 'bye', 'abandoned'].includes(statusParam)) {
+      // The GamesList component will handle the status filter via its own URL parameter logic
+    }
+  }, []);
+
+  // Auto-select team from URL if provided
+  useEffect(() => {
+    if (teamIdFromUrl && teams.length > 0 && currentClub?.setCurrentTeam) {
+      const targetTeam = teams.find(t => t.id === teamIdFromUrl);
+      if (targetTeam && (!currentTeam || currentTeam.id !== teamIdFromUrl)) {
+        currentClub.setCurrentTeam(targetTeam);
+      }
+    }
+  }, [teamIdFromUrl, teams, currentClub, currentTeam]);
+
   // Fetch games
   const { data: games = [], isLoading: isLoadingGames } = useQuery<any[]>({
-    queryKey: ['games', currentClubId, currentTeamId],
+    queryKey: ['games', currentClubId, teamIdFromUrl || currentTeamId],
     queryFn: () => apiClient.get('/api/games'),
     enabled: !!currentClubId,
   });

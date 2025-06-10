@@ -7,6 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import { GameScoreDisplay } from '@/components/statistics/GameScoreDisplay';
 import { GameBadge } from '@/components/ui/game-badge';
 import { ViewMoreButton } from '@/components/ui/view-more-button';
+import { useClub } from '@/contexts/ClubContext';
 
 interface UpcomingGamesProps {
   games: Game[];
@@ -17,6 +18,7 @@ interface UpcomingGamesProps {
 }
 
 export default function UpcomingGames({ games, opponents, className, seasonFilter, activeSeason }: UpcomingGamesProps) {
+  const { currentTeam } = useClub();
   // Filter for upcoming games using the new status system
   const upcomingGames = games
     .filter(game => {
@@ -101,7 +103,7 @@ export default function UpcomingGames({ games, opponents, className, seasonFilte
                              game.completed === true;
           return !isCompleted;
         }).length > 5 ? (
-          <ViewMoreButton href="/games?status=upcoming">
+          <ViewMoreButton href={`/games/${currentTeam?.id}?status=upcoming`}>
             View more →
           </ViewMoreButton>
         ) : (
