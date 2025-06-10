@@ -208,7 +208,7 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
     return clubTeams.find(team => team.id === currentTeamId) || null;
   }, [clubTeams, currentTeamId]);
 
-  const contextValue: ClubContextType = {
+  const contextValue: ClubContextType = useMemo(() => ({
     currentClub,
     currentClubId,
     currentTeamId,
@@ -220,7 +220,21 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
     hasPermission,
     isLoading: isLoadingClubs || (!!currentClubId && isLoadingClub) || isLoadingTeams,
     isInitialized,
-  };
+  }), [
+    currentClub,
+    currentClubId,
+    currentTeamId,
+    currentTeam,
+    userClubs,
+    clubTeams,
+    switchClub,
+    handleSetCurrentTeamId,
+    hasPermission,
+    isLoadingClubs,
+    isLoadingClub,
+    isLoadingTeams,
+    isInitialized
+  ]);
 
   console.log('ClubContext: Rendering with:', {
     currentClubId,
