@@ -28,7 +28,7 @@ export default function Dashboard() {
 
   // Add team switching state early to prevent initialization errors (but don't block queries)
   const [isTeamSwitching, setIsTeamSwitching] = useState(false);
-  
+
   useEffect(() => {
     // When currentTeamId changes, set switching state briefly for UI feedback only
     setIsTeamSwitching(true);
@@ -58,12 +58,13 @@ export default function Dashboard() {
     gcTime: 60 * 60 * 1000, // 1 hour garbage collection - increased
   });
 
-  const { data: games = [], isLoading: isLoadingGames, error: gamesError } = useQuery<any[]>({
+  // Fetch games with team context
+  const { data: games = [], isLoading: isLoadingGames } = useQuery({
     queryKey: ['games', currentClubId, currentTeamId],
     queryFn: () => apiClient.get('/api/games'),
-    enabled: !!currentClubId && !!currentTeamId,
-    staleTime: 15 * 60 * 1000, // 15 minutes cache - increased for better team switching
-    gcTime: 45 * 60 * 1000, // 45 minutes garbage collection - increased
+    enabled: !!currentClubId && !isTeamSwitching,
+    staleTime: 5 * 60 * 1000, // 5 minutes - games don't change frequently
+    gcTime: 30 * 60 * 1000, // 30 minutes cache time
   });
 
   // Opponents system has been completely removed
@@ -86,80 +87,34 @@ export default function Dashboard() {
 
   // Centralized roster fetching for all games - only when games data is stable
   const gameIds = games?.map(g => g.id).sort().join(',') || '';
-  const { data: centralizedRosters = {}, isLoading: isLoadingRosters } = useQuery({
-    queryKey: ['centralized-rosters', currentClubId, currentTeamId, gameIds],
+
+  // Use unified data fetcher for better performance
+  const { data: batchData, isLoading: isLoadingBatchData } = useQuery({
+    queryKey: ['dashboard-batch-data', currentClubId, currentTeamId, gameIds.sort().join(',')],
     queryFn: async () => {
-      if (!games || games.length === 0) return {};
+      if (gameIds.length === 0) return { stats: {}, rosters: {}, scores: {} };
 
-      console.log(`Dashboard centralizing roster fetch for ${games.length} games`);
-      const rostersMap: Record<number, any[]> = {};
+      console.log(`Dashboard fetching batch data for ${gameIds.length} games`);
 
-      // Fetch rosters for all games in parallel for better performance
-      const rosterPromises = games.map(async (game) => {
-        try {
-          const roster = await apiClient.get(`/api/games/${game.id}/rosters`);
-          return { gameId: game.id, roster: roster || [] };
-        } catch (error) {
-          console.error(`Error fetching roster for game ${game.id}:`, error);
-          return { gameId: game.id, roster: [] };
-        }
+      const { dataFetcher } = await import('@/lib/unifiedDataFetcher');
+      return await dataFetcher.batchFetchGameData({
+        gameIds,
+        clubId: currentClubId!,
+        teamId: currentTeamId,
+        includeStats: true,
+        includeRosters: true,
+        includeScores: true
       });
-
-      const rosterResults = await Promise.all(rosterPromises);
-      rosterResults.forEach(({ gameId, roster }) => {
-        rostersMap[gameId] = roster;
-      });
-
-      console.log(`Dashboard centralized roster fetch completed for ${Object.keys(rostersMap).length} games`);
-      return rostersMap;
     },
-    enabled: !!currentClubId && !!currentTeamId && !!games && games.length > 0 && !isLoadingGames,
-    staleTime: 30 * 60 * 1000, // 30 minutes (increased significantly for better caching)
-    gcTime: 2 * 60 * 60 * 1000 // 2 hours (increased significantly)
+    enabled: !!currentClubId && gameIds.length > 0,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes
   });
 
-  // Centralized stats fetching for completed games only
-  const completedGameIds = games?.filter(game => 
-    game.statusIsCompleted && game.statusAllowsStatistics
-  ).map(game => game.id).sort() || [];
-  
-  const completedGameIdsKey = completedGameIds.join(',');
-
-  const { data: centralizedStats = {}, isLoading: isLoadingStats } = useQuery({
-    queryKey: ['centralized-stats', currentClubId, currentTeamId, completedGameIdsKey],
-    queryFn: async () => {
-      if (completedGameIds.length === 0) return {};
-
-      console.log(`Dashboard centralizing stats fetch for ${completedGameIds.length} completed games`);
-      
-      // Use batch endpoint for better performance
-      try {
-        const statsMap = await apiClient.post('/api/games/stats/batch', {
-          gameIds: completedGameIds
-        });
-        console.log(`Dashboard batch stats fetch completed for ${Object.keys(statsMap).length} games`);
-        return statsMap;
-      } catch (error) {
-        console.error('Error in batch stats fetch, falling back to individual requests:', error);
-        
-        // Fallback to individual requests if batch fails
-        const statsMap: Record<number, any[]> = {};
-        for (const gameId of completedGameIds) {
-          try {
-            const stats = await apiClient.get(`/api/games/${gameId}/stats`);
-            statsMap[gameId] = stats || [];
-          } catch (error) {
-            console.error(`Error fetching stats for game ${gameId}:`, error);
-            statsMap[gameId] = [];
-          }
-        }
-        return statsMap;
-      }
-    },
-    enabled: !!currentClubId && !!currentTeamId && completedGameIds.length > 0 && !isLoadingGames,
-    staleTime: 30 * 60 * 1000, // 30 minutes (increased significantly for better caching)
-    gcTime: 2 * 60 * 60 * 1000 // 2 hours (increased significantly)
-  });
+  const gameStatsMap = batchData?.stats || {};
+  const gameRostersMap = batchData?.rosters || {};
+  const gameScoresMap = batchData?.scores || {};
+  const isLoadingStats = isLoadingBatchData;
 
   // NOW we can do conditional returns after all hooks are called
   if (clubLoading || !currentClubId) {
@@ -210,7 +165,7 @@ export default function Dashboard() {
     );
   }
 
-  const isLoading = isLoadingPlayers || isLoadingGames || isLoadingSeasons || isLoadingActiveSeason || isLoadingRosters || isLoadingStats || isTeamSwitching;
+  const isLoading = isLoadingPlayers || isLoadingGames || isLoadingSeasons || isLoadingActiveSeason || isLoadingStats || isTeamSwitching;
 
   // Show error state if any query fails
   if (playersError || gamesError || seasonsError || activeSeasonError) {
@@ -277,8 +232,8 @@ export default function Dashboard() {
           seasons={seasons || []}
           activeSeason={activeSeason}
           isLoading={isLoading}
-          centralizedRosters={centralizedRosters}
-          centralizedStats={centralizedStats}
+          centralizedRosters={gameRostersMap}
+          centralizedStats={gameStatsMap}
         />
       </div>
     </>

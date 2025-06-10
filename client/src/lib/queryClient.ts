@@ -204,20 +204,34 @@ export const queryClient = new QueryClient({
     queries: {
       queryFn: getQueryFn({ on401: "throw" }),
       refetchOnWindowFocus: false,
-      retry: 1,
-      // More aggressive stale time for faster dashboard performance
-      staleTime: 15 * 60 * 1000, // 15 minutes (increased for better caching)
-      // Much longer cache time to preserve data between team switches
-      gcTime: 45 * 60 * 1000, // 45 minutes (increased for better caching)
+      retry: (failureCount, error) => {
+        // Don't retry on 4xx errors (client errors)
+        if (error && typeof error === 'object' && 'message' in error) {
+          const message = error.message as string;
+          if (message.includes('4')) return false;
+        }
+        return failureCount < 3;
+      },
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+      // Differentiated stale times by data type
+      staleTime: 10 * 60 * 1000, // 10 minutes default
+      // Longer cache time to preserve data between navigations
+      gcTime: 30 * 60 * 1000, // 30 minutes default
       // Ensure network mode is online to prevent dispatcher issues
       networkMode: 'online',
+      // Enable background refetching for better UX
+      refetchOnMount: 'always',
+      refetchOnReconnect: 'always',
     },
     mutations: {
-      retry: 1,
-      // Add a short delay before retrying mutations
-      retryDelay: 1000,
-      // Ensure network mode is online for mutations too
+      retry: 2,
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
       networkMode: 'online',
+      // Optimistic updates for better UX
+      onMutate: async () => {
+        // Cancel outgoing refetches to avoid optimistic update conflicts
+        await queryClient.cancelQueries();
+      },
     },
   },
 });

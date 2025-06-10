@@ -78,45 +78,36 @@ export default function PlayersList({ players, isLoading: isPlayersLoading, onEd
   const gameIds = completedGames.map(game => game.id);
   const enableQuery = gameIds.length > 0;
 
-  // Use Team Dashboard's exact cache keys to share data - use batch endpoint
-  const { data: gameStatsMap, isLoading: isLoadingStats } = useQuery<Record<number, GameStat[]>>({
-    queryKey: ['centralized-stats', currentClubId, gameIds.sort().join(',')],
+  // Use unified data fetcher for consistency with Dashboard
+  const { data: batchData, isLoading: isLoadingBatchData, error: batchError } = useQuery({
+    queryKey: ['players-batch-data', currentClubId, gameIds.sort().join(',')],
     queryFn: async () => {
-      if (gameIds.length === 0) return {};
+      if (gameIds.length === 0) return { stats: {}, rosters: {} };
 
-      console.log(`PlayersList: Using batch endpoint for stats fetch of ${gameIds.length} completed games`);
+      console.log(`PlayersList: Fetching batch data for ${gameIds.length} games`);
 
-      try {
-        // Use batch endpoint for better performance and cache consistency
-        const batchResponse = await apiClient.post('/api/games/stats/batch', {
-          gameIds: gameIds
-        });
-        console.log(`PlayersList: Batch stats fetch completed for ${Object.keys(batchResponse).length} games`);
-        return batchResponse;
-      } catch (error) {
-        console.error('PlayersList: Batch stats fetch failed, falling back to individual requests:', error);
-
-        // Fallback to individual requests
-        const statsMap: Record<number, GameStat[]> = {};
-        for (const gameId of gameIds) {
-          try {
-            const stats = await apiClient.get(`/api/games/${gameId}/stats`);
-            statsMap[gameId] = stats || [];
-          } catch (error) {
-            console.error(`PlayersList: Error fetching stats for game ${gameId}:`, error);
-            statsMap[gameId] = [];
-          }
-        }
-        return statsMap;
-      }
+      const { dataFetcher } = await import('@/lib/unifiedDataFetcher');
+      return await dataFetcher.batchFetchGameData({
+        gameIds,
+        clubId: currentClubId!,
+        includeStats: true,
+        includeRosters: true,
+        includeScores: false // Players page doesn't need scores
+      });
     },
-    enabled: enableQuery && !!currentClubId,
-    staleTime: 10 * 60 * 1000, // 10 minutes (increased for better caching)
-    gcTime: 30 * 60 * 1000, // 30 minutes (increased for better caching)
+    enabled: enableQuery && !!currentClubId && gameIds.length > 0,
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes
+    retry: 2, // Retry failed requests
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 
+  const gameStatsMap = batchData?.stats || {};
+  const gameRostersMap = batchData?.rosters || {};
+  const isLoadingStats = isLoadingBatchData;
+
   // Use Team Dashboard's exact cache keys to share roster data
-  const { data: gameRostersMap, isLoading: isLoadingRosters } = useQuery<Record<number, any[]>>({
+  const { data: gameRostersMapOld, isLoading: isLoadingRosters } = useQuery<Record<number, any[]>>({
     queryKey: ['centralized-rosters', currentClubId, gameIds.sort().join(',')],
     queryFn: async () => {
       if (gameIds.length === 0) return {};
