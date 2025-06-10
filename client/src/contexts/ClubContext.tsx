@@ -180,16 +180,23 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
       return; // No change needed
     }
 
-    // Update localStorage
+    // Update localStorage first
     if (teamId !== null) {
       localStorage.setItem('current-team-id', teamId.toString());
     } else {
       localStorage.removeItem('current-team-id');
     }
 
-    // Update state and API client
+    // Update state immediately - this will trigger re-renders
     setCurrentTeamId(teamId);
+    
+    // Update API client context immediately
     apiClient.setClubContext({ currentClubId, currentTeamId: teamId });
+
+    // Force cache invalidation for team-specific data
+    if (cacheManager) {
+      cacheManager.invalidateTeamData(teamId, currentTeamId);
+    }
 
     console.log('ClubContext: Team context updated to:', teamId);
   }, [currentClubId, currentTeamId]);

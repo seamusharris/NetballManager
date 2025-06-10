@@ -1,4 +1,3 @@
-
 import { QueryClient } from '@tanstack/react-query';
 import { CACHE_KEYS } from './cacheKeys';
 
@@ -74,7 +73,7 @@ export class CacheManager {
   getCacheStats() {
     const cache = this.queryClient.getQueryCache();
     const queries = cache.getAll();
-    
+
     return {
       totalQueries: queries.length,
       staleCacheSize: queries.filter(q => q.isStale()).length,
@@ -87,8 +86,43 @@ export class CacheManager {
     const totalSize = queries.reduce((size, query) => {
       return size + JSON.stringify(query.state.data || {}).length;
     }, 0);
-    
+
     return `${(totalSize / 1024 / 1024).toFixed(2)} MB`;
+  }
+
+  // Invalidate team-specific cached data when switching teams
+  invalidateTeamData: (newTeamId: number | null, oldTeamId: number | null) => {
+    if (!this.queryClient) return;
+
+    console.log('CacheManager: Invalidating team data for team switch:', { newTeamId, oldTeamId });
+
+    // Invalidate team-specific queries
+    this.queryClient.invalidateQueries({
+      predicate: (query) => {
+        const key = query.queryKey;
+        const keyStr = Array.isArray(key) ? key.join('-') : String(key);
+
+        // Invalidate dashboard batch data to force refresh with new team context
+        if (keyStr.includes('dashboard-batch-data')) {
+          console.log('CacheManager: Invalidating dashboard batch data for team switch');
+          return true;
+        }
+
+        // Invalidate any queries that include the old team ID
+        if (oldTeamId && keyStr.includes(oldTeamId.toString())) {
+          console.log('CacheManager: Invalidating query with old team ID:', keyStr);
+          return true;
+        }
+
+        return false;
+      }
+    });
+  },
+
+  // Helper to check if a key should be invalidated during club switch
+  shouldInvalidateOnClubSwitch: (key: string, newClubId: number, oldClubId: number | null): boolean => {
+    // Add your logic here to determine invalidation
+    return false;
   }
 }
 

@@ -47,8 +47,12 @@ export default function Dashboard() {
   }, [params.teamId, currentTeamId, setCurrentTeamId, clubTeams]);
 
   // Force re-render when currentTeamId changes
+  const [teamRenderKey, setTeamRenderKey] = useState(0);
+  
   useEffect(() => {
     console.log('Dashboard: currentTeamId changed to:', currentTeamId);
+    // Force component re-render by updating key
+    setTeamRenderKey(prev => prev + 1);
   }, [currentTeamId]);
 
   // Debug team switching
@@ -56,9 +60,10 @@ export default function Dashboard() {
     console.log('Dashboard: Team context updated:', {
       currentTeamId,
       currentTeamName: currentTeam?.name,
-      clubTeamsCount: clubTeams.length
+      clubTeamsCount: clubTeams.length,
+      renderKey: teamRenderKey
     });
-  }, [currentTeamId, currentTeam, clubTeams]);
+  }, [currentTeamId, currentTeam, clubTeams, teamRenderKey]);
 
   // Call ALL hooks first, before any conditional returns
   const { data: players = [], isLoading: isLoadingPlayers, error: playersError } = useQuery<any[]>({
@@ -243,7 +248,7 @@ export default function Dashboard() {
         <meta name="description" content={`View ${TEAM_NAME} team's performance metrics, upcoming games, and player statistics`} />
       </Helmet>
 
-      <div className="container py-8 mx-auto space-y-8">
+      <div key={teamRenderKey} className="container py-8 mx-auto space-y-8">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="space-y-1">
@@ -252,15 +257,15 @@ export default function Dashboard() {
             </h1>
             <p className="text-lg text-muted-foreground">
               Performance metrics and insights for your team
-              {currentTeamId && clubTeams && (
+              {currentTeamId && currentTeam && (
                 <span className="ml-2 text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                  {clubTeams.find(team => team.id === currentTeamId)?.name || 'Selected Team'}
+                  {currentTeam.name}
                 </span>
               )}
             </p>
           </div>
           <div className="flex items-center gap-4">
-            <TeamSwitcher mode="required" />
+            <TeamSwitcher mode="required" key={`team-switcher-${currentTeamId}`} />
           </div>
         </div>
 

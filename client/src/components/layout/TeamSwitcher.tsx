@@ -2,6 +2,8 @@ import React, { useEffect } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { useClub } from '@/contexts/ClubContext';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useState } from 'react';
 
 interface TeamSwitcherProps {
   mode?: 'optional' | 'required' | 'hidden';
@@ -11,6 +13,9 @@ interface TeamSwitcherProps {
 
 export function TeamSwitcher({ mode = 'optional', className, onTeamChange }: TeamSwitcherProps) {
   const { currentTeamId, currentTeam, clubTeams, setCurrentTeamId } = useClub();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [open, setOpen] = useState(false); // Add state to control the dropdown
 
   // Don't render if hidden mode or only one team
   const validTeams = clubTeams.filter(team => team.isActive !== false);
@@ -30,30 +35,48 @@ export function TeamSwitcher({ mode = 'optional', className, onTeamChange }: Tea
   }, [mode, currentTeamId, validTeams, setCurrentTeamId, onTeamChange]);
 
   const handleTeamChange = (value: string) => {
-    console.log('TeamSwitcher: Handling team change to:', value);
     const teamId = value === 'all' ? null : parseInt(value, 10);
-    
+
     // Prevent unnecessary changes
     if (teamId === currentTeamId) {
-      console.log('TeamSwitcher: Team already selected, skipping change');
       return;
     }
-    
-    console.log('TeamSwitcher: Setting current team ID to:', teamId);
-    
-    // Update immediately without React transition to prevent delay
+
     setCurrentTeamId(teamId);
     onTeamChange?.(teamId);
-    
-    console.log('TeamSwitcher: Team change completed to:', teamId);
   };
+
+  const handleTeamSelect = (teamId: string) => {
+    const numericTeamId = parseInt(teamId, 10);
+
+    console.log('TeamSwitcher: Selecting team:', numericTeamId);
+
+    // Close the dropdown first
+    setOpen(false);
+
+    // Update team context - this should trigger immediate re-renders
+    setCurrentTeamId(numericTeamId);
+
+    // Force a small delay to ensure context propagates before navigation
+    setTimeout(() => {
+      if (mode === 'required') {
+        const currentPath = location.pathname; // Access pathname property
+        if (currentPath.includes('/dashboard/team')) {
+          navigate(`/dashboard/team/${numericTeamId}`);
+        }
+      }
+    }, 10);
+  };
+
 
   return (
     <div className={`flex items-center space-x-2 ${className || ''}`}>
       <span className="text-sm font-medium text-gray-700">Team:</span>
       <Select
+        open={open}
+        onOpenChange={setOpen}
         value={currentTeamId?.toString() || (mode === 'required' ? '' : 'all')}
-        onValueChange={handleTeamChange}
+        onValueChange={handleTeamSelect}
       >
         <SelectTrigger className="w-[200px]">
           <SelectValue placeholder={mode === 'required' ? "Select team" : "All teams"} />
