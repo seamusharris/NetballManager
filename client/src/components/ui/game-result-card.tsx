@@ -188,12 +188,8 @@ export function GameResultCard({
 
       {/* Right side - Score */}
       {showScore && (
-        game.isBye ? (
-          <div className="ml-auto px-3 py-1 text-sm font-medium text-gray-600 bg-gray-100 rounded-full">
-            —
-          </div>
-        ) : !game.statusIsCompleted ? (
-          <div className="ml-auto px-3 py-1 text-sm font-medium text-gray-600 bg-gray-100 rounded-full">
+        (game.isBye || !game.statusIsCompleted) ? (
+          <div className="ml-auto px-3 py-1 text-sm font-medium text-gray-600 bg-gray-100 rounded border border-gray-200">
             —
           </div>
         ) : scores ? (
@@ -204,7 +200,7 @@ export function GameResultCard({
             className="ml-auto"
           />
         ) : (
-          <div className="ml-auto px-3 py-1 text-sm font-medium text-gray-500 bg-gray-50 rounded-full border border-gray-200">
+          <div className="ml-auto px-3 py-1 text-sm font-medium text-gray-500 bg-gray-50 rounded border border-gray-200">
             —
           </div>
         )
