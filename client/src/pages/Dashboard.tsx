@@ -59,7 +59,7 @@ export default function Dashboard() {
   });
 
   // Fetch games with team context
-  const { data: games = [], isLoading: isLoadingGames } = useQuery({
+  const { data: games = [], isLoading: isLoadingGames, error: gamesError } = useQuery({
     queryKey: ['games', currentClubId, currentTeamId],
     queryFn: () => apiClient.get('/api/games'),
     enabled: !!currentClubId && !isTeamSwitching,
