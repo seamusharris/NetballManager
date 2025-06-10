@@ -26,13 +26,13 @@ export default function Dashboard() {
     isLoading: clubLoading 
   } = useClub();
 
-  // Add team switching state early to prevent initialization errors
+  // Add team switching state early to prevent initialization errors (but don't block queries)
   const [isTeamSwitching, setIsTeamSwitching] = useState(false);
   
   useEffect(() => {
-    // When currentTeamId changes, set switching state briefly
+    // When currentTeamId changes, set switching state briefly for UI feedback only
     setIsTeamSwitching(true);
-    const timer = setTimeout(() => setIsTeamSwitching(false), 300);
+    const timer = setTimeout(() => setIsTeamSwitching(false), 100); // Reduced from 300ms to 100ms
     return () => clearTimeout(timer);
   }, [currentTeamId]);
 
@@ -53,33 +53,40 @@ export default function Dashboard() {
   const { data: players = [], isLoading: isLoadingPlayers, error: playersError } = useQuery<any[]>({
     queryKey: ['players', currentClubId, currentTeamId],
     queryFn: () => apiClient.get('/api/players'),
-    enabled: !!currentClubId,
+    enabled: !!currentClubId && !!currentTeamId,
+    staleTime: 10 * 60 * 1000, // 10 minutes cache for players
+    gcTime: 30 * 60 * 1000, // 30 minutes garbage collection
   });
 
   const { data: games = [], isLoading: isLoadingGames, error: gamesError } = useQuery<any[]>({
     queryKey: ['games', currentClubId, currentTeamId],
     queryFn: () => apiClient.get('/api/games'),
-    enabled: !!currentClubId && !isTeamSwitching,
-    staleTime: 0, // Always consider data stale to ensure fresh fetches
+    enabled: !!currentClubId && !!currentTeamId,
+    staleTime: 5 * 60 * 1000, // 5 minutes cache for better performance
+    gcTime: 15 * 60 * 1000, // 15 minutes garbage collection
   });
 
   // Opponents system has been completely removed
 
   const { data: seasons = [], isLoading: isLoadingSeasons, error: seasonsError } = useQuery<any[]>({
-    queryKey: ['/api/seasons', currentClubId],
+    queryKey: ['seasons', currentClubId],
     queryFn: () => apiClient.get('/api/seasons'),
     enabled: !!currentClubId,
+    staleTime: 30 * 60 * 1000, // 30 minutes cache for seasons (rarely change)
+    gcTime: 60 * 60 * 1000, // 1 hour garbage collection
   });
 
   const { data: activeSeason, isLoading: isLoadingActiveSeason, error: activeSeasonError } = useQuery<any>({
-    queryKey: ['/api/seasons/active', currentClubId],
+    queryKey: ['seasons', 'active', currentClubId],
     queryFn: () => apiClient.get('/api/seasons/active'),
     enabled: !!currentClubId,
+    staleTime: 30 * 60 * 1000, // 30 minutes cache for active season
+    gcTime: 60 * 60 * 1000, // 1 hour garbage collection
   });
 
   // Centralized roster fetching for all games
   const { data: centralizedRosters = {}, isLoading: isLoadingRosters } = useQuery({
-    queryKey: ['centralized-rosters', currentClubId, games?.map(g => g.id).sort().join(',')],
+    queryKey: ['centralized-rosters', currentClubId, currentTeamId, games?.map(g => g.id).sort().join(',')],
     queryFn: async () => {
       if (!games || games.length === 0) return {};
 
@@ -100,9 +107,9 @@ export default function Dashboard() {
       console.log(`Dashboard centralized roster fetch completed for ${Object.keys(rostersMap).length} games`);
       return rostersMap;
     },
-    enabled: !!currentClubId && !!games && games.length > 0,
-    staleTime: 10 * 60 * 1000, // 10 minutes (increased)
-    gcTime: 30 * 60 * 1000 // 30 minutes (increased)
+    enabled: !!currentClubId && !!currentTeamId && !!games && games.length > 0,
+    staleTime: 15 * 60 * 1000, // 15 minutes (increased for better caching)
+    gcTime: 45 * 60 * 1000 // 45 minutes (increased)
   });
 
   // Centralized stats fetching for completed games only
@@ -111,7 +118,7 @@ export default function Dashboard() {
   ).map(game => game.id) || [];
 
   const { data: centralizedStats = {}, isLoading: isLoadingStats } = useQuery({
-    queryKey: ['centralized-stats', currentClubId, completedGameIds.sort().join(',')],
+    queryKey: ['centralized-stats', currentClubId, currentTeamId, completedGameIds.sort().join(',')],
     queryFn: async () => {
       if (completedGameIds.length === 0) return {};
 
@@ -132,9 +139,9 @@ export default function Dashboard() {
       console.log(`Dashboard centralized stats fetch completed for ${Object.keys(statsMap).length} games`);
       return statsMap;
     },
-    enabled: !!currentClubId && completedGameIds.length > 0,
-    staleTime: 10 * 60 * 1000, // 10 minutes (increased)
-    gcTime: 30 * 60 * 1000 // 30 minutes (increased)
+    enabled: !!currentClubId && !!currentTeamId && completedGameIds.length > 0,
+    staleTime: 15 * 60 * 1000, // 15 minutes (increased for better caching)
+    gcTime: 45 * 60 * 1000 // 45 minutes (increased)
   });
 
   // NOW we can do conditional returns after all hooks are called
