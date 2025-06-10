@@ -228,6 +228,17 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
     // Handle team selection
     const handleSetCurrentTeamId = useCallback((teamId: number | null) => {
       console.log('ClubContext: Setting team ID to:', teamId);
+      
+      // Validate team exists in current club if teamId is provided
+      if (teamId && clubTeams.length > 0) {
+        const teamExists = clubTeams.some(team => team.id === teamId);
+        if (!teamExists) {
+          console.error('ClubContext: Team', teamId, 'does not exist in current club teams');
+          return;
+        }
+      }
+      
+      // Update state and localStorage
       setCurrentTeamId(teamId);
       if (teamId) {
         localStorage.setItem('current-team-id', teamId.toString());
@@ -241,19 +252,34 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
       
       // Don't invalidate any cached data - let React Query handle caching
       // Team switches should use existing cached data for better performance
-    }, [currentClubId]);
+    }, [currentClubId, clubTeams]);
   
-  // Load saved team from localStorage
+  // Load saved team from localStorage when teams are available
   useEffect(() => {
     const savedTeamId = localStorage.getItem('current-team-id');
-    if (savedTeamId && !currentTeamId) {
-      setCurrentTeamId(parseInt(savedTeamId, 10));
+    if (savedTeamId && !currentTeamId && clubTeams.length > 0) {
+      const teamId = parseInt(savedTeamId, 10);
+      // Validate that the saved team exists in current club's teams
+      const teamExists = clubTeams.some(team => team.id === teamId);
+      if (teamExists) {
+        setCurrentTeamId(teamId);
+      } else {
+        // Clear invalid saved team ID
+        localStorage.removeItem('current-team-id');
+      }
     }
-  }, [currentTeamId]);
+  }, [currentTeamId, clubTeams]);
 
   // Get current team object
   const currentTeam = useMemo(() => {
-    return clubTeams.find(team => team.id === currentTeamId) || null;
+    if (!currentTeamId || !clubTeams || clubTeams.length === 0) {
+      return null;
+    }
+    const team = clubTeams.find(team => team.id === currentTeamId);
+    if (!team) {
+      console.warn('ClubContext: currentTeamId', currentTeamId, 'not found in clubTeams');
+    }
+    return team || null;
   }, [clubTeams, currentTeamId]);
 
   const contextValue: ClubContextType = {
