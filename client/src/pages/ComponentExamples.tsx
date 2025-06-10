@@ -4,7 +4,9 @@ import { PageTemplate } from '@/components/layout/PageTemplate';
 import { Link } from 'wouter';
 import { 
   Users, Calendar, Trophy, Settings, 
-  Gamepad2, Target, BarChart, Palette 
+  Gamepad2, Target, BarChart, Palette,
+  ArrowRight, Grid, Square, AlertCircle,
+  Search, Clock, Columns, TrendingUp
 } from 'lucide-react';
 
 interface ExampleSection {
@@ -109,6 +111,72 @@ const examples: ExampleSection[] = [
     icon: <Palette className="h-5 w-5" />,
     category: 'Layouts',
     status: 'Complete'
+  },
+  
+  // Navigation Patterns
+  {
+    title: 'Navigation Patterns',
+    description: 'Breadcrumbs, pagination, tabs, and navigation components for seamless user flow.',
+    path: '/navigation-examples',
+    icon: <ArrowRight className="h-5 w-5" />,
+    category: 'Patterns',
+    status: 'Planned'
+  },
+  {
+    title: 'Table Examples',
+    description: 'Comprehensive table layouts with sorting, filtering, and responsive patterns.',
+    path: '/table-examples',
+    icon: <Grid className="h-5 w-5" />,
+    category: 'Components',
+    status: 'Planned'
+  },
+  {
+    title: 'Modal & Dialog Examples',
+    description: 'Various modal patterns, dialogs, and overlay components for user interactions.',
+    path: '/modal-examples',
+    icon: <Square className="h-5 w-5" />,
+    category: 'Components',
+    status: 'Planned'
+  },
+  {
+    title: 'Loading & Error States',
+    description: 'Loading skeletons, error states, empty states, and notification patterns.',
+    path: '/state-examples',
+    icon: <AlertCircle className="h-5 w-5" />,
+    category: 'Patterns',
+    status: 'Planned'
+  },
+  {
+    title: 'Search & Filter Examples',
+    description: 'Search interfaces, filter components, and data discovery patterns.',
+    path: '/search-examples',
+    icon: <Search className="h-5 w-5" />,
+    category: 'Patterns',
+    status: 'Planned'
+  },
+  {
+    title: 'Timeline Examples',
+    description: 'Activity feeds, game history timelines, and chronological data displays.',
+    path: '/timeline-examples',
+    icon: <Clock className="h-5 w-5" />,
+    category: 'Components',
+    status: 'Planned'
+  },
+  {
+    title: 'Advanced Layouts',
+    description: 'Split views, masonry grids, and complex responsive layout patterns.',
+    path: '/advanced-layout-examples',
+    icon: <Columns className="h-5 w-5" />,
+    category: 'Layouts',
+    status: 'Planned'
+  },
+  {
+    title: 'Statistics Cards',
+    description: 'Various metric displays, KPI cards, and performance indicator patterns.',
+    path: '/statistics-examples',
+    icon: <TrendingUp className="h-5 w-5" />,
+    category: 'Components',
+    status: 'Planned'
   }
 ];
 

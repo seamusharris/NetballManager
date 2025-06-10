@@ -144,6 +144,7 @@ function Router() {
         </Route>
         <Route path="/layout-examples" component={LayoutExamples} />
         <Route path="/color-examples" component={ColorExamples} />
+        <Route path="/navigation-examples" component={lazy(() => import('./pages/NavigationExamples'))} />
         <Route component={withErrorBoundary(NotFound, 'NotFound')} />
       </Switch>
     </Layout>
