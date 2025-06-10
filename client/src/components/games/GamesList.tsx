@@ -6,14 +6,7 @@ import {
   CardContent 
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { 
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow
-} from '@/components/ui/table';
+
 import { 
   Select,
   SelectContent,
@@ -35,7 +28,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Edit, Trash2, FileText, CalendarRange, Search, Trophy, ThumbsDown, Minus, ActivitySquare, Eye, ArrowDown, ArrowUp, ArrowUpDown, FilterIcon } from 'lucide-react';
+import { Edit, Trash2, Search, Eye } from 'lucide-react';
 import { Game, Opponent, GameStatus } from '@shared/schema';
 import { formatDate, formatShortDate } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
@@ -446,108 +439,27 @@ export function GamesList({
         </Card>
       )}
 
-      {/* Games Table */}
-      <Card className="overflow-hidden">
+      {/* Games List */}
+      <Card>
         {title && (
           <CardContent className="p-6 pb-4">
             <h3 className="font-heading font-semibold text-neutral-dark">{title}</h3>
           </CardContent>
         )}
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader className={isDashboard ? "bg-blue-50" : "bg-gray-50"}>
-              <TableRow>
-                <TableHead 
-                  className={`px-6 py-3 text-left font-bold cursor-pointer ${isDashboard ? 'w-20 border-r border-b text-center' : ''}`}
-                  onClick={() => handleSortClick('date')}
-                >
-                  <div className="flex items-center">
-                    {isDashboard ? 'Date' : 'Date & Time'}
-                    <div className="ml-1">
-                      {sortColumn !== 'date' ? (
-                        <ArrowUpDown className="ml-1 h-3 w-3 inline" />
-                      ) : (
-                        sortDirection === 'asc' ? 
-                          <ArrowUp className="ml-1 h-3 w-3 inline text-primary" /> : 
-                          <ArrowDown className="ml-1 h-3 w-3 inline text-primary" />
-                      )}
-                    </div>
-                  </div>
-                </TableHead>
-                <TableHead 
-                  className={`px-6 py-3 text-left font-bold cursor-pointer ${isDashboard ? 'w-20 border-r border-b text-center' : ''}`}
-                  onClick={() => handleSortClick('round')}
-                >
-                  <div className="flex items-center">
-                    Round
-                    <div className="ml-1">
-                      {sortColumn !== 'round' ? (
-                        <ArrowUpDown className="ml-1 h-3 w-3 inline" />
-                      ) : (
-                        sortDirection === 'asc' ? 
-                          <ArrowUp className="ml-1 h-3 w-3 inline text-primary" /> : 
-                          <ArrowDown className="ml-1 h-3 w-3 inline text-primary" />
-                      )}
-                    </div>
-                  </div>
-                </TableHead>
-                <TableHead 
-                  className={`px-6 py-3 text-left font-bold cursor-pointer ${isDashboard ? 'border-r border-b' : ''}`}
-                  onClick={() => handleSortClick('opponent')}
-                >
-                  <div className="flex items-center">
-                    Opponent
-                    <div className="ml-1">
-                      {sortColumn !== 'opponent' ? (
-                        <ArrowUpDown className="ml-1 h-3 w-3 inline" />
-                      ) : (
-                        sortDirection === 'asc' ? 
-                          <ArrowUp className="ml-1 h-3 w-3 inline text-primary" /> : 
-                          <ArrowDown className="ml-1 h-3 w-3 inline text-primary" />
-                      )}
-                    </div>
-                  </div>
-                </TableHead>
-                <TableHead 
-                  className={`px-6 py-3 text-left font-bold cursor-pointer ${isDashboard ? 'w-24 text-center border-r border-b' : ''}`}
-                  onClick={() => handleSortClick('status')}
-                >
-                  <div className="flex items-center justify-center">
-                    Status
-                    <div className="ml-1">
-                      {sortColumn !== 'status' ? (
-                        <ArrowUpDown className="ml-1 h-3 w-3 inline" />
-                      ) : (
-                        sortDirection === 'asc' ? 
-                          <ArrowUp className="ml-1 h-3 w-3 inline text-primary" /> : 
-                          <ArrowDown className="ml-1 h-3 w-3 inline text-primary" />
-                      )}
-                    </div>
-                  </div>
-                </TableHead>
-                <TableHead className={`px-6 py-3 text-left font-bold ${isDashboard ? 'w-24 text-center border-b' : ''}`}>Score</TableHead>
-                {showActions && !isDashboard && (
-                  <TableHead className="px-6 py-3 text-left font-bold">Actions</TableHead>
-                )}
-              </TableRow>
-            </TableHeader>
-            <TableBody className={isDashboard ? "bg-white divide-y divide-gray-200" : ""}>
-              {isLoading ? (
-                Array(5).fill(0).map((_, i) => (
-                  <TableRow key={i}>
-                    <TableCell colSpan={showActions && !isDashboard ? 6 : 5}>
-                      <Skeleton className="h-12 w-full" />
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : finalGames.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={showActions && !isDashboard ? 6 : 5} className={`text-center py-8 text-gray-500 ${isDashboard ? 'border-b' : ''}`}>
-                    No games found. Please add a game or adjust your filters.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                finalGames.map((game) => (
+        <CardContent className="p-6">
+          {isLoading ? (
+            <div className="space-y-3">
+              {Array(5).fill(0).map((_, i) => (
+                <Skeleton key={i} className="h-20 w-full" />
+              ))}
+            </div>
+          ) : finalGames.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              No games found. Please add a game or adjust your filters.
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {finalGames.map((game) => (
                 <div key={game.id} className="relative group">
                   <GameResultCard
                     game={game}
@@ -558,8 +470,7 @@ export function GamesList({
                     showDate={true}
                     showRound={true}
                     showScore={true}
-                    showLink={false}
-                    className="mb-3"
+                    showLink={true}
                     currentTeamId={currentTeamId}
                     clubTeams={teams || []}
                   />
@@ -570,7 +481,7 @@ export function GamesList({
                       <Button
                         variant="secondary"
                         size="sm"
-                        onClick={() => onViewStats(game.id)}
+                        onClick={() => onViewStats?.(game.id)}
                         className="bg-white/90 hover:bg-white shadow-sm"
                       >
                         <Eye className="h-4 w-4" />
@@ -578,7 +489,7 @@ export function GamesList({
                       <Button
                         variant="secondary"
                         size="sm"
-                        onClick={() => onEdit(game)}
+                        onClick={() => onEdit?.(game)}
                         className="bg-white/90 hover:bg-white shadow-sm"
                       >
                         <Edit className="h-4 w-4" />
@@ -602,7 +513,7 @@ export function GamesList({
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => onDelete(game.id)}>
+                            <AlertDialogAction onClick={() => onDelete?.(game.id)}>
                               Delete
                             </AlertDialogAction>
                           </AlertDialogFooter>
@@ -611,11 +522,10 @@ export function GamesList({
                     </div>
                   )}
                 </div>
-              ))
-              )}
-            </TableBody>
-          </Table>
-        </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
       </Card>
 
       {/* Game Status Dialog */}
