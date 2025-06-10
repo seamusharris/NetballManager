@@ -222,9 +222,9 @@ export const queryClient = new QueryClient({
       retry: (failureCount, error) => {
         // Don't retry on 4xx errors (client errors)
         if (error && typeof error === 'object' && 'message' in error) {
-          const errorMessage = error.message.toLowerCase();
-          if (errorMessage.includes('400') || errorMessage.includes('401') || 
-              errorMessage.includes('403') || errorMessage.includes('404')) {
+          const message = error.message.toLowerCase();
+          if (message.includes('400') || message.includes('401') || 
+              message.includes('403') || message.includes('404')) {
             return false;
           }
         }

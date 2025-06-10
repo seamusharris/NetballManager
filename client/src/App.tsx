@@ -117,8 +117,6 @@ function Router() {
   );
 }
 
-import { ClubProvider } from '@/contexts/ClubContext';
-
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
