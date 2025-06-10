@@ -170,8 +170,16 @@ export function useGamesScores(gameIds: number[], forceFresh = false) {
           };
         } else if (stats && stats.length > 0) {
           try {
-            // Use gameScoreService for consistent calculation
-            const gameScores = gameScoreService.calculateGameScores(stats, game.status, undefined, false, undefined, undefined, undefined, undefined, gameId);
+            // Use sync version for React components
+            const gameScores = gameScoreService.calculateGameScoresSync(
+              stats, 
+              game.status, 
+              { teamGoals: game.statusTeamGoals, opponentGoals: game.statusOpponentGoals },
+              false, // isInterClub
+              game.homeTeamId,
+              game.awayTeamId,
+              game.teamId // currentTeamId - use the game's team context
+            );
             
             // Convert to legacy format
             const quarterScores: Record<string, { for: number; against: number }> = {};
