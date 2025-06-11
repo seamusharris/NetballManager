@@ -1225,6 +1225,117 @@ export default function LiveStatsInterfaceExamples() {
             </div>
           </CardContent>
         </Card>
+
+        <section>
+          <h2 className="text-2xl font-bold mb-4">Player Interchange Timeline</h2>
+          <Card>
+            <CardHeader>
+              <CardTitle>Game Interchanges</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {/* Timeline of interchanges */}
+                <div className="relative">
+                  <div className="absolute left-4 top-0 bottom-0 w-px bg-gray-200"></div>
+
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-4">
+                      <div className="flex-shrink-0 w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                        1
+                      </div>
+                      <div className="flex-1 bg-gray-50 rounded-lg p-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-3">
+                            <Badge variant="outline">Q1 - 8:30</Badge>
+                            <Badge>C</Badge>
+                            <span className="text-sm">Emily → Grace</span>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Badge variant="secondary">Tactical</Badge>
+                            <span className="text-xs text-gray-500">2:15 PM</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-4">
+                      <div className="flex-shrink-0 w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                        2
+                      </div>
+                      <div className="flex-1 bg-gray-50 rounded-lg p-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-3">
+                            <Badge variant="outline">Q2 - 12:15</Badge>
+                            <Badge>WA</Badge>
+                            <span className="text-sm">Ava → Sophie</span>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Badge variant="secondary">Rest</Badge>
+                            <span className="text-xs text-gray-500">2:18 PM</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-4">
+                      <div className="flex-shrink-0 w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                        3
+                      </div>
+                      <div className="flex-1 bg-orange-50 rounded-lg p-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-3">
+                            <Badge variant="outline">Q2 - 6:00</Badge>
+                            <Badge>GD</Badge>
+                            <span className="text-sm">Evie → Maya</span>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Badge variant="destructive">Injury</Badge>
+                            <span className="text-xs text-gray-500">2:27 PM</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-4">
+                      <div className="flex-shrink-0 w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                        4
+                      </div>
+                      <div className="flex-1 bg-gray-50 rounded-lg p-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-3">
+                            <Badge variant="outline">Q3 - 10:45</Badge>
+                            <Badge>WA</Badge>
+                            <span className="text-sm">Sophie → Ava</span>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Badge variant="secondary">Tactical</Badge>
+                            <span className="text-xs text-gray-500">2:35 PM</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Summary Stats */}
+                <div className="grid grid-cols-3 gap-4 mt-6 pt-4 border-t">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-blue-600">4</div>
+                    <div className="text-sm text-gray-600">Total Interchanges</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-green-600">7</div>
+                    <div className="text-sm text-gray-600">Players Used</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-purple-600">2.5</div>
+                    <div className="text-sm text-gray-600">Avg per Quarter</div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
       </div>
     </PageTemplate>
   );
