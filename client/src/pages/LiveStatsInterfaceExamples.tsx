@@ -784,6 +784,314 @@ const CompactDashboardInterface = () => {
   );
 };
 
+// Design 5: Quick Tap Version of Current LiveStats
+const QuickTapCurrentInterface = () => {
+  const [positionStats, setPositionStats] = useState({});
+  const [currentQuarter, setCurrentQuarter] = useState(1);
+  const [undoStack, setUndoStack] = useState([]);
+  const [redoStack, setRedoStack] = useState([]);
+
+  // Mock position color mapping
+  const getPositionColor = (position) => {
+    const colors = {
+      'GS': '#ef4444', 'GA': '#f97316', 'WA': '#eab308', 'C': '#22c55e',
+      'WD': '#06b6d4', 'GD': '#3b82f6', 'GK': '#8b5cf6'
+    };
+    return colors[position] || '#6b7280';
+  };
+
+  // Position configuration for available stats
+  const positionStatConfig = {
+    'GS': { goalsFor: true, missedGoals: true, rebounds: true, intercepts: true, badPass: true, handlingError: true, pickUp: true, infringement: true },
+    'GA': { goalsFor: true, missedGoals: true, rebounds: true, intercepts: true, badPass: true, handlingError: true, pickUp: true, infringement: true },
+    'WA': { intercepts: true, badPass: true, handlingError: true, pickUp: true, infringement: true },
+    'C': { intercepts: true, badPass: true, handlingError: true, pickUp: true, infringement: true },
+    'WD': { intercepts: true, badPass: true, handlingError: true, pickUp: true, infringement: true },
+    'GD': { goalsAgainst: true, rebounds: true, intercepts: true, badPass: true, handlingError: true, pickUp: true, infringement: true },
+    'GK': { goalsAgainst: true, rebounds: true, intercepts: true, badPass: true, handlingError: true, pickUp: true, infringement: true }
+  };
+
+  const positionLabels = {
+    'GS': 'Goal Shooter', 'GA': 'Goal Attack', 'WA': 'Wing Attack', 'C': 'Centre',
+    'WD': 'Wing Defence', 'GD': 'Goal Defence', 'GK': 'Goal Keeper'
+  };
+
+  const allPositions = ['GS', 'GA', 'WA', 'C', 'WD', 'GD', 'GK'];
+  const commonStats = ['intercepts', 'badPass', 'handlingError', 'infringement', 'pickUp'];
+
+  // Initialize empty stats
+  const emptyQuarterStats = {
+    goalsFor: 0, goalsAgainst: 0, missedGoals: 0, rebounds: 0, intercepts: 0,
+    badPass: 0, handlingError: 0, pickUp: 0, infringement: 0, rating: 5
+  };
+
+  // Initialize position stats
+  React.useEffect(() => {
+    const initialStats = {};
+    allPositions.forEach(position => {
+      for (let quarter = 1; quarter <= 4; quarter++) {
+        const key = `${position}-${quarter}`;
+        initialStats[key] = { ...emptyQuarterStats };
+      }
+    });
+    setPositionStats(initialStats);
+  }, []);
+
+  const getPositionQuarterKey = (position, quarter) => `${position}-${quarter}`;
+
+  const recordStat = (position, stat, value = 1) => {
+    // Save current state for undo
+    setUndoStack([...undoStack, JSON.parse(JSON.stringify(positionStats))]);
+    setRedoStack([]);
+
+    const key = getPositionQuarterKey(position, currentQuarter);
+    
+    setPositionStats(prev => {
+      const newStats = JSON.parse(JSON.stringify(prev));
+      if (!newStats[key]) {
+        newStats[key] = { ...emptyQuarterStats };
+      }
+      const currentValue = newStats[key][stat] || 0;
+      newStats[key][stat] = currentValue + value;
+      return newStats;
+    });
+  };
+
+  const handleUndo = () => {
+    if (undoStack.length > 0) {
+      const lastState = undoStack[undoStack.length - 1];
+      const newUndoStack = undoStack.slice(0, -1);
+      setRedoStack([...redoStack, JSON.parse(JSON.stringify(positionStats))]);
+      setPositionStats(lastState);
+      setUndoStack(newUndoStack);
+    }
+  };
+
+  const handleRedo = () => {
+    if (redoStack.length > 0) {
+      const nextState = redoStack[redoStack.length - 1];
+      const newRedoStack = redoStack.slice(0, -1);
+      setUndoStack([...undoStack, JSON.parse(JSON.stringify(positionStats))]);
+      setPositionStats(nextState);
+      setRedoStack(newRedoStack);
+    }
+  };
+
+  const getQuarterTotal = (stat) => {
+    let total = 0;
+    allPositions.forEach(position => {
+      const key = getPositionQuarterKey(position, currentQuarter);
+      const stats = positionStats[key];
+      if (stats && stats[stat] !== undefined) {
+        total += stats[stat] || 0;
+      }
+    });
+    return total;
+  };
+
+  // Quick tap stat button - single tap to increment
+  const QuickStatButton = ({ position, stat, important = false }) => {
+    const key = getPositionQuarterKey(position, currentQuarter);
+    const currentValue = positionStats[key]?.[stat] || 0;
+    const StatIcon = statTypes.find(s => s.key === stat)?.icon || Target;
+    const statColor = statTypes.find(s => s.key === stat)?.color || 'bg-gray-100 text-gray-700';
+    const statLabel = statTypes.find(s => s.key === stat)?.label || stat;
+
+    return (
+      <Button
+        variant="outline"
+        className={`${important ? 'h-16 w-full' : 'h-12 w-full'} ${statColor} border-2 touch-manipulation flex flex-col gap-1 relative transition-all hover:scale-105 active:scale-95`}
+        onClick={() => recordStat(position, stat, 1)}
+      >
+        <StatIcon className={important ? 'h-5 w-5' : 'h-4 w-4'} />
+        <span className={`${important ? 'text-sm' : 'text-xs'} font-medium`}>{statLabel}</span>
+        {currentValue > 0 && (
+          <Badge className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0 flex items-center justify-center text-xs">
+            {currentValue}
+          </Badge>
+        )}
+      </Button>
+    );
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Game Header */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <Card>
+          <CardHeader className="py-2">
+            <CardTitle className="text-base font-semibold">Game Score</CardTitle>
+          </CardHeader>
+          <CardContent className="py-1">
+            <div className="flex justify-between items-center">
+              <div>
+                <p className="text-xs text-muted-foreground">WNC Dingoes</p>
+                <p className="text-2xl font-bold">{getQuarterTotal('goalsFor')}</p>
+              </div>
+              <div className="text-xl font-bold">-</div>
+              <div className="text-right">
+                <p className="text-xs text-muted-foreground">Emeralds</p>
+                <p className="text-2xl font-bold">{getQuarterTotal('goalsAgainst')}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="py-2">
+            <div className="flex justify-between items-center">
+              <CardTitle className="text-base font-semibold">Quarter {currentQuarter}</CardTitle>
+              <div className="flex gap-1">
+                {[1, 2, 3, 4].map(quarter => (
+                  <Button
+                    key={quarter}
+                    variant={quarter === currentQuarter ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setCurrentQuarter(quarter)}
+                    className="w-7 h-7 p-0 text-xs touch-manipulation"
+                  >
+                    {quarter}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="py-1">
+            <div className="flex justify-between items-center">
+              <div>
+                <p className="text-xs text-muted-foreground">Quick Tap to Add Stats</p>
+              </div>
+              <div className="flex gap-1">
+                <Button
+                  variant="outline" 
+                  size="sm"
+                  onClick={handleUndo}
+                  disabled={undoStack.length === 0}
+                  className="touch-manipulation"
+                >
+                  <Undo className="h-3 w-3 mr-1" />
+                  Undo
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleRedo}
+                  disabled={redoStack.length === 0}
+                  className="touch-manipulation"
+                >
+                  <Redo className="h-3 w-3 mr-1" />
+                  Redo
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Position Cards with Quick Tap Interface */}
+      <div className="space-y-3">
+        <h2 className="text-base font-semibold">Positions - Quarter {currentQuarter}</h2>
+
+        {allPositions.map(position => {
+          const statConfig = positionStatConfig[position];
+          const player = mockPlayers.find(p => p.position === position);
+
+          return (
+            <Card key={position} className="overflow-hidden">
+              <CardHeader className="py-2 pb-2">
+                <div className="flex items-center gap-3">
+                  {/* Position Identity */}
+                  <div 
+                    className="h-10 w-10 rounded-full flex items-center justify-center text-white font-bold text-base flex-shrink-0"
+                    style={{
+                      backgroundColor: getPositionColor(position),
+                      border: '2px solid white',
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                    }}
+                  >
+                    {position}
+                  </div>
+
+                  <div className="min-w-[100px]">
+                    {player ? (
+                      <p className="font-semibold text-sm">{player.name}</p>
+                    ) : (
+                      <p className="font-semibold text-sm">Unassigned</p>
+                    )}
+                    <p className="text-xs text-muted-foreground">{positionLabels[position]}</p>
+                  </div>
+
+                  {/* Common Stats Row - Quick Tap */}
+                  <div className="flex-1 grid grid-cols-5 gap-2">
+                    {commonStats.map(stat => (
+                      statConfig[stat] && (
+                        <QuickStatButton
+                          key={stat}
+                          position={position}
+                          stat={stat}
+                        />
+                      )
+                    ))}
+                  </div>
+                </div>
+              </CardHeader>
+
+              {/* Position-Specific Stats Row */}
+              <CardContent className="py-2 pt-1">
+                {(() => {
+                  const posSpecificStats = Object.entries(statConfig)
+                    .filter(([stat, isAvailable]) => isAvailable && !commonStats.includes(stat))
+                    .map(([stat]) => stat);
+
+                  if (posSpecificStats.length === 0) {
+                    return null;
+                  }
+
+                  return (
+                    <div className="grid grid-cols-3 gap-2 max-w-md mx-auto">
+                      {posSpecificStats.map(statType => (
+                        <QuickStatButton
+                          key={statType}
+                          position={position}
+                          stat={statType}
+                          important={true}
+                        />
+                      ))}
+                    </div>
+                  );
+                })()}
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+
+      {/* Action Bar */}
+      <Card>
+        <CardContent className="py-3">
+          <div className="flex justify-between items-center">
+            <div className="flex gap-2">
+              <Button variant="outline" className="touch-manipulation">
+                <RotateCcw className="h-4 w-4 mr-2" />
+                Reset Quarter
+              </Button>
+              <Button variant="outline" className="touch-manipulation">
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Reset All
+              </Button>
+            </div>
+
+            <Button className="bg-green-600 hover:bg-green-700 text-white touch-manipulation">
+              <Save className="h-4 w-4 mr-2" />
+              Save All Stats
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
 export default function LiveStatsInterfaceExamples() {
   const [activeDesign, setActiveDesign] = useState('card-based');
 
@@ -811,6 +1119,12 @@ export default function LiveStatsInterfaceExamples() {
       name: 'Compact Dashboard',
       description: 'Information-dense layout with summary/detailed view toggle. Maximum efficiency.',
       component: CompactDashboardInterface
+    },
+    {
+      id: 'quick-tap-current',
+      name: 'Quick Tap (Current Layout)',
+      description: 'Your current LiveStats layout converted to quick-tap gesture entry. Single tap to add stats.',
+      component: QuickTapCurrentInterface
     }
   ];
 
