@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams, useLocation } from 'wouter';
 import { apiClient } from '@/lib/apiClient';
@@ -237,11 +237,29 @@ export default function LiveStats() {
     refetchOnWindowFocus: true // Refetch when window regains focus
   });
 
-  // Fetch all players
-  const { data: players, isLoading: playersLoading } = useQuery({
-    queryKey: ['/api/players'],
-    queryFn: () => apiClient.get('/api/players'),
+  // Fetch players for the team
+  const { data: allPlayers } = useQuery({
+    queryKey: ['players'],
+    queryFn: () => apiClient.get('/api/players')
   });
+
+  // Filter to only show players assigned to the current team
+  const players = useMemo(() => {
+    if (!allPlayers || !currentTeam?.id) return [];
+
+    // Get team-specific players from roster data or team assignments
+    const teamPlayerIds = new Set();
+
+    // Add players from current roster
+    if (rosters) {
+        rosters.forEach(r => teamPlayerIds.add(r.playerId));
+    }
+
+    // Filter to only players in this team
+    return allPlayers.filter(player => 
+      player.active && teamPlayerIds.has(player.id)
+    );
+  }, [allPlayers, currentTeam?.id, rosters]);
 
   // Determine team context - check if current team is home or away
   const isCurrentTeamHome = game?.homeTeamId === currentTeam?.id;
@@ -827,7 +845,7 @@ export default function LiveStats() {
   };
 
   //  // Loading state
-  if (gameLoading || rostersLoading || statsLoading || playersLoading) {
+  if (gameLoading || rostersLoading || statsLoading || allPlayersLoading) {
     return (<div className="container py-6">
         <h1 className="text-2xl font-bold mb-4">Loading game statistics...</h1>
         <p>Please wait while we load the game data.</p>
