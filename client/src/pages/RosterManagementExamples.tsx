@@ -96,14 +96,16 @@ const PositionSlot = ({
   isDropTarget = false, 
   isCompatible = true,
   onDrop,
-  courtSection 
+  courtSection,
+  onDragStart
 }: {
   position: string,
   player?: any,
   isDropTarget?: boolean,
   isCompatible?: boolean,
   onDrop: () => void,
-  courtSection: 'attacking' | 'center' | 'defending'
+  courtSection: 'attacking' | 'center' | 'defending',
+  onDragStart: (playerId: number) => void
 }) => {
   const sectionColors = {
     attacking: 'bg-gradient-to-br from-red-50 to-red-100 border-red-200',
@@ -136,7 +138,7 @@ const PositionSlot = ({
         <div 
           className="mt-2 cursor-move" 
           draggable
-          onDragStart={() => handleDragStart(player.id)}
+          onDragStart={() => onDragStart(player.id)}
         >
           <PlayerCard 
             player={player}
@@ -381,6 +383,7 @@ function DragDropRoster() {
                   isCompatible={draggedPlayer ? isPlayerCompatible(draggedPlayer, position) : true}
                   onDrop={() => handleDrop(position)}
                   courtSection="attacking"
+                  onDragStart={handleDragStart}
                 />
               ))}
             </div>
@@ -406,6 +409,7 @@ function DragDropRoster() {
                     isCompatible={draggedPlayer ? isPlayerCompatible(draggedPlayer, position) : true}
                     onDrop={() => handleDrop(position)}
                     courtSection="center"
+                    onDragStart={handleDragStart}
                   />
                 </div>
               ))}
@@ -432,6 +436,7 @@ function DragDropRoster() {
                     isCompatible={draggedPlayer ? isPlayerCompatible(draggedPlayer, position) : true}
                     onDrop={() => handleDrop(position)}
                     courtSection="defending"
+                    onDragStart={handleDragStart}
                   />
                 </div>
               ))}
