@@ -1736,6 +1736,21 @@ const QuickTapCurrentInterface = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            {/* Available Players for Interchange */}
+            <div className="mb-4 p-3 bg-blue-50 rounded-lg">
+              <h4 className="font-medium text-sm mb-2">Available Players</h4>
+              <div className="flex flex-wrap gap-2">
+                {getAvailablePlayers().map(player => (
+                  <Badge key={player.id} variant="secondary" className="text-xs">
+                    {player.name}
+                  </Badge>
+                ))}
+                {getAvailablePlayers().length === 0 && (
+                  <span className="text-xs text-muted-foreground">All players are on court</span>
+                )}
+              </div>
+            </div>
+
             {/* Quick Interchange Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {allPositions.map(position => {
@@ -1762,18 +1777,26 @@ const QuickTapCurrentInterface = () => {
 
                     {/* Quick Substitute Buttons */}
                     <div className="flex gap-1">
-                      {availablePlayers.slice(0, 2).map(player => (
+                      {availablePlayers.slice(0, 3).map(player => (
                         <Button
                           key={player.id}
                           variant="outline"
                           size="sm"
-                          className="h-8 px-2 text-xs touch-manipulation"
-                          onClick={() => currentPlayerId && recordInterchange(position, currentPlayerId, player.id)}
+                          className="h-8 px-2 text-xs touch-manipulation hover:bg-green-100"
+                          onClick={() => {
+                            if (currentPlayerId) {
+                              recordInterchange(position, currentPlayerId, player.id);
+                            }
+                          }}
                           disabled={!currentPlayerId}
+                          title={`Substitute ${currentPlayer?.name} with ${player.name}`}
                         >
-                          {player.name.split(' ')[0]}
+                          ← {player.name.split(' ')[0]}
                         </Button>
                       ))}
+                      {availablePlayers.length === 0 && (
+                        <span className="text-xs text-muted-foreground">No subs</span>
+                      )}
                     </div>
                   </div>
                 );
