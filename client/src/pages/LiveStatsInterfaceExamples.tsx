@@ -1184,6 +1184,70 @@ const QuickTapCurrentInterface = () => {
   const [undoStack, setUndoStack] = useState([]);
   const [redoStack, setRedoStack] = useState([]);
 
+  // Timer state
+  const [isTimerRunning, setIsTimerRunning] = useState(false);
+  const [timeRemaining, setTimeRemaining] = useState(15 * 60); // 15 minutes in seconds
+  const [quarterLength, setQuarterLength] = useState(15); // minutes
+  const [gameStarted, setGameStarted] = useState(false);
+
+  // Timer effect
+  useEffect(() => {
+    let interval: NodeJS.Timeout | null = null;
+    
+    if (isTimerRunning && timeRemaining > 0) {
+      interval = setInterval(() => {
+        setTimeRemaining(time => {
+          if (time <= 1) {
+            setIsTimerRunning(false);
+            // Auto advance to next quarter if not Q4
+            if (currentQuarter < 4) {
+              setTimeout(() => {
+                setCurrentQuarter(q => q + 1);
+                setTimeRemaining(quarterLength * 60);
+              }, 1000);
+            }
+            return 0;
+          }
+          return time - 1;
+        });
+      }, 1000);
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isTimerRunning, timeRemaining, currentQuarter, quarterLength]);
+
+  // Format time display
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // Timer controls
+  const startTimer = () => {
+    setGameStarted(true);
+    setIsTimerRunning(true);
+  };
+
+  const pauseTimer = () => {
+    setIsTimerRunning(false);
+  };
+
+  const resetQuarter = () => {
+    setIsTimerRunning(false);
+    setTimeRemaining(quarterLength * 60);
+  };
+
+  const endQuarter = () => {
+    setIsTimerRunning(false);
+    if (currentQuarter < 4) {
+      setCurrentQuarter(q => q + 1);
+      setTimeRemaining(quarterLength * 60);
+    }
+  };
+
   // Mock position color mapping
   const getPositionColor = (position) => {
     const colors = {
@@ -1233,6 +1297,10 @@ const QuickTapCurrentInterface = () => {
   const getPositionQuarterKey = (position, quarter) => `${position}-${quarter}`;
 
   const recordStat = (position, stat, value = 1) => {
+    // Get current time for tracking
+    const currentTime = formatTime(timeRemaining);
+    console.log(`Stat recorded: ${position} ${stat} at ${currentTime} in Q${currentQuarter}`);
+    
     // Save current state for undo
     setUndoStack([...undoStack, JSON.parse(JSON.stringify(positionStats))]);
     setRedoStack([]);
@@ -1309,77 +1377,199 @@ const QuickTapCurrentInterface = () => {
 
   return (
     <div className="space-y-4">
-      {/* Game Header */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <Card>
-          <CardHeader className="py-2">
-            <CardTitle className="text-base font-semibold">Game Score</CardTitle>
-          </CardHeader>
-          <CardContent className="py-1">
-            <div className="flex justify-between items-center">
-              <div>
-                <p className="text-xs text-muted-foreground">WNC Dingoes</p>
-                <p className="text-2xl font-bold">{getQuarterTotal('goalsFor')}</p>
-              </div>
-              <div className="text-xl font-bold">-</div>
-              <div className="text-right">
-                <p className="text-xs text-muted-foreground">Emeralds</p>
-                <p className="text-2xl font-bold">{getQuarterTotal('goalsAgainst')}</p>
-              </div>
+      {/* Timer-Enhanced Game Header */}
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Timer className="h-5 w-5" />
+                Live Game with Timer
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">
+                WNC Dingoes vs Emeralds - Quick Tap Stats
+              </p>
             </div>
-          </CardContent>
-        </Card>
+            
+            {/* Quarter Length Selector */}
+            <div className="flex items-center gap-2">
+              <span className="text-sm">Quarter Length:</span>
+              <select 
+                value={quarterLength} 
+                onChange={(e) => {
+                  const newLength = parseInt(e.target.value);
+                  setQuarterLength(newLength);
+                  if (!isTimerRunning) {
+                    setTimeRemaining(newLength * 60);
+                  }
+                }}
+                className="px-2 py-1 border rounded text-sm"
+                disabled={gameStarted}
+              >
+                <option value={10}>10 min</option>
+                <option value={12}>12 min</option>
+                <option value={15}>15 min</option>
+                <option value={20}>20 min</option>
+              </select>
+            </div>
+          </div>
+        </CardHeader>
+        
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Timer Display */}
+            <Card className="text-center">
+              <CardContent className="py-4">
+                <div className="space-y-2">
+                  <div className="text-4xl font-bold font-mono">
+                    {formatTime(timeRemaining)}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    Quarter {currentQuarter} • {quarterLength} minutes
+                  </div>
+                  
+                  {/* Progress Bar */}
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div 
+                      className="bg-blue-600 h-2 rounded-full transition-all duration-1000"
+                      style={{
+                        width: `${((quarterLength * 60 - timeRemaining) / (quarterLength * 60)) * 100}%`
+                      }}
+                    />
+                  </div>
+                  
+                  {/* Timer Status */}
+                  <div className={`px-2 py-1 rounded text-xs ${
+                    isTimerRunning ? 'bg-green-100 text-green-700' : 
+                    timeRemaining === 0 ? 'bg-red-100 text-red-700' :
+                    'bg-yellow-100 text-yellow-700'
+                  }`}>
+                    {isTimerRunning ? 'LIVE' : timeRemaining === 0 ? 'END' : 'PAUSED'}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
-        <Card>
-          <CardHeader className="py-2">
-            <div className="flex justify-between items-center">
-              <CardTitle className="text-base font-semibold">Quarter {currentQuarter}</CardTitle>
-              <div className="flex gap-1">
-                {[1, 2, 3, 4].map(quarter => (
-                  <Button
-                    key={quarter}
-                    variant={quarter === currentQuarter ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setCurrentQuarter(quarter)}
-                    className="w-7 h-7 p-0 text-xs touch-manipulation"
-                  >
-                    {quarter}
-                  </Button>
-                ))}
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="py-1">
-            <div className="flex justify-between items-center">
-              <div>
-                <p className="text-xs text-muted-foreground">Quick Tap to Add Stats</p>
-              </div>
-              <div className="flex gap-1">
-                <Button
-                  variant="outline" 
-                  size="sm"
-                  onClick={handleUndo}
-                  disabled={undoStack.length === 0}
-                  className="touch-manipulation"
-                >
-                  <Undo className="h-3 w-3 mr-1" />
-                  Undo
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleRedo}
-                  disabled={redoStack.length === 0}
-                  className="touch-manipulation"
-                >
-                  <Redo className="h-3 w-3 mr-1" />
-                  Redo
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+            {/* Game Score */}
+            <Card>
+              <CardContent className="py-4">
+                <div className="text-center space-y-2">
+                  <div className="text-sm font-semibold mb-3">Game Score</div>
+                  <div className="grid grid-cols-3 gap-2 items-center">
+                    <div>
+                      <p className="text-xs text-muted-foreground">WNC Dingoes</p>
+                      <p className="text-2xl font-bold">{getQuarterTotal('goalsFor')}</p>
+                    </div>
+                    <div className="text-xl font-bold">-</div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Emeralds</p>
+                      <p className="text-2xl font-bold">{getQuarterTotal('goalsAgainst')}</p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Quarter & Controls */}
+            <Card>
+              <CardContent className="py-4">
+                <div className="space-y-3">
+                  {/* Quarter Selector */}
+                  <div className="text-center">
+                    <div className="text-sm font-semibold mb-2">Quarter</div>
+                    <div className="grid grid-cols-4 gap-1">
+                      {[1, 2, 3, 4].map(quarter => (
+                        <Button
+                          key={quarter}
+                          variant={quarter === currentQuarter ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => {
+                            setCurrentQuarter(quarter);
+                            if (!isTimerRunning) {
+                              setTimeRemaining(quarterLength * 60);
+                            }
+                          }}
+                          className="h-8 touch-manipulation"
+                        >
+                          {quarter}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Timer Controls */}
+                  <div className="space-y-2">
+                    {!gameStarted ? (
+                      <Button 
+                        onClick={startTimer}
+                        className="w-full bg-green-600 hover:bg-green-700 touch-manipulation"
+                      >
+                        <Play className="h-4 w-4 mr-1" />
+                        Start Game
+                      </Button>
+                    ) : (
+                      <div className="grid grid-cols-2 gap-1">
+                        {isTimerRunning ? (
+                          <Button onClick={pauseTimer} variant="outline" size="sm" className="touch-manipulation">
+                            <Pause className="h-3 w-3 mr-1" />
+                            Pause
+                          </Button>
+                        ) : (
+                          <Button onClick={startTimer} size="sm" className="touch-manipulation">
+                            <Play className="h-3 w-3 mr-1" />
+                            Resume
+                          </Button>
+                        )}
+                        
+                        <Button onClick={resetQuarter} variant="outline" size="sm" className="touch-manipulation">
+                          <RotateCcw className="h-3 w-3 mr-1" />
+                          Reset
+                        </Button>
+                      </div>
+                    )}
+                    
+                    {gameStarted && (
+                      <Button 
+                        onClick={endQuarter} 
+                        variant="secondary" 
+                        size="sm"
+                        className="w-full touch-manipulation"
+                        disabled={currentQuarter >= 4 && timeRemaining === 0}
+                      >
+                        End Quarter {currentQuarter}
+                      </Button>
+                    )}
+                  </div>
+
+                  {/* Undo/Redo */}
+                  <div className="grid grid-cols-2 gap-1">
+                    <Button
+                      variant="outline" 
+                      size="sm"
+                      onClick={handleUndo}
+                      disabled={undoStack.length === 0}
+                      className="touch-manipulation"
+                    >
+                      <Undo className="h-3 w-3 mr-1" />
+                      Undo
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleRedo}
+                      disabled={redoStack.length === 0}
+                      className="touch-manipulation"
+                    >
+                      <Redo className="h-3 w-3 mr-1" />
+                      Redo
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Position Cards with Quick Tap Interface */}
       <div className="space-y-3">
@@ -1412,6 +1602,18 @@ const QuickTapCurrentInterface = () => {
                       <p className="font-semibold text-sm">Unassigned</p>
                     )}
                     <p className="text-xs text-muted-foreground">{positionLabels[position]}</p>
+                  </div>
+
+                  {/* Timer Context Display */}
+                  <div className="text-right text-xs text-muted-foreground">
+                    <div>Q{currentQuarter} • {formatTime(timeRemaining)}</div>
+                    <div className={`mt-1 px-2 py-1 rounded text-xs ${
+                      isTimerRunning ? 'bg-green-100 text-green-700' : 
+                      timeRemaining === 0 ? 'bg-red-100 text-red-700' :
+                      'bg-yellow-100 text-yellow-700'
+                    }`}>
+                      {isTimerRunning ? 'LIVE' : timeRemaining === 0 ? 'END' : 'PAUSED'}
+                    </div>
                   </div>
 
                   {/* Common Stats Row - Quick Tap */}
@@ -1459,12 +1661,16 @@ const QuickTapCurrentInterface = () => {
         })}
       </div>
 
-      {/* Action Bar */}
+      {/* Timer-Enhanced Action Bar */}
       <Card>
         <CardContent className="py-3">
           <div className="flex justify-between items-center">
             <div className="flex gap-2">
-              <Button variant="outline" className="touch-manipulation">
+              <Button 
+                variant="outline" 
+                className="touch-manipulation"
+                onClick={resetQuarter}
+              >
                 <RotateCcw className="h-4 w-4 mr-2" />
                 Reset Quarter
               </Button>
@@ -1474,10 +1680,15 @@ const QuickTapCurrentInterface = () => {
               </Button>
             </div>
 
-            <Button className="bg-green-600 hover:bg-green-700 text-white touch-manipulation">
-              <Save className="h-4 w-4 mr-2" />
-              Save All Stats
-            </Button>
+            <div className="flex items-center gap-4">
+              <div className="text-xs text-muted-foreground">
+                Game Time: {formatTime((quarterLength * 60 * (currentQuarter - 1)) + (quarterLength * 60 - timeRemaining))}
+              </div>
+              <Button className="bg-green-600 hover:bg-green-700 text-white touch-manipulation">
+                <Save className="h-4 w-4 mr-2" />
+                Save Stats
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
