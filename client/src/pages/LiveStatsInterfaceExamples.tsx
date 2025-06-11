@@ -1132,7 +1132,7 @@ const TimerEnhancedInterface = () => {
             {timeRemaining < quarterLength * 60 && (
               <div className="flex justify-between items-center p-2 bg-blue-50 rounded">
                 <span>Current Time</span>
-                <span className="font-mono font-bold">{currentTime}</span>
+                <span className="font-mono font-bold">{formatTime(timeRemaining)}</span>
               </div>
             )}
             
