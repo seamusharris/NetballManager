@@ -238,7 +238,7 @@ export default function LiveStats() {
   });
 
   // Fetch players for the team
-  const { data: allPlayers } = useQuery({
+  const { data: allPlayers, isLoading: allPlayersLoading } = useQuery({
     queryKey: ['players'],
     queryFn: () => apiClient.get('/api/players')
   });
