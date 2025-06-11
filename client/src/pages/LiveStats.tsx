@@ -820,9 +820,423 @@ export default function LiveStats() {
             className={`${compact ? 'h-6 w-6' : 'h-8 w-8'} p-0 ${statColors[stat]}`}
             onClick={() => handleStatChange(1)}
           >
-            <Plus className={`${compact ? 'h-3 w-3' : 'h-This commit addresses the issue of the missing `allPositions` export by correcting the import statement.
-<replit_final_file>
-import { useState, useEffect } from 'react';
+            <Plus className={`${compact ? 'h-3 w-3' : 'h-4 w-4'}`} />
+          </Button>
+        </div>
+      </div>
+    );
+  };
+
+  //  // Loading state
+  if (gameLoading || rostersLoading || statsLoading || playersLoading) {
+    return (<div className="container py-6">
+        <h1 className="text-2xl font-bold mb-4">Loading game statistics...</h1>
+        <p>Please wait while we load the game data.</p>
+      </div>
+    );
+  }
+
+  // Error state - game not found
+  if (!game) {
+    return (
+      <div className="container py-6">
+        <h1 className="text-2xl font-bold mb-4">Game not found</h1>
+        <p>The requested game could not be found. Please check the game ID and try again.</p>
+        <Button className="mt-4" onClick={() => navigate('/games')}>
+          Back to Games
+        </Button>
+      </div>
+    );
+  }
+
+  // Error state - game is a bye
+  if (game.isBye) {
+    return (
+      <div className="container py-6">
+        <h1 className="text-2xl font-bold mb-4">Cannot track statistics</h1>
+        <p>This game is marked as a BYE. Statistics tracking is not available for BYE games.</p>
+        <Button className="mt-4" onClick={() => navigate('/games')}>
+          Back to Games
+        </Button>
+      </div>
+    );
+  }
+
+  // Error state - game is a forfeit
+  if (game.status === 'forfeit') {
+    return (
+      <div className="container py-6">
+        <h1 className="text-2xl font-bold mb-4">Cannot edit statistics</h1>
+        <p>This game is marked as a forfeit. Statistics editing is not available for forfeit games.</p>
+        <Button className="mt-4" onClick={() => navigate('/games')}>
+          Back to Games
+        </Button>
+      </div>
+    );
+  }
+
+    // Build breadcrumbs
+    const breadcrumbs = [
+        { label: 'Games', href: '/games' },
+        {
+            label: `Round ${game?.round || gameId} vs ${opponentDisplayName}`,
+            href: `/game/${gameId}`
+        },
+        { label: 'Live Stats' }
+    ];
+
+  // Page actions (reset and save buttons)
+  const pageActions = (
+    <div className="flex space-x-2">
+
+        {isGameCompleted && (
+            <Alert className="border-amber-200 bg-amber-50">
+                <AlertTriangle className="h-4 w-4 text-amber-600" />
+                <AlertDescription className="text-amber-800">
+                    <strong>Warning:</strong> This game is marked as completed. Editing statistics will require confirmation to prevent accidental changes.
+                </AlertDescription>
+            </Alert>
+        )}
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={resetCurrentQuarter}
+        className="border-amber-500 text-amber-700 hover:bg-amber-50 hover:text-amber-900"
+      >
+        <RotateCcw className="h-4 w-4 mr-1" />
+        Reset Quarter {currentQuarter}
+      </Button>
+
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={resetAllStats}
+        className="border-red-500 text-red-700 hover:bg-red-50 hover:text-red-900"
+      >
+        <RefreshCw className="h-4 w-4 mr-1" />
+        Reset All Stats
+      </Button>
+
+        {isGameCompleted ? (
+            <AlertDialog>
+                <AlertDialogTrigger asChild>
+                    <Button
+                        disabled={saveInProgress}
+                        className="bg-amber-600 hover:bg-amber-700 text-white"
+                    >
+                        <AlertTriangle className="h-4 w-4 mr-1" />
+                        Save All Stats (Completed)
+                    </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle className="flex items-center gap-2">
+                            <AlertTriangle className="h-5 w-5 text-amber-600" />
+                            Confirm Save to Completed Game
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This game is marked as completed. Are you sure you want to save the statistics?
+                            This change will affect final scores and records.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={saveAllStats} className="bg-amber-600 hover:bg-amber-700">
+                            Yes, Save Stats
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+        ) : (
+            <Button
+                variant="default"
+                size="sm"
+                onClick={saveAllStats}
+                disabled={saveInProgress}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+                <Save className="h-4 w-4 mr-1" />
+                Save All Stats
+            </Button>
+        )}
+    </div>
+  );
+
+  return (
+    <PageTemplate
+      title="Live Stats Tracking"
+      subtitle={`Round ${game.round} | ${formatShortDate(game.date)} vs ${opponentDisplayName}`}
+      breadcrumbs={breadcrumbs}
+      actions={pageActions}
+      showBackButton={true}
+      backButtonProps={{ 
+        fallbackPath: `/game/${gameId}`,
+        className: "border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+      }}
+    >
+      <Helmet>
+        <title>Live Stats Tracking | NetballManager</title>
+      </Helmet>
+
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+                <TabsList className="w-full">
+                  <TabsTrigger value="stats" className="flex-1">Position Stats</TabsTrigger>
+                  <TabsTrigger value="interchange" className="flex-1">Interchanges</TabsTrigger>
+                  <TabsTrigger value="score" className="flex-1">Score Entry</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="stats">
+                    {/* Game scoreboard - optimized for all tablet sizes */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                        <Card className="overflow-hidden">
+                            <CardHeader className="py-2">
+                                <CardTitle className="text-base md:text-lg font-semibold">Game Score</CardTitle>
+                            </CardHeader>
+                            <CardContent className="py-1">
+                                <div className="flex justify-between items-center">
+                                    <div>
+                                        <p className="text-xs md:text-sm text-muted-foreground">{ourTeamDisplayName}</p>
+                                        <p className="text-2xl md:text-3xl font-bold">{getContextualGameScores().ourScore}</p>
+                                    </div>
+                                    <div className="text-xl md:text-2xl font-bold">-</div>
+                                    <div className="text-right">
+                                        <p className="text-xs md:text-sm text-muted-foreground">{opponentDisplayName}</p>
+                                        <p className="text-2xl md:text-3xl font-bold">{getContextualGameScores().theirScore}</p>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        <Card className="overflow-hidden">
+                            <CardHeader className="py-2">
+                                <div className="flex justify-between items-center">
+                                    <CardTitle className="text-base md:text-lg font-semibold">Quarter {currentQuarter}</CardTitle>
+                                    <div className="flex gap-1">
+                                        {[1, 2, 3, 4].map(quarter => (
+                                            <Button
+                                                key={quarter}
+                                                variant={quarter === currentQuarter ? "default" : "outline"}
+                                                size="sm"
+                                                onClick={() => setCurrentQuarter(quarter)}
+                                                className="w-7 h-7 md:w-8 md:h-8 p-0 text-xs md:text-sm"
+                                            >
+                                                {quarter}
+                                            </Button>
+                                        ))}
+                                    </div>
+                                </div>
+                            </CardHeader>
+                            <CardContent className="py-1">
+                                <div className="flex justify-between items-center">
+                                    <div>
+                                        <p className="text-xs md:text-sm text-muted-foreground">Quarter Score</p>
+                                        <p className="text-xl md:text-2xl font-bold">{getContextualQuarterScores().ourScore} - {getContextualQuarterScores().theirScore}</p>
+                                    </div>
+                                    <div className="flex gap-1">
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={handleUndo}
+                                            disabled={undoStack.length === 0}
+                                        >
+                                            <Undo className="h-3.5 w-3.5 md:h-4 md:w-4 mr-1" />
+                                            Undo
+                                        </Button>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={handleRedo}
+                                            disabled={redoStack.length === 0}
+                                        >
+                                            <Redo className="h-3.5 w-3.5 md:h-4 md:w-4 mr-1" />
+                                            Redo
+                                        </Button>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+
+                    {/* Position stat cards */}
+                    <div className="mb-4 md:mb-5">
+                        <h2 className="text-base md:text-lg font-semibold mb-2 md:mb-3">Positions - Quarter {currentQuarter}</h2>
+
+                        {allPositions.map(position => {
+                            const player = getPlayerForPosition(position, currentQuarter);
+                            const statConfig = positionStatConfig[position];
+
+                            // Generate a unique key
+                            const cardKey = `position-${position}-q${currentQuarter}`;
+
+                            return (
+                                <Card key={cardKey} className="mb-3 overflow-hidden">
+                                    <CardHeader className="py-2 pb-2">
+                                        {/* Use flex instead of grid for better control */}
+                                        <div className="flex flex-wrap items-center gap-2">
+                                            {/* First section - position identity, fixed width */}
+                                            <div className="flex items-center gap-2 mr-3 min-w-fit">
+                                                <div
+                                                    className="h-10 w-10 rounded-full flex items-center justify-center text-white font-bold text-base flex-shrink-0"
+                                                    style={{
+                                                        backgroundColor: getPositionColor(position),
+                                                        border: '2px solid white',
+                                                        boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                                                    }}
+                                                    title={positionLabels[position] || position}
+                                                >
+                                                    {position}
+                                                </div>
+
+                                                <div className="min-w-[60px]">
+                                                    {player ? (
+                                                        <p className="font-semibold text-sm">{player.displayName}</p>
+                                                    ) : (
+                                                        <p className="font-semibold text-sm">Unassigned</p>
+                                                    )}
+                                                    <p className="text-xs text-muted-foreground">{positionLabels[position]}</p>
+                                                </div>
+
+                                                {/* Player Rating */}
+                                                <div className="flex flex-col items-center min-w-[80px]">
+                                                    <p className="text-xs font-medium mb-1">Rating</p>
+                                                    <div className="flex items-center gap-1">
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            className="h-6 w-6 p-0"
+                                                            onClick={() => {
+                                                                const currentRating = positionStats[getPositionQuarterKey(position, currentQuarter)]?.rating || 5;
+                                                                updateRating(position, Math.max(0, currentRating - 1));
+                                                            }}
+                                                            disabled={(positionStats[getPositionQuarterKey(position, currentQuarter)]?.rating || 5) <= 0}
+                                                        >
+                                                            <Minus className="h-3 w-3" />
+                                                        </Button>
+
+                                                        <input
+                                                            type="number"
+                                                            min="0"
+                                                            max="10"
+                                                            className="w-12 h-6 text-center text-sm border border-gray-300 rounded"
+                                                            value={positionStats[getPositionQuarterKey(position, currentQuarter)]?.rating || 5}
+                                                            onChange={(e) => {
+                                                                const value = e.target.value === '' ? null : Math.min(10, Math.max(0, parseInt(e.target.value)));
+                                                                updateRating(position, value);
+                                                            }}
+                                                        />
+
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            className="h-6 w-6 p-0"
+                                                            onClick={() => {
+                                                                const currentRating = positionStats[getPositionQuarterKey(position, currentQuarter)]?.rating || 5;
+                                                                updateRating(position, Math.min(10, currentRating + 1));
+                                                            }}
+                                                            disabled={(positionStats[getPositionQuarterKey(position, currentQuarter)]?.rating || 5) >= 10}
+                                                        >
+                                                            <Plus className="h-3 w-3" />
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Second section - common stats, filling remaining space */}
+                                            <div className="flex-1 flex flex-wrap gap-2">
+                                                {commonStats.map(stat => (
+                                                    statConfig[stat] && (
+                                                        <div key={`${position}-common-${stat}`} className="flex-1 min-w-[120px]">
+                                                            {renderStatCounter(position, stat, false, false)}
+                                                        </div>
+                                                    )
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </CardHeader>
+                                    <CardContent className="py-2 pt-1">
+                                        {/* Count how many position-specific stats exist */}
+                                        {(() => {
+                                            // Get position-specific stat types that are available
+                                            const posSpecificStats = Object.entries(statConfig)
+                                                .filter(([stat, isAvailable]) => isAvailable && !commonStats.includes(stat as StatType))
+                                                .map(([stat]) => stat as StatType);
+
+                                            if (posSpecificStats.length === 0) {
+                                                return null; // No second row needed
+                                            }
+
+                                            return (
+                                                <div className="flex justify-center gap-2 flex-wrap">
+                                                    {posSpecificStats.map(statType => (
+                                                        <div key={`${position}-${statType}`} className="w-[180px]">
+                                                            {renderStatCounter(position, statType, false, true)}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            );
+                                        })()}
+                                    </CardContent>
+                                </Card>
+                            );
+                        })}
+                    </div>
+                </TabsContent>
+
+                <TabsContent value="interchange">
+                  <PlayerInterchangeTracker
+                    gameId={Number(gameId)}
+                    players={players || []}
+                    currentQuarter={currentQuarter}
+                    currentPositions={currentPositions}
+                    onPositionChange={(position, playerId) => {
+                      setCurrentPositions(prev => ({
+                        ...prev,
+                        [position]: playerId
+                      }));
+                    }}
+                    onInterchangeRecorded={(interchange) => {
+                      // Could save to database here if needed
+                      console.log('Interchange recorded:', interchange);
+                    }}
+                  />
+                </TabsContent>
+
+                <TabsContent value="score">
+                  <div className="space-y-6">
+                    <OfficialScoreEntry 
+                      gameId={Number(gameId)}
+                      currentTeam={currentTeam}
+                      opponent={opponent}
+                      game={game}
+                    />
+                  </div>
+                </TabsContent>
+            </Tabs>
+
+        {/* Confirmation Dialog for Completed Game Edits */}
+        <AlertDialog open={!!pendingStatChange} onOpenChange={() => setPendingStatChange(null)}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle className="flex items-center gap-2">
+                        <AlertTriangle className="h-5 w-5 text-amber-600" />
+                        Confirm Edit to Completed Game
+                    </AlertDialogTitle>
+                    <AlertDialogDescription>
+                        This game is marked as completed. Are you sure you want to modify the statistics?
+                        This change will affect final scores and records.
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleConfirmStatChange} className="bg-amber-600 hover:bg-amber-700">
+                        Yes, Edit Stats
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
+    </PageTemplate>
+  );
+}
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams, useLocation } from 'wouter';
 import { apiClient } from '@/lib/apiClient';
