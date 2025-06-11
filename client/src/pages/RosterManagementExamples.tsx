@@ -133,7 +133,11 @@ const PositionSlot = ({
 
       {/* Player or Drop Zone */}
       {player ? (
-        <div className="mt-2">
+        <div 
+          className="mt-2 cursor-move" 
+          draggable
+          onDragStart={() => handleDragStart(player.id)}
+        >
           <PlayerCard 
             player={player}
             showPositions={false}
@@ -187,11 +191,20 @@ function DragDropRoster() {
         ...assignments,
         [currentQuarter]: { ...assignments[currentQuarter] }
       };
+      
+      // Clear the player from any previous position in this quarter
       Object.keys(newAssignments[currentQuarter]).forEach(pos => {
         if (newAssignments[currentQuarter][pos] === draggedPlayer) {
           newAssignments[currentQuarter][pos] = null;
         }
       });
+      
+      // If there's already a player in the target position, remove them
+      if (newAssignments[currentQuarter][position] !== null) {
+        newAssignments[currentQuarter][position] = null;
+      }
+      
+      // Assign the dragged player to the new position
       newAssignments[currentQuarter][position] = draggedPlayer;
       setAssignments(newAssignments);
     }
