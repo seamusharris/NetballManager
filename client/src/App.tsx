@@ -70,6 +70,7 @@ import ScoreProgressionExamples from './pages/ScoreProgressionExamples';
 import SubstitutionFlowExamples from './pages/SubstitutionFlowExamples';
 import RosterManagementExamples from './pages/RosterManagementExamples';
 import LiveStatsInterfaceExamples from './pages/LiveStatsInterfaceExamples';
+import LiveStatsInterfaceExamples from './pages/LiveStatsInterfaceExamples';
 /**
  * Loading spinner component for suspense fallbacks
  */
@@ -188,6 +189,7 @@ function Router() {
         <Route path="/score-progression-examples" component={ScoreProgressionExamples} />
         <Route path="/substitution-flow-examples" component={SubstitutionFlowExamples} />
         <Route path="/roster-management-examples" component={RosterManagementExamples} />
+        <Route path="/live-stats-interface-examples" component={LiveStatsInterfaceExamples} />
         <Route path="/live-stats-interface-examples" component={LiveStatsInterfaceExamples} />
         <Route component={withErrorBoundary(NotFound, 'NotFound')} />
       </Switch>

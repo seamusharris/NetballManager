@@ -890,3 +890,747 @@ export default function LiveStatsInterfaceExamples() {
     </div>
   );
 }
+import React, { useState, useRef } from 'react';
+import { Helmet } from 'react-helmet';
+import { PageTemplate } from '@/components/layout/PageTemplate';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { 
+  Plus, 
+  Minus, 
+  Save,
+  RotateCcw,
+  Target,
+  Shield,
+  Activity,
+  Clock,
+  Users,
+  TrendingUp,
+  AlertCircle,
+  CheckCircle,
+  Zap,
+  Timer,
+  BarChart3,
+  Pause,
+  Play,
+  Settings,
+  Maximize2,
+  Grid3X3,
+  List,
+  Eye,
+  EyeOff
+} from 'lucide-react';
+
+interface StatEntry {
+  id: string;
+  playerId: number;
+  playerName: string;
+  position: string;
+  quarter: number;
+  statType: string;
+  value: number;
+  timestamp: Date;
+}
+
+interface QuarterScore {
+  quarter: number;
+  homeScore: number;
+  awayScore: number;
+}
+
+const mockPlayers = [
+  { id: 60, name: "Abbey N", position: "GA" },
+  { id: 59, name: "Abby D", position: "GS" },
+  { id: 76, name: "Ava", position: "WA" },
+  { id: 61, name: "Emily", position: "GD" },
+  { id: 81, name: "Erin", position: "C" },
+  { id: 63, name: "Evie", position: "WD" },
+  { id: 62, name: "Grace", position: "GK" }
+];
+
+const positions = ["GS", "GA", "WA", "C", "WD", "GD", "GK"];
+const statTypes = ["goalsFor", "missedGoals", "rebounds", "intercepts", "badPass", "handlingError"];
+
+export default function LiveStatsInterfaceExamples() {
+  const [currentQuarter, setCurrentQuarter] = useState(1);
+  const [gameTime, setGameTime] = useState("12:00");
+  const [isGameActive, setIsGameActive] = useState(false);
+  const [stats, setStats] = useState<StatEntry[]>([]);
+  const [scores, setScores] = useState<QuarterScore[]>([
+    { quarter: 1, homeScore: 0, awayScore: 0 },
+    { quarter: 2, homeScore: 0, awayScore: 0 },
+    { quarter: 3, homeScore: 0, awayScore: 0 },
+    { quarter: 4, homeScore: 0, awayScore: 0 }
+  ]);
+  const [selectedPlayer, setSelectedPlayer] = useState<number | null>(null);
+  const [showAdvancedStats, setShowAdvancedStats] = useState(false);
+
+  const addStat = (playerId: number, playerName: string, position: string, statType: string, value: number = 1) => {
+    const newStat: StatEntry = {
+      id: `${Date.now()}-${Math.random()}`,
+      playerId,
+      playerName,
+      position,
+      quarter: currentQuarter,
+      statType,
+      value,
+      timestamp: new Date()
+    };
+    setStats(prev => [...prev, newStat]);
+  };
+
+  const updateScore = (team: 'home' | 'away', delta: number) => {
+    setScores(prev => prev.map(score => 
+      score.quarter === currentQuarter
+        ? { ...score, [team === 'home' ? 'homeScore' : 'awayScore']: Math.max(0, score[team === 'home' ? 'homeScore' : 'awayScore'] + delta) }
+        : score
+    ));
+  };
+
+  const getCurrentScore = () => {
+    const currentQuarterScore = scores.find(s => s.quarter === currentQuarter);
+    return {
+      home: currentQuarterScore?.homeScore || 0,
+      away: currentQuarterScore?.awayScore || 0
+    };
+  };
+
+  const getTotalScore = () => {
+    return scores.reduce((totals, score) => ({
+      home: totals.home + score.homeScore,
+      away: totals.away + score.awayScore
+    }), { home: 0, away: 0 });
+  };
+
+  const getPlayerStats = (playerId: number, statType: string) => {
+    return stats
+      .filter(s => s.playerId === playerId && s.statType === statType && s.quarter === currentQuarter)
+      .reduce((sum, stat) => sum + stat.value, 0);
+  };
+
+  // Design 1: Grid-Based Touch Interface
+  const GridBasedInterface = () => (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-4 mb-6">
+        <Card className="p-6 bg-gradient-to-br from-blue-50 to-blue-100">
+          <div className="text-center">
+            <div className="text-3xl font-bold text-blue-900">{getTotalScore().home}</div>
+            <div className="text-lg font-medium text-blue-700">WNC Dingoes</div>
+          </div>
+        </Card>
+        <Card className="p-6 bg-gradient-to-br from-red-50 to-red-100">
+          <div className="text-center">
+            <div className="text-3xl font-bold text-red-900">{getTotalScore().away}</div>
+            <div className="text-lg font-medium text-red-700">Opponents</div>
+          </div>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-4 gap-2 mb-4">
+        {[1, 2, 3, 4].map(quarter => (
+          <Button
+            key={quarter}
+            variant={currentQuarter === quarter ? "default" : "outline"}
+            className="h-12 text-lg font-semibold"
+            onClick={() => setCurrentQuarter(quarter)}
+          >
+            Q{quarter}
+          </Button>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-7 gap-2">
+        {positions.map(position => {
+          const player = mockPlayers.find(p => p.position === position);
+          return (
+            <Card key={position} className="p-3">
+              <div className="text-center mb-2">
+                <Badge variant="outline" className="text-xs">{position}</Badge>
+                <div className="font-medium text-sm mt-1">{player?.name || "Empty"}</div>
+              </div>
+              <div className="space-y-1">
+                <Button
+                  size="sm"
+                  className="w-full h-8 bg-green-500 hover:bg-green-600 text-white"
+                  onClick={() => player && addStat(player.id, player.name, position, "goalsFor")}
+                >
+                  <Target className="w-4 h-4 mr-1" />
+                  {player ? getPlayerStats(player.id, "goalsFor") : 0}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="w-full h-8"
+                  onClick={() => player && addStat(player.id, player.name, position, "intercepts")}
+                >
+                  <Shield className="w-4 h-4 mr-1" />
+                  {player ? getPlayerStats(player.id, "intercepts") : 0}
+                </Button>
+              </div>
+            </Card>
+          );
+        })}
+      </div>
+    </div>
+  );
+
+  // Design 2: Streamlined Touch Interface
+  const StreamlinedInterface = () => (
+    <div className="space-y-6">
+      {/* Score Section */}
+      <Card className="p-6">
+        <div className="flex justify-between items-center mb-4">
+          <div className="text-center">
+            <div className="text-4xl font-bold text-blue-600">{getTotalScore().home}</div>
+            <div className="text-lg font-medium">Home</div>
+          </div>
+          <div className="text-center">
+            <Badge variant="secondary" className="text-lg px-4 py-2">
+              Q{currentQuarter} • {gameTime}
+            </Badge>
+          </div>
+          <div className="text-center">
+            <div className="text-4xl font-bold text-red-600">{getTotalScore().away}</div>
+            <div className="text-lg font-medium">Away</div>
+          </div>
+        </div>
+        
+        <div className="flex gap-4 justify-center">
+          <Button
+            size="lg"
+            onClick={() => updateScore('home', 1)}
+            className="h-16 w-20 bg-blue-500 hover:bg-blue-600"
+          >
+            <Plus className="w-6 h-6" />
+          </Button>
+          <Button
+            size="lg"
+            onClick={() => updateScore('away', 1)}
+            className="h-16 w-20 bg-red-500 hover:bg-red-600"
+          >
+            <Plus className="w-6 h-6" />
+          </Button>
+        </div>
+      </Card>
+
+      {/* Player Selection */}
+      <Card className="p-6">
+        <CardTitle className="mb-4">Select Player</CardTitle>
+        <div className="grid grid-cols-3 gap-3">
+          {mockPlayers.map(player => (
+            <Button
+              key={player.id}
+              variant={selectedPlayer === player.id ? "default" : "outline"}
+              className="h-16 flex flex-col items-center justify-center"
+              onClick={() => setSelectedPlayer(player.id)}
+            >
+              <div className="font-medium">{player.name}</div>
+              <Badge variant="secondary" className="text-xs">{player.position}</Badge>
+            </Button>
+          ))}
+        </div>
+      </Card>
+
+      {/* Quick Stats */}
+      {selectedPlayer && (
+        <Card className="p-6">
+          <CardTitle className="mb-4">Quick Stats</CardTitle>
+          <div className="grid grid-cols-3 gap-3">
+            {statTypes.map(statType => {
+              const selectedPlayerData = mockPlayers.find(p => p.id === selectedPlayer);
+              return (
+                <Button
+                  key={statType}
+                  size="lg"
+                  variant="outline"
+                  className="h-20 flex flex-col items-center justify-center"
+                  onClick={() => selectedPlayerData && addStat(selectedPlayer, selectedPlayerData.name, selectedPlayerData.position, statType)}
+                >
+                  <div className="text-2xl font-bold">
+                    {getPlayerStats(selectedPlayer, statType)}
+                  </div>
+                  <div className="text-xs capitalize">
+                    {statType.replace(/([A-Z])/g, ' $1').trim()}
+                  </div>
+                </Button>
+              );
+            })}
+          </div>
+        </Card>
+      )}
+    </div>
+  );
+
+  // Design 3: Court View Interface
+  const CourtViewInterface = () => (
+    <div className="space-y-6">
+      {/* Game Status Bar */}
+      <Card className="p-4">
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-4">
+            <Button
+              variant={isGameActive ? "destructive" : "default"}
+              size="lg"
+              onClick={() => setIsGameActive(!isGameActive)}
+            >
+              {isGameActive ? <Pause className="w-5 h-5 mr-2" /> : <Play className="w-5 h-5 mr-2" />}
+              {isGameActive ? "Pause" : "Start"}
+            </Button>
+            <div className="text-2xl font-mono font-bold">{gameTime}</div>
+          </div>
+          
+          <div className="flex items-center gap-6">
+            <div className="text-center">
+              <div className="text-3xl font-bold text-blue-600">{getTotalScore().home}</div>
+              <div className="text-sm font-medium">WNC Dingoes</div>
+            </div>
+            <Badge variant="secondary" className="text-lg px-3 py-1">Q{currentQuarter}</Badge>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-red-600">{getTotalScore().away}</div>
+              <div className="text-sm font-medium">Opponents</div>
+            </div>
+          </div>
+          
+          <Button variant="outline" size="lg">
+            <Save className="w-5 h-5 mr-2" />
+            Save All
+          </Button>
+        </div>
+      </Card>
+
+      {/* Court Layout */}
+      <Card className="p-6">
+        <div className="relative bg-gradient-to-b from-green-100 to-green-200 rounded-lg p-8" style={{ aspectRatio: '3/2' }}>
+          {/* Court Lines */}
+          <div className="absolute inset-4 border-2 border-white rounded"></div>
+          <div className="absolute left-4 right-4 top-1/3 border-t-2 border-white"></div>
+          <div className="absolute left-4 right-4 bottom-1/3 border-t-2 border-white"></div>
+          
+          {/* Goal Circles */}
+          <div className="absolute left-4 top-4 w-16 h-16 border-2 border-white rounded-full flex items-center justify-center">
+            <Target className="w-8 h-8 text-white" />
+          </div>
+          <div className="absolute right-4 bottom-4 w-16 h-16 border-2 border-white rounded-full flex items-center justify-center">
+            <Target className="w-8 h-8 text-white" />
+          </div>
+
+          {/* Player Positions */}
+          {positions.map((position, index) => {
+            const player = mockPlayers.find(p => p.position === position);
+            const xPositions = [10, 25, 40, 50, 60, 75, 90];
+            const yPosition = 40;
+            
+            return (
+              <div
+                key={position}
+                className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer"
+                style={{ 
+                  left: `${xPositions[index]}%`, 
+                  top: `${yPosition}%` 
+                }}
+                onClick={() => player && setSelectedPlayer(player.id)}
+              >
+                <div className={`w-20 h-20 rounded-full border-3 flex flex-col items-center justify-center text-white font-bold ${
+                  selectedPlayer === player?.id ? 'bg-blue-600 border-blue-800' : 'bg-gray-600 border-gray-800'
+                }`}>
+                  <div className="text-xs">{position}</div>
+                  <div className="text-xs truncate w-full text-center">{player?.name || "Empty"}</div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </Card>
+
+      {/* Selected Player Stats Panel */}
+      {selectedPlayer && (
+        <Card className="p-6">
+          <CardTitle className="mb-4">
+            {mockPlayers.find(p => p.id === selectedPlayer)?.name} Stats - Q{currentQuarter}
+          </CardTitle>
+          <div className="grid grid-cols-6 gap-3">
+            {statTypes.map(statType => (
+              <div key={statType} className="text-center">
+                <div className="text-xs mb-2 capitalize">
+                  {statType.replace(/([A-Z])/g, ' $1').trim()}
+                </div>
+                <div className="flex items-center justify-center gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="w-8 h-8 p-0"
+                    onClick={() => {
+                      const currentValue = getPlayerStats(selectedPlayer, statType);
+                      if (currentValue > 0) {
+                        const lastStat = [...stats].reverse().find(
+                          s => s.playerId === selectedPlayer && s.statType === statType && s.quarter === currentQuarter
+                        );
+                        if (lastStat) {
+                          setStats(prev => prev.filter(s => s.id !== lastStat.id));
+                        }
+                      }
+                    }}
+                  >
+                    <Minus className="w-3 h-3" />
+                  </Button>
+                  <div className="text-2xl font-bold w-8 text-center">
+                    {getPlayerStats(selectedPlayer, statType)}
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="w-8 h-8 p-0"
+                    onClick={() => {
+                      const selectedPlayerData = mockPlayers.find(p => p.id === selectedPlayer);
+                      selectedPlayerData && addStat(selectedPlayer, selectedPlayerData.name, selectedPlayerData.position, statType);
+                    }}
+                  >
+                    <Plus className="w-3 h-3" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+    </div>
+  );
+
+  // Design 4: Split Screen Interface
+  const SplitScreenInterface = () => (
+    <div className="grid grid-cols-2 gap-6 h-screen">
+      {/* Left Panel - Game Control */}
+      <div className="space-y-4">
+        <Card className="p-6">
+          <div className="text-center mb-4">
+            <div className="text-6xl font-bold text-blue-600 mb-2">{getTotalScore().home}</div>
+            <div className="text-lg font-medium">WNC Dingoes</div>
+            <div className="text-6xl font-bold text-red-600 mt-4 mb-2">{getTotalScore().away}</div>
+            <div className="text-lg font-medium">Opponents</div>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4 mt-6">
+            <Button
+              size="lg"
+              className="h-20 bg-blue-500 hover:bg-blue-600"
+              onClick={() => updateScore('home', 1)}
+            >
+              <Plus className="w-8 h-8" />
+            </Button>
+            <Button
+              size="lg"
+              className="h-20 bg-red-500 hover:bg-red-600"
+              onClick={() => updateScore('away', 1)}
+            >
+              <Plus className="w-8 h-8" />
+            </Button>
+          </div>
+        </Card>
+
+        <Card className="p-6">
+          <div className="flex justify-between items-center mb-4">
+            <div className="text-3xl font-mono font-bold">{gameTime}</div>
+            <Badge variant="secondary" className="text-xl px-4 py-2">Q{currentQuarter}</Badge>
+          </div>
+          
+          <div className="grid grid-cols-4 gap-2">
+            {[1, 2, 3, 4].map(quarter => (
+              <Button
+                key={quarter}
+                variant={currentQuarter === quarter ? "default" : "outline"}
+                className="h-12"
+                onClick={() => setCurrentQuarter(quarter)}
+              >
+                Q{quarter}
+              </Button>
+            ))}
+          </div>
+        </Card>
+
+        <Card className="p-6 flex-1">
+          <CardTitle className="mb-4">Recent Actions</CardTitle>
+          <div className="space-y-2 max-h-64 overflow-y-auto">
+            {stats.slice(-10).reverse().map(stat => (
+              <div key={stat.id} className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                <div className="text-sm">
+                  <span className="font-medium">{stat.playerName}</span> - {stat.statType}
+                </div>
+                <Badge variant="outline">Q{stat.quarter}</Badge>
+              </div>
+            ))}
+          </div>
+        </Card>
+      </div>
+
+      {/* Right Panel - Player Stats */}
+      <div className="space-y-4">
+        <Card className="p-6">
+          <CardTitle className="mb-4">Player Selection</CardTitle>
+          <div className="grid grid-cols-2 gap-3">
+            {mockPlayers.map(player => (
+              <Button
+                key={player.id}
+                variant={selectedPlayer === player.id ? "default" : "outline"}
+                className="h-20 flex flex-col items-center justify-center"
+                onClick={() => setSelectedPlayer(player.id)}
+              >
+                <div className="font-medium">{player.name}</div>
+                <Badge variant="secondary">{player.position}</Badge>
+              </Button>
+            ))}
+          </div>
+        </Card>
+
+        {selectedPlayer && (
+          <Card className="p-6 flex-1">
+            <CardTitle className="mb-4">
+              {mockPlayers.find(p => p.id === selectedPlayer)?.name} - Quarter {currentQuarter}
+            </CardTitle>
+            <div className="grid grid-cols-2 gap-4">
+              {statTypes.map(statType => (
+                <div key={statType} className="text-center">
+                  <div className="text-sm mb-2 capitalize font-medium">
+                    {statType.replace(/([A-Z])/g, ' $1').trim()}
+                  </div>
+                  <div className="text-4xl font-bold mb-3">
+                    {getPlayerStats(selectedPlayer, statType)}
+                  </div>
+                  <Button
+                    size="lg"
+                    className="w-full h-12"
+                    onClick={() => {
+                      const selectedPlayerData = mockPlayers.find(p => p.id === selectedPlayer);
+                      selectedPlayerData && addStat(selectedPlayer, selectedPlayerData.name, selectedPlayerData.position, statType);
+                    }}
+                  >
+                    <Plus className="w-5 h-5 mr-2" />
+                    Add
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </Card>
+        )}
+      </div>
+    </div>
+  );
+
+  return (
+    <PageTemplate
+      title="Live Stats Interface Examples"
+      subtitle="Touch-optimized interfaces for recording live game statistics on tablets"
+      breadcrumbs={[
+        { label: 'Component Examples', href: '/component-examples' },
+        { label: 'Live Stats Interface Examples' }
+      ]}
+    >
+      <Helmet>
+        <title>Live Stats Interface Examples | Team Manager</title>
+      </Helmet>
+
+      <div className="space-y-8">
+        <div className="prose max-w-none">
+          <p className="text-lg text-gray-700">
+            Multiple design approaches for live statistics recording, optimized for 12" iPad touch interfaces. 
+            Each design prioritizes different aspects: speed, accuracy, visual feedback, and user workflow.
+            All interfaces support real-time updates with local state management before saving.
+          </p>
+        </div>
+
+        {/* Design Overview Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <Card className="p-4">
+            <div className="flex items-center space-x-2 mb-2">
+              <Grid3X3 className="h-5 w-5 text-blue-600" />
+              <h3 className="font-semibold">Grid-Based</h3>
+            </div>
+            <p className="text-sm text-gray-600">Compact layout with all positions visible simultaneously</p>
+          </Card>
+
+          <Card className="p-4">
+            <div className="flex items-center space-x-2 mb-2">
+              <Zap className="h-5 w-5 text-green-600" />
+              <h3 className="font-semibold">Streamlined</h3>
+            </div>
+            <p className="text-sm text-gray-600">Step-by-step workflow for accurate data entry</p>
+          </Card>
+
+          <Card className="p-4">
+            <div className="flex items-center space-x-2 mb-2">
+              <Eye className="h-5 w-5 text-purple-600" />
+              <h3 className="font-semibold">Court View</h3>
+            </div>
+            <p className="text-sm text-gray-600">Visual court representation with position-based interaction</p>
+          </Card>
+
+          <Card className="p-4">
+            <div className="flex items-center space-x-2 mb-2">
+              <BarChart3 className="h-5 w-5 text-orange-600" />
+              <h3 className="font-semibold">Split Screen</h3>
+            </div>
+            <p className="text-sm text-gray-600">Dual-panel layout for scoring and detailed statistics</p>
+          </Card>
+        </div>
+
+        <Tabs defaultValue="grid" className="w-full">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="grid">Grid-Based</TabsTrigger>
+            <TabsTrigger value="streamlined">Streamlined</TabsTrigger>
+            <TabsTrigger value="court">Court View</TabsTrigger>
+            <TabsTrigger value="split">Split Screen</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="grid" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Grid-Based Touch Interface</CardTitle>
+                <p className="text-gray-600">
+                  Compact design showing all court positions in a grid layout. Quick access to common stats 
+                  with large touch targets. Ideal for users who want to see the full team at once.
+                </p>
+              </CardHeader>
+              <CardContent>
+                <GridBasedInterface />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="streamlined" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Streamlined Touch Interface</CardTitle>
+                <p className="text-gray-600">
+                  Step-by-step workflow that guides users through player selection and stat recording. 
+                  Reduces errors by breaking the process into clear steps with large, accessible buttons.
+                </p>
+              </CardHeader>
+              <CardContent>
+                <StreamlinedInterface />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="court" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Court View Interface</CardTitle>
+                <p className="text-gray-600">
+                  Visual representation of the netball court with interactive player positions. 
+                  Game timer and controls integrated with spatial player selection for intuitive use.
+                </p>
+              </CardHeader>
+              <CardContent>
+                <CourtViewInterface />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="split" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Split Screen Interface</CardTitle>
+                <p className="text-gray-600">
+                  Dual-panel layout optimizing the full iPad screen. Score management on the left, 
+                  detailed player statistics on the right. Perfect for dedicated scorekeepers.
+                </p>
+              </CardHeader>
+              <CardContent>
+                <SplitScreenInterface />
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+
+        {/* Design Guidelines */}
+        <Card>
+          <CardHeader>
+            <CardTitle>iPad Touch Interface Guidelines</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <h4 className="font-semibold mb-2 flex items-center">
+                  <Target className="w-4 h-4 mr-2" />
+                  Touch Target Sizes
+                </h4>
+                <p className="text-sm text-gray-600 mb-3">
+                  Minimum 44px touch targets with 8px spacing. Primary action buttons are 60-80px 
+                  for comfortable finger interaction on 12" tablets.
+                </p>
+              </div>
+
+              <div>
+                <h4 className="font-semibold mb-2 flex items-center">
+                  <Activity className="w-4 h-4 mr-2" />
+                  Real-time Feedback
+                </h4>
+                <p className="text-sm text-gray-600 mb-3">
+                  Immediate visual feedback for all actions with color changes, animations, 
+                  and counter updates. Undo capability for accidental taps.
+                </p>
+              </div>
+
+              <div>
+                <h4 className="font-semibold mb-2 flex items-center">
+                  <Save className="w-4 h-4 mr-2" />
+                  Data Persistence
+                </h4>
+                <p className="text-sm text-gray-600 mb-3">
+                  Local state management with batch save functionality. Auto-save drafts 
+                  and clear save/unsaved indicators for reliability.
+                </p>
+              </div>
+
+              <div>
+                <h4 className="font-semibold mb-2 flex items-center">
+                  <Maximize2 className="w-4 h-4 mr-2" />
+                  Screen Optimization
+                </h4>
+                <p className="text-sm text-gray-600 mb-3">
+                  Designed for 12" iPad landscape orientation (1366x1024) with consideration 
+                  for both landscape and portrait modes where applicable.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Implementation Notes */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Implementation Considerations</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div>
+                <h4 className="font-semibold mb-2">Local Storage Fallback</h4>
+                <p className="text-sm text-gray-600">
+                  Implement localStorage backup for network-independent operation. Queue API calls 
+                  when offline and sync when connection is restored.
+                </p>
+              </div>
+
+              <div>
+                <h4 className="font-semibold mb-2">Performance Optimization</h4>
+                <p className="text-sm text-gray-600">
+                  Use React.memo for player components, debounce rapid stat updates, 
+                  and implement virtual scrolling for large player lists.
+                </p>
+              </div>
+
+              <div>
+                <h4 className="font-semibold mb-2">Error Handling</h4>
+                <p className="text-sm text-gray-600">
+                  Graceful degradation with clear error messages, retry mechanisms, 
+                  and data recovery options for interrupted sessions.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </PageTemplate>
+  );
+}

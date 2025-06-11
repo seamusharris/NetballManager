@@ -95,6 +95,14 @@ const examples: ExampleSection[] = [
     category: 'Components',
     status: 'Complete'
   },
+  {
+    title: 'Live Stats Interface',
+    description: 'Touch-optimized interfaces for recording live game statistics on tablets.',
+    path: '/live-stats-interface-examples',
+    icon: <Activity className="h-5 w-5" />,
+    category: 'Sport-Specific',
+    status: 'Complete'
+  },
 
   // Navigation
   {
