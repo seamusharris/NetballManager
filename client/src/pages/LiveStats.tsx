@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Game, Player, GameStat, Roster, Position } from '@shared/schema';
+import { Game, Player, GameStat, Roster, Position, allPositions } from '@shared/schema';
 import { getInitials, formatShortDate, positionLabels, generatePlayerAvatarColor } from '@/lib/utils';
 import { Save, Undo, Redo, Plus, Minus, RefreshCw, RotateCcw } from 'lucide-react';
 import { Helmet } from 'react-helmet';
@@ -24,7 +24,6 @@ import { validateInterClubScores, getScoreDiscrepancyWarning } from '@/lib/score
 import PlayerInterchangeTracker from '@/components/games/PlayerInterchangeTracker';
 import { OfficialScoreEntry } from '@/components/games/OfficialScoreEntry';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { POSITIONS as allPositions } from '@/lib/constants';
 
 // Stat types that can be tracked
 type StatType = 'goalsFor' | 'goalsAgainst' | 'missedGoals' | 'rebounds' | 
