@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -65,14 +64,14 @@ const CardBasedInterface = () => {
   const StatButton = ({ stat, value, onUpdate, size = "normal" }) => {
     const StatIcon = stat.icon;
     const isLarge = size === "large";
-    
+
     return (
       <div className={`flex flex-col items-center p-3 rounded-lg border ${stat.color} ${isLarge ? 'min-h-[100px]' : 'min-h-[80px]'}`}>
         <div className="flex items-center gap-2 mb-2">
           <StatIcon className={`${isLarge ? 'h-5 w-5' : 'h-4 w-4'}`} />
           <span className={`font-medium ${isLarge ? 'text-base' : 'text-sm'}`}>{stat.label}</span>
         </div>
-        
+
         <div className="flex items-center gap-3">
           <Button
             variant="outline"
@@ -83,11 +82,11 @@ const CardBasedInterface = () => {
           >
             <Minus className={`${isLarge ? 'h-5 w-5' : 'h-4 w-4'}`} />
           </Button>
-          
+
           <span className={`${isLarge ? 'text-2xl' : 'text-xl'} font-bold min-w-[40px] text-center`}>
             {value || 0}
           </span>
-          
+
           <Button
             variant="outline"
             size={isLarge ? "default" : "sm"}
@@ -171,7 +170,7 @@ const CardBasedInterface = () => {
                   />
                 ))}
               </div>
-              
+
               {/* Secondary Stats (Smaller) */}
               <div className="grid grid-cols-4 gap-2">
                 {statTypes.filter(s => !s.touch).map(stat => (
@@ -254,7 +253,7 @@ const CourtBasedInterface = () => {
           </Avatar>
           <h3 className="font-semibold text-sm">{player.name}</h3>
           <Badge variant="outline" className="text-xs mt-1">{player.position}</Badge>
-          
+
           {/* Quick Stats Display */}
           <div className="flex justify-center gap-1 mt-2 text-xs">
             <span className="bg-green-100 px-2 py-1 rounded">
@@ -344,7 +343,7 @@ const CourtBasedInterface = () => {
               {statTypes.map(stat => {
                 const StatIcon = stat.icon;
                 const value = stats[selectedPlayer]?.[stat.key] || 0;
-                
+
                 return (
                   <div key={stat.key} className={`p-4 rounded-lg ${stat.color}`}>
                     <div className="flex items-center justify-between mb-3">
@@ -398,7 +397,7 @@ const GestureBasedInterface = () => {
         [statType]: Math.max(0, (prev[playerId]?.[statType] || 0) + change)
       }
     }));
-    
+
     // Track for undo
     setRecentActions(prev => [...prev.slice(-9), { playerId, statType, change, timestamp: Date.now() }]);
   };
@@ -407,7 +406,7 @@ const GestureBasedInterface = () => {
     const StatIcon = stat.icon;
     const value = stats[player.id]?.[stat.key] || 0;
     const size = primary ? 'h-20 w-20' : 'h-16 w-16';
-    
+
     return (
       <Button
         variant="outline"
@@ -444,7 +443,7 @@ const GestureBasedInterface = () => {
                 </Button>
               ))}
             </div>
-            
+
             <div className="grid grid-cols-3 gap-4 items-center">
               <div className="text-center">
                 <p className="text-sm text-muted-foreground">WNC Dingoes</p>
@@ -493,7 +492,7 @@ const GestureBasedInterface = () => {
                     stat={statTypes.find(s => s.key === 'intercepts')} 
                     primary 
                   />
-                  
+
                   {/* Secondary stats */}
                   <QuickStatButton 
                     player={player} 
@@ -536,7 +535,7 @@ const GestureBasedInterface = () => {
               );
             })}
           </div>
-          
+
           <div className="flex justify-between">
             <div className="flex gap-2">
               <Button variant="outline" size="lg" className="touch-manipulation">
@@ -581,7 +580,7 @@ const CompactDashboardInterface = () => {
 
   const StatPill = ({ stat, value, onUpdate, compact = false }) => {
     const StatIcon = stat.icon;
-    
+
     if (compact) {
       return (
         <div className="flex items-center gap-1">
@@ -640,13 +639,13 @@ const CompactDashboardInterface = () => {
                 ))}
               </div>
             </div>
-            
+
             <div className="flex items-center gap-4">
               <div className="text-center">
                 <p className="text-2xl font-bold">26-21</p>
                 <p className="text-xs text-muted-foreground">WNC Leading</p>
               </div>
-              
+
               <div className="flex gap-1">
                 <Button
                   variant={viewMode === 'summary' ? 'default' : 'outline'}
@@ -684,7 +683,7 @@ const CompactDashboardInterface = () => {
                       <Badge variant="outline" className="text-xs">{player.position}</Badge>
                     </div>
                   </div>
-                  
+
                   {/* Key stats display */}
                   <div className="flex items-center gap-4">
                     <StatPill 
@@ -724,7 +723,7 @@ const CompactDashboardInterface = () => {
                       <Badge variant="outline">{player.position}</Badge>
                     </div>
                   </div>
-                  
+
                   <div className="flex-1 grid grid-cols-4 gap-2">
                     {statTypes.slice(0, 8).map(stat => (
                       <StatPill
@@ -756,7 +755,7 @@ const CompactDashboardInterface = () => {
                 Reset
               </Button>
             </div>
-            
+
             <div className="flex items-center gap-4">
               <Badge variant="outline" className="text-sm">
                 Last saved: 2:34 PM
@@ -865,7 +864,7 @@ export default function LiveStatsInterfaceExamples() {
               <li>• Gesture conflicts avoided (scrolling vs. interactions)</li>
             </ul>
           </div>
-          
+
           <div>
             <h4 className="font-semibold mb-2">Data Management</h4>
             <ul className="text-sm text-muted-foreground space-y-1">
@@ -875,7 +874,7 @@ export default function LiveStatsInterfaceExamples() {
               <li>• Optimistic UI updates with error handling</li>
             </ul>
           </div>
-          
+
           <div>
             <h4 className="font-semibold mb-2">Performance</h4>
             <ul className="text-sm text-muted-foreground space-y-1">
@@ -1092,7 +1091,7 @@ export default function LiveStatsInterfaceExamples() {
             <div className="text-lg font-medium">Away</div>
           </div>
         </div>
-        
+
         <div className="flex gap-4 justify-center">
           <Button
             size="lg"
@@ -1176,7 +1175,7 @@ export default function LiveStatsInterfaceExamples() {
             </Button>
             <div className="text-2xl font-mono font-bold">{gameTime}</div>
           </div>
-          
+
           <div className="flex items-center gap-6">
             <div className="text-center">
               <div className="text-3xl font-bold text-blue-600">{getTotalScore().home}</div>
@@ -1188,7 +1187,7 @@ export default function LiveStatsInterfaceExamples() {
               <div className="text-sm font-medium">Opponents</div>
             </div>
           </div>
-          
+
           <Button variant="outline" size="lg">
             <Save className="w-5 h-5 mr-2" />
             Save All
@@ -1203,7 +1202,7 @@ export default function LiveStatsInterfaceExamples() {
           <div className="absolute inset-4 border-2 border-white rounded"></div>
           <div className="absolute left-4 right-4 top-1/3 border-t-2 border-white"></div>
           <div className="absolute left-4 right-4 bottom-1/3 border-t-2 border-white"></div>
-          
+
           {/* Goal Circles */}
           <div className="absolute left-4 top-4 w-16 h-16 border-2 border-white rounded-full flex items-center justify-center">
             <Target className="w-8 h-8 text-white" />
@@ -1217,7 +1216,7 @@ export default function LiveStatsInterfaceExamples() {
             const player = mockPlayers.find(p => p.position === position);
             const xPositions = [10, 25, 40, 50, 60, 75, 90];
             const yPosition = 40;
-            
+
             return (
               <div
                 key={position}
@@ -1306,7 +1305,7 @@ export default function LiveStatsInterfaceExamples() {
             <div className="text-6xl font-bold text-red-600 mt-4 mb-2">{getTotalScore().away}</div>
             <div className="text-lg font-medium">Opponents</div>
           </div>
-          
+
           <div className="grid grid-cols-2 gap-4 mt-6">
             <Button
               size="lg"
@@ -1330,7 +1329,7 @@ export default function LiveStatsInterfaceExamples() {
             <div className="text-3xl font-mono font-bold">{gameTime}</div>
             <Badge variant="secondary" className="text-xl px-4 py-2">Q{currentQuarter}</Badge>
           </div>
-          
+
           <div className="grid grid-cols-4 gap-2">
             {[1, 2, 3, 4].map(quarter => (
               <Button
