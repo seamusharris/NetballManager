@@ -1186,9 +1186,9 @@ const QuickTapCurrentInterface = () => {
   const [undoStack, setUndoStack] = useState([]);
   const [redoStack, setRedoStack] = useState([]);
   
-  // Player assignment and interchange state
+  // Player assignment and interchange state - using mock player IDs from this file
   const [currentPositions, setCurrentPositions] = useState({
-    'GS': 60, 'GA': 59, 'WA': 76, 'C': 81, 'WD': 63, 'GD': 61, 'GK': 67 // Mock initial assignments
+    'GS': 1, 'GA': 2, 'WA': 3, 'C': 4, 'WD': 5, 'GD': 6, 'GK': 7 // Mock initial assignments
   });
   const [interchanges, setInterchanges] = useState([]);
   const [showInterchangePanel, setShowInterchangePanel] = useState(false);
