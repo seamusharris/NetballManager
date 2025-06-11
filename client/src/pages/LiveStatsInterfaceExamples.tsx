@@ -814,7 +814,8 @@ const QuickTapCurrentInterface = () => {
 
   const positionLabels = {
     'GS': 'Goal Shooter', 'GA': 'Goal Attack', 'WA': 'Wing Attack', 'C': 'Centre',
-    'WD': 'Wing Defence', 'GD': 'Goal Defence', 'GK': 'Goal Keeper'
+    'WD': 'Wing Defence', 'GD': 'Goal Defence',```python
+ 'GK': 'Goal Keeper'
   };
 
   const allPositions = ['GS', 'GA', 'WA', 'C', 'WD', 'GD', 'GK'];
@@ -846,7 +847,7 @@ const QuickTapCurrentInterface = () => {
     setRedoStack([]);
 
     const key = getPositionQuarterKey(position, currentQuarter);
-    
+
     setPositionStats(prev => {
       const newStats = JSON.parse(JSON.stringify(prev));
       if (!newStats[key]) {
@@ -1049,7 +1050,7 @@ const QuickTapCurrentInterface = () => {
                   }
 
                   return (
-                    <div className="grid grid-cols-3 gap-2 max-w-md mx-auto">
+                    <div className="flex justify-center gap-2">
                       {posSpecificStats.map(statType => (
                         <QuickStatButton
                           key={statType}
