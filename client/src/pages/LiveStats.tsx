@@ -21,6 +21,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { gameScoreService } from '@/lib/gameScoreService';
 import { validateInterClubScores, getScoreDiscrepancyWarning } from '@/lib/scoreValidation';
+import PlayerInterchangeTracker from '@/components/games/PlayerInterchangeTracker';
 import { OfficialScoreEntry } from '@/components/games/OfficialScoreEntry';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
