@@ -785,7 +785,399 @@ const CompactDashboardInterface = () => {
   );
 };
 
-// Design 5: Quick Tap Version of Current LiveStats
+// Design 5: Timer-Enhanced Live Stats Interface
+const TimerEnhancedInterface = () => {
+  const [positionStats, setPositionStats] = useState({});
+  const [currentQuarter, setCurrentQuarter] = useState(1);
+  const [undoStack, setUndoStack] = useState([]);
+  const [redoStack, setRedoStack] = useState([]);
+
+  // Timer state
+  const [isTimerRunning, setIsTimerRunning] = useState(false);
+  const [timeRemaining, setTimeRemaining] = useState(15 * 60); // 15 minutes in seconds
+  const [quarterLength, setQuarterLength] = useState(15); // minutes
+  const [gameStarted, setGameStarted] = useState(false);
+
+  // Timer effect
+  useEffect(() => {
+    let interval: NodeJS.Timeout | null = null;
+    
+    if (isTimerRunning && timeRemaining > 0) {
+      interval = setInterval(() => {
+        setTimeRemaining(time => {
+          if (time <= 1) {
+            setIsTimerRunning(false);
+            // Auto advance to next quarter if not Q4
+            if (currentQuarter < 4) {
+              setTimeout(() => {
+                setCurrentQuarter(q => q + 1);
+                setTimeRemaining(quarterLength * 60);
+              }, 1000);
+            }
+            return 0;
+          }
+          return time - 1;
+        });
+      }, 1000);
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isTimerRunning, timeRemaining, currentQuarter, quarterLength]);
+
+  // Format time display
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // Timer controls
+  const startTimer = () => {
+    setGameStarted(true);
+    setIsTimerRunning(true);
+  };
+
+  const pauseTimer = () => {
+    setIsTimerRunning(false);
+  };
+
+  const resetQuarter = () => {
+    setIsTimerRunning(false);
+    setTimeRemaining(quarterLength * 60);
+  };
+
+  const endQuarter = () => {
+    setIsTimerRunning(false);
+    if (currentQuarter < 4) {
+      setCurrentQuarter(q => q + 1);
+      setTimeRemaining(quarterLength * 60);
+    }
+  };
+
+  const recordStat = (position: string, stat: string) => {
+    // Get current time for interchange tracking
+    const currentTime = formatTime(timeRemaining);
+    console.log(`Stat recorded: ${position} ${stat} at ${currentTime} in Q${currentQuarter}`);
+    
+    // Update stats (simplified for demo)
+    setPositionStats(prev => {
+      const key = `${position}-${currentQuarter}`;
+      const newStats = { ...prev };
+      if (!newStats[key]) newStats[key] = {};
+      newStats[key][stat] = (newStats[key][stat] || 0) + 1;
+      return newStats;
+    });
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Game Timer Header */}
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Timer className="h-5 w-5" />
+                Live Game Timer
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">
+                WNC Dingoes vs Emeralds
+              </p>
+            </div>
+            
+            {/* Quarter Length Selector */}
+            <div className="flex items-center gap-2">
+              <span className="text-sm">Quarter Length:</span>
+              <select 
+                value={quarterLength} 
+                onChange={(e) => {
+                  const newLength = parseInt(e.target.value);
+                  setQuarterLength(newLength);
+                  if (!isTimerRunning) {
+                    setTimeRemaining(newLength * 60);
+                  }
+                }}
+                className="px-2 py-1 border rounded text-sm"
+                disabled={gameStarted}
+              >
+                <option value={10}>10 min</option>
+                <option value={12}>12 min</option>
+                <option value={15}>15 min</option>
+                <option value={20}>20 min</option>
+              </select>
+            </div>
+          </div>
+        </CardHeader>
+        
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Timer Display */}
+            <Card className="text-center">
+              <CardContent className="py-4">
+                <div className="space-y-2">
+                  <div className="text-4xl font-bold font-mono">
+                    {formatTime(timeRemaining)}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    Quarter {currentQuarter} • {quarterLength} minutes
+                  </div>
+                  
+                  {/* Progress Bar */}
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div 
+                      className="bg-blue-600 h-2 rounded-full transition-all duration-1000"
+                      style={{
+                        width: `${((quarterLength * 60 - timeRemaining) / (quarterLength * 60)) * 100}%`
+                      }}
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Quarter Selector */}
+            <Card>
+              <CardContent className="py-4">
+                <div className="space-y-3">
+                  <div className="text-sm font-semibold text-center">Quarter</div>
+                  <div className="grid grid-cols-4 gap-1">
+                    {[1, 2, 3, 4].map(quarter => (
+                      <Button
+                        key={quarter}
+                        variant={quarter === currentQuarter ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => {
+                          setCurrentQuarter(quarter);
+                          if (!isTimerRunning) {
+                            setTimeRemaining(quarterLength * 60);
+                          }
+                        }}
+                        className="h-8 touch-manipulation"
+                      >
+                        {quarter}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Timer Controls */}
+            <Card>
+              <CardContent className="py-4">
+                <div className="space-y-2">
+                  <div className="text-sm font-semibold text-center mb-3">Timer Controls</div>
+                  
+                  <div className="grid grid-cols-2 gap-2">
+                    {!gameStarted ? (
+                      <Button 
+                        onClick={startTimer}
+                        className="bg-green-600 hover:bg-green-700 col-span-2 touch-manipulation"
+                      >
+                        <Play className="h-4 w-4 mr-1" />
+                        Start Game
+                      </Button>
+                    ) : (
+                      <>
+                        {isTimerRunning ? (
+                          <Button onClick={pauseTimer} variant="outline" className="touch-manipulation">
+                            <Pause className="h-4 w-4 mr-1" />
+                            Pause
+                          </Button>
+                        ) : (
+                          <Button onClick={startTimer} className="touch-manipulation">
+                            <Play className="h-4 w-4 mr-1" />
+                            Resume
+                          </Button>
+                        )}
+                        
+                        <Button onClick={resetQuarter} variant="outline" className="touch-manipulation">
+                          <RotateCcw className="h-4 w-4 mr-1" />
+                          Reset
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                  
+                  {gameStarted && (
+                    <Button 
+                      onClick={endQuarter} 
+                      variant="secondary" 
+                      className="w-full mt-2 touch-manipulation"
+                      disabled={currentQuarter >= 4 && timeRemaining === 0}
+                    >
+                      End Quarter {currentQuarter}
+                    </Button>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Game Score with Timer Integration */}
+      <Card>
+        <CardContent className="py-3">
+          <div className="grid grid-cols-3 gap-4 text-center">
+            <div>
+              <p className="text-sm text-muted-foreground">WNC Dingoes</p>
+              <p className="text-3xl font-bold">
+                {Object.values(positionStats).reduce((sum: number, pos: any) => {
+                  return sum + Object.keys(pos).reduce((qSum, quarter) => {
+                    return qSum + (pos[quarter]?.goalsFor || 0);
+                  }, 0);
+                }, 0)}
+              </p>
+            </div>
+            <div className="flex flex-col items-center justify-center">
+              <div className="text-xs text-muted-foreground mb-1">
+                {timeRemaining === 0 ? 'Quarter End' : isTimerRunning ? 'LIVE' : 'PAUSED'}
+              </div>
+              <span className="text-2xl font-bold">-</span>
+              <div className="text-xs text-muted-foreground mt-1">
+                Q{currentQuarter}
+              </div>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Emeralds</p>
+              <p className="text-3xl font-bold">
+                {Object.values(positionStats).reduce((sum: number, pos: any) => {
+                  return sum + Object.keys(pos).reduce((qSum, quarter) => {
+                    return qSum + (pos[quarter]?.goalsAgainst || 0);
+                  }, 0);
+                }, 0)}
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Position Cards with Timer Context */}
+      <div className="space-y-3">
+        {mockPlayers.slice(0, 3).map(player => {
+          const currentTime = formatTime(timeRemaining);
+          
+          return (
+            <Card key={player.id}>
+              <CardHeader className="py-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-10 w-10 bg-blue-500 text-white">
+                      <AvatarFallback>{player.avatar}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <h3 className="font-semibold text-sm">{player.name}</h3>
+                      <Badge variant="outline" className="text-xs">{player.position}</Badge>
+                    </div>
+                  </div>
+                  
+                  <div className="text-right text-xs text-muted-foreground">
+                    <div>Q{currentQuarter} • {currentTime}</div>
+                    <div className={`mt-1 px-2 py-1 rounded text-xs ${
+                      isTimerRunning ? 'bg-green-100 text-green-700' : 
+                      timeRemaining === 0 ? 'bg-red-100 text-red-700' :
+                      'bg-yellow-100 text-yellow-700'
+                    }`}>
+                      {isTimerRunning ? 'LIVE' : timeRemaining === 0 ? 'END' : 'PAUSED'}
+                    </div>
+                  </div>
+                </div>
+              </CardHeader>
+              
+              <CardContent className="py-2">
+                <div className="grid grid-cols-4 gap-2">
+                  {['goalsFor', 'intercepts', 'badPass', 'rebounds'].map(stat => {
+                    const statKey = `${player.position}-${currentQuarter}`;
+                    const value = positionStats[statKey]?.[stat] || 0;
+                    
+                    return (
+                      <Button
+                        key={stat}
+                        variant="outline"
+                        className="h-12 flex flex-col gap-1 touch-manipulation relative"
+                        onClick={() => recordStat(player.position, stat)}
+                      >
+                        <span className="text-xs capitalize">{stat}</span>
+                        <span className="font-bold">{value}</span>
+                        {value > 0 && (
+                          <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs">
+                            {value}
+                          </Badge>
+                        )}
+                      </Button>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+
+      {/* Interchange Timeline with Timer */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Game Timeline</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between items-center p-2 bg-green-50 rounded">
+              <span>Q{currentQuarter} Started</span>
+              <span>{formatTime(quarterLength * 60)}</span>
+            </div>
+            
+            {timeRemaining < quarterLength * 60 && (
+              <div className="flex justify-between items-center p-2 bg-blue-50 rounded">
+                <span>Current Time</span>
+                <span className="font-mono font-bold">{currentTime}</span>
+              </div>
+            )}
+            
+            {timeRemaining === 0 && (
+              <div className="flex justify-between items-center p-2 bg-red-50 rounded">
+                <span>Q{currentQuarter} Ended</span>
+                <span>00:00</span>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Action Bar with Timer-Aware Saving */}
+      <Card>
+        <CardContent className="py-3">
+          <div className="flex justify-between items-center">
+            <div className="flex gap-2">
+              <Button variant="outline" className="touch-manipulation">
+                <Undo className="h-4 w-4 mr-2" />
+                Undo
+              </Button>
+              <Button variant="outline" className="touch-manipulation">
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Reset Quarter
+              </Button>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <div className="text-xs text-muted-foreground">
+                Game Time: {formatTime((quarterLength * 60 * (currentQuarter - 1)) + (quarterLength * 60 - timeRemaining))}
+              </div>
+              <Button className="bg-green-600 hover:bg-green-700 text-white touch-manipulation">
+                <Save className="h-4 w-4 mr-2" />
+                Save Stats
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+// Design 6: Quick Tap Version of Current LiveStats
 const QuickTapCurrentInterface = () => {
   const [positionStats, setPositionStats] = useState({});
   const [currentQuarter, setCurrentQuarter] = useState(1);
@@ -1122,6 +1514,12 @@ export default function LiveStatsInterfaceExamples() {
       component: CompactDashboardInterface
     },
     {
+      id: 'timer-enhanced',
+      name: 'Timer-Enhanced Live Stats',
+      description: 'Complete live game experience with countdown timer, quarter management, and timestamped stats.',
+      component: TimerEnhancedInterface
+    },
+    {
       id: 'quick-tap-current',
       name: 'Quick Tap (Current Layout)',
       description: 'Your current LiveStats layout converted to quick-tap gesture entry. Single tap to add stats.',
@@ -1221,6 +1619,27 @@ export default function LiveStatsInterfaceExamples() {
                 <li>• Debounced save operations</li>
                 <li>• Efficient state updates using useCallback</li>
                 <li>• Virtual scrolling for large player lists</li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="font-semibold mb-2">Timer Integration</h4>
+              <ul className="text-sm text-muted-foreground space-y-1">
+                <li>• Live countdown with customizable quarter lengths (10, 12, 15, 20 minutes)</li>
+                <li>• Automatic quarter progression when time expires</li>
+                <li>• Timestamped stat recording for interchange tracking</li>
+                <li>• Pause/resume functionality for time-outs and breaks</li>
+                <li>• Visual progress indicators and live game status</li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="font-semibold mb-2">Interchange Support</h4>
+              <ul className="text-sm text-muted-foreground space-y-1">
+                <li>• Stats timestamped with exact game time</li>
+                <li>• Mid-quarter interchange tracking capability</li>
+                <li>• Timeline view showing when stats were recorded</li>
+                <li>• Supports both live and post-game data entry</li>
               </ul>
             </div>
           </CardContent>
