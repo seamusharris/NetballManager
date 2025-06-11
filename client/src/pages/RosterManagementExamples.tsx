@@ -39,6 +39,33 @@ const samplePlayers = [
 
 const positions = ["GS", "GA", "WA", "C", "WD", "GD", "GK"];
 
+// Define a PlayerBox Component
+const PlayerBox = ({ player, showPositions = true, size = "md", className = "" }: {
+  player: any,
+  showPositions?: boolean,
+  size?: "sm" | "md",
+  className?: string
+}) => {
+  const avatarSize = size === "sm" ? "h-6 w-6" : "h-8 w-8";
+  const fontSize = size === "sm" ? "text-xs" : "text-sm";
+
+  return (
+    <div className={`flex flex-col items-center ${className}`}>
+      <Avatar className={avatarSize}>
+        <AvatarFallback className={`${player.color} text-white text-xs`}>
+          {player.name.split(' ').map(n => n[0]).join('')}
+        </AvatarFallback>
+      </Avatar>
+      <div className={`${fontSize} font-medium mt-1`}>{player.displayName}</div>
+      {showPositions && (
+        <div className="text-xs text-gray-500">
+          Plays: {player.positions.join(', ')}
+        </div>
+      )}
+    </div>
+  );
+};
+
 // Drag and Drop Interface
 function DragDropRoster() {
   const [currentQuarter, setCurrentQuarter] = useState(1);
@@ -97,7 +124,7 @@ function DragDropRoster() {
   // Copy quarter function
   const handleCopyQuarter = (sourceQuarter: number, targetQuarter: number) => {
     if (sourceQuarter === targetQuarter) return;
-    
+
     const newAssignments = {
       ...assignments,
       [targetQuarter]: { ...assignments[sourceQuarter] }
@@ -154,7 +181,7 @@ function DragDropRoster() {
     };
     return acc;
   }, {});
-  
+
 
 return (
     <Card>
@@ -190,7 +217,7 @@ return (
               <Trash2 className="h-4 w-4 mr-1" />
               Reset All
             </Button>
-            
+
             {/* Copy Quarter Controls - like in the main roster manager */}
             <div className="flex items-center gap-2 flex-wrap">
               {[1, 2, 3, 4].map(sourceQuarter => (
@@ -240,14 +267,23 @@ return (
                   {['GS', 'GA'].map(position => (
                     <div
                       key={position}
-                      className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center min-h-[80px] bg-white"
+                      className="border-2 border-dashed border-gray-300 rounded-lg p-3 text-center min-h-[120px] bg-white hover:bg-gray-50 transition-colors"
                       onDragOver={handleDragOver}
                       onDrop={() => handleDrop(position)}
                     >
-                      <div className="text-xs font-medium mb-2">{position}</div>
-                      {currentQuarterAssignments[position] && (
-                        <div className="bg-primary text-white rounded px-2 py-1 text-xs">
-                          {samplePlayers.find(p => p.id === currentQuarterAssignments[position])?.displayName}
+                      <div className="text-sm font-bold mb-2 text-gray-700">{position}</div>
+                      {currentQuarterAssignments[position] ? (
+                        <div className="scale-75 origin-center">
+                          <PlayerBox 
+                            player={samplePlayers.find(p => p.id === currentQuarterAssignments[position])!}
+                            showPositions={false}
+                            size="sm"
+                            className="shadow-sm"
+                          />
+                        </div>
+                      ) : (
+                        <div className="text-gray-400 text-xs mt-4">
+                          Drop player here
                         </div>
                       )}
                     </div>
@@ -260,14 +296,23 @@ return (
                   {['WA', 'C', 'WD'].map(position => (
                     <div
                       key={position}
-                      className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center min-h-[80px] bg-white"
+                      className="border-2 border-dashed border-gray-300 rounded-lg p-3 text-center min-h-[120px] bg-white hover:bg-gray-50 transition-colors"
                       onDragOver={handleDragOver}
                       onDrop={() => handleDrop(position)}
                     >
-                      <div className="text-xs font-medium mb-2">{position}</div>
-                      {currentQuarterAssignments[position] && (
-                        <div className="bg-primary text-white rounded px-2 py-1 text-xs">
-                          {samplePlayers.find(p => p.id === currentQuarterAssignments[position])?.displayName}
+                      <div className="text-sm font-bold mb-2 text-gray-700">{position}</div>
+                      {currentQuarterAssignments[position] ? (
+                        <div className="scale-75 origin-center">
+                          <PlayerBox 
+                            player={samplePlayers.find(p => p.id === currentQuarterAssignments[position])!}
+                            showPositions={false}
+                            size="sm"
+                            className="shadow-sm"
+                          />
+                        </div>
+                      ) : (
+                        <div className="text-gray-400 text-xs mt-4">
+                          Drop player here
                         </div>
                       )}
                     </div>
@@ -280,14 +325,23 @@ return (
                   {['GD', 'GK'].map(position => (
                     <div
                       key={position}
-                      className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center min-h-[80px] bg-white"
+                      className="border-2 border-dashed border-gray-300 rounded-lg p-3 text-center min-h-[120px] bg-white hover:bg-gray-50 transition-colors"
                       onDragOver={handleDragOver}
                       onDrop={() => handleDrop(position)}
                     >
-                      <div className="text-xs font-medium mb-2">{position}</div>
-                      {currentQuarterAssignments[position] && (
-                        <div className="bg-primary text-white rounded px-2 py-1 text-xs">
-                          {samplePlayers.find(p => p.id === currentQuarterAssignments[position])?.displayName}
+                      <div className="text-sm font-bold mb-2 text-gray-700">{position}</div>
+                      {currentQuarterAssignments[position] ? (
+                        <div className="scale-75 origin-center">
+                          <PlayerBox 
+                            player={samplePlayers.find(p => p.id === currentQuarterAssignments[position])!}
+                            showPositions={false}
+                            size="sm"
+                            className="shadow-sm"
+                          />
+                        </div>
+                      ) : (
+                        <div className="text-gray-400 text-xs mt-4">
+                          Drop player here
                         </div>
                       )}
                     </div>
@@ -326,7 +380,7 @@ return (
                 const quarterDisplay = stats.quarters.length > 0 
                   ? `Q${stats.quarters.sort().join(', Q')}` 
                   : 'No quarters';
-                
+
                 return (
                   <div key={player.id} className="flex justify-between items-center p-2 bg-gray-50 rounded">
                     <div>
@@ -766,147 +820,4 @@ function MultiQuarterRoster() {
 export default function RosterManagementExamples() {
   const breadcrumbs = [
     { label: 'Examples', href: '/component-examples' },
-    { label: 'Roster Management', href: '/roster-management-examples' }
-  ];
-
-  return (
-    <PageTemplate
-      title="Roster Management Examples"
-      subtitle="Different interface patterns for assigning players to court positions"
-      breadcrumbs={breadcrumbs}
-    >
-      <Helmet>
-        <title>Roster Management Examples - Netball Team Manager</title>
-      </Helmet>
-
-      <div className="space-y-8">
-        <Tabs defaultValue="drag-drop" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="drag-drop">Drag & Drop</TabsTrigger>
-            <TabsTrigger value="grid">Grid Selection</TabsTrigger>
-            <TabsTrigger value="visual">Visual Court</TabsTrigger>
-            <TabsTrigger value="multi-quarter">Multi-Quarter</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="drag-drop" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <ArrowUpDown className="h-5 w-5" />
-                  <span>Drag & Drop Interface</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <DragDropRoster />
-                <div className="mt-4 text-sm text-gray-600">
-                  Drag players from the left panel and drop them onto court positions. 
-                  This provides an intuitive way to assign players by physically moving them.
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="grid" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Grid3X3 className="h-5 w-5" />
-                  <span>Grid-Based Selection</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <GridRoster />
-                <div className="mt-4 text-sm text-gray-600">
-                  Matrix view showing all players and positions. Click the + button to assign, 
-                  ✓ to confirm assignment, or - if the player can't play that position.
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="visual" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Target className="h-5 w-5" />
-                  <span>Visual Court Layout</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <VisualCourtRoster />
-                <div className="mt-4 text-sm text-gray-600">
-                  Interactive court diagram where you click positions to select them, 
-                  then choose a player. Provides spatial context for position assignments.
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="multi-quarter" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Clock className="h-5 w-5" />
-                  <span>Multi-Quarter Management</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <MultiQuarterRoster />
-                <div className="mt-4 text-sm text-gray-600">
-                  Manage all four quarters at once with quick copying between quarters and 
-                  visual playing time tracking to ensure fair rotation.
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-
-        {/* Implementation Notes */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Implementation Notes</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div>
-                <h4 className="font-semibold text-sm">Drag & Drop Benefits:</h4>
-                <ul className="text-sm text-gray-600 list-disc list-inside mt-1">
-                  <li>Most intuitive interface - feels like physically moving players</li>
-                  <li>Works well on touch devices</li>
-                  <li>Clear visual feedback during interaction</li>
-                </ul>
-              </div>
-
-              <div>
-                <h4 className="font-semibold text-sm">Grid Selection Benefits:</h4>
-                <ul className="text-sm text-gray-600 list-disc list-inside mt-1">
-                  <li>Shows all information at once - no hidden state</li>
-                  <li>Fast for experienced users</li>
-                  <li>Easy to see player capabilities vs assignments</li>
-                </ul>
-              </div>
-
-              <div>
-                <h4 className="font-semibold text-sm">Visual Court Benefits:</h4>
-                <ul className="text-sm text-gray-600 list-disc list-inside mt-1">
-                  <li>Provides spatial context for position relationships</li>
-                  <li>Great for tactical planning and visualization</li>
-                  <li>Intuitive for users familiar with netball</li>
-                </ul>
-              </div>
-
-              <div>
-                <h4 className="font-semibold text-sm">Multi-Quarter Benefits:</h4>
-                <ul className="text-sm text-gray-600 list-disc list-inside mt-1">
-                  <li>Efficient management of entire game roster</li>
-                  <li>Built-in fairness tracking</li>
-                  <li>Quick quarter-to-quarter copying</li>
-                </ul>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    </PageTemplate>
-  );
-}
+    { label: 'Roster Management', href
