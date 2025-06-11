@@ -5,8 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowRightLeft, Clock, Undo2, History } from 'lucide-react';
-import { Player, Position } from '@shared/schema';
-import { allPositions, positionLabels } from '@/lib/utils';
+import { Player, Position, allPositions } from '@shared/schema';
+import { positionLabels } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
 interface PlayerInterchange {
