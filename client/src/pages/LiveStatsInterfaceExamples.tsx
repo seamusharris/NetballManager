@@ -31,7 +31,8 @@ import {
   Eye,
   EyeOff,
   BarChart3,
-  Zap
+  Zap,
+  RefreshCw
 } from 'lucide-react';
 
 // Mock data for demonstration
