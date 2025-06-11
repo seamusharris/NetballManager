@@ -22,6 +22,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { gameScoreService } from '@/lib/gameScoreService';
 import { validateInterClubScores, getScoreDiscrepancyWarning } from '@/lib/scoreValidation';
 import PlayerInterchangeTracker from '@/components/games/PlayerInterchangeTracker';
+import { OfficialScoreEntry } from '@/components/games/OfficialScoreEntry';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 // Stat types that can be tracked
@@ -277,6 +278,7 @@ export default function LiveStats() {
   useEffect(() => {
     if (existingStats) {
       console.log(`Initializing position-based stats with ${existingStats.length} existing stats`);
+      console.log('Raw existing stats:', existingStats);
 
       const initialStats: PositionStats = {};
 
