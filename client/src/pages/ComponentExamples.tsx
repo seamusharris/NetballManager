@@ -2,8 +2,30 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PageTemplate } from '@/components/layout/PageTemplate';
 import { Link } from 'wouter';
 import { 
-  Users, Calendar, Trophy, Settings, 
-  Gamepad2, Target, BarChart, Palette 
+  Palette, 
+  Layout, 
+  Mouse, 
+  Type, 
+  Grid, 
+  Users, 
+  Search, 
+  Bell, 
+  Navigation, 
+  Table, 
+  BarChart3, 
+  Settings,
+  Gamepad2,
+  Trophy,
+  Target,
+  Calendar,
+  Clock,
+  Zap,
+  Layers,
+  Box,
+  List,
+  Filter,
+  ChevronRight,
+  Activity
 } from 'lucide-react';
 
 interface ExampleSection {
