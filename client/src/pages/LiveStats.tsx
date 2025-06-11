@@ -369,6 +369,30 @@ export default function LiveStats() {
     }
   }, [existingStats]);
 
+  // Initialize current positions from roster data
+  useEffect(() => {
+    if (rosters && rosters.length > 0) {
+      const latestPositions: Record<Position, number | null> = {
+        'GS': null,
+        'GA': null,
+        'WA': null,
+        'C': null,
+        'WD': null,
+        'GD': null,
+        'GK': null
+      };
+
+      // Find the roster entry for each position in the current quarter
+      rosters.forEach(entry => {
+        if (entry.quarter === currentQuarter) {
+          latestPositions[entry.position] = entry.playerId;
+        }
+      });
+
+      setCurrentPositions(latestPositions);
+    }
+  }, [rosters, currentQuarter]);
+
   // Get player details by ID
   const getPlayer = (playerId: number): Player | undefined => {
     return players?.find((p: Player) => p.id === playerId);

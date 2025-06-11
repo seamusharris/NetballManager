@@ -176,7 +176,7 @@ export default function PlayerInterchangeTracker({
                 <SelectContent>
                   {allPositions.map(position => (
                     <SelectItem key={position} value={position}>
-                      {position} - {currentPositions[position] ? getPlayerName(currentPositions[position]!) : 'Empty'}
+                      {position} - {currentPositions[position] ? getPlayerName(currentPositions[position]!) : 'No Player'}
                     </SelectItem>
                   ))}
                 </SelectContent>
