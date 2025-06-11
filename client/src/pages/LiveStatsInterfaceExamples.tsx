@@ -32,7 +32,9 @@ import {
   EyeOff,
   BarChart3,
   Zap,
-  RefreshCw
+  RefreshCw,
+  ArrowRightLeft,
+  Clock
 } from 'lucide-react';
 
 // Mock data for demonstration
@@ -1183,6 +1185,13 @@ const QuickTapCurrentInterface = () => {
   const [currentQuarter, setCurrentQuarter] = useState(1);
   const [undoStack, setUndoStack] = useState([]);
   const [redoStack, setRedoStack] = useState([]);
+  
+  // Player assignment and interchange state
+  const [currentPositions, setCurrentPositions] = useState({
+    'GS': 60, 'GA': 59, 'WA': 76, 'C': 81, 'WD': 63, 'GD': 61, 'GK': 67 // Mock initial assignments
+  });
+  const [interchanges, setInterchanges] = useState([]);
+  const [showInterchangePanel, setShowInterchangePanel] = useState(false);
 
   // Timer state
   const [isTimerRunning, setIsTimerRunning] = useState(false);
@@ -1348,6 +1357,44 @@ const QuickTapCurrentInterface = () => {
       }
     });
     return total;
+  };
+
+  // Get player name by ID
+  const getPlayerName = (playerId) => {
+    return mockPlayers.find(p => p.id === playerId)?.name || 'Unknown';
+  };
+
+  // Get available players for substitution (not currently on court)
+  const getAvailablePlayers = () => {
+    const onCourtPlayerIds = Object.values(currentPositions).filter(Boolean);
+    return mockPlayers.filter(player => !onCourtPlayerIds.includes(player.id));
+  };
+
+  // Record an interchange
+  const recordInterchange = (position, playerOut, playerIn, reason = 'tactical') => {
+    const currentTime = formatTime(timeRemaining);
+    
+    const newInterchange = {
+      id: `${Date.now()}`,
+      timestamp: new Date(),
+      quarter: currentQuarter,
+      timeInQuarter: currentTime,
+      position,
+      playerOut,
+      playerIn,
+      reason
+    };
+
+    // Add to interchange history
+    setInterchanges(prev => [newInterchange, ...prev]);
+
+    // Update current positions
+    setCurrentPositions(prev => ({
+      ...prev,
+      [position]: playerIn
+    }));
+
+    console.log(`Interchange recorded: ${getPlayerName(playerOut)} → ${getPlayerName(playerIn)} at ${position} (${currentTime})`);
   };
 
   // Quick tap stat button - single tap to increment
@@ -1529,15 +1576,27 @@ const QuickTapCurrentInterface = () => {
                     )}
                     
                     {gameStarted && (
-                      <Button 
-                        onClick={endQuarter} 
-                        variant="secondary" 
-                        size="sm"
-                        className="w-full touch-manipulation"
-                        disabled={currentQuarter >= 4 && timeRemaining === 0}
-                      >
-                        End Quarter {currentQuarter}
-                      </Button>
+                      <>
+                        <Button 
+                          onClick={endQuarter} 
+                          variant="secondary" 
+                          size="sm"
+                          className="w-full touch-manipulation"
+                          disabled={currentQuarter >= 4 && timeRemaining === 0}
+                        >
+                          End Quarter {currentQuarter}
+                        </Button>
+                        
+                        <Button 
+                          onClick={() => setShowInterchangePanel(!showInterchangePanel)}
+                          variant={showInterchangePanel ? "default" : "outline"}
+                          size="sm"
+                          className="w-full touch-manipulation"
+                        >
+                          <ArrowRightLeft className="h-3 w-3 mr-1" />
+                          Interchange
+                        </Button>
+                      </>
                     )}
                   </div>
 
@@ -1577,7 +1636,8 @@ const QuickTapCurrentInterface = () => {
 
         {allPositions.map(position => {
           const statConfig = positionStatConfig[position];
-          const player = mockPlayers.find(p => p.position === position);
+          const assignedPlayerId = currentPositions[position];
+          const assignedPlayer = mockPlayers.find(p => p.id === assignedPlayerId);
 
           return (
             <Card key={position} className="overflow-hidden">
@@ -1596,10 +1656,10 @@ const QuickTapCurrentInterface = () => {
                   </div>
 
                   <div className="min-w-[100px]">
-                    {player ? (
-                      <p className="font-semibold text-sm">{player.name}</p>
+                    {assignedPlayer ? (
+                      <p className="font-semibold text-sm">{assignedPlayer.name}</p>
                     ) : (
-                      <p className="font-semibold text-sm">Unassigned</p>
+                      <p className="font-semibold text-sm text-gray-400">Unassigned</p>
                     )}
                     <p className="text-xs text-muted-foreground">{positionLabels[position]}</p>
                   </div>
@@ -1660,6 +1720,105 @@ const QuickTapCurrentInterface = () => {
           );
         })}
       </div>
+
+      {/* Compact Interchange Panel */}
+      {showInterchangePanel && (
+        <Card>
+          <CardHeader className="py-3">
+            <CardTitle className="flex items-center justify-between">
+              <span className="flex items-center gap-2">
+                <ArrowRightLeft className="h-4 w-4" />
+                Quick Interchange - Q{currentQuarter}
+              </span>
+              <div className="text-sm text-muted-foreground">
+                {formatTime(timeRemaining)} remaining
+              </div>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Quick Interchange Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {allPositions.map(position => {
+                const currentPlayerId = currentPositions[position];
+                const currentPlayer = mockPlayers.find(p => p.id === currentPlayerId);
+                const availablePlayers = getAvailablePlayers();
+
+                return (
+                  <div key={position} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                    {/* Position */}
+                    <div 
+                      className="h-8 w-8 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
+                      style={{ backgroundColor: getPositionColor(position) }}
+                    >
+                      {position}
+                    </div>
+
+                    {/* Current Player */}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm truncate">
+                        {currentPlayer?.name || 'No Player'}
+                      </p>
+                    </div>
+
+                    {/* Quick Substitute Buttons */}
+                    <div className="flex gap-1">
+                      {availablePlayers.slice(0, 2).map(player => (
+                        <Button
+                          key={player.id}
+                          variant="outline"
+                          size="sm"
+                          className="h-8 px-2 text-xs touch-manipulation"
+                          onClick={() => currentPlayerId && recordInterchange(position, currentPlayerId, player.id)}
+                          disabled={!currentPlayerId}
+                        >
+                          {player.name.split(' ')[0]}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Recent Interchanges for Current Quarter */}
+            {interchanges.filter(i => i.quarter === currentQuarter).length > 0 && (
+              <div className="space-y-2">
+                <h4 className="font-medium text-sm">Recent Interchanges</h4>
+                <div className="space-y-1">
+                  {interchanges
+                    .filter(i => i.quarter === currentQuarter)
+                    .slice(0, 3)
+                    .map(interchange => (
+                      <div key={interchange.id} className="flex items-center justify-between p-2 bg-blue-50 rounded text-sm">
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className="text-xs">{interchange.timeInQuarter}</Badge>
+                          <Badge className="text-xs">{interchange.position}</Badge>
+                          <span>
+                            {getPlayerName(interchange.playerOut)} → {getPlayerName(interchange.playerIn)}
+                          </span>
+                        </div>
+                        <Badge variant="secondary" className="text-xs capitalize">
+                          {interchange.reason}
+                        </Badge>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            )}
+
+            {/* Close Panel Button */}
+            <div className="pt-2 border-t">
+              <Button 
+                variant="outline" 
+                onClick={() => setShowInterchangePanel(false)}
+                className="w-full touch-manipulation"
+              >
+                Close Interchange Panel
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Timer-Enhanced Action Bar */}
       <Card>
