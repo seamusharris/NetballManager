@@ -820,8 +820,831 @@ export default function LiveStats() {
             className={`${compact ? 'h-6 w-6' : 'h-8 w-8'} p-0 ${statColors[stat]}`}
             onClick={() => handleStatChange(1)}
           >
-            <Plus className={`${compact ? 'h-3 w-3' : 'h-4 w-4'}`} />
+            <Plus className={`${compact ? 'h-3 w-3' : 'h-This commit addresses the issue of the missing `allPositions` export by correcting the import statement.
+<replit_final_file>
+import { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useParams, useLocation } from 'wouter';
+import { apiClient } from '@/lib/apiClient';
+import { useToast } from '@/hooks/use-toast';
+import { useClub } from '@/contexts/ClubContext';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Game, Player, GameStat, Roster, allPositions, Position } from '@shared/schema';
+import { getInitials, formatShortDate, positionLabels, generatePlayerAvatarColor } from '@/lib/utils';
+import { Save, Undo, Redo, Plus, Minus, RefreshCw, RotateCcw } from 'lucide-react';
+import { Helmet } from 'react-helmet';
+import { BackButton } from '@/components/ui/back-button';
+import { clearGameCache, clearAllCache } from '@/lib/scoresCache';
+import { PageTemplate } from '@/components/layout/PageTemplate';
+import { AlertTriangle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { gameScoreService } from '@/lib/gameScoreService';
+import { validateInterClubScores, getScoreDiscrepancyWarning } from '@/lib/scoreValidation';
+import PlayerInterchangeTracker from '@/components/games/PlayerInterchangeTracker';
+import { OfficialScoreEntry } from '@/components/games/OfficialScoreEntry';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+// Stat types that can be tracked
+type StatType = 'goalsFor' | 'goalsAgainst' | 'missedGoals' | 'rebounds' | 
+                'intercepts' | 'badPass' | 'handlingError' | 'pickUp' | 'infringement';
+
+// Quarter stats including both regular stats and position info
+interface QuarterStats {
+  goalsFor: number;
+  goalsAgainst: number;
+  missedGoals: number;
+  rebounds: number;
+  intercepts: number;
+  badPass: number;
+  handlingError: number;
+  pickUp: number;
+  infringement: number;
+  rating: number | null;
+}
+
+// Position-based stats by quarter - key format: "position-quarter" (e.g., "GS-1", "GA-2")
+interface PositionStats {
+  [positionQuarterKey: string]: QuarterStats;
+}
+
+// New empty stat entry
+const emptyQuarterStats = {
+  goalsFor: 0,
+  goalsAgainst: 0,
+  missedGoals: 0,
+  rebounds: 0,
+  intercepts: 0,
+  badPass: 0,
+  handlingError: 0,
+  pickUp: 0,
+  infringement: 0,
+  rating: 5 as number
+};
+
+// Get color for each netball position - colors coordinate with position roles
+const getPositionColor = (position: Position | ''): string => {
+  switch(position) {
+    case 'GS': return '#ef4444'; // Goalers (red)
+    case 'GA': return '#f97316'; // Goalers (orange)
+    case 'WA': return '#eab308'; // Mid-court (yellow)
+    case 'C':  return '#22c55e'; // Mid-court (green)
+    case 'WD': return '#06b6d4'; // Defense (cyan)
+    case 'GD': return '#3b82f6'; // Defense (blue)
+    case 'GK': return '#8b5cf6'; // Defense (purple)
+    default:   return '#6b7280'; // Gray for unknown positions
+  }
+};
+
+// Different stat availabilities by position - true means the stat is available for this position
+const positionStatConfig: Record<Position, Record<StatType, boolean>> = {
+  'GS': {
+    goalsFor: true,
+    goalsAgainst: false,
+    missedGoals: true,
+    rebounds: true,
+    intercepts: true,
+    badPass: true,
+    handlingError: true,
+    pickUp: true,
+    infringement: true
+  },
+  'GA': {
+    goalsFor: true,
+    goalsAgainst: false,
+    missedGoals: true,
+    rebounds: true,
+    intercepts: true,
+    badPass: true,
+    handlingError: true,
+    pickUp: true,
+    infringement: true
+  },
+  'WA': {
+    goalsFor: false,
+    goalsAgainst: false,
+    missedGoals: false,
+    rebounds: false,
+    intercepts: true,
+    badPass: true,
+    handlingError: true,
+    pickUp: true,
+    infringement: true
+  },
+  'C': {
+    goalsFor: false,
+    goalsAgainst: false,
+    missedGoals: false,
+    rebounds: false,
+    intercepts: true,
+    badPass: true,
+    handlingError: true,
+    pickUp: true,
+    infringement: true
+  },
+  'WD': {
+    goalsFor: false,
+    goalsAgainst: false,
+    missedGoals: false,
+    rebounds: false,
+    intercepts: true,
+    badPass: true,
+    handlingError: true,
+    pickUp: true,
+    infringement: true
+  },
+  'GD': {
+    goalsFor: false,
+    goalsAgainst: true,
+    missedGoals: false,
+    rebounds: true,
+    intercepts: true,
+    badPass: true,
+    handlingError: true,
+    pickUp: true,
+    infringement: true
+  },
+  'GK': {
+    goalsFor: false,
+    goalsAgainst: true,
+    missedGoals: false,
+    rebounds: true,
+    intercepts: true,
+    badPass: true,
+    handlingError: true,
+    pickUp: true,
+    infringement: true
+  }
+};
+
+import { STAT_LABELS, STAT_COLORS } from '@/lib/constants';
+const statColors: Record<StatType, string> = {
+  goalsFor: 'bg-green-100 hover:bg-green-200 text-green-700',
+  missedGoals: 'bg-orange-100 hover:bg-orange-200 text-orange-700',
+  goalsAgainst: 'bg-red-100 hover:bg-red-200 text-red-700',
+  rebounds: 'bg-blue-100 hover:bg-blue-200 text-blue-700',
+  intercepts: 'bg-indigo-100 hover:bg-indigo-200 text-indigo-700',
+  pickUp: 'bg-purple-100 hover:bg-purple-200 text-purple-700',
+  badPass: 'bg-amber-100 hover:bg-amber-200 text-amber-700',
+  handlingError: 'bg-pink-100 hover:bg-pink-200 text-pink-700',
+  infringement: 'bg-rose-100 hover:bg-rose-200 text-rose-700'
+};
+
+const statLabels: Record<StatType, string> = {
+  goalsFor: 'Goal',
+  missedGoals: 'Miss',
+  goalsAgainst: 'Goal Against',
+  rebounds: 'Rebound',
+  intercepts: 'Intercept',
+  pickUp: 'Pick Up',
+  badPass: 'Bad Pass',
+  handlingError: 'Handling Error',
+  infringement: 'Infringement'
+};
+
+export default function LiveStats() {
+  const { id } = useParams<{ id: string }>();
+  const gameId = parseInt(id);
+  const [, navigate] = useLocation();
+
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const { currentTeam, clubTeams } = useClub();
+
+  const [activeTab, setActiveTab] = useState('stats');
+  const [currentQuarter, setCurrentQuarter] = useState(1);
+  const [selectedPosition, setSelectedPosition] = useState<Position | null>(null);
+  const [currentPositions, setCurrentPositions] = useState<Record<Position, number | null>>({
+    'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null
+  });
+
+  // State for tracking the game - now using position-quarter keys
+  const [positionStats, setPositionStats] = useState<PositionStats>({});
+  const [undoStack, setUndoStack] = useState<PositionStats[]>([]);
+  const [redoStack, setRedoStack] = useState<PositionStats[]>([]);
+  const [saveInProgress, setSaveInProgress] = useState<boolean>(false);
+  const [showCompletedWarning, setShowCompletedWarning] = useState(false);
+  const [pendingStatChange, setPendingStatChange] = useState<any>(null);
+
+  // Fetch game details - use direct game endpoint to bypass team filtering
+  const { data: game, isLoading: gameLoading } = useQuery({
+    queryKey: ['/api/games', gameId],
+    queryFn: () => apiClient.get(`/api/games/${gameId}`),
+    enabled: !!gameId && !isNaN(gameId)
+  });
+
+  // Fetch opponent details if we have a game
+  const { data: opponent, isLoading: opponentLoading } = useQuery({
+    queryKey: ['/api/opponents', game?.opponentId],
+    queryFn: () => apiClient.get(`/api/opponents/${game?.opponentId}`),
+    enabled: !!game?.opponentId
+  });
+
+  // Fetch player roster for this game
+  const { data: rosters, isLoading: rostersLoading } = useQuery({
+    queryKey: ['/api/games', gameId, 'rosters'],
+    queryFn: () => apiClient.get(`/api/games/${gameId}/rosters`),
+    enabled: !!gameId && !isNaN(gameId)
+  });
+
+  // Fetch existing stats for this game with forced refresh when needed
+  const { data: existingStats, isLoading: statsLoading, refetch: refetchStats } = useQuery({
+    queryKey: ['/api/games', gameId, 'stats'],
+    queryFn: () => apiClient.get(`/api/games/${gameId}/stats`),
+    enabled: !!gameId && !isNaN(gameId),
+    staleTime: 0, // Consider it always stale to fetch fresh data
+    refetchOnMount: 'always', // Always refetch when component mounts
+    refetchOnWindowFocus: true // Refetch when window regains focus
+  });
+
+  // Fetch all players
+  const { data: players, isLoading: playersLoading } = useQuery({
+    queryKey: ['/api/players'],
+    queryFn: () => apiClient.get('/api/players'),
+  });
+
+  // Determine team context - check if current team is home or away
+  const isCurrentTeamHome = game?.homeTeamId === currentTeam?.id;
+  const isCurrentTeamAway = game?.awayTeamId === currentTeam?.id;
+  const hasTeamContext = isCurrentTeamHome || isCurrentTeamAway;
+
+  // Get team names for display
+  const currentTeamName = currentTeam?.name || 'Our Team';
+  const homeTeamName = clubTeams?.find(t => t.id === game?.homeTeamId)?.name || game?.homeTeamName || 'Home Team';
+  const awayTeamName = clubTeams?.find(t => t.id === game?.awayTeamId)?.name || opponent?.teamName || 'Away Team';
+
+  // Determine display names based on team context
+  const ourTeamDisplayName = hasTeamContext ? currentTeamName : homeTeamName;
+  const opponentDisplayName = hasTeamContext 
+    ? (isCurrentTeamHome ? awayTeamName : homeTeamName)
+    : awayTeamName;
+
+    // Check if game is completed
+    const isGameCompleted = game?.gameStatus?.isCompleted === true;
+
+  // Check if game is forfeit and redirect if needed
+  useEffect(() => {
+    if (game && game.status === 'forfeit') {
+      toast({
+        title: "Forfeit Game",
+        description: "Statistics tracking is not available for forfeit games.",
+        variant: "destructive"
+      });
+      navigate('/games');
+    }
+  }, [game, navigate, toast]);
+
+  // Initialize the position stats when existing data is loaded
+  useEffect(() => {
+    if (existingStats) {
+      console.log(`Initializing position-based stats with ${existingStats.length} existing stats`);
+      console.log('Raw existing stats:', existingStats);
+
+      const initialStats: PositionStats = {};
+
+      // Initialize all position-quarter combinations with empty stats
+      allPositions.forEach(position => {
+        for (let quarter = 1; quarter <= 4; quarter++) {
+          const key = `${position}-${quarter}`;
+          initialStats[key] = { ...emptyQuarterStats };
+        }
+      });
+
+      // Process existing stats if any
+      if (existingStats && existingStats.length > 0) {
+        // Group stats by position and quarter to handle duplicates - take the latest one per position/quarter
+        const statsByPositionAndQuarter: Record<string, GameStat> = {};
+
+        // Get the latest stat for each position/quarter combination
+        existingStats.forEach((stat: GameStat) => {
+          if (!stat.position || !stat.quarter) {
+            console.warn("Found invalid stat without position or quarter:", stat);
+            return;
+          }
+
+          const key = `${stat.position}-${stat.quarter}`;
+
+          // If this is the first stat for this position/quarter or has a higher ID (newer)
+          if (!statsByPositionAndQuarter[key] || stat.id > statsByPositionAndQuarter[key].id) {
+            statsByPositionAndQuarter[key] = stat;
+          }
+        });
+
+        console.log(`Processing ${Object.keys(statsByPositionAndQuarter).length} unique position/quarter combinations`);
+
+        // Apply the stats to our initial structure
+        Object.values(statsByPositionAndQuarter).forEach((stat: GameStat) => {
+          const key = `${stat.position}-${stat.quarter}`;
+
+          console.log(`Loading stat for ${stat.position} in Q${stat.quarter}: Goals: ${stat.goalsFor || 0}, Against: ${stat.goalsAgainst || 0}`);
+
+          // Populate individual stat values
+          const statKeys: StatType[] = ['goalsFor', 'goalsAgainst', 'missedGoals', 'rebounds', 'intercepts', 'badPass', 'handlingError', 'pickUp', 'infringement'];
+
+          statKeys.forEach(statKey => {
+            if (stat[statKey] !== undefined && stat[statKey] !== null) {
+              const value = Number(stat[statKey]) || 0;
+              initialStats[key][statKey] = value;
+
+              // Log non-zero values to help with debugging
+              if (value > 0) {
+                console.log(`Setting ${statKey} = ${value} for ${stat.position} in Q${stat.quarter}`);
+              }
+            }
+          });
+
+          // Handle rating separately as it can be null
+          if (stat.rating !== undefined) {
+            initialStats[key].rating = stat.rating;
+            if (stat.rating !== null) {
+              console.log(`Setting rating = ${stat.rating} for ${stat.position} in Q${stat.quarter}`);
+            }
+          }
+        });
+      }
+
+      console.log('Final initialized position stats:', initialStats);
+      setPositionStats(initialStats);
+      // Clear undo/redo stacks when loading fresh data
+      setUndoStack([]);
+      setRedoStack([]);
+    }
+  }, [existingStats]);
+
+  // Get player details by ID
+  const getPlayer = (playerId: number): Player | undefined => {
+    return players?.find((p: Player) => p.id === playerId);
+  };
+
+  // Get current position for a player in the specified quarter
+  const getPlayerForPosition = (position: Position, quarter: number): Player | undefined => {
+    if (!rosters) return undefined;
+
+    const roster = rosters.find((r: Roster) => 
+      r.position === position && r.quarter === quarter
+    );
+
+    return roster ? getPlayer(roster.playerId) : undefined;
+  };
+
+  // Generate position-quarter key
+  const getPositionQuarterKey = (position: Position, quarter: number): string => {
+    return `${position}-${quarter}`;
+  };
+
+  // Record a new stat (local only - no API call)
+  const recordStat = (position: Position, stat: StatType, value: number = 1) => {
+
+    // If game is completed, require confirmation
+    if (isGameCompleted) {
+        setPendingStatChange({ position, stat, value });
+        return;
+    }
+
+    executeStatChange(position, stat, value);
+  };
+
+  // Update player rating for a position in current quarter
+  const updateRating = (position: Position, rating: number | null) => {
+    console.log(`Updating rating for ${position} in Q${currentQuarter}: ${rating}`);
+
+    // Save current state for undo
+    setUndoStack([...undoStack, JSON.parse(JSON.stringify(positionStats))]);
+    setRedoStack([]);
+
+    const key = getPositionQuarterKey(position, currentQuarter);
+
+    setPositionStats(prev => {
+      const newStats = JSON.parse(JSON.stringify(prev));
+
+      // Initialize if needed
+      if (!newStats[key]) {
+        newStats[key] = { ...emptyQuarterStats };
+      }
+
+      // Update the rating
+      newStats[key].rating = rating;
+
+      console.log(`Updated ${position}-Q${currentQuarter} rating to ${rating}`);
+      return newStats;
+    });
+  };
+
+  const executeStatChange = (position: Position, stat: StatType, value: number = 1) => {
+    console.log(`Recording stat ${stat} for position ${position} in Q${currentQuarter}: ${value > 0 ? 'add' : 'remove'}`);
+
+    // Save current state for undo
+    setUndoStack([...undoStack, JSON.parse(JSON.stringify(positionStats))]);
+    setRedoStack([]);
+
+    const key = getPositionQuarterKey(position, currentQuarter);
+
+    setPositionStats(prev => {
+      const newStats = JSON.parse(JSON.stringify(prev));
+
+      // Initialize if needed
+      if (!newStats[key]) {
+        newStats[key] = { ...emptyQuarterStats };
+      }
+
+      // Update the stat
+      const currentValue = newStats[key][stat] || 0;
+      const newValue = Math.max(0, currentValue + value);
+      newStats[key][stat] = newValue;
+
+      console.log(`Updated ${position}-Q${currentQuarter} ${stat} from ${currentValue} to ${newValue}`);
+      return newStats;
+    });
+  };
+
+  const handleConfirmStatChange = () => {
+    if (pendingStatChange) {
+      const { position, stat, value } = pendingStatChange;
+      executeStatChange(position, stat, value);
+    }
+  };
+
+  // Undo last action
+  const handleUndo = () => {
+    if (undoStack.length > 0) {
+      const lastState = undoStack[undoStack.length - 1];
+      const newUndoStack = undoStack.slice(0, -1);
+
+      // Save current state to redo stack
+      setRedoStack([...redoStack, JSON.parse(JSON.stringify(positionStats))]);
+
+      // Restore previous state
+      setPositionStats(lastState);
+      setUndoStack(newUndoStack);
+    }
+  };
+
+  // Redo last undone action
+  const handleRedo = () => {
+    if (redoStack.length > 0) {
+      const nextState = redoStack[redoStack.length - 1];
+      const newRedoStack = redoStack.slice(0, -1);
+
+      // Save current state to undo stack
+      setUndoStack([...undoStack, JSON.parse(JSON.stringify(positionStats))]);
+
+      // Restore next state
+      setPositionStats(nextState);
+      setRedoStack(newRedoStack);
+    }
+  };
+
+  // Reset stats for the current quarter only
+  const resetCurrentQuarter = () => {
+    // Save current state for undo
+    setUndoStack([...undoStack, JSON.parse(JSON.stringify(positionStats))]);
+    setRedoStack([]);
+
+    setPositionStats(prev => {
+      const newStats = JSON.parse(JSON.stringify(prev));
+
+      // Reset only the current quarter's stats for all positions
+      allPositions.forEach(position => {
+        const key = getPositionQuarterKey(position, currentQuarter);
+        newStats[key] = { ...emptyQuarterStats };
+      });
+
+      return newStats;
+    });
+
+    // Clear the game cache when stats are reset to ensure scores are recalculated properly
+    clearGameCache(gameId);
+    console.log(`Cleared score cache for game ${gameId} after resetting quarter ${currentQuarter}`);
+
+    toast({
+      title: "Quarter Reset",
+      description: `All stats for Quarter ${currentQuarter} have been reset to zero.`,
+      variant: "default"
+    });
+  };
+
+  // Reset all stats for all quarters
+  const resetAllStats = () => {
+    // Save current state for undo
+    setUndoStack([...undoStack, JSON.parse(JSON.stringify(positionStats))]);
+    setRedoStack([]);
+
+    setPositionStats(prev => {
+      const newStats: PositionStats = {};
+
+      // Reset all position-quarter combinations
+      allPositions.forEach(position => {
+        for (let quarter = 1; quarter <= 4; quarter++) {
+          const key = getPositionQuarterKey(position, quarter);
+          newStats[key] = { ...emptyQuarterStats };
+        }
+      });
+
+      return newStats;
+    });
+
+    // Clear the game cache when all stats are reset to ensure scores are recalculated properly
+    clearGameCache(gameId);
+    console.log(`Cleared score cache for game ${gameId} after resetting all stats`);
+
+    toast({
+      title: "All Stats Reset",
+      description: "All statistics have been reset to zero for all quarters.",
+      variant: "default"
+    });
+  };
+
+  // Save all stats mutation using the standard mutation pattern
+  const saveAllStatsMutation = useMutation({
+    mutationFn: async () => {
+      console.log('=== SAVING ALL POSITION STATS ===');
+      console.log('Position stats to save:', positionStats);
+
+      // Validate scores for inter-club games
+      if (game.isInterClub && game.homeTeamId && game.awayTeamId) {
+        const homeStats = Object.values(positionStats).filter(stat => stat.teamId === game.homeTeamId);
+        const awayStats = Object.values(positionStats).filter(stat => stat.teamId === game.awayTeamId);
+
+        const homeTeamTotals = {
+          teamId: game.homeTeamId,
+          goalsFor: homeStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0),
+          goalsAgainst: homeStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0)
+        };
+
+        const awayTeamTotals = {
+          teamId: game.awayTeamId,
+          goalsFor: awayStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0),
+          goalsAgainst: awayStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0)
+        };
+
+        const validation = validateInterClubScores(homeTeamTotals, awayTeamTotals);
+        const warning = getScoreDiscrepancyWarning(validation);
+
+        if (warning) {
+          console.warn('Score mismatch detected:', warning);
+          // You could show a toast warning here
+          // toast({ title: "Score Mismatch", description: warning, variant: "destructive" });
+        }
+      }
+
+      // Determine the team ID for these stats - use current team if available
+      const teamId = currentTeam?.id || (isCurrentTeamHome ? game.homeTeamId : game.awayTeamId);
+
+      if (!teamId) {
+        throw new Error('Cannot determine team context for saving stats');
+      }
+
+      console.log(`Saving stats for team ID: ${teamId} (current team: ${currentTeam?.name}, ${isCurrentTeamHome ? 'home' : 'away'})`);
+
+      const updates = [];
+
+      // Convert position stats to API calls
+      Object.entries(positionStats).forEach(([key, stats]) => {
+        const [position, quarterStr] = key.split('-');
+        const quarter = parseInt(quarterStr);
+
+        if (!position || !quarter || quarter < 1 || quarter > 4) {
+          console.warn(`Invalid position-quarter key: ${key}`);
+          return;
+        }
+
+        // Check if a stat already exists for this team/position/quarter
+        const existingStat = existingStats?.find(s => 
+          s.position === position && 
+          s.quarter === quarter &&
+          s.teamId === teamId
+        );
+
+        if (existingStat) {
+          // Update existing stat
+          const updatePromise = apiClient.patch(`/api/games/${gameId}/stats/${existingStat.id}`, {
+            goalsFor: stats.goalsFor || 0,
+            goalsAgainst: stats.goalsAgainst || 0,
+            missedGoals: stats.missedGoals || 0,
+            rebounds: stats.rebounds || 0,
+            intercepts: stats.intercepts || 0,
+            badPass: stats.badPass || 0,
+            handlingError: stats.handlingError || 0,
+            pickUp: stats.pickUp || 0,
+            infringement: stats.infringement || 0,
+            rating: stats.rating
+          });
+          updates.push(updatePromise);
+        } else {
+          // Create new stat only if there are non-zero values
+          const hasNonZeroStats = Object.values(stats).some(value => value > 0);
+          if (hasNonZeroStats) {
+            const createPromise = apiClient.post(`/api/games/${gameId}/stats`, {
+              gameId: parseInt(gameId),
+              teamId: teamId,
+              position: position,
+              quarter: quarter,
+              goalsFor: stats.goalsFor || 0,
+              goalsAgainst: stats.goalsAgainst || 0,
+              missedGoals: stats.missedGoals || 0,
+              rebounds: stats.rebounds || 0,
+              intercepts: stats.intercepts || 0,
+              badPass: stats.badPass || 0,
+              handlingError: stats.handlingError || 0,
+              pickUp: stats.pickUp || 0,
+              infringement: stats.infringement || 0,
+              rating: stats.rating
+            });
+            updates.push(createPromise);
+          }
+        }
+      });
+
+      if (updates.length === 0) {
+        throw new Error('No statistics found to save');
+      }
+
+      console.log(`Executing ${updates.length} stat updates/creates`);
+      await Promise.all(updates);
+      console.log('All position stats saved successfully');
+    },
+    onSuccess: () => {
+      // Clear the global scores cache first to force recalculation
+      clearGameCache(gameId);
+      console.log(`Cleared score cache for game ${gameId} after saving stats`);
+
+      // Invalidate and refetch relevant queries immediately
+      queryClient.invalidateQueries({ queryKey: ['/api/games', gameId, 'stats'] });
+      queryClient.invalidateQueries({ queryKey: [`/api/games/${gameId}/stats`] });
+      queryClient.invalidateQueries({ queryKey: ['gameScores', gameId] });
+      queryClient.invalidateQueries({ queryKey: ['positionStats', gameId] });
+      queryClient.invalidateQueries({ queryKey: ['playerStats', gameId] });
+
+      // Invalidate all batch stats queries that might include this game
+      queryClient.invalidateQueries({ queryKey: ['batchGameStats'] });
+
+      // Invalidate games scores queries (used by dashboard and games list)
+      queryClient.invalidateQueries({ queryKey: ['gameScores'] });
+
+      // Also invalidate the games list to ensure score updates
+      queryClient.invalidateQueries({ queryKey: ['/api/games'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/games', gameId] });
+
+      // Clear all cached scores to force fresh calculation everywhere
+      queryClient.removeQueries({ queryKey: ['gameScores'] });
+      queryClient.removeQueries({ queryKey: ['batchGameStats'] });
+
+      toast({
+        title: "Success",
+        description: "All statistics have been saved successfully",
+      });
+
+      // Refetch stats to update UI
+      refetchStats();
+    },
+    onError: (error: any) => {
+      console.error('Error saving position stats:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to save statistics. Please try again.",
+        variant: "destructive"
+      });
+    }
+  });
+
+    // Save all stats function - handle confirmation for completed games
+    const saveAllStats = () => {
+        if (!positionStats || Object.keys(positionStats).length === 0) {
+            toast({
+                title: "Nothing to save",
+                description: "No statistics have been recorded yet.",
+                variant: "destructive"
+            });
+            return;
+        }
+
+        if (isGameCompleted) {
+            // For completed games, show confirmation dialog
+            setShowCompletedWarning(true); // Trigger warning
+        } else {
+            saveAllStatsMutation.mutate(); // Proceed directly for non-completed
+        }
+    };
+
+  // Get quarter total for a specific stat - using position stats
+  const getQuarterTotal = (stat: StatType): number => {
+    let total = 0;
+
+    allPositions.forEach(position => {
+      const key = getPositionQuarterKey(position, currentQuarter);
+      const stats = positionStats[key];
+      if (stats && stats[stat] !== undefined) {
+        total += stats[stat] || 0;
+      }
+    });
+
+    return total;
+  };
+
+  // Get game total for a specific stat - using position stats
+  const getGameTotal = (stat: StatType): number => {
+    let total = 0;
+
+    allPositions.forEach(position => {
+      for (let quarter = 1; quarter <= 4; quarter++) {
+        const key = getPositionQuarterKey(position, quarter);
+        const stats = positionStats[key];
+        if (stats && stats[stat] !== undefined) {
+          total += stats[stat] || 0;
+        }
+      }
+    });
+
+    return total;
+  };
+
+  // Get contextual scores based on team perspective
+  const getContextualQuarterScores = () => {
+    const ourScore = getQuarterTotal('goalsFor');
+    const theirScore = getQuarterTotal('goalsAgainst');
+
+    // If current team is away, we need to flip the display perspective
+    // goalsFor should show as our score, goalsAgainst as their score
+    // But for inter-club games, the stats are saved with the correct team context
+    if (hasTeamContext && isCurrentTeamAway) {
+      // For away team perspective, our goals are in goalsFor, opponent goals in goalsAgainst
+      return { ourScore, theirScore };
+    }
+
+    return { ourScore, theirScore };
+  };
+
+  const getContextualGameScores = () => {
+    const ourScore = getGameTotal('goalsFor');
+    const theirScore = getGameTotal('goalsAgainst');
+
+    // If current team is away, we need to flip the display perspective
+    if (hasTeamContext && isCurrentTeamAway) {
+      // For away team perspective, our goals are in goalsFor, opponent goals in goalsAgainst
+      return { ourScore, theirScore };
+    }
+
+    return { ourScore, theirScore };
+  };
+
+  // Common stats to show in the top row
+  const commonStats: StatType[] = ['intercepts', 'badPass', 'handlingError', 'infringement', 'pickUp'];
+
+  // Check if a stat is common across positions
+  const isCommonStat = (stat: StatType): boolean => {
+    // These stats are common across most positions
+    return commonStats.includes(stat);
+  };
+
+  // Check if a stat is position-specific
+  const isPositionSpecificStat = (stat:StatType): boolean => {
+    return !isCommonStat(stat);
+  };
+
+  // Render a stat counter button for a position
+  const renderStatCounter = (
+    position: Position, 
+    stat: StatType, 
+    compact: boolean = false, 
+    important: boolean = false
+  ) => {
+    const key = getPositionQuarterKey(position, currentQuarter);
+    const currentValue = positionStats[key]?.[stat] || 0;
+
+    // Function to handle stat updates
+    const handleStatChange = (change: number) => {
+        recordStat(position, stat, change);
+    };
+
+    return (
+      <div className={`flex flex-col items-center ${compact ? 'p-1' : 'p-2'} rounded-md border`}>
+        <p className={`${important ? 'text-sm font-semibold' : 'text-xs font-medium'} mb-1`}>{statLabels[stat]}</p>
+        <div className="flex items-center gap-1">
+          <Button
+            variant="outline"
+            size="sm"
+            className={`${compact ? 'h-6 w-6' : 'h-8 w-8'} p-0`}
+            onClick={() => handleStatChange(-1)}
+            disabled={currentValue <= 0}
+          >
+            <Minus className={`${compact ? 'h-3 w-3' : 'h-4 w-4'}`} />
           </Button>
+
+          <span className={`${compact ? 'w-6' : 'w-8'} text-center font-semibold ${important ? 'text-base' : ''}`}>
+            {currentValue}
+          </span>
+
+          <Button
+            variant="outline"
+            size="sm"
+            className={`${compact ? 'h-6 w-6' : 'h-8 w-8'} p-0 ${statColors[stat]}`}
+            onClick={() => handleStatChange(1)}
+          >
+            <Plus className={`${compact ? 'h-3 w-3' : 'h-4 w-4'}`} />          </Button>
         </div>
       </div>
     );
