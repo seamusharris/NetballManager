@@ -821,3 +821,4 @@ export default function RosterManagementExamples() {
   const breadcrumbs = [
     { label: 'Examples', href: '/component-examples' },
     { label: 'Roster Management' }
+  ];
