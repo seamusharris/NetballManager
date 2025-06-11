@@ -119,7 +119,7 @@ const examples: ExampleSection[] = [
     title: 'Table Examples',
     description: 'Different table layouts, sorting, filtering patterns, and data presentation styles.',
     path: '/table-examples',
-    icon: <BarChart className="h-5 w-5" />,
+    icon: <BarChart3 className="h-5 w-5" />,
     category: 'Data Display',
     status: 'Complete'
   },
@@ -143,7 +143,7 @@ const examples: ExampleSection[] = [
     title: 'Statistics Cards',
     description: 'Different metric display patterns, stat cards, and performance indicators.',
     path: '/statistics-card-examples',
-    icon: <BarChart className="h-5 w-5" />,
+    icon: <BarChart3 className="h-5 w-5" />,
     category: 'Data Display',
     status: 'Complete'
   },
@@ -213,7 +213,7 @@ const examples: ExampleSection[] = [
     title: 'Dashboard Widgets',
     description: 'Standardized widget patterns for dashboards with consistent backgrounds and styling.',
     path: '/widget-examples',
-    icon: <BarChart className="h-5 w-5" />,
+    icon: <BarChart3 className="h-5 w-5" />,
     category: 'Patterns',
     status: 'Complete'
   },
@@ -229,7 +229,7 @@ const examples: ExampleSection[] = [
     title: 'Data Visualization',
     description: 'Chart patterns, stat displays, and performance visualization components.',
     path: '/chart-examples',
-    icon: <BarChart className="h-5 w-5" />,
+    icon: <BarChart3 className="h-5 w-5" />,
     category: 'Patterns',
     status: 'Complete'
   },
@@ -297,7 +297,7 @@ const examples: ExampleSection[] = [
     title: 'Score Progression Charts',
     description: 'Real-time score tracking patterns, progression visualization, and performance metrics.',
     path: '/score-progression-examples',
-    icon: <BarChart className="h-5 w-5" />,
+    icon: <BarChart3 className="h-5 w-5" />,
     category: 'Sport-Specific',
     status: 'Complete'
   },
