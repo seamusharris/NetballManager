@@ -1224,6 +1224,57 @@ export default function LiveStats() {
                 </TabsContent>
 
                 <TabsContent value="interchange">
+                  {/* Game scoreboard - mirrored from stats tab */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                      <Card className="overflow-hidden">
+                          <CardHeader className="py-2">
+                              <CardTitle className="text-base md:text-lg font-semibold">Game Score</CardTitle>
+                          </CardHeader>
+                          <CardContent className="py-1">
+                              <div className="flex justify-between items-center">
+                                  <div>
+                                      <p className="text-xs md:text-sm text-muted-foreground">{ourTeamDisplayName}</p>
+                                      <p className="text-2xl md:text-3xl font-bold">{getContextualGameScores().ourScore}</p>
+                                  </div>
+                                  <div className="text-xl md:text-2xl font-bold">-</div>
+                                  <div className="text-right">
+                                      <p className="text-xs md:text-sm text-muted-foreground">{opponentDisplayName}</p>
+                                      <p className="text-2xl md:text-3xl font-bold">{getContextualGameScores().theirScore}</p>
+                                  </div>
+                              </div>
+                          </CardContent>
+                      </Card>
+
+                      <Card className="overflow-hidden">
+                          <CardHeader className="py-2">
+                              <div className="flex justify-between items-center">
+                                  <CardTitle className="text-base md:text-lg font-semibold">Quarter {currentQuarter}</CardTitle>
+                                  <div className="flex gap-1">
+                                      {[1, 2, 3, 4].map(quarter => (
+                                          <Button
+                                              key={quarter}
+                                              variant={quarter === currentQuarter ? "default" : "outline"}
+                                              size="sm"
+                                              onClick={() => setCurrentQuarter(quarter)}
+                                              className="w-7 h-7 md:w-8 md:h-8 p-0 text-xs md:text-sm"
+                                          >
+                                              {quarter}
+                                          </Button>
+                                      ))}
+                                  </div>
+                              </div>
+                          </CardHeader>
+                          <CardContent className="py-1">
+                              <div className="flex justify-between items-center">
+                                  <div>
+                                      <p className="text-xs md:text-sm text-muted-foreground">Quarter Score</p>
+                                      <p className="text-xl md:text-2xl font-bold">{getContextualQuarterScores().ourScore} - {getContextualQuarterScores().theirScore}</p>
+                                  </div>
+                              </div>
+                          </CardContent>
+                      </Card>
+                  </div>
+
                   <PlayerInterchangeTracker
                     gameId={Number(gameId)}
                     players={players || []}
