@@ -814,8 +814,7 @@ const QuickTapCurrentInterface = () => {
 
   const positionLabels = {
     'GS': 'Goal Shooter', 'GA': 'Goal Attack', 'WA': 'Wing Attack', 'C': 'Centre',
-    'WD': 'Wing Defence', 'GD': 'Goal Defence',```python
- 'GK': 'Goal Keeper'
+    'WD': 'Wing Defence', 'GD': 'Goal Defence', 'GK': 'Goal Keeper'
   };
 
   const allPositions = ['GS', 'GA', 'WA', 'C', 'WD', 'GD', 'GK'];
