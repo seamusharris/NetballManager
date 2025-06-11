@@ -39,27 +39,116 @@ const samplePlayers = [
 
 const positions = ["GS", "GA", "WA", "C", "WD", "GD", "GK"];
 
-// Define a PlayerBox Component
-const PlayerBox = ({ player, showPositions = true, size = "md", className = "" }: {
+// Enhanced Player Card Component
+const PlayerCard = ({ 
+  player, 
+  showPositions = true, 
+  size = "md", 
+  className = "",
+  isDragging = false,
+  isCompatible = true,
+  isAssigned = false
+}: {
   player: any,
   showPositions?: boolean,
   size?: "sm" | "md",
-  className?: string
+  className?: string,
+  isDragging?: boolean,
+  isCompatible?: boolean,
+  isAssigned?: boolean
 }) => {
-  const avatarSize = size === "sm" ? "h-6 w-6" : "h-8 w-8";
-  const fontSize = size === "sm" ? "text-xs" : "text-sm";
+  const avatarSize = size === "sm" ? "h-8 w-8" : "h-10 w-10";
+  const cardSize = size === "sm" ? "p-2" : "p-3";
+  
+  return (
+    <div className={`
+      ${cardSize} rounded-lg border-2 transition-all duration-200
+      ${isDragging ? 'opacity-50 scale-95 border-blue-400 bg-blue-50' : ''}
+      ${isCompatible ? 'border-green-200 hover:border-green-300' : 'border-red-200 hover:border-red-300'}
+      ${isAssigned ? 'bg-gray-50 border-gray-300' : 'bg-white hover:shadow-md'}
+      ${className}
+    `}>
+      <div className="flex flex-col items-center space-y-1">
+        <Avatar className={avatarSize}>
+          <AvatarFallback className={`${player.color} text-white text-xs font-semibold`}>
+            {player.name.split(' ').map(n => n[0]).join('')}
+          </AvatarFallback>
+        </Avatar>
+        <div className="text-sm font-medium text-center">{player.displayName}</div>
+        {showPositions && (
+          <div className="flex flex-wrap gap-1 justify-center">
+            {player.positions.map(pos => (
+              <Badge key={pos} variant="secondary" className="text-xs px-1 py-0">
+                {pos}
+              </Badge>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// Enhanced Position Slot Component
+const PositionSlot = ({ 
+  position, 
+  player, 
+  isDropTarget = false, 
+  isCompatible = true,
+  onDrop,
+  courtSection 
+}: {
+  position: string,
+  player?: any,
+  isDropTarget?: boolean,
+  isCompatible?: boolean,
+  onDrop: () => void,
+  courtSection: 'attacking' | 'center' | 'defending'
+}) => {
+  const sectionColors = {
+    attacking: 'bg-gradient-to-br from-red-50 to-red-100 border-red-200',
+    center: 'bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200',
+    defending: 'bg-gradient-to-br from-green-50 to-green-100 border-green-200'
+  };
 
   return (
-    <div className={`flex flex-col items-center ${className}`}>
-      <Avatar className={avatarSize}>
-        <AvatarFallback className={`${player.color} text-white text-xs`}>
-          {player.name.split(' ').map(n => n[0]).join('')}
-        </AvatarFallback>
-      </Avatar>
-      <div className={`${fontSize} font-medium mt-1`}>{player.displayName}</div>
-      {showPositions && (
-        <div className="text-xs text-gray-500">
-          Plays: {player.positions.join(', ')}
+    <div
+      className={`
+        relative border-2 border-dashed rounded-xl p-4 text-center min-h-[140px] 
+        transition-all duration-300 flex flex-col justify-center
+        ${isDropTarget && isCompatible ? 'border-green-400 bg-green-50 scale-105' : ''}
+        ${isDropTarget && !isCompatible ? 'border-red-400 bg-red-50' : ''}
+        ${!isDropTarget ? sectionColors[courtSection] : ''}
+        hover:shadow-lg
+      `}
+      onDragOver={(e) => e.preventDefault()}
+      onDrop={onDrop}
+    >
+      {/* Position Label */}
+      <div className="absolute top-2 left-2">
+        <Badge variant="outline" className="font-bold text-sm">
+          {position}
+        </Badge>
+      </div>
+
+      {/* Player or Drop Zone */}
+      {player ? (
+        <div className="mt-2">
+          <PlayerCard 
+            player={player}
+            showPositions={false}
+            size="sm"
+            isAssigned={true}
+          />
+        </div>
+      ) : (
+        <div className="flex flex-col items-center justify-center h-full text-gray-400">
+          <div className="w-12 h-12 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center mb-2">
+            <Plus className="h-6 w-6" />
+          </div>
+          <div className="text-xs font-medium">
+            {isDropTarget ? (isCompatible ? 'Drop here' : 'Not compatible') : 'Drag player here'}
+          </div>
         </div>
       )}
     </div>
@@ -76,13 +165,19 @@ function DragDropRoster() {
     4: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null }
   });
   const [draggedPlayer, setDraggedPlayer] = useState<number | null>(null);
+  const [dragOverPosition, setDragOverPosition] = useState<string | null>(null);
 
   const handleDragStart = (playerId: number) => {
     setDraggedPlayer(playerId);
   };
 
-  const handleDragOver = (e: React.DragEvent) => {
+  const handleDragOver = (e: React.DragEvent, position: string) => {
     e.preventDefault();
+    setDragOverPosition(position);
+  };
+
+  const handleDragLeave = () => {
+    setDragOverPosition(null);
   };
 
   const handleDrop = (position: string) => {
@@ -101,6 +196,13 @@ function DragDropRoster() {
       setAssignments(newAssignments);
     }
     setDraggedPlayer(null);
+    setDragOverPosition(null);
+  };
+
+  // Check if a player is compatible with a position
+  const isPlayerCompatible = (playerId: number, position: string) => {
+    const player = samplePlayers.find(p => p.id === playerId);
+    return player ? player.positions.includes(position) : false;
   };
 
   // Reset functions
@@ -246,174 +348,213 @@ function DragDropRoster() {
           </div>
         </div>
 
-        {/* Court layout */}
-        <div className="grid grid-cols-3 gap-4 mb-6 bg-green-50 p-4 rounded-lg">
-          {/* Attacking Third */}
-          <div className="space-y-2">
-            <h4 className="text-sm font-medium text-center">Attacking Third</h4>
-            {['GS', 'GA'].map(position => (
-              <div
-                key={position}
-                className="border-2 border-dashed border-gray-300 rounded-lg p-3 text-center min-h-[120px] bg-white hover:bg-gray-50 transition-colors"
-                onDragOver={handleDragOver}
-                onDrop={() => handleDrop(position)}
-              >
-                <div className="text-sm font-bold mb-2 text-gray-700">{position}</div>
-                {currentQuarterAssignments[position] ? (
-                  <div className="scale-75 origin-center">
-                    <PlayerBox 
-                      player={samplePlayers.find(p => p.id === currentQuarterAssignments[position])!}
-                      showPositions={false}
-                      size="sm"
-                      className="shadow-sm"
-                    />
-                  </div>
-                ) : (
-                  <div className="text-gray-400 text-xs mt-4">
-                    Drop player here
-                  </div>
-                )}
+        {/* Enhanced Court Layout */}
+        <div className="mb-6 bg-gradient-to-b from-green-100 to-green-50 p-6 rounded-xl border border-green-200 shadow-inner">
+          <div className="grid grid-cols-3 gap-6">
+            {/* Attacking Third */}
+            <div className="space-y-3">
+              <div className="text-center">
+                <h4 className="text-sm font-semibold text-red-700 mb-1">Attacking Third</h4>
+                <div className="h-0.5 bg-red-200 rounded"></div>
               </div>
-            ))}
-          </div>
+              {['GS', 'GA'].map(position => (
+                <PositionSlot
+                  key={position}
+                  position={position}
+                  player={currentQuarterAssignments[position] ? 
+                    samplePlayers.find(p => p.id === currentQuarterAssignments[position]) : null
+                  }
+                  isDropTarget={dragOverPosition === position}
+                  isCompatible={draggedPlayer ? isPlayerCompatible(draggedPlayer, position) : true}
+                  onDrop={() => handleDrop(position)}
+                  courtSection="attacking"
+                />
+              ))}
+            </div>
 
-          {/* Center Third */}
-          <div className="space-y-2">
-            <h4 className="text-sm font-medium text-center">Center Third</h4>
-            {['WA', 'C', 'WD'].map(position => (
-              <div
-                key={position}
-                className="border-2 border-dashed border-gray-300 rounded-lg p-3 text-center min-h-[120px] bg-white hover:bg-gray-50 transition-colors"
-                onDragOver={handleDragOver}
-                onDrop={() => handleDrop(position)}
-              >
-                <div className="text-sm font-bold mb-2 text-gray-700">{position}</div>
-                {currentQuarterAssignments[position] ? (
-                  <div className="scale-75 origin-center">
-                    <PlayerBox 
-                      player={samplePlayers.find(p => p.id === currentQuarterAssignments[position])!}
-                      showPositions={false}
-                      size="sm"
-                      className="shadow-sm"
-                    />
-                  </div>
-                ) : (
-                  <div className="text-gray-400 text-xs mt-4">
-                    Drop player here
-                  </div>
-                )}
+            {/* Center Third */}
+            <div className="space-y-3">
+              <div className="text-center">
+                <h4 className="text-sm font-semibold text-blue-700 mb-1">Center Third</h4>
+                <div className="h-0.5 bg-blue-200 rounded"></div>
               </div>
-            ))}
-          </div>
+              {['WA', 'C', 'WD'].map(position => (
+                <div
+                  key={position}
+                  onDragOver={(e) => handleDragOver(e, position)}
+                  onDragLeave={handleDragLeave}
+                >
+                  <PositionSlot
+                    position={position}
+                    player={currentQuarterAssignments[position] ? 
+                      samplePlayers.find(p => p.id === currentQuarterAssignments[position]) : null
+                    }
+                    isDropTarget={dragOverPosition === position}
+                    isCompatible={draggedPlayer ? isPlayerCompatible(draggedPlayer, position) : true}
+                    onDrop={() => handleDrop(position)}
+                    courtSection="center"
+                  />
+                </div>
+              ))}
+            </div>
 
-          {/* Defending Third */}
-          <div className="space-y-2">
-            <h4 className="text-sm font-medium text-center">Defending Third</h4>
-            {['GD', 'GK'].map(position => (
-              <div
-                key={position}
-                className="border-2 border-dashed border-gray-300 rounded-lg p-3 text-center min-h-[120px] bg-white hover:bg-gray-50 transition-colors"
-                onDragOver={handleDragOver}
-                onDrop={() => handleDrop(position)}
-              >
-                <div className="text-sm font-bold mb-2 text-gray-700">{position}</div>
-                {currentQuarterAssignments[position] ? (
-                  <div className="scale-75 origin-center">
-                    <PlayerBox 
-                      player={samplePlayers.find(p => p.id === currentQuarterAssignments[position])!}
-                      showPositions={false}
-                      size="sm"
-                      className="shadow-sm"
-                    />
-                  </div>
-                ) : (
-                  <div className="text-gray-400 text-xs mt-4">
-                    Drop player here
-                  </div>
-                )}
+            {/* Defending Third */}
+            <div className="space-y-3">
+              <div className="text-center">
+                <h4 className="text-sm font-semibold text-green-700 mb-1">Defending Third</h4>
+                <div className="h-0.5 bg-green-200 rounded"></div>
               </div>
-            ))}
+              {['GD', 'GK'].map(position => (
+                <div
+                  key={position}
+                  onDragOver={(e) => handleDragOver(e, position)}
+                  onDragLeave={handleDragLeave}
+                >
+                  <PositionSlot
+                    position={position}
+                    player={currentQuarterAssignments[position] ? 
+                      samplePlayers.find(p => p.id === currentQuarterAssignments[position]) : null
+                    }
+                    isDropTarget={dragOverPosition === position}
+                    isCompatible={draggedPlayer ? isPlayerCompatible(draggedPlayer, position) : true}
+                    onDrop={() => handleDrop(position)}
+                    courtSection="defending"
+                  />
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
-        {/* Available players for current quarter */}
+        {/* Available Players Pool */}
         <div className="mb-6">
-          <h4 className="text-sm font-medium mb-2">Available Players (Quarter {currentQuarter})</h4>
-          <div className="flex flex-wrap gap-2">
-            {availablePlayers.map(player => (
-              <div
-                key={player.id}
-                draggable
-                onDragStart={() => handleDragStart(player.id)}
-                className="bg-gray-100 border rounded px-3 py-2 cursor-move hover:bg-gray-200 text-sm"
-              >
-                {player.displayName}
+          <div className="flex items-center gap-2 mb-3">
+            <Users className="h-5 w-5 text-blue-600" />
+            <h4 className="text-lg font-semibold text-gray-800">Available Players - Quarter {currentQuarter}</h4>
+            <Badge variant="secondary">{availablePlayers.length} players</Badge>
+          </div>
+          
+          <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+            {availablePlayers.length > 0 ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                {availablePlayers.map(player => (
+                  <div
+                    key={player.id}
+                    draggable
+                    onDragStart={() => handleDragStart(player.id)}
+                    className="cursor-move transform hover:scale-105 transition-transform"
+                  >
+                    <PlayerCard
+                      player={player}
+                      showPositions={true}
+                      isDragging={draggedPlayer === player.id}
+                      isCompatible={true}
+                    />
+                  </div>
+                ))}
               </div>
-            ))}
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <Users className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                <p className="font-medium">All players assigned for this quarter</p>
+                <p className="text-sm">Switch to another quarter or reset assignments</p>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Game Summary */}
+        {/* Enhanced Game Summary */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Player Summary */}
-          <div>
-            <h4 className="text-sm font-medium mb-3">Player Summary</h4>
-            <div className="space-y-2">
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Target className="h-5 w-5 text-blue-600" />
+                Player Game Summary
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
               {samplePlayers.map(player => {
                 const stats = playerSummary[player.id];
                 const quarterDisplay = stats.quarters.length > 0 
                   ? `Q${stats.quarters.sort().join(', Q')}` 
-                  : 'No quarters';
+                  : 'None';
+                const playingTimePercent = (stats.totalQuarters / 4) * 100;
 
                 return (
-                  <div key={player.id} className="flex justify-between items-center p-2 bg-gray-50 rounded">
-                    <div>
-                      <div className="font-medium text-sm">{player.displayName}</div>
-                      <div className="text-xs text-gray-500">
-                        Positions: {stats.positions.join(', ') || 'None'}
+                  <div key={player.id} className="flex items-center justify-between p-3 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg border">
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-8 w-8">
+                        <AvatarFallback className={`${player.color} text-white text-xs`}>
+                          {player.name.split(' ').map(n => n[0]).join('')}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <div className="font-medium text-sm">{player.displayName}</div>
+                        <div className="text-xs text-gray-600">
+                          {stats.positions.length > 0 ? stats.positions.join(', ') : 'No positions'}
+                        </div>
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-sm font-medium">{stats.totalQuarters}/4 quarters</div>
-                      <div className="text-xs text-gray-500">
-                        {quarterDisplay}
+                      <div className="flex items-center gap-2 mb-1">
+                        <div className="text-sm font-semibold">{stats.totalQuarters}/4</div>
+                        <div className="w-12 h-2 bg-gray-200 rounded-full overflow-hidden">
+                          <div 
+                            className="h-full bg-blue-500 transition-all"
+                            style={{ width: `${playingTimePercent}%` }}
+                          ></div>
+                        </div>
                       </div>
+                      <div className="text-xs text-gray-500">{quarterDisplay}</div>
                     </div>
                   </div>
                 );
               })}
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
           {/* Position Summary */}
-          <div>
-            <h4 className="text-sm font-medium mb-3">Position Summary</h4>
-            <div className="space-y-2">
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Grid3X3 className="h-5 w-5 text-green-600" />
+                Position Coverage
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
               {['GS', 'GA', 'WA', 'C', 'WD', 'GD', 'GK'].map(position => {
                 const stats = positionSummary[position];
                 const playerNames = stats.players.map(id => 
                   samplePlayers.find(p => p.id === id)?.displayName
                 ).filter(Boolean);
+                const coveragePercent = (stats.quarters.length / 4) * 100;
 
                 return (
-                  <div key={position} className="flex justify-between items-center p-2 bg-gray-50 rounded">
-                    <div>
-                      <div className="font-medium text-sm">{position}</div>
-                      <div className="text-xs text-gray-500">
-                        {playerNames.join(', ') || 'No players assigned'}
+                  <div key={position} className="p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-100">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="font-bold">{position}</Badge>
+                        <span className="text-sm text-gray-600">{stats.players.length} players</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium">{stats.quarters.length}/4</span>
+                        <div className="w-12 h-2 bg-gray-200 rounded-full overflow-hidden">
+                          <div 
+                            className="h-full bg-green-500 transition-all"
+                            style={{ width: `${coveragePercent}%` }}
+                          ></div>
+                        </div>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <div className="text-sm font-medium">{stats.players.length} players</div>
-                      <div className="text-xs text-gray-500">
-                        {stats.quarters.length}/4 quarters filled
-                      </div>
+                    <div className="text-xs text-gray-600">
+                      {playerNames.length > 0 ? playerNames.join(', ') : 'No players assigned'}
                     </div>
                   </div>
                 );
               })}
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </div>
       </CardContent>
     </Card>
