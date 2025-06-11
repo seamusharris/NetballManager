@@ -182,8 +182,7 @@ function DragDropRoster() {
     return acc;
   }, {});
 
-
-return (
+  return (
     <Card>
       <CardContent className="p-6">
         <h3 className="text-lg font-semibold mb-4">Drag & Drop Roster Assignment</h3>
@@ -218,7 +217,7 @@ return (
               Reset All
             </Button>
 
-            {/* Copy Quarter Controls - like in the main roster manager */}
+            {/* Copy Quarter Controls */}
             <div className="flex items-center gap-2 flex-wrap">
               {[1, 2, 3, 4].map(sourceQuarter => (
                 <Select
@@ -247,110 +246,95 @@ return (
           </div>
         </div>
 
-        <Tabs value={currentQuarter.toString()} onValueChange={(value) => setCurrentQuarter(parseInt(value))}>
-          <div className="hidden">
-            <TabsList className="grid w-full grid-cols-4 mb-4">
-              <TabsTrigger value="1">Quarter 1</TabsTrigger>
-              <TabsTrigger value="2">Quarter 2</TabsTrigger>
-              <TabsTrigger value="3">Quarter 3</TabsTrigger>
-              <TabsTrigger value="4">Quarter 4</TabsTrigger>
-            </TabsList>
+        {/* Court layout */}
+        <div className="grid grid-cols-3 gap-4 mb-6 bg-green-50 p-4 rounded-lg">
+          {/* Attacking Third */}
+          <div className="space-y-2">
+            <h4 className="text-sm font-medium text-center">Attacking Third</h4>
+            {['GS', 'GA'].map(position => (
+              <div
+                key={position}
+                className="border-2 border-dashed border-gray-300 rounded-lg p-3 text-center min-h-[120px] bg-white hover:bg-gray-50 transition-colors"
+                onDragOver={handleDragOver}
+                onDrop={() => handleDrop(position)}
+              >
+                <div className="text-sm font-bold mb-2 text-gray-700">{position}</div>
+                {currentQuarterAssignments[position] ? (
+                  <div className="scale-75 origin-center">
+                    <PlayerBox 
+                      player={samplePlayers.find(p => p.id === currentQuarterAssignments[position])!}
+                      showPositions={false}
+                      size="sm"
+                      className="shadow-sm"
+                    />
+                  </div>
+                ) : (
+                  <div className="text-gray-400 text-xs mt-4">
+                    Drop player here
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
 
-          {[1, 2, 3, 4].map(quarter => (
-            <TabsContent key={quarter} value={quarter.toString()}>
-              {/* Court layout */}
-              <div className="grid grid-cols-3 gap-4 mb-6 bg-green-50 p-4 rounded-lg">
-                {/* Attacking Third */}
-                <div className="space-y-2">
-                  <h4 className="text-sm font-medium text-center">Attacking Third</h4>
-                  {['GS', 'GA'].map(position => (
-                    <div
-                      key={position}
-                      className="border-2 border-dashed border-gray-300 rounded-lg p-3 text-center min-h-[120px] bg-white hover:bg-gray-50 transition-colors"
-                      onDragOver={handleDragOver}
-                      onDrop={() => handleDrop(position)}
-                    >
-                      <div className="text-sm font-bold mb-2 text-gray-700">{position}</div>
-                      {currentQuarterAssignments[position] ? (
-                        <div className="scale-75 origin-center">
-                          <PlayerBox 
-                            player={samplePlayers.find(p => p.id === currentQuarterAssignments[position])!}
-                            showPositions={false}
-                            size="sm"
-                            className="shadow-sm"
-                          />
-                        </div>
-                      ) : (
-                        <div className="text-gray-400 text-xs mt-4">
-                          Drop player here
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-
-                {/* Center Third */}
-                <div className="space-y-2">
-                  <h4 className="text-sm font-medium text-center">Center Third</h4>
-                  {['WA', 'C', 'WD'].map(position => (
-                    <div
-                      key={position}
-                      className="border-2 border-dashed border-gray-300 rounded-lg p-3 text-center min-h-[120px] bg-white hover:bg-gray-50 transition-colors"
-                      onDragOver={handleDragOver}
-                      onDrop={() => handleDrop(position)}
-                    >
-                      <div className="text-sm font-bold mb-2 text-gray-700">{position}</div>
-                      {currentQuarterAssignments[position] ? (
-                        <div className="scale-75 origin-center">
-                          <PlayerBox 
-                            player={samplePlayers.find(p => p.id === currentQuarterAssignments[position])!}
-                            showPositions={false}
-                            size="sm"
-                            className="shadow-sm"
-                          />
-                        </div>
-                      ) : (
-                        <div className="text-gray-400 text-xs mt-4">
-                          Drop player here
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-
-                {/* Defending Third */}
-                <div className="space-y-2">
-                  <h4 className="text-sm font-medium text-center">Defending Third</h4>
-                  {['GD', 'GK'].map(position => (
-                    <div
-                      key={position}
-                      className="border-2 border-dashed border-gray-300 rounded-lg p-3 text-center min-h-[120px] bg-white hover:bg-gray-50 transition-colors"
-                      onDragOver={handleDragOver}
-                      onDrop={() => handleDrop(position)}
-                    >
-                      <div className="text-sm font-bold mb-2 text-gray-700">{position}</div>
-                      {currentQuarterAssignments[position] ? (
-                        <div className="scale-75 origin-center">
-                          <PlayerBox 
-                            player={samplePlayers.find(p => p.id === currentQuarterAssignments[position])!}
-                            showPositions={false}
-                            size="sm"
-                            className="shadow-sm"
-                          />
-                        </div>
-                      ) : (
-                        <div className="text-gray-400 text-xs mt-4">
-                          Drop player here
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
+          {/* Center Third */}
+          <div className="space-y-2">
+            <h4 className="text-sm font-medium text-center">Center Third</h4>
+            {['WA', 'C', 'WD'].map(position => (
+              <div
+                key={position}
+                className="border-2 border-dashed border-gray-300 rounded-lg p-3 text-center min-h-[120px] bg-white hover:bg-gray-50 transition-colors"
+                onDragOver={handleDragOver}
+                onDrop={() => handleDrop(position)}
+              >
+                <div className="text-sm font-bold mb-2 text-gray-700">{position}</div>
+                {currentQuarterAssignments[position] ? (
+                  <div className="scale-75 origin-center">
+                    <PlayerBox 
+                      player={samplePlayers.find(p => p.id === currentQuarterAssignments[position])!}
+                      showPositions={false}
+                      size="sm"
+                      className="shadow-sm"
+                    />
+                  </div>
+                ) : (
+                  <div className="text-gray-400 text-xs mt-4">
+                    Drop player here
+                  </div>
+                )}
               </div>
-            </TabsContent>
-          ))}
-        </Tabs>
+            ))}
+          </div>
+
+          {/* Defending Third */}
+          <div className="space-y-2">
+            <h4 className="text-sm font-medium text-center">Defending Third</h4>
+            {['GD', 'GK'].map(position => (
+              <div
+                key={position}
+                className="border-2 border-dashed border-gray-300 rounded-lg p-3 text-center min-h-[120px] bg-white hover:bg-gray-50 transition-colors"
+                onDragOver={handleDragOver}
+                onDrop={() => handleDrop(position)}
+              >
+                <div className="text-sm font-bold mb-2 text-gray-700">{position}</div>
+                {currentQuarterAssignments[position] ? (
+                  <div className="scale-75 origin-center">
+                    <PlayerBox 
+                      player={samplePlayers.find(p => p.id === currentQuarterAssignments[position])!}
+                      showPositions={false}
+                      size="sm"
+                      className="shadow-sm"
+                    />
+                  </div>
+                ) : (
+                  <div className="text-gray-400 text-xs mt-4">
+                    Drop player here
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
 
         {/* Available players for current quarter */}
         <div className="mb-6">
@@ -436,389 +420,61 @@ return (
   );
 }
 
-// Grid-Based Quick Assignment
-function GridRoster() {
-  const [assignments, setAssignments] = useState<Record<string, number | null>>({
-    GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null
-  });
-
-  const handlePlayerClick = (playerId: number, position: string) => {
-    setAssignments(prev => {
-      const newAssignments = { ...prev };
-
-      // If position is already taken by this player, remove them
-      if (newAssignments[position] === playerId) {
-        newAssignments[position] = null;
-        return newAssignments;
-      }
-
-      // Remove player from any other position
-      Object.keys(newAssignments).forEach(pos => {
-        if (newAssignments[pos] === playerId) {
-          newAssignments[pos] = null;
-        }
-      });
-
-      newAssignments[position] = playerId;
-      return newAssignments;
-    });
-  };
-
-  return (
-    <div className="space-y-4">
-      <div className="overflow-x-auto">
-        <table className="w-full border-collapse">
-          <thead>
-            <tr>
-              <th className="border border-gray-200 p-2 bg-gray-50 text-left">Player</th>
-              {positions.map(pos => (
-                <th key={pos} className="border border-gray-200 p-2 bg-gray-50 text-center min-w-[80px]">
-                  {pos}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {samplePlayers.map(player => (
-              <tr key={player.id} className="hover:bg-gray-50">
-                <td className="border border-gray-200 p-2">
-                  <div className="flex items-center gap-2">
-                    <Avatar className="h-8 w-8">
-                      <AvatarFallback className={`${player.color} text-white text-xs`}>
-                        {player.name.split(' ').map(n => n[0]).join('')}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <div className="font-medium">{player.name}</div>
-                      <div className="text-xs text-gray-500">
-                        Plays: {player.positions.join(', ')}
-                      </div>
-                    </div>
-                  </div>
-                </td>
-                {positions.map(position => {
-                  const isAssigned = assignments[position] === player.id;
-                  const canPlay = player.positions.includes(position);
-
-                  return (
-                    <td key={position} className="border border-gray-200 p-2 text-center">
-                      <Button
-                        variant={isAssigned ? "default" : canPlay ? "outline" : "ghost"}
-                        size="sm"
-                        disabled={!canPlay}
-                        onClick={() => handlePlayerClick(player.id, position)}
-                        className={`w-12 h-8 ${isAssigned ? 'bg-green-600 hover:bg-green-700' : ''}`}
-                      >
-                        {isAssigned ? '✓' : canPlay ? '+' : '-'}
-                      </Button>
-                    </td>
-                  );
-                })}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-}
-
-// Visual Court Layout
-function VisualCourtRoster() {
-  const [assignments, setAssignments] = useState<Record<string, number | null>>({
-    GS: 1, GA: 2, WA: 3, C: 4, WD: 5, GD: 6, GK: 7
-  });
-  const [selectedPosition, setSelectedPosition] = useState<string | null>(null);
-
-  const courtLayout = {
-    GS: { top: '10%', left: '20%' },
-    GA: { top: '30%', left: '20%' },
-    WA: { top: '45%', left: '35%' },
-    C: { top: '50%', left: '50%' },
-    WD: { top: '55%', left: '65%' },
-    GD: { top: '70%', left: '80%' },
-    GK: { top: '90%', left: '80%' }
-  };
-
-  const assignPlayer = (playerId: number) => {
-    if (selectedPosition) {
-      setAssignments(prev => {
-        const newAssignments = { ...prev };
-
-        // Remove player from other positions
-        Object.keys(newAssignments).forEach(pos => {
-          if (newAssignments[pos] === playerId) {
-            newAssignments[pos] = null;
-          }
-        });
-
-        newAssignments[selectedPosition] = playerId;
-        return newAssignments;
-      });
-      setSelectedPosition(null);
-    }
-  };
-
-  return (
-    <div className="grid grid-cols-2 gap-6">
-      {/* Court Visual */}
-      <div className="relative">
-        <h4 className="font-semibold mb-3">Court Layout</h4>
-        <div className="relative bg-green-100 border-2 border-green-300 rounded-lg h-96 overflow-hidden">
-          {/* Court markings */}
-          <div className="absolute inset-0">
-            {/* Center line */}
-            <div className="absolute top-0 bottom-0 left-1/2 w-0.5 bg-white transform -translate-x-0.5"></div>
-            {/* Goal circles */}
-            <div className="absolute top-2 left-2 w-20 h-20 border border-white rounded-full"></div>
-            <div className="absolute bottom-2 right-2 w-20 h-20 border border-white rounded-full"></div>
-          </div>
-
-          {/* Position markers */}
-          {positions.map(position => {
-            const layout = courtLayout[position];
-            const assignedPlayer = assignments[position] 
-              ? samplePlayers.find(p => p.id === assignments[position])
-              : null;
-
-            return (
-              <div
-                key={position}
-                className={`absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer ${
-                  selectedPosition === position ? 'ring-4 ring-blue-400' : ''
-                }`}
-                style={{ top: layout.top, left: layout.left }}
-                onClick={() => setSelectedPosition(position)}
-              >
-                <div className="relative">
-                  <div className={`w-16 h-16 rounded-full border-2 flex items-center justify-center ${
-                    assignedPlayer 
-                      ? `${assignedPlayer.color} border-white text-white` 
-                      : 'bg-white border-gray-400 text-gray-600'
-                  } ${selectedPosition === position ? 'ring-2 ring-blue-400' : ''}`}>
-                    {assignedPlayer ? (
-                      <span className="text-xs font-bold">
-                        {assignedPlayer.name.split(' ').map(n => n[0]).join('')}
-                      </span>
-                    ) : (
-                      <span className="text-xs font-bold">{position}</span>
-                    )}
-                  </div>
-                  <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 text-xs font-medium text-center">
-                    {position}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-        {selectedPosition && (
-          <div className="mt-2 text-sm text-blue-600 font-medium">
-            Click a player below to assign to {selectedPosition}
-          </div>
-        )}
-      </div>
-
-      {/* Player Selection */}
-      <div>
-        <h4 className="font-semibold mb-3">Select Player</h4>
-        <div className="space-y-2 max-h-96 overflow-y-auto">
-          {samplePlayers.map(player => {
-            const currentPosition = Object.keys(assignments).find(
-              pos => assignments[pos] === player.id
-            );
-
-            return (
-              <div
-                key={player.id}
-                className={`flex items-center justify-between p-3 border rounded-lg cursor-pointer hover:bg-gray-50 ${
-                  selectedPosition && !player.positions.includes(selectedPosition) 
-                    ? 'opacity-50 cursor-not-allowed' 
-                    : ''
-                }`}
-                onClick={() => {
-                  if (!selectedPosition || player.positions.includes(selectedPosition)) {
-                    assignPlayer(player.id);
-                  }
-                }}
-              >
-                <div className="flex items-center gap-2">
-                  <Avatar className="h-8 w-8">
-                    <AvatarFallback className={`${player.color} text-white text-xs`}>
-                      {player.name.split(' ').map(n => n[0]).join('')}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <div className="font-medium">{player.name}</div>
-                    <div className="text-xs text-gray-500">
-                      Plays: {player.positions.join(', ')}
-                    </div>
-                  </div>
-                </div>
-                <div className="text-right">
-                  {currentPosition && (
-                    <Badge variant="secondary">{currentPosition}</Badge>
-                  )}
-                  {selectedPosition && player.positions.includes(selectedPosition) && (
-                    <ChevronRight className="h-4 w-4 text-blue-500" />
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// Multi-Quarter Quick Assign
-function MultiQuarterRoster() {
-  const [currentQuarter, setCurrentQuarter] = useState(1);
-  const [assignments, setAssignments] = useState<Record<number, Record<string, number | null>>>({
-    1: { GS: 1, GA: 2, WA: 3, C: 4, WD: 5, GD: 6, GK: 7 },
-    2: { GS: 8, GA: 1, WA: 9, C: 3, WD: 4, GD: 5, GK: 6 },
-    3: { GS: 2, GA: 8, WA: 4, C: 9, WD: 3, GD: 7, GK: 5 },
-    4: { GS: 7, GA: 3, WA: 2, C: 8, WD: 9, GD: 4, GK: 1 }
-  });
-
-  const copyQuarter = (fromQuarter: number, toQuarter: number) => {
-    setAssignments(prev => ({
-      ...prev,
-      [toQuarter]: { ...prev[fromQuarter] }
-    }));
-  };
-
-  const getPlayerQuarterCount = (playerId: number) => {
-    return Object.values(assignments).reduce((count, quarter) => {
-      return count + (Object.values(quarter).includes(playerId) ? 1 : 0);
-    }, 0);
-  };
-
-  return (
-    <div className="space-y-6">
-      {/* Quarter Navigation */}
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2">
-          <Clock className="h-4 w-4" />
-          <span className="font-medium">Quarter:</span>
-        </div>
-        <div className="flex gap-1">
-          {[1, 2, 3, 4].map(quarter => (
-            <Button
-              key={quarter}
-              variant={currentQuarter === quarter ? "default" : "outline"}
-              size="sm"
-              onClick={() => setCurrentQuarter(quarter)}
-            >
-              Q{quarter}
-            </Button>
-          ))}
-        </div>
-        <div className="flex gap-2 ml-auto">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              const sourceQuarter = currentQuarter === 1 ? 4 : currentQuarter - 1;
-              copyQuarter(sourceQuarter, currentQuarter);
-            }}
-          >
-            <ChevronLeft className="h-4 w-4 mr-1" />
-            Copy Previous
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              const targetQuarter = currentQuarter === 4 ? 1 : currentQuarter + 1;
-              copyQuarter(currentQuarter, targetQuarter);
-            }}
-          >
-            Copy to Next
-            <ChevronRight className="h-4 w-4 ml-1" />
-          </Button>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-3 gap-6">
-        {/* Current Quarter Assignment */}
-        <div className="col-span-2">
-          <h4 className="font-semibold mb-3">Quarter {currentQuarter} Positions</h4>
-          <div className="grid grid-cols-7 gap-2">
-            {positions.map(position => {
-              const assignedPlayerId = assignments[currentQuarter][position];
-              const assignedPlayer = assignedPlayerId 
-                ? samplePlayers.find(p => p.id === assignedPlayerId)
-                : null;
-
-              return (
-                <div key={position} className="text-center">
-                  <div className="text-xs font-medium mb-1">{position}</div>
-                  <div className="h-16 border border-gray-300 rounded-lg flex items-center justify-center bg-gray-50">
-                    {assignedPlayer ? (
-                      <Avatar className="h-12 w-12">
-                        <AvatarFallback className={`${assignedPlayer.color} text-white text-xs`}>
-                          {assignedPlayer.name.split(' ').map(n => n[0]).join('')}
-                        </AvatarFallback>
-                      </Avatar>
-                    ) : (
-                      <Plus className="h-6 w-6 text-gray-400" />
-                    )}
-                  </div>
-                  {assignedPlayer && (
-                    <div className="text-xs mt-1 font-medium truncate">
-                      {assignedPlayer.name}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Player Summary */}
-        <div>
-          <h4 className="font-semibold mb-3">Playing Time</h4>
-          <div className="space-y-2">
-            {samplePlayers.map(player => {
-              const quarterCount = getPlayerQuarterCount(player.id);
-
-              return (
-                <div key={player.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                  <div className="flex items-center gap-2">
-                    <Avatar className="h-6 w-6">
-                      <AvatarFallback className={`${player.color} text-white text-xs`}>
-                        {player.name.split(' ').map(n => n[0]).join('')}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span className="text-sm font-medium">{player.name}</span>
-                  </div>
-                  <div className="flex gap-1">
-                    {[1, 2, 3, 4].map(quarter => {
-                      const isPlaying = Object.values(assignments[quarter]).includes(player.id);
-                      return (
-                        <div
-                          key={quarter}
-                          className={`w-4 h-4 rounded-sm ${
-                            isPlaying ? 'bg-green-500' : 'bg-gray-300'
-                          }`}
-                        />
-                      );
-                    })}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export default function RosterManagementExamples() {
   const breadcrumbs = [
     { label: 'Examples', href: '/component-examples' },
     { label: 'Roster Management' }
   ];
+
+  return (
+    <PageTemplate
+      title="Roster Management Examples"
+      subtitle="Interactive roster assignment interfaces for netball teams"
+      breadcrumbs={breadcrumbs}
+    >
+      <Helmet>
+        <title>Roster Management Examples | Team Manager</title>
+      </Helmet>
+
+      <div className="space-y-8">
+        {/* Drag and Drop Interface */}
+        <section>
+          <h2 className="text-2xl font-bold mb-6">Drag & Drop Roster Management</h2>
+          <DragDropRoster />
+        </section>
+
+        {/* Design Guidelines */}
+        <section>
+          <h2 className="text-2xl font-bold mb-6">Design Guidelines</h2>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h4 className="font-semibold mb-3">Roster Management Best Practices</h4>
+                  <ul className="text-sm space-y-2 text-gray-600">
+                    <li>• Provide clear visual feedback for drag operations</li>
+                    <li>• Show quarter summaries and player statistics</li>
+                    <li>• Enable easy copying between quarters</li>
+                    <li>• Highlight position eligibility constraints</li>
+                    <li>• Offer multiple assignment methods (drag, click, grid)</li>
+                  </ul>
+                </div>
+
+                <div>
+                  <h4 className="font-semibold mb-3">User Experience Considerations</h4>
+                  <ul className="text-sm space-y-2 text-gray-600">
+                    <li>• Make court layout intuitive and recognizable</li>
+                    <li>• Provide undo/redo functionality</li>
+                    <li>• Show playing time distribution clearly</li>
+                    <li>• Enable bulk operations for efficiency</li>
+                    <li>• Support both touch and mouse interactions</li>
+                  </ul>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+      </div>
+    </PageTemplate>
+  );
+}
