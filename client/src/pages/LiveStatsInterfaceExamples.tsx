@@ -1550,7 +1550,6 @@ const QuickTapCurrentInterface = () => {
 
   // Define commonStats and statConfig outside the return statement
   const statConfig = positionStatConfig;
-  const commonStats = ['intercepts', 'badPass', 'handlingError', 'infringement', 'pickUp'];
 
   return (
     <div className="space-y-4">
