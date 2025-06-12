@@ -1686,7 +1686,7 @@ const QuickTapCurrentInterface = () => {
                       size="sm"
                       className="w-full touch-manipulation"
                     >
-                      <ArrowRightLeft className="h-3 w-3 mr-1">
+                      <ArrowRightLeft className="h-3 w-3 mr-1" />
                       Interchange
                     </Button>
 
