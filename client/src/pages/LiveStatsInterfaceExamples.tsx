@@ -1105,8 +1105,7 @@ const TimerEnhancedInterface = () => {
                 {Object.values(positionStats).reduce((sum: number, pos: any) => {
                   return sum + Object.keys(pos).reduce((qSum, quarter) => {
                     return qSum + (pos[quarter]?.goalsAgainst || 0);
-                  }, 0);
-                }, 0)}
+                  }, 0)}
               </p>
             </div>
           </div>
@@ -1132,43 +1131,65 @@ const TimerEnhancedInterface = () => {
                     </div>
                   </div>
 
+                  {/* Playing Time Display */}
                   <div className="text-right text-xs text-muted-foreground">
-                    <div>Q{currentQuarter} • {currentTime}</div>
-                    <div className={`mt-1 px-2 py-1 rounded text-xs ${
-                      isTimerRunning ? 'bg-green-100 text-green-700' : 
-                      timeRemaining === 0 ? 'bg-red-100 text-red-700' :
-                      'bg-yellow-100 text-yellow-700'
-                    }`}>
-                      {isTimerRunning ? 'LIVE' : timeRemaining === 0 ? 'END' : 'PAUSED'}
-                    </div>
+                    <div className="text-sm text-muted-foreground space-y-1">
+                    <div>Q{currentQuarter} • {formatTime(timeRemaining)} remaining</div>
+                    {(() => {
+                      const playerId = currentPositions[player.position];
+                      const playerTime = playingTimes[playerId];
+                      if (playerTime && gameStarted) {
+                        return (
+                          <div className="text-xs">
+                            <div>Q{currentQuarter}: {formatTime(playerTime.quarterTime)}</div>
+                            <div>Game: {formatTime(playerTime.totalTime)}</div>
+                          </div>
+                        );
+                      }
+                      return <div className="text-xs text-gray-400">Not playing</div>;
+                    })()}
+                  </div>
+                  </div>
+
+                  {/* Common Stats Row - Quick Tap */}
+                  <div className="flex-1 grid grid-cols-5 gap-2">
+                    {commonStats.map(stat => (
+                      statConfig[stat] && (
+                        <QuickStatButton
+                          key={stat}
+                          position={player.position}
+                          stat={stat}
+                        />
+                      )
+                    ))}
                   </div>
                 </div>
               </CardHeader>
 
-              <CardContent className="py-2">
-                <div className="grid grid-cols-4 gap-2">
-                  {['goalsFor', 'intercepts', 'badPass', 'rebounds'].map(stat => {
-                    const statKey = `${player.position}-${currentQuarter}`;
-                    const value = positionStats[statKey]?.[stat] || 0;
+              {/* Position-Specific Stats Row */}
+              <CardContent className="py-2 pt-1">
+                {(() => {
+                  const posSpecificStats = Object.entries(statConfig)
+                    .filter(([stat, isAvailable]) => isAvailable && !commonStats.includes(stat))
+                    .map(([stat]) => stat);
 
-                    return (
-                      <Button
-                        key={stat}
-                        variant="outline"
-                        className="h-12 flex flex-col gap-1 touch-manipulation relative"
-                        onClick={() => recordStat(player.position, stat)}
-                      >
-                        <span className="text-xs capitalize">{stat}</span>
-                        <span className="font-bold">{value}</span>
-                        {value > 0 && (
-                          <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs">
-                            {value}
-                          </Badge>
-                        )}
-                      </Button>
-                    );
-                  })}
-                </div>
+                  if (posSpecificStats.length === 0) {
+                    return null;
+                  }
+
+                  return (
+                    <div className="flex justify-center gap-2">
+                      {posSpecificStats.map(statType => (
+                        <QuickStatButton
+                          key={statType}
+                          position={player.position}
+                          stat={statType}
+                          important={true}
+                        />
+                      ))}
+                    </div>
+                  );
+                })()}
               </CardContent>
             </Card>
           );
@@ -1767,7 +1788,7 @@ const QuickTapCurrentInterface = () => {
                     <p className="text-xs text-muted-foreground">{positionLabels[position]}</p>
                   </div>
 
-                  {/* Timer Context Display */}
+                  {/* Playing Time Display */}
                   <div className="text-right text-xs text-muted-foreground">
                     <div className="text-sm text-muted-foreground space-y-1">
                     <div>Q{currentQuarter} • {formatTime(timeRemaining)} remaining</div>
