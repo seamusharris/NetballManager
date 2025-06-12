@@ -802,10 +802,13 @@ const TimerEnhancedInterface = () => {
   const [quarterLength, setQuarterLength] = useState(15); // minutes
   const [gameStarted, setGameStarted] = useState(false);
 
+  // Playing time tracking for each player
+  const [playingTimes, setPlayingTimes] = useState({});
+
   // Timer effect
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
-    
+
     if (isTimerRunning && timeRemaining > 0) {
       interval = setInterval(() => {
         setTimeRemaining(time => {
@@ -837,6 +840,29 @@ const TimerEnhancedInterface = () => {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
+  // Calculate playing time for each player (rounded to nearest 30 seconds)
+  const calculatePlayingTimes = () => {
+    const times = {};
+    const quarterProgress = (quarterLength * 60) - timeRemaining;
+    const roundedProgress = Math.floor(quarterProgress / 30) * 30; // Round to 30-second intervals
+
+    // Calculate time for each position
+    Object.entries(currentPositions).forEach(([position, playerId]) => {
+      if (playerId && gameStarted) {
+        if (!times[playerId]) {
+          times[playerId] = { quarterTime: 0, totalTime: 0 };
+        }
+
+        // For demo purposes, assume player has been in position for the quarter duration
+        // In real implementation, this would track actual interchange times
+        times[playerId].quarterTime = roundedProgress;
+        times[playerId].totalTime = roundedProgress + ((currentQuarter - 1) * quarterLength * 60);
+      }
+    });
+
+    return times;
+  };
+
   // Timer controls
   const startTimer = () => {
     setGameStarted(true);
@@ -864,7 +890,7 @@ const TimerEnhancedInterface = () => {
     // Get current time for interchange tracking
     const currentTime = formatTime(timeRemaining);
     console.log(`Stat recorded: ${position} ${stat} at ${currentTime} in Q${currentQuarter}`);
-    
+
     // Update stats (simplified for demo)
     setPositionStats(prev => {
       const key = `${position}-${currentQuarter}`;
@@ -874,6 +900,13 @@ const TimerEnhancedInterface = () => {
       return newStats;
     });
   };
+
+  // Update playing times when timer changes (every 30 seconds)
+  useEffect(() => {
+    if (gameStarted) {
+      setPlayingTimes(calculatePlayingTimes());
+    }
+  }, [Math.floor(timeRemaining / 30), currentQuarter, currentPositions, gameStarted]);
 
   return (
     <div className="space-y-4">
@@ -890,7 +923,7 @@ const TimerEnhancedInterface = () => {
                 WNC Dingoes vs Emeralds
               </p>
             </div>
-            
+
             {/* Quarter Length Selector */}
             <div className="flex items-center gap-2">
               <span className="text-sm">Quarter Length:</span>
@@ -914,7 +947,7 @@ const TimerEnhancedInterface = () => {
             </div>
           </div>
         </CardHeader>
-        
+
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Timer Display */}
@@ -927,7 +960,7 @@ const TimerEnhancedInterface = () => {
                   <div className="text-sm text-muted-foreground">
                     Quarter {currentQuarter} • {quarterLength} minutes
                   </div>
-                  
+
                   {/* Progress Bar */}
                   <div className="w-full bg-gray-200 rounded-full h-2">
                     <div 
@@ -973,7 +1006,7 @@ const TimerEnhancedInterface = () => {
               <CardContent className="py-4">
                 <div className="space-y-2">
                   <div className="text-sm font-semibold text-center mb-3">Timer Controls</div>
-                  
+
                   <div className="grid grid-cols-2 gap-2">
                     {!gameStarted ? (
                       <Button 
@@ -996,7 +1029,7 @@ const TimerEnhancedInterface = () => {
                             Resume
                           </Button>
                         )}
-                        
+
                         <Button onClick={resetQuarter} variant="outline" className="touch-manipulation">
                           <RotateCcw className="h-4 w-4 mr-1" />
                           Reset
@@ -1004,7 +1037,7 @@ const TimerEnhancedInterface = () => {
                       </>
                     )}
                   </div>
-                  
+
                   {gameStarted && (
                     <Button 
                       onClick={endQuarter} 
@@ -1063,7 +1096,7 @@ const TimerEnhancedInterface = () => {
       <div className="space-y-3">
         {mockPlayers.slice(0, 3).map(player => {
           const currentTime = formatTime(timeRemaining);
-          
+
           return (
             <Card key={player.id}>
               <CardHeader className="py-2">
@@ -1077,7 +1110,7 @@ const TimerEnhancedInterface = () => {
                       <Badge variant="outline" className="text-xs">{player.position}</Badge>
                     </div>
                   </div>
-                  
+
                   <div className="text-right text-xs text-muted-foreground">
                     <div>Q{currentQuarter} • {currentTime}</div>
                     <div className={`mt-1 px-2 py-1 rounded text-xs ${
@@ -1090,13 +1123,13 @@ const TimerEnhancedInterface = () => {
                   </div>
                 </div>
               </CardHeader>
-              
+
               <CardContent className="py-2">
                 <div className="grid grid-cols-4 gap-2">
                   {['goalsFor', 'intercepts', 'badPass', 'rebounds'].map(stat => {
                     const statKey = `${player.position}-${currentQuarter}`;
                     const value = positionStats[statKey]?.[stat] || 0;
-                    
+
                     return (
                       <Button
                         key={stat}
@@ -1132,14 +1165,14 @@ const TimerEnhancedInterface = () => {
               <span>Q{currentQuarter} Started</span>
               <span>{formatTime(quarterLength * 60)}</span>
             </div>
-            
+
             {timeRemaining < quarterLength * 60 && (
               <div className="flex justify-between items-center p-2 bg-blue-50 rounded">
                 <span>Current Time</span>
                 <span className="font-mono font-bold">{formatTime(timeRemaining)}</span>
               </div>
             )}
-            
+
             {timeRemaining === 0 && (
               <div className="flex justify-between items-center p-2 bg-red-50 rounded">
                 <span>Q{currentQuarter} Ended</span>
@@ -1187,7 +1220,7 @@ const QuickTapCurrentInterface = () => {
   const [currentQuarter, setCurrentQuarter] = useState(1);
   const [undoStack, setUndoStack] = useState([]);
   const [redoStack, setRedoStack] = useState([]);
-  
+
   // Player assignment and interchange state - using mock player IDs from this file
   const [currentPositions, setCurrentPositions] = useState({
     'GS': 1, 'GA': 2, 'WA': 3, 'C': 4, 'WD': 5, 'GD': 6, 'GK': 7 // All positions filled, players 8 & 9 available for interchange
@@ -1202,10 +1235,13 @@ const QuickTapCurrentInterface = () => {
   const [quarterLength, setQuarterLength] = useState(15); // minutes
   const [gameStarted, setGameStarted] = useState(false);
 
+  // Playing time tracking for each player
+  const [playingTimes, setPlayingTimes] = useState({});
+
   // Timer effect
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
-    
+
     if (isTimerRunning && timeRemaining > 0) {
       interval = setInterval(() => {
         setTimeRemaining(time => {
@@ -1235,6 +1271,29 @@ const QuickTapCurrentInterface = () => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // Calculate playing time for each player (rounded to nearest 30 seconds)
+  const calculatePlayingTimes = () => {
+    const times = {};
+    const quarterProgress = (quarterLength * 60) - timeRemaining;
+    const roundedProgress = Math.floor(quarterProgress / 30) * 30; // Round to 30-second intervals
+
+    // Calculate time for each position
+    Object.entries(currentPositions).forEach(([position, playerId]) => {
+      if (playerId && gameStarted) {
+        if (!times[playerId]) {
+          times[playerId] = { quarterTime: 0, totalTime: 0 };
+        }
+
+        // For demo purposes, assume player has been in position for the quarter duration
+        // In real implementation, this would track actual interchange times
+        times[playerId].quarterTime = roundedProgress;
+        times[playerId].totalTime = roundedProgress + ((currentQuarter - 1) * quarterLength * 60);
+      }
+    });
+
+    return times;
   };
 
   // Timer controls
@@ -1312,7 +1371,7 @@ const QuickTapCurrentInterface = () => {
     // Get current time for tracking
     const currentTime = formatTime(timeRemaining);
     console.log(`Stat recorded: ${position} ${stat} at ${currentTime} in Q${currentQuarter}`);
-    
+
     // Save current state for undo
     setUndoStack([...undoStack, JSON.parse(JSON.stringify(positionStats))]);
     setRedoStack([]);
@@ -1382,7 +1441,7 @@ const QuickTapCurrentInterface = () => {
   // Record an interchange
   const recordInterchange = (position, playerOut, playerIn, reason) => {
     const currentTime = formatTime(timeRemaining);
-    
+
     const newInterchange = {
       id: `${Date.now()}`,
       timestamp: new Date(),
@@ -1446,7 +1505,7 @@ const QuickTapCurrentInterface = () => {
                 WNC Dingoes vs Emeralds - Quick Tap Stats
               </p>
             </div>
-            
+
             {/* Quarter Length Selector */}
             <div className="flex items-center gap-2">
               <span className="text-sm">Quarter Length:</span>
@@ -1470,7 +1529,7 @@ const QuickTapCurrentInterface = () => {
             </div>
           </div>
         </CardHeader>
-        
+
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Timer Display */}
@@ -1483,7 +1542,7 @@ const QuickTapCurrentInterface = () => {
                   <div className="text-sm text-muted-foreground">
                     Quarter {currentQuarter} • {quarterLength} minutes
                   </div>
-                  
+
                   {/* Progress Bar */}
                   <div className="w-full bg-gray-200 rounded-full h-2">
                     <div 
@@ -1493,7 +1552,7 @@ const QuickTapCurrentInterface = () => {
                       }}
                     />
                   </div>
-                  
+
                   {/* Timer Status */}
                   <div className={`px-2 py-1 rounded text-xs ${
                     isTimerRunning ? 'bg-green-100 text-green-700' : 
@@ -1576,14 +1635,14 @@ const QuickTapCurrentInterface = () => {
                             Resume
                           </Button>
                         )}
-                        
+
                         <Button onClick={resetQuarter} variant="outline" size="sm" className="touch-manipulation">
                           <RotateCcw className="h-3 w-3 mr-1" />
                           Reset
                         </Button>
                       </div>
                     )}
-                    
+
                     <Button 
                       onClick={() => setShowInterchangePanel(!showInterchangePanel)}
                       variant={showInterchangePanel ? "default" : "outline"}
@@ -1593,7 +1652,7 @@ const QuickTapCurrentInterface = () => {
                       <ArrowRightLeft className="h-3 w-3 mr-1" />
                       Interchange
                     </Button>
-                    
+
                     {gameStarted && (
                       <Button 
                         onClick={endQuarter} 
@@ -1673,14 +1732,22 @@ const QuickTapCurrentInterface = () => {
 
                   {/* Timer Context Display */}
                   <div className="text-right text-xs text-muted-foreground">
-                    <div>Q{currentQuarter} • {formatTime(timeRemaining)}</div>
-                    <div className={`mt-1 px-2 py-1 rounded text-xs ${
-                      isTimerRunning ? 'bg-green-100 text-green-700' : 
-                      timeRemaining === 0 ? 'bg-red-100 text-red-700' :
-                      'bg-yellow-100 text-yellow-700'
-                    }`}>
-                      {isTimerRunning ? 'LIVE' : timeRemaining === 0 ? 'END' : 'PAUSED'}
-                    </div>
+                    <div className="text-sm text-muted-foreground space-y-1">
+                    <div>Q{currentQuarter} • {formatTime(timeRemaining)} remaining</div>
+                    {(() => {
+                      const playerId = currentPositions[position];
+                      const playerTime = playingTimes[playerId];
+                      if (playerTime && gameStarted) {
+                        return (
+                          <div className="text-xs">
+                            <div>Q{currentQuarter}: {formatTime(playerTime.quarterTime)}</div>
+                            <div>Total: {formatTime(playerTime.totalTime)}</div>
+                          </div>
+                        );
+                      }
+                      return <div className="text-xs text-gray-400">Not playing</div>;
+                    })()}
+                  </div>
                   </div>
 
                   {/* Common Stats Row - Quick Tap */}
@@ -1828,7 +1895,7 @@ const QuickTapCurrentInterface = () => {
                           {currentPlayer ? '← ' : '+ '}{player.name.split(' ')[0]}
                         </Button>
                       ))}
-                      
+
                       {/* Remove player button for occupied positions */}
                       {currentPlayer && (
                         <Button
@@ -1847,7 +1914,7 @@ const QuickTapCurrentInterface = () => {
                           ✕
                         </Button>
                       )}
-                      
+
                       {availablePlayers.length === 0 && !currentPlayer && (
                         <span className="text-xs text-muted-foreground">All assigned</span>
                       )}
