@@ -600,53 +600,54 @@ input[type=number] {
   @apply bg-gray-200 border-gray-300 text-gray-800;
 }
 
-/* Stat count badges with darker backgrounds - target Badge components specifically */
-.touch-manipulation.bg-green-100 .absolute.inline-flex {
-  @apply bg-green-600 text-white border-green-600;
+/* Stat count badges with darker backgrounds - more specific targeting */
+.touch-manipulation.bg-green-100 .absolute.inline-flex.items-center.rounded-full {
+  @apply bg-green-600 text-white border-green-600 !important;
 }
 
-.touch-manipulation.bg-orange-100 .absolute.inline-flex {
-  @apply bg-orange-600 text-white border-orange-600;
+.touch-manipulation.bg-orange-100 .absolute.inline-flex.items-center.rounded-full {
+  @apply bg-orange-600 text-white border-orange-600 !important;
 }
 
-.touch-manipulation.bg-red-100 .absolute.inline-flex {
-  @apply bg-red-600 text-white border-red-600;
+.touch-manipulation.bg-red-100 .absolute.inline-flex.items-center.rounded-full {
+  @apply bg-red-600 text-white border-red-600 !important;
 }
 
-.touch-manipulation.bg-blue-100 .absolute.inline-flex {
-  @apply bg-blue-600 text-white border-blue-600;
+.touch-manipulation.bg-blue-100 .absolute.inline-flex.items-center.rounded-full {
+  @apply bg-blue-600 text-white border-blue-600 !important;
 }
 
-.touch-manipulation.bg-purple-100 .absolute.inline-flex {
-  @apply bg-purple-600 text-white border-purple-600;
+.touch-manipulation.bg-purple-100 .absolute.inline-flex.items-center.rounded-full {
+  @apply bg-purple-600 text-white border-purple-600 !important;
 }
 
-.touch-manipulation.bg-amber-100 .absolute.inline-flex {
-  @apply bg-amber-600 text-white border-amber-600;
+.touch-manipulation.bg-amber-100 .absolute.inline-flex.items-center.rounded-full {
+  @apply bg-amber-600 text-white border-amber-600 !important;
 }
 
-.touch-manipulation.bg-pink-100 .absolute.inline-flex {
-  @apply bg-pink-600 text-white border-pink-600;
+.touch-manipulation.bg-pink-100 .absolute.inline-flex.items-center.rounded-full {
+  @apply bg-pink-600 text-white border-pink-600 !important;
 }
 
-.touch-manipulation.bg-teal-100 .absolute.inline-flex {
-  @apply bg-teal-600 text-white border-teal-600;
+.touch-manipulation.bg-teal-100 .absolute.inline-flex.items-center.rounded-full {
+  @apply bg-teal-600 text-white border-teal-600 !important;
 }
 
-.touch-manipulation.bg-rose-100 .absolute.inline-flex {
-  @apply bg-rose-600 text-white border-rose-600;
+.touch-manipulation.bg-rose-100 .absolute.inline-flex.items-center.rounded-full {
+  @apply bg-rose-600 text-white border-rose-600 !important;
 }
 
-.touch-manipulation.bg-gray-100 .absolute.inline-flex {
-  @apply bg-gray-600 text-white border-gray-600;
+.touch-manipulation.bg-gray-100 .absolute.inline-flex.items-center.rounded-full {
+  @apply bg-gray-600 text-white border-gray-600 !important;
 }
 
-/* Alternative approach - target Badge component class directly */
-.touch-manipulation .absolute[class*="inline-flex"][class*="rounded-full"] {
-  font-weight: 600;
-  font-size: 0.75rem;
-  min-width: 1.5rem;
-  height: 1.5rem;
+/* Enhanced badge styling for better visibility */
+.touch-manipulation .absolute.inline-flex.items-center.rounded-full {
+  font-weight: 600 !important;
+  font-size: 0.75rem !important;
+  min-width: 1.5rem !important;
+  height: 1.5rem !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2) !important;
 }
 
 /* Enhanced tooltips */
