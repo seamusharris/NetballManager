@@ -32,7 +32,6 @@ import GameDetails from "./pages/GameDetails";
 
 // Lazy load components
 const StatsDebug = lazy(() => import("./pages/StatsDebug"));
-const PerformanceDemo = lazy(() => import("./pages/PerformanceDemo"));
 import OpponentPreparation from '@/pages/OpponentPreparation';
 import GameResultExamples from '@/pages/GameResultExamples';
 import RoundBadgeExamples from '@/pages/RoundBadgeExamples';
@@ -144,7 +143,6 @@ function Router() {
         </Route>
         <Route path="/team-analysis" component={withErrorBoundary(TeamAnalysis, 'TeamAnalysis')} />
         <Route path="/opponent-preparation" component={OpponentPreparation} />
-        <Route path="/performance-demo" component={PerformanceDemo} />
         <Route path="/game-result-examples" component={withErrorBoundary(GameResultExamples, 'GameResultExamples')} />
         <Route path="/round-badge-examples" component={withErrorBoundary(RoundBadgeExamples, 'RoundBadgeExamples')} />
         <Route path="/player-box-examples" component={withErrorBoundary(PlayerBoxExamples, 'PlayerBoxExamples')} />
