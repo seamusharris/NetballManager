@@ -834,7 +834,6 @@ const TimerEnhancedInterface = () => {
     }
 
     return () => {
-```javascript
       if (interval) clearInterval(interval);
     };
   }, [isTimerRunning, timeRemaining, currentQuarter, quarterLength]);
