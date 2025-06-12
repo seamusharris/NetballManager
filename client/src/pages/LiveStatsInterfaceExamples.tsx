@@ -913,22 +913,11 @@ const TimerEnhancedInterface = () => {
     return times;
   };
 
-  // Timer controls
+  // Timer controls - simplified
   const startTimer = () => {
-    const now = Date.now();
     setGameStarted(true);
     setIsTimerRunning(true);
-
-    // Initialize timers for all players currently on court
-    const newPlayerTimers = {};
-    Object.values(currentPositions).forEach(playerId => {
-      if (playerId) {
-        newPlayerTimers[playerId] = now;
-      }
-    });
-    setPlayerTimers(newPlayerTimers);
-
-    console.log('Game started, initialized timers for players:', Object.values(currentPositions));
+    console.log('Game started, timer-based playing time tracking active');
   };
 
   const pauseTimer = () => {
@@ -1166,8 +1155,7 @@ const TimerEnhancedInterface = () => {
                 {Object.values(positionStats).reduce((sum: number, pos: any) => {
                   return sum + Object.keys(pos).reduce((qSum, quarter) => {
                     return qSum + (pos[quarter]?.goalsAgainst || 0);
-                  }, 0);
-                }, 0)}
+                  }, 0)}
               </p>
             </div>
           </div>
@@ -1193,8 +1181,8 @@ const TimerEnhancedInterface = () => {
                     </div>
                   </div>
 
-                  {/* Playing Time Display */}
-                  <div className="text-right text-xs text-muted-foreground">
+                  {/* Playing Time Display - add dependency on displayUpdateTrigger to force updates */}
+                  <div key={`${player.position}-${displayUpdateTrigger}`} className="text-right text-xs text-muted-foreground">
                     {(() => {
                       // Get player assigned to this position
                       const assignedPlayerId = currentPositions[player.position];
@@ -1479,22 +1467,11 @@ const QuickTapCurrentInterface = () => {
     };
   }, [isTimerRunning, gameStarted]);
 
-  // Timer controls
+  // Timer controls - simplified
   const startTimer = () => {
-    const now = Date.now();
     setGameStarted(true);
     setIsTimerRunning(true);
-
-    // Initialize timers for all players currently on court
-    const newPlayerTimers = {};
-    Object.values(currentPositions).forEach(playerId => {
-      if (playerId) {
-        newPlayerTimers[playerId] = now;
-      }
-    });
-    setPlayerTimers(newPlayerTimers);
-
-    console.log('Game started, initialized timers for players:', Object.values(currentPositions));
+    console.log('Game started, timer-based playing time tracking active');
   };
 
   const pauseTimer = () => {
@@ -1971,8 +1948,8 @@ const QuickTapCurrentInterface = () => {
                     <p className="text-xs text-muted-foreground">{positionLabels[position]}</p>
                   </div>
 
-                  {/* Playing Time Display */}
-                  <div className="text-right text-xs text-muted-foreground">
+                  {/* Playing Time Display - add dependency on displayUpdateTrigger to force updates */}
+                  <div key={`${position}-${displayUpdateTrigger}`} className="text-right text-xs text-muted-foreground">
                     {(() => {
                       // Get player assigned to this position
                       const assignedPlayerId = currentPositions[position];
