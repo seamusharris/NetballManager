@@ -1194,6 +1194,7 @@ const QuickTapCurrentInterface = () => {
   });
   const [interchanges, setInterchanges] = useState([]);
   const [showInterchangePanel, setShowInterchangePanel] = useState(false);
+  const [interchangeReason, setInterchangeReason] = useState('tactical');
 
   // Timer state
   const [isTimerRunning, setIsTimerRunning] = useState(false);
@@ -1379,7 +1380,7 @@ const QuickTapCurrentInterface = () => {
   };
 
   // Record an interchange
-  const recordInterchange = (position, playerOut, playerIn, reason = 'tactical') => {
+  const recordInterchange = (position, playerOut, playerIn, reason) => {
     const currentTime = formatTime(timeRemaining);
     
     const newInterchange = {
@@ -1742,6 +1743,24 @@ const QuickTapCurrentInterface = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            {/* Interchange Reason Selector */}
+            <div className="p-3 bg-gray-50 rounded-lg">
+              <h4 className="font-medium text-sm mb-2">Interchange Reason</h4>
+              <div className="grid grid-cols-4 gap-2">
+                {['tactical', 'injury', 'rest', 'performance'].map(reason => (
+                  <Button
+                    key={reason}
+                    variant={interchangeReason === reason ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setInterchangeReason(reason)}
+                    className="text-xs touch-manipulation capitalize"
+                  >
+                    {reason}
+                  </Button>
+                ))}
+              </div>
+            </div>
+
             {/* Available Players for Interchange */}
             <div className="mb-4 p-3 bg-blue-50 rounded-lg">
               <h4 className="font-medium text-sm mb-2">Available Players</h4>
@@ -1794,7 +1813,7 @@ const QuickTapCurrentInterface = () => {
                           onClick={() => {
                             if (currentPlayer) {
                               // Substitute existing player
-                              recordInterchange(position, currentPlayer.id, player.id);
+                              recordInterchange(position, currentPlayer.id, player.id, interchangeReason);
                             } else {
                               // Assign to empty position
                               setCurrentPositions(prev => ({
@@ -1855,7 +1874,14 @@ const QuickTapCurrentInterface = () => {
                             {getPlayerName(interchange.playerOut)} → {getPlayerName(interchange.playerIn)}
                           </span>
                         </div>
-                        <Badge variant="secondary" className="text-xs capitalize">
+                        <Badge 
+                          variant={
+                            interchange.reason === 'injury' ? 'destructive' : 
+                            interchange.reason === 'tactical' ? 'default' : 
+                            'secondary'
+                          } 
+                          className="text-xs capitalize"
+                        >
                           {interchange.reason}
                         </Badge>
                       </div>
