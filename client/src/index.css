@@ -518,6 +518,47 @@ input[type=number] {
   transition: none !important;
 }
 
+/* Touch-optimized stat button colors with colored borders */
+.touch-manipulation.bg-green-100 {
+  @apply border-green-200;
+}
+
+.touch-manipulation.bg-orange-100 {
+  @apply border-orange-200;
+}
+
+.touch-manipulation.bg-red-100 {
+  @apply border-red-200;
+}
+
+.touch-manipulation.bg-blue-100 {
+  @apply border-blue-200;
+}
+
+.touch-manipulation.bg-purple-100 {
+  @apply border-purple-200;
+}
+
+.touch-manipulation.bg-amber-100 {
+  @apply border-amber-200;
+}
+
+.touch-manipulation.bg-pink-100 {
+  @apply border-pink-200;
+}
+
+.touch-manipulation.bg-teal-100 {
+  @apply border-teal-200;
+}
+
+.touch-manipulation.bg-rose-100 {
+  @apply border-rose-200;
+}
+
+.touch-manipulation.bg-gray-100 {
+  @apply border-gray-200;
+}
+
 /* Touch-optimized stat button hover states */
 .touch-manipulation.bg-green-100:hover {
   @apply bg-green-200 border-green-300 text-green-800;
