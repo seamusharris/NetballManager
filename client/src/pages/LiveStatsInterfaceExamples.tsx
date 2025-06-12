@@ -974,6 +974,9 @@ const TimerEnhancedInterface = () => {
     });
   };
 
+  // Separate state for forcing display updates every 30 seconds
+  const [displayUpdateTrigger, setDisplayUpdateTrigger] = useState(0);
+
   // Update playing time displays every 30 seconds when timer is running
   useEffect(() => {
     let displayUpdateInterval: NodeJS.Timeout | null = null;
@@ -981,8 +984,8 @@ const TimerEnhancedInterface = () => {
     if (isTimerRunning && gameStarted) {
       // Update display every 30 seconds
       displayUpdateInterval = setInterval(() => {
-        // Force a re-render by updating a dummy state
-        setPlayerTimers(prev => ({ ...prev }));
+        console.log('30-second display update triggered');
+        setDisplayUpdateTrigger(prev => prev + 1);
       }, 30000);
     }
 
@@ -991,12 +994,12 @@ const TimerEnhancedInterface = () => {
     };
   }, [isTimerRunning, gameStarted]);
 
-  // Update when quarter changes or positions change
+  // Update when quarter changes but NOT on events like interchanges
   useEffect(() => {
-    // This effect ensures displays update when key state changes
+    // Only log, don't force updates - let the 30-second interval handle display updates
     const currentTimes = calculatePlayingTimes();
-    console.log('Playing times updated:', currentTimes);
-  }, [currentQuarter, currentPositions, gameStarted, timeRemaining]);
+    console.log('Playing times calculated (no display update):', currentTimes);
+  }, [currentQuarter, gameStarted]);
 
   return (
     <div className="space-y-4">
@@ -1205,7 +1208,7 @@ const TimerEnhancedInterface = () => {
                   <div className="text-right text-xs text-muted-foreground">
                     {(() => {
                       // Get player assigned to this position
-                      const assignedPlayerId = currentPositions[player.position];
+                      const assignedPlayerId = currentPositions[position];
 
                       if (assignedPlayerId) {
                         const playerTime = getPlayerPlayingTime(assignedPlayerId);
@@ -1429,26 +1432,36 @@ const QuickTapCurrentInterface = () => {
 
   // Get accurate playing time for a player, rounded to nearest 30 seconds for display
   const getPlayerPlayingTime = (playerId: number) => {
-    // For demo purposes, calculate simple playing time based on current positions
+    if (!gameStarted) {
+      return { quarterTime: 0, totalTime: 0 };
+    }
+
     let currentQuarterTime = 0;
     let totalTime = 0;
 
-    if (gameStarted && Object.values(currentPositions).includes(playerId)) {
-      // Player is currently on court
-      const quarterProgressSeconds = (quarterLength * 60) - timeRemaining;
-      currentQuarterTime = Math.max(0, quarterProgressSeconds);
+    const isCurrentlyPlaying = Object.values(currentPositions).includes(playerId);
+    const playerStartTime = playerTimers[playerId];
+    const quarterStartTime = quarterStartTimes[currentQuarter];
+
+    if (isCurrentlyPlaying && playerStartTime && quarterStartTime) {
+      // Player is currently on court - calculate their playing time this quarter
+      const gameElapsedMs = (quarterLength * 60 * 1000) - (timeRemaining * 1000);
+      const playerJoinTimeMs = Math.max(0, playerStartTime - quarterStartTime);
+      const playerPlayingTimeMs = Math.max(0, gameElapsedMs - playerJoinTimeMs);
+      currentQuarterTime = Math.floor(playerPlayingTimeMs / 1000);
       
-      // For demo, assume they played full quarters in previous quarters
+      // For demo, assume they played full quarters in previous quarters if they were on court
       const previousQuartersTime = (currentQuarter - 1) * quarterLength * 60;
       totalTime = previousQuartersTime + currentQuarterTime;
-    } else if (gameStarted) {
+    } else {
       // Player not currently playing
       currentQuarterTime = 0;
-      // For demo, assume they played some previous quarters
-      totalTime = Math.max(0, (currentQuarter - 2) * quarterLength * 60);
+      // For demo, calculate based on if they played in previous quarters
+      const previousQuartersTime = Math.max(0, (currentQuarter - 2) * quarterLength * 60);
+      totalTime = previousQuartersTime;
     }
 
-    // Round to nearest 30 seconds for display
+    // Round to nearest 30 seconds for display only
     const displayQuarterTime = Math.round(currentQuarterTime / 30) * 30;
     const displayTotalTime = Math.round(totalTime / 30) * 30;
 
@@ -1458,44 +1471,14 @@ const QuickTapCurrentInterface = () => {
     };
   };
 
-  // Calculate playing times for display
+  // Calculate playing times for display - called by display update trigger only
   const calculatePlayingTimes = () => {
     const times = {};
 
     // Initialize all players with zero times
     mockPlayers.forEach(player => {
-      times[player.id] = { quarterTime: 0, totalTime: 0 };
+      times[player.id] = getPlayerPlayingTime(player.id);
     });
-
-    // Only calculate actual playing time if game has started
-    if (gameStarted) {
-      // For players currently on court, calculate their playing time this quarter
-      const quarterProgressSeconds = (quarterLength * 60) - timeRemaining;
-      const currentQuarterPlayingTime = Math.max(0, Math.round(quarterProgressSeconds / 30) * 30); // Round to nearest 30 seconds
-
-      Object.entries(currentPositions).forEach(([position, playerId]) => {
-        if (playerId && playerId !== 'bench' && times[playerId]) {
-          // Set current quarter playing time
-          times[playerId].quarterTime = currentQuarterPlayingTime;
-
-          // For demo purposes, assume they played full quarters in previous quarters
-          const previousQuartersTime = (currentQuarter - 1) * quarterLength * 60;
-          times[playerId].totalTime = previousQuartersTime + currentQuarterPlayingTime;
-        }
-      });
-
-      // For players not currently playing, show previous quarters only
-      Object.keys(times).forEach(playerId => {
-        const playerIdNum = parseInt(playerId);
-        const isCurrentlyPlaying = Object.values(currentPositions).includes(playerIdNum);
-
-        if (!isCurrentlyPlaying) {
-          times[playerId].quarterTime = 0; // Not playing this quarter
-          // For demo, assume they played some previous quarters
-          times[playerId].totalTime = Math.max(0, (currentQuarter - 2) * quarterLength * 60);
-        }
-      });
-    }
 
     return times;
   };
@@ -1700,7 +1683,7 @@ const QuickTapCurrentInterface = () => {
         [playerIn]: now
       }));
       
-      console.log(`Player ${playerIn} substituted on. Timer started.`);
+      console.log(`Player ${playerIn} substituted on. Timer started. Display will update at next 30-second interval.`);
     }
 
     // Update current positions
