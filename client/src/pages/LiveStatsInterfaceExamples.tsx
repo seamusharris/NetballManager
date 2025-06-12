@@ -834,7 +834,6 @@ const TimerEnhancedInterface = () => {
     }
 
     return () => {
-      The calculatePlayingTimes function is modified to initialize all player times to zero and only calculate the time if the game has started.```text
       if (interval) clearInterval(interval);
     };
   }, [isTimerRunning, timeRemaining, currentQuarter, quarterLength]);
@@ -926,11 +925,9 @@ const TimerEnhancedInterface = () => {
     });
   };
 
-  // Update playing times when timer changes (every 30 seconds)
+  // Initialize playing times and update when timer changes
   useEffect(() => {
-    if (gameStarted) {
-      setPlayingTimes(calculatePlayingTimes());
-    }
+    setPlayingTimes(calculatePlayingTimes());
   }, [Math.floor(timeRemaining / 30), currentQuarter, currentPositions, gameStarted]);
 
   return (
@@ -1143,7 +1140,7 @@ const TimerEnhancedInterface = () => {
                       const assignedPlayerId = currentPositions[player.position];
                       const playerTime = playingTimes[assignedPlayerId];
 
-                      if (assignedPlayerId && playerTime && gameStarted) {
+                      if (assignedPlayerId && playerTime) {
                         return (
                           <div className="text-xs space-y-1">
                             <div>Q{currentQuarter}: {formatTime(playerTime.quarterTime)}</div>
@@ -1151,7 +1148,18 @@ const TimerEnhancedInterface = () => {
                           </div>
                         );
                       }
-                      return <div className="text-xs text-gray-400">Not playing</div>;
+                      
+                      if (assignedPlayerId) {
+                        // Player is assigned but no time data yet - show zeros
+                        return (
+                          <div className="text-xs space-y-1">
+                            <div>Q{currentQuarter}: 00:00</div>
+                            <div>Game: 00:00</div>
+                          </div>
+                        );
+                      }
+                      
+                      return <div className="text-xs text-gray-400">Not assigned</div>;
                     })()}
                   </div>
 
