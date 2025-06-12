@@ -1188,7 +1188,7 @@ const QuickTapCurrentInterface = () => {
   
   // Player assignment and interchange state - using mock player IDs from this file
   const [currentPositions, setCurrentPositions] = useState({
-    'GS': 1, 'GA': 2, 'WA': 3, 'C': 4, 'WD': 5, 'GD': 6, 'GK': 7 // Mock initial assignments
+    'GS': 1, 'GA': 2, 'WA': 3, 'C': 4, 'WD': 5, 'GD': null, 'GK': null // Leave some positions unassigned for interchange demo
   });
   const [interchanges, setInterchanges] = useState([]);
   const [showInterchangePanel, setShowInterchangePanel] = useState(false);
@@ -1368,6 +1368,12 @@ const QuickTapCurrentInterface = () => {
   const getAvailablePlayers = () => {
     const onCourtPlayerIds = Object.values(currentPositions).filter(Boolean);
     return mockPlayers.filter(player => !onCourtPlayerIds.includes(player.id));
+  };
+
+  // Get player currently in a position
+  const getPlayerInPosition = (position) => {
+    const playerId = currentPositions[position];
+    return playerId ? mockPlayers.find(p => p.id === playerId) : null;
   };
 
   // Record an interchange
@@ -1754,8 +1760,7 @@ const QuickTapCurrentInterface = () => {
             {/* Quick Interchange Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {allPositions.map(position => {
-                const currentPlayerId = currentPositions[position];
-                const currentPlayer = mockPlayers.find(p => p.id === currentPlayerId);
+                const currentPlayer = getPlayerInPosition(position);
                 const availablePlayers = getAvailablePlayers();
 
                 return (
@@ -1771,11 +1776,14 @@ const QuickTapCurrentInterface = () => {
                     {/* Current Player */}
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-sm truncate">
-                        {currentPlayer?.name || 'No Player'}
+                        {currentPlayer?.name || 'Empty Position'}
                       </p>
+                      {!currentPlayer && (
+                        <p className="text-xs text-muted-foreground">Click to assign</p>
+                      )}
                     </div>
 
-                    {/* Quick Substitute Buttons */}
+                    {/* Quick Substitute/Assign Buttons */}
                     <div className="flex gap-1">
                       {availablePlayers.slice(0, 3).map(player => (
                         <Button
@@ -1784,18 +1792,45 @@ const QuickTapCurrentInterface = () => {
                           size="sm"
                           className="h-8 px-2 text-xs touch-manipulation hover:bg-green-100"
                           onClick={() => {
-                            if (currentPlayerId) {
-                              recordInterchange(position, currentPlayerId, player.id);
+                            if (currentPlayer) {
+                              // Substitute existing player
+                              recordInterchange(position, currentPlayer.id, player.id);
+                            } else {
+                              // Assign to empty position
+                              setCurrentPositions(prev => ({
+                                ...prev,
+                                [position]: player.id
+                              }));
+                              console.log(`Assigned ${player.name} to ${position}`);
                             }
                           }}
-                          disabled={!currentPlayerId}
-                          title={`Substitute ${currentPlayer?.name} with ${player.name}`}
+                          title={currentPlayer ? `Substitute ${currentPlayer.name} with ${player.name}` : `Assign ${player.name} to ${position}`}
                         >
-                          ← {player.name.split(' ')[0]}
+                          {currentPlayer ? '← ' : '+ '}{player.name.split(' ')[0]}
                         </Button>
                       ))}
-                      {availablePlayers.length === 0 && (
-                        <span className="text-xs text-muted-foreground">No subs</span>
+                      
+                      {/* Remove player button for occupied positions */}
+                      {currentPlayer && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 px-2 text-xs touch-manipulation hover:bg-red-100 text-red-600"
+                          onClick={() => {
+                            setCurrentPositions(prev => ({
+                              ...prev,
+                              [position]: null
+                            }));
+                            console.log(`Removed ${currentPlayer.name} from ${position}`);
+                          }}
+                          title={`Remove ${currentPlayer.name} from ${position}`}
+                        >
+                          ✕
+                        </Button>
+                      )}
+                      
+                      {availablePlayers.length === 0 && !currentPlayer && (
+                        <span className="text-xs text-muted-foreground">All assigned</span>
                       )}
                     </div>
                   </div>
