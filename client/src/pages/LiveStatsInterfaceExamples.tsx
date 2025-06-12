@@ -1417,7 +1417,7 @@ const QuickTapCurrentInterface = () => {
     return (
       <Button
         variant="outline"
-        className={`${important ? 'h-16 w-full' : 'h-12 w-full'} ${statColor} border-2 touch-manipulation flex flex-col gap-1 relative transition-all hover:scale-105 active:scale-95`}
+        className={`${important ? 'h-16 w-full' : 'h-12 w-full'} ${statColor} border-2 touch-manipulation flex flex-col gap-1 relative transition-all hover:scale-102 active:scale-95`}
         onClick={() => recordStat(position, stat, 1)}
       >
         <StatIcon className={important ? 'h-5 w-5' : 'h-4 w-4'} />
