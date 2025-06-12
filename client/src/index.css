@@ -520,43 +520,43 @@ input[type=number] {
 
 /* Touch-optimized stat button hover states */
 .touch-manipulation.bg-green-100:hover {
-  @apply bg-green-200 border-green-300;
+  @apply bg-green-200 border-green-300 text-green-800;
 }
 
 .touch-manipulation.bg-orange-100:hover {
-  @apply bg-orange-200 border-orange-300;
+  @apply bg-orange-200 border-orange-300 text-orange-800;
 }
 
 .touch-manipulation.bg-red-100:hover {
-  @apply bg-red-200 border-red-300;
+  @apply bg-red-200 border-red-300 text-red-800;
 }
 
 .touch-manipulation.bg-blue-100:hover {
-  @apply bg-blue-200 border-blue-300;
+  @apply bg-blue-200 border-blue-300 text-blue-800;
 }
 
 .touch-manipulation.bg-purple-100:hover {
-  @apply bg-purple-200 border-purple-300;
+  @apply bg-purple-200 border-purple-300 text-purple-800;
 }
 
 .touch-manipulation.bg-amber-100:hover {
-  @apply bg-amber-200 border-amber-300;
+  @apply bg-amber-200 border-amber-300 text-amber-800;
 }
 
 .touch-manipulation.bg-pink-100:hover {
-  @apply bg-pink-200 border-pink-300;
+  @apply bg-pink-200 border-pink-300 text-pink-800;
 }
 
 .touch-manipulation.bg-teal-100:hover {
-  @apply bg-teal-200 border-teal-300;
+  @apply bg-teal-200 border-teal-300 text-teal-800;
 }
 
 .touch-manipulation.bg-rose-100:hover {
-  @apply bg-rose-200 border-rose-300;
+  @apply bg-rose-200 border-rose-300 text-rose-800;
 }
 
 .touch-manipulation.bg-gray-100:hover {
-  @apply bg-gray-200 border-gray-300;
+  @apply bg-gray-200 border-gray-300 text-gray-800;
 }
 
 /* Enhanced tooltips */
