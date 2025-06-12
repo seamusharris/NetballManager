@@ -805,6 +805,11 @@ const TimerEnhancedInterface = () => {
   // Playing time tracking for each player
   const [playingTimes, setPlayingTimes] = useState({});
 
+  // Player assignment and interchange state - using mock player IDs from this file
+  const [currentPositions, setCurrentPositions] = useState({
+    'GS': 1, 'GA': 2, 'WA': 3, 'C': 4, 'WD': 5, 'GD': 6, 'GK': 7 // All positions filled, players 8 & 9 available for interchange
+  });
+
   // Timer effect
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
@@ -840,23 +845,39 @@ const TimerEnhancedInterface = () => {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Calculate playing time for each player (rounded to nearest 30 seconds)
+  // Calculate playing times for display
   const calculatePlayingTimes = () => {
     const times = {};
-    const quarterProgress = (quarterLength * 60) - timeRemaining;
-    const roundedProgress = Math.floor(quarterProgress / 30) * 30; // Round to 30-second intervals
 
-    // Calculate time for each position
+    // Initialize all players
+    mockPlayers.forEach(player => {
+      times[player.id] = { quarterTime: 0, totalTime: 0 };
+    });
+
+    // For players currently on court, calculate their playing time this quarter
+    const quarterProgressSeconds = (quarterLength * 60) - timeRemaining;
+    const currentQuarterPlayingTime = Math.round(quarterProgressSeconds / 30) * 30; // Round to nearest 30 seconds
+
     Object.entries(currentPositions).forEach(([position, playerId]) => {
-      if (playerId && gameStarted) {
-        if (!times[playerId]) {
-          times[playerId] = { quarterTime: 0, totalTime: 0 };
-        }
+      if (playerId && playerId !== 'bench' && times[playerId]) {
+        // Set current quarter playing time
+        times[playerId].quarterTime = currentQuarterPlayingTime;
 
-        // For demo purposes, assume player has been in position for the quarter duration
-        // In real implementation, this would track actual interchange times
-        times[playerId].quarterTime = roundedProgress;
-        times[playerId].totalTime = roundedProgress + ((currentQuarter - 1) * quarterLength * 60);
+        // For demo purposes, assume they played full quarters in previous quarters
+        const previousQuartersTime = (currentQuarter - 1) * quarterLength * 60;
+        times[playerId].totalTime = previousQuartersTime + currentQuarterPlayingTime;
+      }
+    });
+
+    // For players not currently playing, show previous quarters only
+    Object.keys(times).forEach(playerId => {
+      const playerIdNum = parseInt(playerId);
+      const isCurrentlyPlaying = Object.values(currentPositions).includes(playerIdNum);
+
+      if (!isCurrentlyPlaying) {
+        times[playerId].quarterTime = 0; // Not playing this quarter
+        // For demo, assume they played some previous quarters
+        times[playerId].totalTime = Math.max(0, (currentQuarter - 2) * quarterLength * 60);
       }
     });
 
@@ -1084,8 +1105,7 @@ const TimerEnhancedInterface = () => {
                 {Object.values(positionStats).reduce((sum: number, pos: any) => {
                   return sum + Object.keys(pos).reduce((qSum, quarter) => {
                     return qSum + (pos[quarter]?.goalsAgainst || 0);
-                  }, 0);
-                }, 0)}
+                  }, 0)}
               </p>
             </div>
           </div>
@@ -1273,23 +1293,39 @@ const QuickTapCurrentInterface = () => {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Calculate playing time for each player (rounded to nearest 30 seconds)
+  // Calculate playing times for display
   const calculatePlayingTimes = () => {
     const times = {};
-    const quarterProgress = (quarterLength * 60) - timeRemaining;
-    const roundedProgress = Math.floor(quarterProgress / 30) * 30; // Round to 30-second intervals
 
-    // Calculate time for each position
+    // Initialize all players
+    mockPlayers.forEach(player => {
+      times[player.id] = { quarterTime: 0, totalTime: 0 };
+    });
+
+    // For players currently on court, calculate their playing time this quarter
+    const quarterProgressSeconds = (quarterLength * 60) - timeRemaining;
+    const currentQuarterPlayingTime = Math.round(quarterProgressSeconds / 30) * 30; // Round to nearest 30 seconds
+
     Object.entries(currentPositions).forEach(([position, playerId]) => {
-      if (playerId && gameStarted) {
-        if (!times[playerId]) {
-          times[playerId] = { quarterTime: 0, totalTime: 0 };
-        }
+      if (playerId && playerId !== 'bench' && times[playerId]) {
+        // Set current quarter playing time
+        times[playerId].quarterTime = currentQuarterPlayingTime;
 
-        // For demo purposes, assume player has been in position for the quarter duration
-        // In real implementation, this would track actual interchange times
-        times[playerId].quarterTime = roundedProgress;
-        times[playerId].totalTime = roundedProgress + ((currentQuarter - 1) * quarterLength * 60);
+        // For demo purposes, assume they played full quarters in previous quarters
+        const previousQuartersTime = (currentQuarter - 1) * quarterLength * 60;
+        times[playerId].totalTime = previousQuartersTime + currentQuarterPlayingTime;
+      }
+    });
+
+    // For players not currently playing, show previous quarters only
+    Object.keys(times).forEach(playerId => {
+      const playerIdNum = parseInt(playerId);
+      const isCurrentlyPlaying = Object.values(currentPositions).includes(playerIdNum);
+
+      if (!isCurrentlyPlaying) {
+        times[playerId].quarterTime = 0; // Not playing this quarter
+        // For demo, assume they played some previous quarters
+        times[playerId].totalTime = Math.max(0, (currentQuarter - 2) * quarterLength * 60);
       }
     });
 
@@ -1649,7 +1685,7 @@ const QuickTapCurrentInterface = () => {
                       size="sm"
                       className="w-full touch-manipulation"
                     >
-                      <ArrowRightLeft className="h-3 w-3 mr-1" />
+                      <ArrowRightLeft className="h-3 w-3 mr-1">
                       Interchange
                     </Button>
 
@@ -1741,7 +1777,7 @@ const QuickTapCurrentInterface = () => {
                         return (
                           <div className="text-xs">
                             <div>Q{currentQuarter}: {formatTime(playerTime.quarterTime)}</div>
-                            <div>Total: {formatTime(playerTime.totalTime)}</div>
+                            <div>Game: {formatTime(playerTime.totalTime)}</div>
                           </div>
                         );
                       }
