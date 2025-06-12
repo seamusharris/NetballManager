@@ -600,54 +600,88 @@ input[type=number] {
   @apply bg-gray-200 border-gray-300 text-gray-800;
 }
 
-/* Stat count badges with darker backgrounds - more specific targeting */
-.touch-manipulation.bg-green-100 .absolute.inline-flex.items-center.rounded-full {
-  @apply bg-green-600 text-white border-green-600 !important;
+/* Stat count badges with darker backgrounds - comprehensive targeting */
+.touch-manipulation.bg-green-100 [class*="absolute"][class*="inline-flex"][class*="rounded-full"],
+.touch-manipulation.bg-green-100 .badge {
+  background-color: #16a34a !important;
+  color: white !important;
+  border-color: #16a34a !important;
 }
 
-.touch-manipulation.bg-orange-100 .absolute.inline-flex.items-center.rounded-full {
-  @apply bg-orange-600 text-white border-orange-600 !important;
+.touch-manipulation.bg-orange-100 [class*="absolute"][class*="inline-flex"][class*="rounded-full"],
+.touch-manipulation.bg-orange-100 .badge {
+  background-color: #ea580c !important;
+  color: white !important;
+  border-color: #ea580c !important;
 }
 
-.touch-manipulation.bg-red-100 .absolute.inline-flex.items-center.rounded-full {
-  @apply bg-red-600 text-white border-red-600 !important;
+.touch-manipulation.bg-red-100 [class*="absolute"][class*="inline-flex"][class*="rounded-full"],
+.touch-manipulation.bg-red-100 .badge {
+  background-color: #dc2626 !important;
+  color: white !important;
+  border-color: #dc2626 !important;
 }
 
-.touch-manipulation.bg-blue-100 .absolute.inline-flex.items-center.rounded-full {
-  @apply bg-blue-600 text-white border-blue-600 !important;
+.touch-manipulation.bg-blue-100 [class*="absolute"][class*="inline-flex"][class*="rounded-full"],
+.touch-manipulation.bg-blue-100 .badge {
+  background-color: #2563eb !important;
+  color: white !important;
+  border-color: #2563eb !important;
 }
 
-.touch-manipulation.bg-purple-100 .absolute.inline-flex.items-center.rounded-full {
-  @apply bg-purple-600 text-white border-purple-600 !important;
+.touch-manipulation.bg-purple-100 [class*="absolute"][class*="inline-flex"][class*="rounded-full"],
+.touch-manipulation.bg-purple-100 .badge {
+  background-color: #9333ea !important;
+  color: white !important;
+  border-color: #9333ea !important;
 }
 
-.touch-manipulation.bg-amber-100 .absolute.inline-flex.items-center.rounded-full {
-  @apply bg-amber-600 text-white border-amber-600 !important;
+.touch-manipulation.bg-amber-100 [class*="absolute"][class*="inline-flex"][class*="rounded-full"],
+.touch-manipulation.bg-amber-100 .badge {
+  background-color: #d97706 !important;
+  color: white !important;
+  border-color: #d97706 !important;
 }
 
-.touch-manipulation.bg-pink-100 .absolute.inline-flex.items-center.rounded-full {
-  @apply bg-pink-600 text-white border-pink-600 !important;
+.touch-manipulation.bg-pink-100 [class*="absolute"][class*="inline-flex"][class*="rounded-full"],
+.touch-manipulation.bg-pink-100 .badge {
+  background-color: #db2777 !important;
+  color: white !important;
+  border-color: #db2777 !important;
 }
 
-.touch-manipulation.bg-teal-100 .absolute.inline-flex.items-center.rounded-full {
-  @apply bg-teal-600 text-white border-teal-600 !important;
+.touch-manipulation.bg-teal-100 [class*="absolute"][class*="inline-flex"][class*="rounded-full"],
+.touch-manipulation.bg-teal-100 .badge {
+  background-color: #0d9488 !important;
+  color: white !important;
+  border-color: #0d9488 !important;
 }
 
-.touch-manipulation.bg-rose-100 .absolute.inline-flex.items-center.rounded-full {
-  @apply bg-rose-600 text-white border-rose-600 !important;
+.touch-manipulation.bg-rose-100 [class*="absolute"][class*="inline-flex"][class*="rounded-full"],
+.touch-manipulation.bg-rose-100 .badge {
+  background-color: #e11d48 !important;
+  color: white !important;
+  border-color: #e11d48 !important;
 }
 
-.touch-manipulation.bg-gray-100 .absolute.inline-flex.items-center.rounded-full {
-  @apply bg-gray-600 text-white border-gray-600 !important;
+.touch-manipulation.bg-gray-100 [class*="absolute"][class*="inline-flex"][class*="rounded-full"],
+.touch-manipulation.bg-gray-100 .badge {
+  background-color: #4b5563 !important;
+  color: white !important;
+  border-color: #4b5563 !important;
 }
 
-/* Enhanced badge styling for better visibility */
-.touch-manipulation .absolute.inline-flex.items-center.rounded-full {
+/* Enhanced badge styling for better visibility - multiple selectors */
+.touch-manipulation [class*="absolute"][class*="inline-flex"][class*="rounded-full"],
+.touch-manipulation .badge,
+.touch-manipulation button [class*="absolute"],
+.touch-manipulation button [class*="badge"] {
   font-weight: 600 !important;
   font-size: 0.75rem !important;
   min-width: 1.5rem !important;
   height: 1.5rem !important;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2) !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+  z-index: 10 !important;
 }
 
 /* Enhanced tooltips */
