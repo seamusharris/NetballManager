@@ -1101,7 +1101,8 @@ const TimerEnhancedInterface = () => {
                 {Object.values(positionStats).reduce((sum: number, pos: any) => {
                   return sum + Object.keys(pos).reduce((qSum, quarter) => {
                     return qSum + (pos[quarter]?.goalsFor || 0);
-                  }, 0)}
+                  }, 0);
+                }, 0)}
               </p>
             </div>
             <div className="flex flex-col items-center justify-center">
@@ -1119,7 +1120,8 @@ const TimerEnhancedInterface = () => {
                 {Object.values(positionStats).reduce((sum: number, pos: any) => {
                   return sum + Object.keys(pos).reduce((qSum, quarter) => {
                     return qSum + (pos[quarter]?.goalsAgainst || 0);
-                  }, 0)}
+                  }, 0);
+                }, 0)}
               </p>
             </div>
           </div>
