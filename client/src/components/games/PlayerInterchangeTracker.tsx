@@ -20,6 +20,12 @@ interface PlayerInterchange {
   reason?: 'tactical' | 'injury' | 'rest' | 'performance';
 }
 
+interface PlayerPlayingTime {
+  playerId: number;
+  quarterTime: Record<number, number>; // quarter -> seconds played
+  totalTime: number; // total seconds played across all quarters
+}
+
 interface PlayerInterchangeTrackerProps {
   gameId: number;
   players: Player[];
@@ -43,7 +49,118 @@ export default function PlayerInterchangeTracker({
   const [quarterTime, setQuarterTime] = useState<string>('15:00');
   const [reason, setReason] = useState<'tactical' | 'injury' | 'rest' | 'performance'>('tactical');
   const [showHistory, setShowHistory] = useState(false);
+  const [playingTimes, setPlayingTimes] = useState<Record<number, PlayerPlayingTime>>({});
   const { toast } = useToast();
+
+  // Convert time string (e.g., "12:30") to seconds remaining in quarter
+  const timeStringToSeconds = (timeStr: string): number => {
+    const [minutes, seconds] = timeStr.split(':').map(Number);
+    return (minutes * 60) + seconds;
+  };
+
+  // Convert seconds to time played (900 - seconds remaining)
+  const getTimePlayedFromRemaining = (remainingSeconds: number): number => {
+    return 900 - remainingSeconds; // 15 minutes = 900 seconds
+  };
+
+  // Format seconds as MM:SS
+  const formatTime = (totalSeconds: number): string => {
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  };
+
+  // Calculate playing time for all players
+  const calculatePlayingTimes = (): Record<number, PlayerPlayingTime> => {
+    const times: Record<number, PlayerPlayingTime> = {};
+
+    // Initialize all players
+    players.forEach(player => {
+      times[player.id] = {
+        playerId: player.id,
+        quarterTime: { 1: 0, 2: 0, 3: 0, 4: 0 },
+        totalTime: 0
+      };
+    });
+
+    // Track position assignments for each quarter
+    const quarterAssignments: Record<number, Record<Position, Array<{ playerId: number, startTime: number, endTime?: number }>>> = {
+      1: {} as Record<Position, Array<{ playerId: number, startTime: number, endTime?: number }>>,
+      2: {} as Record<Position, Array<{ playerId: number, startTime: number, endTime?: number }>>,
+      3: {} as Record<Position, Array<{ playerId: number, startTime: number, endTime?: number }>>,
+      4: {} as Record<Position, Array<{ playerId: number, startTime: number, endTime?: number }>>
+    };
+
+    // Initialize position arrays
+    allPositions.forEach(position => {
+      [1, 2, 3, 4].forEach(quarter => {
+        quarterAssignments[quarter][position] = [];
+      });
+    });
+
+    // Start with current positions (assume they started at 15:00)
+    Object.entries(currentPositions).forEach(([position, playerId]) => {
+      if (playerId) {
+        [1, 2, 3, 4].forEach(quarter => {
+          quarterAssignments[quarter][position as Position].push({
+            playerId,
+            startTime: 900 // Started at beginning of quarter
+          });
+        });
+      }
+    });
+
+    // Process interchanges in chronological order
+    const sortedInterchanges = [...interchanges].sort((a, b) => {
+      if (a.quarter !== b.quarter) return a.quarter - b.quarter;
+      const aSeconds = timeStringToSeconds(a.timeInQuarter);
+      const bSeconds = timeStringToSeconds(b.timeInQuarter);
+      return bSeconds - aSeconds; // Earlier in quarter = higher remaining time
+    });
+
+    sortedInterchanges.forEach(interchange => {
+      const position = interchange.position;
+      const quarter = interchange.quarter;
+      const timeSeconds = timeStringToSeconds(interchange.timeInQuarter);
+      const timePlayedAtInterchange = getTimePlayedFromRemaining(timeSeconds);
+
+      const assignments = quarterAssignments[quarter][position];
+      
+      // End the current player's time
+      if (assignments.length > 0) {
+        const lastAssignment = assignments[assignments.length - 1];
+        if (!lastAssignment.endTime) {
+          lastAssignment.endTime = timePlayedAtInterchange;
+        }
+      }
+
+      // Start the new player's time
+      assignments.push({
+        playerId: interchange.playerIn,
+        startTime: timePlayedAtInterchange,
+        endTime: undefined // Will be set by next interchange or end of quarter
+      });
+    });
+
+    // Calculate total time for each player
+    [1, 2, 3, 4].forEach(quarter => {
+      allPositions.forEach(position => {
+        const assignments = quarterAssignments[quarter][position];
+        
+        assignments.forEach(assignment => {
+          const endTime = assignment.endTime ?? 900; // End of quarter if not specified
+          const timePlayed = endTime - assignment.startTime;
+          
+          if (timePlayed > 0 && times[assignment.playerId]) {
+            times[assignment.playerId].quarterTime[quarter] += timePlayed;
+            times[assignment.playerId].totalTime += timePlayed;
+          }
+        });
+      });
+    });
+
+    return times;
+  };
 
   // Get available players for substitution (not currently on court)
   const getAvailablePlayers = () => {
@@ -57,6 +174,11 @@ export default function PlayerInterchangeTracker({
   const getPlayerName = (playerId: number) => {
     return players.find(p => p.id === playerId)?.displayName || 'Unknown';
   };
+
+  // Recalculate playing times when interchanges change
+  useEffect(() => {
+    setPlayingTimes(calculatePlayingTimes());
+  }, [interchanges, currentPositions, players]);
 
   // Record an interchange
   const recordInterchange = () => {
@@ -320,6 +442,67 @@ export default function PlayerInterchangeTracker({
           </CardContent>
         </Card>
       )}
+
+      {/* Playing Time Summary */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Clock className="h-4 w-4" />
+            Player Playing Time
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {players
+              .filter(player => Object.values(currentPositions).includes(player.id) || 
+                      (playingTimes[player.id] && playingTimes[player.id].totalTime > 0))
+              .sort((a, b) => (playingTimes[b.id]?.totalTime || 0) - (playingTimes[a.id]?.totalTime || 0))
+              .map(player => {
+                const playerTime = playingTimes[player.id];
+                if (!playerTime) return null;
+
+                return (
+                  <div key={player.id} className="flex items-center justify-between p-3 bg-gray-50 rounded">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-sm font-medium">
+                        {player.displayName.charAt(0)}
+                      </div>
+                      <div>
+                        <p className="font-medium">{player.displayName}</p>
+                        <p className="text-sm text-gray-500">
+                          Total: {formatTime(playerTime.totalTime)}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      {[1, 2, 3, 4].map(quarter => (
+                        <div key={quarter} className="text-center">
+                          <div className="text-xs text-gray-500 mb-1">Q{quarter}</div>
+                          <div className={`text-sm font-medium px-2 py-1 rounded ${
+                            playerTime.quarterTime[quarter] > 0 
+                              ? 'bg-green-100 text-green-700' 
+                              : 'bg-gray-100 text-gray-400'
+                          }`}>
+                            {formatTime(playerTime.quarterTime[quarter])}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            
+            {players.filter(player => 
+              Object.values(currentPositions).includes(player.id) || 
+              (playingTimes[player.id] && playingTimes[player.id].totalTime > 0)
+            ).length === 0 && (
+              <p className="text-center text-gray-500 py-4">
+                No playing time recorded yet. Assign players to positions to start tracking.
+              </p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* No Interchanges Message */}
       {interchanges.length === 0 && (

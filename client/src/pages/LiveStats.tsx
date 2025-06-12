@@ -1130,11 +1130,16 @@ export default function LiveStats() {
 
                                                 <div className="min-w-[60px]">
                                                     {player ? (
-                                                        <p className="font-semibold text-sm">{player.displayName}</p>
+                                                        <div>
+                                                            <p className="font-semibold text-sm">{player.displayName}</p>
+                                                            <p className="text-xs text-muted-foreground">{positionLabels[position]}</p>
+                                                        </div>
                                                     ) : (
-                                                        <p className="font-semibold text-sm">Unassigned</p>
+                                                        <div>
+                                                            <p className="font-semibold text-sm">Unassigned</p>
+                                                            <p className="text-xs text-muted-foreground">{positionLabels[position]}</p>
+                                                        </div>
                                                     )}
-                                                    <p className="text-xs text-muted-foreground">{positionLabels[position]}</p>
                                                 </div>
 
                                                 {/* Player Rating */}
