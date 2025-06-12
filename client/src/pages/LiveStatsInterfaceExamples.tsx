@@ -834,8 +834,7 @@ const TimerEnhancedInterface = () => {
     }
 
     return () => {
-```text
-      if (interval) clearInterval(interval);
+      if (interval clearInterval(interval);
     };
   }, [isTimerRunning, timeRemaining, currentQuarter, quarterLength]);
 
@@ -1702,7 +1701,7 @@ const QuickTapCurrentInterface = () => {
                         <Play className="h-4 w-4 mr-1" />
                         StartGame
                       </Button>
-                    ) : (
+                                        ) : (
                       <div className="grid grid-cols-2 gap-1">
                         {isTimerRunning ? (
                           <Button onClick={pauseTimer} variant="outline" size="sm" className="touch-manipulation">
