@@ -39,14 +39,20 @@ export function StatsPerformanceDemo() {
     try {
       const data = await apiClient.get('/api/games');
       console.log("Loaded games:", data);
+      console.log("Total games loaded:", data.length);
 
       // Filter to only include completed games
-      const completedGames = data.filter((game: Game) => 
-        game.status === 'completed' || 
-        game.status === 'forfeit-win' || 
-        game.status === 'forfeit-loss'
-      );
+      const completedGames = data.filter((game: Game) => {
+        const isCompleted = game.statusIsCompleted === true;
+        console.log(`Game ${game.id} completion check:`, {
+          statusIsCompleted: game.statusIsCompleted,
+          statusName: game.statusName,
+          isCompleted: isCompleted
+        });
+        return isCompleted;
+      });
 
+      console.log("Completed games found:", completedGames.length);
       setGames(completedGames);
     } catch (error) {
       console.error("Error loading games:", error);
