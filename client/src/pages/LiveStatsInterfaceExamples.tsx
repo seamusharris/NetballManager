@@ -1349,6 +1349,9 @@ const QuickTapCurrentInterface = () => {
   const [playerTimers, setPlayerTimers] = useState({}); // Track when each player started playing in current quarter
   const [quarterStartTimes, setQuarterStartTimes] = useState({}); // Track when each quarter started
 
+  // Separate state for forcing display updates every 30 seconds
+  const [displayUpdateTrigger, setDisplayUpdateTrigger] = useState(0);
+
   // Playing times are now calculated directly from the timer - no separate initialization needed
 
   // Track quarter start for playing time calculations (timer-based)
@@ -1441,12 +1444,40 @@ const QuickTapCurrentInterface = () => {
   // Calculate playing times for display - called by display update trigger only
   const [calculatedPlayingTimes, setCalculatedPlayingTimes] = useState({});
 
+  // Calculate all playing times for display
+  const calculatePlayingTimes = () => {
+    const times = {};
+
+    mockPlayers.forEach(player => {
+      times[player.id] = getPlayerPlayingTime(player.id);
+    });
+
+    return times;
+  };
+
   useEffect(() => {
     if (isTimerRunning && gameStarted) {
       const newTimes = calculatePlayingTimes();
       setCalculatedPlayingTimes(newTimes);
     }
   }, [isTimerRunning, gameStarted, displayUpdateTrigger, currentPositions]);
+
+  // Update playing time displays every 30 seconds when timer is running
+  useEffect(() => {
+    let displayUpdateInterval: NodeJS.Timeout | null = null;
+
+    if (isTimerRunning && gameStarted) {
+      // Update display every 30 seconds
+      displayUpdateInterval = setInterval(() => {
+        console.log('30-second display update triggered');
+        setDisplayUpdateTrigger(prev => prev + 1);
+      }, 30000);
+    }
+
+    return () => {
+      if (displayUpdateInterval) clearInterval(displayUpdateInterval);
+    };
+  }, [isTimerRunning, gameStarted]);
 
   // Timer controls
   const startTimer = () => {
