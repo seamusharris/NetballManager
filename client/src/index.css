@@ -600,6 +600,47 @@ input[type=number] {
   @apply bg-gray-200 border-gray-300 text-gray-800;
 }
 
+/* Stat count badges with darker backgrounds */
+.touch-manipulation .bg-green-100 .absolute {
+  @apply bg-green-600 text-white;
+}
+
+.touch-manipulation .bg-orange-100 .absolute {
+  @apply bg-orange-600 text-white;
+}
+
+.touch-manipulation .bg-red-100 .absolute {
+  @apply bg-red-600 text-white;
+}
+
+.touch-manipulation .bg-blue-100 .absolute {
+  @apply bg-blue-600 text-white;
+}
+
+.touch-manipulation .bg-purple-100 .absolute {
+  @apply bg-purple-600 text-white;
+}
+
+.touch-manipulation .bg-amber-100 .absolute {
+  @apply bg-amber-600 text-white;
+}
+
+.touch-manipulation .bg-pink-100 .absolute {
+  @apply bg-pink-600 text-white;
+}
+
+.touch-manipulation .bg-teal-100 .absolute {
+  @apply bg-teal-600 text-white;
+}
+
+.touch-manipulation .bg-rose-100 .absolute {
+  @apply bg-rose-600 text-white;
+}
+
+.touch-manipulation .bg-gray-100 .absolute {
+  @apply bg-gray-600 text-white;
+}
+
 /* Enhanced tooltips */
 [title] {
   position: relative;
