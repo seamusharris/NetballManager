@@ -1105,8 +1105,7 @@ const TimerEnhancedInterface = () => {
                 {Object.values(positionStats).reduce((sum: number, pos: any) => {
                   return sum + Object.keys(pos).reduce((qSum, quarter) => {
                     return qSum + (pos[quarter]?.goalsAgainst || 0);
-                  }, 0);
-                }, 0)}
+                  }, 0)}
               </p>
             </div>
           </div>
@@ -1138,7 +1137,7 @@ const TimerEnhancedInterface = () => {
                       // Find which position this player is currently assigned to
                       const assignedPosition = Object.entries(currentPositions).find(([pos, playerId]) => playerId === player.id)?.[0];
                       const playerTime = playingTimes[player.id];
-                      
+
                       if (assignedPosition && playerTime && gameStarted) {
                         return (
                           <div className="text-xs space-y-1">
@@ -1548,6 +1547,9 @@ const QuickTapCurrentInterface = () => {
     );
   };
 
+  // Define commonStats and statConfig outside the return statement
+  const statConfig = positionStatConfig;
+
   return (
     <div className="space-y-4">
       {/* Timer-Enhanced Game Header */}
@@ -1790,14 +1792,14 @@ const QuickTapCurrentInterface = () => {
 
                   {/* Playing Time Display */}
                   <div className="text-right text-xs text-muted-foreground">
-                    <div className="text-sm text-muted-foreground space-y-1">
-                    <div>Q{currentQuarter} • {formatTime(timeRemaining)} remaining</div>
                     {(() => {
-                      const playerId = currentPositions[position];
-                      const playerTime = playingTimes[playerId];
-                      if (playerTime && gameStarted) {
+                      // Get player assigned to this position
+                      const assignedPlayerId = currentPositions[position];
+                      const playerTime = playingTimes[assignedPlayerId];
+
+                      if (assignedPlayerId && playerTime && gameStarted) {
                         return (
-                          <div className="text-xs">
+                          <div className="text-xs space-y-1">
                             <div>Q{currentQuarter}: {formatTime(playerTime.quarterTime)}</div>
                             <div>Game: {formatTime(playerTime.totalTime)}</div>
                           </div>
@@ -1805,7 +1807,6 @@ const QuickTapCurrentInterface = () => {
                       }
                       return <div className="text-xs text-gray-400">Not playing</div>;
                     })()}
-                  </div>
                   </div>
 
                   {/* Common Stats Row - Quick Tap */}
