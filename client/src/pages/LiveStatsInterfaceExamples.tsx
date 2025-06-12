@@ -834,6 +834,7 @@ const TimerEnhancedInterface = () => {
     }
 
     return () => {
+```javascript
       if (interval) clearInterval(interval);
     };
   }, [isTimerRunning, timeRemaining, currentQuarter, quarterLength]);
@@ -1148,7 +1149,7 @@ const TimerEnhancedInterface = () => {
                           </div>
                         );
                       }
-                      
+
                       if (assignedPlayerId) {
                         // Player is assigned but no time data yet - show zeros
                         return (
@@ -1158,7 +1159,7 @@ const TimerEnhancedInterface = () => {
                           </div>
                         );
                       }
-                      
+
                       return <div className="text-xs text-gray-400">Not assigned</div>;
                     })()}
                   </div>
