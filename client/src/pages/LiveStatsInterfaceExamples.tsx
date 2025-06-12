@@ -834,6 +834,7 @@ const TimerEnhancedInterface = () => {
     }
 
     return () => {
+```text
       if (interval) clearInterval(interval);
     };
   }, [isTimerRunning, timeRemaining, currentQuarter, quarterLength]);
@@ -854,11 +855,19 @@ const TimerEnhancedInterface = () => {
       times[player.id] = { quarterTime: 0, totalTime: 0 };
     });
 
+    console.log('calculatePlayingTimes called:', { gameStarted, timeRemaining, currentQuarter, quarterLength });
+
     // Only calculate actual playing time if game has started
     if (gameStarted) {
       // For players currently on court, calculate their playing time this quarter
       const quarterProgressSeconds = (quarterLength * 60) - timeRemaining;
       const currentQuarterPlayingTime = Math.max(0, Math.round(quarterProgressSeconds / 30) * 30); // Round to nearest 30 seconds
+
+      console.log('Playing time calculation:', {
+        quarterProgressSeconds,
+        currentQuarterPlayingTime,
+        currentPositions: Object.keys(currentPositions).filter(pos => currentPositions[pos])
+      });
 
       Object.entries(currentPositions).forEach(([position, playerId]) => {
         if (playerId && playerId !== 'bench' && times[playerId]) {
@@ -868,6 +877,11 @@ const TimerEnhancedInterface = () => {
           // For demo purposes, assume they played full quarters in previous quarters
           const previousQuartersTime = (currentQuarter - 1) * quarterLength * 60;
           times[playerId].totalTime = previousQuartersTime + currentQuarterPlayingTime;
+
+          console.log(`Player ${playerId} (${position}):`, {
+            quarterTime: times[playerId].quarterTime,
+            totalTime: times[playerId].totalTime
+          });
         }
       });
 
@@ -884,6 +898,7 @@ const TimerEnhancedInterface = () => {
       });
     }
 
+    console.log('Final playing times:', times);
     return times;
   };
 
@@ -1087,8 +1102,7 @@ const TimerEnhancedInterface = () => {
                 {Object.values(positionStats).reduce((sum: number, pos: any) => {
                   return sum + Object.keys(pos).reduce((qSum, quarter) => {
                     return qSum + (pos[quarter]?.goalsFor || 0);
-                  }, 0);
-                }, 0)}
+                  }, 0)}
               </p>
             </div>
             <div className="flex flex-col items-center justify-center">
@@ -1106,8 +1120,7 @@ const TimerEnhancedInterface = () => {
                 {Object.values(positionStats).reduce((sum: number, pos: any) => {
                   return sum + Object.keys(pos).reduce((qSum, quarter) => {
                     return qSum + (pos[quarter]?.goalsAgainst || 0);
-                  }, 0);
-                }, 0)}
+                  }, 0)}
               </p>
             </div>
           </div>
@@ -1140,26 +1153,17 @@ const TimerEnhancedInterface = () => {
                       const assignedPlayerId = currentPositions[player.position];
                       const playerTime = playingTimes[assignedPlayerId];
 
-                      if (assignedPlayerId && playerTime) {
+                      if (assignedPlayerId && gameStarted) {
+                        const quarterTime = playerTime?.quarterTime || 0;
+                        const totalTime = playerTime?.totalTime || 0;
                         return (
                           <div className="text-xs space-y-1">
-                            <div>Q{currentQuarter}: {formatTime(playerTime.quarterTime)}</div>
-                            <div>Game: {formatTime(playerTime.totalTime)}</div>
+                            <div>Q{currentQuarter}: {formatTime(quarterTime)}</div>
+                            <div>Total: {formatTime(totalTime)}</div>
                           </div>
                         );
                       }
-
-                      if (assignedPlayerId) {
-                        // Player is assigned but no time data yet - show zeros
-                        return (
-                          <div className="text-xs space-y-1">
-                            <div>Q{currentQuarter}: 00:00</div>
-                            <div>Game: 00:00</div>
-                          </div>
-                        );
-                      }
-
-                      return <div className="text-xs text-gray-400">Not assigned</div>;
+                      return <div className="text-xs text-gray-400">00:00</div>;
                     })()}
                   </div>
 
@@ -1696,7 +1700,7 @@ const QuickTapCurrentInterface = () => {
                         className="w-full bg-green-600 hover:bg-green-700 touch-manipulation"
                       >
                         <Play className="h-4 w-4 mr-1" />
-                        Start Game
+                        StartGame
                       </Button>
                     ) : (
                       <div className="grid grid-cols-2 gap-1">
@@ -1813,11 +1817,13 @@ const QuickTapCurrentInterface = () => {
                       const assignedPlayerId = currentPositions[position];
                       const playerTime = playingTimes[assignedPlayerId];
 
-                      if (assignedPlayerId && playerTime && gameStarted) {
+                      if (assignedPlayerId && gameStarted) {
+                        const quarterTime = playerTime?.quarterTime || 0;
+                        const totalTime = playerTime?.totalTime || 0;
                         return (
                           <div className="text-xs space-y-1">
-                            <div>Q{currentQuarter}: {formatTime(playerTime.quarterTime)}</div>
-                            <div>Game: {formatTime(playerTime.totalTime)}</div>
+                            <div>Q{currentQuarter}: {formatTime(quarterTime)}</div>
+                            <div>Total: {formatTime(totalTime)}</div>
                           </div>
                         );
                       }
