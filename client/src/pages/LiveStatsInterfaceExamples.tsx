@@ -46,6 +46,8 @@ const mockPlayers = [
   { id: 5, name: "Evie N", position: "WD", avatar: "EN" },
   { id: 6, name: "Olivia W", position: "GD", avatar: "OW" },
   { id: 7, name: "Ruby G", position: "GK", avatar: "RG" },
+  { id: 8, name: "Sophie M", position: "C", avatar: "SM" },
+  { id: 9, name: "Grace T", position: "GA", avatar: "GT" },
 ];
 
 const statTypes = [
@@ -1188,7 +1190,7 @@ const QuickTapCurrentInterface = () => {
   
   // Player assignment and interchange state - using mock player IDs from this file
   const [currentPositions, setCurrentPositions] = useState({
-    'GS': 1, 'GA': 2, 'WA': 3, 'C': 4, 'WD': 5, 'GD': null, 'GK': null // Leave some positions unassigned for interchange demo
+    'GS': 1, 'GA': 2, 'WA': 3, 'C': 4, 'WD': 5, 'GD': 6, 'GK': 7 // All positions filled, players 8 & 9 available for interchange
   });
   const [interchanges, setInterchanges] = useState([]);
   const [showInterchangePanel, setShowInterchangePanel] = useState(false);
@@ -1581,28 +1583,26 @@ const QuickTapCurrentInterface = () => {
                       </div>
                     )}
                     
+                    <Button 
+                      onClick={() => setShowInterchangePanel(!showInterchangePanel)}
+                      variant={showInterchangePanel ? "default" : "outline"}
+                      size="sm"
+                      className="w-full touch-manipulation"
+                    >
+                      <ArrowRightLeft className="h-3 w-3 mr-1" />
+                      Interchange
+                    </Button>
+                    
                     {gameStarted && (
-                      <>
-                        <Button 
-                          onClick={endQuarter} 
-                          variant="secondary" 
-                          size="sm"
-                          className="w-full touch-manipulation"
-                          disabled={currentQuarter >= 4 && timeRemaining === 0}
-                        >
-                          End Quarter {currentQuarter}
-                        </Button>
-                        
-                        <Button 
-                          onClick={() => setShowInterchangePanel(!showInterchangePanel)}
-                          variant={showInterchangePanel ? "default" : "outline"}
-                          size="sm"
-                          className="w-full touch-manipulation"
-                        >
-                          <ArrowRightLeft className="h-3 w-3 mr-1" />
-                          Interchange
-                        </Button>
-                      </>
+                      <Button 
+                        onClick={endQuarter} 
+                        variant="secondary" 
+                        size="sm"
+                        className="w-full touch-manipulation"
+                        disabled={currentQuarter >= 4 && timeRemaining === 0}
+                      >
+                        End Quarter {currentQuarter}
+                      </Button>
                     )}
                   </div>
 
