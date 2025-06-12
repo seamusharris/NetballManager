@@ -825,8 +825,7 @@ const TimerEnhancedInterface = () => {
             if (currentQuarter < 4) {
               setTimeout(() => {
                 setCurrentQuarter(q => q + 1);
-                setTimeRemaining(quarterLength * 60);
-              }, 1000);
+                setTimeRemaining(quarterLength * 60);              }, 1000);
             }
             return 0;
           }
@@ -916,8 +915,20 @@ const TimerEnhancedInterface = () => {
 
   // Timer controls
   const startTimer = () => {
+    const now = Date.now();
     setGameStarted(true);
     setIsTimerRunning(true);
+
+    // Initialize timers for all players currently on court
+    const newPlayerTimers = {};
+    Object.values(currentPositions).forEach(playerId => {
+      if (playerId) {
+        newPlayerTimers[playerId] = now;
+      }
+    });
+    setPlayerTimers(newPlayerTimers);
+
+    console.log('Game started, initialized timers for players:', Object.values(currentPositions));
   };
 
   const pauseTimer = () => {
@@ -1186,7 +1197,7 @@ const TimerEnhancedInterface = () => {
                   <div className="text-right text-xs text-muted-foreground">
                     {(() => {
                       // Get player assigned to this position
-                      const assignedPlayerId = currentPositions[position];
+                      const assignedPlayerId = currentPositions[player.position];
 
                       if (assignedPlayerId) {
                         const playerTime = getPlayerPlayingTime(assignedPlayerId);
@@ -1428,21 +1439,31 @@ const QuickTapCurrentInterface = () => {
   };
 
   // Calculate playing times for display - called by display update trigger only
-  const calculatePlayingTimes = () => {
-    const times = {};
+  const [calculatedPlayingTimes, setCalculatedPlayingTimes] = useState({});
 
-    // Initialize all players with zero times
-    mockPlayers.forEach(player => {
-      times[player.id] = getPlayerPlayingTime(player.id);
-    });
-
-    return times;
-  };
+  useEffect(() => {
+    if (isTimerRunning && gameStarted) {
+      const newTimes = calculatePlayingTimes();
+      setCalculatedPlayingTimes(newTimes);
+    }
+  }, [isTimerRunning, gameStarted, displayUpdateTrigger, currentPositions]);
 
   // Timer controls
   const startTimer = () => {
+    const now = Date.now();
     setGameStarted(true);
     setIsTimerRunning(true);
+
+    // Initialize timers for all players currently on court
+    const newPlayerTimers = {};
+    Object.values(currentPositions).forEach(playerId => {
+      if (playerId) {
+        newPlayerTimers[playerId] = now;
+      }
+    });
+    setPlayerTimers(newPlayerTimers);
+
+    console.log('Game started, initialized timers for players:', Object.values(currentPositions));
   };
 
   const pauseTimer = () => {
@@ -1926,7 +1947,8 @@ const QuickTapCurrentInterface = () => {
                       const assignedPlayerId = currentPositions[position];
 
                       if (assignedPlayerId) {
-                        const playerTime = getPlayerPlayingTime(assignedPlayerId);
+                        // Use calculated times from state, fallback to live calculation
+                        const playerTime = calculatedPlayingTimes[assignedPlayerId] || getPlayerPlayingTime(assignedPlayerId);
                         return (
                           <div className="text-xs space-y-1">
                             <div>Q{currentQuarter}: {formatTime(playerTime.quarterTime)}</div>
