@@ -600,88 +600,135 @@ input[type=number] {
   @apply bg-gray-200 border-gray-300 text-gray-800;
 }
 
-/* Stat count badges with darker backgrounds - comprehensive targeting */
-.touch-manipulation.bg-green-100 [class*="absolute"][class*="inline-flex"][class*="rounded-full"],
-.touch-manipulation.bg-green-100 .badge {
+/* High-specificity stat count badge styling - comprehensive approach */
+
+/* Target Badge components within stat buttons using multiple selectors for maximum specificity */
+.touch-manipulation.bg-green-100 div[class*="absolute"][class*="inline-flex"][class*="rounded-full"],
+.touch-manipulation.bg-green-100 .absolute.inline-flex.rounded-full,
+.touch-manipulation.bg-green-100 > div > .absolute[class*="inline-flex"],
+button.touch-manipulation.bg-green-100 .absolute[class*="rounded-full"] {
   background-color: #16a34a !important;
   color: white !important;
   border-color: #16a34a !important;
+  box-shadow: 0 2px 8px rgba(22, 163, 74, 0.4) !important;
 }
 
-.touch-manipulation.bg-orange-100 [class*="absolute"][class*="inline-flex"][class*="rounded-full"],
-.touch-manipulation.bg-orange-100 .badge {
+.touch-manipulation.bg-orange-100 div[class*="absolute"][class*="inline-flex"][class*="rounded-full"],
+.touch-manipulation.bg-orange-100 .absolute.inline-flex.rounded-full,
+.touch-manipulation.bg-orange-100 > div > .absolute[class*="inline-flex"],
+button.touch-manipulation.bg-orange-100 .absolute[class*="rounded-full"] {
   background-color: #ea580c !important;
   color: white !important;
   border-color: #ea580c !important;
+  box-shadow: 0 2px 8px rgba(234, 88, 12, 0.4) !important;
 }
 
-.touch-manipulation.bg-red-100 [class*="absolute"][class*="inline-flex"][class*="rounded-full"],
-.touch-manipulation.bg-red-100 .badge {
+.touch-manipulation.bg-red-100 div[class*="absolute"][class*="inline-flex"][class*="rounded-full"],
+.touch-manipulation.bg-red-100 .absolute.inline-flex.rounded-full,
+.touch-manipulation.bg-red-100 > div > .absolute[class*="inline-flex"],
+button.touch-manipulation.bg-red-100 .absolute[class*="rounded-full"] {
   background-color: #dc2626 !important;
   color: white !important;
   border-color: #dc2626 !important;
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.4) !important;
 }
 
-.touch-manipulation.bg-blue-100 [class*="absolute"][class*="inline-flex"][class*="rounded-full"],
-.touch-manipulation.bg-blue-100 .badge {
+.touch-manipulation.bg-blue-100 div[class*="absolute"][class*="inline-flex"][class*="rounded-full"],
+.touch-manipulation.bg-blue-100 .absolute.inline-flex.rounded-full,
+.touch-manipulation.bg-blue-100 > div > .absolute[class*="inline-flex"],
+button.touch-manipulation.bg-blue-100 .absolute[class*="rounded-full"] {
   background-color: #2563eb !important;
   color: white !important;
   border-color: #2563eb !important;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.4) !important;
 }
 
-.touch-manipulation.bg-purple-100 [class*="absolute"][class*="inline-flex"][class*="rounded-full"],
-.touch-manipulation.bg-purple-100 .badge {
+.touch-manipulation.bg-purple-100 div[class*="absolute"][class*="inline-flex"][class*="rounded-full"],
+.touch-manipulation.bg-purple-100 .absolute.inline-flex.rounded-full,
+.touch-manipulation.bg-purple-100 > div > .absolute[class*="inline-flex"],
+button.touch-manipulation.bg-purple-100 .absolute[class*="rounded-full"] {
   background-color: #9333ea !important;
   color: white !important;
   border-color: #9333ea !important;
+  box-shadow: 0 2px 8px rgba(147, 51, 234, 0.4) !important;
 }
 
-.touch-manipulation.bg-amber-100 [class*="absolute"][class*="inline-flex"][class*="rounded-full"],
-.touch-manipulation.bg-amber-100 .badge {
+.touch-manipulation.bg-amber-100 div[class*="absolute"][class*="inline-flex"][class*="rounded-full"],
+.touch-manipulation.bg-amber-100 .absolute.inline-flex.rounded-full,
+.touch-manipulation.bg-amber-100 > div > .absolute[class*="inline-flex"],
+button.touch-manipulation.bg-amber-100 .absolute[class*="rounded-full"] {
   background-color: #d97706 !important;
   color: white !important;
   border-color: #d97706 !important;
+  box-shadow: 0 2px 8px rgba(217, 119, 6, 0.4) !important;
 }
 
-.touch-manipulation.bg-pink-100 [class*="absolute"][class*="inline-flex"][class*="rounded-full"],
-.touch-manipulation.bg-pink-100 .badge {
+.touch-manipulation.bg-pink-100 div[class*="absolute"][class*="inline-flex"][class*="rounded-full"],
+.touch-manipulation.bg-pink-100 .absolute.inline-flex.rounded-full,
+.touch-manipulation.bg-pink-100 > div > .absolute[class*="inline-flex"],
+button.touch-manipulation.bg-pink-100 .absolute[class*="rounded-full"] {
   background-color: #db2777 !important;
   color: white !important;
   border-color: #db2777 !important;
+  box-shadow: 0 2px 8px rgba(219, 39, 119, 0.4) !important;
 }
 
-.touch-manipulation.bg-teal-100 [class*="absolute"][class*="inline-flex"][class*="rounded-full"],
-.touch-manipulation.bg-teal-100 .badge {
+.touch-manipulation.bg-teal-100 div[class*="absolute"][class*="inline-flex"][class*="rounded-full"],
+.touch-manipulation.bg-teal-100 .absolute.inline-flex.rounded-full,
+.touch-manipulation.bg-teal-100 > div > .absolute[class*="inline-flex"],
+button.touch-manipulation.bg-teal-100 .absolute[class*="rounded-full"] {
   background-color: #0d9488 !important;
   color: white !important;
   border-color: #0d9488 !important;
+  box-shadow: 0 2px 8px rgba(13, 148, 136, 0.4) !important;
 }
 
-.touch-manipulation.bg-rose-100 [class*="absolute"][class*="inline-flex"][class*="rounded-full"],
-.touch-manipulation.bg-rose-100 .badge {
+.touch-manipulation.bg-rose-100 div[class*="absolute"][class*="inline-flex"][class*="rounded-full"],
+.touch-manipulation.bg-rose-100 .absolute.inline-flex.rounded-full,
+.touch-manipulation.bg-rose-100 > div > .absolute[class*="inline-flex"],
+button.touch-manipulation.bg-rose-100 .absolute[class*="rounded-full"] {
   background-color: #e11d48 !important;
   color: white !important;
   border-color: #e11d48 !important;
+  box-shadow: 0 2px 8px rgba(225, 29, 72, 0.4) !important;
 }
 
-.touch-manipulation.bg-gray-100 [class*="absolute"][class*="inline-flex"][class*="rounded-full"],
-.touch-manipulation.bg-gray-100 .badge {
+.touch-manipulation.bg-gray-100 div[class*="absolute"][class*="inline-flex"][class*="rounded-full"],
+.touch-manipulation.bg-gray-100 .absolute.inline-flex.rounded-full,
+.touch-manipulation.bg-gray-100 > div > .absolute[class*="inline-flex"],
+button.touch-manipulation.bg-gray-100 .absolute[class*="rounded-full"] {
   background-color: #4b5563 !important;
   color: white !important;
   border-color: #4b5563 !important;
+  box-shadow: 0 2px 8px rgba(75, 85, 99, 0.4) !important;
 }
 
-/* Enhanced badge styling for better visibility - multiple selectors */
-.touch-manipulation [class*="absolute"][class*="inline-flex"][class*="rounded-full"],
-.touch-manipulation .badge,
-.touch-manipulation button [class*="absolute"],
-.touch-manipulation button [class*="badge"] {
-  font-weight: 600 !important;
+/* Universal badge enhancements for all stat count badges */
+.touch-manipulation div[class*="absolute"][class*="inline-flex"][class*="rounded-full"],
+.touch-manipulation .absolute.inline-flex.rounded-full,
+button.touch-manipulation .absolute[class*="rounded-full"] {
+  font-weight: 700 !important;
   font-size: 0.75rem !important;
   min-width: 1.5rem !important;
   height: 1.5rem !important;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3) !important;
-  z-index: 10 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 20 !important;
+  border-width: 2px !important;
+  transition: all 0.2s ease !important;
+}
+
+/* Ensure badges are always visible with fallback styling */
+[class*="touch-manipulation"] [class*="absolute"][class*="badge"],
+[class*="touch-manipulation"] [class*="absolute"][class*="rounded-full"] {
+  background-color: #1f2937 !important;
+  color: white !important;
+  border-color: #1f2937 !important;
+  font-weight: 700 !important;
+  min-width: 1.5rem !important;
+  height: 1.5rem !important;
+  z-index: 20 !important;
 }
 
 /* Enhanced tooltips */
