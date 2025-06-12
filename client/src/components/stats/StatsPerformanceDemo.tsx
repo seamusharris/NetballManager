@@ -6,6 +6,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2, RefreshCw, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Game, GameStat } from '@shared/schema';
+import { useQueryClient } from '@tanstack/react-query';
+import { apiClient } from '@/lib/apiClient';
 
 /**
  * A demo component to showcase optimized data loading with
@@ -23,33 +25,33 @@ export function StatsPerformanceDemo() {
   const [gamesError, setGamesError] = useState(false);
   const [statsLoading, setStatsLoading] = useState(false);
   const [statsError, setStatsError] = useState(false);
-  
+
   // Fetch games on component mount
   useEffect(() => {
     fetchGames();
   }, []);
-  
+
   // Function to fetch games
   const fetchGames = async () => {
     setGamesLoading(true);
     setGamesError(false);
-    
+
     try {
       const response = await fetch('/api/games');
       if (!response.ok) {
         throw new Error(`Failed to load games: ${response.status}`);
       }
-      
+
       const data = await response.json();
       console.log("Loaded games:", data);
-      
+
       // Filter to only include completed games
       const completedGames = data.filter((game: Game) => 
         game.status === 'completed' || 
         game.status === 'forfeit-win' || 
         game.status === 'forfeit-loss'
       );
-      
+
       setGames(completedGames);
     } catch (error) {
       console.error("Error loading games:", error);
@@ -58,14 +60,14 @@ export function StatsPerformanceDemo() {
       setGamesLoading(false);
     }
   };
-  
+
   const handleGameSelect = (gameId: number) => {
     setSelectedGameId(gameId);
   };
 
   const handleTabChange = (value: string) => {
     setActiveTab(value);
-    
+
     // Load game stats when switching to the stats tab
     if (value === "stats" && selectedGameId) {
       loadGameStats(selectedGameId);
@@ -74,35 +76,29 @@ export function StatsPerformanceDemo() {
 
   const loadGameStats = async (gameId: number) => {
     if (!gameId) return;
-    
+
     setStatsLoading(true);
     setStatsError(false);
-    
+
     try {
-      const response = await fetch(`/api/games/${gameId}/stats`);
-      
-      if (!response.ok) {
-        throw new Error(`Failed to load game stats: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      console.log("Loaded game stats:", data);
-      
+      const data = await apiClient.get(`/api/games/${gameId}/stats`);
+      console.log(`Loaded stats for game ${gameId}:`, data);
+
       // Sort by quarter first, then by position
       const sortedData = [...data].sort((a, b) => {
         // First sort by quarter
         if (a.quarter !== b.quarter) {
           return a.quarter - b.quarter;
         }
-        
+
         // Then sort by position
         const positionOrder: Record<string, number> = {
           "GS": 1, "GA": 2, "WA": 3, "C": 4, "WD": 5, "GD": 6, "GK": 7
         };
-        
+
         return positionOrder[a.position] - positionOrder[b.position];
       });
-      
+
       setGameStats(sortedData);
     } catch (error) {
       console.error("Error loading game stats:", error);
@@ -121,7 +117,7 @@ export function StatsPerformanceDemo() {
       loadGameStats(selectedGameId);
     }
   };
-  
+
   return (
     <Card className="w-full max-w-4xl mx-auto my-6">
       <CardHeader>
@@ -135,7 +131,7 @@ export function StatsPerformanceDemo() {
           Demonstrating improved query handling with granular stale times and error boundaries
         </CardDescription>
       </CardHeader>
-      
+
       <CardContent>
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
           <TabsList className="grid w-full grid-cols-2">
@@ -149,7 +145,7 @@ export function StatsPerformanceDemo() {
               )}
             </TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value="games" className="space-y-4">
             <div className="flex items-center justify-between py-2">
               <h3 className="text-sm font-medium">
@@ -167,7 +163,7 @@ export function StatsPerformanceDemo() {
                 <span>Refresh</span>
               </Button>
             </div>
-            
+
             {gamesError ? (
               <div className="p-4 border border-red-200 rounded-md bg-red-50 text-red-700 flex items-center gap-2">
                 <AlertCircle className="h-5 w-5" />
@@ -208,7 +204,7 @@ export function StatsPerformanceDemo() {
               </div>
             )}
           </TabsContent>
-          
+
           <TabsContent value="stats">
             {!selectedGameId ? (
               <div className="p-4 text-center text-muted-foreground">
@@ -240,7 +236,7 @@ export function StatsPerformanceDemo() {
                     <span>Refresh</span>
                   </Button>
                 </div>
-                
+
                 {gameStats && gameStats.length > 0 ? (
                   <div className="border rounded-md overflow-hidden">
                     <table className="w-full border-collapse">
@@ -292,7 +288,7 @@ export function StatsPerformanceDemo() {
           </TabsContent>
         </Tabs>
       </CardContent>
-      
+
       <CardFooter className="flex justify-between text-sm text-muted-foreground border-t pt-4">
         <div className="flex items-center gap-2">
           <CheckCircle2 className="h-4 w-4 text-green-500" />
