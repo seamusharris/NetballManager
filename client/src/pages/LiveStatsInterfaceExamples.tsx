@@ -1105,7 +1105,8 @@ const TimerEnhancedInterface = () => {
                 {Object.values(positionStats).reduce((sum: number, pos: any) => {
                   return sum + Object.keys(pos).reduce((qSum, quarter) => {
                     return qSum + (pos[quarter]?.goalsAgainst || 0);
-                  }, 0)}
+                  }, 0);
+                }, 0)}
               </p>
             </div>
           </div>
