@@ -36,12 +36,6 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen, isTablet }: Sid
     { path: '/data-management', label: 'Data Management', icon: <Database className="w-5 h-5" /> },
     { path: '/performance', label: 'Performance', icon: <Zap className="w-5 h-5" /> },
     { path: '/clubs', label: 'Club Management', icon: <Building2 className="w-5 h-5" /> },
-    { path: '/game-result-examples', label: 'Game Result Examples', icon: <Calendar className="w-5 h-5" /> },
-    { path: '/round-badge-examples', label: 'Round Badge Examples', icon: <Trophy className="w-5 h-5" /> },
-    { path: '/player-box-examples', label: 'PlayerBox Examples', icon: <Users className="w-5 h-5" /> },
-    { path: '/team-box-examples', label: 'TeamBox Examples', icon: <Users className="w-5 h-5" /> },
-    { path: '/action-button-examples', label: 'Action Button Examples', icon: <SettingsIcon className="w-5 h-5" /> },
-    { path: '/dashboard-examples', label: 'Dashboard Examples', icon: <BarChart className="w-5 h-5" /> },
     { path: '/component-examples', label: 'All Examples', icon: <Zap className="w-5 h-5" /> },
     { path: '/settings', label: 'Settings', icon: <SettingsIcon className="w-5 h-5" /> },
   ];
