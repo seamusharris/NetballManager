@@ -1135,15 +1135,15 @@ const TimerEnhancedInterface = () => {
                   {/* Playing Time Display */}
                   <div className="text-right text-xs text-muted-foreground">
                     {(() => {
-                      // Find which position this player is currently assigned to
-                      const assignedPosition = Object.entries(currentPositions).find(([pos, playerId]) => playerId === player.id)?.[0];
-                      const playerTime = playingTimes[player.id];
+                      // Get player assigned to this position
+                      const assignedPlayerId = currentPositions[player.position];
+                      const playerTime = playingTimes[assignedPlayerId];
 
-                      if (assignedPosition && playerTime && gameStarted) {
+                      if (assignedPlayerId && playerTime && gameStarted) {
                         return (
                           <div className="text-xs space-y-1">
                             <div>Q{currentQuarter}: {formatTime(playerTime.quarterTime)}</div>
-                            <div>Total: {formatTime(playerTime.totalTime)}</div>
+                            <div>Game: {formatTime(playerTime.totalTime)}</div>
                           </div>
                         );
                       }
@@ -1550,6 +1550,7 @@ const QuickTapCurrentInterface = () => {
 
   // Define commonStats and statConfig outside the return statement
   const statConfig = positionStatConfig;
+  const commonStats = ['intercepts', 'badPass', 'handlingError', 'infringement', 'pickUp'];
 
   return (
     <div className="space-y-4">
@@ -1762,7 +1763,7 @@ const QuickTapCurrentInterface = () => {
         <h2 className="text-base font-semibold">Positions - Quarter {currentQuarter}</h2>
 
         {allPositions.map(position => {
-          const statConfig = positionStatConfig[position];
+          const positionStatConfiguration = positionStatConfig[position];
           const assignedPlayerId = currentPositions[position];
           const assignedPlayer = mockPlayers.find(p => p.id === assignedPlayerId);
 
@@ -1813,7 +1814,7 @@ const QuickTapCurrentInterface = () => {
                   {/* Common Stats Row - Quick Tap */}
                   <div className="flex-1 grid grid-cols-5 gap-2">
                     {commonStats.map(stat => (
-                      statConfig[stat] && (
+                      positionStatConfiguration[stat] && (
                         <QuickStatButton
                           key={stat}
                           position={position}
@@ -1828,7 +1829,7 @@ const QuickTapCurrentInterface = () => {
               {/* Position-Specific Stats Row */}
               <CardContent className="py-2 pt-1">
                 {(() => {
-                  const posSpecificStats = Object.entries(statConfig)
+                  const posSpecificStats = Object.entries(positionStatConfiguration)
                     .filter(([stat, isAvailable]) => isAvailable && !commonStats.includes(stat))
                     .map(([stat]) => stat);
 
