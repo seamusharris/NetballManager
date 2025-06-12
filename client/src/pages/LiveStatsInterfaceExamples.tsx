@@ -1354,6 +1354,43 @@ const QuickTapCurrentInterface = () => {
 
   // Playing time tracking for each player
   const [playingTimes, setPlayingTimes] = useState({});
+  const [playerTimers, setPlayerTimers] = useState({}); // Track when each player started playing in current quarter
+  const [quarterStartTimes, setQuarterStartTimes] = useState({}); // Track when each quarter started
+
+  // Initialize playing times for all players
+  useEffect(() => {
+    const initialTimes = {};
+    mockPlayers.forEach(player => {
+      initialTimes[player.id] = {
+        quarterTimes: { 1: 0, 2: 0, 3: 0, 4: 0 }, // Accurate second tracking per quarter
+        totalTime: 0, // Total across all quarters
+        currentQuarterStartTime: null // When they started playing this quarter
+      };
+    });
+    setPlayingTimes(initialTimes);
+  }, []);
+
+  // Track quarter start times and initialize player timers when game starts
+  useEffect(() => {
+    if (gameStarted && !quarterStartTimes[currentQuarter]) {
+      const now = Date.now();
+      setQuarterStartTimes(prev => ({
+        ...prev,
+        [currentQuarter]: now
+      }));
+
+      // Initialize timers for all currently playing players
+      const newPlayerTimers = {};
+      Object.entries(currentPositions).forEach(([position, playerId]) => {
+        if (playerId && playerId !== 'bench') {
+          newPlayerTimers[playerId] = now;
+        }
+      });
+      setPlayerTimers(newPlayerTimers);
+
+      console.log(`Quarter ${currentQuarter} started. Initialized timers for players:`, newPlayerTimers);
+    }
+  }, [gameStarted, currentQuarter, currentPositions, quarterStartTimes]);
 
   // Timer effect
   useEffect(() => {
