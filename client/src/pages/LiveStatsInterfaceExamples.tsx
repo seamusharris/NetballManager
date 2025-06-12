@@ -1390,6 +1390,37 @@ const QuickTapCurrentInterface = () => {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
+  // Get accurate playing time for a player, rounded to nearest 30 seconds for display
+  const getPlayerPlayingTime = (playerId: number) => {
+    // For demo purposes, calculate simple playing time based on current positions
+    let currentQuarterTime = 0;
+    let totalTime = 0;
+
+    if (gameStarted && Object.values(currentPositions).includes(playerId)) {
+      // Player is currently on court
+      const quarterProgressSeconds = (quarterLength * 60) - timeRemaining;
+      currentQuarterTime = Math.max(0, quarterProgressSeconds);
+      
+      // For demo, assume they played full quarters in previous quarters
+      const previousQuartersTime = (currentQuarter - 1) * quarterLength * 60;
+      totalTime = previousQuartersTime + currentQuarterTime;
+    } else if (gameStarted) {
+      // Player not currently playing
+      currentQuarterTime = 0;
+      // For demo, assume they played some previous quarters
+      totalTime = Math.max(0, (currentQuarter - 2) * quarterLength * 60);
+    }
+
+    // Round to nearest 30 seconds for display
+    const displayQuarterTime = Math.round(currentQuarterTime / 30) * 30;
+    const displayTotalTime = Math.round(totalTime / 30) * 30;
+
+    return {
+      quarterTime: displayQuarterTime,
+      totalTime: displayTotalTime
+    };
+  };
+
   // Calculate playing times for display
   const calculatePlayingTimes = () => {
     const times = {};
