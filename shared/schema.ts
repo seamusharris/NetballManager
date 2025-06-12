@@ -397,3 +397,25 @@ export type User = typeof users.$inferSelect;
 
 
 
+
+
+// Player playing times table for storing quarter-by-quarter time data
+export const playerPlayingTimes = pgTable("player_playing_times", {
+  id: serial("id").primaryKey(),
+  gameId: integer("game_id").notNull().references(() => games.id, { onDelete: "cascade" }),
+  playerId: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
+  quarter: integer("quarter").notNull(), // 1-4
+  timeInSeconds: integer("time_in_seconds").notNull().default(0), // Playing time for this quarter
+  position: text("position").$type<Position>(), // Position played in this quarter
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => {
+  return {
+    gamePlayerQuarterUnique: unique().on(table.gameId, table.playerId, table.quarter)
+  };
+});
+
+export const insertPlayerPlayingTimeSchema = createInsertSchema(playerPlayingTimes).omit({ id: true });
+export type InsertPlayerPlayingTime = z.infer<typeof insertPlayerPlayingTimeSchema>;
+export type PlayerPlayingTime = typeof playerPlayingTimes.$inferSelect;
+
