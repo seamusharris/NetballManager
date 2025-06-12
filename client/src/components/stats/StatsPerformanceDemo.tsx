@@ -37,12 +37,7 @@ export function StatsPerformanceDemo() {
     setGamesError(false);
 
     try {
-      const response = await fetch('/api/games');
-      if (!response.ok) {
-        throw new Error(`Failed to load games: ${response.status}`);
-      }
-
-      const data = await response.json();
+      const data = await apiClient.get('/api/games');
       console.log("Loaded games:", data);
 
       // Filter to only include completed games
