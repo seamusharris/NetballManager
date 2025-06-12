@@ -1134,22 +1134,21 @@ const TimerEnhancedInterface = () => {
 
                   {/* Playing Time Display */}
                   <div className="text-right text-xs text-muted-foreground">
-                    <div className="text-sm text-muted-foreground space-y-1">
-                    <div>Q{currentQuarter} • {formatTime(timeRemaining)} remaining</div>
                     {(() => {
-                      const playerId = currentPositions[player.position];
-                      const playerTime = playingTimes[playerId];
-                      if (playerTime && gameStarted) {
+                      // Find which position this player is currently assigned to
+                      const assignedPosition = Object.entries(currentPositions).find(([pos, playerId]) => playerId === player.id)?.[0];
+                      const playerTime = playingTimes[player.id];
+                      
+                      if (assignedPosition && playerTime && gameStarted) {
                         return (
-                          <div className="text-xs">
+                          <div className="text-xs space-y-1">
                             <div>Q{currentQuarter}: {formatTime(playerTime.quarterTime)}</div>
-                            <div>Game: {formatTime(playerTime.totalTime)}</div>
+                            <div>Total: {formatTime(playerTime.totalTime)}</div>
                           </div>
                         );
                       }
                       return <div className="text-xs text-gray-400">Not playing</div>;
                     })()}
-                  </div>
                   </div>
 
                   {/* Common Stats Row - Quick Tap */}
