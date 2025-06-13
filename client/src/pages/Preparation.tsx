@@ -15,7 +15,7 @@ import { LoadingState } from '@/components/ui/loading-state';
 import { ErrorDisplay } from '@/components/ui/error-display';
 import { PlayerAvatar } from '@/components/ui/player-avatar';
 import { PageTemplate } from '@/components/layout/PageTemplate';
-import { useClubContext } from '@/contexts/ClubContext';
+import { useClub } from '@/contexts/ClubContext';
 import { apiClient } from '@/lib/apiClient';
 import { 
   Trophy, Target, TrendingUp, Users, CheckCircle, Clock, 
@@ -60,7 +60,7 @@ interface LineupRecommendation {
 const POSITIONS_ORDER: Position[] = ['GS', 'GA', 'WA', 'C', 'WD', 'GD', 'GK'];
 
 export default function Preparation() {
-  const { currentClubId, currentTeamId } = useClubContext();
+  const { currentClubId, currentTeamId } = useClub();
   const [, navigate] = useLocation();
   const queryClient = useQueryClient();
 
