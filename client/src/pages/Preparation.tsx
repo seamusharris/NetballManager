@@ -821,7 +821,7 @@ export default function Preparation() {
                             <span>vs {opponent}</span>
                             <Badge variant="outline">{venue}</Badge>
                             <span className="text-gray-500">
-                              {new Date(game.date).toLocale<previous_generation>DateString()} {game.time}
+                              {new Date(game.date).toLocaleDateString()} {game.time}
                             </span>
                           </div>
                         </SelectItem>
