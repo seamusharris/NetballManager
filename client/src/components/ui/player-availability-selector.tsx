@@ -10,36 +10,6 @@ import { Zap, RotateCcw } from 'lucide-react';
 import { apiClient } from '@/lib/apiClient';
 import { useToast } from '@/hooks/use-toast';
 
-interface PlayerAvatarProps {
-  firstName: string;
-  lastName: string;
-  avatarColor: string;
-  size: 'sm' | 'md' | 'lg';
-}
-
-function PlayerAvatar({ firstName, lastName, avatarColor, size }: PlayerAvatarProps) {
-  let avatarSizeClass = 'w-6 h-6 text-[0.6rem]'; // Default small size
-  if (size === 'md') {
-    avatarSizeClass = 'w-8 h-8 text-sm';
-  } else if (size === 'lg') {
-    avatarSizeClass = 'w-10 h-10 text-base';
-  }
-
-  return (
-    <div
-      className={cn(
-        "rounded-full flex items-center justify-center text-white font-bold flex-shrink-0",
-        avatarSizeClass,
-        avatarColor
-      )}
-    >
-      <span className="font-semibold">
-        {getInitials(firstName, lastName)}
-      </span>
-    </div>
-  );
-}
-
 interface PlayerAvailabilitySelectorProps {
   players: Player[];
   availabilityData: Record<number, 'available' | 'unavailable' | 'maybe'>;
