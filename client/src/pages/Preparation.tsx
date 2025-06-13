@@ -233,7 +233,7 @@ export default function Preparation() {
         else if (gamesInPosition >= 2) confidence += 0.2;
         else if (gamesInPosition >= 1) confidence += 0.1;
 
-        if (p.positionPreferences?.[0] === position) confidence += 0.2; // Preferred position
+        if (player.positionPreferences?.[0] === position) confidence += 0.2; // Preferred position
         if (avgRating >= 7) confidence += 0.2;
         else if (avgRating >= 5) confidence += 0.1;
 
