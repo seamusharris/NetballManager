@@ -39,7 +39,6 @@ export default function Header({ setIsMobileOpen, isTablet }: HeaderProps) {
     { path: '/seasons', label: 'Seasons', icon: <CalendarRange className="h-5 w-5" /> },
     { path: '/opponent-analysis', label: 'Matchup Analysis', icon: <Trophy className="h-5 w-5" /> },
     { path: '/statistics', label: 'Statistics', icon: <BarChart className="h-5 w-5" /> },
-    { path: '/data-management', label: 'Data Management', icon: <Database className="h-5 w-5" /> },
     { path: '/clubs', label: 'Club Management', icon: <Building2 className="h-5 w-5" /> },
     { path: '/game-result-examples', label: 'Game Result Examples', icon: <Calendar className="h-5 w-5" /> },
     { path: '/round-badge-examples', label: 'Round Badge Examples', icon: <Trophy className="h-5 w-5" /> },

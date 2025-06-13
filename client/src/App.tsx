@@ -20,7 +20,6 @@ import Teams from "@/pages/Teams";
 import ClubManagement from "./pages/ClubManagement";
 import LiveStats from "@/pages/LiveStats";
 import LiveStatsByPosition from "@/pages/LiveStatsByPosition";
-import DataManagement from "@/pages/DataManagement";
 import Settings from "@/pages/Settings";
 import Seasons from "@/pages/Seasons";
 import NotFound from "@/pages/not-found";
@@ -119,7 +118,6 @@ function Router() {
 
         <Route path="/statistics" component={withErrorBoundary(Statistics, 'Statistics')} />
         <Route path="/clubs" component={withErrorBoundary(ClubManagement, 'ClubManagement')} />
-        <Route path="/data-management" component={withErrorBoundary(DataManagement, 'DataManagement')} />
         <Route path="/settings" component={withErrorBoundary(Settings, 'Settings')} />
         <Route path="/seasons" component={withErrorBoundary(Seasons, 'Seasons')} />
         <Route path="/game/:id/details" component={withErrorBoundary(LiveStats, 'LiveStats')} />
