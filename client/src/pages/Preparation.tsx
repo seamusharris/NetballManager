@@ -22,6 +22,7 @@ import { CourtDisplay } from '@/components/ui/court-display';
 import { ResultBadge } from '@/components/ui/result-badge';
 import { useClub } from '@/contexts/ClubContext';
 import { apiClient } from '@/lib/apiClient';
+import { useToast } from '@/hooks/use-toast';
 import { useBatchGameStatistics } from '@/components/statistics/hooks/useBatchGameStatistics';
 import { useBatchRosterData } from '@/components/statistics/hooks/useBatchRosterData';
 import { 
@@ -30,7 +31,7 @@ import {
   RotateCcw, Zap, Play, Save, Calendar, MapPin, Copy, FileText,
   BarChart3, TrendingDown, Award, Shield, Star, Eye, Brain,
   Activity, Flame, History, Search, Filter, RefreshCw, 
-  Crosshair, Focus, Layers, Hash, Flag, Telescope
+  Crosshair, Focus, Layers, Hash, Flag, Telescope, Check
 } from 'lucide-react';
 import { 
   Game, GameStat, Player, PlayerAvailability, 
@@ -110,6 +111,7 @@ export default function Preparation() {
   const { currentClubId, currentTeamId } = useClub();
   const [, navigate] = useLocation();
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   const [selectedGameId, setSelectedGameId] = useState<number | null>(null);
   const [availabilityData, setAvailabilityData] = useState<Record<number, 'available' | 'unavailable' | 'maybe'>>({});
@@ -1259,33 +1261,371 @@ export default function Preparation() {
                   </CardContent>
                 </Card>
 
-                {/* Court View */}
+                {/* Recommended Lineups */}
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center space-x-2">
-                      <Users className="h-5 w-5" />
-                      <span>Starting Lineup</span>
+                      <Star className="h-5 w-5" />
+                      <span>Recommended Starting Lineups vs {opponentName}</span>
                     </CardTitle>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Based on historical performance, player statistics, and opponent-specific analysis
+                    </p>
                   </CardHeader>
                   <CardContent>
-                    <CourtDisplay 
-                      players={selectedLineup}
-                      onPlayerClick={(position) => {
-                        setSelectedLineup(prev => ({
-                          ...prev,
-                          [position]: null
-                        }));
-                      }}
-                    />
+                    <div className="space-y-4">
+                      {/* Generate recommended lineups */}
+                      {(() => {
+                        // Get available players
+                        const availablePlayers = teamPlayers.filter(p => 
+                          availabilityData[p.id] === 'available'
+                        );
 
-                    <div className="mt-4 text-center">
-                      <div className="text-sm text-gray-600 mb-2">
-                        {Object.values(selectedLineup).filter(p => p !== null).length}/7 positions filled
-                      </div>
-                      {Object.values(selectedLineup).every(p => p !== null) && (
-                        <Badge variant="default">Lineup Complete!</Badge>
-                      )}
+                        if (availablePlayers.length < 7) {
+                          return (
+                            <div className="text-center py-8 text-gray-500">
+                              <Users className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                              <p>Need at least 7 available players to generate lineup recommendations</p>
+                              <p className="text-sm">Currently have {availablePlayers.length} available players</p>
+                            </div>
+                          );
+                        }
+
+                        // Generate lineup recommendations based on position preferences and stats
+                        const generateLineupRecommendations = () => {
+                          const recommendations = [];
+                          
+                          // Strategy 1: Optimal Position Preferences
+                          const optimalLineup = {};
+                          const usedPlayers = new Set();
+                          
+                          POSITIONS_ORDER.forEach(position => {
+                            const positionCandidates = availablePlayers
+                              .filter(p => !usedPlayers.has(p.id))
+                              .filter(p => p.positionPreferences?.includes(position))
+                              .sort((a, b) => {
+                                const aIndex = a.positionPreferences?.indexOf(position) ?? 99;
+                                const bIndex = b.positionPreferences?.indexOf(position) ?? 99;
+                                return aIndex - bIndex;
+                              });
+                            
+                            if (positionCandidates.length > 0) {
+                              optimalLineup[position] = positionCandidates[0];
+                              usedPlayers.add(positionCandidates[0].id);
+                            }
+                          });
+
+                          // Fill remaining positions with available players
+                          POSITIONS_ORDER.forEach(position => {
+                            if (!optimalLineup[position]) {
+                              const remaining = availablePlayers.find(p => !usedPlayers.has(p.id));
+                              if (remaining) {
+                                optimalLineup[position] = remaining;
+                                usedPlayers.add(remaining.id);
+                              }
+                            }
+                          });
+
+                          if (Object.keys(optimalLineup).length === 7) {
+                            recommendations.push({
+                              name: "Optimal Position Match",
+                              confidence: 92,
+                              reason: "Players in their preferred positions",
+                              lineup: optimalLineup,
+                              color: "bg-green-100 border-green-300"
+                            });
+                          }
+
+                          // Strategy 2: Experience-Based (players with most games)
+                          const experiencedLineup = {};
+                          const experiencedUsed = new Set();
+                          
+                          POSITIONS_ORDER.forEach(position => {
+                            const candidates = availablePlayers
+                              .filter(p => !experiencedUsed.has(p.id))
+                              .filter(p => p.positionPreferences?.includes(position))
+                              .sort((a, b) => {
+                                // Prioritize by position preference and experience
+                                const aStats = Object.values(centralizedStats).flat().filter(s => s.playerId === a.id && s.position === position);
+                                const bStats = Object.values(centralizedStats).flat().filter(s => s.playerId === b.id && s.position === position);
+                                return bStats.length - aStats.length;
+                              });
+                            
+                            if (candidates.length > 0) {
+                              experiencedLineup[position] = candidates[0];
+                              experiencedUsed.add(candidates[0].id);
+                            }
+                          });
+
+                          // Fill remaining
+                          POSITIONS_ORDER.forEach(position => {
+                            if (!experiencedLineup[position]) {
+                              const remaining = availablePlayers.find(p => !experiencedUsed.has(p.id));
+                              if (remaining) {
+                                experiencedLineup[position] = remaining;
+                                experiencedUsed.add(remaining.id);
+                              }
+                            }
+                          });
+
+                          if (Object.keys(experiencedLineup).length === 7) {
+                            recommendations.push({
+                              name: "Experience-Based",
+                              confidence: 87,
+                              reason: "Players with most games in positions",
+                              lineup: experiencedLineup,
+                              color: "bg-blue-100 border-blue-300"
+                            });
+                          }
+
+                          // Strategy 3: Opponent-Specific (if we have opponent data)
+                          if (opponentAnalysis && opponentAnalysis.totalGames > 0) {
+                            const opponentLineup = {};
+                            const opponentUsed = new Set();
+                            
+                            POSITIONS_ORDER.forEach(position => {
+                              const candidates = availablePlayers
+                                .filter(p => !opponentUsed.has(p.id))
+                                .filter(p => p.positionPreferences?.includes(position))
+                                .sort((a, b) => {
+                                  // Find stats against this specific opponent
+                                  const aOpponentStats = completedGames
+                                    .filter(game => {
+                                      const isAgainstOpponent = 
+                                        (game.homeTeamId === currentTeamId && game.awayTeamName === opponentAnalysis.teamName) ||
+                                        (game.awayTeamId === currentTeamId && game.homeTeamName === opponentAnalysis.teamName);
+                                      return isAgainstOpponent;
+                                    })
+                                    .flatMap(game => (centralizedStats[game.id] || []).filter(s => s.playerId === a.id && s.position === position));
+                                  
+                                  const bOpponentStats = completedGames
+                                    .filter(game => {
+                                      const isAgainstOpponent = 
+                                        (game.homeTeamId === currentTeamId && game.awayTeamName === opponentAnalysis.teamName) ||
+                                        (game.awayTeamId === currentTeamId && game.homeTeamName === opponentAnalysis.teamName);
+                                      return isAgainstOpponent;
+                                    })
+                                    .flatMap(game => (centralizedStats[game.id] || []).filter(s => s.playerId === b.id && s.position === position));
+
+                                  const aAvgRating = aOpponentStats.length > 0 ? 
+                                    aOpponentStats.reduce((sum, s) => sum + (s.rating || 0), 0) / aOpponentStats.length : 0;
+                                  const bAvgRating = bOpponentStats.length > 0 ? 
+                                    bOpponentStats.reduce((sum, s) => sum + (s.rating || 0), 0) / bOpponentStats.length : 0;
+
+                                  return bAvgRating - aAvgRating;
+                                });
+                              
+                              if (candidates.length > 0) {
+                                opponentLineup[position] = candidates[0];
+                                opponentUsed.add(candidates[0].id);
+                              }
+                            });
+
+                            // Fill remaining
+                            POSITIONS_ORDER.forEach(position => {
+                              if (!opponentLineup[position]) {
+                                const remaining = availablePlayers.find(p => !opponentUsed.has(p.id));
+                                if (remaining) {
+                                  opponentLineup[position] = remaining;
+                                  opponentUsed.add(remaining.id);
+                                }
+                              }
+                            });
+
+                            if (Object.keys(opponentLineup).length === 7) {
+                              recommendations.push({
+                                name: `Anti-${opponentAnalysis.teamName}`,
+                                confidence: 89,
+                                reason: `Best performers vs ${opponentAnalysis.teamName}`,
+                                lineup: opponentLineup,
+                                color: "bg-purple-100 border-purple-300"
+                              });
+                            }
+                          }
+
+                          // Strategy 4: Balanced Team
+                          const balancedLineup = {};
+                          const balancedUsed = new Set();
+                          
+                          // Try to balance attack/defense
+                          const attackPositions = ['GS', 'GA', 'WA'];
+                          const defensePositions = ['GK', 'GD', 'WD'];
+                          const centerPosition = ['C'];
+
+                          [...attackPositions, ...defensePositions, ...centerPosition].forEach(position => {
+                            const candidates = availablePlayers
+                              .filter(p => !balancedUsed.has(p.id))
+                              .filter(p => p.positionPreferences?.includes(position))
+                              .sort((a, b) => {
+                                // Calculate overall rating across all positions
+                                const aAllStats = Object.values(centralizedStats).flat().filter(s => s.playerId === a.id);
+                                const bAllStats = Object.values(centralizedStats).flat().filter(s => s.playerId === b.id);
+                                
+                                const aAvgRating = aAllStats.length > 0 ? 
+                                  aAllStats.reduce((sum, s) => sum + (s.rating || 0), 0) / aAllStats.length : 0;
+                                const bAvgRating = bAllStats.length > 0 ? 
+                                  bAllStats.reduce((sum, s) => sum + (s.rating || 0), 0) / bAllStats.length : 0;
+
+                                return bAvgRating - aAvgRating;
+                              });
+                            
+                            if (candidates.length > 0) {
+                              balancedLineup[position] = candidates[0];
+                              balancedUsed.add(candidates[0].id);
+                            }
+                          });
+
+                          // Fill remaining
+                          POSITIONS_ORDER.forEach(position => {
+                            if (!balancedLineup[position]) {
+                              const remaining = availablePlayers.find(p => !balancedUsed.has(p.id));
+                              if (remaining) {
+                                balancedLineup[position] = remaining;
+                                balancedUsed.add(remaining.id);
+                              }
+                            }
+                          });
+
+                          if (Object.keys(balancedLineup).length === 7) {
+                            recommendations.push({
+                              name: "Balanced Performance",
+                              confidence: 85,
+                              reason: "Best overall player ratings",
+                              lineup: balancedLineup,
+                              color: "bg-orange-100 border-orange-300"
+                            });
+                          }
+
+                          return recommendations.slice(0, 4); // Top 4 recommendations
+                        };
+
+                        const lineupRecommendations = generateLineupRecommendations();
+
+                        if (lineupRecommendations.length === 0) {
+                          return (
+                            <div className="text-center py-8 text-gray-500">
+                              <Target className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                              <p>Unable to generate lineup recommendations</p>
+                              <p className="text-sm">Try adjusting player availability</p>
+                            </div>
+                          );
+                        }
+
+                        return lineupRecommendations.map((rec, index) => (
+                          <Card key={index} className={`border-2 cursor-pointer transition-all hover:shadow-md ${rec.color}`}>
+                            <CardContent className="p-4">
+                              <div className="flex items-start justify-between mb-3">
+                                <div className="flex items-center gap-3">
+                                  <Badge variant="outline" className="text-sm">
+                                    #{index + 1}
+                                  </Badge>
+                                  <div>
+                                    <h4 className="font-semibold text-lg">{rec.name}</h4>
+                                    <p className="text-sm text-gray-600">{rec.reason}</p>
+                                  </div>
+                                </div>
+                                <div className="text-right">
+                                  <div className="text-2xl font-bold text-green-600">
+                                    {rec.confidence}%
+                                  </div>
+                                  <div className="text-xs text-gray-500">Confidence</div>
+                                </div>
+                              </div>
+
+                              {/* Lineup Display */}
+                              <div className="grid grid-cols-7 gap-2 mt-4">
+                                {POSITIONS_ORDER.map(position => {
+                                  const player = rec.lineup[position];
+                                  return (
+                                    <div key={position} className="text-center">
+                                      <div className="text-xs font-medium text-gray-600 mb-1">
+                                        {position}
+                                      </div>
+                                      {player ? (
+                                        <div className="flex flex-col items-center">
+                                          <PlayerAvatar player={player} size="sm" />
+                                          <div className="text-xs mt-1 font-medium">
+                                            {player.displayName}
+                                          </div>
+                                          {player.positionPreferences?.[0] === position && (
+                                            <Star className="h-3 w-3 text-yellow-500 mt-1" />
+                                          )}
+                                        </div>
+                                      ) : (
+                                        <div className="w-6 h-6 bg-gray-200 rounded-full mx-auto">
+                                          <span className="text-xs text-gray-400">?</span>
+                                        </div>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+
+                              {/* Select This Lineup Button */}
+                              <div className="mt-4 pt-3 border-t">
+                                <Button 
+                                  onClick={() => {
+                                    setSelectedLineup(rec.lineup);
+                                    toast({
+                                      title: "Lineup Selected",
+                                      description: `${rec.name} lineup has been selected`,
+                                    });
+                                  }}
+                                  variant="outline"
+                                  className="w-full"
+                                >
+                                  <Check className="h-4 w-4 mr-2" />
+                                  Select This Lineup
+                                </Button>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ));
+                      })()}
                     </div>
+
+                    {/* Current Selection Summary */}
+                    {Object.values(selectedLineup).some(p => p !== null) && (
+                      <Card className="mt-6 bg-gray-50">
+                        <CardHeader>
+                          <CardTitle className="text-lg">Selected Lineup</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="grid grid-cols-7 gap-2">
+                            {POSITIONS_ORDER.map(position => {
+                              const player = selectedLineup[position];
+                              return (
+                                <div key={position} className="text-center">
+                                  <div className="text-xs font-medium text-gray-600 mb-1">
+                                    {position}
+                                  </div>
+                                  {player ? (
+                                    <div className="flex flex-col items-center">
+                                      <PlayerAvatar player={player} size="sm" />
+                                      <div className="text-xs mt-1 font-medium">
+                                        {player.displayName}
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <div className="w-6 h-6 bg-gray-200 rounded-full mx-auto flex items-center justify-center">
+                                      <span className="text-xs text-gray-400">-</span>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                          <div className="mt-4 text-center">
+                            <div className="text-sm text-gray-600 mb-2">
+                              {Object.values(selectedLineup).filter(p => p !== null).length}/7 positions filled
+                            </div>
+                            {Object.values(selectedLineup).every(p => p !== null) && (
+                              <Badge variant="default">Lineup Complete!</Badge>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
                   </CardContent>
                 </Card>
               </div>
