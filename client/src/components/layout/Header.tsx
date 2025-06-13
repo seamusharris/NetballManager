@@ -38,6 +38,7 @@ export default function Header({ setIsMobileOpen, isTablet }: HeaderProps) {
     { path: '/opponent-preparation', label: 'Opponent Preparation', icon: <Target className="h-5 w-5" /> },
     { path: '/seasons', label: 'Seasons', icon: <CalendarRange className="h-5 w-5" /> },
     { path: '/opponent-analysis', label: 'Matchup Analysis', icon: <Trophy className="h-5 w-5" /> },
+    { path: '/preparation', label: 'Game Preparation', icon: <Target className="h-5 w-5" /> },
     { path: '/statistics', label: 'Statistics', icon: <BarChart className="h-5 w-5" /> },
     { path: '/clubs', label: 'Club Management', icon: <Building2 className="h-5 w-5" /> },
     { path: '/game-result-examples', label: 'Game Result Examples', icon: <Calendar className="h-5 w-5" /> },

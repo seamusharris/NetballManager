@@ -92,7 +92,8 @@ function withErrorBoundary(Component: React.ComponentType<any>, name: string) {
 }
 
 import PlayerBorrowing from '@/pages/PlayerBorrowing';
-import TeamAnalysis from '@/pages/TeamAnalysis';
+import TeamAnalysis from './pages/TeamAnalysis';
+import Preparation from './pages/Preparation';
 
 function Router() {
   return (
@@ -132,9 +133,10 @@ function Router() {
             </ErrorBoundary>
           )}
         </Route>
-        
-        <Route path="/team-analysis" component={withErrorBoundary(TeamAnalysis, 'TeamAnalysis')} />
+
         <Route path="/opponent-preparation" component={OpponentPreparation} />
+        <Route path="/preparation" component={Preparation} />
+        <Route path="/team-analysis" component={TeamAnalysis} />
         <Route path="/game-result-examples" component={withErrorBoundary(GameResultExamples, 'GameResultExamples')} />
         <Route path="/round-badge-examples" component={withErrorBoundary(RoundBadgeExamples, 'RoundBadgeExamples')} />
         <Route path="/player-box-examples" component={withErrorBoundary(PlayerBoxExamples, 'PlayerBoxExamples')} />

@@ -32,6 +32,7 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen, isTablet }: Sid
     { path: '/opponent-preparation', label: 'Opponent Preparation', icon: <Target className="w-5 h-5" /> },
     { path: '/seasons', label: 'Seasons', icon: <CalendarRange className="w-5 h-5" /> },
     { path: '/statistics', label: 'Statistics', icon: <BarChart className="w-5 h-5" /> },
+    { path: '/preparation', label: 'Game Preparation', icon: <Target className="w-5 h-5" /> },
     { path: '/team-analysis', label: 'Team Analysis', icon: <Trophy className="w-5 h-5" /> },
     { path: '/clubs', label: 'Club Management', icon: <Building2 className="w-5 h-5" /> },
     { path: '/component-examples', label: 'All Examples', icon: <Zap className="w-5 h-5" /> },
