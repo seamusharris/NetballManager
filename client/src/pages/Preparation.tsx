@@ -487,11 +487,32 @@ export default function Preparation() {
 
   // Generate player recommendations based on selected game
   const playerRecommendations = useMemo((): PlayerRecommendation[] => {
-    if (!teamPlayers || !centralizedStats || !selectedGameId || !opponentAnalysis) return [];
+    if (!teamPlayers || !centralizedStats || !selectedGameId) return [];
 
     const availablePlayers = teamPlayers.filter(p => 
       availabilityData[p.id] === 'available'
     );
+
+    // Get opponent team details
+    const selectedGame = games?.find(g => g.id === selectedGameId);
+    const opponentTeamId = selectedGame 
+      ? (selectedGame.homeTeamId === currentTeamId 
+          ? selectedGame.awayTeamId 
+          : selectedGame.homeTeamId)
+      : null;
+
+    // Find games against this specific opponent
+    const opponentGames = completedGames.filter(game => {
+      const isHomeGame = game.homeClubId === currentClubId;
+      const isAwayGame = game.awayClubId === currentClubId;
+      
+      if (isHomeGame && !isAwayGame) {
+        return game.awayTeamId === opponentTeamId;
+      } else if (isAwayGame && !isHomeGame) {
+        return game.homeTeamId === opponentTeamId;
+      }
+      return false;
+    });
 
     return POSITIONS_ORDER.map(position => {
       const positionPlayers = availablePlayers.filter(p => 
@@ -499,37 +520,119 @@ export default function Preparation() {
       );
 
       const playersWithStats = positionPlayers.map(player => {
-        // Get stats from games against this specific opponent
-        const playerStats = Object.values(centralizedStats).flat().filter(stat => 
+        // Get ALL stats for this player in this position
+        const allPositionStats = Object.values(centralizedStats).flat().filter(stat => 
           stat.playerId === player.id && stat.position === position
         );
 
-        const gamesInPosition = playerStats.length;
-        const avgRating = gamesInPosition > 0 
-          ? playerStats.reduce((sum, stat) => sum + (stat.rating || 0), 0) / gamesInPosition 
+        // Get stats specifically against this opponent
+        const opponentStats = opponentGames.length > 0 
+          ? opponentGames.flatMap(game => 
+              (centralizedStats[game.id] || []).filter(stat => 
+                stat.playerId === player.id && stat.position === position
+              )
+            )
+          : [];
+
+        const totalGamesInPosition = allPositionStats.length;
+        const opponentGamesInPosition = opponentStats.length;
+        
+        const avgRating = totalGamesInPosition > 0 
+          ? allPositionStats.reduce((sum, stat) => sum + (stat.rating || 0), 0) / totalGamesInPosition 
           : 0;
 
-        let confidence = 0.5;
-        if (gamesInPosition >= 5) confidence += 0.3;
-        else if (gamesInPosition >= 2) confidence += 0.2;
-        else if (gamesInPosition >= 1) confidence += 0.1;
+        const opponentAvgRating = opponentGamesInPosition > 0
+          ? opponentStats.reduce((sum, stat) => sum + (stat.rating || 0), 0) / opponentGamesInPosition
+          : 0;
 
+        // Calculate performance metrics
+        const totalGoalsFor = allPositionStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
+        const totalGoalsAgainst = allPositionStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
+        const opponentGoalsFor = opponentStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
+        const opponentGoalsAgainst = opponentStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
+
+        // Calculate confidence score
+        let confidence = 0.3; // Base confidence
+
+        // Experience bonus
+        if (totalGamesInPosition >= 8) confidence += 0.3;
+        else if (totalGamesInPosition >= 4) confidence += 0.2;
+        else if (totalGamesInPosition >= 2) confidence += 0.1;
+
+        // Position preference bonus
         if (player.positionPreferences?.[0] === position) confidence += 0.2;
-        if (avgRating >= 7) confidence += 0.2;
-        else if (avgRating >= 5) confidence += 0.1;
+        else if (player.positionPreferences?.[1] === position) confidence += 0.1;
 
-        const reason = gamesInPosition > 0 
-          ? `Avg rating: ${avgRating.toFixed(1)} (${gamesInPosition} games)`
-          : player.positionPreferences?.[0] === position
-            ? 'Preferred position'
-            : 'Secondary position';
+        // Performance bonus
+        if (avgRating >= 7.5) confidence += 0.25;
+        else if (avgRating >= 6.5) confidence += 0.15;
+        else if (avgRating >= 5.5) confidence += 0.1;
+
+        // Opponent-specific bonus
+        if (opponentGamesInPosition > 0) {
+          confidence += 0.1; // Experience against this opponent
+          if (opponentAvgRating >= 7) confidence += 0.15;
+          else if (opponentAvgRating >= 6) confidence += 0.1;
+        }
+
+        // Goal efficiency for attacking positions
+        if (['GS', 'GA'].includes(position) && totalGamesInPosition > 0) {
+          const goalEfficiency = totalGoalsFor / Math.max(1, totalGamesInPosition);
+          if (goalEfficiency >= 8) confidence += 0.1;
+          else if (goalEfficiency >= 5) confidence += 0.05;
+        }
+
+        // Defensive efficiency for defensive positions
+        if (['GK', 'GD'].includes(position) && totalGamesInPosition > 0) {
+          const defenseRatio = totalGoalsAgainst / Math.max(1, totalGamesInPosition);
+          if (defenseRatio <= 3) confidence += 0.1;
+          else if (defenseRatio <= 5) confidence += 0.05;
+        }
+
+        confidence = Math.min(confidence, 1);
+
+        // Generate detailed reason
+        let reason = '';
+        if (opponentGamesInPosition > 0) {
+          reason = `${opponentAvgRating.toFixed(1)} avg vs this opponent (${opponentGamesInPosition} games)`;
+          if (opponentGoalsFor > 0 || opponentGoalsAgainst > 0) {
+            reason += `, ${opponentGoalsFor}F/${opponentGoalsAgainst}A`;
+          }
+        } else if (totalGamesInPosition > 0) {
+          reason = `${avgRating.toFixed(1)} avg rating (${totalGamesInPosition} games)`;
+          if (totalGoalsFor > 0 || totalGoalsAgainst > 0) {
+            reason += `, ${totalGoalsFor}F/${totalGoalsAgainst}A total`;
+          }
+        } else if (player.positionPreferences?.[0] === position) {
+          reason = 'Primary position';
+        } else {
+          reason = 'Secondary position';
+        }
+
+        // Calculate opponent record if available
+        let vsOpponentRecord = undefined;
+        if (opponentGamesInPosition > 0 && opponentGames.length > 0) {
+          let wins = 0;
+          opponentGames.forEach(game => {
+            const gameStats = centralizedStats[game.id] || [];
+            const teamScore = gameStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
+            const opponentScore = gameStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
+            if (teamScore > opponentScore) wins++;
+          });
+          
+          vsOpponentRecord = {
+            played: opponentGames.length,
+            won: wins
+          };
+        }
 
         return {
           player,
-          confidence: Math.min(confidence, 1),
+          confidence,
           reason,
           avgRating: avgRating > 0 ? avgRating : undefined,
-          gamesInPosition: gamesInPosition > 0 ? gamesInPosition : undefined
+          gamesInPosition: totalGamesInPosition > 0 ? totalGamesInPosition : undefined,
+          vsOpponentRecord
         };
       });
 
@@ -540,7 +643,7 @@ export default function Preparation() {
         players: playersWithStats
       };
     });
-  }, [teamPlayers, centralizedStats, selectedGameId, availabilityData, opponentAnalysis]);
+  }, [teamPlayers, centralizedStats, selectedGameId, availabilityData, games, currentTeamId, completedGames, currentClubId]);
 
   // Save preparation state to localStorage
   useEffect(() => {
@@ -814,6 +917,20 @@ export default function Preparation() {
                         onAvailabilityChange={setAvailabilityData}
                         showQuickActions={true}
                       />
+                      
+                      <div className="mt-4 pt-4 border-t">
+                        <Button 
+                          onClick={() => setActiveTab('lineup')}
+                          className="w-full"
+                          disabled={Object.values(availabilityData).filter(status => status === 'available').length < 7}
+                        >
+                          <Target className="h-4 w-4 mr-2" />
+                          View Recommended Lineups
+                          <span className="ml-2 text-xs bg-white/20 px-2 py-1 rounded">
+                            {Object.values(availabilityData).filter(status => status === 'available').length} available
+                          </span>
+                        </Button>
+                      </div>
                     </CardContent>
                   </Card>
 
@@ -1032,8 +1149,11 @@ export default function Preparation() {
                   <CardHeader>
                     <CardTitle className="flex items-center space-x-2">
                       <Lightbulb className="h-5 w-5" />
-                      <span>Position Recommendations</span>
+                      <span>Position Recommendations vs {opponentName}</span>
                     </CardTitle>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Based on historical performance and opponent-specific analysis
+                    </p>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
@@ -1042,7 +1162,7 @@ export default function Preparation() {
 
                         return (
                           <div key={rec.position} className="border rounded-lg p-3">
-                            <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center justify-between mb-3">
                               <h4 className="font-semibold">{rec.position}</h4>
                               {selectedPlayer && (
                                 <Badge variant="default">
@@ -1054,14 +1174,14 @@ export default function Preparation() {
                             {rec.players.length === 0 ? (
                               <p className="text-gray-500 text-sm">No available players for this position</p>
                             ) : (
-                              <div className="space-y-2">
-                                {rec.players.slice(0, 3).map((playerRec, index) => (
+                              <div className="space-y-3">
+                                {rec.players.slice(0, 4).map((playerRec, index) => (
                                   <div 
                                     key={playerRec.player.id} 
-                                    className={`flex items-center justify-between p-2 rounded cursor-pointer transition-colors ${
+                                    className={`p-3 rounded cursor-pointer transition-all ${
                                       selectedPlayer?.id === playerRec.player.id 
-                                        ? 'bg-blue-100 border border-blue-300' 
-                                        : 'hover:bg-gray-50'
+                                        ? 'bg-blue-100 border-2 border-blue-300 shadow-sm' 
+                                        : 'hover:bg-gray-50 border border-gray-200'
                                     }`}
                                     onClick={() => {
                                       setSelectedLineup(prev => ({
@@ -1070,23 +1190,65 @@ export default function Preparation() {
                                       }));
                                     }}
                                   >
-                                    <div className="flex items-center space-x-2">
-                                      <Badge variant={index === 0 ? "default" : "secondary"} className="text-xs">
-                                        #{index + 1}
-                                      </Badge>
-                                      <PlayerAvatar player={playerRec.player} size="sm" />
-                                      <div>
-                                        <p className="font-medium text-sm">{playerRec.player.displayName}</p>
-                                        <p className="text-xs text-gray-600">{playerRec.reason}</p>
+                                    <div className="flex items-start justify-between">
+                                      <div className="flex items-center space-x-3 flex-1">
+                                        <div className="flex flex-col items-center gap-1">
+                                          <Badge 
+                                            variant={index === 0 ? "default" : index === 1 ? "secondary" : "outline"} 
+                                            className="text-xs"
+                                          >
+                                            #{index + 1}
+                                          </Badge>
+                                          <div className="text-xs text-center text-gray-500">
+                                            {Math.round(playerRec.confidence * 100)}%
+                                          </div>
+                                        </div>
+                                        <PlayerAvatar player={playerRec.player} size="sm" />
+                                        <div className="flex-1">
+                                          <p className="font-medium text-sm">{playerRec.player.displayName}</p>
+                                          <p className="text-xs text-gray-600 mb-1">{playerRec.reason}</p>
+                                          
+                                          {/* Additional stats */}
+                                          <div className="flex gap-3 text-xs text-gray-500">
+                                            {playerRec.gamesInPosition && (
+                                              <span>{playerRec.gamesInPosition} games</span>
+                                            )}
+                                            {playerRec.vsOpponentRecord && (
+                                              <span className="text-blue-600">
+                                                vs {opponentName}: {playerRec.vsOpponentRecord.won}/{playerRec.vsOpponentRecord.played}W
+                                              </span>
+                                            )}
+                                          </div>
+                                        </div>
                                       </div>
-                                    </div>
-                                    <div className="text-right">
-                                      <div className="text-xs text-gray-500">
-                                        {Math.round(playerRec.confidence * 100)}% match
+                                      
+                                      <div className="flex flex-col items-end gap-1">
+                                        {playerRec.avgRating && (
+                                          <div className="flex items-center gap-1">
+                                            <Star className="h-3 w-3 text-yellow-500" />
+                                            <span className="text-xs font-medium">
+                                              {playerRec.avgRating.toFixed(1)}
+                                            </span>
+                                          </div>
+                                        )}
+                                        
+                                        {index === 0 && (
+                                          <Badge variant="default" className="text-xs bg-green-100 text-green-800">
+                                            Recommended
+                                          </Badge>
+                                        )}
                                       </div>
                                     </div>
                                   </div>
                                 ))}
+                                
+                                {rec.players.length > 4 && (
+                                  <div className="text-center pt-2">
+                                    <Button variant="ghost" size="sm" className="text-xs">
+                                      View {rec.players.length - 4} more options
+                                    </Button>
+                                  </div>
+                                )}
                               </div>
                             )}
                           </div>
