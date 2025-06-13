@@ -81,6 +81,8 @@ export default function Preparation() {
   const totalSteps = preparationSteps.length;
   const progressPercentage = (completedSteps / totalSteps) * 100;
 
+  // ALL HOOKS MUST BE CALLED FIRST - NO CONDITIONS BEFORE HOOKS
+  
   // Optimized data fetching with error boundaries
   const { data: games, isLoading: gamesLoading, error: gamesError } = useQuery({
     queryKey: ['games', currentClubId, currentTeamId],
@@ -127,36 +129,30 @@ export default function Preparation() {
     },
   });
 
-  // Quick actions
-  const handleSetAllAvailable = () => {
-    if (!players) return;
-    const allAvailable = players.reduce((acc, player) => {
-      acc[player.id] = 'available';
-      return acc;
-    }, {} as Record<number, 'available' | 'unavailable' | 'maybe'>);
-    setAvailabilityData(allAvailable);
-  };
+  // Get unique opponents from games
+  const opponents = useMemo(() => {
+    if (!games) return [];
 
-  const handleUseLastGameAvailability = async () => {
-    if (!games || !currentTeamId) return;
+    const opponentMap = new Map();
 
-    const lastGame = games
-      .filter(g => g.homeTeamId === currentTeamId || g.awayTeamId === currentTeamId)
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
-
-    if (lastGame) {
-      try {
-        const lastAvailability = await apiClient.get(`/api/games/${lastGame.id}/availability`);
-        const availabilityMap = lastAvailability.reduce((acc, avail) => {
-          acc[avail.playerId] = avail.status;
-          return acc;
-        }, {} as Record<number, 'available' | 'unavailable' | 'maybe'>);
-        setAvailabilityData(availabilityMap);
-      } catch (error) {
-        console.error('Failed to load last game availability:', error);
+    games.forEach(game => {
+      if (game.homeTeamId === currentTeamId && game.awayTeamId) {
+        opponentMap.set(game.awayTeamId, {
+          teamId: game.awayTeamId,
+          teamName: game.awayTeamName,
+          clubName: game.awayClubName
+        });
+      } else if (game.awayTeamId === currentTeamId && game.homeTeamId) {
+        opponentMap.set(game.homeTeamId, {
+          teamId: game.homeTeamId,
+          teamName: game.homeTeamName,
+          clubName: game.homeClubName
+        });
       }
-    }
-  };
+    });
+
+    return Array.from(opponentMap.values());
+  }, [games, currentTeamId]);
 
   // Generate opponent analysis
   const opponentAnalysis = useMemo(() => {
@@ -263,6 +259,39 @@ export default function Preparation() {
     });
   }, [players, gameStats, selectedOpponent, availabilityData, currentTeamId]);
 
+  // Quick actions (defined after hooks)
+  const handleSetAllAvailable = () => {
+    if (!players) return;
+    const allAvailable = players.reduce((acc, player) => {
+      acc[player.id] = 'available';
+      return acc;
+    }, {} as Record<number, 'available' | 'unavailable' | 'maybe'>);
+    setAvailabilityData(allAvailable);
+  };
+
+  const handleUseLastGameAvailability = async () => {
+    if (!games || !currentTeamId) return;
+
+    const lastGame = games
+      .filter(g => g.homeTeamId === currentTeamId || g.awayTeamId === currentTeamId)
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
+
+    if (lastGame) {
+      try {
+        const lastAvailability = await apiClient.get(`/api/games/${lastGame.id}/availability`);
+        const availabilityMap = lastAvailability.reduce((acc, avail) => {
+          acc[avail.playerId] = avail.status;
+          return acc;
+        }, {} as Record<number, 'available' | 'unavailable' | 'maybe'>);
+        setAvailabilityData(availabilityMap);
+      } catch (error) {
+        console.error('Failed to load last game availability:', error);
+      }
+    }
+  };
+
+  // NOW CONDITIONAL LOGIC AFTER ALL HOOKS
+  
   // Loading states
   if (gamesLoading || playersLoading) {
     return (
@@ -283,31 +312,6 @@ export default function Preparation() {
       </PageTemplate>
     );
   }
-
-  // Get unique opponents from games
-  const opponents = useMemo(() => {
-    if (!games) return [];
-
-    const opponentMap = new Map();
-
-    games.forEach(game => {
-      if (game.homeTeamId === currentTeamId && game.awayTeamId) {
-        opponentMap.set(game.awayTeamId, {
-          teamId: game.awayTeamId,
-          teamName: game.awayTeamName,
-          clubName: game.awayClubName
-        });
-      } else if (game.awayTeamId === currentTeamId && game.homeTeamId) {
-        opponentMap.set(game.homeTeamId, {
-          teamId: game.homeTeamId,
-          teamName: game.homeTeamName,
-          clubName: game.homeClubName
-        });
-      }
-    });
-
-    return Array.from(opponentMap.values());
-  }, [games, currentTeamId]);
 
   return (
     <PageTemplate 
