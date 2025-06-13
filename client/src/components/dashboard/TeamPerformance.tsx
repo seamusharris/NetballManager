@@ -17,8 +17,8 @@ interface TeamPerformanceProps {
   centralizedStats?: Record<number, GameStat[]>; // Centralized game stats
 }
 
-// Team Performance Component
-export default function TeamPerformance({ games, className, activeSeason, selectedSeason, centralizedStats }: TeamPerformanceProps) {
+// Team Performance Component - Default Export
+function TeamPerformance({ games, className, activeSeason, selectedSeason, centralizedStats }: TeamPerformanceProps) {
   const { currentTeamId } = useClub();
   const [quarterPerformance, setQuarterPerformance] = useState<{
     avgTeamScoreByQuarter: Record<number, number>;
@@ -471,3 +471,5 @@ export default function TeamPerformance({ games, className, activeSeason, select
     </BaseWidget>
   );
 }
+
+export default TeamPerformance;
