@@ -68,6 +68,8 @@ export default function Preparation() {
   const [selectedGameId, setSelectedGameId] = useState<number | null>(null);
   const [availabilityData, setAvailabilityData] = useState<Record<number, 'available' | 'unavailable' | 'maybe'>>({});
   const [activeTab, setActiveTab] = useState('opponent');
+  const [teamPlayers, setTeamPlayers] = useState<Player[]>([]);
+  const [isLoadingTeamPlayers, setIsLoadingTeamPlayers] = useState(false);
 
   // Progress tracking
   const preparationSteps: PreparationStep[] = [
@@ -128,6 +130,31 @@ export default function Preparation() {
       queryClient.invalidateQueries({ queryKey: ['player-availability'] });
     },
   });
+
+  // Load team players for the current team
+  useEffect(() => {
+    const loadTeamPlayers = async () => {
+      if (!currentTeamId) {
+        setTeamPlayers([]);
+        return;
+      }
+
+      setIsLoadingTeamPlayers(true);
+      try {
+        const response = await apiClient.get(`/api/teams/${currentTeamId}/players`);
+        console.log(`Loaded ${response.length} team players for team ${currentTeamId}`);
+        setTeamPlayers(response);
+      } catch (error) {
+        console.error('Error loading team players:', error);
+        // Fallback to all club players if team players can't be loaded
+        setTeamPlayers(players || []);
+      } finally {
+        setIsLoadingTeamPlayers(false);
+      }
+    };
+
+    loadTeamPlayers();
+  }, [currentTeamId, players]);
 
   // Get unique opponents from games
   const opponents = useMemo(() => {
@@ -205,9 +232,9 @@ export default function Preparation() {
 
   // Generate player recommendations
   const playerRecommendations = useMemo((): PlayerRecommendation[] => {
-    if (!players || !gameStats || !selectedOpponent) return [];
+    if (!teamPlayers || !gameStats || !selectedOpponent) return [];
 
-    const availablePlayers = players.filter(p => 
+    const availablePlayers = teamPlayers.filter(p => 
       availabilityData[p.id] === 'available' || 
       (Object.keys(availabilityData).length === 0) // If no availability set, consider all available
     );
@@ -261,8 +288,8 @@ export default function Preparation() {
 
   // Quick actions (defined after hooks)
   const handleSetAllAvailable = () => {
-    if (!players) return;
-    const allAvailable = players.reduce((acc, player) => {
+    if (!teamPlayers) return;
+    const allAvailable = teamPlayers.reduce((acc, player) => {
       acc[player.id] = 'available';
       return acc;
     }, {} as Record<number, 'available' | 'unavailable' | 'maybe'>);
@@ -293,7 +320,7 @@ export default function Preparation() {
   // NOW CONDITIONAL LOGIC AFTER ALL HOOKS
   
   // Loading states
-  if (gamesLoading || playersLoading) {
+  if (gamesLoading || playersLoading || isLoadingTeamPlayers) {
     return (
       <PageTemplate title="Game Preparation" icon={Target}>
         <LoadingState message="Loading preparation data..." />
@@ -459,6 +486,12 @@ export default function Preparation() {
                     </Button>
                   </div>
                 </div>
+                <div className="flex items-center gap-2 mt-2">
+                  <Badge variant="outline" className="mr-1">
+                    {Object.values(availabilityData).filter(status => status === 'available').length}
+                  </Badge>
+                  <span className="text-sm text-gray-600">Available Players</span>
+                </div>
               </CardHeader>
               <CardContent>
                 {Object.keys(availabilityData).length === 0 && (
@@ -470,33 +503,93 @@ export default function Preparation() {
                   </Alert>
                 )}
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {players?.map(player => (
-                    <div key={player.id} className="flex items-center space-x-3 p-3 border rounded-lg">
-                      <PlayerAvatar player={player} size="sm" />
-                      <div className="flex-1">
-                        <p className="font-medium">{player.displayName}</p>
-                        <p className="text-xs text-gray-500">
-                          {player.positionPreferences?.join(', ') || 'No positions set'}
-                        </p>
-                      </div>
-                      <Select
-                        value={availabilityData[player.id] || "available"}
-                        onValueChange={(value) => 
-                          setAvailabilityData(prev => ({ ...prev, [player.id]: value as any }))
-                        }
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {teamPlayers?.map(player => {
+                    const isAvailable = availabilityData[player.id] === 'available' || (!availabilityData[player.id] && Object.keys(availabilityData).length === 0);
+                    const isMaybe = availabilityData[player.id] === 'maybe';
+                    const isUnavailable = availabilityData[player.id] === 'unavailable';
+                    const playerColor = player.avatarColor || 'bg-gray-400';
+                    
+                    // Convert bg-color-shade to hex for styling
+                    const getColorHex = (colorClass: string) => {
+                      const colorMap: Record<string, string> = {
+                        'bg-red-500': '#ef4444',
+                        'bg-emerald-600': '#059669',
+                        'bg-teal-600': '#0d9488',
+                        'bg-blue-600': '#2563eb',
+                        'bg-indigo-600': '#4f46e5',
+                        'bg-purple-600': '#9333ea',
+                        'bg-pink-600': '#db2777',
+                        'bg-pink-500': '#ec4899',
+                        'bg-orange-500': '#f97316',
+                        'bg-yellow-600': '#ca8a04',
+                        'bg-rose-600': '#e11d48',
+                        'bg-lime-600': '#65a30d',
+                        'bg-sky-600': '#0284c7',
+                        'bg-violet-600': '#7c3aed',
+                        'bg-cyan-600': '#0891b2',
+                        'bg-gray-400': '#9ca3af',
+                        'bg-green-600': '#16a34a'
+                      };
+                      return colorMap[colorClass] || '#9ca3af';
+                    };
+
+                    const colorHex = getColorHex(playerColor);
+
+                    return (
+                      <div 
+                        key={player.id}
+                        className={`p-4 border rounded-lg shadow-sm transition-all ${
+                          isAvailable 
+                            ? "border-2 shadow" 
+                            : isMaybe 
+                            ? "border border-yellow-300 opacity-90"
+                            : "opacity-75 border border-gray-200"
+                        }`}
+                        style={{
+                          borderColor: isAvailable ? colorHex : isMaybe ? '#fbbf24' : '',
+                          backgroundColor: isAvailable ? `${colorHex}10` : isMaybe ? '#fbbf2410' : ''
+                        }}
                       >
-                        <SelectTrigger className="w-28">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="available">Available</SelectItem>
-                          <SelectItem value="maybe">Maybe</SelectItem>
-                          <SelectItem value="unavailable">Unavailable</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  ))}
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center gap-3">
+                            <div
+                              className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm ${playerColor}`}
+                            >
+                              <span className="font-semibold">
+                                {player.firstName?.[0]}{player.lastName?.[0]}
+                              </span>
+                            </div>
+                            <div>
+                              <div className="font-medium">{player.displayName}</div>
+                              {player.positionPreferences && player.positionPreferences.length > 0 && (
+                                <div className="text-xs text-gray-500">
+                                  {player.positionPreferences.join(', ')}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Select
+                              value={availabilityData[player.id] || "available"}
+                              onValueChange={(value) => 
+                                setAvailabilityData(prev => ({ ...prev, [player.id]: value as any }))
+                              }
+                            >
+                              <SelectTrigger className="w-28">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="available">Available</SelectItem>
+                                <SelectItem value="maybe">Maybe</SelectItem>
+                                <SelectItem value="unavailable">Unavailable</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
 
                 <div className="mt-4 flex justify-between">
