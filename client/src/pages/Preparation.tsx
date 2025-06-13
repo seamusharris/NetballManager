@@ -38,13 +38,6 @@ import {
 } from '@/shared/api-types';
 import { cn, getWinLoseLabel, formatShortDate } from "@/lib/utils";
 
-interface PreparationStep {
-  id: string;
-  title: string;
-  completed: boolean;
-  optional?: boolean;
-}
-
 interface PlayerRecommendation {
   position: Position;
   players: Array<{
@@ -128,18 +121,6 @@ export default function Preparation() {
   const [isLoadingTeamPlayers, setIsLoadingTeamPlayers] = useState(false);
   const [opponentAnalysis, setOpponentAnalysis] = useState<OpponentAnalysis | null>(null);
   const [teamInsights, setTeamInsights] = useState<TeamInsights | null>(null);
-
-  // Progress tracking
-  const preparationSteps: PreparationStep[] = [
-    { id: 'overview', title: 'Game Overview & Analysis', completed: !!selectedGameId },
-    { id: 'availability', title: 'Set Player Availability', completed: Object.keys(availabilityData).length > 0 },
-    { id: 'lineup', title: 'Select Starting Lineup', completed: Object.values(selectedLineup).every(p => p !== null) },
-    { id: 'roster', title: 'Apply to Roster', completed: false }
-  ];
-
-  const completedSteps = preparationSteps.filter(step => step.completed).length;
-  const totalSteps = preparationSteps.length;
-  const progressPercentage = (completedSteps / totalSteps) * 100;
 
   // Data fetching
   const { data: games, isLoading: gamesLoading, error: gamesError } = useQuery({
@@ -649,44 +630,6 @@ export default function Preparation() {
       description="Comprehensive game preparation with tactical analysis and strategic insights"
     >
       <div className="space-y-6">
-        {/* Progress Indicator */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center space-x-2">
-                <CheckCircle className="h-5 w-5" />
-                <span>Preparation Progress</span>
-              </CardTitle>
-              <Badge variant={progressPercentage === 100 ? "default" : "secondary"}>
-                {completedSteps}/{totalSteps} Complete
-              </Badge>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <Progress value={progressPercentage} className="mb-4" />
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {preparationSteps.map((step, index) => (
-                <div 
-                  key={step.id}
-                  className={`flex items-center space-x-2 p-2 rounded cursor-pointer hover:bg-gray-100 ${
-                    step.completed ? 'bg-green-50' : 'bg-gray-50'
-                  }`}
-                  onClick={() => setActiveTab(step.id)}
-                >
-                  {step.completed ? (
-                    <CheckCircle className="h-4 w-4 text-green-600" />
-                  ) : (
-                    <div className="h-4 w-4 rounded-full border-2 border-gray-300" />
-                  )}
-                  <span className={`text-sm ${step.completed ? 'text-green-700' : 'text-gray-600'}`}>
-                    {step.title}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Game Selection */}
         <Card>
           <CardHeader>
@@ -771,9 +714,8 @@ export default function Preparation() {
         {/* Main Content Tabs */}
         {selectedGame && (
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="overview">Game Analysis</TabsTrigger>
-              <TabsTrigger value="availability">Player Availability</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="overview">Game Overview & Analysis</TabsTrigger>
               <TabsTrigger value="lineup">Starting Lineup</TabsTrigger>
               <TabsTrigger value="roster">Apply to Roster</TabsTrigger>
             </TabsList>
@@ -856,6 +798,24 @@ export default function Preparation() {
                       </Card>
                     </div>
                   )}
+
+                  {/* Player Availability Section */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Users className="h-5 w-5" />
+                        Player Availability - vs {opponentName}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <PlayerAvailabilitySelector
+                        players={teamPlayers}
+                        availabilityData={availabilityData}
+                        onAvailabilityChange={setAvailabilityData}
+                        showQuickActions={true}
+                      />
+                    </CardContent>
+                  </Card>
 
                   {/* Opponent Analysis */}
                   {opponentAnalysis ? (
@@ -1055,34 +1015,13 @@ export default function Preparation() {
                   )}
 
                   <div className="flex justify-end">
-                    <Button onClick={() => setActiveTab('availability')}>
-                      Set Player Availability
+                    <Button onClick={() => setActiveTab('lineup')}>
+                      Set Starting Lineup
                       <ArrowRight className="h-4 w-4 ml-1" />
                     </Button>
                   </div>
                 </>
               )}
-            </TabsContent>
-
-            {/* Player Availability */}
-            <TabsContent value="availability" className="space-y-4">
-              <PlayerAvailabilitySelector
-                players={teamPlayers}
-                availabilityData={availabilityData}
-                onAvailabilityChange={setAvailabilityData}
-                title={`Player Availability - vs ${opponentName}`}
-                showQuickActions={true}
-              />
-
-              <div className="mt-4 flex justify-between">
-                <Button variant="outline" onClick={() => setActiveTab('overview')}>
-                  Back to Analysis
-                </Button>
-                <Button onClick={() => setActiveTab('lineup')}>
-                  Choose Starting Lineup
-                  <ArrowRight className="h-4 w-4 ml-1" />
-                </Button>
-              </div>
             </TabsContent>
 
             {/* Starting Lineup */}
@@ -1189,8 +1128,8 @@ export default function Preparation() {
               </div>
 
               <div className="flex justify-between">
-                <Button variant="outline" onClick={() => setActiveTab('availability')}>
-                  Back
+                <Button variant="outline" onClick={() => setActiveTab('overview')}>
+                  Back to Overview
                 </Button>
                 <Button 
                   onClick={() => setActiveTab('roster')}
@@ -1259,7 +1198,7 @@ export default function Preparation() {
 
               <div className="flex justify-between">
                 <Button variant="outline" onClick={() => setActiveTab('lineup')}>
-                  Back
+                  Back to Lineup
                 </Button>
               </div>
             </TabsContent>
