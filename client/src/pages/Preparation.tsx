@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { useLocation } from 'wouter';
@@ -18,18 +19,24 @@ import { PlayerAvatar } from '@/components/ui/player-avatar';
 import { PlayerAvailabilitySelector } from '@/components/ui/player-availability-selector';
 import { PageTemplate } from '@/components/layout/PageTemplate';
 import { CourtDisplay } from '@/components/ui/court-display';
+import { ResultBadge } from '@/components/ui/result-badge';
 import { useClub } from '@/contexts/ClubContext';
 import { apiClient } from '@/lib/apiClient';
+import { useBatchGameStatistics } from '@/components/statistics/hooks/useBatchGameStatistics';
+import { useBatchRosterData } from '@/components/statistics/hooks/useBatchRosterData';
 import { 
   Trophy, Target, TrendingUp, Users, CheckCircle, Clock, 
   AlertTriangle, Lightbulb, ChevronRight, ArrowRight, 
-  RotateCcw, Zap, Play, Save, Calendar, MapPin, Copy, FileText
+  RotateCcw, Zap, Play, Save, Calendar, MapPin, Copy, FileText,
+  BarChart3, TrendingDown, Award, Shield, Star, Eye, Brain,
+  Activity, Flame, History, Search, Filter, RefreshCw, 
+  Crosshair, Focus, Layers, Hash, Flag, Telescope
 } from 'lucide-react';
 import { 
   Game, GameStat, Player, PlayerAvailability, 
   Position, NETBALL_POSITIONS 
 } from '@/shared/api-types';
-import { cn, getWinLoseLabel } from "@/lib/utils";
+import { cn, getWinLoseLabel, formatShortDate } from "@/lib/utils";
 
 interface PreparationStep {
   id: string;
@@ -50,17 +57,58 @@ interface PlayerRecommendation {
   }>;
 }
 
-interface LineupRecommendation {
-  id: string;
-  type: 'team-specific' | 'general';
-  formation: Record<Position, Player>;
-  confidence: number;
-  effectiveness: number;
-  reasoning: string[];
-  gamesUsed?: number;
-  winRate?: number;
-  averageGoalsFor?: number;
-  averageGoalsAgainst?: number;
+interface OpponentAnalysis {
+  teamName: string;
+  clubName: string;
+  totalGames: number;
+  wins: number;
+  losses: number;
+  draws: number;
+  winRate: number;
+  avgScoreFor: number;
+  avgScoreAgainst: number;
+  scoreDifferential: number;
+  recentForm: string[];
+  lastPlayed?: string;
+  quarterAnalysis: {
+    byQuarter: Record<number, {
+      avgTeamScore: number;
+      avgOpponentScore: number;
+      gamesPlayed: number;
+    }>;
+    strongestQuarter: number;
+    weakestQuarter: number;
+  };
+  positionPerformance: Record<string, {
+    goalsFor: number;
+    goalsAgainst: number;
+    efficiency: number;
+  }>;
+  gameNotes: Array<{
+    gameId: number;
+    date: string;
+    result: string;
+    notes: string;
+  }>;
+}
+
+interface TeamInsights {
+  momentum: {
+    trend: 'up' | 'down' | 'stable';
+    strength: number;
+    recentForm: string[];
+  };
+  positionStrengths: Record<string, {
+    efficiency: number;
+    consistency: number;
+    playerDepth: number;
+  }>;
+  tacticalRecommendations: string[];
+  keyMatchups: Array<{
+    position: string;
+    advantage: 'us' | 'them' | 'neutral';
+    reasoning: string;
+  }>;
 }
 
 const POSITIONS_ORDER: Position[] = ['GS', 'GA', 'WA', 'C', 'WD', 'GD', 'GK'];
@@ -75,16 +123,18 @@ export default function Preparation() {
   const [selectedLineup, setSelectedLineup] = useState<Record<Position, Player | null>>({
     GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null
   });
-  const [activeTab, setActiveTab] = useState('game');
+  const [activeTab, setActiveTab] = useState('overview');
   const [teamPlayers, setTeamPlayers] = useState<Player[]>([]);
   const [isLoadingTeamPlayers, setIsLoadingTeamPlayers] = useState(false);
+  const [opponentAnalysis, setOpponentAnalysis] = useState<OpponentAnalysis | null>(null);
+  const [teamInsights, setTeamInsights] = useState<TeamInsights | null>(null);
 
   // Progress tracking
   const preparationSteps: PreparationStep[] = [
-    { id: 'game', title: 'Select Game', completed: !!selectedGameId },
+    { id: 'overview', title: 'Game Overview & Analysis', completed: !!selectedGameId },
     { id: 'availability', title: 'Set Player Availability', completed: Object.keys(availabilityData).length > 0 },
     { id: 'lineup', title: 'Select Starting Lineup', completed: Object.values(selectedLineup).every(p => p !== null) },
-    { id: 'apply', title: 'Apply to Roster', completed: false }
+    { id: 'roster', title: 'Apply to Roster', completed: false }
   ];
 
   const completedSteps = preparationSteps.filter(step => step.completed).length;
@@ -108,35 +158,36 @@ export default function Preparation() {
     staleTime: 5 * 60 * 1000,
   });
 
-  const { data: gameStats, isLoading: statsLoading } = useQuery({
-    queryKey: ['game-stats-batch', selectedGameId],
-    queryFn: async () => {
-      if (!games || !selectedGameId) return {};
+  // Get all completed games for historical analysis
+  const completedGames = useMemo(() => {
+    if (!games) return [];
+    return games.filter(game => game.statusIsCompleted && game.statusAllowsStatistics);
+  }, [games]);
 
-      const selectedGame = games.find(game => game.id === selectedGameId);
-      if (!selectedGame) return {};
+  const gameIds = completedGames.map(game => game.id);
 
-      const opponentTeamId = selectedGame.homeTeamId === currentTeamId 
-        ? selectedGame.awayTeamId 
-        : selectedGame.homeTeamId;
+  // Fetch batch statistics for historical analysis
+  const { statsMap: centralizedStats = {}, isLoading: statsLoading } = useBatchGameStatistics(gameIds);
+  const { rostersMap: centralizedRosters = {}, isLoading: rostersLoading } = useBatchRosterData(gameIds);
 
-      if (!opponentTeamId) return {};
+  // Get upcoming games for this team
+  const upcomingGames = useMemo(() => {
+    if (!games || !currentTeamId) return [];
 
-      // Get historical games against this opponent
-      const opponentGames = games.filter(game => 
-        game.statusIsCompleted &&
-        ((game.homeTeamId === currentTeamId && game.awayTeamId === opponentTeamId) ||
-         (game.awayTeamId === currentTeamId && game.homeTeamId === opponentTeamId))
-      );
+    return games
+      .filter(game => 
+        !game.statusIsCompleted && 
+        (game.homeTeamId === currentTeamId || game.awayTeamId === currentTeamId)
+      )
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  }, [games, currentTeamId]);
 
-      if (opponentGames.length === 0) return {};
-
-      const gameIds = opponentGames.map(g => g.id);
-      return apiClient.post('/api/games/stats/batch', { gameIds });
-    },
-    enabled: !!games && !!selectedGameId && !!currentTeamId,
-    staleTime: 5 * 60 * 1000,
-  });
+  // Auto-select next game if not already selected
+  useEffect(() => {
+    if (upcomingGames.length > 0 && !selectedGameId) {
+      setSelectedGameId(upcomingGames[0].id);
+    }
+  }, [upcomingGames, selectedGameId]);
 
   // Load team players and set default availability
   useEffect(() => {
@@ -175,37 +226,291 @@ export default function Preparation() {
     loadTeamPlayers();
   }, [currentTeamId, players]);
 
-  // Get upcoming games for this team
-  const upcomingGames = useMemo(() => {
-    if (!games || !currentTeamId) return [];
-
-    return games
-      .filter(game => 
-        !game.statusIsCompleted && 
-        (game.homeTeamId === currentTeamId || game.awayTeamId === currentTeamId)
-      )
-      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  }, [games, currentTeamId]);
-
-  // Auto-select next game if not already selected
+  // Analyze opponent when game is selected
   useEffect(() => {
-    if (upcomingGames.length > 0 && !selectedGameId) {
-      setSelectedGameId(upcomingGames[0].id);
+    if (!selectedGameId || !games || !centralizedStats || Object.keys(centralizedStats).length === 0) {
+      setOpponentAnalysis(null);
+      return;
     }
-  }, [upcomingGames, selectedGameId]);
+
+    const selectedGame = games.find(g => g.id === selectedGameId);
+    if (!selectedGame) return;
+
+    const opponentTeamId = selectedGame.homeTeamId === currentTeamId 
+      ? selectedGame.awayTeamId 
+      : selectedGame.homeTeamId;
+
+    const opponentTeamName = selectedGame.homeTeamId === currentTeamId 
+      ? selectedGame.awayTeamName 
+      : selectedGame.homeTeamName;
+
+    const opponentClubName = selectedGame.homeTeamId === currentTeamId 
+      ? selectedGame.awayClubName 
+      : selectedGame.homeClubName;
+
+    if (!opponentTeamId || opponentTeamName === 'Bye') {
+      setOpponentAnalysis(null);
+      return;
+    }
+
+    // Find all games against this opponent
+    const opponentGames = completedGames.filter(game => {
+      const isHomeGame = game.homeClubId === currentClubId;
+      const isAwayGame = game.awayClubId === currentClubId;
+      
+      if (isHomeGame && !isAwayGame) {
+        return game.awayTeamId === opponentTeamId;
+      } else if (isAwayGame && !isHomeGame) {
+        return game.homeTeamId === opponentTeamId;
+      }
+      return false;
+    });
+
+    if (opponentGames.length === 0) {
+      setOpponentAnalysis(null);
+      return;
+    }
+
+    // Calculate opponent analysis
+    let wins = 0, losses = 0, draws = 0;
+    let totalScoreFor = 0, totalScoreAgainst = 0;
+    const recentForm: string[] = [];
+    const gameNotes: any[] = [];
+
+    const quarterData: Record<number, { teamScores: number[]; opponentScores: number[] }> = {
+      1: { teamScores: [], opponentScores: [] },
+      2: { teamScores: [], opponentScores: [] },
+      3: { teamScores: [], opponentScores: [] },
+      4: { teamScores: [], opponentScores: [] }
+    };
+
+    const positionPerformance: Record<string, any> = {};
+    const positions = ['GK', 'GD', 'WD', 'C', 'WA', 'GA', 'GS'];
+    positions.forEach(position => {
+      positionPerformance[position] = { goalsFor: 0, goalsAgainst: 0, efficiency: 0 };
+    });
+
+    opponentGames.forEach(game => {
+      const gameStats = centralizedStats[game.id] || [];
+      const ourScore = gameStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
+      const theirScore = gameStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
+      const result = getWinLoseLabel(ourScore, theirScore);
+
+      totalScoreFor += ourScore;
+      totalScoreAgainst += theirScore;
+
+      if (result === 'Win') {
+        wins++;
+        recentForm.push('W');
+      } else if (result === 'Loss') {
+        losses++;
+        recentForm.push('L');
+      } else {
+        draws++;
+        recentForm.push('D');
+      }
+
+      // Quarter analysis
+      [1, 2, 3, 4].forEach(quarter => {
+        const quarterStats = gameStats.filter(stat => stat.quarter === quarter);
+        const teamScore = quarterStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
+        const opponentScore = quarterStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
+
+        quarterData[quarter].teamScores.push(teamScore);
+        quarterData[quarter].opponentScores.push(opponentScore);
+      });
+
+      // Position performance
+      gameStats.forEach(stat => {
+        if (stat.position && positions.includes(stat.position)) {
+          positionPerformance[stat.position].goalsFor += stat.goalsFor || 0;
+          positionPerformance[stat.position].goalsAgainst += stat.goalsAgainst || 0;
+        }
+      });
+
+      if (game.notes && game.notes.trim()) {
+        gameNotes.push({
+          gameId: game.id,
+          date: game.date,
+          result,
+          notes: game.notes
+        });
+      }
+    });
+
+    // Calculate quarter analysis
+    const byQuarter: Record<number, any> = {};
+    let strongestQuarter = 1;
+    let weakestQuarter = 1;
+    let bestDifferential = -Infinity;
+    let worstDifferential = Infinity;
+
+    [1, 2, 3, 4].forEach(quarter => {
+      const data = quarterData[quarter];
+      const avgTeamScore = data.teamScores.length > 0 
+        ? data.teamScores.reduce((a, b) => a + b, 0) / data.teamScores.length 
+        : 0;
+      const avgOpponentScore = data.opponentScores.length > 0 
+        ? data.opponentScores.reduce((a, b) => a + b, 0) / data.opponentScores.length 
+        : 0;
+
+      const differential = avgTeamScore - avgOpponentScore;
+
+      if (differential > bestDifferential) {
+        bestDifferential = differential;
+        strongestQuarter = quarter;
+      }
+
+      if (differential < worstDifferential) {
+        worstDifferential = differential;
+        weakestQuarter = quarter;
+      }
+
+      byQuarter[quarter] = {
+        avgTeamScore: Math.round(avgTeamScore * 10) / 10,
+        avgOpponentScore: Math.round(avgOpponentScore * 10) / 10,
+        gamesPlayed: data.teamScores.length
+      };
+    });
+
+    // Calculate position efficiency
+    positions.forEach(position => {
+      const perf = positionPerformance[position];
+      perf.efficiency = perf.goalsFor - perf.goalsAgainst;
+    });
+
+    const analysis: OpponentAnalysis = {
+      teamName: opponentTeamName,
+      clubName: opponentClubName,
+      totalGames: opponentGames.length,
+      wins,
+      losses,
+      draws,
+      winRate: opponentGames.length > 0 ? (wins / opponentGames.length) * 100 : 0,
+      avgScoreFor: opponentGames.length > 0 ? totalScoreFor / opponentGames.length : 0,
+      avgScoreAgainst: opponentGames.length > 0 ? totalScoreAgainst / opponentGames.length : 0,
+      scoreDifferential: opponentGames.length > 0 ? (totalScoreFor - totalScoreAgainst) / opponentGames.length : 0,
+      recentForm: recentForm.slice(-5),
+      lastPlayed: opponentGames.length > 0 ? opponentGames.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0].date : undefined,
+      quarterAnalysis: { byQuarter, strongestQuarter, weakestQuarter },
+      positionPerformance,
+      gameNotes: gameNotes.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    };
+
+    setOpponentAnalysis(analysis);
+  }, [selectedGameId, games, centralizedStats, completedGames, currentTeamId, currentClubId]);
+
+  // Generate team insights
+  useEffect(() => {
+    if (!completedGames.length || !centralizedStats || Object.keys(centralizedStats).length === 0) {
+      setTeamInsights(null);
+      return;
+    }
+
+    // Calculate momentum
+    const recentGames = [...completedGames]
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+      .slice(-5);
+
+    const recentResults = recentGames.map(game => {
+      const gameStats = centralizedStats[game.id] || [];
+      const teamScore = gameStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
+      const opponentScore = gameStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
+      return getWinLoseLabel(teamScore, opponentScore);
+    });
+
+    const winWeight = 3, drawWeight = 1, lossWeight = -2;
+    let momentum = 0;
+    recentResults.forEach((result, index) => {
+      const weight = (index + 1) / recentResults.length;
+      if (result === 'Win') momentum += winWeight * weight;
+      else if (result === 'Draw') momentum += drawWeight * weight;
+      else momentum += lossWeight * weight;
+    });
+
+    const trend = momentum > 1 ? 'up' : momentum < -1 ? 'down' : 'stable';
+
+    // Position strengths analysis
+    const positionStrengths: Record<string, any> = {};
+    const positions = ['GK', 'GD', 'WD', 'C', 'WA', 'GA', 'GS'];
+
+    positions.forEach(position => {
+      const positionStats = Object.values(centralizedStats)
+        .flat()
+        .filter(stat => stat.position === position);
+
+      const efficiency = positionStats.length > 0 
+        ? positionStats.reduce((sum, stat) => sum + ((stat.goalsFor || 0) - (stat.goalsAgainst || 0)), 0) / positionStats.length
+        : 0;
+
+      const playerCount = new Set(positionStats.map(stat => stat.playerId)).size;
+
+      positionStrengths[position] = {
+        efficiency,
+        consistency: Math.min(100, (positionStats.length / completedGames.length) * 100),
+        playerDepth: playerCount
+      };
+    });
+
+    // Generate tactical recommendations
+    const tacticalRecommendations: string[] = [];
+
+    if (opponentAnalysis) {
+      if (opponentAnalysis.winRate >= 70) {
+        tacticalRecommendations.push(`Strong record against ${opponentAnalysis.teamName} - maintain winning formula`);
+      } else if (opponentAnalysis.winRate <= 30) {
+        tacticalRecommendations.push(`Challenging opponent - focus on defensive structures and patient attack`);
+      }
+
+      const strongQuarter = opponentAnalysis.quarterAnalysis.byQuarter[opponentAnalysis.quarterAnalysis.strongestQuarter];
+      const weakQuarter = opponentAnalysis.quarterAnalysis.byQuarter[opponentAnalysis.quarterAnalysis.weakestQuarter];
+
+      if (strongQuarter && weakQuarter) {
+        tacticalRecommendations.push(`Our strongest period: Q${opponentAnalysis.quarterAnalysis.strongestQuarter} (+${(strongQuarter.avgTeamScore - strongQuarter.avgOpponentScore).toFixed(1)})`);
+        tacticalRecommendations.push(`Focus area: Q${opponentAnalysis.quarterAnalysis.weakestQuarter} (${(weakQuarter.avgTeamScore - weakQuarter.avgOpponentScore).toFixed(1)})`);
+      }
+    }
+
+    if (trend === 'up') {
+      tacticalRecommendations.push('Team momentum is positive - build on recent success');
+    } else if (trend === 'down') {
+      tacticalRecommendations.push('Focus on basics and rebuild confidence');
+    }
+
+    // Key matchups
+    const keyMatchups = positions.map(position => {
+      const ourStrength = positionStrengths[position]?.efficiency || 0;
+      const opponentPerf = opponentAnalysis?.positionPerformance[position]?.efficiency || 0;
+      
+      let advantage: 'us' | 'them' | 'neutral' = 'neutral';
+      let reasoning = 'Balanced matchup';
+
+      if (ourStrength > 2 && opponentPerf < -1) {
+        advantage = 'us';
+        reasoning = 'Strong position for us historically';
+      } else if (ourStrength < -2 && opponentPerf > 1) {
+        advantage = 'them';
+        reasoning = 'Challenging position - needs focus';
+      }
+
+      return { position, advantage, reasoning };
+    });
+
+    setTeamInsights({
+      momentum: { trend, strength: Math.abs(momentum), recentForm: recentResults },
+      positionStrengths,
+      tacticalRecommendations,
+      keyMatchups
+    });
+  }, [completedGames, centralizedStats, opponentAnalysis]);
 
   // Generate player recommendations based on selected game
   const playerRecommendations = useMemo((): PlayerRecommendation[] => {
-    if (!teamPlayers || !gameStats || !selectedGameId) return [];
+    if (!teamPlayers || !centralizedStats || !selectedGameId || !opponentAnalysis) return [];
 
     const availablePlayers = teamPlayers.filter(p => 
       availabilityData[p.id] === 'available'
     );
-
-    const selectedGame = games?.find(game => game.id === selectedGameId);
-    const opponentTeamId = selectedGame?.homeTeamId === currentTeamId 
-      ? selectedGame?.awayTeamId 
-      : selectedGame?.homeTeamId;
 
     return POSITIONS_ORDER.map(position => {
       const positionPlayers = availablePlayers.filter(p => 
@@ -214,7 +519,7 @@ export default function Preparation() {
 
       const playersWithStats = positionPlayers.map(player => {
         // Get stats from games against this specific opponent
-        const playerStats = Object.values(gameStats).flat().filter(stat => 
+        const playerStats = Object.values(centralizedStats).flat().filter(stat => 
           stat.playerId === player.id && stat.position === position
         );
 
@@ -233,7 +538,7 @@ export default function Preparation() {
         else if (avgRating >= 5) confidence += 0.1;
 
         const reason = gamesInPosition > 0 
-          ? `Avg rating: ${avgRating.toFixed(1)} vs this opponent (${gamesInPosition} games)`
+          ? `Avg rating: ${avgRating.toFixed(1)} (${gamesInPosition} games)`
           : player.positionPreferences?.[0] === position
             ? 'Preferred position'
             : 'Secondary position';
@@ -254,7 +559,7 @@ export default function Preparation() {
         players: playersWithStats
       };
     });
-  }, [teamPlayers, gameStats, selectedGameId, availabilityData, currentTeamId, games]);
+  }, [teamPlayers, centralizedStats, selectedGameId, availabilityData, opponentAnalysis]);
 
   // Save preparation state to localStorage
   useEffect(() => {
@@ -276,7 +581,6 @@ export default function Preparation() {
       if (saved) {
         try {
           const state = JSON.parse(saved);
-          // Only restore if less than 24 hours old
           if (Date.now() - state.timestamp < 24 * 60 * 60 * 1000) {
             if (state.gameId && upcomingGames.some(g => g.id === state.gameId)) {
               setSelectedGameId(state.gameId);
@@ -298,7 +602,6 @@ export default function Preparation() {
   const handleApplyToRoster = () => {
     if (!selectedGameId) return;
 
-    // Save current state before navigating
     const state = {
       gameId: selectedGameId,
       availability: availabilityData,
@@ -343,7 +646,7 @@ export default function Preparation() {
     <PageTemplate 
       title="Game Preparation" 
       icon={Target}
-      description="Prepare your team for upcoming games with player availability and lineup recommendations"
+      description="Comprehensive game preparation with tactical analysis and strategic insights"
     >
       <div className="space-y-6">
         {/* Progress Indicator */}
@@ -365,9 +668,10 @@ export default function Preparation() {
               {preparationSteps.map((step, index) => (
                 <div 
                   key={step.id}
-                  className={`flex items-center space-x-2 p-2 rounded ${
+                  className={`flex items-center space-x-2 p-2 rounded cursor-pointer hover:bg-gray-100 ${
                     step.completed ? 'bg-green-50' : 'bg-gray-50'
                   }`}
+                  onClick={() => setActiveTab(step.id)}
                 >
                   {step.completed ? (
                     <CheckCircle className="h-4 w-4 text-green-600" />
@@ -383,303 +687,584 @@ export default function Preparation() {
           </CardContent>
         </Card>
 
+        {/* Game Selection */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Calendar className="h-5 w-5" />
+              Select Upcoming Game
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {upcomingGames.length === 0 ? (
+              <Alert>
+                <Calendar className="h-4 w-4" />
+                <AlertDescription>
+                  No upcoming games found for this team.
+                </AlertDescription>
+              </Alert>
+            ) : (
+              <>
+                <Select 
+                  value={selectedGameId?.toString() || ""} 
+                  onValueChange={(value) => {
+                    setSelectedGameId(parseInt(value));
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choose an upcoming game..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {upcomingGames.map(game => {
+                      const opponent = game.homeTeamId === currentTeamId 
+                        ? game.awayTeamName 
+                        : game.homeTeamName;
+                      const venue = game.venue || (game.homeTeamId === currentTeamId ? 'Home' : 'Away');
+
+                      return (
+                        <SelectItem key={game.id} value={game.id.toString()}>
+                          <div className="flex items-center space-x-2">
+                            <span>vs {opponent}</span>
+                            <Badge variant="outline">{venue}</Badge>
+                            <span className="text-gray-500">
+                              {new Date(game.date).toLocaleDateString()} {game.time}
+                            </span>
+                          </div>
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+
+                {selectedGame && (
+                  <div className="mt-4 p-4 bg-blue-50 rounded-lg">
+                    <h4 className="font-semibold mb-2">Game Details</h4>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                      <div>
+                        <span className="text-gray-600">Opponent</span>
+                        <p className="font-semibold">{opponentName}</p>
+                      </div>
+                      <div>
+                        <span className="text-gray-600">Date & Time</span>
+                        <p className="font-semibold">
+                          {new Date(selectedGame.date).toLocaleDateString()} {selectedGame.time}
+                        </p>
+                      </div>
+                      <div>
+                        <span className="text-gray-600">Venue</span>
+                        <p className="font-semibold">
+                          {selectedGame.venue || (selectedGame.homeTeamId === currentTeamId ? 'Home' : 'Away')}
+                        </p>
+                      </div>
+                      <div>
+                        <span className="text-gray-600">Round</span>
+                        <p className="font-semibold">Round {selectedGame.round}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Main Content Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="game">Select Game</TabsTrigger>
-            <TabsTrigger value="availability" disabled={!selectedGameId}>
-              Player Availability
-            </TabsTrigger>
-            <TabsTrigger value="lineup" disabled={!selectedGameId}>
-              Starting Lineup
-            </TabsTrigger>
-            <TabsTrigger value="apply" disabled={!selectedGameId}>
-              Apply to Roster
-            </TabsTrigger>
-          </TabsList>
+        {selectedGame && (
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="overview">Game Analysis</TabsTrigger>
+              <TabsTrigger value="availability">Player Availability</TabsTrigger>
+              <TabsTrigger value="lineup">Starting Lineup</TabsTrigger>
+              <TabsTrigger value="roster">Apply to Roster</TabsTrigger>
+            </TabsList>
 
-          {/* Game Selection */}
-          <TabsContent value="game" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Select Upcoming Game</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {upcomingGames.length === 0 ? (
-                  <Alert>
-                    <Calendar className="h-4 w-4" />
-                    <AlertDescription>
-                      No upcoming games found for this team.
-                    </AlertDescription>
-                  </Alert>
-                ) : (
-                  <>
-                    <Select 
-                      value={selectedGameId?.toString() || ""} 
-                      onValueChange={(value) => {
-                        setSelectedGameId(parseInt(value));
-                        setActiveTab('availability');
-                      }}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Choose an upcoming game..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {upcomingGames.map(game => {
-                          const opponent = game.homeTeamId === currentTeamId 
-                            ? game.awayTeamName 
-                            : game.homeTeamName;
-                          const venue = game.venue || (game.homeTeamId === currentTeamId ? 'Home' : 'Away');
+            {/* Game Analysis Overview */}
+            <TabsContent value="overview" className="space-y-6">
+              {statsLoading || rostersLoading ? (
+                <LoadingState message="Analyzing game data and opponent history..." />
+              ) : (
+                <>
+                  {/* Team Performance Summary */}
+                  {teamInsights && (
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      {/* Team Momentum */}
+                      <Card className="bg-gradient-to-r from-blue-50 to-purple-50">
+                        <CardHeader>
+                          <CardTitle className="flex items-center gap-2">
+                            {teamInsights.momentum.trend === 'up' ? (
+                              <TrendingUp className="h-5 w-5 text-green-600" />
+                            ) : teamInsights.momentum.trend === 'down' ? (
+                              <TrendingDown className="h-5 w-5 text-red-600" />
+                            ) : (
+                              <Activity className="h-5 w-5 text-yellow-600" />
+                            )}
+                            Team Momentum
+                            <Badge variant={
+                              teamInsights.momentum.trend === 'up' ? 'default' : 
+                              teamInsights.momentum.trend === 'down' ? 'destructive' : 'secondary'
+                            }>
+                              {teamInsights.momentum.trend.toUpperCase()}
+                            </Badge>
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="flex items-center justify-between">
+                            <div className="flex gap-1">
+                              {teamInsights.momentum.recentForm.map((result, index) => (
+                                <ResultBadge key={index} result={result as any} size="sm" />
+                              ))}
+                            </div>
+                            <div className="text-right">
+                              <div className="text-3xl font-bold text-purple-700">
+                                {teamInsights.momentum.strength.toFixed(1)}
+                              </div>
+                              <div className="text-sm text-gray-600">Momentum Score</div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
 
-                          return (
-                            <SelectItem key={game.id} value={game.id.toString()}>
-                              <div className="flex items-center space-x-2">
-                                <span>vs {opponent}</span>
-                                <Badge variant="outline">{venue}</Badge>
-                                <span className="text-gray-500">
-                                  {new Date(game.date).toLocaleDateString()} {game.time}
+                      {/* Position Strengths */}
+                      <Card className="bg-gradient-to-r from-green-50 to-teal-50">
+                        <CardHeader>
+                          <CardTitle className="flex items-center gap-2">
+                            <Shield className="h-5 w-5 text-green-600" />
+                            Position Strengths
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-2">
+                            {Object.entries(teamInsights.positionStrengths)
+                              .sort(([,a], [,b]) => b.efficiency - a.efficiency)
+                              .slice(0, 4)
+                              .map(([position, stats]) => (
+                                <div key={position} className="flex items-center justify-between">
+                                  <span className="font-medium">{position}</span>
+                                  <div className="flex items-center gap-2">
+                                    <div className="text-sm text-gray-600">
+                                      +{stats.efficiency.toFixed(1)}
+                                    </div>
+                                    <Progress 
+                                      value={Math.min(100, (stats.efficiency + 10) * 5)} 
+                                      className="w-16 h-2" 
+                                    />
+                                  </div>
+                                </div>
+                              ))}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  )}
+
+                  {/* Opponent Analysis */}
+                  {opponentAnalysis ? (
+                    <div className="space-y-6">
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="flex items-center gap-2">
+                            <Crosshair className="h-5 w-5 text-red-600" />
+                            Head-to-Head vs {opponentAnalysis.teamName}
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            {/* Overall Record */}
+                            <div className="space-y-4">
+                              <h4 className="font-semibold">Overall Record</h4>
+                              <div className="flex justify-between items-center">
+                                <span>Record:</span>
+                                <span className="font-bold">
+                                  {opponentAnalysis.wins}W - {opponentAnalysis.losses}L
+                                  {opponentAnalysis.draws > 0 && ` - ${opponentAnalysis.draws}D`}
                                 </span>
                               </div>
-                            </SelectItem>
-                          );
-                        })}
-                      </SelectContent>
-                    </Select>
+                              
+                              <div>
+                                <div className="flex justify-between mb-2">
+                                  <span>Win Rate</span>
+                                  <span>{opponentAnalysis.winRate.toFixed(1)}%</span>
+                                </div>
+                                <Progress value={opponentAnalysis.winRate} className="h-2" />
+                              </div>
+
+                              <div className="flex items-center gap-2">
+                                <span>Recent Form:</span>
+                                <div className="flex gap-1">
+                                  {opponentAnalysis.recentForm.map((result, index) => (
+                                    <ResultBadge 
+                                      key={index}
+                                      result={result === 'W' ? 'Win' : result === 'L' ? 'Loss' : 'Draw'}
+                                      size="sm"
+                                    />
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Quarter Analysis */}
+                            <div className="space-y-4">
+                              <h4 className="font-semibold">Quarter Performance</h4>
+                              <div className="space-y-2">
+                                {[1, 2, 3, 4].map(quarter => {
+                                  const qData = opponentAnalysis.quarterAnalysis.byQuarter[quarter];
+                                  const diff = qData.avgTeamScore - qData.avgOpponentScore;
+                                  const isStrongest = quarter === opponentAnalysis.quarterAnalysis.strongestQuarter;
+                                  const isWeakest = quarter === opponentAnalysis.quarterAnalysis.weakestQuarter;
+
+                                  return (
+                                    <div key={quarter} className={`flex items-center justify-between p-2 rounded ${
+                                      isStrongest ? 'bg-green-100' : isWeakest ? 'bg-red-100' : 'bg-gray-50'
+                                    }`}>
+                                      <div className="flex items-center gap-2">
+                                        <span className="font-medium">Q{quarter}</span>
+                                        {isStrongest && <Badge variant="secondary" className="text-xs bg-green-200 text-green-800">Strongest</Badge>}
+                                        {isWeakest && <Badge variant="secondary" className="text-xs bg-red-200 text-red-800">Weakest</Badge>}
+                                      </div>
+                                      <div className="text-right">
+                                        <div className="text-sm">{qData.avgTeamScore} - {qData.avgOpponentScore}</div>
+                                        <div className={`text-xs ${diff >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                          {diff >= 0 ? '+' : ''}{diff.toFixed(1)}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+
+                            {/* Performance Stats */}
+                            <div className="space-y-4">
+                              <h4 className="font-semibold">Performance Stats</h4>
+                              <div className="space-y-2">
+                                <div className="flex justify-between">
+                                  <span>Our Average Score:</span>
+                                  <span className="font-bold">{opponentAnalysis.avgScoreFor.toFixed(1)}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span>Their Average Score:</span>
+                                  <span className="font-bold">{opponentAnalysis.avgScoreAgainst.toFixed(1)}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span>Average Margin:</span>
+                                  <span className={`font-bold ${opponentAnalysis.scoreDifferential >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                    {opponentAnalysis.scoreDifferential >= 0 ? '+' : ''}{opponentAnalysis.scoreDifferential.toFixed(1)}
+                                  </span>
+                                </div>
+                                {opponentAnalysis.lastPlayed && (
+                                  <div className="flex justify-between">
+                                    <span>Last Played:</span>
+                                    <span className="font-bold">{formatShortDate(opponentAnalysis.lastPlayed)}</span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      {/* Tactical Recommendations */}
+                      {teamInsights && (
+                        <Card className="bg-gradient-to-r from-yellow-50 to-orange-50">
+                          <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                              <Brain className="h-5 w-5 text-orange-600" />
+                              Tactical Recommendations
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                              <div>
+                                <h4 className="font-semibold mb-3 text-orange-700">Key Strategic Points</h4>
+                                <ul className="space-y-2">
+                                  {teamInsights.tacticalRecommendations.map((rec, index) => (
+                                    <li key={index} className="flex items-start gap-2 text-sm">
+                                      <Lightbulb className="h-4 w-4 text-orange-500 mt-0.5 flex-shrink-0" />
+                                      <span>{rec}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+
+                              <div>
+                                <h4 className="font-semibold mb-3 text-orange-700">Key Matchups</h4>
+                                <div className="space-y-2">
+                                  {teamInsights.keyMatchups
+                                    .filter(matchup => matchup.advantage !== 'neutral')
+                                    .slice(0, 4)
+                                    .map((matchup, index) => (
+                                    <div key={index} className="flex items-center justify-between p-2 rounded bg-white border">
+                                      <span className="font-medium">{matchup.position}</span>
+                                      <div className="flex items-center gap-2">
+                                        <Badge variant={matchup.advantage === 'us' ? 'default' : 'destructive'}>
+                                          {matchup.advantage === 'us' ? 'Advantage' : 'Challenge'}
+                                        </Badge>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      )}
+
+                      {/* Previous Game Notes */}
+                      {opponentAnalysis.gameNotes.length > 0 && (
+                        <Card>
+                          <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                              <History className="h-5 w-5 text-blue-600" />
+                              Previous Game Notes vs {opponentAnalysis.teamName}
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="space-y-3">
+                              {opponentAnalysis.gameNotes.slice(0, 3).map((note, index) => (
+                                <div key={index} className="border-l-4 border-blue-400 pl-4 py-2 bg-blue-50 rounded-r">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <span className="font-medium text-blue-800">{formatShortDate(note.date)}</span>
+                                    <ResultBadge result={note.result as any} size="sm" />
+                                  </div>
+                                  <p className="text-sm text-blue-700">{note.notes}</p>
+                                </div>
+                              ))}
+                              
+                              {opponentAnalysis.gameNotes.length > 3 && (
+                                <div className="text-center">
+                                  <Button variant="outline" size="sm">
+                                    View All Notes ({opponentAnalysis.gameNotes.length})
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      )}
+                    </div>
+                  ) : (
+                    <Card>
+                      <CardContent className="text-center py-8">
+                        <Telescope className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                        <h3 className="text-lg font-semibold mb-2">No Previous Matchups</h3>
+                        <p className="text-gray-600">
+                          This will be your first game against {opponentName}. Focus on your team's strengths and maintain your game plan.
+                        </p>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  <div className="flex justify-end">
+                    <Button onClick={() => setActiveTab('availability')}>
+                      Set Player Availability
+                      <ArrowRight className="h-4 w-4 ml-1" />
+                    </Button>
+                  </div>
+                </>
+              )}
+            </TabsContent>
+
+            {/* Player Availability */}
+            <TabsContent value="availability" className="space-y-4">
+              <PlayerAvailabilitySelector
+                players={teamPlayers}
+                availabilityData={availabilityData}
+                onAvailabilityChange={setAvailabilityData}
+                title={`Player Availability - vs ${opponentName}`}
+                showQuickActions={true}
+              />
+
+              <div className="mt-4 flex justify-between">
+                <Button variant="outline" onClick={() => setActiveTab('overview')}>
+                  Back to Analysis
+                </Button>
+                <Button onClick={() => setActiveTab('lineup')}>
+                  Choose Starting Lineup
+                  <ArrowRight className="h-4 w-4 ml-1" />
+                </Button>
+              </div>
+            </TabsContent>
+
+            {/* Starting Lineup */}
+            <TabsContent value="lineup" className="space-y-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Position Recommendations */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center space-x-2">
+                      <Lightbulb className="h-5 w-5" />
+                      <span>Position Recommendations</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {playerRecommendations.map(rec => {
+                        const selectedPlayer = selectedLineup[rec.position];
+
+                        return (
+                          <div key={rec.position} className="border rounded-lg p-3">
+                            <div className="flex items-center justify-between mb-2">
+                              <h4 className="font-semibold">{rec.position}</h4>
+                              {selectedPlayer && (
+                                <Badge variant="default">
+                                  {selectedPlayer.displayName}
+                                </Badge>
+                              )}
+                            </div>
+
+                            {rec.players.length === 0 ? (
+                              <p className="text-gray-500 text-sm">No available players for this position</p>
+                            ) : (
+                              <div className="space-y-2">
+                                {rec.players.slice(0, 3).map((playerRec, index) => (
+                                  <div 
+                                    key={playerRec.player.id} 
+                                    className={`flex items-center justify-between p-2 rounded cursor-pointer transition-colors ${
+                                      selectedPlayer?.id === playerRec.player.id 
+                                        ? 'bg-blue-100 border border-blue-300' 
+                                        : 'hover:bg-gray-50'
+                                    }`}
+                                    onClick={() => {
+                                      setSelectedLineup(prev => ({
+                                        ...prev,
+                                        [rec.position]: playerRec.player
+                                      }));
+                                    }}
+                                  >
+                                    <div className="flex items-center space-x-2">
+                                      <Badge variant={index === 0 ? "default" : "secondary"} className="text-xs">
+                                        #{index + 1}
+                                      </Badge>
+                                      <PlayerAvatar player={playerRec.player} size="sm" />
+                                      <div>
+                                        <p className="font-medium text-sm">{playerRec.player.displayName}</p>
+                                        <p className="text-xs text-gray-600">{playerRec.reason}</p>
+                                      </div>
+                                    </div>
+                                    <div className="text-right">
+                                      <div className="text-xs text-gray-500">
+                                        {Math.round(playerRec.confidence * 100)}% match
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Court View */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center space-x-2">
+                      <Users className="h-5 w-5" />
+                      <span>Starting Lineup</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <CourtDisplay 
+                      players={selectedLineup}
+                      onPlayerClick={(position) => {
+                        setSelectedLineup(prev => ({
+                          ...prev,
+                          [position]: null
+                        }));
+                      }}
+                    />
+
+                    <div className="mt-4 text-center">
+                      <div className="text-sm text-gray-600 mb-2">
+                        {Object.values(selectedLineup).filter(p => p !== null).length}/7 positions filled
+                      </div>
+                      {Object.values(selectedLineup).every(p => p !== null) && (
+                        <Badge variant="default">Lineup Complete!</Badge>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div className="flex justify-between">
+                <Button variant="outline" onClick={() => setActiveTab('availability')}>
+                  Back
+                </Button>
+                <Button 
+                  onClick={() => setActiveTab('roster')}
+                  disabled={!Object.values(selectedLineup).every(p => p !== null)}
+                >
+                  Apply to Roster
+                  <ArrowRight className="h-4 w-4 ml-1" />
+                </Button>
+              </div>
+            </TabsContent>
+
+            {/* Apply to Roster */}
+            <TabsContent value="roster" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Apply to Roster</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <Alert>
+                      <Play className="h-4 w-4" />
+                      <AlertDescription>
+                        Your preparation is complete! Apply your selections to the roster manager.
+                      </AlertDescription>
+                    </Alert>
 
                     {selectedGame && (
-                      <div className="mt-4 p-4 bg-blue-50 rounded-lg">
-                        <h4 className="font-semibold mb-2">Game Details</h4>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                      <div className="p-4 bg-green-50 rounded-lg">
+                        <h4 className="font-semibold mb-2">Preparation Summary</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                           <div>
-                            <span className="text-gray-600">Opponent</span>
-                            <p className="font-semibold">{opponentName}</p>
-                          </div>
-                          <div>
-                            <span className="text-gray-600">Date & Time</span>
-                            <p className="font-semibold">
+                            <span className="text-gray-600">Game</span>
+                            <p className="font-semibold">vs {opponentName}</p>
+                            <p className="text-xs text-gray-500">
                               {new Date(selectedGame.date).toLocaleDateString()} {selectedGame.time}
                             </p>
                           </div>
                           <div>
-                            <span className="text-gray-600">Venue</span>
+                            <span className="text-gray-600">Available Players</span>
                             <p className="font-semibold">
-                              {selectedGame.venue || (selectedGame.homeTeamId === currentTeamId ? 'Home' : 'Away')}
+                              {Object.values(availabilityData).filter(status => status === 'available').length}
                             </p>
                           </div>
                           <div>
-                            <span className="text-gray-600">Round</span>
-                            <p className="font-semibold">Round {selectedGame.round}</p>
+                            <span className="text-gray-600">Starting Lineup</span>
+                            <p className="font-semibold">
+                              {Object.values(selectedLineup).filter(p => p !== null).length}/7 Complete
+                            </p>
                           </div>
                         </div>
                       </div>
                     )}
-                  </>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
 
-          {/* Player Availability */}
-          <TabsContent value="availability" className="space-y-4">
-            <PlayerAvailabilitySelector
-              players={teamPlayers}
-              availabilityData={availabilityData}
-              onAvailabilityChange={setAvailabilityData}
-              title={`Player Availability - vs ${opponentName}`}
-              showQuickActions={true}
-            />
-
-            <div className="mt-4 flex justify-between">
-              <Button variant="outline" onClick={() => setActiveTab('game')}>
-                Back
-              </Button>
-              <Button onClick={() => setActiveTab('lineup')}>
-                Choose Starting Lineup
-                <ArrowRight className="h-4 w-4 ml-1" />
-              </Button>
-            </div>
-          </TabsContent>
-
-          {/* Starting Lineup */}
-          <TabsContent value="lineup" className="space-y-4">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Position Recommendations */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <Lightbulb className="h-5 w-5" />
-                    <span>Position Recommendations</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {playerRecommendations.map(rec => {
-                      const selectedPlayer = selectedLineup[rec.position];
-
-                      return (
-                        <div key={rec.position} className="border rounded-lg p-3">
-                          <div className="flex items-center justify-between mb-2">
-                            <h4 className="font-semibold">{rec.position}</h4>
-                            {selectedPlayer && (
-                              <Badge variant="default">
-                                {selectedPlayer.displayName}
-                              </Badge>
-                            )}
-                          </div>
-
-                          {rec.players.length === 0 ? (
-                            <p className="text-gray-500 text-sm">No available players for this position</p>
-                          ) : (
-                            <div className="space-y-2">
-                              {rec.players.slice(0, 3).map((playerRec, index) => (
-                                <div 
-                                  key={playerRec.player.id} 
-                                  className={`flex items-center justify-between p-2 rounded cursor-pointer transition-colors ${
-                                    selectedPlayer?.id === playerRec.player.id 
-                                      ? 'bg-blue-100 border border-blue-300' 
-                                      : 'hover:bg-gray-50'
-                                  }`}
-                                  onClick={() => {
-                                    setSelectedLineup(prev => ({
-                                      ...prev,
-                                      [rec.position]: playerRec.player
-                                    }));
-                                  }}
-                                >
-                                  <div className="flex items-center space-x-2">
-                                    <Badge variant={index === 0 ? "default" : "secondary"} className="text-xs">
-                                      #{index + 1}
-                                    </Badge>
-                                    <PlayerAvatar player={playerRec.player} size="sm" />
-                                    <div>
-                                      <p className="font-medium text-sm">{playerRec.player.displayName}</p>
-                                      <p className="text-xs text-gray-600">{playerRec.reason}</p>
-                                    </div>
-                                  </div>
-                                  <div className="text-right">
-                                    <div className="text-xs text-gray-500">
-                                      {Math.round(playerRec.confidence * 100)}% match
-                                    </div>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
+                    <div className="flex space-x-2">
+                      <Button 
+                        onClick={handleApplyToRoster}
+                        className="flex-1"
+                      >
+                        <Play className="h-4 w-4 mr-2" />
+                        Open Roster Manager
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
 
-              {/* Court View */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <Users className="h-5 w-5" />
-                    <span>Starting Lineup</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <CourtDisplay 
-                    players={selectedLineup}
-                    onPlayerClick={(position) => {
-                      // Clear selection for position
-                      setSelectedLineup(prev => ({
-                        ...prev,
-                        [position]: null
-                      }));
-                    }}
-                  />
-
-                  <div className="mt-4 text-center">
-                    <div className="text-sm text-gray-600 mb-2">
-                      {Object.values(selectedLineup).filter(p => p !== null).length}/7 positions filled
-                    </div>
-                    {Object.values(selectedLineup).every(p => p !== null) && (
-                      <Badge variant="default">Lineup Complete!</Badge>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            <div className="flex justify-between">
-              <Button variant="outline" onClick={() => setActiveTab('availability')}>
-                Back
-              </Button>
-              <Button 
-                onClick={() => setActiveTab('apply')}
-                disabled={!Object.values(selectedLineup).every(p => p !== null)}
-              >
-                Apply to Roster
-                <ArrowRight className="h-4 w-4 ml-1" />
-              </Button>
-            </div>
-          </TabsContent>
-
-          {/* Apply to Roster */}
-          <TabsContent value="apply" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Apply to Roster</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <Alert>
-                    <Play className="h-4 w-4" />
-                    <AlertDescription>
-                      Your preparation is complete! Apply your selections to the roster manager.
-                    </AlertDescription>
-                  </Alert>
-
-                  {selectedGame && (
-                    <div className="p-4 bg-green-50 rounded-lg">
-                      <h4 className="font-semibold mb-2">Preparation Summary</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                        <div>
-                          <span className="text-gray-600">Game</span>
-                          <p className="font-semibold">vs {opponentName}</p>
-                          <p className="text-xs text-gray-500">
-                            {new Date(selectedGame.date).toLocaleDateString()} {selectedGame.time}
-                          </p>
-                        </div>
-                        <div>
-                          <span className="text-gray-600">Available Players</span>
-                          <p className="font-semibold">
-                            {Object.values(availabilityData).filter(status => status === 'available').length}
-                          </p>
-                        </div>
-                        <div>
-                          <span className="text-gray-600">Starting Lineup</span>
-                          <p className="font-semibold">
-                            {Object.values(selectedLineup).filter(p => p !== null).length}/7 Complete
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="flex space-x-2">
-                    <Button 
-                      onClick={handleApplyToRoster}
-                      className="flex-1"
-                    >
-                      <Play className="h-4 w-4 mr-2" />
-                      Open Roster Manager
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <div className="flex justify-between">
-              <Button variant="outline" onClick={() => setActiveTab('lineup')}>
-                Back
-              </Button>
-            </div>
-          </TabsContent>
-        </Tabs>
+              <div className="flex justify-between">
+                <Button variant="outline" onClick={() => setActiveTab('lineup')}>
+                  Back
+                </Button>
+              </div>
+            </TabsContent>
+          </Tabs>
+        )}
       </div>
     </PageTemplate>
   );
