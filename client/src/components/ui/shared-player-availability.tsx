@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
@@ -5,52 +6,43 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PlayerAvatar } from '@/components/ui/player-avatar';
 import { Player } from '@/shared/api-types';
-import { cn, getInitials } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 import { Zap, RotateCcw } from 'lucide-react';
 import { apiClient } from '@/lib/apiClient';
 import { useToast } from '@/hooks/use-toast';
 
-interface PlayerAvailabilitySelectorProps {
+interface SharedPlayerAvailabilityProps {
   players: Player[];
   availabilityData: Record<number, 'available' | 'unavailable' | 'maybe'>;
   onAvailabilityChange: (data: Record<number, 'available' | 'unavailable' | 'maybe'>) => void;
   title?: string;
   showQuickActions?: boolean;
   className?: string;
-  gameId?: number; // Optional gameId for auto-save functionality
+  gameId?: number;
+  variant?: 'compact' | 'detailed';
 }
 
-export function PlayerAvailabilitySelector({
+export function SharedPlayerAvailability({
   players,
   availabilityData,
   onAvailabilityChange,
   title = "Player Availability",
   showQuickActions = true,
   className,
-  gameId
-}: PlayerAvailabilitySelectorProps) {
+  gameId,
+  variant = 'detailed'
+}: SharedPlayerAvailabilityProps) {
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
 
-  // Get player color using the player's own avatarColor property from their profile
   const getPlayerColor = (player: Player) => {
-    // Use the player's stored avatarColor if it exists
-    if (player.avatarColor) {
-      // If it's already a Tailwind class (starts with 'bg-'), use it directly
-      if (player.avatarColor.startsWith('bg-')) {
-        return player.avatarColor;
-      }
+    if (player.avatarColor?.startsWith('bg-')) {
+      return player.avatarColor;
     }
-
-    // If the player doesn't have an avatarColor or it's not a Tailwind class,
-    // we use a default gray color - this should be very rare as all players
-    // should have colors assigned in the database
     return 'bg-gray-400';
   };
 
-  // Get color hex value for styling
   const getColorHex = (colorClass: string) => {
-    // Convert bg-color-shade to a hex color for borders and text
     const colorMap: Record<string, string> = {
       'bg-red-500': '#ef4444',
       'bg-emerald-600': '#059669',
@@ -68,13 +60,8 @@ export function PlayerAvailabilitySelector({
       'bg-violet-600': '#7c3aed',
       'bg-cyan-600': '#0891b2',
       'bg-gray-400': '#9ca3af',
-      'bg-accent': '#0d9488',
-      'bg-secondary': '#7c3aed',
-      'bg-primary': '#2563eb',
-      'bg-green-600': '#16a34a',
-      'bg-green-700': '#15803d'
+      'bg-green-600': '#16a34a'
     };
-
     return colorMap[colorClass] || '#9ca3af';
   };
 
@@ -103,6 +90,7 @@ export function PlayerAvailabilitySelector({
         [playerId]: availability
       });
 
+      // Auto-save if gameId is provided
       if (gameId) {
         const isAvailable = availability === 'available';
         await apiClient.patch(`/api/games/${gameId}/availability/${playerId}`, { isAvailable });
@@ -110,8 +98,6 @@ export function PlayerAvailabilitySelector({
           title: "Availability updated",
           description: `Player availability updated successfully.`,
         });
-      } else {
-        console.warn("gameId is not provided. Auto-saving is disabled.");
       }
     } catch (error) {
       console.error("Failed to update player availability:", error);
@@ -120,12 +106,14 @@ export function PlayerAvailabilitySelector({
         title: "Error updating availability",
         description: "Failed to update player availability. Please try again.",
       });
+      
+      // Revert optimistic update on error
+      onAvailabilityChange(availabilityData);
     } finally {
       setIsSaving(false);
     }
   };
 
-  // Sort players by display name
   const sortedPlayers = [...players].sort((a, b) => {
     const displayNameA = a.displayName || `${a.firstName} ${a.lastName}`;
     const displayNameB = b.displayName || `${b.firstName} ${b.lastName}`;
@@ -171,7 +159,12 @@ export function PlayerAvailabilitySelector({
       </CardHeader>
 
       <CardContent>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-2">
+        <div className={cn(
+          "grid gap-4 mt-2",
+          variant === 'compact' 
+            ? "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5" 
+            : "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
+        )}>
           {sortedPlayers.map(player => {
             const status = availabilityData[player.id] || 'unavailable';
             const playerColor = getPlayerColor(player);
@@ -199,11 +192,16 @@ export function PlayerAvailabilitySelector({
                       firstName={player.firstName}
                       lastName={player.lastName}
                       avatarColor={playerColor}
-                      size="md"
+                      size={variant === 'compact' ? 'sm' : 'md'}
                     />
                     <div>
-                      <div className="font-medium">{displayName}</div>
-                      {player.positionPreferences && player.positionPreferences.length > 0 && (
+                      <div className={cn(
+                        "font-medium",
+                        variant === 'compact' ? "text-sm" : ""
+                      )}>
+                        {displayName}
+                      </div>
+                      {player.positionPreferences && player.positionPreferences.length > 0 && variant === 'detailed' && (
                         <div className="text-xs text-gray-500">
                           {player.positionPreferences.join(', ')}
                         </div>

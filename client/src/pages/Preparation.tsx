@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { useLocation } from 'wouter';
@@ -240,7 +239,7 @@ export default function Preparation() {
     const opponentGames = completedGames.filter(game => {
       const isHomeGame = game.homeClubId === currentClubId;
       const isAwayGame = game.awayClubId === currentClubId;
-      
+
       if (isHomeGame && !isAwayGame) {
         return game.awayTeamId === opponentTeamId;
       } else if (isAwayGame && !isHomeGame) {
@@ -464,7 +463,7 @@ export default function Preparation() {
     const keyMatchups = positions.map(position => {
       const ourStrength = positionStrengths[position]?.efficiency || 0;
       const opponentPerf = opponentAnalysis?.positionPerformance[position]?.efficiency || 0;
-      
+
       let advantage: 'us' | 'them' | 'neutral' = 'neutral';
       let reasoning = 'Balanced matchup';
 
@@ -507,7 +506,7 @@ export default function Preparation() {
     const opponentGames = completedGames.filter(game => {
       const isHomeGame = game.homeClubId === currentClubId;
       const isAwayGame = game.awayClubId === currentClubId;
-      
+
       if (isHomeGame && !isAwayGame) {
         return game.awayTeamId === opponentTeamId;
       } else if (isAwayGame && !isHomeGame) {
@@ -538,7 +537,7 @@ export default function Preparation() {
 
         const totalGamesInPosition = allPositionStats.length;
         const opponentGamesInPosition = opponentStats.length;
-        
+
         const avgRating = totalGamesInPosition > 0 
           ? allPositionStats.reduce((sum, stat) => sum + (stat.rating || 0), 0) / totalGamesInPosition 
           : 0;
@@ -621,7 +620,7 @@ export default function Preparation() {
             const opponentScore = gameStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
             if (teamScore > opponentScore) wins++;
           });
-          
+
           vsOpponentRecord = {
             played: opponentGames.length,
             won: wins
@@ -728,6 +727,53 @@ export default function Preparation() {
         : selectedGame.homeTeamName)
     : null;
 
+    const handleApplyLineup = (lineup: Record<string, Player | null>) => {
+    setSelectedLineup(lineup);
+    toast({
+      title: "Lineup Applied",
+      description: "Starting lineup has been set for this game.",
+    });
+  };
+
+  const handleSaveRoster = async () => {
+    if (!selectedLineup || !selectedGameId) {
+      toast({
+        variant: "destructive",
+        title: "Cannot Save Roster",
+        description: "Please select a lineup first.",
+      });
+      return;
+    }
+
+    try {
+      // Convert lineup to roster format (quarter 1)
+      const rosterEntries = Object.entries(selectedLineup)
+        .filter(([_, player]) => player !== null)
+        .map(([position, player]) => ({
+          position,
+          playerId: player!.id,
+          quarter: 1
+        }));
+
+      // Save roster to backend
+      await apiClient.post(`/api/games/${selectedGameId}/rosters`, {
+        rosters: rosterEntries
+      });
+
+      toast({
+        title: "Roster Saved",
+        description: "Starting lineup has been saved for Quarter 1.",
+      });
+    } catch (error) {
+      console.error("Failed to save roster:", error);
+      toast({
+        variant: "destructive",
+        title: "Error Saving Roster",
+        description: "Failed to save the roster. Please try again.",
+      });
+    }
+  };
+
   return (
     <PageTemplate 
       title="Game Preparation" 
@@ -775,7 +821,7 @@ export default function Preparation() {
                             <span>vs {opponent}</span>
                             <Badge variant="outline">{venue}</Badge>
                             <span className="text-gray-500">
-                              {new Date(game.date).toLocaleDateString()} {game.time}
+                              {new Date(game.date).toLocale<previous_generation>DateString()} {game.time}
                             </span>
                           </div>
                         </SelectItem>
@@ -920,7 +966,7 @@ export default function Preparation() {
                         showQuickActions={true}
                         gameId={selectedGameId || undefined}
                       />
-                      
+
                       <div className="mt-4 pt-4 border-t">
                         <Button 
                           onClick={() => setActiveTab('lineup')}
@@ -959,7 +1005,7 @@ export default function Preparation() {
                                   {opponentAnalysis.draws > 0 && ` - ${opponentAnalysis.draws}D`}
                                 </span>
                               </div>
-                              
+
                               <div>
                                 <div className="flex justify-between mb-2">
                                   <span>Win Rate</span>
@@ -1109,7 +1155,7 @@ export default function Preparation() {
                                   <p className="text-sm text-blue-700">{note.notes}</p>
                                 </div>
                               ))}
-                              
+
                               {opponentAnalysis.gameNotes.length > 3 && (
                                 <div className="text-center">
                                   <Button variant="outline" size="sm">
@@ -1210,7 +1256,7 @@ export default function Preparation() {
                                         <div className="flex-1">
                                           <p className="font-medium text-sm">{playerRec.player.displayName}</p>
                                           <p className="text-xs text-gray-600 mb-1">{playerRec.reason}</p>
-                                          
+
                                           {/* Additional stats */}
                                           <div className="flex gap-3 text-xs text-gray-500">
                                             {playerRec.gamesInPosition && (
@@ -1224,7 +1270,7 @@ export default function Preparation() {
                                           </div>
                                         </div>
                                       </div>
-                                      
+
                                       <div className="flex flex-col items-end gap-1">
                                         {playerRec.avgRating && (
                                           <div className="flex items-center gap-1">
@@ -1234,7 +1280,7 @@ export default function Preparation() {
                                             </span>
                                           </div>
                                         )}
-                                        
+
                                         {index === 0 && (
                                           <Badge variant="default" className="text-xs bg-green-100 text-green-800">
                                             Recommended
@@ -1244,7 +1290,7 @@ export default function Preparation() {
                                     </div>
                                   </div>
                                 ))}
-                                
+
                                 {rec.players.length > 4 && (
                                   <div className="text-center pt-2">
                                     <Button variant="ghost" size="sm" className="text-xs">
@@ -1294,11 +1340,11 @@ export default function Preparation() {
                         // Generate lineup recommendations based on position preferences and stats
                         const generateLineupRecommendations = () => {
                           const recommendations = [];
-                          
+
                           // Strategy 1: Optimal Position Preferences
                           const optimalLineup = {};
                           const usedPlayers = new Set();
-                          
+
                           POSITIONS_ORDER.forEach(position => {
                             const positionCandidates = availablePlayers
                               .filter(p => !usedPlayers.has(p.id))
@@ -1308,7 +1354,7 @@ export default function Preparation() {
                                 const bIndex = b.positionPreferences?.indexOf(position) ?? 99;
                                 return aIndex - bIndex;
                               });
-                            
+
                             if (positionCandidates.length > 0) {
                               optimalLineup[position] = positionCandidates[0];
                               usedPlayers.add(positionCandidates[0].id);
@@ -1339,7 +1385,7 @@ export default function Preparation() {
                           // Strategy 2: Experience-Based (players with most games)
                           const experiencedLineup = {};
                           const experiencedUsed = new Set();
-                          
+
                           POSITIONS_ORDER.forEach(position => {
                             const candidates = availablePlayers
                               .filter(p => !experiencedUsed.has(p.id))
@@ -1350,7 +1396,7 @@ export default function Preparation() {
                                 const bStats = Object.values(centralizedStats).flat().filter(s => s.playerId === b.id && s.position === position);
                                 return bStats.length - aStats.length;
                               });
-                            
+
                             if (candidates.length > 0) {
                               experiencedLineup[position] = candidates[0];
                               experiencedUsed.add(candidates[0].id);
@@ -1382,7 +1428,7 @@ export default function Preparation() {
                           if (opponentAnalysis && opponentAnalysis.totalGames > 0) {
                             const opponentLineup = {};
                             const opponentUsed = new Set();
-                            
+
                             POSITIONS_ORDER.forEach(position => {
                               const candidates = availablePlayers
                                 .filter(p => !opponentUsed.has(p.id))
@@ -1397,7 +1443,7 @@ export default function Preparation() {
                                       return isAgainstOpponent;
                                     })
                                     .flatMap(game => (centralizedStats[game.id] || []).filter(s => s.playerId === a.id && s.position === position));
-                                  
+
                                   const bOpponentStats = completedGames
                                     .filter(game => {
                                       const isAgainstOpponent = 
@@ -1414,7 +1460,7 @@ export default function Preparation() {
 
                                   return bAvgRating - aAvgRating;
                                 });
-                              
+
                               if (candidates.length > 0) {
                                 opponentLineup[position] = candidates[0];
                                 opponentUsed.add(candidates[0].id);
@@ -1446,7 +1492,7 @@ export default function Preparation() {
                           // Strategy 4: Balanced Team
                           const balancedLineup = {};
                           const balancedUsed = new Set();
-                          
+
                           // Try to balance attack/defense
                           const attackPositions = ['GS', 'GA', 'WA'];
                           const defensePositions = ['GK', 'GD', 'WD'];
@@ -1460,7 +1506,7 @@ export default function Preparation() {
                                 // Calculate overall rating across all positions
                                 const aAllStats = Object.values(centralizedStats).flat().filter(s => s.playerId === a.id);
                                 const bAllStats = Object.values(centralizedStats).flat().filter(s => s.playerId === b.id);
-                                
+
                                 const aAvgRating = aAllStats.length > 0 ? 
                                   aAllStats.reduce((sum, s) => sum + (s.rating || 0), 0) / aAllStats.length : 0;
                                 const bAvgRating = bAllStats.length > 0 ? 
@@ -1468,7 +1514,7 @@ export default function Preparation() {
 
                                 return bAvgRating - aAvgRating;
                               });
-                            
+
                             if (candidates.length > 0) {
                               balancedLineup[position] = candidates[0];
                               balancedUsed.add(candidates[0].id);
@@ -1574,7 +1620,7 @@ export default function Preparation() {
                                   variant="outline"
                                   className="w-full"
                                 >
-                                  <Check className="h-4 w-4 mr-2" />
+                                    <Check className="h-4 w-4 mr-2" />
                                   Select This Lineup
                                 </Button>
                               </div>
