@@ -1,12 +1,14 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { PlayerAvatar } from '@/components/ui/player-avatar';
 import { Player } from '@/shared/api-types';
 import { cn, getInitials } from '@/lib/utils';
 import { Zap, RotateCcw } from 'lucide-react';
+import { apiClient } from '@/lib/apiClient';
+import { useToast } from '@/hooks/use-toast';
 
 interface PlayerAvatarProps {
   firstName: string;
@@ -45,6 +47,7 @@ interface PlayerAvailabilitySelectorProps {
   title?: string;
   showQuickActions?: boolean;
   className?: string;
+  gameId?: number; // Optional gameId for auto-save functionality
 }
 
 export function PlayerAvailabilitySelector({
@@ -53,8 +56,12 @@ export function PlayerAvailabilitySelector({
   onAvailabilityChange,
   title = "Player Availability",
   showQuickActions = true,
-  className
+  className,
+  gameId
 }: PlayerAvailabilitySelectorProps) {
+  const [isSaving, setIsSaving] = useState(false);
+  const { toast } = useToast();
+
   // Get player color using the player's own avatarColor property from their profile
   const getPlayerColor = (player: Player) => {
     // Use the player's stored avatarColor if it exists
@@ -117,6 +124,40 @@ export function PlayerAvailabilitySelector({
     onAvailabilityChange(allUnavailable);
   };
 
+  const handlePlayerAvailabilityChange = async (playerId: number, availability: 'available' | 'unavailable' | 'maybe') => {
+    setIsSaving(true);
+    try {
+      // Optimistically update local state
+      onAvailabilityChange({
+        ...availabilityData,
+        [playerId]: availability
+      });
+
+      if (gameId) {
+        await apiClient.updatePlayerAvailability({
+          gameId: gameId,
+          playerId: playerId,
+          availability: availability
+        });
+        toast({
+          title: "Availability updated",
+          description: `Player availability updated to ${availability} for player ID ${playerId}.`,
+        });
+      } else {
+        console.warn("gameId is not provided. Auto-saving is disabled.");
+      }
+    } catch (error) {
+      console.error("Failed to update player availability:", error);
+      toast({
+        variant: "destructive",
+        title: "Error updating availability",
+        description: "Failed to update player availability. Please try again.",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   // Sort players by display name
   const sortedPlayers = [...players].sort((a, b) => {
     const displayNameA = a.displayName || `${a.firstName} ${a.lastName}`;
@@ -137,6 +178,7 @@ export function PlayerAvailabilitySelector({
                 variant="outline" 
                 size="sm" 
                 onClick={handleSetAllAvailable}
+                disabled={isSaving}
               >
                 <Zap className="h-4 w-4 mr-1" />
                 All Available
@@ -145,6 +187,7 @@ export function PlayerAvailabilitySelector({
                 variant="outline" 
                 size="sm" 
                 onClick={handleSetAllUnavailable}
+                disabled={isSaving}
               >
                 <RotateCcw className="h-4 w-4 mr-1" />
                 Clear All
@@ -163,10 +206,11 @@ export function PlayerAvailabilitySelector({
       <CardContent>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-2">
           {sortedPlayers.map(player => {
-            const isAvailable = availabilityData[player.id] === 'available';
+            const status = availabilityData[player.id] || 'unavailable';
             const playerColor = getPlayerColor(player);
             const colorHex = getColorHex(playerColor);
             const displayName = player.displayName || `${player.firstName} ${player.lastName}`;
+            const isAvailable = status === 'available';
 
             return (
               <div 
@@ -202,11 +246,12 @@ export function PlayerAvailabilitySelector({
                   <div className="flex items-center gap-2">
                     <Switch
                       checked={isAvailable}
+                      disabled={isSaving}
                       onCheckedChange={(checked) => {
-                        onAvailabilityChange({
-                          ...availabilityData,
-                          [player.id]: checked ? 'available' : 'unavailable'
-                        });
+                        handlePlayerAvailabilityChange(
+                          player.id, 
+                          checked ? 'available' : 'unavailable'
+                        );
                       }}
                     />
                   </div>

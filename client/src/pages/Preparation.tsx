@@ -916,6 +916,7 @@ export default function Preparation() {
                         availabilityData={availabilityData}
                         onAvailabilityChange={setAvailabilityData}
                         showQuickActions={true}
+                        gameId={selectedGameId || undefined}
                       />
                       
                       <div className="mt-4 pt-4 border-t">
