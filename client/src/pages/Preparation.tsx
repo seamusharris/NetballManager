@@ -171,25 +171,42 @@ export default function Preparation() {
     }
   }, [upcomingGames, selectedGameId]);
 
-  // Load team players and set default availability
+  // Load team players and availability data
   useEffect(() => {
-    const loadTeamPlayers = async () => {
-      if (!currentTeamId) {
-        setTeamPlayers([]);
+    const loadTeamPlayersAndAvailability = async () => {
+      if (!currentTeamId || !selectedGameId) {
+        setTeamPlayers(players || []);
         return;
       }
 
       setIsLoadingTeamPlayers(true);
       try {
-        const response = await apiClient.get(`/api/teams/${currentTeamId}/players`);
-        setTeamPlayers(response);
+        // Load team players
+        const teamPlayersResponse = await apiClient.get(`/api/teams/${currentTeamId}/players`);
+        setTeamPlayers(teamPlayersResponse);
 
-        // Set all players as available by default
-        const defaultAvailability = response.reduce((acc, player) => {
-          acc[player.id] = 'available';
-          return acc;
-        }, {} as Record<number, 'available' | 'unavailable' | 'maybe'>);
-        setAvailabilityData(defaultAvailability);
+        // Load actual availability data for the selected game
+        try {
+          const availabilityResponse = await apiClient.get(`/api/games/${selectedGameId}/availability`);
+          const availablePlayerIds = availabilityResponse.availablePlayerIds || [];
+
+          // Convert to the format expected by the preparation page
+          const availabilityDataFromServer = teamPlayersResponse.reduce((acc, player) => {
+            acc[player.id] = availablePlayerIds.includes(player.id) ? 'available' : 'unavailable';
+            return acc;
+          }, {} as Record<number, 'available' | 'unavailable' | 'maybe'>);
+
+          setAvailabilityData(availabilityDataFromServer);
+          console.log('Loaded availability data for game', selectedGameId, ':', availabilityDataFromServer);
+        } catch (availabilityError) {
+          console.error('Error loading availability data, using defaults:', availabilityError);
+          // Fall back to all available if API fails
+          const defaultAvailability = teamPlayersResponse.reduce((acc, player) => {
+            acc[player.id] = 'available';
+            return acc;
+          }, {} as Record<number, 'available' | 'unavailable' | 'maybe'>);
+          setAvailabilityData(defaultAvailability);
+        }
       } catch (error) {
         console.error('Error loading team players:', error);
         const fallbackPlayers = players || [];
@@ -205,8 +222,8 @@ export default function Preparation() {
       }
     };
 
-    loadTeamPlayers();
-  }, [currentTeamId, players]);
+    loadTeamPlayersAndAvailability();
+  }, [currentTeamId, players, selectedGameId]);
 
   // Analyze opponent when game is selected
   useEffect(() => {
@@ -799,7 +816,7 @@ export default function Preparation() {
               </Alert>
             ) : (
               <>
-                <Select 
+                                <Select 
                   value={selectedGameId?.toString() || ""} 
                   onValueChange={(value) => {
                     setSelectedGameId(parseInt(value));
@@ -1667,7 +1684,7 @@ export default function Preparation() {
                                 if (availablePlayers.length >= 7) {
                                   const youthLineup = {};
                                   const youthUsed = new Set();
-                                  
+
                                   // Prioritize younger/less experienced players
                                   const playersByExperience = availablePlayers.sort((a, b) => {
                                     const aStats = Object.values(centralizedStats).flat().filter(s => s.playerId === a.id);
