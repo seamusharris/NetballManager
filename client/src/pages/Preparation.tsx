@@ -1208,6 +1208,12 @@ export default function Preparation() {
                     <div className="space-y-4">
                       {playerRecommendations.map(rec => {
                         const selectedPlayer = selectedLineup[rec.position];
+                        // Filter out players already assigned to other positions
+                        const alreadyAssignedPlayers = new Set(
+                          Object.entries(selectedLineup)
+                            .filter(([pos, player]) => pos !== rec.position && player !== null)
+                            .map(([_, player]) => player!.id)
+                        );
 
                         return (
                           <div key={rec.position} className="border rounded-lg p-3">
@@ -1224,19 +1230,29 @@ export default function Preparation() {
                               <p className="text-gray-500 text-sm">No available players for this position</p>
                             ) : (
                               <div className="space-y-3">
-                                {rec.players.slice(0, 4).map((playerRec, index) => (
+                                {rec.players
+                                  .filter(playerRec => 
+                                    !alreadyAssignedPlayers.has(playerRec.player.id) || 
+                                    selectedPlayer?.id === playerRec.player.id
+                                  )
+                                  .slice(0, 4)
+                                  .map((playerRec, index) => (
                                   <div 
                                     key={playerRec.player.id} 
                                     className={`p-3 rounded cursor-pointer transition-all ${
                                       selectedPlayer?.id === playerRec.player.id 
                                         ? 'bg-blue-100 border-2 border-blue-300 shadow-sm' 
+                                        : alreadyAssignedPlayers.has(playerRec.player.id)
+                                        ? 'bg-gray-100 border border-gray-200 opacity-50 cursor-not-allowed'
                                         : 'hover:bg-gray-50 border border-gray-200'
                                     }`}
                                     onClick={() => {
-                                      setSelectedLineup(prev => ({
-                                        ...prev,
-                                        [rec.position]: playerRec.player
-                                      }));
+                                      if (!alreadyAssignedPlayers.has(playerRec.player.id)) {
+                                        setSelectedLineup(prev => ({
+                                          ...prev,
+                                          [rec.position]: playerRec.player
+                                        }));
+                                      }
                                     }}
                                   >
                                     <div className="flex items-start justify-between">
@@ -1281,9 +1297,15 @@ export default function Preparation() {
                                           </div>
                                         )}
 
-                                        {index === 0 && (
+                                        {index === 0 && !alreadyAssignedPlayers.has(playerRec.player.id) && (
                                           <Badge variant="default" className="text-xs bg-green-100 text-green-800">
                                             Recommended
+                                          </Badge>
+                                        )}
+
+                                        {alreadyAssignedPlayers.has(playerRec.player.id) && selectedPlayer?.id !== playerRec.player.id && (
+                                          <Badge variant="outline" className="text-xs bg-gray-100 text-gray-500">
+                                            Already Assigned
                                           </Badge>
                                         )}
                                       </div>
@@ -1291,10 +1313,10 @@ export default function Preparation() {
                                   </div>
                                 ))}
 
-                                {rec.players.length > 4 && (
+                                {rec.players.filter(playerRec => !alreadyAssignedPlayers.has(playerRec.player.id)).length > 4 && (
                                   <div className="text-center pt-2">
                                     <Button variant="ghost" size="sm" className="text-xs">
-                                      View {rec.players.length - 4} more options
+                                      View {rec.players.filter(playerRec => !alreadyAssignedPlayers.has(playerRec.player.id)).length - 4} more options
                                     </Button>
                                   </div>
                                 )}
@@ -1557,76 +1579,382 @@ export default function Preparation() {
                           );
                         }
 
-                        return lineupRecommendations.map((rec, index) => (
-                          <Card key={index} className={`border-2 cursor-pointer transition-all hover:shadow-md ${rec.color}`}>
-                            <CardContent className="p-4">
-                              <div className="flex items-start justify-between mb-3">
-                                <div className="flex items-center gap-3">
-                                  <Badge variant="outline" className="text-sm">
-                                    #{index + 1}
-                                  </Badge>
-                                  <div>
-                                    <h4 className="font-semibold text-lg">{rec.name}</h4>
-                                    <p className="text-sm text-gray-600">{rec.reason}</p>
-                                  </div>
-                                </div>
-                                <div className="text-right">
-                                  <div className="text-2xl font-bold text-green-600">
-                                    {rec.confidence}%
-                                  </div>
-                                  <div className="text-xs text-gray-500">Confidence</div>
-                                </div>
-                              </div>
-
-                              {/* Lineup Display */}
-                              <div className="grid grid-cols-7 gap-2 mt-4">
-                                {POSITIONS_ORDER.map(position => {
-                                  const player = rec.lineup[position];
-                                  return (
-                                    <div key={position} className="text-center">
-                                      <div className="text-xs font-medium text-gray-600 mb-1">
-                                        {position}
+                        return (
+                          <>
+                            {lineupRecommendations.map((rec, index) => (
+                              <Card key={index} className={`border-2 cursor-pointer transition-all hover:shadow-md ${rec.color}`}>
+                                <CardContent className="p-4">
+                                  <div className="flex items-start justify-between mb-3">
+                                    <div className="flex items-center gap-3">
+                                      <Badge variant="outline" className="text-sm">
+                                        #{index + 1}
+                                      </Badge>
+                                      <div>
+                                        <h4 className="font-semibold text-lg">{rec.name}</h4>
+                                        <p className="text-sm text-gray-600">{rec.reason}</p>
                                       </div>
-                                      {player ? (
-                                        <div className="flex flex-col items-center">
-                                          <PlayerAvatar player={player} size="sm" />
-                                          <div className="text-xs mt-1 font-medium">
-                                            {player.displayName}
+                                    </div>
+                                    <div className="text-right">
+                                      <div className="text-2xl font-bold text-green-600">
+                                        {rec.confidence}%
+                                      </div>
+                                      <div className="text-xs text-gray-500">Confidence</div>
+                                    </div>
+                                  </div>
+
+                                  {/* Lineup Display */}
+                                  <div className="grid grid-cols-7 gap-2 mt-4">
+                                    {POSITIONS_ORDER.map(position => {
+                                      const player = rec.lineup[position];
+                                      return (
+                                        <div key={position} className="text-center">
+                                          <div className="text-xs font-medium text-gray-600 mb-1">
+                                            {position}
                                           </div>
-                                          {player.positionPreferences?.[0] === position && (
-                                            <Star className="h-3 w-3 text-yellow-500 mt-1" />
+                                          {player ? (
+                                            <div className="flex flex-col items-center">
+                                              <PlayerAvatar player={player} size="sm" />
+                                              <div className="text-xs mt-1 font-medium">
+                                                {player.displayName}
+                                              </div>
+                                              {player.positionPreferences?.[0] === position && (
+                                                <Star className="h-3 w-3 text-yellow-500 mt-1" />
+                                              )}
+                                            </div>
+                                          ) : (
+                                            <div className="w-6 h-6 bg-gray-200 rounded-full mx-auto">
+                                              <span className="text-xs text-gray-400">?</span>
+                                            </div>
                                           )}
                                         </div>
-                                      ) : (
-                                        <div className="w-6 h-6 bg-gray-200 rounded-full mx-auto">
-                                          <span className="text-xs text-gray-400">?</span>
-                                        </div>
-                                      )}
-                                    </div>
-                                  );
-                                })}
+                                      );
+                                    })}
+                                  </div>
+
+                                  {/* Select This Lineup Button */}
+                                  <div className="mt-4 pt-3 border-t">
+                                    <Button 
+                                      onClick={() => {
+                                        setSelectedLineup(rec.lineup);
+                                        toast({
+                                          title: "Lineup Selected",
+                                          description: `${rec.name} lineup has been selected`,
+                                        });
+                                      }}
+                                      variant="outline"
+                                      className="w-full"
+                                    >
+                                        <Check className="h-4 w-4 mr-2" />
+                                      Select This Lineup
+                                    </Button>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            ))}
+
+                            {/* Additional Combination Options */}
+                            <div className="mt-8 space-y-4">
+                              <div className="text-center">
+                                <h3 className="text-lg font-semibold text-gray-700 mb-2">More Lineup Options</h3>
+                                <p className="text-sm text-gray-500">Additional tactical combinations to consider</p>
                               </div>
 
-                              {/* Select This Lineup Button */}
-                              <div className="mt-4 pt-3 border-t">
-                                <Button 
-                                  onClick={() => {
-                                    setSelectedLineup(rec.lineup);
-                                    toast({
-                                      title: "Lineup Selected",
-                                      description: `${rec.name} lineup has been selected`,
+                              {(() => {
+                                // Generate additional combination strategies
+                                const additionalCombinations = [];
+
+                                // Strategy 5: Youth Development
+                                if (availablePlayers.length >= 7) {
+                                  const youthLineup = {};
+                                  const youthUsed = new Set();
+                                  
+                                  // Prioritize younger/less experienced players
+                                  const playersByExperience = availablePlayers.sort((a, b) => {
+                                    const aStats = Object.values(centralizedStats).flat().filter(s => s.playerId === a.id);
+                                    const bStats = Object.values(centralizedStats).flat().filter(s => s.playerId === b.id);
+                                    return aStats.length - bStats.length; // Less experienced first
+                                  });
+
+                                  POSITIONS_ORDER.forEach(position => {
+                                    const candidates = playersByExperience
+                                      .filter(p => !youthUsed.has(p.id))
+                                      .filter(p => p.positionPreferences?.includes(position));
+
+                                    if (candidates.length > 0) {
+                                      youthLineup[position] = candidates[0];
+                                      youthUsed.add(candidates[0].id);
+                                    }
+                                  });
+
+                                  // Fill remaining positions
+                                  POSITIONS_ORDER.forEach(position => {
+                                    if (!youthLineup[position]) {
+                                      const remaining = playersByExperience.find(p => !youthUsed.has(p.id));
+                                      if (remaining) {
+                                        youthLineup[position] = remaining;
+                                        youthUsed.add(remaining.id);
+                                      }
+                                    }
+                                  });
+
+                                  if (Object.keys(youthLineup).length === 7) {
+                                    additionalCombinations.push({
+                                      name: "Development Focus",
+                                      confidence: 70,
+                                      reason: "Give opportunities to developing players",
+                                      lineup: youthLineup,
+                                      color: "bg-indigo-100 border-indigo-300"
                                     });
-                                  }}
-                                  variant="outline"
-                                  className="w-full"
-                                >
-                                    <Check className="h-4 w-4 mr-2" />
-                                  Select This Lineup
-                                </Button>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ));
+                                  }
+                                }
+
+                                // Strategy 6: High Scoring Attack
+                                if (availablePlayers.length >= 7) {
+                                  const attackLineup = {};
+                                  const attackUsed = new Set();
+
+                                  // Focus on goal scoring for attack positions
+                                  const attackPositions = ['GS', 'GA', 'WA'];
+                                  const defensePositions = ['GK', 'GD', 'WD'];
+                                  const centerPosition = ['C'];
+
+                                  attackPositions.forEach(position => {
+                                    const candidates = availablePlayers
+                                      .filter(p => !attackUsed.has(p.id))
+                                      .filter(p => p.positionPreferences?.includes(position))
+                                      .sort((a, b) => {
+                                        const aGoals = Object.values(centralizedStats).flat()
+                                          .filter(s => s.playerId === a.id && ['GS', 'GA'].includes(s.position || ''))
+                                          .reduce((sum, s) => sum + (s.goalsFor || 0), 0);
+                                        const bGoals = Object.values(centralizedStats).flat()
+                                          .filter(s => s.playerId === b.id && ['GS', 'GA'].includes(s.position || ''))
+                                          .reduce((sum, s) => sum + (s.goalsFor || 0), 0);
+                                        return bGoals - aGoals;
+                                      });
+
+                                    if (candidates.length > 0) {
+                                      attackLineup[position] = candidates[0];
+                                      attackUsed.add(candidates[0].id);
+                                    }
+                                  });
+
+                                  // Fill other positions
+                                  [...defensePositions, ...centerPosition].forEach(position => {
+                                    const candidates = availablePlayers
+                                      .filter(p => !attackUsed.has(p.id))
+                                      .filter(p => p.positionPreferences?.includes(position));
+
+                                    if (candidates.length > 0) {
+                                      attackLineup[position] = candidates[0];
+                                      attackUsed.add(candidates[0].id);
+                                    }
+                                  });
+
+                                  // Fill remaining
+                                  POSITIONS_ORDER.forEach(position => {
+                                    if (!attackLineup[position]) {
+                                      const remaining = availablePlayers.find(p => !attackUsed.has(p.id));
+                                      if (remaining) {
+                                        attackLineup[position] = remaining;
+                                        attackUsed.add(remaining.id);
+                                      }
+                                    }
+                                  });
+
+                                  if (Object.keys(attackLineup).length === 7) {
+                                    additionalCombinations.push({
+                                      name: "High-Scoring Attack",
+                                      confidence: 78,
+                                      reason: "Maximize goal-scoring potential",
+                                      lineup: attackLineup,
+                                      color: "bg-red-100 border-red-300"
+                                    });
+                                  }
+                                }
+
+                                // Strategy 7: Defensive Wall
+                                if (availablePlayers.length >= 7) {
+                                  const defenseLineup = {};
+                                  const defenseUsed = new Set();
+
+                                  const defensePositions = ['GK', 'GD', 'WD'];
+                                  const attackPositions = ['GS', 'GA', 'WA'];
+                                  const centerPosition = ['C'];
+
+                                  // Focus on defensive strength
+                                  defensePositions.forEach(position => {
+                                    const candidates = availablePlayers
+                                      .filter(p => !defenseUsed.has(p.id))
+                                      .filter(p => p.positionPreferences?.includes(position))
+                                      .sort((a, b) => {
+                                        const aIntercepts = Object.values(centralizedStats).flat()
+                                          .filter(s => s.playerId === a.id && ['GK', 'GD', 'WD'].includes(s.position || ''))
+                                          .reduce((sum, s) => sum + (s.intercepts || 0), 0);
+                                        const bIntercepts = Object.values(centralizedStats).flat()
+                                          .filter(s => s.playerId === b.id && ['GK', 'GD', 'WD'].includes(s.position || ''))
+                                          .reduce((sum, s) => sum + (s.intercepts || 0), 0);
+                                        return bIntercepts - aIntercepts;
+                                      });
+
+                                    if (candidates.length > 0) {
+                                      defenseLineup[position] = candidates[0];
+                                      defenseUsed.add(candidates[0].id);
+                                    }
+                                  });
+
+                                  // Fill other positions
+                                  [...attackPositions, ...centerPosition].forEach(position => {
+                                    const candidates = availablePlayers
+                                      .filter(p => !defenseUsed.has(p.id))
+                                      .filter(p => p.positionPreferences?.includes(position));
+
+                                    if (candidates.length > 0) {
+                                      defenseLineup[position] = candidates[0];
+                                      defenseUsed.add(candidates[0].id);
+                                    }
+                                  });
+
+                                  // Fill remaining
+                                  POSITIONS_ORDER.forEach(position => {
+                                    if (!defenseLineup[position]) {
+                                      const remaining = availablePlayers.find(p => !defenseUsed.has(p.id));
+                                      if (remaining) {
+                                        defenseLineup[position] = remaining;
+                                        defenseUsed.add(remaining.id);
+                                      }
+                                    }
+                                  });
+
+                                  if (Object.keys(defenseLineup).length === 7) {
+                                    additionalCombinations.push({
+                                      name: "Defensive Wall",
+                                      confidence: 82,
+                                      reason: "Strengthen defensive capabilities",
+                                      lineup: defenseLineup,
+                                      color: "bg-cyan-100 border-cyan-300"
+                                    });
+                                  }
+                                }
+
+                                // Strategy 8: Versatility Mix
+                                if (availablePlayers.length >= 7) {
+                                  const versatileLineup = {};
+                                  const versatileUsed = new Set();
+
+                                  // Prioritize players who can play multiple positions
+                                  const playersByVersatility = availablePlayers.sort((a, b) => {
+                                    const aPositions = a.positionPreferences?.length || 0;
+                                    const bPositions = b.positionPreferences?.length || 0;
+                                    return bPositions - aPositions;
+                                  });
+
+                                  POSITIONS_ORDER.forEach(position => {
+                                    const candidates = playersByVersatility
+                                      .filter(p => !versatileUsed.has(p.id))
+                                      .filter(p => p.positionPreferences?.includes(position));
+
+                                    if (candidates.length > 0) {
+                                      versatileLineup[position] = candidates[0];
+                                      versatileUsed.add(candidates[0].id);
+                                    }
+                                  });
+
+                                  // Fill remaining
+                                  POSITIONS_ORDER.forEach(position => {
+                                    if (!versatileLineup[position]) {
+                                      const remaining = playersByVersatility.find(p => !versatileUsed.has(p.id));
+                                      if (remaining) {
+                                        versatileLineup[position] = remaining;
+                                        versatileUsed.add(remaining.id);
+                                      }
+                                    }
+                                  });
+
+                                  if (Object.keys(versatileLineup).length === 7) {
+                                    additionalCombinations.push({
+                                      name: "Versatile Squad",
+                                      confidence: 75,
+                                      reason: "Players comfortable in multiple positions",
+                                      lineup: versatileLineup,
+                                      color: "bg-teal-100 border-teal-300"
+                                    });
+                                  }
+                                }
+
+                                return additionalCombinations.map((combo, index) => (
+                                  <Card key={`additional-${index}`} className={`border-2 cursor-pointer transition-all hover:shadow-md ${combo.color}`}>
+                                    <CardContent className="p-4">
+                                      <div className="flex items-start justify-between mb-3">
+                                        <div className="flex items-center gap-3">
+                                          <Badge variant="outline" className="text-sm">
+                                            Alt #{index + 1}
+                                          </Badge>
+                                          <div>
+                                            <h4 className="font-semibold text-lg">{combo.name}</h4>
+                                            <p className="text-sm text-gray-600">{combo.reason}</p>
+                                          </div>
+                                        </div>
+                                        <div className="text-right">
+                                          <div className="text-2xl font-bold text-green-600">
+                                            {combo.confidence}%
+                                          </div>
+                                          <div className="text-xs text-gray-500">Confidence</div>
+                                        </div>
+                                      </div>
+
+                                      {/* Lineup Display */}
+                                      <div className="grid grid-cols-7 gap-2 mt-4">
+                                        {POSITIONS_ORDER.map(position => {
+                                          const player = combo.lineup[position];
+                                          return (
+                                            <div key={position} className="text-center">
+                                              <div className="text-xs font-medium text-gray-600 mb-1">
+                                                {position}
+                                              </div>
+                                              {player ? (
+                                                <div className="flex flex-col items-center">
+                                                  <PlayerAvatar player={player} size="sm" />
+                                                  <div className="text-xs mt-1 font-medium">
+                                                    {player.displayName}
+                                                  </div>
+                                                  {player.positionPreferences?.[0] === position && (
+                                                    <Star className="h-3 w-3 text-yellow-500 mt-1" />
+                                                  )}
+                                                </div>
+                                              ) : (
+                                                <div className="w-6 h-6 bg-gray-200 rounded-full mx-auto">
+                                                  <span className="text-xs text-gray-400">?</span>
+                                                </div>
+                                              )}
+                                            </div>
+                                          );
+                                        })}
+                                      </div>
+
+                                      {/* Select This Lineup Button */}
+                                      <div className="mt-4 pt-3 border-t">
+                                        <Button 
+                                          onClick={() => {
+                                            setSelectedLineup(combo.lineup);
+                                            toast({
+                                              title: "Lineup Selected",
+                                              description: `${combo.name} lineup has been selected`,
+                                            });
+                                          }}
+                                          variant="outline"
+                                          className="w-full"
+                                        >
+                                          <Check className="h-4 w-4 mr-2" />
+                                          Select This Lineup
+                                        </Button>
+                                      </div>
+                                    </CardContent>
+                                  </Card>
+                                ));
+                              })()}
+                            </div>
+                          </>
+                        );
                       })()}
                     </div>
 
