@@ -474,3 +474,4 @@ const TeamPerformance = ({ games, className, activeSeason, selectedSeason, centr
 };
 
 export default TeamPerformance;
+export { TeamPerformance };
