@@ -19,7 +19,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { RecentGames } from '@/components/dashboard/RecentGames';
 import { UpcomingGames } from '@/components/dashboard/UpcomingGames';
 import { TopPlayersWidget } from '@/components/dashboard/TopPlayersWidget';
-import { TeamPerformance } from '@/components/dashboard/TeamPerformance';
+import TeamPerformance from '@/components/dashboard/TeamPerformance';
 import { QuickActionsWidget } from '@/components/dashboard/QuickActionsWidget';
 import { OpponentAnalysisWidget } from '@/components/dashboard/OpponentAnalysisWidget';
 
@@ -293,7 +293,7 @@ export default function Dashboard() {
         />
         {/* Right Column - Secondary Widgets */}
         <div className="space-y-6">
-          <TeamPerformance />
+          <TeamPerformance games={games || []} />
           <OpponentAnalysisWidget />
           <TopPlayersWidget />
           <QuickActionsWidget />
