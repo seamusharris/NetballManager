@@ -10,6 +10,7 @@ import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
 import { LoadingState } from '@/components/ui/loading-state';
 import { ErrorDisplay } from '@/components/ui/error-display';
@@ -26,6 +27,7 @@ import {
   Game, GameStat, Player, PlayerAvailability, 
   Position, NETBALL_POSITIONS 
 } from '@/shared/api-types';
+import { cn } from "@/lib/utils";
 
 interface PreparationStep {
   id: string;
@@ -84,7 +86,7 @@ export default function Preparation() {
   const progressPercentage = (completedSteps / totalSteps) * 100;
 
   // ALL HOOKS MUST BE CALLED FIRST - NO CONDITIONS BEFORE HOOKS
-  
+
   // Optimized data fetching with error boundaries
   const { data: games, isLoading: gamesLoading, error: gamesError } = useQuery({
     queryKey: ['games', currentClubId, currentTeamId],
@@ -317,8 +319,37 @@ export default function Preparation() {
     }
   };
 
+  // Function to determine player color
+  const getPlayerColor = (player: Player): string => {
+    return player.avatarColor || 'bg-gray-400';
+  };
+
+  // Convert bg-color-shade to hex for styling
+  const getColorHex = (colorClass: string) => {
+    const colorMap: Record<string, string> = {
+      'bg-red-500': '#ef4444',
+      'bg-emerald-600': '#059669',
+      'bg-teal-600': '#0d9488',
+      'bg-blue-600': '#2563eb',
+      'bg-indigo-600': '#4f46e5',
+      'bg-purple-600': '#9333ea',
+      'bg-pink-600': '#db2777',
+      'bg-pink-500': '#ec4899',
+      'bg-orange-500': '#f97316',
+      'bg-yellow-600': '#ca8a04',
+      'bg-rose-600': '#e11d48',
+      'bg-lime-600': '#65a30d',
+      'bg-sky-600': '#0284c7',
+      'bg-violet-600': '#7c3aed',
+      'bg-cyan-600': '#0891b2',
+      'bg-gray-400': '#9ca3af',
+      'bg-green-600': '#16a34a'
+    };
+    return colorMap[colorClass] || '#9ca3af';
+  };
+
   // NOW CONDITIONAL LOGIC AFTER ALL HOOKS
-  
+
   // Loading states
   if (gamesLoading || playersLoading || isLoadingTeamPlayers) {
     return (
@@ -503,65 +534,41 @@ export default function Preparation() {
                   </Alert>
                 )}
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {teamPlayers?.map(player => {
-                    const isAvailable = availabilityData[player.id] === 'available' || (!availabilityData[player.id] && Object.keys(availabilityData).length === 0);
-                    const isMaybe = availabilityData[player.id] === 'maybe';
-                    const isUnavailable = availabilityData[player.id] === 'unavailable';
-                    const playerColor = player.avatarColor || 'bg-gray-400';
-                    
-                    // Convert bg-color-shade to hex for styling
-                    const getColorHex = (colorClass: string) => {
-                      const colorMap: Record<string, string> = {
-                        'bg-red-500': '#ef4444',
-                        'bg-emerald-600': '#059669',
-                        'bg-teal-600': '#0d9488',
-                        'bg-blue-600': '#2563eb',
-                        'bg-indigo-600': '#4f46e5',
-                        'bg-purple-600': '#9333ea',
-                        'bg-pink-600': '#db2777',
-                        'bg-pink-500': '#ec4899',
-                        'bg-orange-500': '#f97316',
-                        'bg-yellow-600': '#ca8a04',
-                        'bg-rose-600': '#e11d48',
-                        'bg-lime-600': '#65a30d',
-                        'bg-sky-600': '#0284c7',
-                        'bg-violet-600': '#7c3aed',
-                        'bg-cyan-600': '#0891b2',
-                        'bg-gray-400': '#9ca3af',
-                        'bg-green-600': '#16a34a'
-                      };
-                      return colorMap[colorClass] || '#9ca3af';
-                    };
-
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-2">
+                  {teamPlayers.map(player => {
+                    const isAvailable = availabilityData[player.id] === 'available';
+                    const playerColor = getPlayerColor(player);
                     const colorHex = getColorHex(playerColor);
+                    const displayName = player.displayName || `${player.firstName} ${player.lastName}`;
 
                     return (
                       <div 
                         key={player.id}
-                        className={`p-4 border rounded-lg shadow-sm transition-all ${
+                        className={cn(
+                          "p-4 border rounded-lg shadow-sm transition-all",
                           isAvailable 
                             ? "border-2 shadow" 
-                            : isMaybe 
-                            ? "border border-yellow-300 opacity-90"
                             : "opacity-75 border border-gray-200"
-                        }`}
+                        )}
                         style={{
-                          borderColor: isAvailable ? colorHex : isMaybe ? '#fbbf24' : '',
-                          backgroundColor: isAvailable ? `${colorHex}10` : isMaybe ? '#fbbf2410' : ''
+                          borderColor: isAvailable ? colorHex : '',
+                          backgroundColor: isAvailable ? `${colorHex}10` : ''
                         }}
                       >
                         <div className="flex justify-between items-center">
                           <div className="flex items-center gap-3">
-                            <div
-                              className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm ${playerColor}`}
+                            <div 
+                              className={cn(
+                                "w-8 h-8 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0",
+                                playerColor
+                              )}
                             >
                               <span className="font-semibold">
                                 {player.firstName?.[0]}{player.lastName?.[0]}
                               </span>
                             </div>
                             <div>
-                              <div className="font-medium">{player.displayName}</div>
+                              <div className="font-medium">{displayName}</div>
                               {player.positionPreferences && player.positionPreferences.length > 0 && (
                                 <div className="text-xs text-gray-500">
                                   {player.positionPreferences.join(', ')}
@@ -570,21 +577,15 @@ export default function Preparation() {
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
-                            <Select
-                              value={availabilityData[player.id] || "available"}
-                              onValueChange={(value) => 
-                                setAvailabilityData(prev => ({ ...prev, [player.id]: value as any }))
-                              }
-                            >
-                              <SelectTrigger className="w-28">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="available">Available</SelectItem>
-                                <SelectItem value="maybe">Maybe</SelectItem>
-                                <SelectItem value="unavailable">Unavailable</SelectItem>
-                              </SelectContent>
-                            </Select>
+                            <Switch
+                              checked={isAvailable}
+                              onCheckedChange={(checked) => {
+                                setAvailabilityData(prev => ({ 
+                                  ...prev, 
+                                  [player.id]: checked ? 'available' : 'unavailable' 
+                                }));
+                              }}
+                            />
                           </div>
                         </div>
                       </div>
