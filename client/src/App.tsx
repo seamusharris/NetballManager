@@ -134,13 +134,7 @@ function Router() {
             </ErrorBoundary>
           )}
         </Route>
-        <Route path="/performance">
-          <ErrorBoundary>
-            <Suspense fallback={<LoadingSpinner message="Loading performance demo..." />}>
-              <PerformanceDemo />
-            </Suspense>
-          </ErrorBoundary>
-        </Route>
+        
         <Route path="/team-analysis" component={withErrorBoundary(TeamAnalysis, 'TeamAnalysis')} />
         <Route path="/opponent-preparation" component={OpponentPreparation} />
         <Route path="/game-result-examples" component={withErrorBoundary(GameResultExamples, 'GameResultExamples')} />
