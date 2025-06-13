@@ -1,1147 +1,655 @@
-import { useState, useEffect } from 'react';
-import { Helmet } from 'react-helmet';
-import { useQuery } from '@tanstack/react-query';
-import { useClub } from '@/contexts/ClubContext';
-import { apiClient } from '@/lib/apiClient';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
-import { Loader2, Target, TrendingUp, FileText, Users, Clock, MapPin, Calendar, Trophy, BarChart3, Zap, AlertTriangle, CheckCircle, ArrowRight, Star } from 'lucide-react';
-import { useBatchGameStatistics } from '@/components/statistics/hooks/useBatchGameStatistics';
-import { useBatchRosterData } from '@/components/statistics/hooks/useBatchRosterData';
-import { getWinLoseLabel, formatShortDate } from '@/lib/utils';
-import { TeamSwitcher } from '@/components/layout/TeamSwitcher';
-import { ResultBadge } from '@/components/ui/result-badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import { LoadingState } from '@/components/ui/loading-state';
+import { ErrorDisplay } from '@/components/ui/error-display';
+import { PlayerAvatar } from '@/components/ui/player-avatar';
+import { PageTemplate } from '@/components/layout/PageTemplate';
+import { useClubContext } from '@/contexts/ClubContext';
+import { apiClient } from '@/lib/apiClient';
+import { 
+  Trophy, Target, TrendingUp, Users, CheckCircle, Clock, 
+  AlertTriangle, Lightbulb, ChevronRight, ArrowRight, 
+  RotateCcw, Zap, Play, Save, Calendar, MapPin, Copy
+} from 'lucide-react';
+import { 
+  Game, GameStat, Player, PlayerAvailability, 
+  Position, NETBALL_POSITIONS 
+} from '@/shared/api-types';
 
-interface UpcomingGame {
-  id: number;
-  date: string;
-  time: string;
-  opponent: string;
-  opponentId: number;
-  venue: string | null;
-  round: string;
-  isNextGame: boolean;
-}
-
-interface OpponentAnalysis {
-  teamId: number;
-  teamName: string;
-  clubName: string;
-  division: string;
-  gamesPlayed: number;
-  ourRecord: {
-    wins: number;
-    losses: number;
-    draws: number;
-    winRate: number;
-  };
-  avgScores: {
-    ourAvg: number;
-    theirAvg: number;
-    margin: number;
-  };
-  recentForm: string[];
-  lastPlayed: string;
-  quarterPerformance: Record<number, {
-    ourAvg: number;
-    theirAvg: number;
-    margin: number;
-  }>;
-  keyInsights: string[];
-  tacticalNotes: string[];
+interface PreparationStep {
+  id: string;
+  title: string;
+  completed: boolean;
+  optional?: boolean;
 }
 
 interface PlayerRecommendation {
-  playerId: number;
-  playerName: string;
-  position: string;
-  avgPerformance: number;
-  gamesAgainstOpponent: number;
-  successRate: number;
-  keyStrengths: string[];
-  recommendation: 'strongly-recommended' | 'recommended' | 'consider' | 'caution';
+  position: Position;
+  players: Array<{
+    player: Player;
+    confidence: number;
+    reason: string;
+    avgRating?: number;
+    gamesInPosition?: number;
+    vsOpponentRecord?: { played: number; won: number; };
+  }>;
 }
 
 interface LineupRecommendation {
   id: string;
-  positions: Record<string, {
-    playerId: number;
-    playerName: string;
-    confidence: number;
-  }>;
-  overallStrength: number;
+  type: 'team-specific' | 'general';
+  formation: Record<Position, Player>;
+  confidence: number;
+  effectiveness: number;
   reasoning: string[];
-  vsOpponentSuccess: number;
-  riskFactors: string[];
+  gamesUsed?: number;
+  winRate?: number;
 }
 
-export default function Preparation() {
-  const { currentClub, currentClubId, currentTeamId, isLoading: clubLoading } = useClub();
-  const [selectedOpponent, setSelectedOpponent] = useState<string>('');
-  const [filterMode, setFilterMode] = useState<'next-game' | 'all-opponents'>('next-game');
-  const [selectedAnalysis, setSelectedAnalysis] = useState<OpponentAnalysis | null>(null);
-  const [upcomingGames, setUpcomingGames] = useState<UpcomingGame[]>([]);
-  const [playerRecommendations, setPlayerRecommendations] = useState<PlayerRecommendation[]>([]);
-  const [lineupRecommendations, setLineupRecommendations] = useState<LineupRecommendation[]>([]);
+const POSITIONS_ORDER: Position[] = ['GS', 'GA', 'WA', 'C', 'WD', 'GD', 'GK'];
 
-  const { data: games = [], isLoading: isLoadingGames } = useQuery<any[]>({
+export default function Preparation() {
+  const { currentClubId, currentTeamId } = useClubContext();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  const [selectedOpponent, setSelectedOpponent] = useState<{ teamId: number; teamName: string; clubName: string; } | null>(null);
+  const [selectedGameId, setSelectedGameId] = useState<number | null>(null);
+  const [availabilityData, setAvailabilityData] = useState<Record<number, 'available' | 'unavailable' | 'maybe'>>({});
+  const [activeTab, setActiveTab] = useState('opponent');
+
+  // Progress tracking
+  const preparationSteps: PreparationStep[] = [
+    { id: 'opponent', title: 'Select Opponent', completed: !!selectedOpponent },
+    { id: 'availability', title: 'Set Player Availability', completed: Object.keys(availabilityData).length > 0 },
+    { id: 'recommendations', title: 'Review Recommendations', completed: false, optional: true },
+    { id: 'roster', title: 'Apply to Roster', completed: false, optional: true }
+  ];
+
+  const completedSteps = preparationSteps.filter(step => step.completed).length;
+  const totalSteps = preparationSteps.length;
+  const progressPercentage = (completedSteps / totalSteps) * 100;
+
+  // Optimized data fetching with error boundaries
+  const { data: games, isLoading: gamesLoading, error: gamesError } = useQuery({
     queryKey: ['games', currentClubId, currentTeamId],
-    queryFn: () => {
-      const headers: Record<string, string> = {};
-      if (currentTeamId) {
-        headers['x-current-team-id'] = currentTeamId.toString();
-      }
-      return apiClient.get('/api/games', { headers });
-    },
-    enabled: !!currentClubId,
+    queryFn: () => apiClient.get('/api/games'),
+    enabled: !!currentClubId && !!currentTeamId,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    retry: 3,
+    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 
-  const { data: players = [], isLoading: isLoadingPlayers } = useQuery<any[]>({
+  const { data: players, isLoading: playersLoading, error: playersError } = useQuery({
     queryKey: ['players', currentClubId],
     queryFn: () => apiClient.get('/api/players'),
     enabled: !!currentClubId,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
-  // Get completed and upcoming games
-  const completedGames = games.filter(game => game.statusIsCompleted && game.statusAllowsStatistics);
-  const upcomingGamesList = games.filter(game => !game.statusIsCompleted);
-  const gameIds = completedGames.map(game => game.id);
-
-  // Fetch batch statistics and rosters
-  const { statsMap: centralizedStats = {}, isLoading: isLoadingStats } = useBatchGameStatistics(gameIds);
-  const { rostersMap: centralizedRosters = {}, isLoading: isLoadingRosters } = useBatchRosterData(gameIds);
-
-  // Process upcoming games and identify next opponent
-  useEffect(() => {
-    if (upcomingGamesList.length === 0) return;
-
-    const processedUpcoming = upcomingGamesList
-      .map(game => {
-        const isHomeGame = game.homeClubId === currentClubId;
-        const isAwayGame = game.awayClubId === currentClubId;
-
-        if (isHomeGame && isAwayGame) return null; // Skip intra-club games
-
-        let opponent = '';
-        let opponentId = 0;
-
-        if (isHomeGame && !isAwayGame && game.awayTeamName !== 'Bye') {
-          opponent = game.awayTeamName;
-          opponentId = game.awayTeamId;
-        } else if (isAwayGame && !isHomeGame && game.homeTeamName !== 'Bye') {
-          opponent = game.homeTeamName;
-          opponentId = game.homeTeamId;
-        }
-
-        if (!opponent) return null;
-
-        return {
-          id: game.id,
-          date: game.date,
-          time: game.time,
-          opponent,
-          opponentId,
-          venue: game.venue,
-          round: game.round,
-          isNextGame: false
-        } as UpcomingGame;
-      })
-      .filter(Boolean)
-      .sort((a, b) => new Date(a!.date).getTime() - new Date(b!.date).getTime()) as UpcomingGame[];
-
-    // Mark the next game
-    if (processedUpcoming.length > 0) {
-      processedUpcoming[0].isNextGame = true;
-      if (filterMode === 'next-game') {
-        setSelectedOpponent(processedUpcoming[0].opponentId.toString());
-      }
-    }
-
-    setUpcomingGames(processedUpcoming);
-  }, [upcomingGamesList, currentClubId, filterMode]);
-
-  // Analyze selected opponent
-  useEffect(() => {
-    console.log('Opponent analysis useEffect triggered:', {
-      selectedOpponent,
-      hasStats: !!centralizedStats,
-      statsKeys: Object.keys(centralizedStats || {}),
-      hasRosters: !!centralizedRosters,
-      rostersKeys: Object.keys(centralizedRosters || {}),
-      completedGamesCount: completedGames.length,
-      playersCount: players.length
-    });
-
-    if (!selectedOpponent || !centralizedStats || Object.keys(centralizedStats).length === 0) {
-      setSelectedAnalysis(null);
-      setPlayerRecommendations([]);
-      setLineupRecommendations([]);
-      return;
-    }
-
-    const opponentId = parseInt(selectedOpponent);
-    const opponentGames = completedGames.filter(game => {
-      const isHomeGame = game.homeClubId === currentClubId;
-      const isAwayGame = game.awayClubId === currentClubId;
-
-      if (isHomeGame && isAwayGame) return false;
-
-      const oppId = isHomeGame ? game.awayTeamId : game.homeTeamId;
-      return oppId === opponentId;
-    });
-
-    console.log(`Found ${opponentGames.length} games against opponent ${opponentId}`);
-
-    if (opponentGames.length === 0) {
-      setSelectedAnalysis(null);
-      setPlayerRecommendations([]);
-      setLineupRecommendations([]);
-      return;
-    }
-
-    // Calculate detailed analysis
-    const gameResults = opponentGames.map(game => {
-      const gameStats = centralizedStats[game.id] || [];
-      const ourScore = gameStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
-      const theirScore = gameStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
-      return {
-        game,
-        ourScore,
-        theirScore,
-        result: getWinLoseLabel(ourScore, theirScore),
-        margin: ourScore - theirScore,
-        gameStats
-      };
-    });
-
-    const wins = gameResults.filter(r => r.result === 'Win').length;
-    const losses = gameResults.filter(r => r.result === 'Loss').length;
-    const draws = gameResults.filter(r => r.result === 'Draw').length;
-    const winRate = opponentGames.length > 0 ? (wins / opponentGames.length) * 100 : 0;
-
-    const totalOurScore = gameResults.reduce((sum, r) => sum + r.ourScore, 0);
-    const totalTheirScore = gameResults.reduce((sum, r) => sum + r.theirScore, 0);
-    const ourAvg = opponentGames.length > 0 ? totalOurScore / opponentGames.length : 0;
-    const theirAvg = opponentGames.length > 0 ? totalTheirScore / opponentGames.length : 0;
-
-    // Quarter performance analysis
-    const quarterPerformance: Record<number, any> = {};
-    [1, 2, 3, 4].forEach(quarter => {
-      const quarterData = gameResults.map(result => {
-        const quarterStats = result.gameStats.filter(stat => stat.quarter === quarter);
-        const ourQ = quarterStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
-        const theirQ = quarterStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
-        return { ourQ, theirQ };
-      });
-
-      const ourQAvg = quarterData.length > 0 ? quarterData.reduce((sum, d) => sum + d.ourQ, 0) / quarterData.length : 0;
-      const theirQAvg = quarterData.length > 0 ? quarterData.reduce((sum, d) => sum + d.theirQ, 0) / quarterData.length : 0;
-
-      quarterPerformance[quarter] = {
-        ourAvg: ourQAvg,
-        theirAvg: theirQAvg,
-        margin: ourQAvg - theirQAvg
-      };
-    });
-
-    // Generate insights
-    const keyInsights: string[] = [];
-    const tacticalNotes: string[] = [];
-
-    if (winRate >= 70) {
-      keyInsights.push("Strong historical performance - high confidence matchup");
-    } else if (winRate <= 30) {
-      keyInsights.push("Challenging opponent - requires strategic preparation");
-    } else {
-      keyInsights.push("Balanced matchup - execution will be key");
-    }
-
-    const bestQuarter = Object.entries(quarterPerformance).reduce((best, [q, data]) => 
-      data.margin > best.margin ? { quarter: parseInt(q), margin: data.margin } : best
-    , { quarter: 1, margin: -Infinity });
-
-    const worstQuarter = Object.entries(quarterPerformance).reduce((worst, [q, data]) => 
-      data.margin < worst.margin ? { quarter: parseInt(q), margin: data.margin } : worst
-    , { quarter: 1, margin: Infinity });
-
-    keyInsights.push(`Strongest in Q${bestQuarter.quarter} (+${bestQuarter.margin.toFixed(1)} avg margin)`);
-    if (worstQuarter.margin < 0) {
-      keyInsights.push(`Q${worstQuarter.quarter} needs focus (${worstQuarter.margin.toFixed(1)} avg margin)`);
-    }
-
-    tacticalNotes.push(`Average scoring: ${ourAvg.toFixed(1)} vs ${theirAvg.toFixed(1)}`);
-    tacticalNotes.push(`${opponentGames.length} previous encounters analyzed`);
-
-    const recentForm = gameResults
-      .sort((a, b) => new Date(b.game.date).getTime() - new Date(a.game.date).getTime())
-      .slice(0, 5)
-      .map(r => r.result === 'Win' ? 'W' : r.result === 'Loss' ? 'L' : 'D');
-
-    const lastGame = gameResults.sort((a, b) => new Date(b.game.date).getTime() - new Date(a.game.date).getTime())[0];
-
-    const analysis: OpponentAnalysis = {
-      teamId: opponentId,
-      teamName: opponentGames[0].homeClubId === currentClubId ? opponentGames[0].awayTeamName : opponentGames[0].homeTeamName,
-      clubName: opponentGames[0].homeClubId === currentClubId ? opponentGames[0].awayClubName : opponentGames[0].homeTeamName,
-      division: opponentGames[0].homeClubId === currentClubId ? opponentGames[0].awayTeamDivision : opponentGames[0].homeTeamDivision,
-      gamesPlayed: opponentGames.length,
-      ourRecord: { wins, losses, draws, winRate },
-      avgScores: { ourAvg, theirAvg, margin: ourAvg - theirAvg },
-      recentForm,
-      lastPlayed: lastGame.game.date,
-      quarterPerformance,
-      keyInsights,
-      tacticalNotes
-    };
-
-    setSelectedAnalysis(analysis);
-
-    // Generate player recommendations
-    generatePlayerRecommendationsFunc(opponentGames, players, centralizedStats, centralizedRosters);
-    generateLineupRecommendations(opponentGames, opponentId);
-
-  }, [selectedOpponent, centralizedStats, centralizedRosters, completedGames, currentClubId, players]);
-
-  const generatePlayerRecommendationsFunc = (opponentGames: any[], players: any[], centralizedStats: any, centralizedRosters: any) => {
-    console.log('Starting player recommendations generation with:', {
-      opponentGames: opponentGames.length,
-      players: players.length,
-      statsAvailable: !!centralizedStats,
-      rostersAvailable: !!centralizedRosters
-    });
-
-    const recommendations: PlayerRecommendation[] = [];
-    const positions = ['GK', 'GD', 'WD', 'C', 'WA', 'GA', 'GS'];
-
-    // For each position, find the best players based on overall stats and availability
-    positions.forEach(position => {
-      console.log(`\n=== Processing position ${position} ===`);
-      
-      // Get all players who have played this position in any game against the opponent
-      const positionCandidates: any[] = [];
-
-      players.forEach(player => {
-        let totalQuarters = 0;
-        let totalPerformance = 0;
-        let gamesPlayed = 0;
-        let totalRating = 0;
-        let ratingCount = 0;
-
-        // Check all opponent games for this player
-        opponentGames.forEach(game => {
-          const gameRosters = centralizedRosters[game.id] || [];
-          const gameStats = centralizedStats[game.id] || [];
-
-          // Find quarters where this player played this position
-          const playerPositionRosters = gameRosters.filter(roster => 
-            roster.playerId === player.id && roster.position === position
-          );
-
-          if (playerPositionRosters.length > 0) {
-            gamesPlayed++;
-            
-            playerPositionRosters.forEach(roster => {
-              totalQuarters++;
-              
-              // Find matching stats for this position and quarter
-              const quarterStats = gameStats.find(stat => 
-                stat.position === position && stat.quarter === roster.quarter
-              );
-
-              if (quarterStats) {
-                // Calculate performance score
-                const positive = (quarterStats.goalsFor || 0) + 
-                               (quarterStats.rebounds || 0) + 
-                               (quarterStats.intercepts || 0) + 
-                               (quarterStats.pickUp || 0);
-                
-                const negative = (quarterStats.goalsAgainst || 0) + 
-                               (quarterStats.badPass || 0) + 
-                               (quarterStats.handlingError || 0) + 
-                               (quarterStats.infringement || 0);
-
-                const performance = positive - (negative * 0.3); // Weight negatives less
-                totalPerformance += performance;
-
-                if (quarterStats.rating) {
-                  totalRating += quarterStats.rating;
-                  ratingCount++;
-                }
-              }
-            });
-          }
-        });
-
-        // Also check if player has this position in their preferences
-        const hasPositionPreference = player.positionPreferences?.includes(position) || false;
-        
-        // Calculate metrics
-        const avgPerformance = totalQuarters > 0 ? totalPerformance / totalQuarters : 0;
-        const avgRating = ratingCount > 0 ? totalRating / ratingCount : 5;
-        const experienceBonus = gamesPlayed > 0 ? 1 : 0;
-        const preferenceBonus = hasPositionPreference ? 0.5 : 0;
-        
-        // Overall score combining performance, experience, and preferences
-        const overallScore = avgPerformance + experienceBonus + preferenceBonus;
-        
-        console.log(`Player ${player.displayName}: quarters=${totalQuarters}, performance=${avgPerformance.toFixed(1)}, rating=${avgRating.toFixed(1)}, games=${gamesPlayed}, preference=${hasPositionPreference}, overall=${overallScore.toFixed(1)}`);
-
-        positionCandidates.push({
-          playerId: player.id,
-          playerName: player.displayName,
-          position,
-          avgPerformance: Math.round(avgPerformance * 10) / 10,
-          gamesAgainstOpponent: gamesPlayed,
-          quartersPlayed: totalQuarters,
-          avgRating,
-          hasPreference: hasPositionPreference,
-          overallScore,
-          successRate: Math.min(100, Math.max(0, ((overallScore + 1) / 3) * 100)),
-          keyStrengths: [],
-          recommendation: 'consider' as PlayerRecommendation['recommendation']
-        });
-      });
-
-      // Sort candidates by overall score
-      positionCandidates.sort((a, b) => b.overallScore - a.overallScore);
-      
-      // Assign recommendation levels to top candidates
-      positionCandidates.forEach((candidate, index) => {
-        if (index === 0 && candidate.overallScore > 2) {
-          candidate.recommendation = 'strongly-recommended';
-          candidate.keyStrengths.push('Top performer in position');
-        } else if (index < 3 && candidate.overallScore > 1) {
-          candidate.recommendation = 'recommended';
-          candidate.keyStrengths.push('Strong candidate');
-        } else if (candidate.overallScore < -0.5) {
-          candidate.recommendation = 'caution';
-          candidate.keyStrengths.push('Limited success');
-        }
-
-        if (candidate.gamesAgainstOpponent > 1) {
-          candidate.keyStrengths.push('Experienced vs opponent');
-        }
-        if (candidate.hasPreference) {
-          candidate.keyStrengths.push('Preferred position');
-        }
-        if (candidate.avgRating > 6) {
-          candidate.keyStrengths.push('High rated');
-        }
-      });
-
-      // Add top candidates for this position
-      recommendations.push(...positionCandidates.slice(0, 4));
-      console.log(`Added ${Math.min(4, positionCandidates.length)} recommendations for ${position}`);
-    });
-
-    console.log(`Total recommendations generated: ${recommendations.length}`);
-    setPlayerRecommendations(recommendations);
-  }
-
-  const generateLineupRecommendations = (opponentGames: any[], opponentId: number) => {
-    console.log('Generating lineup recommendations...', {
-      opponentGames: opponentGames.length,
-      hasStats: !!centralizedStats,
-      hasRosters: !!centralizedRosters,
-      playersCount: players.length,
-      playerRecommendationsCount: playerRecommendations.length
-    });
-
-    if (!centralizedStats || !centralizedRosters || players.length === 0) {
-      console.log('Missing required data for lineup generation');
-      setLineupRecommendations([]);
-      return;
-    }
-
-    const lineupRecommendations: LineupRecommendation[] = [];
-    const positions = ['GK', 'GD', 'WD', 'C', 'WA', 'GA', 'GS'];
-
-    // 1. Generate "Optimal Performance" lineup based on player recommendations
-    if (playerRecommendations.length > 0) {
-      console.log('Creating optimal performance lineup...');
-      const optimalLineup: LineupRecommendation = {
-        id: 'optimal-performance',
-        positions: {},
-        overallStrength: 0,
-        reasoning: [
-          'Based on individual player performance vs this opponent',
-          'Prioritizes proven performers in each position',
-          'Data-driven selection'
-        ],
-        vsOpponentSuccess: 0,
-        riskFactors: []
-      };
-
-      let totalConfidence = 0;
-      let positionsAssigned = 0;
-
-      positions.forEach(position => {
-        const positionPlayers = playerRecommendations
-          .filter(p => p.position === position)
-          .sort((a, b) => {
-            // Sort by recommendation level first, then performance
-            const levelPriority = {
-              'strongly-recommended': 4,
-              'recommended': 3,
-              'consider': 2,
-              'caution': 1
-            };
-            
-            const levelDiff = levelPriority[b.recommendation] - levelPriority[a.recommendation];
-            if (levelDiff !== 0) return levelDiff;
-            
-            return b.successRate - a.successRate;
-          });
-
-        if (positionPlayers.length > 0) {
-          const bestPlayer = positionPlayers[0];
-          optimalLineup.positions[position] = {
-            playerId: bestPlayer.playerId,
-            playerName: bestPlayer.playerName,
-            confidence: Math.round(bestPlayer.successRate)
-          };
-          totalConfidence += bestPlayer.successRate;
-          positionsAssigned++;
-        }
-      });
-
-      if (positionsAssigned === 7) {
-        optimalLineup.overallStrength = Math.round(totalConfidence / 7);
-        optimalLineup.vsOpponentSuccess = Math.round(totalConfidence / 7);
-
-        // Add risk factors
-        const lowConfidencePlayers = Object.values(optimalLineup.positions).filter(p => p.confidence < 60);
-        if (lowConfidencePlayers.length > 0) {
-          optimalLineup.riskFactors.push(`${lowConfidencePlayers.length} players with limited experience vs this opponent`);
-        }
-
-        lineupRecommendations.push(optimalLineup);
-        console.log('Added optimal performance lineup');
-      }
-    }
-
-    // 2. Generate "Balanced Experience" lineup
-    console.log('Creating balanced experience lineup...');
-    const balancedLineup: LineupRecommendation = {
-      id: 'balanced-experience',
-      positions: {},
-      overallStrength: 75,
-      reasoning: [
-        'Balances performance with player preferences',
-        'Mix of experienced and developing players',
-        'Considers position preferences'
-      ],
-      vsOpponentSuccess: 70,
-      riskFactors: []
-    };
-
-    positions.forEach(position => {
-      // Find players who prefer this position or have played it
-      const candidates = playerRecommendations
-        .filter(p => p.position === position)
-        .concat(
-          // Add players who have this position as a preference but might not have played vs opponent
-          players
-            .filter(player => player.positionPreferences?.includes(position))
-            .map(player => ({
-              playerId: player.id,
-              playerName: player.displayName,
-              position,
-              avgPerformance: 0,
-              gamesAgainstOpponent: 0,
-              successRate: 60, // Default confidence for preferred position
-              keyStrengths: ['Position preference'],
-              recommendation: 'consider' as PlayerRecommendation['recommendation']
-            }))
-        )
-        .filter((player, index, self) => 
-          // Remove duplicates
-          index === self.findIndex(p => p.playerId === player.playerId)
-        )
-        .sort((a, b) => {
-          // Prioritize players with experience, then preference
-          if (a.gamesAgainstOpponent !== b.gamesAgainstOpponent) {
-            return b.gamesAgainstOpponent - a.gamesAgainstOpponent;
-          }
-          return b.successRate - a.successRate;
-        });
-
-      if (candidates.length > 0) {
-        const selectedPlayer = candidates[0];
-        balancedLineup.positions[position] = {
-          playerId: selectedPlayer.playerId,
-          playerName: selectedPlayer.playerName,
-          confidence: Math.round(selectedPlayer.successRate)
-        };
-      }
-    });
-
-    if (Object.keys(balancedLineup.positions).length === 7) {
-      lineupRecommendations.push(balancedLineup);
-      console.log('Added balanced experience lineup');
-    }
-
-    // 3. Generate "Development Opportunity" lineup if we have successful historical lineups
-    const successfulGames = opponentGames.filter(game => {
-      const gameStats = centralizedStats[game.id];
-      if (!gameStats) return false;
-      
-      const ourScore = gameStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
-      const theirScore = gameStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
-      return ourScore > theirScore;
-    });
-
-    if (successfulGames.length > 0) {
-      console.log('Creating proven success lineup from historical data...');
-      const mostRecentWin = successfulGames.sort((a, b) => 
-        new Date(b.date).getTime() - new Date(a.date).getTime()
-      )[0];
-
-      const gameRosters = centralizedRosters[mostRecentWin.id] || [];
-      const gameStats = centralizedStats[mostRecentWin.id] || [];
-      
-      if (gameRosters.length > 0) {
-        // Use quarter 1 lineup from most recent win
-        const q1Rosters = gameRosters.filter(r => r.quarter === 1);
-        const historicalLineup: LineupRecommendation = {
-          id: 'proven-success',
-          positions: {},
-          overallStrength: 85,
-          reasoning: [
-            `Based on successful lineup from ${formatShortDate(mostRecentWin.date)}`,
-            'Proven combination vs this opponent',
-            'Historical performance data'
-          ],
-          vsOpponentSuccess: 90,
-          riskFactors: ['May need adjustments for current squad availability']
-        };
-
-        positions.forEach(position => {
-          const positionRoster = q1Rosters.find(r => r.position === position);
-          if (positionRoster) {
-            const player = players.find(p => p.id === positionRoster.playerId);
-            if (player) {
-              historicalLineup.positions[position] = {
-                playerId: player.id,
-                playerName: player.displayName,
-                confidence: 85
-              };
-            }
-          }
-        });
-
-        if (Object.keys(historicalLineup.positions).length >= 5) { // At least 5 positions filled
-          lineupRecommendations.push(historicalLineup);
-          console.log('Added proven success lineup');
-        }
-      }
-    }
-
-    console.log(`Generated ${lineupRecommendations.length} lineup recommendations`);
-    setLineupRecommendations(lineupRecommendations.slice(0, 3)); // Keep top 3
+  const { data: gameStats, isLoading: statsLoading } = useQuery({
+    queryKey: ['game-stats-batch', selectedOpponent?.teamId],
+    queryFn: async () => {
+      if (!games || !selectedOpponent) return {};
+
+      const opponentGames = games.filter(game => 
+        (game.homeTeamId === currentTeamId && game.awayTeamId === selectedOpponent.teamId) ||
+        (game.awayTeamId === currentTeamId && game.homeTeamId === selectedOpponent.teamId)
+      );
+
+      if (opponentGames.length === 0) return {};
+
+      const gameIds = opponentGames.map(g => g.id);
+      return apiClient.post('/api/games/stats/batch', { gameIds });
+    },
+    enabled: !!games && !!selectedOpponent,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // Player availability mutation
+  const saveAvailabilityMutation = useMutation({
+    mutationFn: async (availabilityUpdate: { gameId: number; playerId: number; status: string }) => {
+      return apiClient.post('/api/player-availability', availabilityUpdate);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['player-availability'] });
+    },
+  });
+
+  // Quick actions
+  const handleSetAllAvailable = () => {
+    if (!players) return;
+    const allAvailable = players.reduce((acc, player) => {
+      acc[player.id] = 'available';
+      return acc;
+    }, {} as Record<number, 'available' | 'unavailable' | 'maybe'>);
+    setAvailabilityData(allAvailable);
   };
 
-  if (clubLoading || !currentClubId) {
+  const handleUseLastGameAvailability = async () => {
+    if (!games || !currentTeamId) return;
+
+    const lastGame = games
+      .filter(g => g.homeTeamId === currentTeamId || g.awayTeamId === currentTeamId)
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
+
+    if (lastGame) {
+      try {
+        const lastAvailability = await apiClient.get(`/api/games/${lastGame.id}/availability`);
+        const availabilityMap = lastAvailability.reduce((acc, avail) => {
+          acc[avail.playerId] = avail.status;
+          return acc;
+        }, {} as Record<number, 'available' | 'unavailable' | 'maybe'>);
+        setAvailabilityData(availabilityMap);
+      } catch (error) {
+        console.error('Failed to load last game availability:', error);
+      }
+    }
+  };
+
+  // Generate opponent analysis
+  const opponentAnalysis = useMemo(() => {
+    if (!games || !gameStats || !selectedOpponent) return null;
+
+    const opponentGames = games.filter(game => 
+      (game.homeTeamId === currentTeamId && game.awayTeamId === selectedOpponent.teamId) ||
+      (game.awayTeamId === currentTeamId && game.homeTeamId === selectedOpponent.teamId)
+    );
+
+    if (opponentGames.length === 0) return null;
+
+    let wins = 0;
+    let totalOurScore = 0;
+    let totalTheirScore = 0;
+    const quarterPerformance = { 1: { for: 0, against: 0 }, 2: { for: 0, against: 0 }, 3: { for: 0, against: 0 }, 4: { for: 0, against: 0 } };
+
+    opponentGames.forEach(game => {
+      const stats = gameStats[game.id] || [];
+      const ourScore = stats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
+      const theirScore = stats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
+
+      if (ourScore > theirScore) wins++;
+      totalOurScore += ourScore;
+      totalTheirScore += theirScore;
+
+      // Quarter analysis
+      [1, 2, 3, 4].forEach(quarter => {
+        const quarterStats = stats.filter(s => s.quarter === quarter);
+        const quarterFor = quarterStats.reduce((sum, s) => sum + (s.goalsFor || 0), 0);
+        const quarterAgainst = quarterStats.reduce((sum, s) => sum + (s.goalsAgainst || 0), 0);
+        quarterPerformance[quarter].for += quarterFor;
+        quarterPerformance[quarter].against += quarterAgainst;
+      });
+    });
+
+    const winRate = (wins / opponentGames.length) * 100;
+    const avgOurScore = totalOurScore / opponentGames.length;
+    const avgTheirScore = totalTheirScore / opponentGames.length;
+
+    return {
+      gamesPlayed: opponentGames.length,
+      winRate,
+      avgOurScore: Math.round(avgOurScore * 10) / 10,
+      avgTheirScore: Math.round(avgTheirScore * 10) / 10,
+      quarterPerformance,
+      confidence: opponentGames.length >= 3 ? 'high' : opponentGames.length >= 1 ? 'medium' : 'low'
+    };
+  }, [games, gameStats, selectedOpponent, currentTeamId]);
+
+  // Generate player recommendations
+  const playerRecommendations = useMemo((): PlayerRecommendation[] => {
+    if (!players || !gameStats || !selectedOpponent) return [];
+
+    const availablePlayers = players.filter(p => 
+      availabilityData[p.id] === 'available' || 
+      (Object.keys(availabilityData).length === 0) // If no availability set, consider all available
+    );
+
+    return POSITIONS_ORDER.map(position => {
+      const positionPlayers = availablePlayers.filter(p => 
+        p.positionPreferences?.includes(position)
+      );
+
+      const playersWithStats = positionPlayers.map(player => {
+        const playerStats = Object.values(gameStats).flat().filter(stat => 
+          stat.position === position && stat.teamId === currentTeamId
+        );
+
+        const gamesInPosition = playerStats.length;
+        const avgRating = gamesInPosition > 0 
+          ? playerStats.reduce((sum, stat) => sum + (stat.rating || 0), 0) / gamesInPosition 
+          : 0;
+
+        // Calculate confidence based on data availability
+        let confidence = 0.5; // Base confidence
+        if (gamesInPosition >= 5) confidence += 0.3;
+        else if (gamesInPosition >= 2) confidence += 0.2;
+        else if (gamesInPosition >= 1) confidence += 0.1;
+
+        if (p.positionPreferences?.[0] === position) confidence += 0.2; // Preferred position
+        if (avgRating >= 7) confidence += 0.2;
+        else if (avgRating >= 5) confidence += 0.1;
+
+        const reason = gamesInPosition > 0 
+          ? `Avg rating: ${avgRating.toFixed(1)} (${gamesInPosition} games)`
+          : `Preferred position, no recent stats`;
+
+        return {
+          player,
+          confidence: Math.min(confidence, 1),
+          reason,
+          avgRating: avgRating > 0 ? avgRating : undefined,
+          gamesInPosition: gamesInPosition > 0 ? gamesInPosition : undefined
+        };
+      });
+
+      playersWithStats.sort((a, b) => b.confidence - a.confidence);
+
+      return {
+        position,
+        players: playersWithStats.slice(0, 3) // Top 3 recommendations
+      };
+    });
+  }, [players, gameStats, selectedOpponent, availabilityData, currentTeamId]);
+
+  // Loading states
+  if (gamesLoading || playersLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <Loader2 className="mx-auto h-8 w-8 animate-spin" />
-          <p className="mt-2 text-sm text-muted-foreground">Loading club data...</p>
-        </div>
-      </div>
+      <PageTemplate title="Game Preparation" icon={Target}>
+        <LoadingState message="Loading preparation data..." />
+      </PageTemplate>
     );
   }
 
-  const isLoading = isLoadingGames || isLoadingStats || isLoadingRosters || isLoadingPlayers;
-
-  if (isLoading) {
+  // Error states
+  if (gamesError || playersError) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <h2 className="text-xl font-semibold mb-2">Loading Preparation Analysis</h2>
-          <p className="text-muted-foreground">Analyzing game data and generating recommendations...</p>
-        </div>
-      </div>
+      <PageTemplate title="Game Preparation" icon={Target}>
+        <ErrorDisplay 
+          error={gamesError || playersError} 
+          retry={() => queryClient.invalidateQueries()}
+        />
+      </PageTemplate>
     );
   }
 
-  const nextGame = upcomingGames.find(g => g.isNextGame);
+  // Get unique opponents from games
+  const opponents = useMemo(() => {
+    if (!games) return [];
+
+    const opponentMap = new Map();
+
+    games.forEach(game => {
+      if (game.homeTeamId === currentTeamId && game.awayTeamId) {
+        opponentMap.set(game.awayTeamId, {
+          teamId: game.awayTeamId,
+          teamName: game.awayTeamName,
+          clubName: game.awayClubName
+        });
+      } else if (game.awayTeamId === currentTeamId && game.homeTeamId) {
+        opponentMap.set(game.homeTeamId, {
+          teamId: game.homeTeamId,
+          teamName: game.homeTeamName,
+          clubName: game.homeClubName
+        });
+      }
+    });
+
+    return Array.from(opponentMap.values());
+  }, [games, currentTeamId]);
 
   return (
-    <>
-      <Helmet>
-        <title>Game Preparation | {currentClub?.name} Stats Tracker</title>
-        <meta name="description" content={`Comprehensive game preparation and tactical analysis`} />
-      </Helmet>
-
-      <div className="container py-6 mx-auto space-y-6">
-        {/* Header with Next Game Highlight */}
-        <div className="flex items-center justify-between">
-          <div className="space-y-1">
-            <h1 className="text-3xl font-heading font-bold text-neutral-dark">
-              Game Preparation
-            </h1>
-            <p className="text-lg text-gray-600">
-              Tactical analysis and team recommendations
-              {currentTeamId && (
-                <span className="ml-2 text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                  {currentClub?.name} - Selected Team
-                </span>
-              )}
-            </p>
-          </div>
-          <div className="flex items-center gap-4">
-            <TeamSwitcher mode="required" />
-          </div>
-        </div>
-
-        {/* Next Game Alert */}
-        {nextGame && (
-          <Card className="border-l-4 border-l-blue-500 bg-blue-50">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-5 w-5 text-blue-600" />
-                    <div>
-                      <h3 className="font-semibold text-blue-900">Next Game</h3>
-                      <p className="text-sm text-blue-700">
-                        vs {nextGame.opponent} • {formatShortDate(nextGame.date)} at {nextGame.time}
-                      </p>
-                    </div>
-                  </div>
-                  {selectedAnalysis && (
-                    <div className="flex items-center gap-2">
-                      <Badge variant={selectedAnalysis.ourRecord.winRate >= 60 ? "default" : selectedAnalysis.ourRecord.winRate >= 40 ? "secondary" : "destructive"}>
-                        {selectedAnalysis.ourRecord.winRate.toFixed(0)}% Win Rate
-                      </Badge>
-                      <div className="flex gap-1">
-                        {selectedAnalysis.recentForm.slice(0, 3).map((result, index) => (
-                          <ResultBadge key={index} result={result === 'W' ? 'Win' : result === 'L' ? 'Loss' : 'Draw'} size="sm" />
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => {
-                    setFilterMode('next-game');
-                    if (nextGame) setSelectedOpponent(nextGame.opponentId.toString());
-                  }}
-                >
-                  Focus on Next Game
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Opponent Selection */}
+    <PageTemplate 
+      title="Game Preparation" 
+      icon={Target}
+      description="Prepare your team for the upcoming game with AI-powered recommendations"
+    >
+      <div className="space-y-6">
+        {/* Progress Indicator */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Target className="h-5 w-5" />
-              Select Opponent for Analysis
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center space-x-2">
+                <CheckCircle className="h-5 w-5" />
+                <span>Preparation Progress</span>
+              </CardTitle>
+              <Badge variant={progressPercentage === 100 ? "default" : "secondary"}>
+                {completedSteps}/{totalSteps} Complete
+              </Badge>
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center gap-4 mb-4">
-              <Select value={filterMode} onValueChange={(value: 'next-game' | 'all-opponents') => setFilterMode(value)}>
-                <SelectTrigger className="w-[200px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="next-game">Next Game Focus</SelectItem>
-                  <SelectItem value="all-opponents">All Opponents</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select value={selectedOpponent} onValueChange={setSelectedOpponent}>
-                <SelectTrigger className="flex-1">
-                  <SelectValue placeholder="Select opponent to analyze..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {filterMode === 'next-game' ? (
-                    upcomingGames.map(game => (
-                      <SelectItem key={game.opponentId} value={game.opponentId.toString()}>
-                        {game.opponent} - {formatShortDate(game.date)} {game.isNextGame && '(Next Game)'}
-                      </SelectItem>
-                    ))
+            <Progress value={progressPercentage} className="mb-4" />
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {preparationSteps.map((step, index) => (
+                <div 
+                  key={step.id}
+                  className={`flex items-center space-x-2 p-2 rounded ${
+                    step.completed ? 'bg-green-50' : 'bg-gray-50'
+                  }`}
+                >
+                  {step.completed ? (
+                    <CheckCircle className="h-4 w-4 text-green-600" />
                   ) : (
-                    // Show all opponents from completed games
-                    Array.from(new Set(completedGames.map(game => {
-                      const isHome = game.homeClubId === currentClubId;
-                      const isAway = game.awayClubId === currentClubId;
-                      if (isHome && isAway) return null;
-                      return isHome ? game.awayTeamId : game.homeTeamId;
-                    }).filter(Boolean))).map(opponentId => {
-                      const game = completedGames.find(g => {
-                        const isHome = g.homeClubId === currentClubId;
-                        const oppId = isHome ? g.awayTeamId : g.homeTeamId;
-                        return oppId === opponentId;
-                      });
-                      const opponentName = game ? (game.homeClubId === currentClubId ? game.awayTeamName : game.homeTeamName) : `Team ${opponentId}`;
-
-                      return (
-                        <SelectItem key={opponentId} value={opponentId.toString()}>
-                          {opponentName}
-                        </SelectItem>
-                      );
-                    })
+                    <div className="h-4 w-4 rounded-full border-2 border-gray-300" />
                   )}
-                </SelectContent>
-              </Select>
+                  <span className={`text-sm ${step.completed ? 'text-green-700' : 'text-gray-600'}`}>
+                    {step.title}
+                  </span>
+                  {step.optional && (
+                    <Badge variant="outline" className="text-xs">Optional</Badge>
+                  )}
+                </div>
+              ))}
             </div>
           </CardContent>
         </Card>
 
-        {/* Analysis Content */}
-        {selectedAnalysis && (
-          <Tabs defaultValue="overview" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-5">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="tactical">Tactical Analysis</TabsTrigger>
-              <TabsTrigger value="players">Player Recommendations</TabsTrigger>
-              <TabsTrigger value="lineups">Lineup Suggestions</TabsTrigger>
-              <TabsTrigger value="preparation">Game Plan</TabsTrigger>
-            </TabsList>
+        {/* Main Content Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="opponent">Select Opponent</TabsTrigger>
+            <TabsTrigger value="availability" disabled={!selectedOpponent}>
+              Player Availability
+            </TabsTrigger>
+            <TabsTrigger value="recommendations" disabled={!selectedOpponent}>
+              Recommendations
+            </TabsTrigger>
+            <TabsTrigger value="apply" disabled={!selectedOpponent}>
+              Apply to Roster
+            </TabsTrigger>
+          </TabsList>
 
-            {/* Overview Tab */}
-            <TabsContent value="overview" className="space-y-6">
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Head-to-Head Summary */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle>vs {selectedAnalysis.teamName}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
+          {/* Opponent Selection */}
+          <TabsContent value="opponent" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Select Your Opponent</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Select 
+                  value={selectedOpponent?.teamId.toString() || ""} 
+                  onValueChange={(value) => {
+                    const opponent = opponents.find(o => o.teamId === parseInt(value));
+                    setSelectedOpponent(opponent || null);
+                    if (opponent) setActiveTab('availability');
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choose an opponent team..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {opponents.map(opponent => (
+                      <SelectItem key={opponent.teamId} value={opponent.teamId.toString()}>
+                        {opponent.teamName} ({opponent.clubName})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                {selectedOpponent && opponentAnalysis && (
+                  <div className="mt-4 p-4 bg-blue-50 rounded-lg">
+                    <h4 className="font-semibold mb-2">Historical Analysis</h4>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                       <div>
-                        <div className="text-2xl font-bold">
-                          {selectedAnalysis.ourRecord.wins}-{selectedAnalysis.ourRecord.losses}
-                          {selectedAnalysis.ourRecord.draws > 0 && `-${selectedAnalysis.ourRecord.draws}`}
-                        </div>
-                        <p className="text-sm text-gray-600">Historical Record</p>
+                        <span className="text-gray-600">Games Played</span>
+                        <p className="font-semibold">{opponentAnalysis.gamesPlayed}</p>
                       </div>
-
                       <div>
-                        <Progress value={selectedAnalysis.ourRecord.winRate} className="h-2" />
-                        <p className="text-sm mt-1">{selectedAnalysis.ourRecord.winRate.toFixed(1)}% Win Rate</p>
+                        <span className="text-gray-600">Win Rate</span>
+                        <p className="font-semibold">{opponentAnalysis.winRate.toFixed(1)}%</p>
                       </div>
-
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm">Recent Form:</span>
-                        <div className="flex gap-1">
-                          {selectedAnalysis.recentForm.map((result, index) => (
-                            <ResultBadge key={index} result={result === 'W' ? 'Win' : result === 'L' ? 'Loss' : 'Draw'} size="sm" />
-                          ))}
-                        </div>
+                      <div>
+                        <span className="text-gray-600">Avg Score</span>
+                        <p className="font-semibold">{opponentAnalysis.avgOurScore} - {opponentAnalysis.avgTheirScore}</p>
+                      </div>
+                      <div>
+                        <span className="text-gray-600">Data Quality</span>
+                        <Badge variant={
+                          opponentAnalysis.confidence === 'high' ? 'default' : 
+                          opponentAnalysis.confidence === 'medium' ? 'secondary' : 'outline'
+                        }>
+                          {opponentAnalysis.confidence}
+                        </Badge>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-                {/* Scoring Analysis */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Scoring Patterns</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      <div className="flex justify-between">
-                        <span>Our Average:</span>
-                        <span className="font-bold">{selectedAnalysis.avgScores.ourAvg.toFixed(1)}</span>
+          {/* Player Availability */}
+          <TabsContent value="availability" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle>Player Availability</CardTitle>
+                  <div className="flex space-x-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={handleSetAllAvailable}
+                    >
+                      <Zap className="h-4 w-4 mr-1" />
+                      All Available
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={handleUseLastGameAvailability}
+                    >
+                      <RotateCcw className="h-4 w-4 mr-1" />
+                      Use Last Game
+                    </Button>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {Object.keys(availabilityData).length === 0 && (
+                  <Alert className="mb-4">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertDescription>
+                      No availability set. Players will be considered available by default for recommendations.
+                    </AlertDescription>
+                  </Alert>
+                )}
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {players?.map(player => (
+                    <div key={player.id} className="flex items-center space-x-3 p-3 border rounded-lg">
+                      <PlayerAvatar player={player} size="sm" />
+                      <div className="flex-1">
+                        <p className="font-medium">{player.displayName}</p>
+                        <p className="text-xs text-gray-500">
+                          {player.positionPreferences?.join(', ') || 'No positions set'}
+                        </p>
                       </div>
-                      <div className="flex justify-between">
-                        <span>Their Average:</span>
-                        <span className="font-bold">{selectedAnalysis.avgScores.theirAvg.toFixed(1)}</span>
-                      </div>
-                      <div className="flex justify-between border-t pt-2">
-                        <span>Average Margin:</span>
-                        <span className={`font-bold ${selectedAnalysis.avgScores.margin >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                          {selectedAnalysis.avgScores.margin >= 0 ? '+' : ''}{selectedAnalysis.avgScores.margin.toFixed(1)}
-                        </span>
-                      </div>
+                      <Select
+                        value={availabilityData[player.id] || "available"}
+                        onValueChange={(value) => 
+                          setAvailabilityData(prev => ({ ...prev, [player.id]: value as any }))
+                        }
+                      >
+                        <SelectTrigger className="w-28">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="available">Available</SelectItem>
+                          <SelectItem value="maybe">Maybe</SelectItem>
+                          <SelectItem value="unavailable">Unavailable</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
-                  </CardContent>
-                </Card>
+                  ))}
+                </div>
 
-                {/* Key Insights */}
+                <div className="mt-4 flex justify-between">
+                  <Button variant="outline" onClick={() => setActiveTab('opponent')}>
+                    Back
+                  </Button>
+                  <Button onClick={() => setActiveTab('recommendations')}>
+                    View Recommendations
+                    <ArrowRight className="h-4 w-4 ml-1" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Recommendations */}
+          <TabsContent value="recommendations" className="space-y-4">
+            {statsLoading ? (
+              <LoadingState message="Analyzing player performance..." />
+            ) : (
+              <>
                 <Card>
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <TrendingUp className="h-5 w-5" />
-                      Key Insights
+                    <CardTitle className="flex items-center space-x-2">
+                      <Lightbulb className="h-5 w-5" />
+                      <span>Position Recommendations</span>
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <ul className="space-y-2">
-                      {selectedAnalysis.keyInsights.map((insight, index) => (
-                        <li key={index} className="flex items-start gap-2 text-sm">
-                          <CheckCircle className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
-                          {insight}
-                        </li>
-                      ))}
-                    </ul>
-                  </CardContent>
-                </Card>
-              </div>
-            </TabsContent>
-
-            {/* Tactical Analysis Tab */}
-            <TabsContent value="tactical" className="space-y-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Quarter Analysis */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Quarter Performance Analysis</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      {Object.entries(selectedAnalysis.quarterPerformance).map(([quarter, data]) => (
-                        <div key={quarter} className="p-3 rounded-lg bg-gray-50">
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="font-medium">Quarter {quarter}</span>
-                            <span className={`font-bold ${data.margin >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                              {data.margin >= 0 ? '+' : ''}{data.margin.toFixed(1)}
-                            </span>
-                          </div>
-                          <div className="text-sm text-gray-600">
-                            {data.ourAvg.toFixed(1)} - {data.theirAvg.toFixed(1)} (avg scores)
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Tactical Notes */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <FileText className="h-5 w-5" />
-                      Tactical Notes
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ul className="space-y-3">
-                      {selectedAnalysis.tacticalNotes.map((note, index) => (
-                        <li key={index} className="flex items-start gap-2 text-sm">
-                          <ArrowRight className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
-                          {note}
-                        </li>
-                      ))}
-                    </ul>
-                  </CardContent>
-                </Card>
-              </div>
-            </TabsContent>
-
-            {/* Player Recommendations Tab */}
-            <TabsContent value="players" className="space-y-6">
-              <div className="grid gap-4">
-                {['GK', 'GD', 'WD', 'C', 'WA', 'GA', 'GS'].map(position => {
-                  const positionPlayers = playerRecommendations.filter(p => p.position === position);
-
-                  return (
-                    <Card key={position}>
-                      <CardHeader>
-                        <CardTitle className="text-lg">{position} Recommendations</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        {positionPlayers.length === 0 ? (
-                          <p className="text-gray-500 text-sm">No data available for this position</p>
-                        ) : (
-                          <div className="space-y-3">
-                            {positionPlayers.slice(0, 3).map(player => (
-                              <div key={`${player.playerId}-${position}`} className="flex items-center justify-between p-3 rounded-lg bg-gray-50">
-                                <div className="flex items-center gap-3">
-                                  <div>
-                                    <h4 className="font-medium">{player.playerName}</h4>
-                                    <p className="text-sm text-gray-600">{player.gamesAgainstOpponent} games vs opponent</p>
-                                  </div>
-                                  <Badge variant={
-                                    player.recommendation === 'strongly-recommended' ? 'default' :
-                                    player.recommendation === 'recommended' ? 'secondary' :
-                                    player.recommendation === 'consider' ? 'outline' : 'destructive'
-                                  }>
-                                    {player.recommendation === 'strongly-recommended' ? 'Highly Recommended' :
-                                     player.recommendation === 'recommended' ? 'Recommended' :
-                                     player.recommendation === 'consider' ? 'Consider' : 'Caution'}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                      {playerRecommendations.map(rec => (
+                        <div key={rec.position} className="border rounded-lg p-4">
+                          <h4 className="font-semibold mb-3">{rec.position}</h4>
+                          {rec.players.length === 0 ? (
+                            <p className="text-gray-500 text-sm">No available players for this position</p>
+                          ) : (
+                            <div className="space-y-2">
+                              {rec.players.map((playerRec, index) => (
+                                <div key={playerRec.player.id} className="flex items-center space-x-3 p-2 bg-gray-50 rounded">
+                                  <Badge variant={index === 0 ? "default" : "secondary"}>
+                                    #{index + 1}
                                   </Badge>
+                                  <PlayerAvatar player={playerRec.player} size="sm" />
+                                  <div className="flex-1">
+                                    <p className="font-medium text-sm">{playerRec.player.displayName}</p>
+                                    <p className="text-xs text-gray-600">{playerRec.reason}</p>
+                                  </div>
+                                  <div className="text-right">
+                                    <div className="text-xs font-medium">
+                                      {Math.round(playerRec.confidence * 100)}% confidence
+                                    </div>
+                                  </div>
                                 </div>
-                                <div className="text-right">
-                                  <div className="font-bold">{player.successRate.toFixed(0)}%</div>
-                                  <div className="text-sm text-gray-600">Success Rate</div>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
-            </TabsContent>
-
-            {/* Lineup Suggestions Tab */}
-            <TabsContent value="lineups" className="space-y-6">
-              <div className="grid gap-6">
-                {lineupRecommendations.map((lineup, index) => (
-                  <Card key={lineup.id} className={index === 0 ? 'border-l-4 border-l-green-500' : ''}>
-                    <CardHeader>
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="flex items-center gap-2">
-                          {index === 0 && <Star className="h-5 w-5 text-green-600" />}
-                          Lineup Recommendation {index + 1}
-                          {index === 0 && <Badge>Recommended</Badge>}
-                        </CardTitle>
-                        <div className="text-right">
-                          <div className="text-lg font-bold text-green-600">{lineup.overallStrength}%</div>
-                          <div className="text-sm text-gray-600">Confidence</div>
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        {/* Court Layout */}
-                        <div>
-                          <h4 className="font-medium mb-3">Suggested Lineup</h4>
-                          <div className="grid grid-cols-1 gap-2">
-                            {['GS', 'GA', 'WA', 'C', 'WD', 'GD', 'GK'].map(position => {
-                              const player = lineup.positions[position];
-                              return (
-                                <div key={position} className="flex items-center justify-between p-2 rounded bg-gray-50">
-                                  <span className="font-medium w-8">{position}</span>
-                                  <span className="flex-1 text-center">{player?.playerName || 'TBD'}</span>
-                                  <span className="text-sm text-gray-600 w-12 text-right">
-                                    {player ? `${player.confidence}%` : ''}
-                                  </span>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-
-                        {/* Reasoning and Risk Factors */}
-                        <div className="space-y-4">
-                          <div>
-                            <h4 className="font-medium mb-2">Reasoning</h4>
-                            <ul className="space-y-1">
-                              {lineup.reasoning.map((reason, i) => (
-                                <li key={i} className="text-sm text-gray-600 flex items-start gap-2">
-                                  <CheckCircle className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
-                                  {reason}
-                                </li>
                               ))}
-                            </ul>
-                          </div>
-
-                          {lineup.riskFactors.length > 0 && (
-                            <div>
-                              <h4 className="font-medium mb-2">Risk Factors</h4>
-                              <ul className="space-y-1">
-                                {lineup.riskFactors.map((risk, i) => (
-                                  <li key={i} className="text-sm text-red-600 flex items-start gap-2">
-                                    <AlertTriangle className="h-4 w-4 text-red-600 mt-0.5 flex-shrink-0" />
-                                    {risk}
-                                  </li>
-                                ))}
-                              </ul>
                             </div>
                           )}
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </TabsContent>
-
-            {/* Game Plan Tab */}
-            <TabsContent value="preparation" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Trophy className="h-5 w-5" />
-                    Game Plan Summary vs {selectedAnalysis.teamName}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div>
-                      <h4 className="font-semibold mb-3">Strategic Focus Areas</h4>
-                      <ul className="space-y-2 text-sm">
-                        <li className="flex items-start gap-2">
-                          <span className="text-blue-500">•</span>
-                          <span>Historical win rate: {selectedAnalysis.ourRecord.winRate.toFixed(0)}% - {
-                            selectedAnalysis.ourRecord.winRate >= 60 ? 'confident approach' :
-                            selectedAnalysis.ourRecord.winRate >= 40 ? 'balanced strategy needed' :
-                            'defensive preparation required'
-                          }</span>
-                        </li>
-                        <li className="flex items-start gap-2">
-                          <span className="text-blue-500">•</span>
-                          <span>Average margin: {selectedAnalysis.avgScores.margin >= 0 ? '+' : ''}{selectedAnalysis.avgScores.margin.toFixed(1)} - {
-                            Math.abs(selectedAnalysis.avgScores.margin) > 5 ? 'expect significant margin' : 'close game likely'
-                          }</span>
-                        </li>
-                        <li className="flex items-start gap-2">
-                          <span className="text-blue-500">•</span>
-                          <span>Last played: {formatShortDate(selectedAnalysis.lastPlayed)} - review game notes</span>
-                        </li>
-                      </ul>
+                      ))}
                     </div>
+                  </CardContent>
+                </Card>
 
-                    <div>
-                      <h4 className="font-semibold mb-3">Pre-Game Checklist</h4>
-                      <ul className="space-y-2 text-sm">
-                        <li className="flex items-start gap-2">
-                          <span className="text-green-500">✓</span>
-                          <span>Review recommended lineup and substitution options</span>
-                        </li>
-                        <li className="flex items-start gap-2">
-                          <span className="text-green-500">✓</span>
-                          <span>Brief players on opponent strengths and weaknesses</span>
-                        </li>
-                        <li className="flex items-start gap-2">
-                          <span className="text-green-500">✓</span>
-                          <span>Plan quarter-specific strategies based on historical performance</span>
-                        </li>
-                        <li className="flex items-start gap-2">
-                          <span className="text-green-500">✓</span>
-                          <span>Prepare for tactical adjustments during timeouts</span>
-                        </li>
-                      </ul>
-                    </div>
+                <div className="flex justify-between">
+                  <Button variant="outline" onClick={() => setActiveTab('availability')}>
+                    Back
+                  </Button>
+                  <Button onClick={() => setActiveTab('apply')}>
+                    Apply to Roster
+                    <ArrowRight className="h-4 w-4 ml-1" />
+                  </Button>
+                </div>
+              </>
+            )}
+          </TabsContent>
+
+          {/* Apply to Roster */}
+          <TabsContent value="apply" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Apply Recommendations to Roster</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <Alert>
+                    <Calendar className="h-4 w-4" />
+                    <AlertDescription>
+                      Select an upcoming game to apply these recommendations to your roster.
+                    </AlertDescription>
+                  </Alert>
+
+                  {/* Game Selection */}
+                  <div className="grid gap-4">
+                    {games
+                      ?.filter(game => 
+                        !game.statusIsCompleted && 
+                        ((game.homeTeamId === currentTeamId && game.awayTeamId === selectedOpponent?.teamId) ||
+                         (game.awayTeamId === currentTeamId && game.homeTeamId === selectedOpponent?.teamId))
+                      )
+                      .map(game => (
+                        <div 
+                          key={game.id} 
+                          className={`p-4 border rounded-lg cursor-pointer transition-colors ${
+                            selectedGameId === game.id ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
+                          }`}
+                          onClick={() => setSelectedGameId(game.id)}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="font-medium">
+                                {game.homeTeamName} vs {game.awayTeamName}
+                              </p>
+                              <div className="flex items-center space-x-4 text-sm text-gray-600 mt-1">
+                                <span className="flex items-center space-x-1">
+                                  <Calendar className="h-3 w-3" />
+                                  <span>{new Date(game.date).toLocaleDateString()}</span>
+                                </span>
+                                <span>{game.time}</span>
+                                {game.venue && (
+                                  <span className="flex items-center space-x-1">
+                                    <MapPin className="h-3 w-3" />
+                                    <span>{game.venue}</span>
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            <Checkbox checked={selectedGameId === game.id} />
+                          </div>
+                        </div>
+                      ))}
                   </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
-        )}
 
-        {/* No Selection State */}
-        {!selectedAnalysis && (
-          <Card>
-            <CardContent className="text-center py-8">
-              <Target className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Select an Opponent to Begin Analysis</h3>
-              <p className="text-gray-600">
-                Choose an opponent from the dropdown above to see detailed analysis, player recommendations, and tactical insights.
-              </p>
-            </CardContent>
-          </Card>
-        )}
+                  {selectedGameId && (
+                    <div className="flex space-x-2">
+                      <Button 
+                        onClick={() => navigate(`/roster/${selectedGameId}`)}
+                        className="flex-1"
+                      >
+                        <Play className="h-4 w-4 mr-2" />
+                        Open Roster Manager
+                      </Button>
+                      <Button 
+                        variant="outline"
+                        onClick={() => {
+                          // Copy recommendations to clipboard or save as draft
+                          console.log('Save recommendations as draft');
+                        }}
+                      >
+                        <Save className="h-4 w-4 mr-2" />
+                        Save Draft
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
-    </>
+    </PageTemplate>
   );
 }
