@@ -90,21 +90,22 @@ export default function Settings() {
       <div className="grid gap-6 md:grid-cols-2">
         <div className="space-y-6">
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Database className="h-5 w-5" />
-                Data Management
-              </CardTitle>
-              <CardDescription>
-                Export and import your netball management data
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-                <Button variant="outline" className="w-full">
-                  Backup All Data
-                </Button>
-                <Button variant="outline" className="w-full">
-                  Export Statistics
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Database className="h-5 w-5" />
+                  Quick Actions
+                </CardTitle>
+                <CardDescription>
+                  Common data management tasks
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => window.open('/data-management', '_blank')}
+                >
+                  Open Data Management
                 </Button>
               </CardContent>
             </Card>
@@ -143,21 +144,6 @@ export default function Settings() {
 
                 <Button onClick={saveSettings} variant="outline" className="w-full">
                   Save Display Preferences
-                </Button>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Backup & Export</CardTitle>
-                <CardDescription>Manage your data</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <Button variant="outline" className="w-full">
-                  Backup All Data
-                </Button>
-                <Button variant="outline" className="w-full">
-                  Export Statistics
                 </Button>
               </CardContent>
             </Card>
