@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Game, GameStat } from '@shared/schema';
@@ -17,8 +18,8 @@ interface TeamPerformanceProps {
   centralizedStats?: Record<number, GameStat[]>; // Centralized game stats
 }
 
-// Team Performance Component - Default Export
-function TeamPerformance({ games, className, activeSeason, selectedSeason, centralizedStats }: TeamPerformanceProps) {
+// Team Performance Component
+const TeamPerformance = ({ games, className, activeSeason, selectedSeason, centralizedStats }: TeamPerformanceProps) => {
   const { currentTeamId } = useClub();
   const [quarterPerformance, setQuarterPerformance] = useState<{
     avgTeamScoreByQuarter: Record<number, number>;
@@ -470,6 +471,6 @@ function TeamPerformance({ games, className, activeSeason, selectedSeason, centr
         </div>
     </BaseWidget>
   );
-}
+};
 
 export default TeamPerformance;
