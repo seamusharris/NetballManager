@@ -63,24 +63,52 @@ export default function Roster() {
     }
   });
 
-  // Initialize available players to all active players when players load
+  // Check for preparation state and restore it
+  useEffect(() => {
+    if (gameIdFromUrl) {
+      // Check for preparation state from game preparation page
+      const prepState = sessionStorage.getItem('roster-prep-state');
+      if (prepState) {
+        try {
+          const state = JSON.parse(prepState);
+          if (state.gameId === gameIdFromUrl && state.fromPreparation) {
+            console.log('Restoring preparation state for game:', gameIdFromUrl);
+            
+            // Convert availability data format
+            if (state.availability) {
+              const availableIds = Object.entries(state.availability)
+                .filter(([_, status]) => status === 'available')
+                .map(([id]) => parseInt(id));
+              setAvailablePlayerIds(availableIds);
+            }
+            
+            // Set current step based on what was completed
+            if (state.lineup && Object.values(state.lineup).every(p => p !== null)) {
+              setCurrentStep('roster');
+            } else {
+              setCurrentStep('availability');
+            }
+            
+            // Clear the session state after use
+            sessionStorage.removeItem('roster-prep-state');
+          }
+        } catch (error) {
+          console.error('Error restoring preparation state:', error);
+        }
+      }
+      
+      // Set game ID regardless
+      setSelectedGameId(gameIdFromUrl);
+    }
+  }, [gameIdFromUrl]);
+
+  // Initialize available players to all active players when players load (fallback)
   useEffect(() => {
     if (players.length > 0 && availablePlayerIds.length === 0) {
       const activePlayerIds = players.filter(p => p.active).map(p => p.id);
       setAvailablePlayerIds(activePlayerIds);
     }
   }, [players, availablePlayerIds.length]);
-
-  // Set selected game and step on mount if from URL
-  useEffect(() => {
-    console.log('useEffect triggered - gameIdFromUrl:', gameIdFromUrl, 'selectedGameId:', selectedGameId);
-    if (gameIdFromUrl && gameIdFromUrl !== selectedGameId) {
-      console.log('Setting game from URL parameter:', gameIdFromUrl);
-      setSelectedGameId(gameIdFromUrl);
-      setCurrentStep('availability');
-      console.log('Set current step to availability for game:', gameIdFromUrl);
-    }
-  }, [gameIdFromUrl]);
 
   // Debug logging for rendering conditions
   useEffect(() => {

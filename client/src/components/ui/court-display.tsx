@@ -1,4 +1,7 @@
+The CourtDisplay component is updated to handle player clicks, display player names, and show a customizable empty text message.
+```
 
+```replit_final_file
 import React from 'react';
 import { Position, POSITIONS } from '@shared/schema';
 import { convertTailwindToHex } from '@/lib/utils';

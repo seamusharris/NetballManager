@@ -16,6 +16,12 @@ import { useEffect, useState } from 'react';
 import { useRequestMonitor } from '@/hooks/use-request-monitor';
 import React from 'react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { RecentGames } from '@/components/dashboard/RecentGames';
+import { UpcomingGames } from '@/components/dashboard/UpcomingGames';
+import { TopPlayersWidget } from '@/components/dashboard/TopPlayersWidget';
+import { TeamPerformance } from '@/components/dashboard/TeamPerformance';
+import { QuickActionsWidget } from '@/components/dashboard/QuickActionsWidget';
+import { OpponentAnalysisWidget } from '@/components/dashboard/OpponentAnalysisWidget';
 
 export default function Dashboard() {
   const params = useParams();
@@ -285,6 +291,13 @@ export default function Dashboard() {
           isBatchDataLoading={isLoadingBatchData}
           teams={clubTeams}
         />
+        {/* Right Column - Secondary Widgets */}
+        <div className="space-y-6">
+          <TeamPerformance />
+          <OpponentAnalysisWidget />
+          <TopPlayersWidget />
+          <QuickActionsWidget />
+        </div>
       </div>
     </>
   );
