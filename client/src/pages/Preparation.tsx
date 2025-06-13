@@ -15,6 +15,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { LoadingState } from '@/components/ui/loading-state';
 import { ErrorDisplay } from '@/components/ui/error-display';
 import { PlayerAvatar } from '@/components/ui/player-avatar';
+import { PlayerAvailabilitySelector } from '@/components/ui/player-availability-selector';
 import { PageTemplate } from '@/components/layout/PageTemplate';
 import { useClub } from '@/contexts/ClubContext';
 import { apiClient } from '@/lib/apiClient';
@@ -146,10 +147,29 @@ export default function Preparation() {
         const response = await apiClient.get(`/api/teams/${currentTeamId}/players`);
         console.log(`Loaded ${response.length} team players for team ${currentTeamId}`);
         setTeamPlayers(response);
+        
+        // Default all players to available if no availability data exists
+        if (Object.keys(availabilityData).length === 0) {
+          const defaultAvailability = response.reduce((acc, player) => {
+            acc[player.id] = 'available';
+            return acc;
+          }, {} as Record<number, 'available' | 'unavailable' | 'maybe'>);
+          setAvailabilityData(defaultAvailability);
+        }
       } catch (error) {
         console.error('Error loading team players:', error);
         // Fallback to all club players if team players can't be loaded
-        setTeamPlayers(players || []);
+        const fallbackPlayers = players || [];
+        setTeamPlayers(fallbackPlayers);
+        
+        // Default all fallback players to available if no availability data exists
+        if (Object.keys(availabilityData).length === 0) {
+          const defaultAvailability = fallbackPlayers.reduce((acc, player) => {
+            acc[player.id] = 'available';
+            return acc;
+          }, {} as Record<number, 'available' | 'unavailable' | 'maybe'>);
+          setAvailabilityData(defaultAvailability);
+        }
       } finally {
         setIsLoadingTeamPlayers(false);
       }
@@ -288,65 +308,7 @@ export default function Preparation() {
     });
   }, [players, gameStats, selectedOpponent, availabilityData, currentTeamId]);
 
-  // Quick actions (defined after hooks)
-  const handleSetAllAvailable = () => {
-    if (!teamPlayers) return;
-    const allAvailable = teamPlayers.reduce((acc, player) => {
-      acc[player.id] = 'available';
-      return acc;
-    }, {} as Record<number, 'available' | 'unavailable' | 'maybe'>);
-    setAvailabilityData(allAvailable);
-  };
-
-  const handleUseLastGameAvailability = async () => {
-    if (!games || !currentTeamId) return;
-
-    const lastGame = games
-      .filter(g => g.homeTeamId === currentTeamId || g.awayTeamId === currentTeamId)
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
-
-    if (lastGame) {
-      try {
-        const lastAvailability = await apiClient.get(`/api/games/${lastGame.id}/availability`);
-        const availabilityMap = lastAvailability.reduce((acc, avail) => {
-          acc[avail.playerId] = avail.status;
-          return acc;
-        }, {} as Record<number, 'available' | 'unavailable' | 'maybe'>);
-        setAvailabilityData(availabilityMap);
-      } catch (error) {
-        console.error('Failed to load last game availability:', error);
-      }
-    }
-  };
-
-  // Function to determine player color
-  const getPlayerColor = (player: Player): string => {
-    return player.avatarColor || 'bg-gray-400';
-  };
-
-  // Convert bg-color-shade to hex for styling
-  const getColorHex = (colorClass: string) => {
-    const colorMap: Record<string, string> = {
-      'bg-red-500': '#ef4444',
-      'bg-emerald-600': '#059669',
-      'bg-teal-600': '#0d9488',
-      'bg-blue-600': '#2563eb',
-      'bg-indigo-600': '#4f46e5',
-      'bg-purple-600': '#9333ea',
-      'bg-pink-600': '#db2777',
-      'bg-pink-500': '#ec4899',
-      'bg-orange-500': '#f97316',
-      'bg-yellow-600': '#ca8a04',
-      'bg-rose-600': '#e11d48',
-      'bg-lime-600': '#65a30d',
-      'bg-sky-600': '#0284c7',
-      'bg-violet-600': '#7c3aed',
-      'bg-cyan-600': '#0891b2',
-      'bg-gray-400': '#9ca3af',
-      'bg-green-600': '#16a34a'
-    };
-    return colorMap[colorClass] || '#9ca3af';
-  };
+  
 
   // NOW CONDITIONAL LOGIC AFTER ALL HOOKS
 
@@ -494,116 +456,23 @@ export default function Preparation() {
 
           {/* Player Availability */}
           <TabsContent value="availability" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle>Player Availability</CardTitle>
-                  <div className="flex space-x-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={handleSetAllAvailable}
-                    >
-                      <Zap className="h-4 w-4 mr-1" />
-                      All Available
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={handleUseLastGameAvailability}
-                    >
-                      <RotateCcw className="h-4 w-4 mr-1" />
-                      Use Last Game
-                    </Button>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 mt-2">
-                  <Badge variant="outline" className="mr-1">
-                    {Object.values(availabilityData).filter(status => status === 'available').length}
-                  </Badge>
-                  <span className="text-sm text-gray-600">Available Players</span>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {Object.keys(availabilityData).length === 0 && (
-                  <Alert className="mb-4">
-                    <AlertTriangle className="h-4 w-4" />
-                    <AlertDescription>
-                      No availability set. Players will be considered available by default for recommendations.
-                    </AlertDescription>
-                  </Alert>
-                )}
+            <PlayerAvailabilitySelector
+              players={teamPlayers}
+              availabilityData={availabilityData}
+              onAvailabilityChange={setAvailabilityData}
+              title="Player Availability"
+              showQuickActions={true}
+            />
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-2">
-                  {teamPlayers.map(player => {
-                    const isAvailable = availabilityData[player.id] === 'available';
-                    const playerColor = getPlayerColor(player);
-                    const colorHex = getColorHex(playerColor);
-                    const displayName = player.displayName || `${player.firstName} ${player.lastName}`;
-
-                    return (
-                      <div 
-                        key={player.id}
-                        className={cn(
-                          "p-4 border rounded-lg shadow-sm transition-all",
-                          isAvailable 
-                            ? "border-2 shadow" 
-                            : "opacity-75 border border-gray-200"
-                        )}
-                        style={{
-                          borderColor: isAvailable ? colorHex : '',
-                          backgroundColor: isAvailable ? `${colorHex}10` : ''
-                        }}
-                      >
-                        <div className="flex justify-between items-center">
-                          <div className="flex items-center gap-3">
-                            <div 
-                              className={cn(
-                                "w-8 h-8 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0",
-                                playerColor
-                              )}
-                            >
-                              <span className="font-semibold">
-                                {player.firstName?.[0]}{player.lastName?.[0]}
-                              </span>
-                            </div>
-                            <div>
-                              <div className="font-medium">{displayName}</div>
-                              {player.positionPreferences && player.positionPreferences.length > 0 && (
-                                <div className="text-xs text-gray-500">
-                                  {player.positionPreferences.join(', ')}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Switch
-                              checked={isAvailable}
-                              onCheckedChange={(checked) => {
-                                setAvailabilityData(prev => ({ 
-                                  ...prev, 
-                                  [player.id]: checked ? 'available' : 'unavailable' 
-                                }));
-                              }}
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                <div className="mt-4 flex justify-between">
-                  <Button variant="outline" onClick={() => setActiveTab('opponent')}>
-                    Back
-                  </Button>
-                  <Button onClick={() => setActiveTab('recommendations')}>
-                    View Recommendations
-                    <ArrowRight className="h-4 w-4 ml-1" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+            <div className="mt-4 flex justify-between">
+              <Button variant="outline" onClick={() => setActiveTab('opponent')}>
+                Back
+              </Button>
+              <Button onClick={() => setActiveTab('recommendations')}>
+                View Recommendations
+                <ArrowRight className="h-4 w-4 ml-1" />
+              </Button>
+            </div>
           </TabsContent>
 
           {/* Recommendations */}
