@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet';
 import { useQuery } from '@tanstack/react-query';
@@ -124,12 +123,12 @@ export default function Preparation() {
       .map(game => {
         const isHomeGame = game.homeClubId === currentClubId;
         const isAwayGame = game.awayClubId === currentClubId;
-        
+
         if (isHomeGame && isAwayGame) return null; // Skip intra-club games
-        
+
         let opponent = '';
         let opponentId = 0;
-        
+
         if (isHomeGame && !isAwayGame && game.awayTeamName !== 'Bye') {
           opponent = game.awayTeamName;
           opponentId = game.awayTeamId;
@@ -137,7 +136,7 @@ export default function Preparation() {
           opponent = game.homeTeamName;
           opponentId = game.homeTeamId;
         }
-        
+
         if (!opponent) return null;
 
         return {
@@ -188,15 +187,15 @@ export default function Preparation() {
     const opponentGames = completedGames.filter(game => {
       const isHomeGame = game.homeClubId === currentClubId;
       const isAwayGame = game.awayClubId === currentClubId;
-      
+
       if (isHomeGame && isAwayGame) return false;
-      
+
       const oppId = isHomeGame ? game.awayTeamId : game.homeTeamId;
       return oppId === opponentId;
     });
 
     console.log(`Found ${opponentGames.length} games against opponent ${opponentId}`);
-    
+
     if (opponentGames.length === 0) {
       setSelectedAnalysis(null);
       setPlayerRecommendations([]);
@@ -287,7 +286,7 @@ export default function Preparation() {
     const analysis: OpponentAnalysis = {
       teamId: opponentId,
       teamName: opponentGames[0].homeClubId === currentClubId ? opponentGames[0].awayTeamName : opponentGames[0].homeTeamName,
-      clubName: opponentGames[0].homeClubId === currentClubId ? opponentGames[0].awayClubName : opponentGames[0].homeClubName,
+      clubName: opponentGames[0].homeClubId === currentClubId ? opponentGames[0].awayClubName : opponentGames[0].homeTeamName,
       division: opponentGames[0].homeClubId === currentClubId ? opponentGames[0].awayTeamDivision : opponentGames[0].homeTeamDivision,
       gamesPlayed: opponentGames.length,
       ourRecord: { wins, losses, draws, winRate },
@@ -302,112 +301,161 @@ export default function Preparation() {
     setSelectedAnalysis(analysis);
 
     // Generate player recommendations
-    generatePlayerRecommendations(opponentGames, opponentId);
+    generatePlayerRecommendationsFunc(opponentGames, players, centralizedStats, centralizedRosters);
     generateLineupRecommendations(opponentGames, opponentId);
 
   }, [selectedOpponent, centralizedStats, centralizedRosters, completedGames, currentClubId, players]);
 
-  const generatePlayerRecommendations = (opponentGames: any[], opponentId: number) => {
-    if (!centralizedStats || Object.keys(centralizedStats).length === 0 || players.length === 0) {
-      console.log('Missing data for player recommendations:', { 
-        hasStats: !!centralizedStats, 
-        statsCount: Object.keys(centralizedStats || {}).length,
-        playersCount: players.length,
-        opponentGamesCount: opponentGames.length
-      });
-      setPlayerRecommendations([]);
-      return;
-    }
-
-    const playerPerformanceMap = new Map();
-
-    opponentGames.forEach(game => {
-      const gameStats = centralizedStats[game.id];
-      if (!gameStats || gameStats.length === 0) {
-        console.log(`No stats found for game ${game.id}`);
-        return;
-      }
-
-      gameStats.forEach(stat => {
-        if (!stat.playerId || !stat.position) return;
-        
-        const player = players.find(p => p.id === stat.playerId);
-        if (!player) return;
-
-        const key = `${stat.playerId}-${stat.position}`;
-        if (!playerPerformanceMap.has(key)) {
-          playerPerformanceMap.set(key, {
-            playerId: stat.playerId,
-            playerName: player.displayName,
-            position: stat.position,
-            games: [],
-            totalPerformance: 0,
-            gamesCount: 0
+  const generatePlayerRecommendationsFunc = (opponentGames: any[], players: any[], centralizedStats: any, centralizedRosters: any) => {
+    // Generate player recommendations based on performance against this opponent
+    const generatePlayerRecommendations = (
+      opponentGames: Game[],
+      players: Player[],
+      gameStats: Record<number, GameStat[]>,
+      rosters: Record<number, Roster[]>
+    ): Record<string, PlayerRecommendation[]> => {
+      const recommendations: Record<string, PlayerRecommendation[]> = {};
+      const positions = ['GK', 'GD', 'WD', 'C', 'WA', 'GA', 'GS'];
+  
+      console.log('generatePlayerRecommendations: Processing', opponentGames.length, 'opponent games');
+      console.log('generatePlayerRecommendations: Available players:', players.length);
+  
+      positions.forEach(position => {
+        const positionRecommendations: PlayerRecommendation[] = [];
+  
+        players.forEach(player => {
+          // Find all games where this player played in this position against the opponent
+          let totalPerformance = 0;
+          let gameCount = 0;
+          let totalRating = 0;
+          let ratingCount = 0;
+          let quarterCount = 0;
+  
+          opponentGames.forEach(game => {
+            const gameRosters = rosters[game.id] || [];
+            const gameStatsList = gameStats[game.id] || [];
+  
+            console.log(`Checking player ${player.displayName} in position ${position} for game ${game.id}`);
+            console.log(`Game ${game.id} rosters:`, gameRosters.length, 'entries');
+            console.log(`Game ${game.id} stats:`, gameStatsList.length, 'entries');
+  
+            // Check if player was in this position for any quarter
+            const playerRostersInPosition = gameRosters.filter(roster => 
+              roster.playerId === player.id && roster.position === position
+            );
+  
+            console.log(`Player ${player.displayName} rosters in ${position}:`, playerRostersInPosition.length);
+  
+            if (playerRostersInPosition.length > 0) {
+              gameCount++;
+  
+              // Calculate performance metrics for this position in this game
+              playerRostersInPosition.forEach(roster => {
+                quarterCount++;
+                const quarterStats = gameStatsList.find(stat => 
+                  stat.position === position && stat.quarter === roster.quarter
+                );
+  
+                console.log(`Quarter ${roster.quarter} stats for ${position}:`, quarterStats);
+  
+                if (quarterStats) {
+                  // Simple performance metric based on positive vs negative stats
+                  const positiveStats = (quarterStats.goalsFor || 0) + 
+                                      (quarterStats.rebounds || 0) + 
+                                      (quarterStats.intercepts || 0) + 
+                                      (quarterStats.pickUp || 0);
+  
+                  const negativeStats = (quarterStats.goalsAgainst || 0) + 
+                                       (quarterStats.badPass || 0) + 
+                                       (quarterStats.handlingError || 0) + 
+                                       (quarterStats.infringement || 0);
+  
+                  const netPerformance = positiveStats - (negativeStats * 0.5); // Weight negatives less
+                  totalPerformance += netPerformance;
+  
+                  console.log(`Performance calculation: +${positiveStats} -${negativeStats} = ${netPerformance}`);
+  
+                  if (quarterStats.rating && roster.quarter === 1) {
+                    totalRating += quarterStats.rating;
+                    ratingCount++;
+                  }
+                } else {
+                  // If no stats recorded, assume neutral performance
+                  totalPerformance += 0;
+                }
+              });
+            }
           });
-        }
-
-        const data = playerPerformanceMap.get(key);
-        // Calculate performance based on goals, rating, and efficiency
-        const goalsFor = stat.goalsFor || 0;
-        const goalsAgainst = stat.goalsAgainst || 0;
-        const rating = stat.rating || 3;
-        const performance = goalsFor - goalsAgainst + rating;
-        
-        data.totalPerformance += performance;
-        data.gamesCount++;
-        data.games.push({ gameId: game.id, performance, stat });
+  
+          console.log(`Player ${player.displayName} in ${position}: ${gameCount} games, ${quarterCount} quarters, total performance: ${totalPerformance}`);
+  
+          if (gameCount > 0 || quarterCount > 0) {
+            const avgPerformance = quarterCount > 0 ? totalPerformance / quarterCount : 0;
+            const avgRating = ratingCount > 0 ? totalRating / ratingCount : 5;
+  
+            console.log(`Final metrics - Avg Performance: ${avgPerformance}, Avg Rating: ${avgRating}`);
+  
+            // Determine recommendation level
+            let recommendation: PlayerRecommendation['recommendation'] = 'consider';
+            if (avgPerformance >= 2 && avgRating >= 7) {
+              recommendation = 'strongly-recommended';
+            } else if (avgPerformance >= 1 && avgRating >= 6) {
+              recommendation = 'recommended';
+            } else if (avgPerformance < -1 || avgRating < 4) {
+              recommendation = 'caution';
+            }
+  
+            // Generate key strengths based on stats
+            const keyStrengths: string[] = [];
+            if (avgPerformance >= 2) keyStrengths.push('Strong overall performance');
+            if (avgRating >= 7) keyStrengths.push('High game rating');
+            if (gameCount >= 2) keyStrengths.push('Experienced vs opponent');
+  
+            positionRecommendations.push({
+              playerId: player.id,
+              playerName: player.displayName,
+              position,
+              avgPerformance: Math.round(avgPerformance * 10) / 10,
+              gamesAgainstOpponent: gameCount,
+              successRate: Math.min(100, Math.max(0, ((avgPerformance + 2) / 4) * 100)),
+              keyStrengths,
+              recommendation
+            });
+          }
+        });
+  
+        // Sort by performance and limit to top recommendations
+        positionRecommendations.sort((a, b) => {
+          // Prioritize by recommendation level first, then performance
+          const levelPriority = {
+            'strongly-recommended': 4,
+            'recommended': 3,
+            'consider': 2,
+            'caution': 1
+          };
+  
+          const levelDiff = levelPriority[b.recommendation] - levelPriority[a.recommendation];
+          if (levelDiff !== 0) return levelDiff;
+  
+          return b.avgPerformance - a.avgPerformance;
+        });
+  
+        recommendations[position] = positionRecommendations.slice(0, 5); // Show top 5
+        console.log(`Position ${position} recommendations:`, recommendations[position].length);
       });
-    });
+  
+      return recommendations;
+    };
 
-    if (playerPerformanceMap.size === 0) {
-      console.log('No player performance data generated');
-      setPlayerRecommendations([]);
-      return;
+    const playerRecommendationsData = generatePlayerRecommendations(opponentGames, players, centralizedStats, centralizedRosters);
+    const playerRecommendationsList: PlayerRecommendation[] = [];
+
+    for (const position in playerRecommendationsData) {
+      playerRecommendationsList.push(...playerRecommendationsData[position]);
     }
 
-    const recommendations: PlayerRecommendation[] = [];
-    playerPerformanceMap.forEach(data => {
-      const avgPerformance = data.gamesCount > 0 ? data.totalPerformance / data.gamesCount : 0;
-      const successRate = data.gamesCount > 0 ? 
-        (data.games.filter((g: any) => g.performance > 3).length / data.gamesCount * 100) : 0;
-      
-      let recommendation: PlayerRecommendation['recommendation'] = 'consider';
-      const keyStrengths: string[] = [];
-
-      if (avgPerformance >= 5 && successRate >= 70) {
-        recommendation = 'strongly-recommended';
-        keyStrengths.push('Consistent high performer vs this opponent');
-      } else if (avgPerformance >= 4 && successRate >= 50) {
-        recommendation = 'recommended';
-        keyStrengths.push('Solid track record');
-      } else if (avgPerformance < 3 || successRate < 30) {
-        recommendation = 'caution';
-        keyStrengths.push('Has struggled against this opponent');
-      } else {
-        keyStrengths.push('Moderate performance history');
-      }
-
-      if (data.gamesCount >= 3) {
-        keyStrengths.push('Extensive experience vs opponent');
-      } else if (data.gamesCount >= 1) {
-        keyStrengths.push(`${data.gamesCount} game(s) vs opponent`);
-      }
-
-      recommendations.push({
-        playerId: data.playerId,
-        playerName: data.playerName,
-        position: data.position,
-        avgPerformance,
-        gamesAgainstOpponent: data.gamesCount,
-        successRate,
-        keyStrengths,
-        recommendation
-      });
-    });
-
-    console.log(`Generated ${recommendations.length} player recommendations`);
-    setPlayerRecommendations(recommendations.sort((a, b) => b.avgPerformance - a.avgPerformance));
-  };
+    setPlayerRecommendations(playerRecommendationsList);
+  }
 
   const generateLineupRecommendations = (opponentGames: any[], opponentId: number) => {
     if (!centralizedStats || !centralizedRosters || players.length === 0) {
@@ -421,9 +469,9 @@ export default function Preparation() {
     opponentGames.forEach(game => {
       const gameStats = centralizedStats[game.id];
       const gameRosters = centralizedRosters[game.id];
-      
+
       if (!gameStats || !gameRosters) return;
-      
+
       const ourScore = gameStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
       const theirScore = gameStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
       const wasSuccessful = getWinLoseLabel(ourScore, theirScore) === 'Win';
@@ -448,7 +496,7 @@ export default function Preparation() {
         quarterLineups.forEach((lineup, quarter) => {
           const positions = ['GK', 'GD', 'WD', 'C', 'WA', 'GA', 'GS'];
           const isCompleteLineup = positions.every(pos => lineup[pos]);
-          
+
           if (isCompleteLineup) {
             successfulLineups.push({
               id: `game-${game.id}-q${quarter}`,
@@ -476,7 +524,7 @@ export default function Preparation() {
         const positionPlayers = playerRecommendations
           .filter(p => p.position === position)
           .sort((a, b) => b.avgPerformance - a.avgPerformance);
-        
+
         if (positionPlayers.length > 0) {
           bestByPosition.set(position, positionPlayers[0]);
         }
@@ -671,7 +719,7 @@ export default function Preparation() {
                         return oppId === opponentId;
                       });
                       const opponentName = game ? (game.homeClubId === currentClubId ? game.awayTeamName : game.homeTeamName) : `Team ${opponentId}`;
-                      
+
                       return (
                         <SelectItem key={opponentId} value={opponentId.toString()}>
                           {opponentName}
@@ -713,7 +761,7 @@ export default function Preparation() {
                         </div>
                         <p className="text-sm text-gray-600">Historical Record</p>
                       </div>
-                      
+
                       <div>
                         <Progress value={selectedAnalysis.ourRecord.winRate} className="h-2" />
                         <p className="text-sm mt-1">{selectedAnalysis.ourRecord.winRate.toFixed(1)}% Win Rate</p>
@@ -832,7 +880,7 @@ export default function Preparation() {
               <div className="grid gap-4">
                 {['GK', 'GD', 'WD', 'C', 'WA', 'GA', 'GS'].map(position => {
                   const positionPlayers = playerRecommendations.filter(p => p.position === position);
-                  
+
                   return (
                     <Card key={position}>
                       <CardHeader>
