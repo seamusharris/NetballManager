@@ -122,18 +122,7 @@ export default function Header({ setIsMobileOpen, isTablet }: HeaderProps) {
         </div>
 
         <div className="flex items-center space-x-4">
-          <Button variant="ghost" size="icon" className="text-gray-600 focus:outline-none relative">
-            <Bell className="h-5 w-5" />
-            <span className="absolute top-1 right-1 block h-2 w-2 rounded-full bg-secondary"></span>
-          </Button>
-
-          <div className="flex items-center space-x-2">
-            {/* Hide coach name on tablet to save space */}
-            <span className={`text-sm font-semibold ${isTablet ? 'hidden md:inline' : ''}`}>Coach Smith</span>
-            <Avatar className="w-8 h-8 bg-accent text-white">
-              <span className="text-xs font-bold">CS</span>
-            </Avatar>
-          </div>
+          {/* Removed notification and user profile sections */}
         </div>
       </div>
     </header>
