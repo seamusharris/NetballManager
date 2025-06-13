@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
-import { Bell, Search, ChevronDown, Home, Users, ClipboardList, Calendar, CalendarRange, BarChart, Database, Zap, Settings as SettingsIcon, Trophy, Menu, Building2, Target } from 'lucide-react';
+import { ChevronDown, Home, Users, ClipboardList, Calendar, CalendarRange, BarChart, Database, Zap, Settings as SettingsIcon, Trophy, Menu, Building2, Target } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar } from '@/components/ui/avatar';
@@ -118,14 +118,7 @@ export default function Header({ setIsMobileOpen, isTablet }: HeaderProps) {
 
         <div className="flex items-center space-x-4">
           {/* Show search only on larger screens to save space on tablet */}
-          <div className={`relative ${isTablet ? 'hidden md:block' : ''}`}>
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            <Input 
-              type="text" 
-              placeholder="Search..." 
-              className="pl-10 pr-4 w-full border rounded-md text-sm focus:border-accent focus:outline-none" 
-            />
-          </div>
+          {/* Removing search functionality from header as per request */}
         </div>
 
         <div className="flex items-center space-x-4">
