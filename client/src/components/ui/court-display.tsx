@@ -36,6 +36,7 @@ export const CourtDisplay = ({
 }: CourtDisplayProps) => {
   // Group roster by quarter and position
   const rosterByQuarter = React.useMemo(() => {
+    if (!roster || !Array.isArray(roster)) return {};
     return roster.reduce((acc: any, entry: any) => {
       if (!acc[entry.quarter]) acc[entry.quarter] = {};
       acc[entry.quarter][entry.position] = entry;
