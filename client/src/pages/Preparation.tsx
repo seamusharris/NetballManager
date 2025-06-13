@@ -24,6 +24,7 @@ import { apiClient } from '@/lib/apiClient';
 import { useToast } from '@/hooks/use-toast';
 import { useBatchGameStatistics } from '@/components/statistics/hooks/useBatchGameStatistics';
 import { useBatchRosterData } from '@/components/statistics/hooks/useBatchRosterData';
+import DragDropLineupEditor from '@/components/roster/DragDropLineupEditor';
 import { 
   Trophy, Target, TrendingUp, Users, CheckCircle, Clock, 
   AlertTriangle, Lightbulb, ChevronRight, ArrowRight, 
@@ -1655,14 +1656,14 @@ export default function Preparation() {
                                         setSelectedLineup(rec.lineup);
                                         toast({
                                           title: "Lineup Selected",
-                                          description: `${rec.name} lineup has been selected`,
+                                          description: `${rec.name} lineup has been applied to the interactive editor below`,
                                         });
                                       }}
                                       variant="outline"
                                       className="w-full"
                                     >
                                         <Check className="h-4 w-4 mr-2" />
-                                      Select This Lineup
+                                      Apply to Editor Below
                                     </Button>
                                   </div>
                                 </CardContent>
@@ -1955,14 +1956,14 @@ export default function Preparation() {
                                             setSelectedLineup(combo.lineup);
                                             toast({
                                               title: "Lineup Selected",
-                                              description: `${combo.name} lineup has been selected`,
+                                              description: `${combo.name} lineup has been applied to the interactive editor below`,
                                             });
                                           }}
                                           variant="outline"
                                           className="w-full"
                                         >
                                           <Check className="h-4 w-4 mr-2" />
-                                          Select This Lineup
+                                          Apply to Editor Below
                                         </Button>
                                       </div>
                                     </CardContent>
@@ -2020,6 +2021,33 @@ export default function Preparation() {
                   </CardContent>
                 </Card>
               </div>
+
+              {/* Drag and Drop Lineup Editor */}
+              <Card className="mt-6">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="h-5 w-5" />
+                    Interactive Lineup Editor
+                  </CardTitle>
+                  <p className="text-sm text-gray-600">
+                    Drag players from the bench to positions on the court, or click a recommended lineup to populate this editor
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  <DragDropLineupEditor
+                    availablePlayers={teamPlayers.filter(p => availabilityData[p.id] === 'available')}
+                    currentLineup={selectedLineup}
+                    onLineupChange={setSelectedLineup}
+                    onApplyRecommendation={(lineup) => {
+                      setSelectedLineup(lineup);
+                      toast({
+                        title: "Lineup Applied",
+                        description: "Recommended lineup has been applied to the editor",
+                      });
+                    }}
+                  />
+                </CardContent>
+              </Card>
 
               <div className="flex justify-between">
                 <Button variant="outline" onClick={() => setActiveTab('overview')}>
