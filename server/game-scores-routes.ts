@@ -3,11 +3,11 @@ import { Express } from 'express';
 import { db } from './db';
 import { gameScores, games } from '@shared/schema';
 import { eq, sql } from 'drizzle-orm';
-import { authMiddleware } from './auth-middleware';
+import { standardAuth, AuthenticatedRequest } from './auth-middleware';
 
 export function registerGameScoresRoutes(app: Express) {
   // Get official scores for a game
-  app.get('/api/games/:gameId/scores', authMiddleware, async (req, res) => {
+  app.get('/api/games/:gameId/scores', standardAuth({ requireGameAccess: true }), async (req: AuthenticatedRequest, res) => {
   try {
     const gameId = parseInt(req.params.gameId);
     
@@ -27,7 +27,7 @@ export function registerGameScoresRoutes(app: Express) {
 });
 
 // Create or update official scores for a game
-  app.post('/api/games/:gameId/scores', authMiddleware, async (req, res) => {
+  app.post('/api/games/:gameId/scores', standardAuth({ requireGameAccess: true }), async (req: AuthenticatedRequest, res) => {
   try {
     const gameId = parseInt(req.params.gameId);
     const { quarter, homeScore, awayScore, notes } = req.body;
@@ -107,7 +107,7 @@ export function registerGameScoresRoutes(app: Express) {
 });
 
 // Delete official scores
-  app.delete('/api/games/:gameId/scores', authMiddleware, async (req, res) => {
+  app.delete('/api/games/:gameId/scores', standardAuth({ requireGameAccess: true }), async (req: AuthenticatedRequest, res) => {
   try {
     const gameId = parseInt(req.params.gameId);
     
