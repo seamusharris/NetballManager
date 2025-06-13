@@ -166,84 +166,83 @@ export default function DragDropLineupEditor({
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Court Display */}
-        <div className="lg:col-span-2">
-          <Card>
-            <CardContent className="p-6">
-              <h4 className="font-semibold mb-4 text-center">Court Positions</h4>
-              
-              {/* Interactive Court Layout */}
-              <div className="relative">
-                <CourtDisplay
-                  roster={Object.entries(currentLineup)
-                    .filter(([_, player]) => player !== null)
-                    .map(([position, player]) => ({
-                      quarter: 1,
-                      position,
-                      playerId: player!.id
-                    }))}
-                  players={availablePlayers}
-                  quarter={1}
-                  layout="horizontal"
-                  showPositionLabels={true}
-                  className="pointer-events-none"
-                />
+      {/* Full Width Court Display */}
+      <Card className="mb-6">
+        <CardContent className="p-6">
+          <h4 className="font-semibold mb-4 text-center">Court Positions</h4>
+          
+          {/* Interactive Court Layout - Full Width */}
+          <div className="relative max-w-6xl mx-auto">
+            <CourtDisplay
+              roster={Object.entries(currentLineup)
+                .filter(([_, player]) => player !== null)
+                .map(([position, player]) => ({
+                  quarter: 1,
+                  position,
+                  playerId: player!.id
+                }))}
+              players={availablePlayers}
+              quarter={1}
+              layout="horizontal"
+              showPositionLabels={true}
+              className="pointer-events-none h-80"
+            />
+            
+            {/* Overlay drag targets */}
+            <div className="absolute inset-0 grid grid-cols-7 gap-3 p-6">
+              {POSITIONS_ORDER.map((position) => {
+                const player = currentLineup[position];
+                const isHighlighted = dragOverPosition === position;
                 
-                {/* Overlay drag targets */}
-                <div className="absolute inset-0 grid grid-cols-7 gap-2 p-4">
-                  {POSITIONS_ORDER.map((position) => {
-                    const player = currentLineup[position];
-                    const isHighlighted = dragOverPosition === position;
+                return (
+                  <div
+                    key={position}
+                    className={cn(
+                      "relative flex flex-col items-center justify-center rounded-lg border-2 border-dashed transition-all duration-200 min-h-[120px]",
+                      isHighlighted 
+                        ? "border-blue-400 bg-blue-50" 
+                        : "border-gray-300 hover:border-gray-400",
+                      "cursor-pointer"
+                    )}
+                    onDragOver={(e) => handlePositionDragOver(e, position)}
+                    onDragLeave={handlePositionDragLeave}
+                    onDrop={(e) => handlePositionDrop(e, position)}
+                  >
+                    <div className="text-sm font-bold text-gray-600 mb-2">{position}</div>
                     
-                    return (
+                    {player ? (
                       <div
-                        key={position}
-                        className={cn(
-                          "relative flex flex-col items-center justify-center rounded-lg border-2 border-dashed transition-all duration-200 min-h-[100px]",
-                          isHighlighted 
-                            ? "border-blue-400 bg-blue-50" 
-                            : "border-gray-300 hover:border-gray-400",
-                          "cursor-pointer"
-                        )}
-                        onDragOver={(e) => handlePositionDragOver(e, position)}
-                        onDragLeave={handlePositionDragLeave}
-                        onDrop={(e) => handlePositionDrop(e, position)}
+                        draggable
+                        onDragStart={(e) => handleDragStart(e, player)}
+                        onDragEnd={handleDragEnd}
+                        className="cursor-move hover:scale-105 transition-transform"
                       >
-                        <div className="text-xs font-bold text-gray-600 mb-2">{position}</div>
-                        
-                        {player ? (
-                          <div
-                            draggable
-                            onDragStart={(e) => handleDragStart(e, player)}
-                            onDragEnd={handleDragEnd}
-                            className="cursor-move hover:scale-105 transition-transform"
-                          >
-                            <PlayerAvatar player={player} size="sm" />
-                            <div className="text-xs text-center mt-1 font-medium">
-                              {player.displayName}
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="text-xs text-gray-400 text-center">
-                            Drop player here
-                          </div>
-                        )}
-                        
-                        {isHighlighted && (
-                          <div className="absolute inset-0 border-2 border-blue-400 rounded-lg bg-blue-100/20" />
-                        )}
+                        <PlayerAvatar player={player} size="md" />
+                        <div className="text-xs text-center mt-2 font-medium">
+                          {player.displayName}
+                        </div>
                       </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+                    ) : (
+                      <div className="text-sm text-gray-400 text-center px-2">
+                        Drop player here
+                      </div>
+                    )}
+                    
+                    {isHighlighted && (
+                      <div className="absolute inset-0 border-2 border-blue-400 rounded-lg bg-blue-100/20" />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
+      {/* Bench and Quick Actions Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Bench */}
-        <div className="space-y-4">
+        <div className="lg:col-span-2">
           <Card>
             <CardContent className="p-4">
               <h4 className="font-semibold mb-4 flex items-center gap-2">
@@ -253,11 +252,10 @@ export default function DragDropLineupEditor({
               
               <div
                 className={cn(
-                  "min-h-[300px] p-4 border-2 border-dashed rounded-lg transition-all duration-200",
+                  "min-h-[200px] p-4 border-2 border-dashed rounded-lg transition-all duration-200",
                   dragOverBench 
                     ? "border-green-400 bg-green-50" 
-                    : "border-gray-300",
-                  "space-y-3"
+                    : "border-gray-300"
                 )}
                 onDragOver={handleBenchDragOver}
                 onDragLeave={handleBenchDragLeave}
@@ -269,33 +267,35 @@ export default function DragDropLineupEditor({
                     <p className="text-sm">All available players are assigned</p>
                   </div>
                 ) : (
-                  benchPlayers.map((player) => (
-                    <div
-                      key={player.id}
-                      draggable
-                      onDragStart={(e) => handleDragStart(e, player)}
-                      onDragEnd={handleDragEnd}
-                      className={cn(
-                        "flex items-center gap-3 p-3 bg-white rounded-lg border cursor-move transition-all",
-                        "hover:shadow-md hover:scale-105",
-                        draggedPlayer?.id === player.id && "opacity-50"
-                      )}
-                    >
-                      <PlayerAvatar player={player} size="sm" />
-                      <div className="flex-1 min-w-0">
-                        <div className="font-medium text-sm">{player.displayName}</div>
-                        {player.positionPreferences && (
-                          <div className="flex gap-1 mt-1">
-                            {player.positionPreferences.slice(0, 3).map(pos => (
-                              <Badge key={pos} variant="outline" className="text-xs">
-                                {pos}
-                              </Badge>
-                            ))}
-                          </div>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                    {benchPlayers.map((player) => (
+                      <div
+                        key={player.id}
+                        draggable
+                        onDragStart={(e) => handleDragStart(e, player)}
+                        onDragEnd={handleDragEnd}
+                        className={cn(
+                          "flex flex-col items-center gap-2 p-3 bg-white rounded-lg border cursor-move transition-all",
+                          "hover:shadow-md hover:scale-105",
+                          draggedPlayer?.id === player.id && "opacity-50"
                         )}
+                      >
+                        <PlayerAvatar player={player} size="sm" />
+                        <div className="text-center min-w-0">
+                          <div className="font-medium text-sm truncate">{player.displayName}</div>
+                          {player.positionPreferences && (
+                            <div className="flex gap-1 mt-1 justify-center flex-wrap">
+                              {player.positionPreferences.slice(0, 3).map(pos => (
+                                <Badge key={pos} variant="outline" className="text-xs">
+                                  {pos}
+                                </Badge>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))
+                    ))}
+                  </div>
                 )}
                 
                 {dragOverBench && (
@@ -304,8 +304,10 @@ export default function DragDropLineupEditor({
               </div>
             </CardContent>
           </Card>
+        </div>
 
-          {/* Quick Actions */}
+        {/* Quick Actions */}
+        <div>
           <Card>
             <CardContent className="p-4">
               <h4 className="font-semibold mb-3">Quick Actions</h4>
