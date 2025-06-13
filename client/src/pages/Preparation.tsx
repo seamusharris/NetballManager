@@ -307,273 +307,342 @@ export default function Preparation() {
   }, [selectedOpponent, centralizedStats, centralizedRosters, completedGames, currentClubId, players]);
 
   const generatePlayerRecommendationsFunc = (opponentGames: any[], players: any[], centralizedStats: any, centralizedRosters: any) => {
-    // Generate player recommendations based on performance against this opponent
-    const generatePlayerRecommendations = (
-      opponentGames: Game[],
-      players: Player[],
-      gameStats: Record<number, GameStat[]>,
-      rosters: Record<number, Roster[]>
-    ): Record<string, PlayerRecommendation[]> => {
-      const recommendations: Record<string, PlayerRecommendation[]> = {};
-      const positions = ['GK', 'GD', 'WD', 'C', 'WA', 'GA', 'GS'];
-  
-      console.log('generatePlayerRecommendations: Processing', opponentGames.length, 'opponent games');
-      console.log('generatePlayerRecommendations: Available players:', players.length);
-  
-      positions.forEach(position => {
-        const positionRecommendations: PlayerRecommendation[] = [];
-  
-        players.forEach(player => {
-          // Find all games where this player played in this position against the opponent
-          let totalPerformance = 0;
-          let gameCount = 0;
-          let totalRating = 0;
-          let ratingCount = 0;
-          let quarterCount = 0;
-  
-          opponentGames.forEach(game => {
-            const gameRosters = rosters[game.id] || [];
-            const gameStatsList = gameStats[game.id] || [];
-  
-            console.log(`Checking player ${player.displayName} in position ${position} for game ${game.id}`);
-            console.log(`Game ${game.id} rosters:`, gameRosters.length, 'entries');
-            console.log(`Game ${game.id} stats:`, gameStatsList.length, 'entries');
-  
-            // Check if player was in this position for any quarter
-            const playerRostersInPosition = gameRosters.filter(roster => 
-              roster.playerId === player.id && roster.position === position
-            );
-  
-            console.log(`Player ${player.displayName} rosters in ${position}:`, playerRostersInPosition.length);
-  
-            if (playerRostersInPosition.length > 0) {
-              gameCount++;
-  
-              // Calculate performance metrics for this position in this game
-              playerRostersInPosition.forEach(roster => {
-                quarterCount++;
-                const quarterStats = gameStatsList.find(stat => 
-                  stat.position === position && stat.quarter === roster.quarter
-                );
-  
-                console.log(`Quarter ${roster.quarter} stats for ${position}:`, quarterStats);
-  
-                if (quarterStats) {
-                  // Simple performance metric based on positive vs negative stats
-                  const positiveStats = (quarterStats.goalsFor || 0) + 
-                                      (quarterStats.rebounds || 0) + 
-                                      (quarterStats.intercepts || 0) + 
-                                      (quarterStats.pickUp || 0);
-  
-                  const negativeStats = (quarterStats.goalsAgainst || 0) + 
-                                       (quarterStats.badPass || 0) + 
-                                       (quarterStats.handlingError || 0) + 
-                                       (quarterStats.infringement || 0);
-  
-                  const netPerformance = positiveStats - (negativeStats * 0.5); // Weight negatives less
-                  totalPerformance += netPerformance;
-  
-                  console.log(`Performance calculation: +${positiveStats} -${negativeStats} = ${netPerformance}`);
-  
-                  if (quarterStats.rating && roster.quarter === 1) {
-                    totalRating += quarterStats.rating;
-                    ratingCount++;
-                  }
-                } else {
-                  // If no stats recorded, assume neutral performance
-                  totalPerformance += 0;
+    console.log('Starting player recommendations generation with:', {
+      opponentGames: opponentGames.length,
+      players: players.length,
+      statsAvailable: !!centralizedStats,
+      rostersAvailable: !!centralizedRosters
+    });
+
+    const recommendations: PlayerRecommendation[] = [];
+    const positions = ['GK', 'GD', 'WD', 'C', 'WA', 'GA', 'GS'];
+
+    // For each position, find the best players based on overall stats and availability
+    positions.forEach(position => {
+      console.log(`\n=== Processing position ${position} ===`);
+      
+      // Get all players who have played this position in any game against the opponent
+      const positionCandidates: any[] = [];
+
+      players.forEach(player => {
+        let totalQuarters = 0;
+        let totalPerformance = 0;
+        let gamesPlayed = 0;
+        let totalRating = 0;
+        let ratingCount = 0;
+
+        // Check all opponent games for this player
+        opponentGames.forEach(game => {
+          const gameRosters = centralizedRosters[game.id] || [];
+          const gameStats = centralizedStats[game.id] || [];
+
+          // Find quarters where this player played this position
+          const playerPositionRosters = gameRosters.filter(roster => 
+            roster.playerId === player.id && roster.position === position
+          );
+
+          if (playerPositionRosters.length > 0) {
+            gamesPlayed++;
+            
+            playerPositionRosters.forEach(roster => {
+              totalQuarters++;
+              
+              // Find matching stats for this position and quarter
+              const quarterStats = gameStats.find(stat => 
+                stat.position === position && stat.quarter === roster.quarter
+              );
+
+              if (quarterStats) {
+                // Calculate performance score
+                const positive = (quarterStats.goalsFor || 0) + 
+                               (quarterStats.rebounds || 0) + 
+                               (quarterStats.intercepts || 0) + 
+                               (quarterStats.pickUp || 0);
+                
+                const negative = (quarterStats.goalsAgainst || 0) + 
+                               (quarterStats.badPass || 0) + 
+                               (quarterStats.handlingError || 0) + 
+                               (quarterStats.infringement || 0);
+
+                const performance = positive - (negative * 0.3); // Weight negatives less
+                totalPerformance += performance;
+
+                if (quarterStats.rating) {
+                  totalRating += quarterStats.rating;
+                  ratingCount++;
                 }
-              });
-            }
-          });
-  
-          console.log(`Player ${player.displayName} in ${position}: ${gameCount} games, ${quarterCount} quarters, total performance: ${totalPerformance}`);
-  
-          if (gameCount > 0 || quarterCount > 0) {
-            const avgPerformance = quarterCount > 0 ? totalPerformance / quarterCount : 0;
-            const avgRating = ratingCount > 0 ? totalRating / ratingCount : 5;
-  
-            console.log(`Final metrics - Avg Performance: ${avgPerformance}, Avg Rating: ${avgRating}`);
-  
-            // Determine recommendation level
-            let recommendation: PlayerRecommendation['recommendation'] = 'consider';
-            if (avgPerformance >= 2 && avgRating >= 7) {
-              recommendation = 'strongly-recommended';
-            } else if (avgPerformance >= 1 && avgRating >= 6) {
-              recommendation = 'recommended';
-            } else if (avgPerformance < -1 || avgRating < 4) {
-              recommendation = 'caution';
-            }
-  
-            // Generate key strengths based on stats
-            const keyStrengths: string[] = [];
-            if (avgPerformance >= 2) keyStrengths.push('Strong overall performance');
-            if (avgRating >= 7) keyStrengths.push('High game rating');
-            if (gameCount >= 2) keyStrengths.push('Experienced vs opponent');
-  
-            positionRecommendations.push({
-              playerId: player.id,
-              playerName: player.displayName,
-              position,
-              avgPerformance: Math.round(avgPerformance * 10) / 10,
-              gamesAgainstOpponent: gameCount,
-              successRate: Math.min(100, Math.max(0, ((avgPerformance + 2) / 4) * 100)),
-              keyStrengths,
-              recommendation
+              }
             });
           }
         });
-  
-        // Sort by performance and limit to top recommendations
-        positionRecommendations.sort((a, b) => {
-          // Prioritize by recommendation level first, then performance
-          const levelPriority = {
-            'strongly-recommended': 4,
-            'recommended': 3,
-            'consider': 2,
-            'caution': 1
-          };
-  
-          const levelDiff = levelPriority[b.recommendation] - levelPriority[a.recommendation];
-          if (levelDiff !== 0) return levelDiff;
-  
-          return b.avgPerformance - a.avgPerformance;
+
+        // Also check if player has this position in their preferences
+        const hasPositionPreference = player.positionPreferences?.includes(position) || false;
+        
+        // Calculate metrics
+        const avgPerformance = totalQuarters > 0 ? totalPerformance / totalQuarters : 0;
+        const avgRating = ratingCount > 0 ? totalRating / ratingCount : 5;
+        const experienceBonus = gamesPlayed > 0 ? 1 : 0;
+        const preferenceBonus = hasPositionPreference ? 0.5 : 0;
+        
+        // Overall score combining performance, experience, and preferences
+        const overallScore = avgPerformance + experienceBonus + preferenceBonus;
+        
+        console.log(`Player ${player.displayName}: quarters=${totalQuarters}, performance=${avgPerformance.toFixed(1)}, rating=${avgRating.toFixed(1)}, games=${gamesPlayed}, preference=${hasPositionPreference}, overall=${overallScore.toFixed(1)}`);
+
+        positionCandidates.push({
+          playerId: player.id,
+          playerName: player.displayName,
+          position,
+          avgPerformance: Math.round(avgPerformance * 10) / 10,
+          gamesAgainstOpponent: gamesPlayed,
+          quartersPlayed: totalQuarters,
+          avgRating,
+          hasPreference: hasPositionPreference,
+          overallScore,
+          successRate: Math.min(100, Math.max(0, ((overallScore + 1) / 3) * 100)),
+          keyStrengths: [],
+          recommendation: 'consider' as PlayerRecommendation['recommendation']
         });
-  
-        recommendations[position] = positionRecommendations.slice(0, 5); // Show top 5
-        console.log(`Position ${position} recommendations:`, recommendations[position].length);
       });
-  
-      return recommendations;
-    };
 
-    const playerRecommendationsData = generatePlayerRecommendations(opponentGames, players, centralizedStats, centralizedRosters);
-    const playerRecommendationsList: PlayerRecommendation[] = [];
+      // Sort candidates by overall score
+      positionCandidates.sort((a, b) => b.overallScore - a.overallScore);
+      
+      // Assign recommendation levels to top candidates
+      positionCandidates.forEach((candidate, index) => {
+        if (index === 0 && candidate.overallScore > 2) {
+          candidate.recommendation = 'strongly-recommended';
+          candidate.keyStrengths.push('Top performer in position');
+        } else if (index < 3 && candidate.overallScore > 1) {
+          candidate.recommendation = 'recommended';
+          candidate.keyStrengths.push('Strong candidate');
+        } else if (candidate.overallScore < -0.5) {
+          candidate.recommendation = 'caution';
+          candidate.keyStrengths.push('Limited success');
+        }
 
-    for (const position in playerRecommendationsData) {
-      playerRecommendationsList.push(...playerRecommendationsData[position]);
-    }
+        if (candidate.gamesAgainstOpponent > 1) {
+          candidate.keyStrengths.push('Experienced vs opponent');
+        }
+        if (candidate.hasPreference) {
+          candidate.keyStrengths.push('Preferred position');
+        }
+        if (candidate.avgRating > 6) {
+          candidate.keyStrengths.push('High rated');
+        }
+      });
 
-    setPlayerRecommendations(playerRecommendationsList);
+      // Add top candidates for this position
+      recommendations.push(...positionCandidates.slice(0, 4));
+      console.log(`Added ${Math.min(4, positionCandidates.length)} recommendations for ${position}`);
+    });
+
+    console.log(`Total recommendations generated: ${recommendations.length}`);
+    setPlayerRecommendations(recommendations);
   }
 
   const generateLineupRecommendations = (opponentGames: any[], opponentId: number) => {
+    console.log('Generating lineup recommendations...', {
+      opponentGames: opponentGames.length,
+      hasStats: !!centralizedStats,
+      hasRosters: !!centralizedRosters,
+      playersCount: players.length,
+      playerRecommendationsCount: playerRecommendations.length
+    });
+
     if (!centralizedStats || !centralizedRosters || players.length === 0) {
+      console.log('Missing required data for lineup generation');
       setLineupRecommendations([]);
       return;
     }
 
-    // Analyze successful lineups from previous games
-    const successfulLineups: LineupRecommendation[] = [];
+    const lineupRecommendations: LineupRecommendation[] = [];
+    const positions = ['GK', 'GD', 'WD', 'C', 'WA', 'GA', 'GS'];
 
-    opponentGames.forEach(game => {
-      const gameStats = centralizedStats[game.id];
-      const gameRosters = centralizedRosters[game.id];
-
-      if (!gameStats || !gameRosters) return;
-
-      const ourScore = gameStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
-      const theirScore = gameStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
-      const wasSuccessful = getWinLoseLabel(ourScore, theirScore) === 'Win';
-
-      if (wasSuccessful && gameRosters.length > 0) {
-        // Group rosters by quarter to find consistent lineups
-        const quarterLineups = new Map();
-        gameRosters.forEach(roster => {
-          if (!quarterLineups.has(roster.quarter)) {
-            quarterLineups.set(roster.quarter, {});
-          }
-          const player = players.find(p => p.id === roster.playerId);
-          if (player) {
-            quarterLineups.get(roster.quarter)[roster.position] = {
-              playerId: roster.playerId,
-              playerName: player.displayName,
-              confidence: 85 // High confidence for successful lineups
-            };
-          }
-        });
-
-        quarterLineups.forEach((lineup, quarter) => {
-          const positions = ['GK', 'GD', 'WD', 'C', 'WA', 'GA', 'GS'];
-          const isCompleteLineup = positions.every(pos => lineup[pos]);
-
-          if (isCompleteLineup) {
-            successfulLineups.push({
-              id: `game-${game.id}-q${quarter}`,
-              positions: lineup,
-              overallStrength: 85,
-              reasoning: [
-                `Successful lineup from ${formatShortDate(game.date)}`,
-                `Won by ${ourScore - theirScore} goals`,
-                `Proven combination vs this opponent`
-              ],
-              vsOpponentSuccess: 100,
-              riskFactors: []
-            });
-          }
-        });
-      }
-    });
-
-    // Generate optimized recommendations based on player performance
+    // 1. Generate "Optimal Performance" lineup based on player recommendations
     if (playerRecommendations.length > 0) {
-      const positions = ['GK', 'GD', 'WD', 'C', 'WA', 'GA', 'GS'];
-      const bestByPosition = new Map();
+      console.log('Creating optimal performance lineup...');
+      const optimalLineup: LineupRecommendation = {
+        id: 'optimal-performance',
+        positions: {},
+        overallStrength: 0,
+        reasoning: [
+          'Based on individual player performance vs this opponent',
+          'Prioritizes proven performers in each position',
+          'Data-driven selection'
+        ],
+        vsOpponentSuccess: 0,
+        riskFactors: []
+      };
+
+      let totalConfidence = 0;
+      let positionsAssigned = 0;
 
       positions.forEach(position => {
         const positionPlayers = playerRecommendations
           .filter(p => p.position === position)
-          .sort((a, b) => b.avgPerformance - a.avgPerformance);
+          .sort((a, b) => {
+            // Sort by recommendation level first, then performance
+            const levelPriority = {
+              'strongly-recommended': 4,
+              'recommended': 3,
+              'consider': 2,
+              'caution': 1
+            };
+            
+            const levelDiff = levelPriority[b.recommendation] - levelPriority[a.recommendation];
+            if (levelDiff !== 0) return levelDiff;
+            
+            return b.successRate - a.successRate;
+          });
 
         if (positionPlayers.length > 0) {
-          bestByPosition.set(position, positionPlayers[0]);
+          const bestPlayer = positionPlayers[0];
+          optimalLineup.positions[position] = {
+            playerId: bestPlayer.playerId,
+            playerName: bestPlayer.playerName,
+            confidence: Math.round(bestPlayer.successRate)
+          };
+          totalConfidence += bestPlayer.successRate;
+          positionsAssigned++;
         }
       });
 
-      if (bestByPosition.size === 7) {
-        const optimizedLineup: LineupRecommendation = {
-          id: 'optimized-recommendation',
-          positions: {},
-          overallStrength: 0,
-          reasoning: [
-            'Data-driven optimal lineup',
-            'Based on historical performance vs this opponent',
-            'Highest success probability'
-          ],
-          vsOpponentSuccess: 0,
-          riskFactors: []
-        };
-
-        let totalStrength = 0;
-        let totalSuccess = 0;
-
-        positions.forEach(position => {
-          const player = bestByPosition.get(position);
-          if (player) {
-            optimizedLineup.positions[position] = {
-              playerId: player.playerId,
-              playerName: player.playerName,
-              confidence: Math.round(player.successRate)
-            };
-            totalStrength += player.avgPerformance;
-            totalSuccess += player.successRate;
-          }
-        });
-
-        optimizedLineup.overallStrength = Math.round(totalStrength / 7 * 20); // Scale to 100
-        optimizedLineup.vsOpponentSuccess = Math.round(totalSuccess / 7);
+      if (positionsAssigned === 7) {
+        optimalLineup.overallStrength = Math.round(totalConfidence / 7);
+        optimalLineup.vsOpponentSuccess = Math.round(totalConfidence / 7);
 
         // Add risk factors
-        const lowConfidencePlayers = Object.values(optimizedLineup.positions).filter(p => p.confidence < 50);
+        const lowConfidencePlayers = Object.values(optimalLineup.positions).filter(p => p.confidence < 60);
         if (lowConfidencePlayers.length > 0) {
-          optimizedLineup.riskFactors.push(`${lowConfidencePlayers.length} players with limited success vs this opponent`);
+          optimalLineup.riskFactors.push(`${lowConfidencePlayers.length} players with limited experience vs this opponent`);
         }
 
-        successfulLineups.unshift(optimizedLineup);
+        lineupRecommendations.push(optimalLineup);
+        console.log('Added optimal performance lineup');
       }
     }
 
-    setLineupRecommendations(successfulLineups.slice(0, 3)); // Top 3 recommendations
+    // 2. Generate "Balanced Experience" lineup
+    console.log('Creating balanced experience lineup...');
+    const balancedLineup: LineupRecommendation = {
+      id: 'balanced-experience',
+      positions: {},
+      overallStrength: 75,
+      reasoning: [
+        'Balances performance with player preferences',
+        'Mix of experienced and developing players',
+        'Considers position preferences'
+      ],
+      vsOpponentSuccess: 70,
+      riskFactors: []
+    };
+
+    positions.forEach(position => {
+      // Find players who prefer this position or have played it
+      const candidates = playerRecommendations
+        .filter(p => p.position === position)
+        .concat(
+          // Add players who have this position as a preference but might not have played vs opponent
+          players
+            .filter(player => player.positionPreferences?.includes(position))
+            .map(player => ({
+              playerId: player.id,
+              playerName: player.displayName,
+              position,
+              avgPerformance: 0,
+              gamesAgainstOpponent: 0,
+              successRate: 60, // Default confidence for preferred position
+              keyStrengths: ['Position preference'],
+              recommendation: 'consider' as PlayerRecommendation['recommendation']
+            }))
+        )
+        .filter((player, index, self) => 
+          // Remove duplicates
+          index === self.findIndex(p => p.playerId === player.playerId)
+        )
+        .sort((a, b) => {
+          // Prioritize players with experience, then preference
+          if (a.gamesAgainstOpponent !== b.gamesAgainstOpponent) {
+            return b.gamesAgainstOpponent - a.gamesAgainstOpponent;
+          }
+          return b.successRate - a.successRate;
+        });
+
+      if (candidates.length > 0) {
+        const selectedPlayer = candidates[0];
+        balancedLineup.positions[position] = {
+          playerId: selectedPlayer.playerId,
+          playerName: selectedPlayer.playerName,
+          confidence: Math.round(selectedPlayer.successRate)
+        };
+      }
+    });
+
+    if (Object.keys(balancedLineup.positions).length === 7) {
+      lineupRecommendations.push(balancedLineup);
+      console.log('Added balanced experience lineup');
+    }
+
+    // 3. Generate "Development Opportunity" lineup if we have successful historical lineups
+    const successfulGames = opponentGames.filter(game => {
+      const gameStats = centralizedStats[game.id];
+      if (!gameStats) return false;
+      
+      const ourScore = gameStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
+      const theirScore = gameStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
+      return ourScore > theirScore;
+    });
+
+    if (successfulGames.length > 0) {
+      console.log('Creating proven success lineup from historical data...');
+      const mostRecentWin = successfulGames.sort((a, b) => 
+        new Date(b.date).getTime() - new Date(a.date).getTime()
+      )[0];
+
+      const gameRosters = centralizedRosters[mostRecentWin.id] || [];
+      const gameStats = centralizedStats[mostRecentWin.id] || [];
+      
+      if (gameRosters.length > 0) {
+        // Use quarter 1 lineup from most recent win
+        const q1Rosters = gameRosters.filter(r => r.quarter === 1);
+        const historicalLineup: LineupRecommendation = {
+          id: 'proven-success',
+          positions: {},
+          overallStrength: 85,
+          reasoning: [
+            `Based on successful lineup from ${formatShortDate(mostRecentWin.date)}`,
+            'Proven combination vs this opponent',
+            'Historical performance data'
+          ],
+          vsOpponentSuccess: 90,
+          riskFactors: ['May need adjustments for current squad availability']
+        };
+
+        positions.forEach(position => {
+          const positionRoster = q1Rosters.find(r => r.position === position);
+          if (positionRoster) {
+            const player = players.find(p => p.id === positionRoster.playerId);
+            if (player) {
+              historicalLineup.positions[position] = {
+                playerId: player.id,
+                playerName: player.displayName,
+                confidence: 85
+              };
+            }
+          }
+        });
+
+        if (Object.keys(historicalLineup.positions).length >= 5) { // At least 5 positions filled
+          lineupRecommendations.push(historicalLineup);
+          console.log('Added proven success lineup');
+        }
+      }
+    }
+
+    console.log(`Generated ${lineupRecommendations.length} lineup recommendations`);
+    setLineupRecommendations(lineupRecommendations.slice(0, 3)); // Keep top 3
   };
 
   if (clubLoading || !currentClubId) {
