@@ -167,7 +167,22 @@ export default function Preparation() {
 
   // Analyze selected opponent
   useEffect(() => {
-    if (!selectedOpponent || !centralizedStats || Object.keys(centralizedStats).length === 0) return;
+    console.log('Opponent analysis useEffect triggered:', {
+      selectedOpponent,
+      hasStats: !!centralizedStats,
+      statsKeys: Object.keys(centralizedStats || {}),
+      hasRosters: !!centralizedRosters,
+      rostersKeys: Object.keys(centralizedRosters || {}),
+      completedGamesCount: completedGames.length,
+      playersCount: players.length
+    });
+
+    if (!selectedOpponent || !centralizedStats || Object.keys(centralizedStats).length === 0) {
+      setSelectedAnalysis(null);
+      setPlayerRecommendations([]);
+      setLineupRecommendations([]);
+      return;
+    }
 
     const opponentId = parseInt(selectedOpponent);
     const opponentGames = completedGames.filter(game => {
@@ -180,7 +195,14 @@ export default function Preparation() {
       return oppId === opponentId;
     });
 
-    if (opponentGames.length === 0) return;
+    console.log(`Found ${opponentGames.length} games against opponent ${opponentId}`);
+    
+    if (opponentGames.length === 0) {
+      setSelectedAnalysis(null);
+      setPlayerRecommendations([]);
+      setLineupRecommendations([]);
+      return;
+    }
 
     // Calculate detailed analysis
     const gameResults = opponentGames.map(game => {
@@ -283,16 +305,32 @@ export default function Preparation() {
     generatePlayerRecommendations(opponentGames, opponentId);
     generateLineupRecommendations(opponentGames, opponentId);
 
-  }, [selectedOpponent, centralizedStats, completedGames, currentClubId]);
+  }, [selectedOpponent, centralizedStats, centralizedRosters, completedGames, currentClubId, players]);
 
   const generatePlayerRecommendations = (opponentGames: any[], opponentId: number) => {
+    if (!centralizedStats || Object.keys(centralizedStats).length === 0 || players.length === 0) {
+      console.log('Missing data for player recommendations:', { 
+        hasStats: !!centralizedStats, 
+        statsCount: Object.keys(centralizedStats || {}).length,
+        playersCount: players.length,
+        opponentGamesCount: opponentGames.length
+      });
+      setPlayerRecommendations([]);
+      return;
+    }
+
     const playerPerformanceMap = new Map();
 
     opponentGames.forEach(game => {
-      const gameStats = centralizedStats[game.id] || [];
-      const gameRosters = centralizedRosters[game.id] || [];
+      const gameStats = centralizedStats[game.id];
+      if (!gameStats || gameStats.length === 0) {
+        console.log(`No stats found for game ${game.id}`);
+        return;
+      }
 
       gameStats.forEach(stat => {
+        if (!stat.playerId || !stat.position) return;
+        
         const player = players.find(p => p.id === stat.playerId);
         if (!player) return;
 
@@ -309,17 +347,29 @@ export default function Preparation() {
         }
 
         const data = playerPerformanceMap.get(key);
-        const performance = (stat.goalsFor || 0) - (stat.goalsAgainst || 0) + (stat.rating || 3);
+        // Calculate performance based on goals, rating, and efficiency
+        const goalsFor = stat.goalsFor || 0;
+        const goalsAgainst = stat.goalsAgainst || 0;
+        const rating = stat.rating || 3;
+        const performance = goalsFor - goalsAgainst + rating;
+        
         data.totalPerformance += performance;
         data.gamesCount++;
         data.games.push({ gameId: game.id, performance, stat });
       });
     });
 
+    if (playerPerformanceMap.size === 0) {
+      console.log('No player performance data generated');
+      setPlayerRecommendations([]);
+      return;
+    }
+
     const recommendations: PlayerRecommendation[] = [];
     playerPerformanceMap.forEach(data => {
       const avgPerformance = data.gamesCount > 0 ? data.totalPerformance / data.gamesCount : 0;
-      const successRate = data.games.filter((g: any) => g.performance > 3).length / data.gamesCount * 100;
+      const successRate = data.gamesCount > 0 ? 
+        (data.games.filter((g: any) => g.performance > 3).length / data.gamesCount * 100) : 0;
       
       let recommendation: PlayerRecommendation['recommendation'] = 'consider';
       const keyStrengths: string[] = [];
@@ -333,10 +383,14 @@ export default function Preparation() {
       } else if (avgPerformance < 3 || successRate < 30) {
         recommendation = 'caution';
         keyStrengths.push('Has struggled against this opponent');
+      } else {
+        keyStrengths.push('Moderate performance history');
       }
 
       if (data.gamesCount >= 3) {
         keyStrengths.push('Extensive experience vs opponent');
+      } else if (data.gamesCount >= 1) {
+        keyStrengths.push(`${data.gamesCount} game(s) vs opponent`);
       }
 
       recommendations.push({
@@ -351,16 +405,24 @@ export default function Preparation() {
       });
     });
 
+    console.log(`Generated ${recommendations.length} player recommendations`);
     setPlayerRecommendations(recommendations.sort((a, b) => b.avgPerformance - a.avgPerformance));
   };
 
   const generateLineupRecommendations = (opponentGames: any[], opponentId: number) => {
+    if (!centralizedStats || !centralizedRosters || players.length === 0) {
+      setLineupRecommendations([]);
+      return;
+    }
+
     // Analyze successful lineups from previous games
     const successfulLineups: LineupRecommendation[] = [];
 
     opponentGames.forEach(game => {
-      const gameStats = centralizedStats[game.id] || [];
-      const gameRosters = centralizedRosters[game.id] || [];
+      const gameStats = centralizedStats[game.id];
+      const gameRosters = centralizedRosters[game.id];
+      
+      if (!gameStats || !gameRosters) return;
       
       const ourScore = gameStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
       const theirScore = gameStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
@@ -406,59 +468,61 @@ export default function Preparation() {
     });
 
     // Generate optimized recommendations based on player performance
-    const positions = ['GK', 'GD', 'WD', 'C', 'WA', 'GA', 'GS'];
-    const bestByPosition = new Map();
-
-    positions.forEach(position => {
-      const positionPlayers = playerRecommendations
-        .filter(p => p.position === position)
-        .sort((a, b) => b.avgPerformance - a.avgPerformance);
-      
-      if (positionPlayers.length > 0) {
-        bestByPosition.set(position, positionPlayers[0]);
-      }
-    });
-
-    if (bestByPosition.size === 7) {
-      const optimizedLineup: LineupRecommendation = {
-        id: 'optimized-recommendation',
-        positions: {},
-        overallStrength: 0,
-        reasoning: [
-          'Data-driven optimal lineup',
-          'Based on historical performance vs this opponent',
-          'Highest success probability'
-        ],
-        vsOpponentSuccess: 0,
-        riskFactors: []
-      };
-
-      let totalStrength = 0;
-      let totalSuccess = 0;
+    if (playerRecommendations.length > 0) {
+      const positions = ['GK', 'GD', 'WD', 'C', 'WA', 'GA', 'GS'];
+      const bestByPosition = new Map();
 
       positions.forEach(position => {
-        const player = bestByPosition.get(position);
-        if (player) {
-          optimizedLineup.positions[position] = {
-            playerId: player.playerId,
-            playerName: player.playerName,
-            confidence: Math.round(player.successRate)
-          };
-          totalStrength += player.avgPerformance;
-          totalSuccess += player.successRate;
+        const positionPlayers = playerRecommendations
+          .filter(p => p.position === position)
+          .sort((a, b) => b.avgPerformance - a.avgPerformance);
+        
+        if (positionPlayers.length > 0) {
+          bestByPosition.set(position, positionPlayers[0]);
         }
       });
 
-      optimizedLineup.overallStrength = Math.round(totalStrength / 7 * 20); // Scale to 100
-      optimizedLineup.vsOpponentSuccess = Math.round(totalSuccess / 7);
+      if (bestByPosition.size === 7) {
+        const optimizedLineup: LineupRecommendation = {
+          id: 'optimized-recommendation',
+          positions: {},
+          overallStrength: 0,
+          reasoning: [
+            'Data-driven optimal lineup',
+            'Based on historical performance vs this opponent',
+            'Highest success probability'
+          ],
+          vsOpponentSuccess: 0,
+          riskFactors: []
+        };
 
-      // Add risk factors
-      const lowConfidencePlayers = Object.values(optimizedLineup.positions).filter(p => p.confidence < 50);
-      if (lowConfidencePlayers.length > 0) {
-        optimizedLineup.riskFactors.push(`${lowConfidencePlayers.length} players with limited success vs this opponent`);
+        let totalStrength = 0;
+        let totalSuccess = 0;
+
+        positions.forEach(position => {
+          const player = bestByPosition.get(position);
+          if (player) {
+            optimizedLineup.positions[position] = {
+              playerId: player.playerId,
+              playerName: player.playerName,
+              confidence: Math.round(player.successRate)
+            };
+            totalStrength += player.avgPerformance;
+            totalSuccess += player.successRate;
+          }
+        });
+
+        optimizedLineup.overallStrength = Math.round(totalStrength / 7 * 20); // Scale to 100
+        optimizedLineup.vsOpponentSuccess = Math.round(totalSuccess / 7);
+
+        // Add risk factors
+        const lowConfidencePlayers = Object.values(optimizedLineup.positions).filter(p => p.confidence < 50);
+        if (lowConfidencePlayers.length > 0) {
+          optimizedLineup.riskFactors.push(`${lowConfidencePlayers.length} players with limited success vs this opponent`);
+        }
+
+        successfulLineups.unshift(optimizedLineup);
       }
-
-      successfulLineups.unshift(optimizedLineup);
     }
 
     setLineupRecommendations(successfulLineups.slice(0, 3)); // Top 3 recommendations
