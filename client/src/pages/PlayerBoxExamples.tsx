@@ -247,20 +247,12 @@ export default function PlayerBoxExamples() {
                 <p className="text-sm text-gray-600 mb-4">Subtle shadows that work well on light backgrounds</p>
                 {samplePlayers.slice(0, 3).map((player) => (
                   <div key={`classic-${player.id}`} className="relative">
-                    <div className="flex items-center">
-                      <div 
-                        className={`h-16 w-16 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 shadow-lg ${player.avatarColor || 'bg-gray-700'}`}
-                        style={{ boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)' }}
-                      >
-                        {player.firstName?.[0]?.toUpperCase()}{player.lastName?.[0]?.toUpperCase()}
-                      </div>
-                      <div className="ml-4">
-                        <div className="text-lg font-bold text-gray-900">{player.displayName}</div>
-                        <div className="text-sm text-gray-600">
-                          {player.positionPreferences?.join(', ') || 'No positions'}
-                        </div>
-                      </div>
-                    </div>
+                    <PlayerBox 
+                      player={player}
+                      size="md"
+                      showPositions={true}
+                      className="[&_.player-avatar]:shadow-lg [&_.player-avatar]:shadow-black/15"
+                    />
                   </div>
                 ))}
               </div>
@@ -273,23 +265,12 @@ export default function PlayerBoxExamples() {
                 <p className="text-sm text-gray-600 mb-4">Clean white borders with subtle shadows</p>
                 {samplePlayers.slice(1, 4).map((player) => (
                   <div key={`border-${player.id}`} className="relative">
-                    <div className="flex items-center">
-                      <div 
-                        className={`h-16 w-16 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 ${player.avatarColor || 'bg-gray-700'}`}
-                        style={{ 
-                          border: '3px solid white',
-                          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05)' 
-                        }}
-                      >
-                        {player.firstName?.[0]?.toUpperCase()}{player.lastName?.[0]?.toUpperCase()}
-                      </div>
-                      <div className="ml-4">
-                        <div className="text-lg font-bold text-gray-900">{player.displayName}</div>
-                        <div className="text-sm text-gray-600">
-                          {player.positionPreferences?.join(', ') || 'No positions'}
-                        </div>
-                      </div>
-                    </div>
+                    <PlayerBox 
+                      player={player}
+                      size="md"
+                      showPositions={true}
+                      className="[&_.player-avatar]:border-4 [&_.player-avatar]:border-white [&_.player-avatar]:shadow-lg [&_.player-avatar]:shadow-black/15"
+                    />
                   </div>
                 ))}
               </div>
@@ -302,123 +283,86 @@ export default function PlayerBoxExamples() {
                 <p className="text-sm text-gray-600 mb-4">Multi-layered shadows for premium feel</p>
                 {samplePlayers.slice(0, 3).map((player) => (
                   <div key={`depth-${player.id}`} className="relative">
-                    <div className="flex items-center">
-                      <div 
-                        className={`h-20 w-20 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 text-xl ${player.avatarColor || 'bg-gray-700'}`}
-                        style={{ 
-                          boxShadow: '0 8px 25px rgba(0, 0, 0, 0.15), 0 4px 10px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.05)' 
-                        }}
-                      >
-                        {player.firstName?.[0]?.toUpperCase()}{player.lastName?.[0]?.toUpperCase()}
-                      </div>
-                      <div className="ml-4">
-                        <div className="text-lg font-bold text-gray-900">{player.displayName}</div>
-                        <div className="text-sm text-gray-600">
-                          {player.positionPreferences?.join(', ') || 'No positions'}
-                        </div>
-                      </div>
-                    </div>
+                    <PlayerBox 
+                      player={player}
+                      size="lg"
+                      showPositions={true}
+                      className="[&_.player-avatar]:shadow-2xl [&_.player-avatar]:shadow-black/20"
+                    />
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Ring Effect */}
+            {/* Subtle Ring Effect */}
             <div>
               <h3 className="text-lg font-medium mb-3">Ring Effect</h3>
               <div className="bg-gray-50 p-6 rounded-lg space-y-4">
-                <p className="text-sm text-gray-600 mb-4">Colored rings that complement the avatar</p>
+                <p className="text-sm text-gray-600 mb-4">Subtle ring border for emphasis</p>
                 {samplePlayers.slice(2, 5).map((player) => (
                   <div key={`ring-${player.id}`} className="relative">
-                    <div className="flex items-center">
-                      <div className="relative">
-                        <div 
-                          className="absolute inset-0 rounded-full"
-                          style={{ 
-                            background: `linear-gradient(135deg, ${player.avatarColor?.includes('bg-') ? '#' + player.avatarColor.split('-')[1] : '#6b7280'}40, ${player.avatarColor?.includes('bg-') ? '#' + player.avatarColor.split('-')[1] : '#6b7280'}20)`,
-                            padding: '4px'
-                          }}
-                        >
-                        </div>
-                        <div 
-                          className={`relative h-16 w-16 rounded-full flex items-center justify-center text-white font-bold ${player.avatarColor || 'bg-gray-700'}`}
-                          style={{ 
-                            margin: '4px',
-                            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)' 
-                          }}
-                        >
-                          {player.firstName?.[0]?.toUpperCase()}{player.lastName?.[0]?.toUpperCase()}
-                        </div>
-                      </div>
-                      <div className="ml-4">
-                        <div className="text-lg font-bold text-gray-900">{player.displayName}</div>
-                        <div className="text-sm text-gray-600">
-                          {player.positionPreferences?.join(', ') || 'No positions'}
-                        </div>
-                      </div>
-                    </div>
+                    <PlayerBox 
+                      player={player}
+                      size="md"
+                      showPositions={true}
+                      className="[&_.player-avatar]:ring-2 [&_.player-avatar]:ring-gray-200 [&_.player-avatar]:ring-offset-2 [&_.player-avatar]:shadow-md"
+                    />
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Glow Effect */}
+            {/* Soft Glow */}
             <div>
-              <h3 className="text-lg font-medium mb-3">Glow Effect</h3>
+              <h3 className="text-lg font-medium mb-3">Soft Glow Effect</h3>
               <div className="bg-gray-900 p-6 rounded-lg space-y-4">
                 <p className="text-sm text-gray-300 mb-4">Subtle glow effects for dark themes</p>
                 {samplePlayers.slice(1, 4).map((player) => (
                   <div key={`glow-${player.id}`} className="relative">
-                    <div className="flex items-center">
-                      <div 
-                        className={`h-16 w-16 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 ${player.avatarColor || 'bg-gray-700'}`}
-                        style={{ 
-                          boxShadow: `0 0 20px ${player.avatarColor?.includes('red') ? '#ef444430' : 
-                                                  player.avatarColor?.includes('blue') ? '#3b82f630' :
-                                                  player.avatarColor?.includes('green') ? '#22c55e30' :
-                                                  player.avatarColor?.includes('orange') ? '#f9731630' :
-                                                  player.avatarColor?.includes('purple') ? '#a855f730' :
-                                                  '#6b728030'}, 0 4px 12px rgba(0, 0, 0, 0.3)` 
-                        }}
-                      >
-                        {player.firstName?.[0]?.toUpperCase()}{player.lastName?.[0]?.toUpperCase()}
-                      </div>
-                      <div className="ml-4">
-                        <div className="text-lg font-bold text-white">{player.displayName}</div>
-                        <div className="text-sm text-gray-300">
-                          {player.positionPreferences?.join(', ') || 'No positions'}
-                        </div>
-                      </div>
+                    <PlayerBox 
+                      player={player}
+                      size="md"
+                      showPositions={true}
+                      className="[&_.player-name]:text-white [&_.player-positions]:text-gray-300 [&_.player-avatar]:shadow-lg [&_.player-avatar]:shadow-blue-500/20"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Elevated Card Style */}
+            <div>
+              <h3 className="text-lg font-medium mb-3">Elevated Card Style</h3>
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-100 p-6 rounded-lg space-y-4">
+                <p className="text-sm text-gray-600 mb-4">Card-based layout with enhanced shadows</p>
+                {samplePlayers.slice(0, 2).map((player) => (
+                  <div key={`elevated-${player.id}`} className="relative">
+                    <div className="bg-white rounded-lg p-4 shadow-md hover:shadow-lg transition-shadow">
+                      <PlayerBox 
+                        player={player}
+                        size="md"
+                        showPositions={true}
+                        className="[&_.player-avatar]:border-2 [&_.player-avatar]:border-white [&_.player-avatar]:shadow-lg"
+                      />
                     </div>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Elevated Style */}
+            {/* Thick Border Emphasis */}
             <div>
-              <h3 className="text-lg font-medium mb-3">Elevated Style</h3>
-              <div className="bg-gradient-to-br from-blue-50 to-indigo-100 p-6 rounded-lg space-y-4">
-                <p className="text-sm text-gray-600 mb-4">Combination of border, shadow and subtle background</p>
-                {samplePlayers.slice(0, 2).map((player) => (
-                  <div key={`elevated-${player.id}`} className="relative">
-                    <div className="flex items-center p-3 bg-white rounded-lg shadow-sm">
-                      <div 
-                        className={`h-16 w-16 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 ${player.avatarColor || 'bg-gray-700'}`}
-                        style={{ 
-                          border: '2px solid white',
-                          boxShadow: '0 6px 20px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05)' 
-                        }}
-                      >
-                        {player.firstName?.[0]?.toUpperCase()}{player.lastName?.[0]?.toUpperCase()}
-                      </div>
-                      <div className="ml-4">
-                        <div className="text-lg font-bold text-gray-900">{player.displayName}</div>
-                        <div className="text-sm text-gray-600">
-                          {player.positionPreferences?.join(', ') || 'No positions'}
-                        </div>
-                      </div>
-                    </div>
+              <h3 className="text-lg font-medium mb-3">Thick Border Emphasis</h3>
+              <div className="bg-white p-6 rounded-lg border space-y-4">
+                <p className="text-sm text-gray-600 mb-4">Bold borders for high contrast</p>
+                {samplePlayers.slice(3, 5).map((player) => (
+                  <div key={`thick-${player.id}`} className="relative">
+                    <PlayerBox 
+                      player={player}
+                      size="md"
+                      showPositions={true}
+                      className="[&_.player-avatar]:border-4 [&_.player-avatar]:border-gray-800 [&_.player-avatar]:shadow-lg"
+                    />
                   </div>
                 ))}
               </div>
