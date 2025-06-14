@@ -15,6 +15,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { LoadingState } from '@/components/ui/loading-state';
 import { ErrorDisplay } from '@/components/ui/error-display';
 import { PlayerAvatar } from '@/components/ui/player-avatar';
+import { PlayerBox } from '@/components/ui/player-box';
 import { PlayerAvailabilitySelector } from '@/components/ui/player-availability-selector';
 import { PageTemplate } from '@/components/layout/PageTemplate';
 import { CourtDisplay } from '@/components/ui/court-display';
@@ -108,7 +109,7 @@ interface TeamInsights {
 
 const POSITIONS_ORDER: Position[] = ['GS', 'GA', 'WA', 'C', 'WD', 'GD', 'GK'];
 
-// Enhanced Player Card Component for advanced interface
+// Enhanced Player Card Component for advanced interface using PlayerBox
 const PlayerCard = ({ 
   player, 
   showPositions = true, 
@@ -126,30 +127,24 @@ const PlayerCard = ({
   isCompatible?: boolean,
   isAssigned?: boolean
 }) => {
-  const avatarSize = size === "sm" ? "h-8 w-8" : "h-10 w-10";
-  const cardSize = size === "sm" ? "p-2" : "p-3";
   
   return (
     <div className={`
-      ${cardSize} rounded-lg border-2 transition-all duration-200
-      ${isDragging ? 'opacity-50 scale-95 border-blue-400 bg-blue-50' : ''}
-      ${isCompatible ? 'border-green-200 hover:border-green-300' : 'border-red-200 hover:border-red-300'}
-      ${isAssigned ? 'bg-gray-50 border-gray-300' : 'bg-white hover:shadow-md'}
+      transition-all duration-200
+      ${isDragging ? 'opacity-50 scale-95' : ''}
+      ${isCompatible ? 'hover:scale-105' : ''}
       ${className}
     `}>
-      <div className="flex flex-col items-center space-y-1">
-        <PlayerAvatar player={player} size={size} />
-        <div className="text-sm font-medium text-center">{player.displayName}</div>
-        {showPositions && (
-          <div className="flex flex-wrap gap-1 justify-center">
-            {player.positionPreferences?.map(pos => (
-              <Badge key={pos} variant="secondary" className="text-xs px-1 py-0">
-                {pos}
-              </Badge>
-            ))}
-          </div>
-        )}
-      </div>
+      <PlayerBox
+        player={player}
+        showPositions={showPositions}
+        size={size}
+        className={`
+          ${isDragging ? 'border-blue-400 bg-blue-50' : ''}
+          ${isCompatible ? 'border-green-200 hover:border-green-300' : 'border-red-200 hover:border-red-300'}
+          ${isAssigned ? 'bg-gray-50 border-gray-300' : 'bg-white hover:shadow-md'}
+        `}
+      />
     </div>
   );
 };
