@@ -1029,7 +1029,7 @@ const QuarterScores = ({ quarterScores, gameStatus, contextualTeamScore, context
                     return (
                       <div key={`q-${score.quarter}`} className="text-center">
                         <div className="text-xs text-gray-500 mb-1">Q{score.quarter}</div>
-                        <div className={`font-medium text-xs p-1.5 rounded border ${quarterBgColor} min-h-[2rem] flex items-center justify-center`}>
+                        <div className={`font-medium text-sm p-2 rounded border ${quarterBgColor} min-h-[2.5rem] flex items-center justify-center`}>
                           {score.teamScore}-{score.opponentScore}
                         </div>
                       </div>
@@ -1054,7 +1054,7 @@ const QuarterScores = ({ quarterScores, gameStatus, contextualTeamScore, context
                     return (
                       <div key={`cumulative-${score.quarter}`} className="text-center">
                         <div className="text-xs text-gray-500 mb-1">Q{score.quarter}</div>
-                        <div className={`font-medium text-xs p-1.5 rounded border ${gameBgColor} min-h-[2rem] flex items-center justify-center`}>
+                        <div className={`font-medium text-sm p-2 rounded border ${gameBgColor} min-h-[2.5rem] flex items-center justify-center`}>
                           {score.cumulativeTeamScore}-{score.cumulativeOpponentScore}
                         </div>
                       </div>
