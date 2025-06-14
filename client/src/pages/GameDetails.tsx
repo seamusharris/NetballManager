@@ -1011,25 +1011,25 @@ const QuarterScores = ({ quarterScores, gameStatus, contextualTeamScore, context
             )}
           </div>
           <div className="bg-white p-6">
-            <div className="grid grid-cols-2 gap-10">
-              <div className="border-r pr-4">
+            <div className="grid grid-cols-2 gap-6">
+              <div className="flex flex-col items-center">
                 <div className="text-center mb-3 font-medium text-base text-gray-700">Quarter Scores</div>
-                <div className="grid grid-cols-4 gap-4">
+                <div className="grid grid-cols-4 gap-1 w-full max-w-xs">
                   {scoringByQuarter.map(score => {
                     const quarterWin = score.teamScore > score.opponentScore;
                     const quarterLoss = score.teamScore < score.opponentScore;
                     const quarterDraw = score.teamScore === score.opponentScore;
-                    
+
                     const quarterBgColor = quarterWin 
                       ? 'bg-green-100 border-green-300' 
                       : quarterLoss 
                         ? 'bg-red-100 border-red-300' 
                         : 'bg-amber-100 border-amber-300';
-                    
+
                     return (
                       <div key={`q-${score.quarter}`} className="text-center">
                         <div className="text-xs text-gray-500 mb-1">Q{score.quarter}</div>
-                        <div className={`font-medium text-lg p-2 rounded border ${quarterBgColor}`}>
+                        <div className={`font-medium text-xs p-1.5 rounded border ${quarterBgColor} min-h-[2rem] flex items-center justify-center`}>
                           {score.teamScore}-{score.opponentScore}
                         </div>
                       </div>
@@ -1037,24 +1037,24 @@ const QuarterScores = ({ quarterScores, gameStatus, contextualTeamScore, context
                   })}
                 </div>
               </div>
-              <div className="pl-4">
+              <div className="flex flex-col items-center">
                 <div className="text-center mb-3 font-medium text-base text-gray-700">Game Scores</div>
-                <div className="grid grid-cols-4 gap-4">
+                <div className="grid grid-cols-4 gap-1 w-full max-w-xs">
                   {cumulativeScores.map(score => {
                     const gameWin = score.cumulativeTeamScore > score.cumulativeOpponentScore;
                     const gameLoss = score.cumulativeTeamScore < score.cumulativeOpponentScore;
                     const gameDraw = score.cumulativeTeamScore === score.cumulativeOpponentScore;
-                    
+
                     const gameBgColor = gameWin 
                       ? 'bg-green-100 border-green-300' 
                       : gameLoss 
                         ? 'bg-red-100 border-red-300' 
                         : 'bg-amber-100 border-amber-300';
-                    
+
                     return (
                       <div key={`cumulative-${score.quarter}`} className="text-center">
                         <div className="text-xs text-gray-500 mb-1">Q{score.quarter}</div>
-                        <div className={`font-medium text-lg p-2 rounded border ${gameBgColor}`}>
+                        <div className={`font-medium text-xs p-1.5 rounded border ${gameBgColor} min-h-[2rem] flex items-center justify-center`}>
                           {score.cumulativeTeamScore}-{score.cumulativeOpponentScore}
                         </div>
                       </div>
@@ -1680,7 +1680,7 @@ export default function GameDetails() {
           </div>
         )}
 
-        
+
 
         {/* Hidden Official Score Entry for dialog functionality */}
         {game && !game.isBye && (
