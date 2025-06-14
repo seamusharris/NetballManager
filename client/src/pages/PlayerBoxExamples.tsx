@@ -439,6 +439,278 @@ export default function PlayerBoxExamples() {
                 ))}
               </div>
             </div>
+
+            {/* Professional Clean */}
+            <div>
+              <h3 className="text-lg font-medium mb-3">Professional Clean</h3>
+              <div className="bg-white p-6 rounded-lg border space-y-4">
+                <p className="text-sm text-gray-600 mb-4">Crisp, clean styling perfect for business presentations</p>
+                {samplePlayers.slice(0, 3).map((player) => (
+                  <div key={`professional-${player.id}`} className="relative">
+                    <PlayerBox 
+                      player={player}
+                      size="md"
+                      showPositions={true}
+                      className="[&>div>div:first-child]:border-3 [&>div>div:first-child]:border-gray-200 [&>div>div:first-child]:shadow-lg [&>div>div:first-child]:shadow-gray-200/60"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Double Border Effect */}
+            <div>
+              <h3 className="text-lg font-medium mb-3">Double Border Effect</h3>
+              <div className="bg-white p-6 rounded-lg border space-y-4">
+                <p className="text-sm text-gray-600 mb-4">Elegant double border creating depth and sophistication</p>
+                {samplePlayers.slice(1, 4).map((player) => (
+                  <div key={`double-border-${player.id}`} className="relative">
+                    <PlayerBox 
+                      player={player}
+                      size="md"
+                      showPositions={true}
+                      className="[&>div>div:first-child]:border-4 [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-2 [&>div>div:first-child]:ring-gray-300 [&>div>div:first-child]:shadow-lg [&>div>div:first-child]:shadow-black/20"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Soft Shadow Collection */}
+            <div>
+              <h3 className="text-lg font-medium mb-3">Soft Shadow Collection</h3>
+              <div className="bg-white p-6 rounded-lg border space-y-4">
+                <p className="text-sm text-gray-600 mb-4">Various soft shadow intensities for different prominence levels</p>
+                <div className="grid gap-4">
+                  <div className="flex items-center gap-4">
+                    <span className="w-24 text-sm font-medium">Light:</span>
+                    <PlayerBox 
+                      player={samplePlayers[0]}
+                      size="sm"
+                      showPositions={false}
+                      className="[&>div>div:first-child]:shadow-sm [&>div>div:first-child]:shadow-gray-400/30"
+                    />
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <span className="w-24 text-sm font-medium">Medium:</span>
+                    <PlayerBox 
+                      player={samplePlayers[1]}
+                      size="sm"
+                      showPositions={false}
+                      className="[&>div>div:first-child]:shadow-md [&>div>div:first-child]:shadow-gray-500/40"
+                    />
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <span className="w-24 text-sm font-medium">Strong:</span>
+                    <PlayerBox 
+                      player={samplePlayers[2]}
+                      size="sm"
+                      showPositions={false}
+                      className="[&>div>div:first-child]:shadow-lg [&>div>div:first-child]:shadow-gray-600/50"
+                    />
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <span className="w-24 text-sm font-medium">Dramatic:</span>
+                    <PlayerBox 
+                      player={samplePlayers[3]}
+                      size="sm"
+                      showPositions={false}
+                      className="[&>div>div:first-child]:shadow-xl [&>div>div:first-child]:shadow-gray-700/60"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Colored Border Highlights */}
+            <div>
+              <h3 className="text-lg font-medium mb-3">Colored Border Highlights</h3>
+              <div className="bg-white p-6 rounded-lg border space-y-4">
+                <p className="text-sm text-gray-600 mb-4">Matching avatar colors with border accents</p>
+                {samplePlayers.slice(0, 4).map((player) => (
+                  <div key={`colored-border-${player.id}`} className="relative">
+                    <PlayerBox 
+                      player={player}
+                      size="md"
+                      showPositions={true}
+                      className="[&>div>div:first-child]:border-3 [&>div>div:first-child]:border-current [&>div>div:first-child]:shadow-lg [&>div>div:first-child]:shadow-current/30"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Minimalist Elegance */}
+            <div>
+              <h3 className="text-lg font-medium mb-3">Minimalist Elegance</h3>
+              <div className="bg-white p-6 rounded-lg border space-y-4">
+                <p className="text-sm text-gray-600 mb-4">Ultra-clean styling with subtle depth hints</p>
+                {samplePlayers.slice(2, 5).map((player) => (
+                  <div key={`minimalist-${player.id}`} className="relative">
+                    <PlayerBox 
+                      player={player}
+                      size="md"
+                      showPositions={true}
+                      className="[&>div>div:first-child]:border [&>div>div:first-child]:border-gray-100 [&>div>div:first-child]:shadow-sm [&>div>div:first-child]:shadow-gray-200/50"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Raised Appearance */}
+            <div>
+              <h3 className="text-lg font-medium mb-3">Raised Appearance</h3>
+              <div className="bg-gray-50 p-6 rounded-lg space-y-4">
+                <p className="text-sm text-gray-600 mb-4">3D-like raised effect with graduated shadows</p>
+                {samplePlayers.slice(0, 3).map((player) => (
+                  <div key={`raised-${player.id}`} className="relative">
+                    <PlayerBox 
+                      player={player}
+                      size="md"
+                      showPositions={true}
+                      className="[&>div>div:first-child]:border-2 [&>div>div:first-child]:border-white [&>div>div:first-child]:shadow-lg [&>div>div:first-child]:shadow-black/25 [&>div>div:first-child]:ring-1 [&>div>div:first-child]:ring-gray-200"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Floating Effect */}
+            <div>
+              <h3 className="text-lg font-medium mb-3">Floating Effect</h3>
+              <div className="bg-white p-6 rounded-lg border space-y-4">
+                <p className="text-sm text-gray-600 mb-4">Avatars that appear to float above the surface</p>
+                {samplePlayers.slice(1, 4).map((player) => (
+                  <div key={`floating-${player.id}`} className="relative">
+                    <PlayerBox 
+                      player={player}
+                      size="md"
+                      showPositions={true}
+                      className="[&>div>div:first-child]:shadow-2xl [&>div>div:first-child]:shadow-black/30 [&>div>div:first-child]:border-2 [&>div>div:first-child]:border-white [&>div>div:first-child]:translate-y-[-2px]"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Gradient Shadow */}
+            <div>
+              <h3 className="text-lg font-medium mb-3">Gradient Shadow</h3>
+              <div className="bg-white p-6 rounded-lg border space-y-4">
+                <p className="text-sm text-gray-600 mb-4">Subtle gradient shadows for modern appeal</p>
+                {samplePlayers.slice(0, 4).map((player, index) => (
+                  <div key={`gradient-${player.id}`} className="relative">
+                    <PlayerBox 
+                      player={player}
+                      size="md"
+                      showPositions={true}
+                      className={`[&>div>div:first-child]:border-2 [&>div>div:first-child]:border-white [&>div>div:first-child]:shadow-lg ${
+                        index === 0 ? '[&>div>div:first-child]:shadow-blue-200/60' :
+                        index === 1 ? '[&>div>div:first-child]:shadow-green-200/60' :
+                        index === 2 ? '[&>div>div:first-child]:shadow-purple-200/60' :
+                        '[&>div>div:first-child]:shadow-orange-200/60'
+                      }`}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Layered Depth */}
+            <div>
+              <h3 className="text-lg font-medium mb-3">Layered Depth</h3>
+              <div className="bg-white p-6 rounded-lg border space-y-4">
+                <p className="text-sm text-gray-600 mb-4">Multiple shadow layers creating rich depth</p>
+                {samplePlayers.slice(2, 5).map((player) => (
+                  <div key={`layered-${player.id}`} className="relative">
+                    <PlayerBox 
+                      player={player}
+                      size="md"
+                      showPositions={true}
+                      className="[&>div>div:first-child]:border-3 [&>div>div:first-child]:border-white [&>div>div:first-child]:shadow-lg [&>div>div:first-child]:shadow-black/20 [&>div>div:first-child]:drop-shadow-md"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Vintage Style */}
+            <div>
+              <h3 className="text-lg font-medium mb-3">Vintage Style</h3>
+              <div className="bg-amber-50 p-6 rounded-lg space-y-4">
+                <p className="text-sm text-gray-600 mb-4">Classic styling with warm tones and softer edges</p>
+                {samplePlayers.slice(0, 3).map((player) => (
+                  <div key={`vintage-${player.id}`} className="relative">
+                    <PlayerBox 
+                      player={player}
+                      size="md"
+                      showPositions={true}
+                      className="[&>div>div:first-child]:border-4 [&>div>div:first-child]:border-amber-100 [&>div>div:first-child]:shadow-lg [&>div>div:first-child]:shadow-amber-900/25"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Modern Flat */}
+            <div>
+              <h3 className="text-lg font-medium mb-3">Modern Flat</h3>
+              <div className="bg-white p-6 rounded-lg border space-y-4">
+                <p className="text-sm text-gray-600 mb-4">Contemporary flat design with subtle accents</p>
+                {samplePlayers.slice(1, 4).map((player) => (
+                  <div key={`flat-${player.id}`} className="relative">
+                    <PlayerBox 
+                      player={player}
+                      size="md"
+                      showPositions={true}
+                      className="[&>div>div:first-child]:border-2 [&>div>div:first-child]:border-gray-100 [&>div>div:first-child]:shadow-none"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Prismatic Borders */}
+            <div>
+              <h3 className="text-lg font-medium mb-3">Prismatic Borders</h3>
+              <div className="bg-white p-6 rounded-lg border space-y-4">
+                <p className="text-sm text-gray-600 mb-4">Rainbow-inspired border effects</p>
+                {samplePlayers.slice(0, 4).map((player, index) => (
+                  <div key={`prismatic-${player.id}`} className="relative">
+                    <PlayerBox 
+                      player={player}
+                      size="md"
+                      showPositions={true}
+                      className={`[&>div>div:first-child]:border-3 [&>div>div:first-child]:shadow-lg ${
+                        index === 0 ? '[&>div>div:first-child]:border-red-200 [&>div>div:first-child]:shadow-red-200/40' :
+                        index === 1 ? '[&>div>div:first-child]:border-blue-200 [&>div>div:first-child]:shadow-blue-200/40' :
+                        index === 2 ? '[&>div>div:first-child]:border-green-200 [&>div>div:first-child]:shadow-green-200/40' :
+                        '[&>div>div:first-child]:border-purple-200 [&>div>div:first-child]:shadow-purple-200/40'
+                      }`}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Premium Luxury */}
+            <div>
+              <h3 className="text-lg font-medium mb-3">Premium Luxury</h3>
+              <div className="bg-slate-50 p-6 rounded-lg space-y-4">
+                <p className="text-sm text-gray-600 mb-4">High-end styling with metallic accents</p>
+                {samplePlayers.slice(2, 5).map((player) => (
+                  <div key={`luxury-${player.id}`} className="relative">
+                    <PlayerBox 
+                      player={player}
+                      size="lg"
+                      showPositions={true}
+                      className="[&>div>div:first-child]:border-4 [&>div>div:first-child]:border-slate-200 [&>div>div:first-child]:shadow-xl [&>div>div:first-child]:shadow-slate-500/30 [&>div>div:first-child]:ring-1 [&>div>div:first-child]:ring-slate-300"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </section>
       </div>
