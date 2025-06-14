@@ -1310,7 +1310,14 @@ export default function GameDetails() {
                  contextualTeamScore < contextualOpponentScore ? 'Loss' : 'Draw';
 
   const getScoreDisplay = () => {
-    if (!game) return "- -";
+    if (!game) return "—";
+
+    // Check if this is a BYE game
+    const isByeGame = game.statusId === 6 || game.statusName === 'bye';
+    if (isByeGame) return "BYE";
+
+    // For upcoming games, show dash
+    if (!game.statusIsCompleted) return "—";
 
     // Show fixed scores from status if available
     if (game.statusTeamGoals !== null && game.statusOpponentGoals !== null) {
@@ -1327,8 +1334,8 @@ export default function GameDetails() {
       return `${contextualTeamScore}-${contextualOpponentScore}`;
     }
 
-    // Show dash for upcoming games or games without statistics
-    return "- -";
+    // Default fallback
+    return "—";
   };
 
   return (

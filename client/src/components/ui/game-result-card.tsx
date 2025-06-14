@@ -71,8 +71,8 @@ export function GameResultCard({
     }
   }, [gameStats, centralizedScores, useOfficialPriority, game, currentTeamId]);
 
-  // Check if this is a BYE game using game status
-  const isByeGame = game.statusId === 6 || game.statusName === 'bye' || game.isBye;
+  // Check if this is a BYE game using game status only
+  const isByeGame = game.statusId === 6 || game.statusName === 'bye';
   const isUpcoming = !game.statusIsCompleted && !isByeGame;
 
   const getOpponentName = (): string => {
@@ -166,10 +166,13 @@ export function GameResultCard({
 
   // Display score or placeholder
   const getScoreDisplay = () => {
-    if (!game) return "- -";
+    if (!game) return "—";
 
     // For BYE games, don't show scores
-    if (game.isBye) return "BYE";
+    if (isByeGame) return "BYE";
+
+    // For upcoming games, show dash
+    if (isUpcoming) return "—";
 
     // Show calculated scores if available
     if (scores && scores.totalTeamScore !== undefined && scores.totalOpponentScore !== undefined) {
@@ -186,8 +189,8 @@ export function GameResultCard({
       return "0-0";
     }
 
-    // Default for upcoming games
-    return "- -";
+    // Default fallback
+    return "—";
   };
 
     const getOpponentDisplay = (): string => {
