@@ -31,7 +31,8 @@ import {
   RotateCcw, Zap, Play, Save, Calendar, MapPin, Copy, FileText,
   BarChart3, TrendingDown, Award, Shield, Star, Eye, Brain,
   Activity, Flame, History, Search, Filter, RefreshCw, 
-  Crosshair, Focus, Layers, Hash, Flag, Telescope, Check
+  Crosshair, Focus, Layers, Hash, Flag, Telescope, Check,
+  Plus, Minus, ArrowUpDown, Grid3X3
 } from 'lucide-react';
 import { 
   Game, GameStat, Player, PlayerAvailability, 
@@ -106,6 +107,391 @@ interface TeamInsights {
 }
 
 const POSITIONS_ORDER: Position[] = ['GS', 'GA', 'WA', 'C', 'WD', 'GD', 'GK'];
+
+// Enhanced Player Card Component for advanced interface
+const PlayerCard = ({ 
+  player, 
+  showPositions = true, 
+  size = "md", 
+  className = "",
+  isDragging = false,
+  isCompatible = true,
+  isAssigned = false
+}: {
+  player: any,
+  showPositions?: boolean,
+  size?: "sm" | "md",
+  className?: string,
+  isDragging?: boolean,
+  isCompatible?: boolean,
+  isAssigned?: boolean
+}) => {
+  const avatarSize = size === "sm" ? "h-8 w-8" : "h-10 w-10";
+  const cardSize = size === "sm" ? "p-2" : "p-3";
+  
+  return (
+    <div className={`
+      ${cardSize} rounded-lg border-2 transition-all duration-200
+      ${isDragging ? 'opacity-50 scale-95 border-blue-400 bg-blue-50' : ''}
+      ${isCompatible ? 'border-green-200 hover:border-green-300' : 'border-red-200 hover:border-red-300'}
+      ${isAssigned ? 'bg-gray-50 border-gray-300' : 'bg-white hover:shadow-md'}
+      ${className}
+    `}>
+      <div className="flex flex-col items-center space-y-1">
+        <PlayerAvatar player={player} size={size} />
+        <div className="text-sm font-medium text-center">{player.displayName}</div>
+        {showPositions && (
+          <div className="flex flex-wrap gap-1 justify-center">
+            {player.positionPreferences?.map(pos => (
+              <Badge key={pos} variant="secondary" className="text-xs px-1 py-0">
+                {pos}
+              </Badge>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// Enhanced Position Slot Component for advanced interface
+const PositionSlot = ({ 
+  position, 
+  player, 
+  isDropTarget = false, 
+  isCompatible = true,
+  onDrop,
+  courtSection,
+  onDragStart
+}: {
+  position: string,
+  player?: any,
+  isDropTarget?: boolean,
+  isCompatible?: boolean,
+  onDrop: () => void,
+  courtSection: 'attacking' | 'center' | 'defending',
+  onDragStart: (playerId: number) => void
+}) => {
+  const sectionColors = {
+    attacking: 'bg-gradient-to-br from-red-50 to-red-100 border-red-200',
+    center: 'bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200',
+    defending: 'bg-gradient-to-br from-green-50 to-green-100 border-green-200'
+  };
+
+  return (
+    <div
+      className={`
+        relative border-2 border-dashed rounded-xl p-4 text-center min-h-[140px] 
+        transition-all duration-300 flex flex-col justify-center
+        ${isDropTarget && isCompatible ? 'border-green-400 bg-green-50 scale-105' : ''}
+        ${isDropTarget && !isCompatible ? 'border-red-400 bg-red-50' : ''}
+        ${!isDropTarget ? sectionColors[courtSection] : ''}
+        hover:shadow-lg
+      `}
+      onDragOver={(e) => e.preventDefault()}
+      onDrop={onDrop}
+    >
+      {/* Position Label */}
+      <div className="absolute top-2 left-2">
+        <Badge variant="outline" className="font-bold text-sm">
+          {position}
+        </Badge>
+      </div>
+
+      {/* Player or Drop Zone */}
+      {player ? (
+        <div 
+          className="mt-2 cursor-move" 
+          draggable
+          onDragStart={() => onDragStart(player.id)}
+        >
+          <PlayerCard 
+            player={player}
+            showPositions={false}
+            size="sm"
+            isAssigned={true}
+          />
+        </div>
+      ) : (
+        <div className="flex flex-col items-center justify-center h-full text-gray-400">
+          <div className="w-12 h-12 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center mb-2">
+            <Plus className="h-6 w-6" />
+          </div>
+          <div className="text-xs font-medium">
+            {isDropTarget ? (isCompatible ? 'Drop here' : 'Not compatible') : 'Drag player here'}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Advanced Drag and Drop Interface from Examples
+function AdvancedDragDropRoster({ 
+  availablePlayers, 
+  currentLineup, 
+  onLineupChange, 
+  opponentName 
+}: {
+  availablePlayers: Player[],
+  currentLineup: Record<Position, Player | null>,
+  onLineupChange: (lineup: Record<Position, Player | null>) => void,
+  opponentName?: string | null
+}) {
+  const [draggedPlayer, setDraggedPlayer] = useState<number | null>(null);
+  const [dragOverPosition, setDragOverPosition] = useState<string | null>(null);
+
+  const handleDragStart = (playerId: number) => {
+    setDraggedPlayer(playerId);
+  };
+
+  const handleDragOver = (e: React.DragEvent, position: string) => {
+    e.preventDefault();
+    setDragOverPosition(position);
+  };
+
+  const handleDragLeave = () => {
+    setDragOverPosition(null);
+  };
+
+  const handleDrop = (position: string) => {
+    if (draggedPlayer) {
+      // Remove player from previous position
+      const newLineup = { ...currentLineup };
+      
+      // Clear the player from any previous position
+      Object.keys(newLineup).forEach(pos => {
+        if (newLineup[pos]?.id === draggedPlayer) {
+          newLineup[pos] = null;
+        }
+      });
+      
+      // If there's already a player in the target position, remove them
+      if (newLineup[position] !== null) {
+        newLineup[position] = null;
+      }
+      
+      // Assign the dragged player to the new position
+      const player = availablePlayers.find(p => p.id === draggedPlayer);
+      if (player) {
+        newLineup[position] = player;
+      }
+      
+      onLineupChange(newLineup);
+    }
+    setDraggedPlayer(null);
+    setDragOverPosition(null);
+  };
+
+  // Check if a player is compatible with a position
+  const isPlayerCompatible = (playerId: number, position: string) => {
+    const player = availablePlayers.find(p => p.id === playerId);
+    return player ? player.positionPreferences?.includes(position) : false;
+  };
+
+  // Reset functions
+  const handleResetLineup = () => {
+    const emptyLineup = {
+      GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null
+    } as Record<Position, Player | null>;
+    onLineupChange(emptyLineup);
+  };
+
+  const assignedPlayerIds = Object.values(currentLineup).filter(p => p !== null).map(p => p!.id);
+  const benchPlayers = availablePlayers.filter(p => !assignedPlayerIds.includes(p.id));
+
+  return (
+    <Card className="mt-6">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Grid3X3 className="h-5 w-5" />
+          Advanced Roster Builder {opponentName && `- vs ${opponentName}`}
+        </CardTitle>
+        <p className="text-sm text-gray-600">
+          Enhanced drag & drop interface with full court layout and detailed player management
+        </p>
+      </CardHeader>
+      <CardContent className="p-6">
+        {/* Controls */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <Target className="h-4 w-4 text-blue-600" />
+              <span className="font-medium">Positions Filled:</span>
+              <Badge variant="secondary">
+                {Object.values(currentLineup).filter(p => p !== null).length}/7
+              </Badge>
+            </div>
+            <div className="flex items-center gap-2">
+              <Users className="h-4 w-4 text-green-600" />
+              <span className="font-medium">Available:</span>
+              <Badge variant="outline">{benchPlayers.length} players</Badge>
+            </div>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleResetLineup}
+          >
+            <RotateCcw className="h-4 w-4 mr-1" />
+            Reset Lineup
+          </Button>
+        </div>
+
+        {/* Full Width Court Layout */}
+        <div className="mb-6 bg-gradient-to-b from-green-100 to-green-50 p-6 rounded-xl border border-green-200 shadow-inner">
+          <div className="grid grid-cols-3 gap-6 max-w-6xl mx-auto">
+            {/* Attacking Third */}
+            <div className="space-y-3">
+              <div className="text-center">
+                <h4 className="text-sm font-semibold text-red-700 mb-1">Attacking Third</h4>
+                <div className="h-0.5 bg-red-200 rounded"></div>
+              </div>
+              {['GS', 'GA'].map(position => (
+                <PositionSlot
+                  key={position}
+                  position={position}
+                  player={currentLineup[position]}
+                  isDropTarget={dragOverPosition === position}
+                  isCompatible={draggedPlayer ? isPlayerCompatible(draggedPlayer, position) : true}
+                  onDrop={() => handleDrop(position)}
+                  courtSection="attacking"
+                  onDragStart={handleDragStart}
+                />
+              ))}
+            </div>
+
+            {/* Center Third */}
+            <div className="space-y-3">
+              <div className="text-center">
+                <h4 className="text-sm font-semibold text-blue-700 mb-1">Center Third</h4>
+                <div className="h-0.5 bg-blue-200 rounded"></div>
+              </div>
+              {['WA', 'C', 'WD'].map(position => (
+                <div
+                  key={position}
+                  onDragOver={(e) => handleDragOver(e, position)}
+                  onDragLeave={handleDragLeave}
+                >
+                  <PositionSlot
+                    position={position}
+                    player={currentLineup[position]}
+                    isDropTarget={dragOverPosition === position}
+                    isCompatible={draggedPlayer ? isPlayerCompatible(draggedPlayer, position) : true}
+                    onDrop={() => handleDrop(position)}
+                    courtSection="center"
+                    onDragStart={handleDragStart}
+                  />
+                </div>
+              ))}
+            </div>
+
+            {/* Defending Third */}
+            <div className="space-y-3">
+              <div className="text-center">
+                <h4 className="text-sm font-semibold text-green-700 mb-1">Defending Third</h4>
+                <div className="h-0.5 bg-green-200 rounded"></div>
+              </div>
+              {['GD', 'GK'].map(position => (
+                <div
+                  key={position}
+                  onDragOver={(e) => handleDragOver(e, position)}
+                  onDragLeave={handleDragLeave}
+                >
+                  <PositionSlot
+                    position={position}
+                    player={currentLineup[position]}
+                    isDropTarget={dragOverPosition === position}
+                    isCompatible={draggedPlayer ? isPlayerCompatible(draggedPlayer, position) : true}
+                    onDrop={() => handleDrop(position)}
+                    courtSection="defending"
+                    onDragStart={handleDragStart}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Bench and Quick Actions */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* Available Players Pool */}
+          <div className="lg:col-span-3">
+            <div className="flex items-center gap-2 mb-3">
+              <Users className="h-5 w-5 text-blue-600" />
+              <h4 className="text-lg font-semibold text-gray-800">Available Players</h4>
+              <Badge variant="secondary">{benchPlayers.length} players</Badge>
+            </div>
+            
+            <div className="bg-gray-50 rounded-xl p-4 border border-gray-200 min-h-[200px]">
+              {benchPlayers.length > 0 ? (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                  {benchPlayers.map(player => (
+                    <div
+                      key={player.id}
+                      draggable
+                      onDragStart={() => handleDragStart(player.id)}
+                      className="cursor-move transform hover:scale-105 transition-transform"
+                    >
+                      <PlayerCard
+                        player={player}
+                        showPositions={true}
+                        isDragging={draggedPlayer === player.id}
+                        isCompatible={true}
+                      />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <Users className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                  <p className="font-medium">All players assigned</p>
+                  <p className="text-sm">Complete lineup ready!</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Quick Actions */}
+          <div>
+            <h4 className="text-lg font-semibold text-gray-800 mb-3">Quick Actions</h4>
+            <div className="space-y-3">
+              <Button 
+                variant="outline" 
+                className="w-full justify-start"
+                onClick={handleResetLineup}
+              >
+                <RotateCcw className="h-4 w-4 mr-2" />
+                Clear All
+              </Button>
+              <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <h5 className="font-medium text-blue-800 mb-2">Status</h5>
+                <div className="space-y-1 text-sm text-blue-700">
+                  <div>Assigned: {assignedPlayerIds.length}/7</div>
+                  <div>Available: {benchPlayers.length}</div>
+                  <div>Ready: {Object.values(currentLineup).every(p => p !== null) ? 'Yes' : 'No'}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Instructions */}
+        <Card className="mt-6 bg-blue-50 border-blue-200">
+          <CardContent className="p-4">
+            <h4 className="font-semibold text-blue-800 mb-2">Advanced Interface Features</h4>
+            <div className="text-sm text-blue-700 space-y-1">
+              <p>• <strong>Court sections:</strong> Visual distinction between attacking, center, and defending thirds</p>
+              <p>• <strong>Position compatibility:</strong> Visual feedback when dragging players to appropriate positions</p>
+              <p>• <strong>Enhanced bench:</strong> Larger player cards with position preferences displayed</p>
+              <p>• <strong>Quick status:</strong> Real-time lineup completion tracking</p>
+            </div>
+          </CardContent>
+        </Card>
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function Preparation() {
   const { currentClubId, currentTeamId } = useClub();
@@ -2048,6 +2434,14 @@ export default function Preparation() {
                   />
                 </CardContent>
               </Card>
+
+              {/* Advanced Drag and Drop Interface from Examples */}
+              <AdvancedDragDropRoster 
+                availablePlayers={teamPlayers.filter(p => availabilityData[p.id] === 'available')}
+                currentLineup={selectedLineup}
+                onLineupChange={setSelectedLineup}
+                opponentName={opponentName}
+              />
 
               <div className="flex justify-between">
                 <Button variant="outline" onClick={() => setActiveTab('overview')}>
