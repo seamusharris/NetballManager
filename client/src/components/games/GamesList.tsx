@@ -457,7 +457,7 @@ export function GamesList({
               No games found. Please add a game or adjust your filters.
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-6">
               {finalGames.map((game) => (
                 <div key={game.id} className="relative group">
                   <GameResultCard

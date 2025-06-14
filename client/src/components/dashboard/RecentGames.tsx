@@ -49,7 +49,7 @@ export default function RecentGames({ games, opponents, className, seasonFilter,
       title="Recent Games"
       contentClassName="px-4 py-6 pb-2"
     >
-        <div className="space-y-4">
+        <div className="space-y-6">
           {isLoading ? (
             <p className="text-gray-500 text-center py-4">Loading recent games...</p>
           ) : recentGames.length === 0 ? (
@@ -66,7 +66,7 @@ export default function RecentGames({ games, opponents, className, seasonFilter,
                 showDate={true}
                 showRound={true}
                 showScore={true}
-                className="mb-2"
+                className="mb-4"
                 currentTeamId={clubWide ? null : currentTeam?.id}
                 clubTeams={teams || []}
               />

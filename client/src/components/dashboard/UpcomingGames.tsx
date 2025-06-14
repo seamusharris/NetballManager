@@ -59,10 +59,10 @@ export default function UpcomingGames({ games, opponents, className, seasonFilte
     >
 
         {upcomingGames.length > 0 ? (
-          <div className="space-y-8">
+          <div className="space-y-6">
             {upcomingGames.map((game, index) => (
               <Link key={game.id} href={`/game/${game.id}`}>
-                <div className={`flex justify-between items-center p-4 mb-4 mt-2 border-l-4 border-t border-r border-b rounded cursor-pointer hover:bg-blue-100 transition-colors ${
+                <div className={`flex justify-between items-center p-4 mb-6 mt-2 border-l-4 border-t border-r border-b rounded cursor-pointer hover:bg-blue-100 transition-colors ${
                     index === 0 ? 'border-blue-500 bg-blue-50 border-t-blue-500 border-r-blue-500 border-b-blue-500' : 'border-blue-400 bg-blue-50 border-t-blue-400 border-r-blue-400 border-b-blue-400'
                   }`}
                 >
