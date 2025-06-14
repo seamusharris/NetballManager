@@ -101,12 +101,14 @@ export function GameResultCard({
   const getResultClass = () => {
     if (isWin) return 'border-green-500 bg-green-50';
     if (isLoss) return 'border-red-500 bg-red-50';
-    return 'border-gray-500 bg-gray-50';
+    if (isDraw) return 'border-amber-500 bg-amber-50';
+    return 'border-gray-500 bg-gray-50'; // for byes and other states
   };
 
   const getHoverClass = () => {
     if (isWin) return 'hover:bg-green-100';
     if (isLoss) return 'hover:bg-red-100';
+    if (isDraw) return 'hover:bg-amber-100';
     return 'hover:bg-gray-100';
   };
 
