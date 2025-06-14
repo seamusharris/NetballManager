@@ -748,6 +748,7 @@ const StatisticsByPosition = ({ gameStats }) => {
       }
 
       if (!acc[stat.position][stat.quarter]) {
+        ```
         acc[stat.position][stat.quarter] = {};
       }
 
@@ -913,7 +914,7 @@ const QuarterScores = ({ quarterScores, gameStatus, contextualTeamScore, context
     const bgColor = isByeGame ? 'bg-gray-500' : 'bg-blue-500';
     const borderColor = isByeGame ? 'border-gray-300' : 'border-blue-300';
     const displayText = isByeGame ? 'BYE' : '—';
-    
+
     return (
       <div>
         <div className="mt-4 max-w-2xl mx-auto">
@@ -1345,7 +1346,7 @@ export default function GameDetails() {
     if (!game) return "—";
 
     // Use status ID-based logic (matching games list)
-    if (isByeGame) return "BYE";
+    if (isByeGame) return "Bye";
     if (isUpcomingGame) return "—";
 
     // Show fixed scores from status if available for completed games
@@ -1582,7 +1583,7 @@ export default function GameDetails() {
                           console.error("Error updating game:", error);
                           toast({
                             title: "Error",
-                            description: "Failed to update game details",
+                            description: "Failed toupdate game details",
                             variant: "destructive",
                           });
                         }
