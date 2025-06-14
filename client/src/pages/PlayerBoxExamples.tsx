@@ -711,6 +711,137 @@ export default function PlayerBoxExamples() {
                 ))}
               </div>
             </div>
+
+            {/* Double Border Effect - White + Color */}
+            <div>
+              <h3 className="text-lg font-medium mb-3">Double Border - White + Color</h3>
+              <div className="bg-white p-6 rounded-lg border space-y-4">
+                <p className="text-sm text-gray-600 mb-4">White outer border with thin inner colored border matching avatar</p>
+                {samplePlayers.slice(0, 5).map((player) => (
+                  <div key={`double-white-color-${player.id}`} className="relative">
+                    <PlayerBox 
+                      player={player}
+                      size="md"
+                      showPositions={true}
+                      className="[&>div>div:first-child]:border-4 [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-2 [&>div>div:first-child]:ring-current [&>div>div:first-child]:shadow-lg [&>div>div:first-child]:shadow-black/20"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Triple Layer Border */}
+            <div>
+              <h3 className="text-lg font-medium mb-3">Triple Layer Border</h3>
+              <div className="bg-gray-50 p-6 rounded-lg space-y-4">
+                <p className="text-sm text-gray-600 mb-4">White border, colored ring, plus shadow for maximum depth</p>
+                {samplePlayers.slice(1, 4).map((player) => (
+                  <div key={`triple-${player.id}`} className="relative">
+                    <PlayerBox 
+                      player={player}
+                      size="lg"
+                      showPositions={true}
+                      className="[&>div>div:first-child]:border-[5px] [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-3 [&>div>div:first-child]:ring-current [&>div>div:first-child]:shadow-xl [&>div>div:first-child]:shadow-current/25"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Subtle Double Border */}
+            <div>
+              <h3 className="text-lg font-medium mb-3">Subtle Double Border</h3>
+              <div className="bg-white p-6 rounded-lg border space-y-4">
+                <p className="text-sm text-gray-600 mb-4">Thinner borders for a more refined look</p>
+                {samplePlayers.slice(0, 4).map((player) => (
+                  <div key={`subtle-double-${player.id}`} className="relative">
+                    <PlayerBox 
+                      player={player}
+                      size="md"
+                      showPositions={true}
+                      className="[&>div>div:first-child]:border-3 [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-1 [&>div>div:first-child]:ring-current [&>div>div:first-child]:shadow-md [&>div>div:first-child]:shadow-black/15"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Bold Double Border */}
+            <div>
+              <h3 className="text-lg font-medium mb-3">Bold Double Border</h3>
+              <div className="bg-white p-6 rounded-lg border space-y-4">
+                <p className="text-sm text-gray-600 mb-4">Thick white border with prominent colored inner ring</p>
+                {samplePlayers.slice(2, 5).map((player) => (
+                  <div key={`bold-double-${player.id}`} className="relative">
+                    <PlayerBox 
+                      player={player}
+                      size="lg"
+                      showPositions={true}
+                      className="[&>div>div:first-child]:border-[6px] [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-4 [&>div>div:first-child]:ring-current [&>div>div:first-child]:shadow-2xl [&>div>div:first-child]:shadow-black/30"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Inverted Double Border */}
+            <div>
+              <h3 className="text-lg font-medium mb-3">Inverted Double Border</h3>
+              <div className="bg-gray-800 p-6 rounded-lg space-y-4">
+                <p className="text-sm text-gray-300 mb-4">Colored outer border with white inner ring on dark background</p>
+                {samplePlayers.slice(1, 4).map((player) => (
+                  <div key={`inverted-double-${player.id}`} className="relative">
+                    <PlayerBox 
+                      player={player}
+                      size="md"
+                      showPositions={true}
+                      className="[&_.player-name]:text-white [&_.player-positions]:text-gray-300 [&>div>div:first-child]:border-4 [&>div>div:first-child]:border-current [&>div>div:first-child]:ring-2 [&>div>div:first-child]:ring-white [&>div>div:first-child]:shadow-xl [&>div>div:first-child]:shadow-black/50"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Gradient Double Border */}
+            <div>
+              <h3 className="text-lg font-medium mb-3">Gradient Double Border</h3>
+              <div className="bg-white p-6 rounded-lg border space-y-4">
+                <p className="text-sm text-gray-600 mb-4">White border with gradient-colored inner ring effects</p>
+                {samplePlayers.slice(0, 4).map((player, index) => (
+                  <div key={`gradient-double-${player.id}`} className="relative">
+                    <PlayerBox 
+                      player={player}
+                      size="md"
+                      showPositions={true}
+                      className={`[&>div>div:first-child]:border-4 [&>div>div:first-child]:border-white [&>div>div:first-child]:shadow-lg ${
+                        index === 0 ? '[&>div>div:first-child]:ring-2 [&>div>div:first-child]:ring-blue-400 [&>div>div:first-child]:shadow-blue-200/40' :
+                        index === 1 ? '[&>div>div:first-child]:ring-2 [&>div>div:first-child]:ring-green-400 [&>div>div:first-child]:shadow-green-200/40' :
+                        index === 2 ? '[&>div>div:first-child]:ring-2 [&>div>div:first-child]:ring-purple-400 [&>div>div:first-child]:shadow-purple-200/40' :
+                        '[&>div>div:first-child]:ring-2 [&>div>div:first-child]:ring-orange-400 [&>div>div:first-child]:shadow-orange-200/40'
+                      }`}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Professional Double Border */}
+            <div>
+              <h3 className="text-lg font-medium mb-3">Professional Double Border</h3>
+              <div className="bg-slate-100 p-6 rounded-lg space-y-4">
+                <p className="text-sm text-gray-600 mb-4">Clean corporate styling with white and accent borders</p>
+                {samplePlayers.slice(1, 5).map((player) => (
+                  <div key={`professional-double-${player.id}`} className="relative">
+                    <PlayerBox 
+                      player={player}
+                      size="md"
+                      showPositions={true}
+                      className="[&>div>div:first-child]:border-3 [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-1 [&>div>div:first-child]:ring-slate-400 [&>div>div:first-child]:shadow-lg [&>div>div:first-child]:shadow-slate-300/50"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </section>
       </div>
