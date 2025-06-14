@@ -907,7 +907,33 @@ const StatisticsByPosition = ({ gameStats }) => {
 };
 
 // Quarter scores display
-const QuarterScores = ({ quarterScores, gameStatus, contextualTeamScore, contextualOpponentScore }) => {
+const QuarterScores = ({ quarterScores, gameStatus, contextualTeamScore, contextualOpponentScore, isByeGame, isUpcomingGame }) => {
+  // For BYE and upcoming games, show special styling
+  if (isByeGame || isUpcomingGame) {
+    const bgColor = isByeGame ? 'bg-gray-500' : 'bg-blue-500';
+    const borderColor = isByeGame ? 'border-gray-300' : 'border-blue-300';
+    const displayText = isByeGame ? 'BYE' : '—';
+    
+    return (
+      <div>
+        <div className="mt-4 max-w-2xl mx-auto">
+          <div className={`rounded-md overflow-hidden border ${borderColor}`}>
+            <div className={`text-white p-4 text-center ${bgColor}`}>
+              <div className="flex justify-center items-center text-xl">
+                <span className="font-bold text-3xl">{displayText}</span>
+              </div>
+              {gameStatus && (
+                <div className="mt-1 text-sm font-medium">
+                  {isByeGame ? 'BYE Round' : gameStatus.charAt(0).toUpperCase() + gameStatus.slice(1).replace('-', ' ')}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Reshape the data to be quarter-by-quarter for easier rendering
   const scoringByQuarter = useMemo(() => {
     if (!quarterScores || !Array.isArray(quarterScores)) {
@@ -1259,6 +1285,12 @@ export default function GameDetails() {
   const isForfeitGame = game.status === 'forfeit-win' || game.status === 'forfeit-loss';
   //const opponentName = getOpponentName(opponents || [], game.opponentId); // Removed opponentName
 
+  // Check game status using status ID (matching games list logic)
+  const isByeGame = game?.statusId === 6;
+  const isUpcomingGame = game?.statusId === 1;
+  const isInProgressGame = game?.statusId === 2;
+  const isCompletedGame = game?.statusId === 3;
+
   // Helper function to get score display with correct team context
   const finalTeamScore = quarterScores?.reduce((sum, q) => sum + q.teamScore, 0) || 0;
   const finalOpponentScore = quarterScores?.reduce((sum, q) => sum + q.opponentScore, 0) || 0;
@@ -1312,15 +1344,12 @@ export default function GameDetails() {
   const getScoreDisplay = () => {
     if (!game) return "—";
 
-    // Check if this is a BYE game
-    const isByeGame = game.statusId === 6 || game.statusName === 'bye';
+    // Use status ID-based logic (matching games list)
     if (isByeGame) return "BYE";
+    if (isUpcomingGame) return "—";
 
-    // For upcoming games, show dash
-    if (!game.statusIsCompleted) return "—";
-
-    // Show fixed scores from status if available
-    if (game.statusTeamGoals !== null && game.statusOpponentGoals !== null) {
+    // Show fixed scores from status if available for completed games
+    if (isCompletedGame && game.statusTeamGoals !== null && game.statusOpponentGoals !== null) {
       // For fixed scores, also consider team context
       if (currentTeam && game.awayTeamId === currentTeam.id && 
           teams.some(t => t.id === game.homeTeamId) && teams.some(t => t.id === game.awayTeamId)) {
@@ -1330,7 +1359,7 @@ export default function GameDetails() {
     }
 
     // Show actual scores for completed games
-    if (game.statusIsCompleted) {
+    if (isCompletedGame) {
       return `${contextualTeamScore}-${contextualOpponentScore}`;
     }
 
@@ -1589,6 +1618,8 @@ export default function GameDetails() {
         gameStatus={game?.status} 
         contextualTeamScore={totalTeamScore}
         contextualOpponentScore={totalOpponentScore}
+        isByeGame={isByeGame}
+        isUpcomingGame={isUpcomingGame}
       />
 
       <div className="mt-8">
@@ -1625,7 +1656,7 @@ export default function GameDetails() {
           </div>
         )}
 
-        {game && (
+        {game && !isByeGame && !isUpcomingGame && (
           <div className="space-y-6">
             <GameScoreDisplay gameId={gameId} preloadedStats={gameStats} />
           </div>
