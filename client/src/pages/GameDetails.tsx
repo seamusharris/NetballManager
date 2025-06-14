@@ -1680,11 +1680,7 @@ export default function GameDetails() {
           </div>
         )}
 
-        {game && !isByeGame && !isUpcomingGame && (
-          <div className="space-y-6">
-            <GameScoreDisplay gameId={gameId} preloadedStats={gameStats} />
-          </div>
-        )}
+        
 
         {/* Hidden Official Score Entry for dialog functionality */}
         {game && !game.isBye && (
