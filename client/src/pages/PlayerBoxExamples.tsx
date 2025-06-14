@@ -367,6 +367,78 @@ export default function PlayerBoxExamples() {
                 ))}
               </div>
             </div>
+
+            {/* Court Position Style Avatars */}
+            <div>
+              <h3 className="text-lg font-medium mb-3">Court Position Style (Game Details)</h3>
+              <div className="bg-green-100 p-6 rounded-lg space-y-4">
+                <p className="text-sm text-gray-600 mb-4">White borders with drop shadows like those used in court position layouts</p>
+                {samplePlayers.slice(0, 4).map((player) => (
+                  <div key={`court-${player.id}`} className="relative">
+                    <PlayerBox 
+                      player={player}
+                      size="md"
+                      showPositions={true}
+                      className="[&>div>div:first-child]:border-4 [&>div>div:first-child]:border-white [&>div>div:first-child]:shadow-lg [&>div>div:first-child]:shadow-black/25"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Court Position Large */}
+            <div>
+              <h3 className="text-lg font-medium mb-3">Court Position Style - Large</h3>
+              <div className="bg-blue-50 p-6 rounded-lg space-y-4">
+                <p className="text-sm text-gray-600 mb-4">Larger avatars with prominent white borders and strong shadows</p>
+                {samplePlayers.slice(1, 3).map((player) => (
+                  <div key={`court-large-${player.id}`} className="relative">
+                    <PlayerBox 
+                      player={player}
+                      size="lg"
+                      showPositions={true}
+                      className="[&>div>div:first-child]:border-[5px] [&>div>div:first-child]:border-white [&>div>div:first-child]:shadow-xl [&>div>div:first-child]:shadow-black/30"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Court on Dark Background */}
+            <div>
+              <h3 className="text-lg font-medium mb-3">Court Style - Dark Court</h3>
+              <div className="bg-gray-800 p-6 rounded-lg space-y-4">
+                <p className="text-sm text-gray-300 mb-4">Court position styling on dark backgrounds with white borders</p>
+                {samplePlayers.slice(2, 5).map((player) => (
+                  <div key={`court-dark-${player.id}`} className="relative">
+                    <PlayerBox 
+                      player={player}
+                      size="md"
+                      showPositions={true}
+                      className="[&_.player-name]:text-white [&_.player-positions]:text-gray-300 [&>div>div:first-child]:border-4 [&>div>div:first-child]:border-white [&>div>div:first-child]:shadow-2xl [&>div>div:first-child]:shadow-black/50"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Subtle Court Style */}
+            <div>
+              <h3 className="text-lg font-medium mb-3">Subtle Court Style</h3>
+              <div className="bg-gray-50 p-6 rounded-lg space-y-4">
+                <p className="text-sm text-gray-600 mb-4">Softer version with thinner borders and lighter shadows</p>
+                {samplePlayers.map((player) => (
+                  <div key={`court-subtle-${player.id}`} className="relative">
+                    <PlayerBox 
+                      player={player}
+                      size="sm"
+                      showPositions={false}
+                      className="[&>div>div:first-child]:border-2 [&>div>div:first-child]:border-white [&>div>div:first-child]:shadow-md [&>div>div:first-child]:shadow-black/15"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </section>
       </div>
