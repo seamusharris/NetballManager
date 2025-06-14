@@ -80,7 +80,7 @@ export function GameResultCard({
     if (isByeGame) {
       return 'Bye';
     }
-    
+
     // For inter-club games, determine opponent based on current team
     if (game.isInterClub && currentTeamId) {
       if (game.homeTeamId === currentTeamId) {
@@ -89,7 +89,7 @@ export function GameResultCard({
         return game.homeTeamName || 'Unknown';
       }
     }
-    
+
     // Default fallback
     return game.awayTeamName || game.homeTeamName || 'Unknown Opponent';
   };
@@ -197,12 +197,12 @@ export function GameResultCard({
     if (isByeGame) {
       return "Bye";
     }
-    
+
     // For inter-club games, show Home vs Away format
     if (game.isInterClub) {
       return `${game.homeTeamName || 'Unknown'} vs ${game.awayTeamName || 'Unknown'}`;
     }
-    
+
     // For non-inter-club games, show vs opponent
     return `vs ${getOpponentName()}`;
   };
