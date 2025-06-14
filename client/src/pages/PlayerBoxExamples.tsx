@@ -240,100 +240,185 @@ export default function PlayerBoxExamples() {
           <h2 className="text-2xl font-semibold mb-4">Avatar Styling Variations</h2>
           <div className="space-y-6">
             
-            {/* White Border Examples */}
+            {/* Classic Drop Shadow */}
             <div>
-              <h3 className="text-lg font-medium mb-3">With White Border</h3>
-              <div className="bg-gray-100 p-6 rounded-lg space-y-4">
-                <p className="text-sm text-gray-600 mb-4">Avatars with white borders work well on colored backgrounds</p>
+              <h3 className="text-lg font-medium mb-3">Classic Drop Shadow</h3>
+              <div className="bg-white p-6 rounded-lg border space-y-4">
+                <p className="text-sm text-gray-600 mb-4">Subtle shadows that work well on light backgrounds</p>
                 {samplePlayers.slice(0, 3).map((player) => (
-                  <div key={`border-${player.id}`} className="relative">
-                    <PlayerBox 
-                      player={player}
-                      size="md"
-                      showPositions={false}
-                    />
-                    <style>{`
-                      .player-avatar-border-${player.id} {
-                        border: 3px solid white !important;
-                        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15) !important;
-                      }
-                    `}</style>
+                  <div key={`classic-${player.id}`} className="relative">
+                    <div className="flex items-center">
+                      <div 
+                        className={`h-16 w-16 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 shadow-lg ${player.avatarColor || 'bg-gray-700'}`}
+                        style={{ boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)' }}
+                      >
+                        {player.firstName?.[0]?.toUpperCase()}{player.lastName?.[0]?.toUpperCase()}
+                      </div>
+                      <div className="ml-4">
+                        <div className="text-lg font-bold text-gray-900">{player.displayName}</div>
+                        <div className="text-sm text-gray-600">
+                          {player.positionPreferences?.join(', ') || 'No positions'}
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Drop Shadow Examples */}
+            {/* White Border + Shadow */}
             <div>
-              <h3 className="text-lg font-medium mb-3">With Enhanced Drop Shadow</h3>
-              <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-6 rounded-lg space-y-4">
-                <p className="text-sm text-gray-600 mb-4">Enhanced shadows for more depth and visual impact</p>
-                {samplePlayers.slice(2, 5).map((player) => (
-                  <div key={`shadow-${player.id}`} className="relative">
-                    <PlayerBox 
-                      player={player}
-                      size="lg"
-                      showPositions={true}
-                    />
-                    <style>{`
-                      .player-avatar-shadow-${player.id} {
-                        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25), 0 4px 10px rgba(0, 0, 0, 0.1) !important;
-                      }
-                    `}</style>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Combined Border and Shadow */}
-            <div>
-              <h3 className="text-lg font-medium mb-3">White Border + Drop Shadow</h3>
-              <div className="bg-gradient-to-br from-green-100 via-blue-100 to-purple-100 p-6 rounded-lg space-y-4">
-                <p className="text-sm text-gray-600 mb-4">Premium styling with both white border and enhanced shadows</p>
-                {samplePlayers.slice(0, 2).map((player) => (
-                  <div key={`premium-${player.id}`} className="relative">
-                    <PlayerBox 
-                      player={player}
-                      size="lg"
-                      stats={[
-                        { label: "Goals", value: Math.floor(Math.random() * 30) + 10 },
-                        { label: "Rating", value: (Math.random() * 2 + 7).toFixed(1) }
-                      ]}
-                      actions={
-                        <Button size="sm" variant="default">
-                          View Profile
-                        </Button>
-                      }
-                    />
-                    <style>{`
-                      .player-avatar-premium-${player.id} {
-                        border: 4px solid white !important;
-                        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2), 0 6px 15px rgba(0, 0, 0, 0.1) !important;
-                      }
-                    `}</style>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Dark Background Examples */}
-            <div>
-              <h3 className="text-lg font-medium mb-3">On Dark Backgrounds</h3>
-              <div className="bg-gray-800 p-6 rounded-lg space-y-4">
-                <p className="text-sm text-gray-300 mb-4">White borders are especially effective on dark backgrounds</p>
+              <h3 className="text-lg font-medium mb-3">White Border + Shadow</h3>
+              <div className="bg-gradient-to-r from-gray-50 to-blue-50 p-6 rounded-lg space-y-4">
+                <p className="text-sm text-gray-600 mb-4">Clean white borders with subtle shadows</p>
                 {samplePlayers.slice(1, 4).map((player) => (
-                  <div key={`dark-${player.id}`} className="relative">
-                    <PlayerBox 
-                      player={player}
-                      size="md"
-                      showPositions={true}
-                    />
-                    <style>{`
-                      .player-avatar-dark-${player.id} {
-                        border: 3px solid white !important;
-                        box-shadow: 0 6px 20px rgba(255, 255, 255, 0.1), 0 4px 12px rgba(0, 0, 0, 0.3) !important;
-                      }
-                    `}</style>
+                  <div key={`border-${player.id}`} className="relative">
+                    <div className="flex items-center">
+                      <div 
+                        className={`h-16 w-16 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 ${player.avatarColor || 'bg-gray-700'}`}
+                        style={{ 
+                          border: '3px solid white',
+                          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05)' 
+                        }}
+                      >
+                        {player.firstName?.[0]?.toUpperCase()}{player.lastName?.[0]?.toUpperCase()}
+                      </div>
+                      <div className="ml-4">
+                        <div className="text-lg font-bold text-gray-900">{player.displayName}</div>
+                        <div className="text-sm text-gray-600">
+                          {player.positionPreferences?.join(', ') || 'No positions'}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Enhanced Depth */}
+            <div>
+              <h3 className="text-lg font-medium mb-3">Enhanced Depth</h3>
+              <div className="bg-white p-6 rounded-lg border space-y-4">
+                <p className="text-sm text-gray-600 mb-4">Multi-layered shadows for premium feel</p>
+                {samplePlayers.slice(0, 3).map((player) => (
+                  <div key={`depth-${player.id}`} className="relative">
+                    <div className="flex items-center">
+                      <div 
+                        className={`h-20 w-20 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 text-xl ${player.avatarColor || 'bg-gray-700'}`}
+                        style={{ 
+                          boxShadow: '0 8px 25px rgba(0, 0, 0, 0.15), 0 4px 10px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.05)' 
+                        }}
+                      >
+                        {player.firstName?.[0]?.toUpperCase()}{player.lastName?.[0]?.toUpperCase()}
+                      </div>
+                      <div className="ml-4">
+                        <div className="text-lg font-bold text-gray-900">{player.displayName}</div>
+                        <div className="text-sm text-gray-600">
+                          {player.positionPreferences?.join(', ') || 'No positions'}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Ring Effect */}
+            <div>
+              <h3 className="text-lg font-medium mb-3">Ring Effect</h3>
+              <div className="bg-gray-50 p-6 rounded-lg space-y-4">
+                <p className="text-sm text-gray-600 mb-4">Colored rings that complement the avatar</p>
+                {samplePlayers.slice(2, 5).map((player) => (
+                  <div key={`ring-${player.id}`} className="relative">
+                    <div className="flex items-center">
+                      <div className="relative">
+                        <div 
+                          className="absolute inset-0 rounded-full"
+                          style={{ 
+                            background: `linear-gradient(135deg, ${player.avatarColor?.includes('bg-') ? '#' + player.avatarColor.split('-')[1] : '#6b7280'}40, ${player.avatarColor?.includes('bg-') ? '#' + player.avatarColor.split('-')[1] : '#6b7280'}20)`,
+                            padding: '4px'
+                          }}
+                        >
+                        </div>
+                        <div 
+                          className={`relative h-16 w-16 rounded-full flex items-center justify-center text-white font-bold ${player.avatarColor || 'bg-gray-700'}`}
+                          style={{ 
+                            margin: '4px',
+                            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)' 
+                          }}
+                        >
+                          {player.firstName?.[0]?.toUpperCase()}{player.lastName?.[0]?.toUpperCase()}
+                        </div>
+                      </div>
+                      <div className="ml-4">
+                        <div className="text-lg font-bold text-gray-900">{player.displayName}</div>
+                        <div className="text-sm text-gray-600">
+                          {player.positionPreferences?.join(', ') || 'No positions'}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Glow Effect */}
+            <div>
+              <h3 className="text-lg font-medium mb-3">Glow Effect</h3>
+              <div className="bg-gray-900 p-6 rounded-lg space-y-4">
+                <p className="text-sm text-gray-300 mb-4">Subtle glow effects for dark themes</p>
+                {samplePlayers.slice(1, 4).map((player) => (
+                  <div key={`glow-${player.id}`} className="relative">
+                    <div className="flex items-center">
+                      <div 
+                        className={`h-16 w-16 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 ${player.avatarColor || 'bg-gray-700'}`}
+                        style={{ 
+                          boxShadow: `0 0 20px ${player.avatarColor?.includes('red') ? '#ef444430' : 
+                                                  player.avatarColor?.includes('blue') ? '#3b82f630' :
+                                                  player.avatarColor?.includes('green') ? '#22c55e30' :
+                                                  player.avatarColor?.includes('orange') ? '#f9731630' :
+                                                  player.avatarColor?.includes('purple') ? '#a855f730' :
+                                                  '#6b728030'}, 0 4px 12px rgba(0, 0, 0, 0.3)` 
+                        }}
+                      >
+                        {player.firstName?.[0]?.toUpperCase()}{player.lastName?.[0]?.toUpperCase()}
+                      </div>
+                      <div className="ml-4">
+                        <div className="text-lg font-bold text-white">{player.displayName}</div>
+                        <div className="text-sm text-gray-300">
+                          {player.positionPreferences?.join(', ') || 'No positions'}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Elevated Style */}
+            <div>
+              <h3 className="text-lg font-medium mb-3">Elevated Style</h3>
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-100 p-6 rounded-lg space-y-4">
+                <p className="text-sm text-gray-600 mb-4">Combination of border, shadow and subtle background</p>
+                {samplePlayers.slice(0, 2).map((player) => (
+                  <div key={`elevated-${player.id}`} className="relative">
+                    <div className="flex items-center p-3 bg-white rounded-lg shadow-sm">
+                      <div 
+                        className={`h-16 w-16 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 ${player.avatarColor || 'bg-gray-700'}`}
+                        style={{ 
+                          border: '2px solid white',
+                          boxShadow: '0 6px 20px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05)' 
+                        }}
+                      >
+                        {player.firstName?.[0]?.toUpperCase()}{player.lastName?.[0]?.toUpperCase()}
+                      </div>
+                      <div className="ml-4">
+                        <div className="text-lg font-bold text-gray-900">{player.displayName}</div>
+                        <div className="text-sm text-gray-600">
+                          {player.positionPreferences?.join(', ') || 'No positions'}
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 ))}
               </div>
