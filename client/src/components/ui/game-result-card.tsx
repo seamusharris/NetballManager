@@ -100,20 +100,20 @@ export function GameResultCard({
   const isDraw = scores && scores.result === 'draw';
 
   const getResultClass = () => {
+    if (isByeGame) return 'border-gray-500 bg-gray-50'; // check byes first
+    if (isUpcoming) return 'border-blue-500 bg-blue-50'; // upcoming games
     if (isWin) return 'border-green-500 bg-green-50';
     if (isLoss) return 'border-red-500 bg-red-50';
     if (isDraw) return 'border-amber-500 bg-amber-50';
-    if (isUpcoming) return 'border-blue-500 bg-blue-50'; // upcoming games
-    if (isByeGame) return 'border-gray-500 bg-gray-50'; // byes
     return 'border-gray-400 bg-gray-100'; // other completed states without results
   };
 
   const getHoverClass = () => {
+    if (isByeGame) return 'hover:bg-gray-100'; // check byes first
+    if (isUpcoming) return 'hover:bg-blue-100'; // upcoming games
     if (isWin) return 'hover:bg-green-100';
     if (isLoss) return 'hover:bg-red-100';
     if (isDraw) return 'hover:bg-amber-100';
-    if (isUpcoming) return 'hover:bg-blue-100'; // upcoming games
-    if (isByeGame) return 'hover:bg-gray-100'; // byes
     return 'hover:bg-gray-200';
   };
 
