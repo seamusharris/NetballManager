@@ -102,13 +102,15 @@ export function GameResultCard({
     if (isWin) return 'border-green-500 bg-green-50';
     if (isLoss) return 'border-red-500 bg-red-50';
     if (isDraw) return 'border-amber-500 bg-amber-50';
-    return 'border-gray-500 bg-gray-50'; // for byes and other states
+    if (!game.statusIsCompleted) return 'border-blue-500 bg-blue-50'; // upcoming games
+    return 'border-gray-500 bg-gray-50'; // for byes and other completed states
   };
 
   const getHoverClass = () => {
     if (isWin) return 'hover:bg-green-100';
     if (isLoss) return 'hover:bg-red-100';
     if (isDraw) return 'hover:bg-amber-100';
+    if (!game.statusIsCompleted) return 'hover:bg-blue-100'; // upcoming games
     return 'hover:bg-gray-100';
   };
 
