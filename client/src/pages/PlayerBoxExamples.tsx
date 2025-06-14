@@ -825,6 +825,114 @@ export default function PlayerBoxExamples() {
               </div>
             </div>
 
+            {/* Refined Double Border - Thin White */}
+            <div>
+              <h3 className="text-lg font-medium mb-3">Refined Double Border - Thin White</h3>
+              <div className="bg-white p-6 rounded-lg border space-y-4">
+                <p className="text-sm text-gray-600 mb-4">Thinner white outer border with colored inner ring for elegant refinement</p>
+                {samplePlayers.slice(0, 5).map((player) => (
+                  <div key={`refined-thin-${player.id}`} className="relative">
+                    <PlayerBox 
+                      player={player}
+                      size="md"
+                      showPositions={true}
+                      className="[&>div>div:first-child]:border-2 [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-2 [&>div>div:first-child]:ring-current [&>div>div:first-child]:shadow-lg [&>div>div:first-child]:shadow-black/15"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Ultra-Thin Double Border */}
+            <div>
+              <h3 className="text-lg font-medium mb-3">Ultra-Thin Double Border</h3>
+              <div className="bg-gray-50 p-6 rounded-lg space-y-4">
+                <p className="text-sm text-gray-600 mb-4">Very thin borders for delicate, refined appearance</p>
+                {samplePlayers.slice(1, 4).map((player) => (
+                  <div key={`ultra-thin-${player.id}`} className="relative">
+                    <PlayerBox 
+                      player={player}
+                      size="md"
+                      showPositions={true}
+                      className="[&>div>div:first-child]:border [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-1 [&>div>div:first-child]:ring-current [&>div>div:first-child]:shadow-md [&>div>div:first-child]:shadow-black/10"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Medium Thin Double Border */}
+            <div>
+              <h3 className="text-lg font-medium mb-3">Medium Thin Double Border</h3>
+              <div className="bg-white p-6 rounded-lg border space-y-4">
+                <p className="text-sm text-gray-600 mb-4">Balanced thin white border with subtle colored accent</p>
+                {samplePlayers.slice(0, 4).map((player) => (
+                  <div key={`medium-thin-${player.id}`} className="relative">
+                    <PlayerBox 
+                      player={player}
+                      size="md"
+                      showPositions={true}
+                      className="[&>div>div:first-child]:border-[3px] [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-1 [&>div>div:first-child]:ring-current [&>div>div:first-child]:shadow-md [&>div>div:first-child]:shadow-black/12"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Asymmetric Double Border */}
+            <div>
+              <h3 className="text-lg font-medium mb-3">Asymmetric Double Border</h3>
+              <div className="bg-white p-6 rounded-lg border space-y-4">
+                <p className="text-sm text-gray-600 mb-4">Thin white border with thicker colored ring for emphasis</p>
+                {samplePlayers.slice(2, 5).map((player) => (
+                  <div key={`asymmetric-${player.id}`} className="relative">
+                    <PlayerBox 
+                      player={player}
+                      size="md"
+                      showPositions={true}
+                      className="[&>div>div:first-child]:border-2 [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-[3px] [&>div>div:first-child]:ring-current [&>div>div:first-child]:shadow-lg [&>div>div:first-child]:shadow-current/20"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Soft Thin Double Border */}
+            <div>
+              <h3 className="text-lg font-medium mb-3">Soft Thin Double Border</h3>
+              <div className="bg-slate-50 p-6 rounded-lg space-y-4">
+                <p className="text-sm text-gray-600 mb-4">Gentle thin borders with soft shadows for professional look</p>
+                {samplePlayers.slice(1, 5).map((player) => (
+                  <div key={`soft-thin-${player.id}`} className="relative">
+                    <PlayerBox 
+                      player={player}
+                      size="md"
+                      showPositions={true}
+                      className="[&>div>div:first-child]:border-2 [&>div>div:first-child]:border-slate-200 [&>div>div:first-child]:ring-1 [&>div>div:first-child]:ring-current [&>div>div:first-child]:shadow-md [&>div>div:first-child]:shadow-slate-300/40"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Crisp Thin Double Border */}
+            <div>
+              <h3 className="text-lg font-medium mb-3">Crisp Thin Double Border</h3>
+              <div className="bg-white p-6 rounded-lg border space-y-4">
+                <p className="text-sm text-gray-600 mb-4">Sharp, clean thin borders with high contrast</p>
+                {samplePlayers.slice(0, 3).map((player) => (
+                  <div key={`crisp-thin-${player.id}`} className="relative">
+                    <PlayerBox 
+                      player={player}
+                      size="lg"
+                      showPositions={true}
+                      className="[&>div>div:first-child]:border-2 [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-2 [&>div>div:first-child]:ring-current [&>div>div:first-child]:shadow-lg [&>div>div:first-child]:shadow-black/25"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
             {/* Professional Double Border */}
             <div>
               <h3 className="text-lg font-medium mb-3">Professional Double Border</h3>
