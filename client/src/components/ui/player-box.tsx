@@ -95,7 +95,7 @@ export function PlayerBox({
   const lightBackgroundColor = `${playerColor}15`; // Add transparency for background
 
   const playerBoxContent = (
-    <div className="flex items-center space-x-4">
+    <div className="flex items-center">
       {/* Avatar Circle - matching Player of the Match style */}
       <div 
         className={`${avatarSizes[size]} rounded-full flex items-center justify-center text-white font-bold shadow-md flex-shrink-0 ${player.avatarColor || 'bg-gray-700'}`}
@@ -105,7 +105,7 @@ export function PlayerBox({
       
       {/* Stats Box - matching Player of the Match style */}
       <div 
-        className="flex-1 flex items-center p-3 rounded-lg border-2"
+        className="flex-1 flex items-center p-3 ml-4 rounded-lg border-2"
         style={{ 
           backgroundColor: lightBackgroundColor,
           borderColor: playerColor
