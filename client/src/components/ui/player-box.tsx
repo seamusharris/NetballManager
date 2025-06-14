@@ -2,6 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { getInitials } from '@/lib/utils';
 
 interface PlayerBoxProps {
   player: {
@@ -48,19 +49,19 @@ export function PlayerBox({
     lg: "h-20 w-20 text-2xl"
   };
 
-  const getInitials = () => {
+  const playerInitials = (() => {
     if (player.firstName && player.lastName) {
-      return `${player.firstName[0]}${player.lastName[0]}`;
+      return getInitials(player.firstName, player.lastName);
     }
     if (player.displayName) {
       const nameParts = player.displayName.split(' ');
       if (nameParts.length >= 2) {
-        return `${nameParts[0][0]}${nameParts[nameParts.length - 1][0]}`;
+        return getInitials(nameParts[0], nameParts[nameParts.length - 1]);
       }
-      return player.displayName[0] || '';
+      return player.displayName[0]?.toUpperCase() || '';
     }
     return '';
-  };
+  })();
 
   // Helper function to convert Tailwind class to hex for dynamic styling
   const getPlayerColorHex = (avatarColor?: string): string => {
@@ -99,7 +100,7 @@ export function PlayerBox({
       <div 
         className={`${avatarSizes[size]} rounded-full flex items-center justify-center text-white font-bold shadow-md flex-shrink-0 ${player.avatarColor || 'bg-gray-700'}`}
       >
-        {getInitials()}
+        {playerInitials}
       </div>
       
       {/* Stats Box - matching Player of the Match style */}

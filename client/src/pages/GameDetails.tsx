@@ -35,7 +35,7 @@ import {
 } from 'lucide-react';
 import { BackButton } from '@/components/ui/back-button';
 import { Separator } from '@/components/ui/separator';
-import { formatDate, cn, tailwindToHex, convertTailwindToHex } from '@/lib/utils';
+import { formatDate, cn, tailwindToHex, convertTailwindToHex, getInitials } from '@/lib/utils';
 import { TeamSwitcher } from '@/components/layout/TeamSwitcher';
 import { ScoreMismatchWarning } from '@/components/games/ScoreMismatchWarning';
 import { validateInterClubScores, getScoreDiscrepancyWarning, getReconciledScore } from '@/lib/scoreValidation';
@@ -932,7 +932,7 @@ const QuarterScores = ({ quarterScores, gameStatus, contextualTeamScore, context
     if (!scoringByQuarter || scoringByQuarter.length === 0) {
       return [];
     }
-    
+
     let teamRunningTotal = 0;
     let opponentRunningTotal = 0;
 
@@ -1163,10 +1163,10 @@ export default function GameDetails() {
   // Calculate scores using official score priority for game details
   const gameScores = useMemo(() => {
     if (!game) return { quarterScores: [], totalTeamScore: 0, totalOpponentScore: 0 };
-    
+
     // Ensure we always pass the current team ID for consistent perspective
     const effectiveCurrentTeamId = currentTeam?.id || currentClub?.id;
-    
+
     // Game details should prioritize official scores
     return gameScoreService.calculateGameScoresSync(
       gameStats || [], 
@@ -1789,20 +1789,6 @@ export default function GameDetails() {
                             rebounds += stat.rebounds || 0;
                           }
                         });
-
-                        // Get player initials
-                        const getInitials = (firstName: string, lastName: string) => {
-                          // Handle first name (considering first part of compound names)
-                          const firstInitial = firstName.trim().charAt(0).toUpperCase();
-
-                          // Handle last name (including hyphenated or multi-part names)
-                          let lastInitial = '';
-                          if (lastName && lastName.trim()) {
-                            lastInitial = lastName.trim().charAt(0).toUpperCase();
-                          }
-
-                          return `${firstInitial}${lastInitial}`;
-                        };
 
                         return (
                           <div className="flex items-center space-x-4">
