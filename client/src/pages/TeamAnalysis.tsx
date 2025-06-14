@@ -211,18 +211,27 @@ export default function TeamAnalysis() {
     const lossWeight = -2;
 
     let momentum = 0;
+    // Process results in chronological order, with more recent games having higher weight
     results.forEach((result, index) => {
-      const weight = (index + 1) / results.length; // More recent games have higher weight
-      if (result === 'Win') momentum += winWeight * weight;
-      else if (result === 'Draw') momentum += drawWeight * weight;
-      else momentum += lossWeight * weight;
+      const recencyWeight = (index + 1) / results.length; // More recent games have higher weight
+      let baseScore = 0;
+      
+      if (result === 'Win') baseScore = winWeight;
+      else if (result === 'Draw') baseScore = drawWeight;
+      else if (result === 'Loss') baseScore = lossWeight;
+      
+      momentum += baseScore * recencyWeight;
     });
 
-    const trend = momentum > 1 ? 'up' : momentum < -1 ? 'down' : 'stable';
+    // Normalize momentum based on number of games
+    const normalizedMomentum = momentum / results.length;
+
+    // Set trend thresholds based on normalized momentum
+    const trend = normalizedMomentum > 0.5 ? 'up' : normalizedMomentum < -0.5 ? 'down' : 'stable';
 
     return {
       trend,
-      strength: Math.abs(momentum),
+      strength: Math.abs(normalizedMomentum),
       recentForm: results
     };
   };
@@ -239,8 +248,10 @@ export default function TeamAnalysis() {
 
     const recentResults = recentGames.map(game => {
       const gameStats = centralizedStats[game.id] || [];
-      const teamScore = gameStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
-      const opponentScore = gameStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
+      // Filter stats to only include current team's stats
+      const teamStats = gameStats.filter(stat => stat.teamId === currentTeamId);
+      const teamScore = teamStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
+      const opponentScore = teamStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
       return getWinLoseLabel(teamScore, opponentScore);
     });
 
@@ -462,7 +473,9 @@ export default function TeamAnalysis() {
           let theirScore = 0;
 
           if (gameStats.length > 0) {
-            gameStats.forEach(stat => {
+            // Filter stats to only include current team's stats
+            const teamStats = gameStats.filter(stat => stat.teamId === currentTeamId);
+            teamStats.forEach(stat => {
               ourScore += stat.goalsFor || 0;
               theirScore += stat.goalsAgainst || 0;
             });
@@ -479,13 +492,13 @@ export default function TeamAnalysis() {
 
           if (result === 'Win') {
             wins++;
-            recentForm.push('W');
+            recentForm.push('Win');
           } else if (result === 'Loss') {
             losses++;
-            recentForm.push('L');
+            recentForm.push('Loss');
           } else {
             draws++;
-            recentForm.push('D');
+            recentForm.push('Draw');
           }
 
           return {
