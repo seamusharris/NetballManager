@@ -68,13 +68,13 @@ const lossGame: Game = {
   clubId: 54,
   venue: 'Court 3',
   isBye: false,
-  statusTeamGoals: 35,
-  statusOpponentGoals: 30
+  statusTeamGoals: 30,
+  statusOpponentGoals: 45
 };
 
 const lossStats = [
-  { id: 7, gameId: 3, position: 'GS', quarter: 1, goalsFor: 7, goalsAgainst: 9 },
-  { id: 8, gameId: 3, position: 'GA', quarter: 1, goalsFor: 4, goalsAgainst: 6 }
+  { id: 7, gameId: 3, position: 'GS', quarter: 1, goalsFor: 6, goalsAgainst: 12 },
+  { id: 8, gameId: 3, position: 'GA', quarter: 1, goalsFor: 4, goalsAgainst: 8 }
 ];
 
 const drawGame: Game = {
