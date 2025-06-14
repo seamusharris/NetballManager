@@ -933,6 +933,24 @@ export default function PlayerBoxExamples() {
               </div>
             </div>
 
+            {/* Crisp Thin Double Border - Medium */}
+            <div>
+              <h3 className="text-lg font-medium mb-3">Crisp Thin Double Border - Medium</h3>
+              <div className="bg-white p-6 rounded-lg border space-y-4">
+                <p className="text-sm text-gray-600 mb-4">Sharp, clean thin borders with medium-sized avatars</p>
+                {samplePlayers.slice(1, 5).map((player) => (
+                  <div key={`crisp-thin-medium-${player.id}`} className="relative">
+                    <PlayerBox 
+                      player={player}
+                      size="md"
+                      showPositions={true}
+                      className="[&>div>div:first-child]:border-2 [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-2 [&>div>div:first-child]:ring-current [&>div>div:first-child]:shadow-lg [&>div>div:first-child]:shadow-black/25"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
             {/* Professional Double Border */}
             <div>
               <h3 className="text-lg font-medium mb-3">Professional Double Border</h3>
