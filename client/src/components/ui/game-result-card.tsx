@@ -72,7 +72,8 @@ export function GameResultCard({
   }, [gameStats, centralizedScores, useOfficialPriority, game, currentTeamId]);
 
   // Check if this is a BYE game using game status
-  const isByeGame = game.statusId === 6 || game.statusName === 'bye';
+  const isByeGame = game.statusId === 6 || game.statusName === 'bye' || game.isBye;
+  const isUpcoming = !game.statusIsCompleted && !isByeGame;
 
   const getOpponentName = (): string => {
     // Handle BYE games
@@ -102,16 +103,18 @@ export function GameResultCard({
     if (isWin) return 'border-green-500 bg-green-50';
     if (isLoss) return 'border-red-500 bg-red-50';
     if (isDraw) return 'border-amber-500 bg-amber-50';
-    if (!game.statusIsCompleted) return 'border-blue-500 bg-blue-50'; // upcoming games
-    return 'border-gray-500 bg-gray-50'; // for byes and other completed states
+    if (isUpcoming) return 'border-blue-500 bg-blue-50'; // upcoming games
+    if (isByeGame) return 'border-gray-500 bg-gray-50'; // byes
+    return 'border-gray-400 bg-gray-100'; // other completed states without results
   };
 
   const getHoverClass = () => {
     if (isWin) return 'hover:bg-green-100';
     if (isLoss) return 'hover:bg-red-100';
     if (isDraw) return 'hover:bg-amber-100';
-    if (!game.statusIsCompleted) return 'hover:bg-blue-100'; // upcoming games
-    return 'hover:bg-gray-100';
+    if (isUpcoming) return 'hover:bg-blue-100'; // upcoming games
+    if (isByeGame) return 'hover:bg-gray-100'; // byes
+    return 'hover:bg-gray-200';
   };
 
   // Layout configurations
