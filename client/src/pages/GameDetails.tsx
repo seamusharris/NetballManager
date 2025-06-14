@@ -748,7 +748,6 @@ const StatisticsByPosition = ({ gameStats }) => {
       }
 
       if (!acc[stat.position][stat.quarter]) {
-        ```
         acc[stat.position][stat.quarter] = {};
       }
 
