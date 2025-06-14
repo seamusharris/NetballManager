@@ -234,6 +234,112 @@ export default function PlayerBoxExamples() {
             ))}
           </div>
         </section>
+
+        {/* Avatar Styling Variations */}
+        <section>
+          <h2 className="text-2xl font-semibold mb-4">Avatar Styling Variations</h2>
+          <div className="space-y-6">
+            
+            {/* White Border Examples */}
+            <div>
+              <h3 className="text-lg font-medium mb-3">With White Border</h3>
+              <div className="bg-gray-100 p-6 rounded-lg space-y-4">
+                <p className="text-sm text-gray-600 mb-4">Avatars with white borders work well on colored backgrounds</p>
+                {samplePlayers.slice(0, 3).map((player) => (
+                  <div key={`border-${player.id}`} className="relative">
+                    <PlayerBox 
+                      player={player}
+                      size="md"
+                      showPositions={false}
+                    />
+                    <style>{`
+                      .player-avatar-border-${player.id} {
+                        border: 3px solid white !important;
+                        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15) !important;
+                      }
+                    `}</style>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Drop Shadow Examples */}
+            <div>
+              <h3 className="text-lg font-medium mb-3">With Enhanced Drop Shadow</h3>
+              <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-6 rounded-lg space-y-4">
+                <p className="text-sm text-gray-600 mb-4">Enhanced shadows for more depth and visual impact</p>
+                {samplePlayers.slice(2, 5).map((player) => (
+                  <div key={`shadow-${player.id}`} className="relative">
+                    <PlayerBox 
+                      player={player}
+                      size="lg"
+                      showPositions={true}
+                    />
+                    <style>{`
+                      .player-avatar-shadow-${player.id} {
+                        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25), 0 4px 10px rgba(0, 0, 0, 0.1) !important;
+                      }
+                    `}</style>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Combined Border and Shadow */}
+            <div>
+              <h3 className="text-lg font-medium mb-3">White Border + Drop Shadow</h3>
+              <div className="bg-gradient-to-br from-green-100 via-blue-100 to-purple-100 p-6 rounded-lg space-y-4">
+                <p className="text-sm text-gray-600 mb-4">Premium styling with both white border and enhanced shadows</p>
+                {samplePlayers.slice(0, 2).map((player) => (
+                  <div key={`premium-${player.id}`} className="relative">
+                    <PlayerBox 
+                      player={player}
+                      size="lg"
+                      stats={[
+                        { label: "Goals", value: Math.floor(Math.random() * 30) + 10 },
+                        { label: "Rating", value: (Math.random() * 2 + 7).toFixed(1) }
+                      ]}
+                      actions={
+                        <Button size="sm" variant="default">
+                          View Profile
+                        </Button>
+                      }
+                    />
+                    <style>{`
+                      .player-avatar-premium-${player.id} {
+                        border: 4px solid white !important;
+                        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2), 0 6px 15px rgba(0, 0, 0, 0.1) !important;
+                      }
+                    `}</style>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Dark Background Examples */}
+            <div>
+              <h3 className="text-lg font-medium mb-3">On Dark Backgrounds</h3>
+              <div className="bg-gray-800 p-6 rounded-lg space-y-4">
+                <p className="text-sm text-gray-300 mb-4">White borders are especially effective on dark backgrounds</p>
+                {samplePlayers.slice(1, 4).map((player) => (
+                  <div key={`dark-${player.id}`} className="relative">
+                    <PlayerBox 
+                      player={player}
+                      size="md"
+                      showPositions={true}
+                    />
+                    <style>{`
+                      .player-avatar-dark-${player.id} {
+                        border: 3px solid white !important;
+                        box-shadow: 0 6px 20px rgba(255, 255, 255, 0.1), 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+                      }
+                    `}</style>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
       </div>
     </PageTemplate>
   );
