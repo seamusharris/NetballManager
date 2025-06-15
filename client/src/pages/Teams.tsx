@@ -157,7 +157,7 @@ export default function Teams() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setLocation(`/dashboard/${team.id}`)}
+                      onClick={() => setLocation(`/team-dashboard/${team.id}`)}
                       className="group-hover:border-primary group-hover:text-primary transition-all duration-300"
                     >
                       <Activity className="h-4 w-4 mr-1" />

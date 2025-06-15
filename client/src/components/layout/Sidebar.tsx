@@ -67,30 +67,50 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen, isTablet }: Sid
       <div className="px-4 py-6">
         <p className="text-gray-500 text-xs uppercase font-bold tracking-wider mb-4 px-2">Navigation</p>
         <nav className="space-y-2">
-          {navLinks.map((link) => (
-            <Link 
-              key={link.path}
-              href={link.path}
-              onClick={() => isTablet && setIsMobileOpen(false)}
-            >
-              <div 
-                className={cn(
-                  "flex items-center px-3 py-2.5 rounded-lg transition-all duration-200 group border-l-4",
-                  isActive(link.path) 
-                    ? "border-blue-600 bg-blue-50 text-blue-700 font-semibold" 
-                    : "border-transparent text-blue-600 hover:bg-blue-600 hover:text-white"
-                )}
+          {navLinks.map((link) => {
+            const isDisabled = 'disabled' in link && link.disabled;
+            const displayLabel = isDisabled && 'fallbackLabel' in link ? link.fallbackLabel : link.label;
+
+            if (isDisabled) {
+              return (
+                <div 
+                  key={link.path}
+                  className="flex items-center px-3 py-2.5 rounded-lg border-l-4 border-transparent text-gray-400 cursor-not-allowed"
+                  title={`${link.label} - Please select a team first`}
+                >
+                  <span className="w-5 h-5 mr-3 text-gray-400">
+                    {link.icon}
+                  </span>
+                  <span className="font-medium">{displayLabel}</span>
+                </div>
+              );
+            }
+
+            return (
+              <Link 
+                key={link.path}
+                href={link.path}
+                onClick={() => isTablet && setIsMobileOpen(false)}
               >
-                <span className={cn(
-                  "w-5 h-5 mr-3 transition-colors",
-                  isActive(link.path) ? "text-blue-700" : "text-blue-600 group-hover:text-white"
-                )}>
-                  {link.icon}
-                </span>
-                <span className="font-medium">{link.label}</span>
-              </div>
-            </Link>
-          ))}
+                <div 
+                  className={cn(
+                    "flex items-center px-3 py-2.5 rounded-lg transition-all duration-200 group border-l-4",
+                    isActive(link.path) 
+                      ? "border-blue-600 bg-blue-50 text-blue-700 font-semibold" 
+                      : "border-transparent text-blue-600 hover:bg-blue-600 hover:text-white"
+                  )}
+                >
+                  <span className={cn(
+                    "w-5 h-5 mr-3 transition-colors",
+                    isActive(link.path) ? "text-blue-700" : "text-blue-600 group-hover:text-white"
+                  )}>
+                    {link.icon}
+                  </span>
+                  <span className="font-medium">{displayLabel}</span>
+                </div>
+              </Link>
+            );
+          })}
         </nav>
       </div>
     </aside>

@@ -25,6 +25,7 @@ import { OpponentAnalysisWidget } from '@/components/dashboard/OpponentAnalysisW
 
 export default function Dashboard() {
   const params = useParams();
+  const [, setLocation] = useLocation();
   const { 
     currentClub, 
     currentClubId, 
@@ -38,7 +39,7 @@ export default function Dashboard() {
   // Monitor request performance
   const requestMetrics = useRequestMonitor('Dashboard');
 
-  // Handle teamId from URL parameter - only set once on initial load
+  // Handle teamId from URL parameter - always required now
   useEffect(() => {
     const teamIdFromUrl = params.teamId;
     if (teamIdFromUrl && !isNaN(Number(teamIdFromUrl))) {
@@ -48,9 +49,19 @@ export default function Dashboard() {
       if (teamExists && currentTeamId !== targetTeamId) {
         console.log(`Dashboard: Setting team ${targetTeamId} from URL`);
         setCurrentTeamId(targetTeamId);
+      } else if (!teamExists && clubTeams.length > 0) {
+        console.log(`Dashboard: Team ${targetTeamId} not found, redirecting to teams page`);
+        // Team doesn't exist, redirect to teams page
+        setLocation('/teams');
+        return;
       }
+    } else if (!teamIdFromUrl && clubTeams.length > 0) {
+      console.log('Dashboard: No team ID in URL, redirecting to teams page');
+      // No team ID provided, redirect to teams page
+      setLocation('/teams');
+      return;
     }
-  }, [params.teamId, clubTeams]); // Remove currentTeamId and setCurrentTeamId from deps to prevent loops
+  }, [params.teamId, clubTeams, setLocation]);
 
   // Debug team switching
   useEffect(() => {
@@ -170,40 +181,7 @@ export default function Dashboard() {
     );
   }
 
-  // For Team Dashboard, require team selection - show prompt if no team selected
-  if (!currentTeamId || !currentTeam) {
-    return (
-      <>
-        <Helmet>
-          <title>Team Dashboard | {TEAM_NAME} Stats Tracker</title>
-          <meta name="description" content={`View ${TEAM_NAME} team's performance metrics, upcoming games, and player statistics`} />
-        </Helmet>
-
-        <div className="container py-8 mx-auto space-y-8">
-          <div className="flex items-center justify-between">
-            <div className="space-y-1">
-              <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-                Team Dashboard
-              </h1>
-              <p className="text-lg text-muted-foreground">
-                Performance metrics and insights for your team
-              </p>
-            </div>
-            <div className="flex items-center gap-4">
-              <TeamSwitcher mode="required" />
-            </div>
-          </div>
-
-          <div className="flex items-center justify-center min-h-[400px]">
-            <div className="text-center">
-              <h2 className="text-xl font-semibold mb-2">Select a Team</h2>
-              <p className="text-muted-foreground">Please select a team from the dropdown above to view the dashboard.</p>
-            </div>
-          </div>
-        </div>
-      </>
-    );
-  }
+  // Team ID is now required from URL - if we get here without one, we've already redirected
 
   // Improved loading state - wait for both core data AND batch data for better UX
   const hasBasicData = players.length > 0 && games.length > 0;

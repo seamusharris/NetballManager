@@ -100,8 +100,7 @@ function Router() {
     <Layout>
       <Switch>
         <Route path="/" component={withErrorBoundary(ClubDashboard, 'ClubDashboard')} />
-        <Route path="/team-dashboard" component={withErrorBoundary(Dashboard, 'Dashboard')} />
-        <Route path="/dashboard" component={withErrorBoundary(Dashboard, 'Dashboard')} />
+        <Route path="/team-dashboard/:teamId" component={withErrorBoundary(Dashboard, 'Dashboard')} />
         <Route path="/dashboard/:teamId" component={withErrorBoundary(Dashboard, 'Dashboard')} />
         <Route path="/players" component={withErrorBoundary(Players, 'Players')} />
         <Route path="/players/:clubId" component={withErrorBoundary(Players, 'Players')} />
@@ -111,10 +110,11 @@ function Router() {
         <Route path="/teams/:teamId/players" component={withErrorBoundary(Players, 'TeamPlayers')} />
         <Route path="/roster" component={withErrorBoundary(Roster, 'Roster')} />
         <Route path="/roster/:gameId" component={withErrorBoundary(Roster, 'Roster')} />
-        <Route path="/games" component={withErrorBoundary(Games, 'Games')} />
         <Route path="/games/:teamId" component={withErrorBoundary(Games, 'Games')} />
         <Route path="/games/edit/:id" component={withErrorBoundary(Games, 'GameEdit')} />
         <Route path="/game/:id" component={withErrorBoundary(GameDetails, 'GameDetails')} />
+        <Route path="/preparation/:teamId" component={withErrorBoundary(Preparation, 'Preparation')} />
+        <Route path="/opponent-preparation/:teamId" component={withErrorBoundary(OpponentPreparation, 'OpponentPreparation')} />
         <Route path="/club-dashboard" component={withErrorBoundary(ClubDashboard, 'ClubDashboard')} />
 
         <Route path="/statistics" component={withErrorBoundary(Statistics, 'Statistics')} />

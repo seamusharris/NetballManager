@@ -42,13 +42,30 @@ export function TeamSwitcher({ mode = 'optional', className, onTeamChange }: Tea
   const handleTeamChange = (value: string) => {
     const teamId = value === 'all' ? null : parseInt(value, 10);
 
-    // Prevent unnecessary changes
-    if (teamId === currentTeamId) {
-      return;
-    }
+    console.log('TeamSwitcher: Team changed:', { value, teamId, currentTeamId, location });
 
+    setInternalValue(value);
     setCurrentTeamId(teamId);
     onTeamChange?.(teamId);
+
+    // Navigate to team-specific URL if we're on a team-dependent page
+    if (teamId) {
+      if (location.startsWith('/team-dashboard') || location === '/dashboard') {
+        setLocation(`/team-dashboard/${teamId}`);
+      } else if (location.startsWith('/games')) {
+        setLocation(`/games/${teamId}`);
+      } else if (location.startsWith('/preparation')) {
+        setLocation(`/preparation/${teamId}`);
+      } else if (location.startsWith('/opponent-preparation')) {
+        setLocation(`/opponent-preparation/${teamId}`);
+      }
+    } else {
+      // If no team selected and we're on a team-dependent page, go to teams page
+      if (location.startsWith('/team-dashboard') || location.startsWith('/games') || 
+          location.startsWith('/preparation') || location.startsWith('/opponent-preparation')) {
+        setLocation('/teams');
+      }
+    }
   };
 
   const handleTeamSelect = (value: string) => {
