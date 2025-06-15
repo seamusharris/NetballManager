@@ -59,6 +59,10 @@ export function TeamSwitcher({ mode = 'optional', className, onTeamChange }: Tea
       } else if (location.startsWith('/opponent-preparation')) {
         setLocation(`/opponent-preparation/${teamId}`);
       }
+      // If currently on club dashboard and selecting a team, navigate to team dashboard
+      else if (location === '/') {
+        setLocation(`/team-dashboard/${teamId}`);
+      }
     } else {
       // If no team selected and we're on a team-dependent page, go to teams page
       if (location.startsWith('/team-dashboard') || location.startsWith('/games') || 

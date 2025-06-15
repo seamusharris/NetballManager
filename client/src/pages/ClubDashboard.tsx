@@ -292,7 +292,11 @@ export default function ClubDashboard() {
               {teamPerformance.map((team) => (
                 <div 
                   key={team.id} 
-                  onClick={() => navigate(`/team-dashboard/${team.id}`)}
+                  onClick={() => {
+                    // First set the team in context, then navigate
+                    setCurrentTeamId(team.id);
+                    navigate(`/team-dashboard/${team.id}`);
+                  }}
                   className="flex items-center justify-between p-6 border-2 rounded-xl cursor-pointer transform transition-all duration-300 ease-in-out bg-gradient-to-r from-white to-slate-50 hover:from-blue-50 hover:to-blue-100 hover:shadow-lg hover:scale-[1.02] hover:border-blue-300 active:scale-[0.98]"
                 >
                   <div className="flex items-center gap-4">

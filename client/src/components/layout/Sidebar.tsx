@@ -6,6 +6,7 @@ import {
   BarChart, Database, SettingsIcon, Zap, Trophy, Building2, Target
 } from 'lucide-react';
 import { TEAM_NAME } from '@/lib/settings';
+import { useClub } from '@/contexts/ClubContext';
 
 interface SidebarProps {
   isMobileOpen: boolean;
@@ -15,6 +16,7 @@ interface SidebarProps {
 
 export default function Sidebar({ isMobileOpen, setIsMobileOpen, isTablet }: SidebarProps) {
   const [location] = useLocation();
+  const { currentTeamId, currentTeam } = useClub();
 
   const isActive = (path: string) => {
     if (path === '/' && location === '/') return true;
@@ -22,22 +24,106 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen, isTablet }: Sid
     return false;
   };
 
-  const navLinks = [
-    { path: '/', label: 'Club Dashboard', icon: <Building2 className="w-5 h-5" /> },
-    { path: '/team-dashboard', label: 'Team Dashboard', icon: <Home className="w-5 h-5" /> },
-    { path: '/players', label: 'Players', icon: <Users className="w-5 h-5" /> },
-    { path: '/teams', label: 'Teams', icon: <Users className="w-5 h-5" /> },
-    { path: '/roster', label: 'Roster', icon: <ClipboardList className="w-5 h-5" /> },
-    { path: '/games', label: 'Games', icon: <Calendar className="w-5 h-5" /> },
-    { path: '/opponent-preparation', label: 'Opponent Preparation', icon: <Target className="w-5 h-5" /> },
-    { path: '/seasons', label: 'Seasons', icon: <CalendarRange className="w-5 h-5" /> },
-    { path: '/statistics', label: 'Statistics', icon: <BarChart className="w-5 h-5" /> },
-    { path: '/preparation', label: 'Game Preparation', icon: <Target className="w-5 h-5" /> },
-    { path: '/team-analysis', label: 'Team Analysis', icon: <Trophy className="w-5 h-5" /> },
-    { path: '/clubs', label: 'Club Management', icon: <Building2 className="w-5 h-5" /> },
-    { path: '/component-examples', label: 'All Examples', icon: <Zap className="w-5 h-5" /> },
-    { path: '/settings', label: 'Settings', icon: <SettingsIcon className="w-5 h-5" /> },
-  ];
+  // Create team-aware navigation links
+  const getNavLinks = () => {
+    const baseLinks = [
+      { path: '/', label: 'Club Dashboard', icon: <Building2 className="w-5 h-5" /> },
+      { path: '/players', label: 'Players', icon: <Users className="w-5 h-5" /> },
+      { path: '/teams', label: 'Teams', icon: <Users className="w-5 h-5" /> },
+      { path: '/seasons', label: 'Seasons', icon: <CalendarRange className="w-5 h-5" /> },
+      { path: '/statistics', label: 'Statistics', icon: <BarChart className="w-5 h-5" /> },
+      { path: '/clubs', label: 'Club Management', icon: <Building2 className="w-5 h-5" /> },
+      { path: '/component-examples', label: 'All Examples', icon: <Zap className="w-5 h-5" /> },
+      { path: '/settings', label: 'Settings', icon: <SettingsIcon className="w-5 h-5" /> },
+    ];
+
+    // Team-dependent links
+    const teamLinks = currentTeamId ? [
+      { 
+        path: `/team-dashboard/${currentTeamId}`, 
+        label: 'Team Dashboard', 
+        icon: <Home className="w-5 h-5" /> 
+      },
+      { 
+        path: `/games/${currentTeamId}`, 
+        label: 'Games', 
+        icon: <Calendar className="w-5 h-5" /> 
+      },
+      { 
+        path: `/roster`, 
+        label: 'Roster', 
+        icon: <ClipboardList className="w-5 h-5" /> 
+      },
+      { 
+        path: `/preparation/${currentTeamId}`, 
+        label: 'Game Preparation', 
+        icon: <Target className="w-5 h-5" /> 
+      },
+      { 
+        path: `/opponent-preparation/${currentTeamId}`, 
+        label: 'Opponent Preparation', 
+        icon: <Target className="w-5 h-5" /> 
+      },
+      { 
+        path: `/team-analysis`, 
+        label: 'Team Analysis', 
+        icon: <Trophy className="w-5 h-5" /> 
+      },
+    ] : [
+      // Disabled links when no team selected
+      { 
+        path: '/teams', 
+        label: 'Team Dashboard', 
+        icon: <Home className="w-5 h-5" />, 
+        disabled: true,
+        fallbackLabel: 'Team Dashboard (Select Team First)'
+      },
+      { 
+        path: '/teams', 
+        label: 'Games', 
+        icon: <Calendar className="w-5 h-5" />, 
+        disabled: true,
+        fallbackLabel: 'Games (Select Team First)'
+      },
+      { 
+        path: '/teams', 
+        label: 'Roster', 
+        icon: <ClipboardList className="w-5 h-5" />, 
+        disabled: true,
+        fallbackLabel: 'Roster (Select Team First)'
+      },
+      { 
+        path: '/teams', 
+        label: 'Game Preparation', 
+        icon: <Target className="w-5 h-5" />, 
+        disabled: true,
+        fallbackLabel: 'Game Preparation (Select Team First)'
+      },
+      { 
+        path: '/teams', 
+        label: 'Opponent Preparation', 
+        icon: <Target className="w-5 h-5" />, 
+        disabled: true,
+        fallbackLabel: 'Opponent Preparation (Select Team First)'
+      },
+      { 
+        path: '/teams', 
+        label: 'Team Analysis', 
+        icon: <Trophy className="w-5 h-5" />, 
+        disabled: true,
+        fallbackLabel: 'Team Analysis (Select Team First)'
+      },
+    ];
+
+    // Insert team links after Club Dashboard
+    return [
+      baseLinks[0], // Club Dashboard
+      ...teamLinks, // Team-dependent links
+      ...baseLinks.slice(1) // Rest of base links
+    ];
+  };
+
+  const navLinks = getNavLinks();
 
   return (
     <aside 

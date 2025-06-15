@@ -1,8 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
 import { useLocation } from 'wouter';
-import { Helmet } from 'react-helmet';
+import { Plus, Activity, Users, Edit, Trash2, MoreVertical, Trophy, Calendar } from 'lucide-react';
 import { useClub } from '@/contexts/ClubContext';
+import { useState } from 'react';
+import { Helmet } from 'react-helmet';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -14,9 +15,9 @@ import { PageTemplate, ContentSection, ActionButton } from '@/components/ui/ui-s
 
 export default function Teams() {
   const [, setLocation] = useLocation();
-  const { currentClub, currentClubId, isLoading: clubLoading } = useClub();
   const [showForm, setShowForm] = useState(false);
   const [editingTeam, setEditingTeam] = useState<any>(null);
+  const { setCurrentTeamId } = useClub();
   const queryClient = useQueryClient();
 
   const { data: teams = [], isLoading: isLoadingTeams } = useQuery<any[]>({
