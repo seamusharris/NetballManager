@@ -91,6 +91,21 @@ export default function PrintableRosterSummary({ game, opponent, roster, players
     window.print();
   };
 
+  // Get opponent name from game data
+  const getOpponentName = () => {
+    if (!game) return 'Unknown Opponent';
+    
+    // For games with both home and away teams, show the opponent team name
+    if (game.homeTeamName && game.awayTeamName) {
+      // If this is an inter-club game, we need to determine which team is the opponent
+      // For now, we'll show both team names
+      return `${game.homeTeamName} vs ${game.awayTeamName}`;
+    }
+    
+    // For regular games, show the away team as the opponent
+    return game.awayTeamName || game.homeTeamName || 'Unknown Opponent';
+  };
+
   // Export to PDF
   const handleExportPDF = () => {
     if (!game) return;
@@ -99,7 +114,7 @@ export default function PrintableRosterSummary({ game, opponent, roster, players
 
     // Add title
     const gameDate = formatDate(game.date);
-    const opponentName = opponent?.teamName || 'Unknown Opponent';
+    const opponentName = getOpponentName();
     const roundInfo = game.round ? ` (Round ${game.round})` : '';
     const title = `${gameDate} - Roster vs ${opponentName}${roundInfo}`;
 
@@ -109,7 +124,7 @@ export default function PrintableRosterSummary({ game, opponent, roster, players
     // Game details
     doc.setFontSize(12);
     doc.text(`Time: ${game?.time || 'TBD'}`, 14, 32);
-    doc.text(`Opponent: ${game?.awayTeamName || game?.homeTeamName || 'Unknown Opponent'}`, 14, 38);
+    doc.text(`Opponent: ${opponentName}`, 14, 38);
 
     // Create table data for positions by quarter
     const tableData = POSITIONS.map(position => {
@@ -161,8 +176,8 @@ export default function PrintableRosterSummary({ game, opponent, roster, players
       });
 
       // Save PDF
-      const opponentName = game?.awayTeamName || game?.homeTeamName || 'Unknown';
-      doc.save(`${gameDate.replace(/\//g, '-')}_roster_${opponentName.replace(/\s+/g, '_')}${roundInfo ? '_Round' + game?.round : ''}.pdf`);
+      const pdfOpponentName = getOpponentName().replace(/\s+/g, '_');
+      doc.save(`${gameDate.replace(/\//g, '-')}_roster_${pdfOpponentName}${roundInfo ? '_Round' + game?.round : ''}.pdf`);
     });
   };
 
@@ -205,7 +220,7 @@ export default function PrintableRosterSummary({ game, opponent, roster, players
     const gameInfo = [
       ['Game Date', formatDate(game?.date || '')],
       ['Game Time', game?.time || 'TBD'],
-      ['Opponent', game?.awayTeamName || game?.homeTeamName || 'Unknown Opponent'],
+      ['Opponent', getOpponentName()],
       ['Round', game?.round || 'N/A'],
       ['', ''], // Empty row for spacing
     ];
@@ -223,9 +238,9 @@ export default function PrintableRosterSummary({ game, opponent, roster, players
 
     // Save Excel file
     const gameDate = formatDate(game?.date || '').replace(/\//g, '-');
-    const opponentName = game?.awayTeamName || game?.homeTeamName || 'Unknown';
+    const opponentName = getOpponentName().replace(/\s+/g, '_');
     const roundInfo = game?.round ? `_Round${game?.round}` : '';
-    XLSX.writeFile(wb, `${gameDate}_roster_${opponentName.replace(/\s+/g, '_')}${roundInfo}.xlsx`);
+    XLSX.writeFile(wb, `${gameDate}_roster_${opponentName}${roundInfo}.xlsx`);
   };
 
   // Print-specific styles (will be active only during printing)
@@ -289,7 +304,7 @@ export default function PrintableRosterSummary({ game, opponent, roster, players
             {formatDate(game?.date || '')} - Game Roster
           </h1>
           <p className="text-lg">
-            vs {opponent?.teamName || 'Unknown Opponent'}
+            {getOpponentName()}
             {game?.round && ` (Round ${game.round})`}
           </p>
         </div>
