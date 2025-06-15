@@ -1438,6 +1438,293 @@ export default function PlayerBoxExamples() {
               </div>
             </div>
 
+            {/* Background Darkening Hover Effects */}
+            <div>
+              <h3 className="text-lg font-medium mb-3">Background Darkening Hover Effects</h3>
+              <div className="bg-white p-6 rounded-lg border space-y-6">
+                <p className="text-sm text-gray-600 mb-4">Hover effects that darken the background color (similar to games list) instead of changing shadows</p>
+                
+                {/* Light Background Darkening */}
+                <div>
+                  <h4 className="text-md font-medium mb-2 text-gray-700">Light Background Darkening</h4>
+                  <div className="space-y-3">
+                    {samplePlayers.slice(0, 3).map((player) => {
+                      const playerColorHex = (() => {
+                        const colorMap: Record<string, string> = {
+                          'bg-red-500': '#ef4444', 'bg-red-600': '#dc2626',
+                          'bg-orange-500': '#f97316', 'bg-orange-600': '#ea580c',
+                          'bg-yellow-600': '#ca8a04', 'bg-amber-600': '#d97706',
+                          'bg-green-600': '#16a34a', 'bg-green-700': '#15803d',
+                          'bg-teal-600': '#0d9488', 'bg-cyan-600': '#0891b2',
+                          'bg-blue-500': '#3b82f6', 'bg-blue-600': '#2563eb',
+                          'bg-purple-500': '#a855f7', 'bg-purple-600': '#9333ea'
+                        };
+                        return colorMap[player.avatarColor || 'bg-gray-500'] || '#6b7280';
+                      })();
+
+                      return (
+                        <div key={`bg-darken-light-${player.id}`} className="relative">
+                          <div 
+                            className="rounded-lg border-2 transition-all duration-300 cursor-pointer hover:brightness-90"
+                            style={{ 
+                              backgroundColor: `${playerColorHex}15`,
+                              borderColor: `${playerColorHex}80`,
+                              color: playerColorHex
+                            }}
+                          >
+                            <PlayerBox 
+                              player={player}
+                              size="md"
+                              showPositions={true}
+                              className="[&>div]:bg-transparent [&>div]:border-0 [&>div]:shadow-none [&>div]:cursor-pointer [&>div>div:first-child]:border-2 [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-2 [&>div>div:first-child]:ring-current"
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Medium Background Darkening */}
+                <div>
+                  <h4 className="text-md font-medium mb-2 text-gray-700">Medium Background Darkening</h4>
+                  <div className="space-y-3">
+                    {samplePlayers.slice(1, 4).map((player) => {
+                      const playerColorHex = (() => {
+                        const colorMap: Record<string, string> = {
+                          'bg-red-500': '#ef4444', 'bg-red-600': '#dc2626',
+                          'bg-orange-500': '#f97316', 'bg-orange-600': '#ea580c',
+                          'bg-yellow-600': '#ca8a04', 'bg-amber-600': '#d97706',
+                          'bg-green-600': '#16a34a', 'bg-green-700': '#15803d',
+                          'bg-teal-600': '#0d9488', 'bg-cyan-600': '#0891b2',
+                          'bg-blue-500': '#3b82f6', 'bg-blue-600': '#2563eb',
+                          'bg-purple-500': '#a855f7', 'bg-purple-600': '#9333ea'
+                        };
+                        return colorMap[player.avatarColor || 'bg-gray-500'] || '#6b7280';
+                      })();
+
+                      return (
+                        <div key={`bg-darken-medium-${player.id}`} className="relative">
+                          <div 
+                            className="rounded-lg border-2 transition-all duration-300 cursor-pointer hover:brightness-75"
+                            style={{ 
+                              backgroundColor: `${playerColorHex}20`,
+                              borderColor: `${playerColorHex}90`,
+                              color: playerColorHex
+                            }}
+                          >
+                            <PlayerBox 
+                              player={player}
+                              size="md"
+                              showPositions={true}
+                              className="[&>div]:bg-transparent [&>div]:border-0 [&>div]:shadow-none [&>div]:cursor-pointer [&>div>div:first-child]:border-2 [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-2 [&>div>div:first-child]:ring-current"
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Strong Background Darkening */}
+                <div>
+                  <h4 className="text-md font-medium mb-2 text-gray-700">Strong Background Darkening</h4>
+                  <div className="space-y-3">
+                    {samplePlayers.slice(2, 5).map((player) => {
+                      const playerColorHex = (() => {
+                        const colorMap: Record<string, string> = {
+                          'bg-red-500': '#ef4444', 'bg-red-600': '#dc2626',
+                          'bg-orange-500': '#f97316', 'bg-orange-600': '#ea580c',
+                          'bg-yellow-600': '#ca8a04', 'bg-amber-600': '#d97706',
+                          'bg-green-600': '#16a34a', 'bg-green-700': '#15803d',
+                          'bg-teal-600': '#0d9488', 'bg-cyan-600': '#0891b2',
+                          'bg-blue-500': '#3b82f6', 'bg-blue-600': '#2563eb',
+                          'bg-purple-500': '#a855f7', 'bg-purple-600': '#9333ea'
+                        };
+                        return colorMap[player.avatarColor || 'bg-gray-500'] || '#6b7280';
+                      })();
+
+                      return (
+                        <div key={`bg-darken-strong-${player.id}`} className="relative">
+                          <div 
+                            className="rounded-lg border-2 transition-all duration-300 cursor-pointer hover:brightness-50"
+                            style={{ 
+                              backgroundColor: `${playerColorHex}25`,
+                              borderColor: `${playerColorHex}A0`,
+                              color: playerColorHex
+                            }}
+                          >
+                            <PlayerBox 
+                              player={player}
+                              size="md"
+                              showPositions={true}
+                              className="[&>div]:bg-transparent [&>div]:border-0 [&>div]:shadow-none [&>div]:cursor-pointer [&>div>div:first-child]:border-2 [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-2 [&>div>div:first-child]:ring-current"
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Combined Background Darkening + Shadow */}
+                <div>
+                  <h4 className="text-md font-medium mb-2 text-gray-700">Combined Background Darkening + Shadow</h4>
+                  <div className="space-y-3">
+                    {samplePlayers.slice(0, 3).map((player) => {
+                      const playerColorHex = (() => {
+                        const colorMap: Record<string, string> = {
+                          'bg-red-500': '#ef4444', 'bg-red-600': '#dc2626',
+                          'bg-orange-500': '#f97316', 'bg-orange-600': '#ea580c',
+                          'bg-yellow-600': '#ca8a04', 'bg-amber-600': '#d97706',
+                          'bg-green-600': '#16a34a', 'bg-green-700': '#15803d',
+                          'bg-teal-600': '#0d9488', 'bg-cyan-600': '#0891b2',
+                          'bg-blue-500': '#3b82f6', 'bg-blue-600': '#2563eb',
+                          'bg-purple-500': '#a855f7', 'bg-purple-600': '#9333ea'
+                        };
+                        return colorMap[player.avatarColor || 'bg-gray-500'] || '#6b7280';
+                      })();
+
+                      return (
+                        <div key={`bg-darken-shadow-${player.id}`} className="relative">
+                          <div 
+                            className="rounded-lg border-2 shadow-sm transition-all duration-300 cursor-pointer hover:brightness-85 hover:shadow-lg"
+                            style={{ 
+                              backgroundColor: `${playerColorHex}18`,
+                              borderColor: `${playerColorHex}85`,
+                              color: playerColorHex
+                            }}
+                          >
+                            <PlayerBox 
+                              player={player}
+                              size="md"
+                              showPositions={true}
+                              className="[&>div]:bg-transparent [&>div]:border-0 [&>div]:shadow-none [&>div]:cursor-pointer [&>div>div:first-child]:border-2 [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-2 [&>div>div:first-child]:ring-current"
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Subtle Shadow Variations */}
+            <div>
+              <h3 className="text-lg font-medium mb-3">Subtle Shadow Hover Variations</h3>
+              <div className="bg-white p-6 rounded-lg border space-y-6">
+                <p className="text-sm text-gray-600 mb-4">More refined shadow hover effects for comparison with the standard app hover</p>
+                
+                {/* Minimal Shadow Change */}
+                <div>
+                  <h4 className="text-md font-medium mb-2 text-gray-700">Minimal Shadow Change</h4>
+                  <div className="space-y-3">
+                    {samplePlayers.slice(0, 3).map((player) => (
+                      <div key={`subtle-minimal-${player.id}`} className="relative">
+                        <PlayerBox 
+                          player={player}
+                          size="md"
+                          showPositions={true}
+                          className="shadow-sm transition-shadow duration-300 hover:shadow-md cursor-pointer [&>div>div:first-child]:border-2 [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-2 [&>div>div:first-child]:ring-current"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Gentle Shadow Lift */}
+                <div>
+                  <h4 className="text-md font-medium mb-2 text-gray-700">Gentle Shadow Lift</h4>
+                  <div className="space-y-3">
+                    {samplePlayers.slice(1, 4).map((player) => (
+                      <div key={`subtle-gentle-${player.id}`} className="relative">
+                        <PlayerBox 
+                          player={player}
+                          size="md"
+                          showPositions={true}
+                          className="shadow-md transition-shadow duration-200 hover:shadow-lg cursor-pointer [&>div>div:first-child]:border-2 [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-2 [&>div>div:first-child]:ring-current"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Soft Float Effect */}
+                <div>
+                  <h4 className="text-md font-medium mb-2 text-gray-700">Soft Float Effect</h4>
+                  <div className="space-y-3">
+                    {samplePlayers.slice(2, 5).map((player) => (
+                      <div key={`subtle-float-${player.id}`} className="relative">
+                        <PlayerBox 
+                          player={player}
+                          size="md"
+                          showPositions={true}
+                          className="shadow transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 cursor-pointer [&>div>div:first-child]:border-2 [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-2 [&>div>div:first-child]:ring-current"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Warm Shadow Glow */}
+                <div>
+                  <h4 className="text-md font-medium mb-2 text-gray-700">Warm Shadow Glow</h4>
+                  <div className="space-y-3">
+                    {samplePlayers.slice(0, 4).map((player, index) => (
+                      <div key={`subtle-glow-${player.id}`} className="relative">
+                        <PlayerBox 
+                          player={player}
+                          size="md"
+                          showPositions={true}
+                          className={`${
+                            index === 0 ? 'shadow-sm hover:shadow-blue-200/60' :
+                            index === 1 ? 'shadow-sm hover:shadow-orange-200/60' :
+                            index === 2 ? 'shadow-sm hover:shadow-teal-200/60' :
+                            'shadow-sm hover:shadow-yellow-200/60'
+                          } shadow-sm transition-shadow duration-300 hover:shadow-lg cursor-pointer [&>div>div:first-child]:border-2 [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-2 [&>div>div:first-child]:ring-current`}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Ultra Subtle */}
+                <div>
+                  <h4 className="text-md font-medium mb-2 text-gray-700">Ultra Subtle</h4>
+                  <div className="space-y-3">
+                    {samplePlayers.slice(1, 4).map((player) => (
+                      <div key={`ultra-subtle-${player.id}`} className="relative">
+                        <PlayerBox 
+                          player={player}
+                          size="md"
+                          showPositions={true}
+                          className="shadow-sm transition-shadow duration-500 hover:shadow cursor-pointer [&>div>div:first-child]:border-2 [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-2 [&>div>div:first-child]:ring-current"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Scale + Shadow */}
+                <div>
+                  <h4 className="text-md font-medium mb-2 text-gray-700">Scale + Shadow</h4>
+                  <div className="space-y-3">
+                    {samplePlayers.slice(0, 3).map((player) => (
+                      <div key={`scale-shadow-${player.id}`} className="relative">
+                        <PlayerBox 
+                          player={player}
+                          size="md"
+                          showPositions={true}
+                          className="shadow-sm transition-all duration-300 hover:shadow-md hover:scale-[1.02] cursor-pointer [&>div>div:first-child]:border-2 [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-2 [&>div>div:first-child]:ring-current"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Outer PlayerBox Shadow Effects Collection */}
             <div>
               <h3 className="text-lg font-medium mb-3">Outer PlayerBox Shadow Effects</h3>
