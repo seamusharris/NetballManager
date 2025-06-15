@@ -1002,9 +1002,9 @@ export default function Preparation() {
 
     if (opponentAnalysis) {
       if (opponentAnalysis.winRate >= 70) {
-        tacticalRecommendations.push(`Strong record against ${opponentAnalysis.teamName} - maintain winning formula`);
+        tacticalRecommendations.push("Strong record against " + opponentAnalysis.teamName + " - maintain winning formula");
       } else if (opponentAnalysis.winRate <= 30) {
-        tacticalRecommendations.push(`Challenging opponent - focus on defensive structures and patient attack`);
+        tacticalRecommendations.push("Challenging opponent - focus on defensive structures and patient attack");
       }
 
       const strongQuarter = opponentAnalysis.quarterAnalysis.byQuarter[opponentAnalysis.quarterAnalysis.strongestQuarter];
