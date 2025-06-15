@@ -38,7 +38,7 @@ export default function Dashboard() {
   // Monitor request performance
   const requestMetrics = useRequestMonitor('Dashboard');
 
-  // Handle teamId from URL parameter
+  // Handle teamId from URL parameter - only set once on initial load
   useEffect(() => {
     const teamIdFromUrl = params.teamId;
     if (teamIdFromUrl && !isNaN(Number(teamIdFromUrl))) {
@@ -46,11 +46,11 @@ export default function Dashboard() {
       // Check if the team exists in the current club
       const teamExists = clubTeams?.some(team => team.id === targetTeamId);
       if (teamExists && currentTeamId !== targetTeamId) {
-        console.log(`Dashboard: Switching to team ${targetTeamId} from URL`);
+        console.log(`Dashboard: Setting team ${targetTeamId} from URL`);
         setCurrentTeamId(targetTeamId);
       }
     }
-  }, [params.teamId, currentTeamId, setCurrentTeamId, clubTeams]);
+  }, [params.teamId, clubTeams]); // Remove currentTeamId and setCurrentTeamId from deps to prevent loops
 
   // Debug team switching
   useEffect(() => {

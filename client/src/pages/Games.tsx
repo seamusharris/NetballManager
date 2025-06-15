@@ -60,15 +60,16 @@ export default function Games() {
     enabled: !!currentClubId,
   });
 
-  // Auto-select team from URL if provided
+  // Auto-select team from URL if provided - optimize to prevent unnecessary updates
   useEffect(() => {
-    if (teamIdFromUrl && teams.length > 0 && currentClub?.setCurrentTeam) {
+    if (teamIdFromUrl && teams.length > 0) {
       const targetTeam = teams.find(t => t.id === teamIdFromUrl);
-      if (targetTeam && (!currentTeam || currentTeam.id !== teamIdFromUrl)) {
-        currentClub.setCurrentTeam(targetTeam);
+      if (targetTeam && currentTeamId !== teamIdFromUrl) {
+        console.log(`Games: Setting team ${teamIdFromUrl} from URL`);
+        setCurrentTeamId(teamIdFromUrl);
       }
     }
-  }, [teamIdFromUrl, teams, currentClub, currentTeam]);
+  }, [teamIdFromUrl, teams, currentTeamId, setCurrentTeamId]);
 
   // Fetch games
   const { data: games = [], isLoading: isLoadingGames } = useQuery<any[]>({
