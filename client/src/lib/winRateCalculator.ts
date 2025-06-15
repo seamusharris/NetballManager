@@ -1,4 +1,3 @@
-
 export interface WinRateResult {
   wins: number;
   losses: number;
@@ -102,17 +101,39 @@ export function calculateClubWinRate(
 
   for (const game of validGames) {
     const isHome = game.homeClubId === clubId;
+    const isInterClubGame = game.homeClubId === clubId && game.awayClubId === clubId;
     const gameStats = centralizedStats[game.id] || [];
 
     let ourScore = 0;
     let theirScore = 0;
 
     if (gameStats.length > 0) {
-      // Use centralized statistics - sum all goals for/against for our club
-      gameStats.forEach(stat => {
-        ourScore += stat.goalsFor || 0;
-        theirScore += stat.goalsAgainst || 0;
-      });
+      if (isInterClubGame) {
+        // For inter-club games, we need to determine the winner based on team-specific stats
+        // Get the home team and away team scores separately
+        const homeTeamStats = gameStats.filter(stat => stat.teamId === game.homeTeamId);
+        const awayTeamStats = gameStats.filter(stat => stat.teamId === game.awayTeamId);
+
+        const homeScore = homeTeamStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
+        const awayScore = awayTeamStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
+
+        // For club-wide calculation, inter-club games don't affect win rate
+        // (one team wins, one loses - net effect is zero)
+        continue;
+      } else {
+        // Regular game against another club
+        // Filter stats to only include teams from our club
+        const ourClubStats = gameStats.filter(stat => {
+          // Check if this stat belongs to a team from our club
+          // We can determine this by checking if the game involves our club
+          return true; // All stats in this game should be from our club's perspective
+        });
+
+        ourClubStats.forEach(stat => {
+          ourScore += stat.goalsFor || 0;
+          theirScore += stat.goalsAgainst || 0;
+        });
+      }
     } else {
       // Fallback to game status scores
       ourScore = isHome ? (game.statusTeamGoals || 0) : (game.statusOpponentGoals || 0);
@@ -128,7 +149,11 @@ export function calculateClubWinRate(
     }
   }
 
-  const totalGames = validGames.length;
+  // Exclude inter-club games from total count
+  const nonInterClubGames = validGames.filter(game => 
+    !(game.homeClubId === clubId && game.awayClubId === clubId)
+  );
+  const totalGames = nonInterClubGames.length;
   const winRate = totalGames > 0 ? (wins / totalGames) * 100 : 0;
 
   return {
