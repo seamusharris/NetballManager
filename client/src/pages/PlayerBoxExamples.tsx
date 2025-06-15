@@ -698,22 +698,19 @@ export default function PlayerBoxExamples() {
             <div>
               <h3 className="text-lg font-medium mb-3">Colored Background Player Boxes</h3>
               <div className="bg-white p-6 rounded-lg border space-y-4">
-                <p className="text-sm text-gray-600 mb-4">Avatar centered in colored background boxes with white borders and shadows</p>
+                <p className="text-sm text-gray-600 mb-4">PlayerBox components inside colored background containers with white avatar borders and shadows</p>
                 {samplePlayers.slice(0, 5).map((player) => (
                   <div key={`colored-bg-${player.id}`} className="relative">
                     <div 
-                      className="p-4 rounded-lg flex items-center justify-center shadow-md"
+                      className="p-4 rounded-lg shadow-md"
                       style={{ backgroundColor: `${player.avatarColor?.replace('bg-', '#') || '#6b7280'}20` }}
                     >
-                      <div 
-                        className={`${player.avatarColor || 'bg-gray-500'} h-20 w-20 rounded-full flex items-center justify-center text-white font-bold text-2xl border-4 border-white shadow-lg`}
-                      >
-                        {player.firstName?.[0]}{player.lastName?.[0]}
-                      </div>
-                    </div>
-                    <div className="text-center mt-2">
-                      <div className="font-semibold">{player.displayName}</div>
-                      <div className="text-sm text-gray-600">{player.positionPreferences?.join(', ')}</div>
+                      <PlayerBox 
+                        player={player}
+                        size="md"
+                        showPositions={true}
+                        className="[&>div>div:first-child]:border-4 [&>div>div:first-child]:border-white [&>div>div:first-child]:shadow-lg"
+                      />
                     </div>
                   </div>
                 ))}
@@ -724,7 +721,7 @@ export default function PlayerBoxExamples() {
             <div>
               <h3 className="text-lg font-medium mb-3">Colored Background - Shadow Variations</h3>
               <div className="bg-white p-6 rounded-lg border space-y-6">
-                <p className="text-sm text-gray-600 mb-4">Different shadow intensities on colored background boxes</p>
+                <p className="text-sm text-gray-600 mb-4">Different shadow intensities on colored background boxes containing PlayerBox components</p>
                 
                 {/* Light Shadow */}
                 <div>
@@ -733,17 +730,15 @@ export default function PlayerBoxExamples() {
                     {samplePlayers.slice(0, 3).map((player) => (
                       <div key={`light-shadow-${player.id}`} className="relative">
                         <div 
-                          className="p-4 rounded-lg flex items-center justify-center shadow-sm"
+                          className="p-3 rounded-lg shadow-sm"
                           style={{ backgroundColor: `${player.avatarColor?.replace('bg-', '#') || '#6b7280'}15` }}
                         >
-                          <div 
-                            className={`${player.avatarColor || 'bg-gray-500'} h-16 w-16 rounded-full flex items-center justify-center text-white font-bold text-lg border-3 border-white shadow-sm`}
-                          >
-                            {player.firstName?.[0]}{player.lastName?.[0]}
-                          </div>
-                        </div>
-                        <div className="text-center mt-2">
-                          <div className="font-medium text-sm">{player.displayName}</div>
+                          <PlayerBox 
+                            player={player}
+                            size="sm"
+                            showPositions={true}
+                            className="[&>div>div:first-child]:border-3 [&>div>div:first-child]:border-white [&>div>div:first-child]:shadow-sm"
+                          />
                         </div>
                       </div>
                     ))}
@@ -757,17 +752,15 @@ export default function PlayerBoxExamples() {
                     {samplePlayers.slice(1, 4).map((player) => (
                       <div key={`medium-shadow-${player.id}`} className="relative">
                         <div 
-                          className="p-4 rounded-lg flex items-center justify-center shadow-md"
+                          className="p-3 rounded-lg shadow-md"
                           style={{ backgroundColor: `${player.avatarColor?.replace('bg-', '#') || '#6b7280'}15` }}
                         >
-                          <div 
-                            className={`${player.avatarColor || 'bg-gray-500'} h-16 w-16 rounded-full flex items-center justify-center text-white font-bold text-lg border-3 border-white shadow-md`}
-                          >
-                            {player.firstName?.[0]}{player.lastName?.[0]}
-                          </div>
-                        </div>
-                        <div className="text-center mt-2">
-                          <div className="font-medium text-sm">{player.displayName}</div>
+                          <PlayerBox 
+                            player={player}
+                            size="sm"
+                            showPositions={true}
+                            className="[&>div>div:first-child]:border-3 [&>div>div:first-child]:border-white [&>div>div:first-child]:shadow-md"
+                          />
                         </div>
                       </div>
                     ))}
@@ -781,17 +774,15 @@ export default function PlayerBoxExamples() {
                     {samplePlayers.slice(2, 5).map((player) => (
                       <div key={`strong-shadow-${player.id}`} className="relative">
                         <div 
-                          className="p-4 rounded-lg flex items-center justify-center shadow-lg"
+                          className="p-3 rounded-lg shadow-lg"
                           style={{ backgroundColor: `${player.avatarColor?.replace('bg-', '#') || '#6b7280'}15` }}
                         >
-                          <div 
-                            className={`${player.avatarColor || 'bg-gray-500'} h-16 w-16 rounded-full flex items-center justify-center text-white font-bold text-lg border-3 border-white shadow-lg`}
-                          >
-                            {player.firstName?.[0]}{player.lastName?.[0]}
-                          </div>
-                        </div>
-                        <div className="text-center mt-2">
-                          <div className="font-medium text-sm">{player.displayName}</div>
+                          <PlayerBox 
+                            player={player}
+                            size="sm"
+                            showPositions={true}
+                            className="[&>div>div:first-child]:border-3 [&>div>div:first-child]:border-white [&>div>div:first-child]:shadow-lg"
+                          />
                         </div>
                       </div>
                     ))}
@@ -800,27 +791,24 @@ export default function PlayerBoxExamples() {
               </div>
             </div>
 
-            {/* Large Colored Background Avatars */}
+            {/* Large Colored Background Player Boxes */}
             <div>
-              <h3 className="text-lg font-medium mb-3">Large Colored Background Avatars</h3>
+              <h3 className="text-lg font-medium mb-3">Large Colored Background Player Boxes</h3>
               <div className="bg-gray-50 p-6 rounded-lg space-y-4">
-                <p className="text-sm text-gray-600 mb-4">Larger avatars in colored containers with enhanced shadows</p>
+                <p className="text-sm text-gray-600 mb-4">Larger PlayerBox components in colored containers with enhanced shadows</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {samplePlayers.slice(0, 4).map((player) => (
                     <div key={`large-colored-${player.id}`} className="relative">
                       <div 
-                        className="p-6 rounded-xl flex flex-col items-center justify-center shadow-xl"
+                        className="p-6 rounded-xl shadow-xl"
                         style={{ backgroundColor: `${player.avatarColor?.replace('bg-', '#') || '#6b7280'}20` }}
                       >
-                        <div 
-                          className={`${player.avatarColor || 'bg-gray-500'} h-24 w-24 rounded-full flex items-center justify-center text-white font-bold text-2xl border-4 border-white shadow-xl`}
-                        >
-                          {player.firstName?.[0]}{player.lastName?.[0]}
-                        </div>
-                        <div className="text-center mt-4">
-                          <div className="font-bold text-lg">{player.displayName}</div>
-                          <div className="text-sm text-gray-600">{player.positionPreferences?.join(', ')}</div>
-                        </div>
+                        <PlayerBox 
+                          player={player}
+                          size="lg"
+                          showPositions={true}
+                          className="[&>div>div:first-child]:border-4 [&>div>div:first-child]:border-white [&>div>div:first-child]:shadow-xl"
+                        />
                       </div>
                     </div>
                   ))}
@@ -832,22 +820,19 @@ export default function PlayerBoxExamples() {
             <div>
               <h3 className="text-lg font-medium mb-3">Compact Colored Background Cards</h3>
               <div className="bg-white p-6 rounded-lg border space-y-4">
-                <p className="text-sm text-gray-600 mb-4">Compact horizontal layout with colored backgrounds</p>
+                <p className="text-sm text-gray-600 mb-4">Compact PlayerBox components in colored background containers</p>
                 {samplePlayers.map((player) => (
                   <div key={`compact-colored-${player.id}`} className="relative">
                     <div 
-                      className="p-3 rounded-lg flex items-center space-x-4 shadow-md"
+                      className="p-3 rounded-lg shadow-md"
                       style={{ backgroundColor: `${player.avatarColor?.replace('bg-', '#') || '#6b7280'}15` }}
                     >
-                      <div 
-                        className={`${player.avatarColor || 'bg-gray-500'} h-14 w-14 rounded-full flex items-center justify-center text-white font-bold text-lg border-2 border-white shadow-md flex-shrink-0`}
-                      >
-                        {player.firstName?.[0]}{player.lastName?.[0]}
-                      </div>
-                      <div className="flex-1">
-                        <div className="font-semibold">{player.displayName}</div>
-                        <div className="text-sm text-gray-600">{player.positionPreferences?.join(', ')}</div>
-                      </div>
+                      <PlayerBox 
+                        player={player}
+                        size="sm"
+                        showPositions={true}
+                        className="[&>div>div:first-child]:border-2 [&>div>div:first-child]:border-white [&>div>div:first-child]:shadow-md"
+                      />
                     </div>
                   </div>
                 ))}
@@ -858,23 +843,20 @@ export default function PlayerBoxExamples() {
             <div>
               <h3 className="text-lg font-medium mb-3">Dark Colored Backgrounds</h3>
               <div className="bg-gray-100 p-6 rounded-lg space-y-4">
-                <p className="text-sm text-gray-600 mb-4">Darker colored backgrounds with enhanced white borders</p>
+                <p className="text-sm text-gray-600 mb-4">Darker colored backgrounds with enhanced white borders on PlayerBox components</p>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {samplePlayers.slice(0, 3).map((player) => (
                     <div key={`dark-colored-${player.id}`} className="relative">
                       <div 
-                        className="p-5 rounded-lg flex items-center justify-center shadow-lg"
+                        className="p-5 rounded-lg shadow-lg"
                         style={{ backgroundColor: `${player.avatarColor?.replace('bg-', '#') || '#6b7280'}40` }}
                       >
-                        <div 
-                          className={`${player.avatarColor || 'bg-gray-500'} h-18 w-18 rounded-full flex items-center justify-center text-white font-bold text-xl border-4 border-white shadow-xl`}
-                        >
-                          {player.firstName?.[0]}{player.lastName?.[0]}
-                        </div>
-                      </div>
-                      <div className="text-center mt-3">
-                        <div className="font-semibold">{player.displayName}</div>
-                        <div className="text-sm text-gray-600">{player.positionPreferences?.join(', ')}</div>
+                        <PlayerBox 
+                          player={player}
+                          size="md"
+                          showPositions={true}
+                          className="[&>div>div:first-child]:border-4 [&>div>div:first-child]:border-white [&>div>div:first-child]:shadow-xl"
+                        />
                       </div>
                     </div>
                   ))}
@@ -886,27 +868,25 @@ export default function PlayerBoxExamples() {
             <div>
               <h3 className="text-lg font-medium mb-3">Gradient Colored Backgrounds</h3>
               <div className="bg-white p-6 rounded-lg border space-y-4">
-                <p className="text-sm text-gray-600 mb-4">Subtle gradient backgrounds with varying border styles</p>
+                <p className="text-sm text-gray-600 mb-4">Subtle gradient backgrounds with PlayerBox components and varying border styles</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {samplePlayers.slice(1, 5).map((player, index) => (
                     <div key={`gradient-colored-${player.id}`} className="relative">
                       <div 
-                        className="p-5 rounded-xl flex items-center justify-center shadow-lg"
+                        className="p-5 rounded-xl shadow-lg"
                         style={{ 
                           background: `linear-gradient(135deg, ${player.avatarColor?.replace('bg-', '#') || '#6b7280'}20, ${player.avatarColor?.replace('bg-', '#') || '#6b7280'}05)` 
                         }}
                       >
-                        <div 
-                          className={`${player.avatarColor || 'bg-gray-500'} h-20 w-20 rounded-full flex items-center justify-center text-white font-bold text-xl ${
-                            index % 2 === 0 ? 'border-4 border-white shadow-lg' : 'border-2 border-white shadow-xl ring-2 ring-white/50'
-                          }`}
-                        >
-                          {player.firstName?.[0]}{player.lastName?.[0]}
-                        </div>
-                      </div>
-                      <div className="text-center mt-3">
-                        <div className="font-semibold">{player.displayName}</div>
-                        <div className="text-sm text-gray-600">{player.positionPreferences?.join(', ')}</div>
+                        <PlayerBox 
+                          player={player}
+                          size="md"
+                          showPositions={true}
+                          className={index % 2 === 0 ? 
+                            '[&>div>div:first-child]:border-4 [&>div>div:first-child]:border-white [&>div>div:first-child]:shadow-lg' : 
+                            '[&>div>div:first-child]:border-2 [&>div>div:first-child]:border-white [&>div>div:first-child]:shadow-xl [&>div>div:first-child]:ring-2 [&>div>div:first-child]:ring-white/50'
+                          }
+                        />
                       </div>
                     </div>
                   ))}
@@ -918,22 +898,19 @@ export default function PlayerBoxExamples() {
             <div>
               <h3 className="text-lg font-medium mb-3">Minimal Colored Background</h3>
               <div className="bg-white p-6 rounded-lg border space-y-4">
-                <p className="text-sm text-gray-600 mb-4">Clean, minimal design with subtle colored backgrounds</p>
+                <p className="text-sm text-gray-600 mb-4">Clean, minimal design with subtle colored backgrounds containing PlayerBox components</p>
                 {samplePlayers.slice(0, 4).map((player) => (
                   <div key={`minimal-colored-${player.id}`} className="relative">
                     <div 
-                      className="p-4 rounded-lg flex items-center space-x-4 border border-gray-200 shadow-sm"
+                      className="p-4 rounded-lg border border-gray-200 shadow-sm"
                       style={{ backgroundColor: `${player.avatarColor?.replace('bg-', '#') || '#6b7280'}08` }}
                     >
-                      <div 
-                        className={`${player.avatarColor || 'bg-gray-500'} h-12 w-12 rounded-full flex items-center justify-center text-white font-semibold text-sm border-2 border-white shadow-sm flex-shrink-0`}
-                      >
-                        {player.firstName?.[0]}{player.lastName?.[0]}
-                      </div>
-                      <div className="flex-1">
-                        <div className="font-medium">{player.displayName}</div>
-                        <div className="text-xs text-gray-500">{player.positionPreferences?.join(', ')}</div>
-                      </div>
+                      <PlayerBox 
+                        player={player}
+                        size="sm"
+                        showPositions={true}
+                        className="[&>div>div:first-child]:border-2 [&>div>div:first-child]:border-white [&>div>div:first-child]:shadow-sm"
+                      />
                     </div>
                   </div>
                 ))}
