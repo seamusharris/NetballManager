@@ -31,7 +31,7 @@ export default function PrintableRosterSummary({ game, opponent, roster, players
       '3': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null },
       '4': { 'GS': null, 'GA': null, 'WA': null, 'C': null, 'WD': null, 'GD': null, 'GK': null }
     };
-    
+
     if (roster && roster.length > 0) {
       roster.forEach(entry => {
         if (entry.quarter >= 1 && entry.quarter <= 4 && POSITIONS.includes(entry.position as Position)) {
@@ -39,10 +39,10 @@ export default function PrintableRosterSummary({ game, opponent, roster, players
         }
       });
     }
-    
+
     return result;
   }, [roster]);
-  
+
   // Identify players who are off in each quarter
   const offPlayersByQuarter = React.useMemo(() => {
     const result: Record<string, number[]> = {
@@ -51,7 +51,7 @@ export default function PrintableRosterSummary({ game, opponent, roster, players
       '3': [],
       '4': []
     };
-    
+
     // Only process if we have both roster and players
     if (roster && roster.length > 0 && players && players.length > 0) {
       // Get all player IDs from the roster
@@ -61,19 +61,19 @@ export default function PrintableRosterSummary({ game, opponent, roster, players
           uniquePlayerIds.add(entry.playerId);
         }
       });
-      
+
       // For each quarter, find players who aren't assigned a position
       for (let quarter = 1; quarter <= 4; quarter++) {
         const quarterKey = quarter.toString();
         const assignedPlayers = new Set<number>();
-        
+
         // Get all players assigned in this quarter
         Object.values(rosterByQuarter[quarterKey]).forEach(playerId => {
           if (playerId !== null) {
             assignedPlayers.add(playerId);
           }
         });
-        
+
         // Find players who are on the roster but not assigned in this quarter
         uniquePlayerIds.forEach(playerId => {
           if (!assignedPlayers.has(playerId)) {
@@ -82,7 +82,7 @@ export default function PrintableRosterSummary({ game, opponent, roster, players
         });
       }
     }
-    
+
     return result;
   }, [roster, players, rosterByQuarter]);
 
@@ -94,18 +94,23 @@ export default function PrintableRosterSummary({ game, opponent, roster, players
   // Export to PDF
   const handleExportPDF = () => {
     if (!game) return;
-    
+
     const doc = new jsPDF();
-    
+
     // Add title
     const gameDate = formatDate(game.date);
     const opponentName = opponent?.teamName || 'Unknown Opponent';
     const roundInfo = game.round ? ` (Round ${game.round})` : '';
     const title = `${gameDate} - Roster vs ${opponentName}${roundInfo}`;
-    
+
     doc.setFontSize(18);
     doc.text(title, 14, 20);
-    
+
+    // Game details
+    doc.setFontSize(12);
+    doc.text(`Time: ${game?.time || 'TBD'}`, 14, 32);
+    doc.text(`Opponent: ${game?.awayTeamName || game?.homeTeamName || 'Unknown Opponent'}`, 14, 38);
+
     // Create table data for positions by quarter
     const tableData = POSITIONS.map(position => {
       return [
@@ -116,11 +121,11 @@ export default function PrintableRosterSummary({ game, opponent, roster, players
         getPlayerName(rosterByQuarter['4'][position] || null)
       ];
     });
-    
+
     // Add table to PDF - use the properly imported autoTable
     import('jspdf-autotable').then((autoTable) => {
       const autoTablePlugin = autoTable.default;
-      
+
       // First table - Players by position
       autoTablePlugin(doc, {
         startY: 30,
@@ -131,14 +136,14 @@ export default function PrintableRosterSummary({ game, opponent, roster, players
         headStyles: { fillColor: [59, 130, 246], textColor: 255 },
         alternateRowStyles: { fillColor: [240, 245, 255] }
       });
-      
+
       // Get the Y position after the first table
       const finalY = (doc as any).lastAutoTable.finalY || 120;
-      
+
       // Add "Players Off" section title
       doc.setFontSize(14);
       doc.text("Players Off Court", 14, finalY + 15);
-      
+
       // Second table - Players off
       autoTablePlugin(doc, {
         startY: finalY + 20,
@@ -154,16 +159,17 @@ export default function PrintableRosterSummary({ game, opponent, roster, players
         styles: { fontSize: 10, cellPadding: 3 },
         headStyles: { fillColor: [59, 130, 246], textColor: 255 }
       });
-      
-      // Save PDF after both tables are applied
-      doc.save(`${gameDate.replace(/\//g, '-')}_roster_${opponentName.replace(/\s+/g, '_')}.pdf`);
+
+      // Save PDF
+      const opponentName = game?.awayTeamName || game?.homeTeamName || 'Unknown';
+      doc.save(`${gameDate.replace(/\//g, '-')}_roster_${opponentName.replace(/\s+/g, '_')}${roundInfo ? '_Round' + game?.round : ''}.pdf`);
     });
   };
 
   // Export to Excel
   const handleExportExcel = () => {
     if (!game) return;
-    
+
     // Prepare the data for positions by quarter
     const positionData = POSITIONS.map(position => {
       return {
@@ -174,7 +180,7 @@ export default function PrintableRosterSummary({ game, opponent, roster, players
         'Quarter 4': getPlayerName(rosterByQuarter['4'][position] || null)
       };
     });
-    
+
     // Prepare data for players who are off in each quarter
     const offPlayersData = [{
       'Players Off': 'Off Court',
@@ -191,22 +197,34 @@ export default function PrintableRosterSummary({ game, opponent, roster, players
         ? offPlayersByQuarter['4'].map(id => getPlayerName(id)).join(', ') 
         : 'None'
     }];
-    
+
     // Create workbook and worksheets
     const wb = XLSX.utils.book_new();
-    
+
+    // Create worksheet with game info
+    const gameInfo = [
+      ['Game Date', formatDate(game?.date || '')],
+      ['Game Time', game?.time || 'TBD'],
+      ['Opponent', game?.awayTeamName || game?.homeTeamName || 'Unknown Opponent'],
+      ['Round', game?.round || 'N/A'],
+      ['', ''], // Empty row for spacing
+    ];
+    const gameInfoWs = XLSX.utils.aoa_to_sheet(gameInfo);
+    XLSX.utils.book_append_sheet(wb, gameInfoWs, "Game Info");
+
+
     // Add positions worksheet
     const positionsWs = XLSX.utils.json_to_sheet(positionData);
     XLSX.utils.book_append_sheet(wb, positionsWs, "Positions");
-    
+
     // Add off players worksheet
     const offPlayersWs = XLSX.utils.json_to_sheet(offPlayersData);
     XLSX.utils.book_append_sheet(wb, offPlayersWs, "Players Off");
-    
+
     // Save Excel file
-    const gameDate = formatDate(game.date).replace(/\//g, '-');
-    const opponentName = opponent?.teamName || 'Unknown';
-    const roundInfo = game.round ? `_Round${game.round}` : '';
+    const gameDate = formatDate(game?.date || '').replace(/\//g, '-');
+    const opponentName = game?.awayTeamName || game?.homeTeamName || 'Unknown';
+    const roundInfo = game?.round ? `_Round${game?.round}` : '';
     XLSX.writeFile(wb, `${gameDate}_roster_${opponentName.replace(/\s+/g, '_')}${roundInfo}.xlsx`);
   };
 
@@ -237,7 +255,7 @@ export default function PrintableRosterSummary({ game, opponent, roster, players
   return (
     <div>
       <style>{printStyles}</style>
-      
+
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-bold">Roster Summary</h2>
         <div className="flex gap-2">
@@ -264,7 +282,7 @@ export default function PrintableRosterSummary({ game, opponent, roster, players
           </Button>
         </div>
       </div>
-      
+
       <div className="print-section">
         <div className="mb-4">
           <h1 className="text-2xl font-bold">
@@ -275,7 +293,7 @@ export default function PrintableRosterSummary({ game, opponent, roster, players
             {game?.round && ` (Round ${game.round})`}
           </p>
         </div>
-        
+
         <Table className="border-2 border-gray-200 mb-8 w-full table-fixed">
           <TableHeader className="bg-blue-500">
             <TableRow>
@@ -298,7 +316,7 @@ export default function PrintableRosterSummary({ game, opponent, roster, players
             ))}
           </TableBody>
         </Table>
-        
+
         {/* Players who are off in each quarter */}
         <Table className="border-2 border-gray-200 w-full table-fixed">
           <TableHeader className="bg-blue-500">
