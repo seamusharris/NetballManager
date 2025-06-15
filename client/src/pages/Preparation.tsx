@@ -798,8 +798,9 @@ export default function Preparation() {
     }
 
     // Find all games against this opponent
-    const opponentGames = completedGames<previous_generation>```text
-.filter(game => {
+    const opponentGames```text
+ = completedGames
+    .filter(game => {
       const isHomeGame = game.homeClubId === currentClubId;
       const isAwayGame = game.awayClubId === currentClubId;
 
@@ -1616,7 +1617,8 @@ export default function Preparation() {
                                           {diff >= 0 ? '+' : ''}{diff.toFixed(1)}
                                         </div>
                                       </div>
-                                                                      );
+                                    </div>
+                                  );
                                 })}
                               </div>
                             </div>
