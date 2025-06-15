@@ -93,9 +93,17 @@ export function PlayerBox({
 
   const playerColor = getPlayerColorHex(player.avatarColor);
   const lightBackgroundColor = `${playerColor}15`; // Add transparency for background
+  const darkerBorderColor = `${playerColor}C0`; // Darker version for border
 
   const playerBoxContent = (
-    <div className={`flex items-center p-4 rounded-lg ${sizeClasses[size]}`}>
+    <div 
+      className={`flex items-center p-4 rounded-lg border-2 ${sizeClasses[size]}`}
+      style={{
+        backgroundColor: lightBackgroundColor,
+        borderColor: darkerBorderColor,
+        color: playerColor
+      }}
+    >
       {/* Avatar Circle */}
       <div 
         className={`${avatarSizes[size]} rounded-full flex items-center justify-center text-white font-bold shadow-md flex-shrink-0 player-avatar ${player.avatarColor || 'bg-gray-700'}`}

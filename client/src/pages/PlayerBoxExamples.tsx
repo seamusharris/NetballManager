@@ -73,11 +73,13 @@ export default function PlayerBoxExamples() {
       <div className="space-y-8">
         {/* Basic PlayerBox */}
         <section>
-          <h2 className="text-2xl font-semibold mb-4">Basic PlayerBox</h2>
+          <h2 className="text-2xl font-semibold mb-4">Basic PlayerBox (Original Style)</h2>
           <div className="space-y-4">
             <PlayerBox player={samplePlayers[0]} />
             <PlayerBox player={samplePlayers[1]} />
             <PlayerBox player={samplePlayers[2]} />
+            <PlayerBox player={samplePlayers[3]} />
+            <PlayerBox player={samplePlayers[4]} />
           </div>
         </section>
 
