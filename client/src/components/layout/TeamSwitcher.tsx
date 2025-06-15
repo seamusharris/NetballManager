@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { useClub } from '@/contexts/ClubContext';
@@ -14,6 +14,14 @@ interface TeamSwitcherProps {
 export function TeamSwitcher({ mode = 'optional', className, onTeamChange }: TeamSwitcherProps) {
   const { currentTeamId, currentTeam, clubTeams, setCurrentTeamId } = useClub();
   const [location, setLocation] = useLocation();
+  const [internalValue, setInternalValue] = useState<string>('');
+
+  // Sync internal value with context changes
+  useEffect(() => {
+    const newValue = currentTeamId?.toString() || (mode === 'required' ? '' : 'all');
+    console.log('TeamSwitcher: Context changed, updating internal value:', { currentTeamId, newValue });
+    setInternalValue(newValue);
+  }, [currentTeamId, mode]);
 
   // Don't render if hidden mode or only one team
   const validTeams = clubTeams.filter(team => team.isActive !== false);
@@ -46,6 +54,7 @@ export function TeamSwitcher({ mode = 'optional', className, onTeamChange }: Tea
 
   const handleTeamSelect = (value: string) => {
     console.log('TeamSwitcher: Selecting team:', value);
+    setInternalValue(value);
     handleTeamChange(value);
   };
 
@@ -54,7 +63,7 @@ export function TeamSwitcher({ mode = 'optional', className, onTeamChange }: Tea
     <div className={`flex items-center space-x-2 ${className || ''}`}>
       <span className="text-sm font-medium text-gray-700">Team:</span>
       <Select
-        value={currentTeamId?.toString() || (mode === 'required' ? '' : 'all')}
+        value={internalValue}
         onValueChange={handleTeamSelect}
       >
         <SelectTrigger className="w-[200px]">

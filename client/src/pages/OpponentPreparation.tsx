@@ -291,7 +291,7 @@ export default function OpponentPreparation() {
             </p>
           </div>
           <div className="flex items-center gap-4">
-            <TeamSwitcher mode="required" />
+            <TeamSwitcher mode="optional" />
           </div>
         </div>
 

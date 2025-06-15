@@ -52,24 +52,14 @@ export default function Dashboard() {
     }
   }, [params.teamId, currentTeamId, setCurrentTeamId, clubTeams]);
 
-  // Force re-render when currentTeamId changes
-  const [teamRenderKey, setTeamRenderKey] = useState(0);
-
-  useEffect(() => {
-    console.log('Dashboard: currentTeamId changed to:', currentTeamId);
-    // Force component re-render by updating key
-    setTeamRenderKey(prev => prev + 1);
-  }, [currentTeamId]);
-
   // Debug team switching
   useEffect(() => {
     console.log('Dashboard: Team context updated:', {
       currentTeamId,
       currentTeamName: currentTeam?.name,
-      clubTeamsCount: clubTeams.length,
-      renderKey: teamRenderKey
+      clubTeamsCount: clubTeams.length
     });
-  }, [currentTeamId, currentTeam, clubTeams, teamRenderKey]);
+  }, [currentTeamId, currentTeam, clubTeams]);
 
   // Call ALL hooks first, before any conditional returns
   const { data: players = [], isLoading: isLoadingPlayers, error: playersError } = useQuery<any[]>({
@@ -255,7 +245,7 @@ export default function Dashboard() {
         <meta name="description" content={`View ${TEAM_NAME} team's performance metrics, upcoming games, and player statistics`} />
       </Helmet>
 
-      <div key={teamRenderKey} className="container py-8 mx-auto space-y-8">
+      <div className="container py-8 mx-auto space-y-8">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="space-y-1">
@@ -272,7 +262,7 @@ export default function Dashboard() {
             </p>
           </div>
           <div className="flex items-center gap-4">
-            <TeamSwitcher mode="required" key={`team-switcher-${currentTeamId}`} />
+            <TeamSwitcher mode="required" />
           </div>
         </div>
 
