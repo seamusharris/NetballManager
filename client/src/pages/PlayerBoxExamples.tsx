@@ -1952,11 +1952,17 @@ export default function PlayerBoxExamples() {
                       return (
                         <div key={`bg-darken-shadow-${player.id}`} className="relative">
                           <div 
-                            className="rounded-lg border-2 shadow-sm transition-all duration-300 cursor-pointer hover:brightness-85 hover:shadow-lg [&:hover_.player-avatar]:brightness-[1.18]"
+                            className="rounded-lg border-2 shadow-sm transition-all duration-300 cursor-pointer hover:shadow-lg"
                             style={{ 
                               backgroundColor: `${playerColorHex}18`,
                               borderColor: `${playerColorHex}85`,
                               color: playerColorHex
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.backgroundColor = `${playerColorHex}25`;
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.backgroundColor = `${playerColorHex}18`;
                             }}
                           >
                             <PlayerBox 
