@@ -1411,6 +1411,490 @@ export default function PlayerBoxExamples() {
               </div>
             </div>
 
+            {/* Outer PlayerBox Shadow Effects Collection */}
+            <div>
+              <h3 className="text-lg font-medium mb-3">Outer PlayerBox Shadow Effects</h3>
+              <div className="bg-white p-6 rounded-lg border space-y-6">
+                <p className="text-sm text-gray-600 mb-4">Various shadow effects applied to the entire PlayerBox container</p>
+                
+                {/* Subtle Outer Shadow */}
+                <div>
+                  <h4 className="text-md font-medium mb-2 text-gray-700">Subtle Outer Shadow</h4>
+                  <div className="space-y-3">
+                    {samplePlayers.slice(0, 3).map((player) => (
+                      <div key={`subtle-outer-${player.id}`} className="relative">
+                        <PlayerBox 
+                          player={player}
+                          size="md"
+                          showPositions={true}
+                          className="shadow-sm [&>div>div:first-child]:border-2 [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-1 [&>div>div:first-child]:ring-current"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Medium Outer Shadow */}
+                <div>
+                  <h4 className="text-md font-medium mb-2 text-gray-700">Medium Outer Shadow</h4>
+                  <div className="space-y-3">
+                    {samplePlayers.slice(1, 4).map((player) => (
+                      <div key={`medium-outer-${player.id}`} className="relative">
+                        <PlayerBox 
+                          player={player}
+                          size="md"
+                          showPositions={true}
+                          className="shadow-md [&>div>div:first-child]:border-2 [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-2 [&>div>div:first-child]:ring-current"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Strong Outer Shadow */}
+                <div>
+                  <h4 className="text-md font-medium mb-2 text-gray-700">Strong Outer Shadow</h4>
+                  <div className="space-y-3">
+                    {samplePlayers.slice(2, 5).map((player) => (
+                      <div key={`strong-outer-${player.id}`} className="relative">
+                        <PlayerBox 
+                          player={player}
+                          size="md"
+                          showPositions={true}
+                          className="shadow-lg [&>div>div:first-child]:border-2 [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-2 [&>div>div:first-child]:ring-current"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Extra Strong Outer Shadow */}
+                <div>
+                  <h4 className="text-md font-medium mb-2 text-gray-700">Extra Strong Outer Shadow</h4>
+                  <div className="space-y-3">
+                    {samplePlayers.slice(0, 3).map((player) => (
+                      <div key={`extra-strong-outer-${player.id}`} className="relative">
+                        <PlayerBox 
+                          player={player}
+                          size="md"
+                          showPositions={true}
+                          className="shadow-xl [&>div>div:first-child]:border-3 [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-2 [&>div>div:first-child]:ring-current"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Dramatic Outer Shadow */}
+                <div>
+                  <h4 className="text-md font-medium mb-2 text-gray-700">Dramatic Outer Shadow</h4>
+                  <div className="space-y-3">
+                    {samplePlayers.slice(1, 4).map((player) => (
+                      <div key={`dramatic-outer-${player.id}`} className="relative">
+                        <PlayerBox 
+                          player={player}
+                          size="md"
+                          showPositions={true}
+                          className="shadow-2xl [&>div>div:first-child]:border-3 [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-2 [&>div>div:first-child]:ring-current"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Colored Outer Shadows */}
+            <div>
+              <h3 className="text-lg font-medium mb-3">Colored Outer Shadow Effects</h3>
+              <div className="bg-white p-6 rounded-lg border space-y-6">
+                <p className="text-sm text-gray-600 mb-4">PlayerBox shadows that match or complement avatar colors</p>
+                
+                {/* Matching Color Shadows */}
+                <div>
+                  <h4 className="text-md font-medium mb-2 text-gray-700">Matching Color Shadows</h4>
+                  <div className="space-y-3">
+                    {samplePlayers.slice(0, 4).map((player, index) => (
+                      <div key={`colored-shadow-${player.id}`} className="relative">
+                        <PlayerBox 
+                          player={player}
+                          size="md"
+                          showPositions={true}
+                          className={`${
+                            index === 0 ? 'shadow-lg shadow-blue-200/60' :
+                            index === 1 ? 'shadow-lg shadow-orange-200/60' :
+                            index === 2 ? 'shadow-lg shadow-teal-200/60' :
+                            'shadow-lg shadow-yellow-200/60'
+                          } [&>div>div:first-child]:border-2 [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-2 [&>div>div:first-child]:ring-current`}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Darker Color Shadows */}
+                <div>
+                  <h4 className="text-md font-medium mb-2 text-gray-700">Darker Color Shadows</h4>
+                  <div className="space-y-3">
+                    {samplePlayers.slice(1, 5).map((player, index) => (
+                      <div key={`dark-colored-shadow-${player.id}`} className="relative">
+                        <PlayerBox 
+                          player={player}
+                          size="md"
+                          showPositions={true}
+                          className={`${
+                            index === 0 ? 'shadow-xl shadow-orange-400/40' :
+                            index === 1 ? 'shadow-xl shadow-teal-400/40' :
+                            index === 2 ? 'shadow-xl shadow-yellow-400/40' :
+                            'shadow-xl shadow-green-400/40'
+                          } [&>div>div:first-child]:border-2 [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-2 [&>div>div:first-child]:ring-current`}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Glow Effects */}
+            <div>
+              <h3 className="text-lg font-medium mb-3">Glow Effects on PlayerBox</h3>
+              <div className="bg-gray-900 p-6 rounded-lg space-y-6">
+                <p className="text-sm text-gray-300 mb-4">Subtle glow effects for dramatic presentation</p>
+                
+                {/* Soft Glow */}
+                <div>
+                  <h4 className="text-md font-medium mb-2 text-gray-200">Soft Glow</h4>
+                  <div className="space-y-3">
+                    {samplePlayers.slice(0, 3).map((player, index) => (
+                      <div key={`soft-glow-${player.id}`} className="relative">
+                        <PlayerBox 
+                          player={player}
+                          size="md"
+                          showPositions={true}
+                          className={`${
+                            index === 0 ? 'shadow-lg shadow-blue-500/25' :
+                            index === 1 ? 'shadow-lg shadow-orange-500/25' :
+                            'shadow-lg shadow-teal-500/25'
+                          } [&_.player-name]:text-white [&_.player-positions]:text-gray-300 [&>div>div:first-child]:border-2 [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-1 [&>div>div:first-child]:ring-current`}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Intense Glow */}
+                <div>
+                  <h4 className="text-md font-medium mb-2 text-gray-200">Intense Glow</h4>
+                  <div className="space-y-3">
+                    {samplePlayers.slice(2, 5).map((player, index) => (
+                      <div key={`intense-glow-${player.id}`} className="relative">
+                        <PlayerBox 
+                          player={player}
+                          size="md"
+                          showPositions={true}
+                          className={`${
+                            index === 0 ? 'shadow-2xl shadow-teal-400/40' :
+                            index === 1 ? 'shadow-2xl shadow-yellow-400/40' :
+                            'shadow-2xl shadow-green-400/40'
+                          } [&_.player-name]:text-white [&_.player-positions]:text-gray-300 [&>div>div:first-child]:border-3 [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-2 [&>div>div:first-child]:ring-current`}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Border Radius Effects */}
+            <div>
+              <h3 className="text-lg font-medium mb-3">Border Radius Variations</h3>
+              <div className="bg-white p-6 rounded-lg border space-y-6">
+                <p className="text-sm text-gray-600 mb-4">Different border radius effects on PlayerBox containers</p>
+                
+                {/* Sharp Corners */}
+                <div>
+                  <h4 className="text-md font-medium mb-2 text-gray-700">Sharp Corners</h4>
+                  <div className="space-y-3">
+                    {samplePlayers.slice(0, 2).map((player) => (
+                      <div key={`sharp-${player.id}`} className="relative">
+                        <PlayerBox 
+                          player={player}
+                          size="md"
+                          showPositions={true}
+                          className="rounded-none shadow-md [&>div>div:first-child]:border-2 [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-2 [&>div>div:first-child]:ring-current"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Small Radius */}
+                <div>
+                  <h4 className="text-md font-medium mb-2 text-gray-700">Small Radius</h4>
+                  <div className="space-y-3">
+                    {samplePlayers.slice(1, 3).map((player) => (
+                      <div key={`small-radius-${player.id}`} className="relative">
+                        <PlayerBox 
+                          player={player}
+                          size="md"
+                          showPositions={true}
+                          className="rounded-sm shadow-md [&>div>div:first-child]:border-2 [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-2 [&>div>div:first-child]:ring-current"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Large Radius */}
+                <div>
+                  <h4 className="text-md font-medium mb-2 text-gray-700">Large Radius</h4>
+                  <div className="space-y-3">
+                    {samplePlayers.slice(2, 4).map((player) => (
+                      <div key={`large-radius-${player.id}`} className="relative">
+                        <PlayerBox 
+                          player={player}
+                          size="md"
+                          showPositions={true}
+                          className="rounded-xl shadow-md [&>div>div:first-child]:border-2 [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-2 [&>div>div:first-child]:ring-current"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Extra Large Radius */}
+                <div>
+                  <h4 className="text-md font-medium mb-2 text-gray-700">Extra Large Radius</h4>
+                  <div className="space-y-3">
+                    {samplePlayers.slice(3, 5).map((player) => (
+                      <div key={`xl-radius-${player.id}`} className="relative">
+                        <PlayerBox 
+                          player={player}
+                          size="md"
+                          showPositions={true}
+                          className="rounded-2xl shadow-md [&>div>div:first-child]:border-2 [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-2 [&>div>div:first-child]:ring-current"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Elevated Card Effects */}
+            <div>
+              <h3 className="text-lg font-medium mb-3">Elevated Card Effects</h3>
+              <div className="bg-gradient-to-br from-blue-50 to-purple-50 p-6 rounded-lg space-y-6">
+                <p className="text-sm text-gray-600 mb-4">PlayerBox components styled as elevated cards with various heights</p>
+                
+                {/* Level 1 Elevation */}
+                <div>
+                  <h4 className="text-md font-medium mb-2 text-gray-700">Level 1 Elevation</h4>
+                  <div className="space-y-3">
+                    {samplePlayers.slice(0, 2).map((player) => (
+                      <div key={`elevation-1-${player.id}`} className="relative">
+                        <div className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
+                          <PlayerBox 
+                            player={player}
+                            size="md"
+                            showPositions={true}
+                            className="[&>div]:bg-transparent [&>div]:border-0 [&>div>div:first-child]:border-2 [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-1 [&>div>div:first-child]:ring-current"
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Level 2 Elevation */}
+                <div>
+                  <h4 className="text-md font-medium mb-2 text-gray-700">Level 2 Elevation</h4>
+                  <div className="space-y-3">
+                    {samplePlayers.slice(1, 3).map((player) => (
+                      <div key={`elevation-2-${player.id}`} className="relative">
+                        <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200">
+                          <PlayerBox 
+                            player={player}
+                            size="md"
+                            showPositions={true}
+                            className="[&>div]:bg-transparent [&>div]:border-0 [&>div>div:first-child]:border-2 [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-2 [&>div>div:first-child]:ring-current"
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Level 3 Elevation */}
+                <div>
+                  <h4 className="text-md font-medium mb-2 text-gray-700">Level 3 Elevation</h4>
+                  <div className="space-y-3">
+                    {samplePlayers.slice(2, 4).map((player) => (
+                      <div key={`elevation-3-${player.id}`} className="relative">
+                        <div className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-200">
+                          <PlayerBox 
+                            player={player}
+                            size="md"
+                            showPositions={true}
+                            className="[&>div]:bg-transparent [&>div]:border-0 [&>div>div:first-child]:border-3 [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-2 [&>div>div:first-child]:ring-current"
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Level 4 Elevation */}
+                <div>
+                  <h4 className="text-md font-medium mb-2 text-gray-700">Level 4 Elevation</h4>
+                  <div className="space-y-3">
+                    {samplePlayers.slice(3, 5).map((player) => (
+                      <div key={`elevation-4-${player.id}`} className="relative">
+                        <div className="bg-white rounded-xl shadow-xl hover:shadow-2xl transition-shadow duration-200">
+                          <PlayerBox 
+                            player={player}
+                            size="md"
+                            showPositions={true}
+                            className="[&>div]:bg-transparent [&>div]:border-0 [&>div>div:first-child]:border-3 [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-2 [&>div>div:first-child]:ring-current"
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Interactive Hover Effects */}
+            <div>
+              <h3 className="text-lg font-medium mb-3">Interactive Hover Effects</h3>
+              <div className="bg-white p-6 rounded-lg border space-y-6">
+                <p className="text-sm text-gray-600 mb-4">PlayerBox components with hover-triggered visual effects</p>
+                
+                {/* Shadow Intensity on Hover */}
+                <div>
+                  <h4 className="text-md font-medium mb-2 text-gray-700">Shadow Intensity on Hover</h4>
+                  <div className="space-y-3">
+                    {samplePlayers.slice(0, 3).map((player) => (
+                      <div key={`hover-shadow-${player.id}`} className="relative">
+                        <PlayerBox 
+                          player={player}
+                          size="md"
+                          showPositions={true}
+                          className="transition-shadow duration-300 hover:shadow-xl shadow-md cursor-pointer [&>div>div:first-child]:border-2 [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-2 [&>div>div:first-child]:ring-current"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Scale on Hover */}
+                <div>
+                  <h4 className="text-md font-medium mb-2 text-gray-700">Scale on Hover</h4>
+                  <div className="space-y-3">
+                    {samplePlayers.slice(1, 4).map((player) => (
+                      <div key={`hover-scale-${player.id}`} className="relative">
+                        <PlayerBox 
+                          player={player}
+                          size="md"
+                          showPositions={true}
+                          className="transition-all duration-300 hover:scale-105 hover:shadow-lg shadow-md cursor-pointer [&>div>div:first-child]:border-2 [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-2 [&>div>div:first-child]:ring-current"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Lift on Hover */}
+                <div>
+                  <h4 className="text-md font-medium mb-2 text-gray-700">Lift on Hover</h4>
+                  <div className="space-y-3">
+                    {samplePlayers.slice(2, 5).map((player) => (
+                      <div key={`hover-lift-${player.id}`} className="relative">
+                        <PlayerBox 
+                          player={player}
+                          size="md"
+                          showPositions={true}
+                          className="transition-all duration-300 hover:-translate-y-1 hover:shadow-xl shadow-md cursor-pointer [&>div>div:first-child]:border-2 [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-2 [&>div>div:first-child]:ring-current"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Custom Shadow Patterns */}
+            <div>
+              <h3 className="text-lg font-medium mb-3">Custom Shadow Patterns</h3>
+              <div className="bg-white p-6 rounded-lg border space-y-6">
+                <p className="text-sm text-gray-600 mb-4">Unique shadow effects using custom CSS</p>
+                
+                {/* Multi-directional Shadows */}
+                <div>
+                  <h4 className="text-md font-medium mb-2 text-gray-700">Multi-directional Shadows</h4>
+                  <div className="space-y-3">
+                    {samplePlayers.slice(0, 2).map((player) => (
+                      <div key={`multi-shadow-${player.id}`} className="relative">
+                        <PlayerBox 
+                          player={player}
+                          size="md"
+                          showPositions={true}
+                          className="[&>div>div:first-child]:border-2 [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-2 [&>div>div:first-child]:ring-current"
+                          style={{
+                            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06), 2px 0 4px -1px rgba(0, 0, 0, 0.1), -2px 0 4px -1px rgba(0, 0, 0, 0.1)'
+                          }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Inset Shadows */}
+                <div>
+                  <h4 className="text-md font-medium mb-2 text-gray-700">Inset Shadows</h4>
+                  <div className="space-y-3">
+                    {samplePlayers.slice(1, 3).map((player) => (
+                      <div key={`inset-shadow-${player.id}`} className="relative">
+                        <PlayerBox 
+                          player={player}
+                          size="md"
+                          showPositions={true}
+                          className="[&>div>div:first-child]:border-2 [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-2 [&>div>div:first-child]:ring-current"
+                          style={{
+                            boxShadow: 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.06), 0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                          }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Gradient Shadows */}
+                <div>
+                  <h4 className="text-md font-medium mb-2 text-gray-700">Gradient Shadows</h4>
+                  <div className="space-y-3">
+                    {samplePlayers.slice(2, 4).map((player, index) => (
+                      <div key={`gradient-shadow-${player.id}`} className="relative">
+                        <PlayerBox 
+                          player={player}
+                          size="md"
+                          showPositions={true}
+                          className="[&>div>div:first-child]:border-2 [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-2 [&>div>div:first-child]:ring-current"
+                          style={{
+                            boxShadow: index === 0 ? 
+                              '0 10px 25px -5px rgba(59, 130, 246, 0.3), 0 4px 6px -2px rgba(59, 130, 246, 0.1)' :
+                              '0 10px 25px -5px rgba(245, 158, 11, 0.3), 0 4px 6px -2px rgba(245, 158, 11, 0.1)'
+                          }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Professional Double Border */}
             <div>
               <h3 className="text-lg font-medium mb-3">Professional Double Border</h3>
