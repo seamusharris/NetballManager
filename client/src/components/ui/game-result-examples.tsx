@@ -308,7 +308,7 @@ export function GameResultCardExamples() {
                         backgroundColor: index === 0 ? '#dcfdf7' : index === 1 ? '#fef2f2' : '#fef3c7'
                       }}
                       onMouseEnter={(e) => {
-                        const bgColor = index === 0 ? '#a7f3d0' : index === 1 ? '#fecaca' : '#fed7aa';
+                        const bgColor = index === 0 ? '#d1fae5' : index === 1 ? '#fee2e2' : '#fef3c7';
                         e.currentTarget.style.backgroundColor = bgColor;
                       }}
                       onMouseLeave={(e) => {
