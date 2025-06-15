@@ -1431,4 +1431,3 @@ export default function PlayerBoxExamples() {
     </PageTemplate>
   );
 }
-This code restores the original examples and keeps only the new colored player box examples.
