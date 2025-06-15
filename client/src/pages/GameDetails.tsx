@@ -2074,6 +2074,7 @@ export default function GameDetails() {
             <PrintableStatsSheet
               game={game}
               opponent={null} //Removed opponent
+              players={players || []}
             />
           </TabsContent>
 
