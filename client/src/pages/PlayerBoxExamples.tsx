@@ -1465,7 +1465,7 @@ export default function PlayerBoxExamples() {
                       return (
                         <div key={`bg-darken-light-${player.id}`} className="relative">
                           <div 
-                            className="rounded-lg border-2 transition-all duration-300 cursor-pointer hover:brightness-90"
+                            className="rounded-lg border-2 transition-all duration-300 cursor-pointer hover:brightness-90 [&:hover_.player-avatar]:brightness-[1.11]"
                             style={{ 
                               backgroundColor: `${playerColorHex}15`,
                               borderColor: `${playerColorHex}80`,
@@ -1506,7 +1506,7 @@ export default function PlayerBoxExamples() {
                       return (
                         <div key={`bg-darken-medium-${player.id}`} className="relative">
                           <div 
-                            className="rounded-lg border-2 transition-all duration-300 cursor-pointer hover:brightness-75"
+                            className="rounded-lg border-2 transition-all duration-300 cursor-pointer hover:brightness-75 [&:hover_.player-avatar]:brightness-[1.33]"
                             style={{ 
                               backgroundColor: `${playerColorHex}20`,
                               borderColor: `${playerColorHex}90`,
@@ -1547,7 +1547,7 @@ export default function PlayerBoxExamples() {
                       return (
                         <div key={`bg-darken-strong-${player.id}`} className="relative">
                           <div 
-                            className="rounded-lg border-2 transition-all duration-300 cursor-pointer hover:brightness-50"
+                            className="rounded-lg border-2 transition-all duration-300 cursor-pointer hover:brightness-50 [&:hover_.player-avatar]:brightness-[2.0]"
                             style={{ 
                               backgroundColor: `${playerColorHex}25`,
                               borderColor: `${playerColorHex}A0`,
@@ -1588,7 +1588,7 @@ export default function PlayerBoxExamples() {
                       return (
                         <div key={`bg-darken-shadow-${player.id}`} className="relative">
                           <div 
-                            className="rounded-lg border-2 shadow-sm transition-all duration-300 cursor-pointer hover:brightness-85 hover:shadow-lg"
+                            className="rounded-lg border-2 shadow-sm transition-all duration-300 cursor-pointer hover:brightness-85 hover:shadow-lg [&:hover_.player-avatar]:brightness-[1.18]"
                             style={{ 
                               backgroundColor: `${playerColorHex}18`,
                               borderColor: `${playerColorHex}85`,
