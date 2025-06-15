@@ -83,6 +83,139 @@ export default function PlayerBoxExamples() {
           </div>
         </section>
 
+        {/* Background Darkening Hover Effects - Prominent Examples */}
+        <section>
+          <h2 className="text-2xl font-semibold mb-4">Background Darkening Hover Effects</h2>
+          <div className="bg-white p-6 rounded-lg border space-y-4">
+            <p className="text-lg text-gray-700 mb-4">
+              Hover over these player boxes to see the background darkening effect (similar to games list)
+            </p>
+            
+            {/* Light Background Darkening */}
+            <div>
+              <h3 className="text-lg font-medium mb-3 text-gray-700">Light Background Darkening</h3>
+              <div className="space-y-3">
+                {samplePlayers.slice(0, 3).map((player) => {
+                  const playerColorHex = (() => {
+                    const colorMap: Record<string, string> = {
+                      'bg-red-500': '#ef4444', 'bg-red-600': '#dc2626',
+                      'bg-orange-500': '#f97316', 'bg-orange-600': '#ea580c',
+                      'bg-yellow-600': '#ca8a04', 'bg-amber-600': '#d97706',
+                      'bg-green-600': '#16a34a', 'bg-green-700': '#15803d',
+                      'bg-teal-600': '#0d9488', 'bg-cyan-600': '#0891b2',
+                      'bg-blue-500': '#3b82f6', 'bg-blue-600': '#2563eb',
+                      'bg-purple-500': '#a855f7', 'bg-purple-600': '#9333ea'
+                    };
+                    return colorMap[player.avatarColor || 'bg-gray-500'] || '#6b7280';
+                  })();
+
+                  return (
+                    <div key={`prominent-bg-darken-light-${player.id}`} className="relative">
+                      <div 
+                        className="rounded-lg border-2 transition-all duration-300 cursor-pointer hover:brightness-90 [&:hover_.player-avatar]:brightness-[1.11]"
+                        style={{ 
+                          backgroundColor: `${playerColorHex}15`,
+                          borderColor: `${playerColorHex}80`,
+                          color: playerColorHex
+                        }}
+                      >
+                        <PlayerBox 
+                          player={player}
+                          size="md"
+                          showPositions={true}
+                          className="[&>div]:bg-transparent [&>div]:border-0 [&>div]:shadow-none [&>div]:cursor-pointer [&>div>div:first-child]:border-2 [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-2 [&>div>div:first-child]:ring-current"
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Medium Background Darkening */}
+            <div>
+              <h3 className="text-lg font-medium mb-3 text-gray-700">Medium Background Darkening</h3>
+              <div className="space-y-3">
+                {samplePlayers.slice(1, 4).map((player) => {
+                  const playerColorHex = (() => {
+                    const colorMap: Record<string, string> = {
+                      'bg-red-500': '#ef4444', 'bg-red-600': '#dc2626',
+                      'bg-orange-500': '#f97316', 'bg-orange-600': '#ea580c',
+                      'bg-yellow-600': '#ca8a04', 'bg-amber-600': '#d97706',
+                      'bg-green-600': '#16a34a', 'bg-green-700': '#15803d',
+                      'bg-teal-600': '#0d9488', 'bg-cyan-600': '#0891b2',
+                      'bg-blue-500': '#3b82f6', 'bg-blue-600': '#2563eb',
+                      'bg-purple-500': '#a855f7', 'bg-purple-600': '#9333ea'
+                    };
+                    return colorMap[player.avatarColor || 'bg-gray-500'] || '#6b7280';
+                  })();
+
+                  return (
+                    <div key={`prominent-bg-darken-medium-${player.id}`} className="relative">
+                      <div 
+                        className="rounded-lg border-2 transition-all duration-300 cursor-pointer hover:brightness-75 [&:hover_.player-avatar]:brightness-[1.33]"
+                        style={{ 
+                          backgroundColor: `${playerColorHex}20`,
+                          borderColor: `${playerColorHex}90`,
+                          color: playerColorHex
+                        }}
+                      >
+                        <PlayerBox 
+                          player={player}
+                          size="md"
+                          showPositions={true}
+                          className="[&>div]:bg-transparent [&>div]:border-0 [&>div]:shadow-none [&>div]:cursor-pointer [&>div>div:first-child]:border-2 [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-2 [&>div>div:first-child]:ring-current"
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Combined Background Darkening + Shadow */}
+            <div>
+              <h3 className="text-lg font-medium mb-3 text-gray-700">Combined Background Darkening + Shadow</h3>
+              <div className="space-y-3">
+                {samplePlayers.slice(0, 3).map((player) => {
+                  const playerColorHex = (() => {
+                    const colorMap: Record<string, string> = {
+                      'bg-red-500': '#ef4444', 'bg-red-600': '#dc2626',
+                      'bg-orange-500': '#f97316', 'bg-orange-600': '#ea580c',
+                      'bg-yellow-600': '#ca8a04', 'bg-amber-600': '#d97706',
+                      'bg-green-600': '#16a34a', 'bg-green-700': '#15803d',
+                      'bg-teal-600': '#0d9488', 'bg-cyan-600': '#0891b2',
+                      'bg-blue-500': '#3b82f6', 'bg-blue-600': '#2563eb',
+                      'bg-purple-500': '#a855f7', 'bg-purple-600': '#9333ea'
+                    };
+                    return colorMap[player.avatarColor || 'bg-gray-500'] || '#6b7280';
+                  })();
+
+                  return (
+                    <div key={`prominent-bg-darken-shadow-${player.id}`} className="relative">
+                      <div 
+                        className="rounded-lg border-2 shadow-sm transition-all duration-300 cursor-pointer hover:brightness-85 hover:shadow-lg [&:hover_.player-avatar]:brightness-[1.18]"
+                        style={{ 
+                          backgroundColor: `${playerColorHex}18`,
+                          borderColor: `${playerColorHex}85`,
+                          color: playerColorHex
+                        }}
+                      >
+                        <PlayerBox 
+                          player={player}
+                          size="md"
+                          showPositions={true}
+                          className="[&>div]:bg-transparent [&>div]:border-0 [&>div]:shadow-none [&>div]:cursor-pointer [&>div>div:first-child]:border-2 [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-2 [&>div>div:first-child]:ring-current"
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Different Sizes */}
         <section>
           <h2 className="text-2xl font-semibold mb-4">Different Sizes</h2>
