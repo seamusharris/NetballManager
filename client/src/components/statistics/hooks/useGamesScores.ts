@@ -1,4 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { apiClient } from '@/lib/apiClient';
 import { useMemo } from 'react';
 import { statisticsService, GameScores, GameStat } from '@/lib/statisticsService';
 import { 
