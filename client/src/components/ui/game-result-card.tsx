@@ -198,13 +198,8 @@ export function GameResultCard({
       return "Bye";
     }
 
-    // For inter-club games, show Home vs Away format
-    if (game.isInterClub) {
-      return `${game.homeTeamName || 'Unknown'} vs ${game.awayTeamName || 'Unknown'}`;
-    }
-
-    // For non-inter-club games, show vs opponent
-    return `vs ${getOpponentName()}`;
+    // Always show Home vs Away format
+    return `${game.homeTeamName || 'Unknown'} vs ${game.awayTeamName || 'Unknown'}`;
   };
 
   const CardContent = () => (

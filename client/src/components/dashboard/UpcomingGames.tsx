@@ -30,25 +30,15 @@ export default function UpcomingGames({ games, opponents, className, seasonFilte
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
     .slice(0, 5); // Limit to next 5 upcoming games
 
-  // Updated to work with team-based system
+  // Always show home vs away format
   const getOpponentName = (game: any) => {
-    // For team-based games, we need to determine which team is the opponent
-    if (game.awayTeamName && game.awayTeamName !== 'Bye') {
-      return `vs ${game.awayTeamName}`;
-    } else if (game.homeTeamName && game.awayTeamName === 'Bye') {
+    // Handle BYE games
+    if (game.awayTeamName === 'Bye' || game.awayTeamName === null) {
       return 'BYE';
-    } else if (game.homeTeamName) {
-      return `vs ${game.homeTeamName}`;
     }
     
-    // Fallback to old opponent system if available
-    if (game.opponentId) {
-      if (!opponents || !Array.isArray(opponents)) return 'Loading...';
-      const opponent = opponents.find(o => o.id === game.opponentId);
-      return opponent ? opponent.teamName : 'Unknown Opponent';
-    }
-    
-    return 'Unknown Opponent';
+    // Always show "Home Team vs Away Team" format
+    return `${game.homeTeamName || 'Unknown'} vs ${game.awayTeamName || 'Unknown'}`;
   };
 
   return (
