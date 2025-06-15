@@ -283,6 +283,142 @@ export function GameResultCardExamples() {
           />
         </div>
       </div>
+
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold">Hover Effect Comparisons</h3>
+        
+        {/* Background Darkening Effects */}
+        <div>
+          <h4 className="text-md font-medium mb-3 text-gray-700">Background Darkening Hover Effects</h4>
+          <div className="bg-white p-6 rounded-lg border space-y-4">
+            <p className="text-sm text-gray-600 mb-4">Game result cards with background darkening on hover (similar to games list)</p>
+            
+            {/* Light Background Darkening */}
+            <div>
+              <h5 className="text-sm font-medium mb-2 text-gray-600">Light Background Darkening</h5>
+              <div className="max-w-lg space-y-2">
+                {[winGame, lossGame, drawGame].map((game, index) => {
+                  const gameStats = index === 0 ? winStats : index === 1 ? lossStats : drawStats;
+                  return (
+                    <div 
+                      key={`bg-light-${game.id}`}
+                      className="border-l-4 border-t border-r border-b rounded transition-all duration-300 cursor-pointer flex items-center justify-between p-3 space-x-3"
+                      style={{
+                        borderColor: index === 0 ? '#10b981' : index === 1 ? '#ef4444' : '#f59e0b',
+                        backgroundColor: index === 0 ? '#dcfdf7' : index === 1 ? '#fef2f2' : '#fef3c7'
+                      }}
+                      onMouseEnter={(e) => {
+                        const bgColor = index === 0 ? '#a7f3d0' : index === 1 ? '#fecaca' : '#fed7aa';
+                        e.currentTarget.style.backgroundColor = bgColor;
+                      }}
+                      onMouseLeave={(e) => {
+                        const bgColor = index === 0 ? '#dcfdf7' : index === 1 ? '#fef2f2' : '#fef3c7';
+                        e.currentTarget.style.backgroundColor = bgColor;
+                      }}
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className="font-semibold text-gray-800 truncate text-sm">
+                          vs {game.awayTeamName}
+                        </div>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-xs text-gray-600">
+                            {game.date}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="ml-auto px-3 py-1 text-sm font-medium text-white rounded"
+                           style={{backgroundColor: index === 0 ? '#10b981' : index === 1 ? '#ef4444' : '#f59e0b'}}>
+                        {index === 0 ? '60-40' : index === 1 ? '30-45' : '45-45'}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="text-xs text-gray-500 mt-2">Background Darkening Effect</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Shadow Variations */}
+        <div>
+          <h4 className="text-md font-medium mb-3 text-gray-700">Shadow Hover Variations</h4>
+          <div className="bg-white p-6 rounded-lg border space-y-4">
+            <p className="text-sm text-gray-600 mb-4">Game result cards with different shadow hover effects</p>
+            
+            {/* Minimal Shadow Change */}
+            <div>
+              <h5 className="text-sm font-medium mb-2 text-gray-600">Minimal Shadow Change</h5>
+              <div className="max-w-lg space-y-2">
+                {[winGame, lossGame, drawGame].map((game, index) => {
+                  const gameStats = index === 0 ? winStats : index === 1 ? lossStats : drawStats;
+                  return (
+                    <div 
+                      key={`shadow-minimal-${game.id}`}
+                      className="border-l-4 border-t border-r border-b rounded shadow-sm transition-shadow duration-300 hover:shadow-md cursor-pointer flex items-center justify-between p-3 space-x-3"
+                      style={{
+                        borderColor: index === 0 ? '#10b981' : index === 1 ? '#ef4444' : '#f59e0b',
+                        backgroundColor: index === 0 ? '#dcfdf7' : index === 1 ? '#fef2f2' : '#fef3c7'
+                      }}
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className="font-semibold text-gray-800 truncate text-sm">
+                          vs {game.awayTeamName}
+                        </div>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-xs text-gray-600">
+                            {game.date}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="ml-auto px-3 py-1 text-sm font-medium text-white rounded"
+                           style={{backgroundColor: index === 0 ? '#10b981' : index === 1 ? '#ef4444' : '#f59e0b'}}>
+                        {index === 0 ? '60-40' : index === 1 ? '30-45' : '45-45'}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="text-xs text-gray-500 mt-2">Minimal Shadow Change (shadow-sm → shadow-md)</div>
+            </div>
+
+            {/* Standard Shadow Change */}
+            <div>
+              <h5 className="text-sm font-medium mb-2 text-gray-600">Standard Shadow Change</h5>
+              <div className="max-w-lg space-y-2">
+                {[winGame, lossGame, drawGame].map((game, index) => {
+                  const gameStats = index === 0 ? winStats : index === 1 ? lossStats : drawStats;
+                  return (
+                    <div 
+                      key={`shadow-standard-${game.id}`}
+                      className="border-l-4 border-t border-r border-b rounded shadow-md transition-shadow duration-300 hover:shadow-lg cursor-pointer flex items-center justify-between p-3 space-x-3"
+                      style={{
+                        borderColor: index === 0 ? '#10b981' : index === 1 ? '#ef4444' : '#f59e0b',
+                        backgroundColor: index === 0 ? '#dcfdf7' : index === 1 ? '#fef2f2' : '#fef3c7'
+                      }}
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className="font-semibold text-gray-800 truncate text-sm">
+                          vs {game.awayTeamName}
+                        </div>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-xs text-gray-600">
+                            {game.date}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="ml-auto px-3 py-1 text-sm font-medium text-white rounded"
+                           style={{backgroundColor: index === 0 ? '#10b981' : index === 1 ? '#ef4444' : '#f59e0b'}}>
+                        {index === 0 ? '60-40' : index === 1 ? '30-45' : '45-45'}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="text-xs text-gray-500 mt-2">Standard Shadow Change (shadow-md → shadow-lg)</div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
