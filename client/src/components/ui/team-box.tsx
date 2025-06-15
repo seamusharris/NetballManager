@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -83,7 +82,7 @@ export function TeamBox({
       a = ((a << 5) - a) + b.charCodeAt(0);
       return a & a;
     }, 0);
-    
+
     const colors = ['#ef4444', '#f97316', '#f59e0b', '#84cc16', '#22c55e', '#10b981', '#14b8a6', '#06b6d4', '#3b82f6', '#6366f1', '#8b5cf6', '#d946ef', '#ec4899'];
     return colors[Math.abs(hash) % colors.length];
   };
@@ -97,7 +96,7 @@ export function TeamBox({
   if (variant === 'minimal') {
     return (
       <div 
-        className={`flex items-center justify-between p-3 rounded-lg border-2 transition-shadow duration-300 hover:shadow-xl shadow-md cursor-pointer ${className}`}
+        className={`flex items-center justify-between p-3 rounded-lg border-2 transition-shadow duration-300 hover:shadow-md shadow-sm cursor-pointer ${className}`}
         style={{ 
           backgroundColor: lightBackgroundColor,
           borderColor: teamColor
@@ -133,7 +132,7 @@ export function TeamBox({
 
   const teamBoxContent = (
     <div 
-      className={`${sizeClasses[size]} rounded-lg border-2 transition-shadow duration-300 hover:shadow-xl shadow-md cursor-pointer`}
+      className={`${sizeClasses[size]} rounded-lg border-2 transition-shadow duration-300 hover:shadow-md shadow-sm cursor-pointer`}
       style={{ 
         backgroundColor: lightBackgroundColor,
         borderColor: teamColor
@@ -163,7 +162,7 @@ export function TeamBox({
             )}
           </div>
         </div>
-        
+
         <div className="flex items-center space-x-2">
           {playerCount > 0 && (
             <Badge variant="secondary" className="text-xs">
@@ -232,7 +231,7 @@ export function TeamBox({
         </div>
       )}
 
-      
+
     </div>
   );
 
