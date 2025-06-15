@@ -379,7 +379,7 @@ export default function PlayerBoxExamples() {
                       player={player}
                       size="md"
                       showPositions={true}
-                      className="[&>div>div:first-child]:border-4 [&>div>div:first-child]:border-white [&>div>div:first-child]:shadow-lg [&>div>div:first-child]:shadow-black/25"
+                      className="[&_.player-avatar]:border-4 [&_.player-avatar]:border-white [&_.player-avatar]:shadow-lg [&_.player-avatar]:shadow-black/25"
                     />
                   </div>
                 ))}
@@ -397,7 +397,7 @@ export default function PlayerBoxExamples() {
                       player={player}
                       size="lg"
                       showPositions={true}
-                      className="[&>div>div:first-child]:border-[5px] [&>div>div:first-child]:border-white [&>div>div:first-child]:shadow-xl [&>div>div:first-child]:shadow-black/30"
+                      className="[&_.player-avatar]:border-[5px] [&_.player-avatar]:border-white [&_.player-avatar]:shadow-xl [&_.player-avatar]:shadow-black/30"
                     />
                   </div>
                 ))}
@@ -415,7 +415,7 @@ export default function PlayerBoxExamples() {
                       player={player}
                       size="md"
                       showPositions={true}
-                      className="[&_.player-name]:text-white [&_.player-positions]:text-gray-300 [&>div>div:first-child]:border-4 [&>div>div:first-child]:border-white [&>div>div:first-child]:shadow-2xl [&>div>div:first-child]:shadow-black/50"
+                      className="[&_.player-name]:text-white [&_.player-positions]:text-gray-300 [&_.player-avatar]:border-4 [&_.player-avatar]:border-white [&_.player-avatar]:shadow-2xl [&_.player-avatar]:shadow-black/50"
                     />
                   </div>
                 ))}
@@ -433,7 +433,7 @@ export default function PlayerBoxExamples() {
                       player={player}
                       size="sm"
                       showPositions={false}
-                      className="[&>div>div:first-child]:border-2 [&>div>div:first-child]:border-white [&>div>div:first-child]:shadow-md [&>div>div:first-child]:shadow-black/15"
+                      className="[&_.player-avatar]:border-2 [&_.player-avatar]:border-white [&_.player-avatar]:shadow-md [&_.player-avatar]:shadow-black/15"
                     />
                   </div>
                 ))}
@@ -451,7 +451,7 @@ export default function PlayerBoxExamples() {
                       player={player}
                       size="md"
                       showPositions={true}
-                      className="[&>div>div:first-child]:border-3 [&>div>div:first-child]:border-gray-200 [&>div>div:first-child]:shadow-lg [&>div>div:first-child]:shadow-gray-200/60"
+                      className="[&_.player-avatar]:border-3 [&_.player-avatar]:border-gray-200 [&_.player-avatar]:shadow-lg [&_.player-avatar]:shadow-gray-200/60"
                     />
                   </div>
                 ))}
@@ -469,7 +469,7 @@ export default function PlayerBoxExamples() {
                       player={player}
                       size="md"
                       showPositions={true}
-                      className="[&>div>div:first-child]:border-4 [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-2 [&>div>div:first-child]:ring-gray-300 [&>div>div:first-child]:shadow-lg [&>div>div:first-child]:shadow-black/20"
+                      className="[&_.player-avatar]:border-4 [&_.player-avatar]:border-white [&_.player-avatar]:ring-2 [&_.player-avatar]:ring-gray-300 [&_.player-avatar]:shadow-lg [&_.player-avatar]:shadow-black/20"
                     />
                   </div>
                 ))}
@@ -488,7 +488,7 @@ export default function PlayerBoxExamples() {
                       player={samplePlayers[0]}
                       size="sm"
                       showPositions={false}
-                      className="[&>div>div:first-child]:shadow-sm [&>div>div:first-child]:shadow-gray-400/30"
+                      className="[&_.player-avatar]:shadow-sm [&_.player-avatar]:shadow-gray-400/30"
                     />
                   </div>
                   <div className="flex items-center gap-4">
@@ -497,7 +497,7 @@ export default function PlayerBoxExamples() {
                       player={samplePlayers[1]}
                       size="sm"
                       showPositions={false}
-                      className="[&>div>div:first-child]:shadow-md [&>div>div:first-child]:shadow-gray-500/40"
+                      className="[&_.player-avatar]:shadow-md [&_.player-avatar]:shadow-gray-500/40"
                     />
                   </div>
                   <div className="flex items-center gap-4">
@@ -506,7 +506,7 @@ export default function PlayerBoxExamples() {
                       player={samplePlayers[2]}
                       size="sm"
                       showPositions={false}
-                      className="[&>div>div:first-child]:shadow-lg [&>div>div:first-child]:shadow-gray-600/50"
+                      className="[&_.player-avatar]:shadow-lg [&_.player-avatar]:shadow-gray-600/50"
                     />
                   </div>
                   <div className="flex items-center gap-4">
@@ -515,7 +515,7 @@ export default function PlayerBoxExamples() {
                       player={samplePlayers[3]}
                       size="sm"
                       showPositions={false}
-                      className="[&>div>div:first-child]:shadow-xl [&>div>div:first-child]:shadow-gray-700/60"
+                      className="[&_.player-avatar]:shadow-xl [&_.player-avatar]:shadow-gray-700/60"
                     />
                   </div>
                 </div>
@@ -533,7 +533,7 @@ export default function PlayerBoxExamples() {
                       player={player}
                       size="md"
                       showPositions={true}
-                      className="[&>div>div:first-child]:border-3 [&>div>div:first-child]:border-current [&>div>div:first-child]:shadow-lg [&>div>div:first-child]:shadow-current/30"
+                      className="[&_.player-avatar]:border-3 [&_.player-avatar]:border-current [&_.player-avatar]:shadow-lg [&_.player-avatar]:shadow-current/30"
                     />
                   </div>
                 ))}
@@ -551,7 +551,7 @@ export default function PlayerBoxExamples() {
                       player={player}
                       size="md"
                       showPositions={true}
-                      className="[&>div>div:first-child]:border [&>div>div:first-child]:border-gray-100 [&>div>div:first-child]:shadow-sm [&>div>div:first-child]:shadow-gray-200/50"
+                      className="[&_.player-avatar]:border [&_.player-avatar]:border-gray-100 [&_.player-avatar]:shadow-sm [&_.player-avatar]:shadow-gray-200/50"
                     />
                   </div>
                 ))}
@@ -569,7 +569,7 @@ export default function PlayerBoxExamples() {
                       player={player}
                       size="md"
                       showPositions={true}
-                      className="[&>div>div:first-child]:border-2 [&>div>div:first-child]:border-white [&>div>div:first-child]:shadow-lg [&>div>div:first-child]:shadow-black/25 [&>div>div:first-child]:ring-1 [&>div>div:first-child]:ring-gray-200"
+                      className="[&_.player-avatar]:border-2 [&_.player-avatar]:border-white [&_.player-avatar]:shadow-lg [&_.player-avatar]:shadow-black/25 [&_.player-avatar]:ring-1 [&_.player-avatar]:ring-gray-200"
                     />
                   </div>
                 ))}
@@ -587,7 +587,7 @@ export default function PlayerBoxExamples() {
                       player={player}
                       size="md"
                       showPositions={true}
-                      className="[&>div>div:first-child]:shadow-2xl [&>div>div:first-child]:shadow-black/30 [&>div>div:first-child]:border-2 [&>div>div:first-child]:border-white [&>div>div:first-child]:translate-y-[-2px]"
+                      className="[&_.player-avatar]:shadow-2xl [&_.player-avatar]:shadow-black/30 [&_.player-avatar]:border-2 [&_.player-avatar]:border-white [&_.player-avatar]:translate-y-[-2px]"
                     />
                   </div>
                 ))}
@@ -605,11 +605,11 @@ export default function PlayerBoxExamples() {
                       player={player}
                       size="md"
                       showPositions={true}
-                      className={`[&>div>div:first-child]:border-2 [&>div>div:first-child]:border-white [&>div>div:first-child]:shadow-lg ${
-                        index === 0 ? '[&>div>div:first-child]:shadow-blue-200/60' :
-                        index === 1 ? '[&>div>div:first-child]:shadow-green-200/60' :
-                        index === 2 ? '[&>div>div:first-child]:shadow-purple-200/60' :
-                        '[&>div>div:first-child]:shadow-orange-200/60'
+                      className={`[&_.player-avatar]:border-2 [&_.player-avatar]:border-white [&_.player-avatar]:shadow-lg ${
+                        index === 0 ? '[&_.player-avatar]:shadow-blue-200/60' :
+                        index === 1 ? '[&_.player-avatar]:shadow-green-200/60' :
+                        index === 2 ? '[&_.player-avatar]:shadow-purple-200/60' :
+                        '[&_.player-avatar]:shadow-orange-200/60'
                       }`}
                     />
                   </div>
@@ -628,7 +628,7 @@ export default function PlayerBoxExamples() {
                       player={player}
                       size="md"
                       showPositions={true}
-                      className="[&>div>div:first-child]:border-3 [&>div>div:first-child]:border-white [&>div>div:first-child]:shadow-lg [&>div>div:first-child]:shadow-black/20 [&>div>div:first-child]:drop-shadow-md"
+                      className="[&_.player-avatar]:border-3 [&_.player-avatar]:border-white [&_.player-avatar]:shadow-lg [&_.player-avatar]:shadow-black/20 [&_.player-avatar]:drop-shadow-md"
                     />
                   </div>
                 ))}
@@ -646,7 +646,7 @@ export default function PlayerBoxExamples() {
                       player={player}
                       size="md"
                       showPositions={true}
-                      className="[&>div>div:first-child]:border-4 [&>div>div:first-child]:border-amber-100 [&>div>div:first-child]:shadow-lg [&>div>div:first-child]:shadow-amber-900/25"
+                      className="[&_.player-avatar]:border-4 [&_.player-avatar]:border-amber-100 [&_.player-avatar]:shadow-lg [&_.player-avatar]:shadow-amber-900/25"
                     />
                   </div>
                 ))}
@@ -664,7 +664,7 @@ export default function PlayerBoxExamples() {
                       player={player}
                       size="md"
                       showPositions={true}
-                      className="[&>div>div:first-child]:border-2 [&>div>div:first-child]:border-gray-100 [&>div>div:first-child]:shadow-none"
+                      className="[&_.player-avatar]:border-2 [&_.player-avatar]:border-gray-100 [&_.player-avatar]:shadow-none"
                     />
                   </div>
                 ))}
@@ -682,11 +682,11 @@ export default function PlayerBoxExamples() {
                       player={player}
                       size="md"
                       showPositions={true}
-                      className={`[&>div>div:first-child]:border-3 [&>div>div:first-child]:shadow-lg ${
-                        index === 0 ? '[&>div>div:first-child]:border-red-200 [&>div>div:first-child]:shadow-red-200/40' :
-                        index === 1 ? '[&>div>div:first-child]:border-blue-200 [&>div>div:first-child]:shadow-blue-200/40' :
-                        index === 2 ? '[&>div>div:first-child]:border-green-200 [&>div>div:first-child]:shadow-green-200/40' :
-                        '[&>div>div:first-child]:border-purple-200 [&>div>div:first-child]:shadow-purple-200/40'
+                      className={`[&_.player-avatar]:border-3 [&_.player-avatar]:shadow-lg ${
+                        index === 0 ? '[&_.player-avatar]:border-red-200 [&_.player-avatar]:shadow-red-200/40' :
+                        index === 1 ? '[&_.player-avatar]:border-blue-200 [&_.player-avatar]:shadow-blue-200/40' :
+                        index === 2 ? '[&_.player-avatar]:border-green-200 [&_.player-avatar]:shadow-green-200/40' :
+                        '[&_.player-avatar]:border-purple-200 [&_.player-avatar]:shadow-purple-200/40'
                       }`}
                     />
                   </div>
