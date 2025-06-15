@@ -14,7 +14,6 @@ interface TeamSwitcherProps {
 export function TeamSwitcher({ mode = 'optional', className, onTeamChange }: TeamSwitcherProps) {
   const { currentTeamId, currentTeam, clubTeams, setCurrentTeamId } = useClub();
   const [location, setLocation] = useLocation();
-  const [open, setOpen] = useState(false); // Add state to control the dropdown
 
   // Don't render if hidden mode or only one team
   const validTeams = clubTeams.filter(team => team.isActive !== false);
@@ -47,11 +46,6 @@ export function TeamSwitcher({ mode = 'optional', className, onTeamChange }: Tea
 
   const handleTeamSelect = (value: string) => {
     console.log('TeamSwitcher: Selecting team:', value);
-    
-    // Close the dropdown first
-    setOpen(false);
-    
-    // Use the existing handleTeamChange logic which properly handles the selection
     handleTeamChange(value);
   };
 
@@ -60,8 +54,6 @@ export function TeamSwitcher({ mode = 'optional', className, onTeamChange }: Tea
     <div className={`flex items-center space-x-2 ${className || ''}`}>
       <span className="text-sm font-medium text-gray-700">Team:</span>
       <Select
-        open={open}
-        onOpenChange={setOpen}
         value={currentTeamId?.toString() || (mode === 'required' ? '' : 'all')}
         onValueChange={handleTeamSelect}
       >
