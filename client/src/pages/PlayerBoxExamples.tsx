@@ -1415,11 +1415,11 @@ export default function PlayerBoxExamples() {
             <div>
               <h3 className="text-lg font-medium mb-3">Crisp Thin Double Border - Medium with Hover Effects</h3>
               <div className="bg-white p-6 rounded-lg border space-y-6">
-                <p className="text-sm text-gray-600 mb-4">Interactive hover effects on the crisp thin double border style with medium outer shadows</p>
+                <p className="text-sm text-gray-600 mb-4">Interactive hover effects on the crisp thin double border style (now using consistent app-wide hover pattern)</p>
                 
-                {/* Hover: Shadow Intensity */}
+                {/* Standard Hover Effect */}
                 <div>
-                  <h4 className="text-md font-medium mb-2 text-gray-700">Hover: Enhanced Shadow</h4>
+                  <h4 className="text-md font-medium mb-2 text-gray-700">Standard App Hover Effect</h4>
                   <div className="space-y-3">
                     {samplePlayers.slice(0, 3).map((player) => (
                       <div key={`hover-shadow-crisp-${player.id}`} className="relative">
@@ -1427,145 +1427,14 @@ export default function PlayerBoxExamples() {
                           player={player}
                           size="md"
                           showPositions={true}
-                          className="transition-shadow duration-300 hover:shadow-xl shadow-md cursor-pointer [&>div>div:first-child]:border-2 [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-2 [&>div>div:first-child]:ring-current [&>div>div:first-child]:shadow-lg [&>div>div:first-child]:shadow-black/25"
+                          className="[&>div>div:first-child]:border-2 [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-2 [&>div>div:first-child]:ring-current [&>div>div:first-child]:shadow-lg [&>div>div:first-child]:shadow-black/25"
                         />
                       </div>
                     ))}
                   </div>
                 </div>
 
-                {/* Hover: Subtle Scale */}
-                <div>
-                  <h4 className="text-md font-medium mb-2 text-gray-700">Hover: Subtle Scale</h4>
-                  <div className="space-y-3">
-                    {samplePlayers.slice(1, 4).map((player) => (
-                      <div key={`hover-scale-crisp-${player.id}`} className="relative">
-                        <PlayerBox 
-                          player={player}
-                          size="md"
-                          showPositions={true}
-                          className="transition-all duration-300 hover:scale-[1.02] hover:shadow-lg shadow-md cursor-pointer [&>div>div:first-child]:border-2 [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-2 [&>div>div:first-child]:ring-current [&>div>div:first-child]:shadow-lg [&>div>div:first-child]:shadow-black/25"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Hover: Lift Effect */}
-                <div>
-                  <h4 className="text-md font-medium mb-2 text-gray-700">Hover: Lift Effect</h4>
-                  <div className="space-y-3">
-                    {samplePlayers.slice(2, 5).map((player) => (
-                      <div key={`hover-lift-crisp-${player.id}`} className="relative">
-                        <PlayerBox 
-                          player={player}
-                          size="md"
-                          showPositions={true}
-                          className="transition-all duration-300 hover:-translate-y-1 hover:shadow-xl shadow-md cursor-pointer [&>div>div:first-child]:border-2 [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-2 [&>div>div:first-child]:ring-current [&>div>div:first-child]:shadow-lg [&>div>div:first-child]:shadow-black/25"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Hover: Ring Glow */}
-                <div>
-                  <h4 className="text-md font-medium mb-2 text-gray-700">Hover: Ring Glow</h4>
-                  <div className="space-y-3">
-                    {samplePlayers.slice(0, 4).map((player, index) => (
-                      <div key={`hover-glow-crisp-${player.id}`} className="relative">
-                        <PlayerBox 
-                          player={player}
-                          size="md"
-                          showPositions={true}
-                          className={`transition-all duration-300 hover:shadow-lg shadow-md cursor-pointer [&>div>div:first-child]:border-2 [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-2 [&>div>div:first-child]:ring-current [&>div>div:first-child]:shadow-lg [&>div>div:first-child]:shadow-black/25 ${
-                            index === 0 ? 'hover:[&>div>div:first-child]:ring-blue-400 hover:[&>div>div:first-child]:ring-4' :
-                            index === 1 ? 'hover:[&>div>div:first-child]:ring-orange-400 hover:[&>div>div:first-child]:ring-4' :
-                            index === 2 ? 'hover:[&>div>div:first-child]:ring-teal-400 hover:[&>div>div:first-child]:ring-4' :
-                            'hover:[&>div>div:first-child]:ring-yellow-400 hover:[&>div>div:first-child]:ring-4'
-                          }`}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Hover: Combined Effects */}
-                <div>
-                  <h4 className="text-md font-medium mb-2 text-gray-700">Hover: Combined Effects (Scale + Lift + Shadow)</h4>
-                  <div className="space-y-3">
-                    {samplePlayers.slice(1, 4).map((player) => (
-                      <div key={`hover-combined-crisp-${player.id}`} className="relative">
-                        <PlayerBox 
-                          player={player}
-                          size="md"
-                          showPositions={true}
-                          className="transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1 hover:shadow-2xl shadow-md cursor-pointer [&>div>div:first-child]:border-2 [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-2 [&>div>div:first-child]:ring-current [&>div>div:first-child]:shadow-lg [&>div>div:first-child]:shadow-black/25"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Hover: Colored Shadow Glow */}
-                <div>
-                  <h4 className="text-md font-medium mb-2 text-gray-700">Hover: Colored Shadow Glow</h4>
-                  <div className="space-y-3">
-                    {samplePlayers.slice(0, 4).map((player, index) => (
-                      <div key={`hover-colored-shadow-crisp-${player.id}`} className="relative">
-                        <PlayerBox 
-                          player={player}
-                          size="md"
-                          showPositions={true}
-                          className={`transition-all duration-300 shadow-md cursor-pointer [&>div>div:first-child]:border-2 [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-2 [&>div>div:first-child]:ring-current [&>div>div:first-child]:shadow-lg [&>div>div:first-child]:shadow-black/25 ${
-                            index === 0 ? 'hover:shadow-lg hover:shadow-blue-300/40' :
-                            index === 1 ? 'hover:shadow-lg hover:shadow-orange-300/40' :
-                            index === 2 ? 'hover:shadow-lg hover:shadow-teal-300/40' :
-                            'hover:shadow-lg hover:shadow-yellow-300/40'
-                          }`}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Hover: Background Brightness */}
-                <div>
-                  <h4 className="text-md font-medium mb-2 text-gray-700">Hover: Background Brightness</h4>
-                  <div className="space-y-3">
-                    {samplePlayers.slice(2, 5).map((player) => (
-                      <div key={`hover-brightness-crisp-${player.id}`} className="relative">
-                        <PlayerBox 
-                          player={player}
-                          size="md"
-                          showPositions={true}
-                          className="transition-all duration-300 hover:brightness-105 hover:shadow-lg shadow-md cursor-pointer [&>div>div:first-child]:border-2 [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-2 [&>div>div:first-child]:ring-current [&>div>div:first-child]:shadow-lg [&>div>div:first-child]:shadow-black/25"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Hover: Premium Interaction */}
-                <div>
-                  <h4 className="text-md font-medium mb-2 text-gray-700">Hover: Premium Interaction (Multi-effect)</h4>
-                  <div className="space-y-3">
-                    {samplePlayers.slice(0, 3).map((player, index) => (
-                      <div key={`hover-premium-crisp-${player.id}`} className="relative">
-                        <PlayerBox 
-                          player={player}
-                          size="md"
-                          showPositions={true}
-                          className={`transition-all duration-300 hover:scale-[1.01] hover:-translate-y-0.5 hover:shadow-xl shadow-md cursor-pointer [&>div>div:first-child]:border-2 [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-2 [&>div>div:first-child]:ring-current [&>div>div:first-child]:shadow-lg [&>div>div:first-child]:shadow-black/25 ${
-                            index === 0 ? 'hover:[&>div>div:first-child]:ring-blue-300 hover:[&>div>div:first-child]:ring-3 hover:shadow-blue-200/30' :
-                            index === 1 ? 'hover:[&>div>div:first-child]:ring-orange-300 hover:[&>div>div:first-child]:ring-3 hover:shadow-orange-200/30' :
-                            'hover:[&>div>div:first-child]:ring-teal-300 hover:[&>div>div:first-child]:ring-3 hover:shadow-teal-200/30'
-                          }`}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                
               </div>
             </div>
 
@@ -1924,64 +1793,7 @@ export default function PlayerBoxExamples() {
               </div>
             </div>
 
-            {/* Interactive Hover Effects */}
-            <div>
-              <h3 className="text-lg font-medium mb-3">Interactive Hover Effects</h3>
-              <div className="bg-white p-6 rounded-lg border space-y-6">
-                <p className="text-sm text-gray-600 mb-4">PlayerBox components with hover-triggered visual effects</p>
-                
-                {/* Shadow Intensity on Hover */}
-                <div>
-                  <h4 className="text-md font-medium mb-2 text-gray-700">Shadow Intensity on Hover</h4>
-                  <div className="space-y-3">
-                    {samplePlayers.slice(0, 3).map((player) => (
-                      <div key={`hover-shadow-${player.id}`} className="relative">
-                        <PlayerBox 
-                          player={player}
-                          size="md"
-                          showPositions={true}
-                          className="transition-shadow duration-300 hover:shadow-xl shadow-md cursor-pointer [&>div>div:first-child]:border-2 [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-2 [&>div>div:first-child]:ring-current"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Scale on Hover */}
-                <div>
-                  <h4 className="text-md font-medium mb-2 text-gray-700">Scale on Hover</h4>
-                  <div className="space-y-3">
-                    {samplePlayers.slice(1, 4).map((player) => (
-                      <div key={`hover-scale-${player.id}`} className="relative">
-                        <PlayerBox 
-                          player={player}
-                          size="md"
-                          showPositions={true}
-                          className="transition-all duration-300 hover:scale-105 hover:shadow-lg shadow-md cursor-pointer [&>div>div:first-child]:border-2 [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-2 [&>div>div:first-child]:ring-current"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Lift on Hover */}
-                <div>
-                  <h4 className="text-md font-medium mb-2 text-gray-700">Lift on Hover</h4>
-                  <div className="space-y-3">
-                    {samplePlayers.slice(2, 5).map((player) => (
-                      <div key={`hover-lift-${player.id}`} className="relative">
-                        <PlayerBox 
-                          player={player}
-                          size="md"
-                          showPositions={true}
-                          className="transition-all duration-300 hover:-translate-y-1 hover:shadow-xl shadow-md cursor-pointer [&>div>div:first-child]:border-2 [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-2 [&>div>div:first-child]:ring-current"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
+            
 
             {/* Custom Shadow Patterns */}
             <div>

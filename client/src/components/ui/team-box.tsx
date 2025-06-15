@@ -97,7 +97,7 @@ export function TeamBox({
   if (variant === 'minimal') {
     return (
       <div 
-        className={`flex items-center justify-between p-3 rounded-lg border-2 ${className}`}
+        className={`flex items-center justify-between p-3 rounded-lg border-2 transition-shadow duration-300 hover:shadow-xl shadow-md cursor-pointer ${className}`}
         style={{ 
           backgroundColor: lightBackgroundColor,
           borderColor: teamColor
@@ -133,7 +133,7 @@ export function TeamBox({
 
   const teamBoxContent = (
     <div 
-      className={`${sizeClasses[size]} rounded-lg border-2`}
+      className={`${sizeClasses[size]} rounded-lg border-2 transition-shadow duration-300 hover:shadow-xl shadow-md cursor-pointer`}
       style={{ 
         backgroundColor: lightBackgroundColor,
         borderColor: teamColor

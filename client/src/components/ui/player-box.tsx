@@ -97,7 +97,7 @@ export function PlayerBox({
 
   const playerBoxContent = (
     <div 
-      className={`flex items-center p-4 rounded-lg border-2 ${sizeClasses[size]}`}
+      className={`flex items-center p-4 rounded-lg border-2 transition-shadow duration-300 hover:shadow-xl shadow-md cursor-pointer ${sizeClasses[size]}`}
       style={{
         backgroundColor: lightBackgroundColor,
         borderColor: darkerBorderColor,
