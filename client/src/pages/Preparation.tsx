@@ -127,7 +127,7 @@ const PlayerCard = ({
   isCompatible?: boolean,
   isAssigned?: boolean
 }) => {
-  
+
   return (
     <div className={`
       transition-all duration-200
@@ -221,7 +221,7 @@ const PositionSlot = ({
   );
 };
 
-// Advanced Drag and Drop Interface from Examples
+// Enhanced Drag and Drop Interface from Examples
 function AdvancedDragDropRoster({ 
   availablePlayers, 
   currentLineup, 
@@ -235,6 +235,26 @@ function AdvancedDragDropRoster({
 }) {
   const [draggedPlayer, setDraggedPlayer] = useState<number | null>(null);
   const [dragOverPosition, setDragOverPosition] = useState<string | null>(null);
+  const [activeQuarter, setActiveQuarter] = useState('1');
+
+  // State for all 4 quarters
+  const [quarterLineups, setQuarterLineups] = useState<Record<string, Record<Position, Player | null>>>({
+    '1': { GS: null, GA: null, WA: null, C: null, WD: null, GK: null },
+    '2': { GS: null, GA: null, WA: null, C: null, WD: null, GK: null },
+    '3': { GS: null, GA: null, WA: null, C: null, WD: null, GK: null },
+    '4': { GS: null, GA: null, WA: null, C: null, WD: null, GK: null }
+  });
+
+  // Initialize Quarter 1 with current lineup
+  useEffect(() => {
+    setQuarterLineups(prev => ({
+      ...prev,
+      '1': currentLineup
+    }));
+  }, [currentLineup]);
+
+  // Get current quarter's lineup
+  const getCurrentQuarterLineup = () => quarterLineups[activeQuarter];
 
   const handleDragStart = (playerId: number) => {
     setDraggedPlayer(playerId);
@@ -251,28 +271,37 @@ function AdvancedDragDropRoster({
 
   const handleDrop = (position: string) => {
     if (draggedPlayer) {
-      // Remove player from previous position
-      const newLineup = { ...currentLineup };
-      
-      // Clear the player from any previous position
+      const currentQuarterLineup = getCurrentQuarterLineup();
+      const newLineup = { ...currentQuarterLineup };
+
+      // Clear the player from any previous position in this quarter
       Object.keys(newLineup).forEach(pos => {
         if (newLineup[pos]?.id === draggedPlayer) {
           newLineup[pos] = null;
         }
       });
-      
+
       // If there's already a player in the target position, remove them
       if (newLineup[position] !== null) {
         newLineup[position] = null;
       }
-      
+
       // Assign the dragged player to the new position
       const player = availablePlayers.find(p => p.id === draggedPlayer);
       if (player) {
         newLineup[position] = player;
       }
-      
-      onLineupChange(newLineup);
+
+      // Update the quarter lineups
+      setQuarterLineups(prev => ({
+        ...prev,
+        [activeQuarter]: newLineup
+      }));
+
+      // If this is Quarter 1, also update the parent component
+      if (activeQuarter === '1') {
+        onLineupChange(newLineup);
+      }
     }
     setDraggedPlayer(null);
     setDragOverPosition(null);
@@ -285,128 +314,231 @@ function AdvancedDragDropRoster({
   };
 
   // Reset functions
-  const handleResetLineup = () => {
+  const handleResetQuarter = () => {
     const emptyLineup = {
-      GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null
+      GS: null, GA: null, WA: null, C: null, WD: null, GK: null
     } as Record<Position, Player | null>;
+
+    setQuarterLineups(prev => ({
+      ...prev,
+      [activeQuarter]: emptyLineup
+    }));
+
+    // If this is Quarter 1, also update the parent component
+    if (activeQuarter === '1') {
+      onLineupChange(emptyLineup);
+    }
+  };
+
+  const handleResetAllQuarters = () => {
+    const emptyLineup = {
+      GS: null, GA: null, WA: null, C: null, WD: null, GK: null
+    } as Record<Position, Player | null>;
+
+    setQuarterLineups({
+      '1': emptyLineup,
+      '2': emptyLineup,
+      '3': emptyLineup,
+      '4': emptyLineup
+    });
+
     onLineupChange(emptyLineup);
   };
 
-  const assignedPlayerIds = Object.values(currentLineup).filter(p => p !== null).map(p => p!.id);
+  // Copy quarter function
+  const handleCopyQuarter = (fromQuarter: string, toQuarter: string) => {
+    const sourceLineup = quarterLineups[fromQuarter];
+    setQuarterLineups(prev => ({
+      ...prev,
+      [toQuarter]: { ...sourceLineup }
+    }));
+
+    // If copying to Quarter 1, also update the parent component
+    if (toQuarter === '1') {
+      onLineupChange(sourceLineup);
+    }
+  };
+
+  const currentQuarterLineup = getCurrentQuarterLineup();
+  const assignedPlayerIds = Object.values(currentQuarterLineup).filter(p => p !== null).map(p => p!.id);
   const benchPlayers = availablePlayers.filter(p => !assignedPlayerIds.includes(p.id));
+
+  // Calculate completion stats across all quarters
+  const totalPositionsAcrossQuarters = 7 * 4; // 7 positions × 4 quarters
+  const filledPositionsAcrossQuarters = Object.values(quarterLineups).reduce((total, lineup) => {
+    return total + Object.values(lineup).filter(p => p !== null).length;
+  }, 0);
 
   return (
     <Card className="mt-6">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Grid3X3 className="h-5 w-5" />
-          Advanced Roster Builder {opponentName && `- vs ${opponentName}`}
+          Advanced Roster Builder - All Quarters {opponentName && `- vs ${opponentName}`}
         </CardTitle>
         <p className="text-sm text-gray-600">
-          Enhanced drag & drop interface with full court layout and detailed player management
+          Enhanced drag & drop interface with full court layout for all 4 quarters
         </p>
       </CardHeader>
       <CardContent className="p-6">
-        {/* Controls */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <Target className="h-4 w-4 text-blue-600" />
-              <span className="font-medium">Positions Filled:</span>
-              <Badge variant="secondary">
-                {Object.values(currentLineup).filter(p => p !== null).length}/7
-              </Badge>
+        {/* Quarter Tabs */}
+        <Tabs value={activeQuarter} onValueChange={setActiveQuarter} className="mb-6">
+          <TabsList className="grid w-full grid-cols-4">
+            {['1', '2', '3', '4'].map(quarter => {
+              const qLineup = quarterLineups[quarter];
+              const filled = Object.values(qLineup).filter(p => p !== null).length;
+              return (
+                <TabsTrigger key={quarter} value={quarter} className="relative">
+                  Quarter {quarter}
+                  <Badge 
+                    variant={filled === 7 ? "default" : "secondary"} 
+                    className="ml-2 text-xs"
+                  >
+                    {filled}/7
+                  </Badge>
+                </TabsTrigger>
+              );
+            })}
+          </TabsList>
+
+          {/* Controls */}
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <Target className="h-4 w-4 text-blue-600" />
+                <span className="font-medium">Q{activeQuarter} Positions:</span>
+                <Badge variant="secondary">
+                  {Object.values(currentQuarterLineup).filter(p => p !== null).length}/7
+                </Badge>
+              </div>
+              <div className="flex items-center gap-2">
+                <Users className="h-4 w-4 text-green-600" />
+                <span className="font-medium">Available:</span>
+                <Badge variant="outline">{benchPlayers.length} players</Badge>
+              </div>
+              <div className="flex items-center gap-2">
+                <Hash className="h-4 w-4 text-purple-600" />
+                <span className="font-medium">Total Progress:</span>
+                <Badge variant="outline">
+                  {filledPositionsAcrossQuarters}/{totalPositionsAcrossQuarters}
+                </Badge>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Users className="h-4 w-4 text-green-600" />
-              <span className="font-medium">Available:</span>
-              <Badge variant="outline">{benchPlayers.length} players</Badge>
+            <div className="flex gap-2">
+              <Select onValueChange={(toQuarter) => handleCopyQuarter(activeQuarter, toQuarter)}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Copy to quarter..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {['1', '2', '3', '4']
+                    .filter(q => q !== activeQuarter)
+                    .map(quarter => (
+                      <SelectItem key={quarter} value={quarter}>
+                        Quarter {quarter}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleResetQuarter}
+              >
+                <RotateCcw className="h-4 w-4 mr-1" />
+                Clear Q{activeQuarter}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleResetAllQuarters}
+                className="text-red-600 border-red-300 hover:bg-red-50"
+              >
+                <RotateCcw className="h-4 w-4 mr-1" />
+                Reset All
+              </Button>
             </div>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleResetLineup}
-          >
-            <RotateCcw className="h-4 w-4 mr-1" />
-            Reset Lineup
-          </Button>
-        </div>
 
-        {/* Full Width Court Layout */}
-        <div className="mb-6 bg-gradient-to-b from-green-100 to-green-50 p-6 rounded-xl border border-green-200 shadow-inner">
-          <div className="grid grid-cols-3 gap-6 max-w-6xl mx-auto">
-            {/* Attacking Third */}
-            <div className="space-y-3">
-              <div className="text-center">
-                <h4 className="text-sm font-semibold text-red-700 mb-1">Attacking Third</h4>
-                <div className="h-0.5 bg-red-200 rounded"></div>
-              </div>
-              {['GS', 'GA'].map(position => (
-                <PositionSlot
-                  key={position}
-                  position={position}
-                  player={currentLineup[position]}
-                  isDropTarget={dragOverPosition === position}
-                  isCompatible={draggedPlayer ? isPlayerCompatible(draggedPlayer, position) : true}
-                  onDrop={() => handleDrop(position)}
-                  courtSection="attacking"
-                  onDragStart={handleDragStart}
-                />
-              ))}
-            </div>
+          {/* Quarter Content */}
+          {['1', '2', '3', '4'].map(quarter => (
+            <TabsContent key={quarter} value={quarter}>
+              {/* Full Width Court Layout */}
+              <div className="mb-6 bg-gradient-to-b from-green-100 to-green-50 p-6 rounded-xl border border-green-200 shadow-inner">
+                <div className="grid grid-cols-3 gap-6 max-w-6xl mx-auto">
+                  {/* Attacking Third */}
+                  <div className="space-y-3">
+                    <div className="text-center">
+                      <h4 className="text-sm font-semibold text-red-700 mb-1">Attacking Third</h4>
+                      <div className="h-0.5 bg-red-200 rounded"></div>
+                    </div>
+                    {['GS', 'GA'].map(position => (
+                      <PositionSlot
+                        key={position}
+                        position={position}
+                        player={quarterLineups[quarter][position]}
+                        isDropTarget={dragOverPosition === position}
+                        isCompatible={draggedPlayer ? isPlayerCompatible(draggedPlayer, position) : true}
+                        onDrop={() => handleDrop(position)}
+                        courtSection="attacking"
+                        onDragStart={handleDragStart}
+                      />
+                    ))}
+                  </div>
 
-            {/* Center Third */}
-            <div className="space-y-3">
-              <div className="text-center">
-                <h4 className="text-sm font-semibold text-blue-700 mb-1">Center Third</h4>
-                <div className="h-0.5 bg-blue-200 rounded"></div>
-              </div>
-              {['WA', 'C', 'WD'].map(position => (
-                <div
-                  key={position}
-                  onDragOver={(e) => handleDragOver(e, position)}
-                  onDragLeave={handleDragLeave}
-                >
-                  <PositionSlot
-                    position={position}
-                    player={currentLineup[position]}
-                    isDropTarget={dragOverPosition === position}
-                    isCompatible={draggedPlayer ? isPlayerCompatible(draggedPlayer, position) : true}
-                    onDrop={() => handleDrop(position)}
-                    courtSection="center"
-                    onDragStart={handleDragStart}
-                  />
+                  {/* Center Third */}
+                  <div className="space-y-3">
+                    <div className="text-center">
+                      <h4 className="text-sm font-semibold text-blue-700 mb-1">Center Third</h4>
+                      <div className="h-0.5 bg-blue-200 rounded"></div>
+                    </div>
+                    {['WA', 'C', 'WD'].map(position => (
+                      <div
+                        key={position}
+                        onDragOver={(e) => handleDragOver(e, position)}
+                        onDragLeave={handleDragLeave}
+                      >
+                        <PositionSlot
+                          position={position}
+                          player={quarterLineups[quarter][position]}
+                          isDropTarget={dragOverPosition === position}
+                          isCompatible={draggedPlayer ? isPlayerCompatible(draggedPlayer, position) : true}
+                          onDrop={() => handleDrop(position)}
+                          courtSection="center"
+                          onDragStart={handleDragStart}
+                        />
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Defending Third */}
+                  <div className="space-y-3">
+                    <div className="text-center">
+                      <h4 className="text-sm font-semibold text-green-700 mb-1">Defending Third</h4>
+                      <div className="h-0.5 bg-green-200 rounded"></div>
+                    </div>
+                    {['GD', 'GK'].map(position => (
+                      <div
+                        key={position}
+                        onDragOver={(e) => handleDragOver(e, position)}
+                        onDragLeave={handleDragLeave}
+                      >
+                        <PositionSlot
+                          position={position}
+                          player={quarterLineups[quarter][position]}
+                          isDropTarget={dragOverPosition === position}
+                          isCompatible={draggedPlayer ? isPlayerCompatible(draggedPlayer, position) : true}
+                          onDrop={() => handleDrop(position)}
+                          courtSection="defending"
+                          onDragStart={handleDragStart}
+                        />
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              ))}
-            </div>
-
-            {/* Defending Third */}
-            <div className="space-y-3">
-              <div className="text-center">
-                <h4 className="text-sm font-semibold text-green-700 mb-1">Defending Third</h4>
-                <div className="h-0.5 bg-green-200 rounded"></div>
               </div>
-              {['GD', 'GK'].map(position => (
-                <div
-                  key={position}
-                  onDragOver={(e) => handleDragOver(e, position)}
-                  onDragLeave={handleDragLeave}
-                >
-                  <PositionSlot
-                    position={position}
-                    player={currentLineup[position]}
-                    isDropTarget={dragOverPosition === position}
-                    isCompatible={draggedPlayer ? isPlayerCompatible(draggedPlayer, position) : true}
-                    onDrop={() => handleDrop(position)}
-                    courtSection="defending"
-                    onDragStart={handleDragStart}
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+            </TabsContent>
+          ))}
+        </Tabs>
 
         {/* Bench and Quick Actions */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -414,10 +546,10 @@ function AdvancedDragDropRoster({
           <div className="lg:col-span-3">
             <div className="flex items-center gap-2 mb-3">
               <Users className="h-5 w-5 text-blue-600" />
-              <h4 className="text-lg font-semibold text-gray-800">Available Players</h4>
+              <h4 className="text-lg font-semibold text-gray-800">Available Players (Q{activeQuarter})</h4>
               <Badge variant="secondary">{benchPlayers.length} players</Badge>
             </div>
-            
+
             <div className="bg-gray-50 rounded-xl p-4 border border-gray-200 min-h-[200px]">
               {benchPlayers.length > 0 ? (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
@@ -440,8 +572,8 @@ function AdvancedDragDropRoster({
               ) : (
                 <div className="text-center py-8 text-gray-500">
                   <Users className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                  <p className="font-medium">All players assigned</p>
-                  <p className="text-sm">Complete lineup ready!</p>
+                  <p className="font-medium">All players assigned in Q{activeQuarter}</p>
+                  <p className="text-sm">Quarter {activeQuarter} lineup complete!</p>
                 </div>
               )}
             </div>
@@ -454,17 +586,41 @@ function AdvancedDragDropRoster({
               <Button 
                 variant="outline" 
                 className="w-full justify-start"
-                onClick={handleResetLineup}
+                onClick={handleResetQuarter}
               >
                 <RotateCcw className="h-4 w-4 mr-2" />
-                Clear All
+                Clear Q{activeQuarter}
+              </Button>
+              <Button 
+                variant="outline" 
+                className="w-full justify-start text-red-600 border-red-300 hover:bg-red-50"
+                onClick={handleResetAllQuarters}
+              >
+                <RotateCcw className="h-4 w-4 mr-2" />
+                Reset All Quarters
               </Button>
               <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-                <h5 className="font-medium text-blue-800 mb-2">Status</h5>
+                <h5 className="font-medium text-blue-800 mb-2">Quarter {activeQuarter} Status</h5>
                 <div className="space-y-1 text-sm text-blue-700">
                   <div>Assigned: {assignedPlayerIds.length}/7</div>
                   <div>Available: {benchPlayers.length}</div>
-                  <div>Ready: {Object.values(currentLineup).every(p => p !== null) ? 'Yes' : 'No'}</div>
+                  <div>Ready: {Object.values(currentQuarterLineup).every(p => p !== null) ? 'Yes' : 'No'}</div>
+                </div>
+              </div>
+              <div className="p-3 bg-purple-50 rounded-lg border border-purple-200">
+                <h5 className="font-medium text-purple-800 mb-2">Game Overview</h5>
+                <div className="space-y-1 text-sm text-purple-700">
+                  <div>Total Positions: {filledPositionsAcrossQuarters}/{totalPositionsAcrossQuarters}</div>
+                  <div>Progress: {Math.round((filledPositionsAcrossQuarters / totalPositionsAcrossQuarters) * 100)}%</div>
+                  {Object.entries(quarterLineups).map(([q, lineup]) => {
+                    const filled = Object.values(lineup).filter(p => p !== null).length;
+                    return (
+                      <div key={q} className="flex justify-between">
+                        <span>Q{q}:</span>
+                        <span>{filled}/7 {filled === 7 ? '✓' : ''}</span>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -474,12 +630,13 @@ function AdvancedDragDropRoster({
         {/* Instructions */}
         <Card className="mt-6 bg-blue-50 border-blue-200">
           <CardContent className="p-4">
-            <h4 className="font-semibold text-blue-800 mb-2">Advanced Interface Features</h4>
+            <h4 className="font-semibold text-blue-800 mb-2">Advanced Multi-Quarter Interface</h4>
             <div className="text-sm text-blue-700 space-y-1">
-              <p>• <strong>Court sections:</strong> Visual distinction between attacking, center, and defending thirds</p>
+              <p>• <strong>Quarter tabs:</strong> Switch between quarters to set different lineups</p>
+              <p>• <strong>Copy quarters:</strong> Use the dropdown to copy lineups between quarters</p>
               <p>• <strong>Position compatibility:</strong> Visual feedback when dragging players to appropriate positions</p>
-              <p>• <strong>Enhanced bench:</strong> Larger player cards with position preferences displayed</p>
-              <p>• <strong>Quick status:</strong> Real-time lineup completion tracking</p>
+              <p>• <strong>Progress tracking:</strong> Monitor completion across all quarters</p>
+              <p>• <strong>Independent rosters:</strong> Each quarter can have completely different player assignments</p>
             </div>
           </CardContent>
         </Card>
@@ -497,7 +654,13 @@ export default function Preparation() {
   const [selectedGameId, setSelectedGameId] = useState<number | null>(null);
   const [availabilityData, setAvailabilityData] = useState<Record<number, 'available' | 'unavailable' | 'maybe'>>({});
   const [selectedLineup, setSelectedLineup] = useState<Record<Position, Player | null>>({
-    GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null
+    GS: null, GA: null, WA: null, C: null, WD: null, GK: null
+  });
+  const [allQuarterLineups, setAllQuarterLineups] = useState<Record<string, Record<Position, Player | null>>>({
+    '1': { GS: null, GA: null, WA: null, C: null, WD: null, GK: null },
+    '2': { GS: null, GA: null, WA: null, C: null, WD: null, GK: null },
+    '3': { GS: null, GA: null, WA: null, C: null, WD: null, GK: null },
+    '4': { GS: null, GA: null, WA: null, C: null, WD: null, GK: null }
   });
   const [activeTab, setActiveTab] = useState('overview');
   const [teamPlayers, setTeamPlayers] = useState<Player[]>([]);
@@ -635,7 +798,8 @@ export default function Preparation() {
     }
 
     // Find all games against this opponent
-    const opponentGames = completedGames.filter(game => {
+    const opponentGames = completedGames<previous_generation>```text
+.filter(game => {
       const isHomeGame = game.homeClubId === currentClubId;
       const isAwayGame = game.awayClubId === currentClubId;
 
@@ -1452,8 +1616,7 @@ export default function Preparation() {
                                           {diff >= 0 ? '+' : ''}{diff.toFixed(1)}
                                         </div>
                                       </div>
-                                    </div>
-                                  );
+                                                                      );
                                 })}
                               </div>
                             </div>
