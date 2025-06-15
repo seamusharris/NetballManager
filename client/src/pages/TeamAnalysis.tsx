@@ -16,6 +16,7 @@ import { PlayerCombinationAnalysis } from '@/components/dashboard/PlayerCombinat
 import { TeamPositionAnalysis } from '@/components/dashboard/TeamPositionAnalysis';
 import { TeamSwitcher } from '@/components/layout/TeamSwitcher';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
+import { calculateClubWinRate } from '@/lib/winRateCalculator';
 
 interface OpponentTeamData {
   teamId: number;
@@ -215,11 +216,11 @@ export default function TeamAnalysis() {
     results.forEach((result, index) => {
       const recencyWeight = (index + 1) / results.length; // More recent games have higher weight
       let baseScore = 0;
-      
+
       if (result === 'Win') baseScore = winWeight;
       else if (result === 'Draw') baseScore = drawWeight;
       else if (result === 'Loss') baseScore = lossWeight;
-      
+
       momentum += baseScore * recencyWeight;
     });
 
@@ -540,7 +541,7 @@ export default function TeamAnalysis() {
   const totalWins = opponentTeamsData.reduce((sum, team) => sum + team.wins, 0);
   const totalLosses = opponentTeamsData.reduce((sum, team) => sum + team.losses, 0);
   const totalDraws = opponentTeamsData.reduce((sum, team) => sum + team.draws, 0);
-  const overallWinRate = totalGamesPlayed > 0 ? (totalWins / totalGamesPlayed) * 100 : 0;
+  const overallWinRate = calculateClubWinRate(completedGames, currentClubId, currentTeamId);
 
   // Calculate detailed analytics for the first opponent (most played against)
   const selectedOpponentData = opponentTeamsData[0];

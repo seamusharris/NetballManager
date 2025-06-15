@@ -4,6 +4,7 @@ import { useLocation } from 'wouter';
 import { useMemo } from 'react';
 import { TEAM_NAME } from '@/lib/settings';
 import { useClub } from '@/contexts/ClubContext';
+import { calculateTeamWinRate, calculateClubWinRate } from '@/lib/winRateCalculator';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, Trophy, Users, Calendar, TrendingUp, Target, Award } from 'lucide-react';
 import { apiClient } from '@/lib/apiClient';
@@ -110,54 +111,40 @@ export default function ClubDashboard() {
   });
 
   // Calculate club-wide metrics (memoized to prevent unnecessary recalculations)
-  const { activeTeams, completedGames, upcomingGames, totalPlayers, activePlayers } = useMemo(() => {
+  const { activeTeams, completedGames, upcomingGames, totalPlayers, activePlayers, clubWinRate } = useMemo(() => {
+    const activeTeams = teams.filter(team => team.isActive && team.name !== 'BYE');
+    const completedGames = games.filter(game => game.statusIsCompleted);
+    const upcomingGames = games.filter(game => !game.statusIsCompleted);
+    
+    // Calculate club-wide win rate using shared utility
+    const clubWinRateData = calculateClubWinRate(games, currentClubId!, centralizedStats);
+    
     return {
-      activeTeams: teams.filter(team => team.isActive && team.name !== 'BYE'),
-      completedGames: games.filter(game => game.statusIsCompleted),
-      upcomingGames: games.filter(game => !game.statusIsCompleted),
+      activeTeams,
+      completedGames,
+      upcomingGames,
       totalPlayers: players.length, // Count all players, not just active ones
-      activePlayers: players.filter(player => player.active)
+      activePlayers: players.filter(player => player.active),
+      clubWinRate: clubWinRateData
     };
-  }, [teams, games, players]);
+  }, [teams, games, players, currentClubId, centralizedStats]);
 
   // Team performance metrics (memoized to prevent unnecessary recalculations)
   const teamPerformance = useMemo(() => activeTeams.map(team => {
-    // Filter games where this team is playing (either home or away)
-    // Note: using the correct field names from the server response
-    const teamGames = games.filter(game => 
-      game.homeTeamId === team.id || game.awayTeamId === team.id
-    );
-    const teamCompletedGames = teamGames.filter(game => game.statusIsCompleted);
-
-
-
-    const wins = teamCompletedGames.filter(game => {
-      // Use game statistics which are always from our team's perspective
-      const gameStats = centralizedStats[game.id] || [];
-      if (gameStats.length === 0) {
-        return false;
-      }
-
-      // Calculate total goals for and against from all quarters
-      const totalGoalsFor = gameStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
-      const totalGoalsAgainst = gameStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
-
-
-
-      return totalGoalsFor > totalGoalsAgainst;
-    }).length;
+    // Use shared win rate calculator for consistent logic
+    const winRateData = calculateTeamWinRate(games, team.id, currentClubId!, centralizedStats);
 
     const teamPerf = {
       ...team,
-      totalGames: teamCompletedGames.length,
-      wins,
-      winRate: teamCompletedGames.length > 0 ? (wins / teamCompletedGames.length) * 100 : 0
+      totalGames: winRateData.totalGames,
+      wins: winRateData.wins,
+      losses: winRateData.losses,
+      draws: winRateData.draws,
+      winRate: winRateData.winRate
     };
 
-
-
     return teamPerf;
-  }), [activeTeams, games, centralizedStats]);
+  }), [activeTeams, games, currentClubId, centralizedStats]);
 
   // Recent games across all teams (memoized)
   const recentGames = useMemo(() => 
@@ -264,9 +251,9 @@ export default function ClubDashboard() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-purple-900">{completedGames.length}</div>
+              <div className="text-3xl font-bold text-purple-900">{clubWinRate.totalGames}</div>
               <p className="text-xs text-muted-foreground mt-1">
-                {upcomingGames.length} upcoming
+                {completedGames.length} total completed, {upcomingGames.length} upcoming
               </p>
             </CardContent>
           </Card>
@@ -280,14 +267,11 @@ export default function ClubDashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-orange-900">
-                {(() => {
-                  const totalWins = teamPerformance.reduce((sum, team) => sum + team.wins, 0);
-                  const totalGames = teamPerformance.reduce((sum, team) => sum + team.totalGames, 0);
-                  return totalGames > 0 ? Math.round((totalWins / totalGames) * 100) : 0;
-                })()}%
+                {Math.round(clubWinRate.winRate)}%
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                {teamPerformance.reduce((sum, team) => sum + team.wins, 0)} wins from {teamPerformance.reduce((sum, team) => sum + team.totalGames, 0)} games
+                {clubWinRate.wins} wins from {clubWinRate.totalGames} games
+                {clubWinRate.draws > 0 && `, ${clubWinRate.draws} draws`}
               </p>
             </CardContent>
           </Card>
