@@ -3,7 +3,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { useClub } from '@/contexts/ClubContext';
 import { useLocation, useRoute } from 'wouter';
-import { useState } from 'react';
 
 interface TeamSwitcherProps {
   mode?: 'optional' | 'required' | 'hidden';
