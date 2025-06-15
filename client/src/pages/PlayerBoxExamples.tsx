@@ -719,10 +719,11 @@ export default function PlayerBoxExamples() {
                         player={player}
                         size="md"
                         showPositions={true}
-                        className="rounded-lg border-2 shadow-md p-4"
+                        className="border-2 shadow-md"
                         style={{ 
-                          backgroundColor: `${playerColorHex}10`,
-                          borderColor: `${playerColorHex}80`
+                          backgroundColor: `${playerColorHex}15`,
+                          borderColor: `${playerColorHex}80`,
+                          color: playerColorHex
                         }}
                       />
                     </div>
@@ -756,10 +757,11 @@ export default function PlayerBoxExamples() {
                         player={player}
                         size="md"
                         showPositions={true}
-                        className="rounded-xl border-4 shadow-lg p-5"
+                        className="rounded-xl border-4 shadow-lg"
                         style={{ 
                           backgroundColor: `${playerColorHex}08`,
-                          borderColor: `${playerColorHex}C0`
+                          borderColor: `${playerColorHex}C0`,
+                          color: playerColorHex
                         }}
                       />
                     </div>
@@ -793,10 +795,11 @@ export default function PlayerBoxExamples() {
                         player={player}
                         size="md"
                         showPositions={true}
-                        className="rounded-lg border-3 shadow-md p-4"
+                        className="rounded-lg border-3 shadow-md"
                         style={{ 
                           backgroundColor: `${playerColorHex}18`,
-                          borderColor: `${playerColorHex}A0`
+                          borderColor: `${playerColorHex}A0`,
+                          color: playerColorHex
                         }}
                       />
                     </div>
@@ -830,10 +833,11 @@ export default function PlayerBoxExamples() {
                         player={player}
                         size="md"
                         showPositions={true}
-                        className="rounded-lg border-3 shadow-lg p-4"
+                        className="rounded-lg border-3 shadow-lg"
                         style={{ 
                           backgroundColor: `${playerColorHex}12`,
-                          borderColor: playerColorHex
+                          borderColor: playerColorHex,
+                          color: '#ffffff'
                         }}
                       />
                     </div>
@@ -867,10 +871,11 @@ export default function PlayerBoxExamples() {
                         player={player}
                         size="sm"
                         showPositions={true}
-                        className="rounded-md border-2 shadow-sm p-3"
+                        className="rounded-md border-2 shadow-sm"
                         style={{ 
                           backgroundColor: `${playerColorHex}0A`,
-                          borderColor: `${playerColorHex}90`
+                          borderColor: `${playerColorHex}90`,
+                          color: playerColorHex
                         }}
                       />
                     </div>

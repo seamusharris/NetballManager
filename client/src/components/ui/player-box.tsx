@@ -95,35 +95,23 @@ export function PlayerBox({
   const lightBackgroundColor = `${playerColor}15`; // Add transparency for background
 
   const playerBoxContent = (
-    <div className="flex items-center">
-      {/* Avatar Circle - matching Player of the Match style */}
+    <div className={`flex items-center p-4 rounded-lg ${sizeClasses[size]}`}>
+      {/* Avatar Circle */}
       <div 
-        className={`${avatarSizes[size]} rounded-full flex items-center justify-center text-white font-bold shadow-md flex-shrink-0 ${player.avatarColor || 'bg-gray-700'}`}
+        className={`${avatarSizes[size]} rounded-full flex items-center justify-center text-white font-bold shadow-md flex-shrink-0 player-avatar ${player.avatarColor || 'bg-gray-700'}`}
       >
         {playerInitials}
       </div>
       
-      {/* Stats Box - matching Player of the Match style */}
-      <div 
-        className="flex-1 flex items-center p-3 ml-4 rounded-lg border-2"
-        style={{ 
-          backgroundColor: lightBackgroundColor,
-          borderColor: playerColor
-        }}
-      >
+      {/* Player Details */}
+      <div className="flex-1 flex items-center ml-4">
         <div className="flex-1">
-          <div 
-            className="text-lg font-bold"
-            style={{ color: playerColor }}
-          >
+          <div className="text-lg font-bold player-name">
             {player.displayName}
           </div>
           
           {showPositions && (
-            <div 
-              className="text-sm"
-              style={{ color: playerColor }}
-            >
+            <div className="text-sm player-positions">
               {Array.isArray(player.positionPreferences) && player.positionPreferences.length > 0 
                 ? player.positionPreferences.join(', ') 
                 : 'No position preferences'}
@@ -133,8 +121,6 @@ export function PlayerBox({
           {player.active === false && (
             <Badge variant="secondary" className="text-xs mt-1">Inactive</Badge>
           )}
-          
-          
         </div>
         
         {/* Stats positioned on the right */}
@@ -142,24 +128,16 @@ export function PlayerBox({
           <div className="flex space-x-6 ml-4">
             {stats.map((stat, index) => (
               <div key={index} className="text-center">
-                <div 
-                  className="text-2xl font-bold"
-                  style={{ color: playerColor }}
-                >
+                <div className="text-2xl font-bold">
                   {stat.value}
                 </div>
-                <div 
-                  className="text-sm"
-                  style={{ color: `${playerColor}AA` }}
-                >
+                <div className="text-sm opacity-75">
                   {stat.label}
                 </div>
               </div>
             ))}
           </div>
         )}
-        
-        
       </div>
     </div>
   );
