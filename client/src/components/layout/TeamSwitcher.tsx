@@ -74,7 +74,6 @@ export function TeamSwitcher({ mode = 'optional', className, onTeamChange }: Tea
 
   const handleTeamSelect = (value: string) => {
     console.log('TeamSwitcher: Selecting team:', value);
-    setInternalValue(value);
     handleTeamChange(value);
   };
 
