@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Helmet } from 'react-helmet';
 import { PageTemplate } from '@/components/layout/PageTemplate';
@@ -69,7 +68,7 @@ export default function PlayerBoxExamples() {
           Different layouts and configurations of the PlayerBox component
         </p>
       </div>
-      
+
       <div className="space-y-8">
         {/* Basic PlayerBox */}
         <section>
@@ -239,7 +238,7 @@ export default function PlayerBoxExamples() {
         <section>
           <h2 className="text-2xl font-semibold mb-4">Avatar Styling Variations</h2>
           <div className="space-y-6">
-            
+
             {/* Classic Drop Shadow */}
             <div>
               <h3 className="text-lg font-medium mb-3">Classic Drop Shadow</h3>
@@ -1432,3 +1431,4 @@ export default function PlayerBoxExamples() {
     </PageTemplate>
   );
 }
+This code restores the original examples and keeps only the new colored player box examples.
