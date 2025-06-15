@@ -74,18 +74,9 @@ export default function PlayerBoxExamples() {
         <section>
           <h2 className="text-2xl font-semibold mb-4">Basic PlayerBox</h2>
           <div className="space-y-4">
-            <PlayerBox 
-              player={samplePlayers[0]} 
-              className="[&_.player-avatar]:bg-blue-500 [&_.player-avatar]:border-4 [&_.player-avatar]:border-blue-700 [&_.player-avatar]:shadow-lg"
-            />
-            <PlayerBox 
-              player={samplePlayers[1]} 
-              className="[&_.player-avatar]:bg-green-600 [&_.player-avatar]:border-4 [&_.player-avatar]:border-green-800 [&_.player-avatar]:shadow-lg"
-            />
-            <PlayerBox 
-              player={samplePlayers[2]} 
-              className="[&_.player-avatar]:bg-purple-500 [&_.player-avatar]:border-4 [&_.player-avatar]:border-purple-700 [&_.player-avatar]:shadow-lg"
-            />
+            <PlayerBox player={samplePlayers[0]} />
+            <PlayerBox player={samplePlayers[1]} />
+            <PlayerBox player={samplePlayers[2]} />
           </div>
         </section>
 
@@ -95,27 +86,15 @@ export default function PlayerBoxExamples() {
           <div className="space-y-4">
             <div>
               <h3 className="text-lg font-medium mb-2">Small Size</h3>
-              <PlayerBox 
-                player={samplePlayers[0]} 
-                size="sm" 
-                className="[&_.player-avatar]:bg-blue-500 [&_.player-avatar]:border-3 [&_.player-avatar]:border-blue-700 [&_.player-avatar]:shadow-md"
-              />
+              <PlayerBox player={samplePlayers[0]} size="sm" />
             </div>
             <div>
               <h3 className="text-lg font-medium mb-2">Medium Size (Default)</h3>
-              <PlayerBox 
-                player={samplePlayers[0]} 
-                size="md" 
-                className="[&_.player-avatar]:bg-blue-500 [&_.player-avatar]:border-4 [&_.player-avatar]:border-blue-700 [&_.player-avatar]:shadow-lg"
-              />
+              <PlayerBox player={samplePlayers[0]} size="md" />
             </div>
             <div>
               <h3 className="text-lg font-medium mb-2">Large Size</h3>
-              <PlayerBox 
-                player={samplePlayers[0]} 
-                size="lg" 
-                className="[&_.player-avatar]:bg-blue-500 [&_.player-avatar]:border-[5px] [&_.player-avatar]:border-blue-700 [&_.player-avatar]:shadow-xl"
-              />
+              <PlayerBox player={samplePlayers[0]} size="lg" />
             </div>
           </div>
         </section>
@@ -126,7 +105,6 @@ export default function PlayerBoxExamples() {
           <div className="space-y-4">
             <PlayerBox 
               player={samplePlayers[1]} 
-              className="[&_.player-avatar]:bg-green-600 [&_.player-avatar]:border-4 [&_.player-avatar]:border-green-800 [&_.player-avatar]:shadow-lg"
               actions={
                 <div className="flex gap-2">
                   <Button size="sm" variant="outline">
@@ -140,7 +118,6 @@ export default function PlayerBoxExamples() {
             />
             <PlayerBox 
               player={samplePlayers[4]} 
-              className="[&_.player-avatar]:bg-red-600 [&_.player-avatar]:border-4 [&_.player-avatar]:border-red-800 [&_.player-avatar]:shadow-lg"
               actions={
                 <div className="flex gap-2">
                   <Button size="sm" variant="default">
@@ -162,7 +139,6 @@ export default function PlayerBoxExamples() {
           <div className="space-y-4">
             <PlayerBox 
               player={samplePlayers[0]} 
-              className="[&_.player-avatar]:bg-blue-500 [&_.player-avatar]:border-4 [&_.player-avatar]:border-blue-700 [&_.player-avatar]:shadow-lg"
               stats={[
                 { label: "Goals", value: 24 },
                 { label: "Assists", value: 8 },
@@ -171,7 +147,6 @@ export default function PlayerBoxExamples() {
             />
             <PlayerBox 
               player={samplePlayers[1]} 
-              className="[&_.player-avatar]:bg-green-600 [&_.player-avatar]:border-4 [&_.player-avatar]:border-green-800 [&_.player-avatar]:shadow-lg"
               stats={[
                 { label: "Intercepts", value: 12 },
                 { label: "Turnovers", value: 3 },
@@ -180,7 +155,6 @@ export default function PlayerBoxExamples() {
             />
             <PlayerBox 
               player={samplePlayers[4]} 
-              className="[&_.player-avatar]:bg-red-600 [&_.player-avatar]:border-4 [&_.player-avatar]:border-red-800 [&_.player-avatar]:shadow-lg"
               stats={[
                 { label: "Goals", value: 18 },
                 { label: "Accuracy", value: "85%" },
@@ -194,15 +168,10 @@ export default function PlayerBoxExamples() {
         <section>
           <h2 className="text-2xl font-semibold mb-4">Without Position Display</h2>
           <div className="space-y-4">
-            <PlayerBox 
-              player={samplePlayers[0]} 
-              showPositions={false}
-              className="[&_.player-avatar]:bg-blue-500 [&_.player-avatar]:border-4 [&_.player-avatar]:border-blue-700 [&_.player-avatar]:shadow-lg"
-            />
+            <PlayerBox player={samplePlayers[0]} showPositions={false} />
             <PlayerBox 
               player={samplePlayers[1]} 
               showPositions={false}
-              className="[&_.player-avatar]:bg-green-600 [&_.player-avatar]:border-4 [&_.player-avatar]:border-green-800 [&_.player-avatar]:shadow-lg"
               stats={[
                 { label: "MVP", value: 2 },
                 { label: "Games", value: 8 }
@@ -218,7 +187,6 @@ export default function PlayerBoxExamples() {
             <PlayerBox 
               player={samplePlayers[3]} 
               size="lg"
-              className="[&_.player-avatar]:bg-orange-500 [&_.player-avatar]:border-[5px] [&_.player-avatar]:border-orange-700 [&_.player-avatar]:shadow-xl"
               stats={[
                 { label: "Goals", value: 32 },
                 { label: "Assists", value: 15 },
@@ -239,7 +207,6 @@ export default function PlayerBoxExamples() {
               player={samplePlayers[2]} 
               size="sm"
               showPositions={false}
-              className="[&_.player-avatar]:bg-purple-500 [&_.player-avatar]:border-3 [&_.player-avatar]:border-purple-700 [&_.player-avatar]:shadow-md"
               actions={
                 <Badge variant="secondary">
                   Inactive
@@ -253,36 +220,11 @@ export default function PlayerBoxExamples() {
         <section>
           <h2 className="text-2xl font-semibold mb-4">Different Avatar Colors</h2>
           <div className="space-y-4">
-            <PlayerBox 
-              player={samplePlayers[0]}
-              size="sm"
-              showPositions={false}
-              className="[&_.player-avatar]:bg-blue-500 [&_.player-avatar]:border-3 [&_.player-avatar]:border-blue-700 [&_.player-avatar]:shadow-md"
-            />
-            <PlayerBox 
-              player={samplePlayers[1]}
-              size="sm"
-              showPositions={false}
-              className="[&_.player-avatar]:bg-green-600 [&_.player-avatar]:border-3 [&_.player-avatar]:border-green-800 [&_.player-avatar]:shadow-md"
-            />
-            <PlayerBox 
-              player={samplePlayers[2]}
-              size="sm"
-              showPositions={false}
-              className="[&_.player-avatar]:bg-purple-500 [&_.player-avatar]:border-3 [&_.player-avatar]:border-purple-700 [&_.player-avatar]:shadow-md"
-            />
-            <PlayerBox 
-              player={samplePlayers[3]}
-              size="sm"
-              showPositions={false}
-              className="[&_.player-avatar]:bg-orange-500 [&_.player-avatar]:border-3 [&_.player-avatar]:border-orange-700 [&_.player-avatar]:shadow-md"
-            />
-            <PlayerBox 
-              player={samplePlayers[4]}
-              size="sm"
-              showPositions={false}
-              className="[&_.player-avatar]:bg-red-600 [&_.player-avatar]:border-3 [&_.player-avatar]:border-red-800 [&_.player-avatar]:shadow-md"
-            />
+            <PlayerBox player={samplePlayers[0]} size="sm" showPositions={false} />
+            <PlayerBox player={samplePlayers[1]} size="sm" showPositions={false} />
+            <PlayerBox player={samplePlayers[2]} size="sm" showPositions={false} />
+            <PlayerBox player={samplePlayers[3]} size="sm" showPositions={false} />
+            <PlayerBox player={samplePlayers[4]} size="sm" showPositions={false} />
           </div>
         </section>
 
@@ -745,11 +687,11 @@ export default function PlayerBoxExamples() {
               </div>
             </div>
 
-            {/* Avatar Inside Colored Player Box with Dark Border */}
-            <div>
-              <h3 className="text-lg font-medium mb-3">Avatar Inside Colored Player Box with Dark Border</h3>
+             {/* Colored Player Box with Consistent Backgrounds */}
+             <div>
+              <h3 className="text-lg font-medium mb-3">Basic Colored Player Boxes</h3>
               <div className="bg-white p-6 rounded-lg border space-y-4">
-                <p className="text-sm text-gray-600 mb-4">Complete PlayerBox components with consistent colored backgrounds and dark borders</p>
+                <p className="text-sm text-gray-600 mb-4">PlayerBox components with consistent colored backgrounds</p>
                 {samplePlayers.slice(0, 5).map((player) => {
                   const playerColorHex = (() => {
                     const colorMap: Record<string, string> = {
@@ -765,212 +707,21 @@ export default function PlayerBoxExamples() {
                   })();
 
                   return (
-                    <div key={`dark-border-container-${player.id}`} className="relative">
+                    <div key={`basic-colored-${player.id}`} className="relative">
                       <PlayerBox 
                         player={player}
                         size="md"
                         showPositions={true}
-                        className="border-2 shadow-md"
+                        className="rounded-lg border-2 shadow-md p-4"
                         style={{ 
                           backgroundColor: `${playerColorHex}15`,
-                          borderColor: `${playerColorHex}80`,
+                          borderColor: `${playerColorHex}30`,
                           color: playerColorHex
                         }}
                       />
                     </div>
                   );
                 })}
-              </div>
-            </div>
-
-            {/* Thick Dark Border with Light Background */}
-            <div>
-              <h3 className="text-lg font-medium mb-3">Thick Dark Border with Light Background</h3>
-              <div className="bg-gray-50 p-6 rounded-lg space-y-4">
-                <p className="text-sm text-gray-600 mb-4">PlayerBox components with thick dark borders and very light colored backgrounds</p>
-                {samplePlayers.slice(1, 4).map((player) => {
-                  const playerColorHex = (() => {
-                    const colorMap: Record<string, string> = {
-                      'bg-red-500': '#ef4444', 'bg-red-600': '#dc2626',
-                      'bg-orange-500': '#f97316', 'bg-orange-600': '#ea580c',
-                      'bg-yellow-600': '#ca8a04', 'bg-amber-600': '#d97706',
-                      'bg-green-600': '#16a34a', 'bg-green-700': '#15803d',
-                      'bg-teal-600': '#0d9488', 'bg-cyan-600': '#0891b2',
-                      'bg-blue-500': '#3b82f6', 'bg-blue-600': '#2563eb',
-                      'bg-purple-500': '#a855f7', 'bg-purple-600': '#9333ea'
-                    };
-                    return colorMap[player.avatarColor || 'bg-gray-500'] || '#6b7280';
-                  })();
-
-                  return (
-                    <div key={`thick-border-${player.id}`} className="relative">
-                      <PlayerBox 
-                        player={player}
-                        size="md"
-                        showPositions={true}
-                        className="rounded-xl border-4 shadow-lg"
-                        style={{ 
-                          backgroundColor: `${playerColorHex}08`,
-                          borderColor: `${playerColorHex}C0`,
-                          color: playerColorHex
-                        }}
-                      />
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Dark Border Medium Background */}
-            <div>
-              <h3 className="text-lg font-medium mb-3">Dark Border with Medium Background</h3>
-              <div className="bg-white p-6 rounded-lg border space-y-4">
-                <p className="text-sm text-gray-600 mb-4">PlayerBox components with dark borders and medium-toned colored backgrounds</p>
-                {samplePlayers.slice(0, 4).map((player) => {
-                  const playerColorHex = (() => {
-                    const colorMap: Record<string, string> = {
-                      'bg-red-500': '#ef4444', 'bg-red-600': '#dc2626',
-                      'bg-orange-500': '#f97316', 'bg-orange-600': '#ea580c',
-                      'bg-yellow-600': '#ca8a04', 'bg-amber-600': '#d97706',
-                      'bg-green-600': '#16a34a', 'bg-green-700': '#15803d',
-                      'bg-teal-600': '#0d9488', 'bg-cyan-600': '#0891b2',
-                      'bg-blue-500': '#3b82f6', 'bg-blue-600': '#2563eb',
-                      'bg-purple-500': '#a855f7', 'bg-purple-600': '#9333ea'
-                    };
-                    return colorMap[player.avatarColor || 'bg-gray-500'] || '#6b7280';
-                  })();
-
-                  return (
-                    <div key={`medium-bg-${player.id}`} className="relative">
-                      <PlayerBox 
-                        player={player}
-                        size="md"
-                        showPositions={true}
-                        className="rounded-lg border-3 shadow-md"
-                        style={{ 
-                          backgroundColor: `${playerColorHex}18`,
-                          borderColor: `${playerColorHex}A0`,
-                          color: playerColorHex
-                        }}
-                      />
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* High Contrast Dark Border */}
-            <div>
-              <h3 className="text-lg font-medium mb-3">High Contrast Dark Border</h3>
-              <div className="bg-gray-100 p-6 rounded-lg space-y-4">
-                <p className="text-sm text-gray-600 mb-4">PlayerBox components with very dark borders for maximum contrast</p>
-                {samplePlayers.slice(2, 5).map((player) => {
-                  const playerColorHex = (() => {
-                    const colorMap: Record<string, string> = {
-                      'bg-red-500': '#dc2626', 'bg-red-600': '#b91c1c',
-                      'bg-orange-500': '#ea580c', 'bg-orange-600': '#c2410c',
-                      'bg-yellow-600': '#a16207', 'bg-amber-600': '#b45309',
-                      'bg-green-600': '#15803d', 'bg-green-700': '#14532d',
-                      'bg-teal-600': '#0f766e', 'bg-cyan-600': '#0e7490',
-                      'bg-blue-500': '#1d4ed8', 'bg-blue-600': '#1e40af',
-                      'bg-purple-500': '#7e22ce', 'bg-purple-600': '#6b21a8'
-                    };
-                    return colorMap[player.avatarColor || 'bg-gray-500'] || '#374151';
-                  })();
-
-                  return (
-                    <div key={`high-contrast-${player.id}`} className="relative">
-                      <PlayerBox 
-                        player={player}
-                        size="md"
-                        showPositions={true}
-                        className="rounded-lg border-3 shadow-lg"
-                        style={{ 
-                          backgroundColor: `${playerColorHex}12`,
-                          borderColor: playerColorHex,
-                          color: '#ffffff'
-                        }}
-                      />
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Compact Dark Border Style */}
-            <div>
-              <h3 className="text-lg font-medium mb-3">Compact Dark Border Style</h3>
-              <div className="bg-white p-6 rounded-lg border space-y-3">
-                <p className="text-sm text-gray-600 mb-4">Smaller PlayerBox components with dark borders and colored backgrounds</p>
-                {samplePlayers.map((player) => {
-                  const playerColorHex = (() => {
-                    const colorMap: Record<string, string> = {
-                      'bg-red-500': '#ef4444', 'bg-red-600': '#dc2626',
-                      'bg-orange-500': '#f97316', 'bg-orange-600': '#ea580c',
-                      'bg-yellow-600': '#ca8a04', 'bg-amber-600': '#d97706',
-                      'bg-green-600': '#16a34a', 'bg-green-700': '#15803d',
-                      'bg-teal-600': '#0d9488', 'bg-cyan-600': '#0891b2',
-                      'bg-blue-500': '#3b82f6', 'bg-blue-600': '#2563eb',
-                      'bg-purple-500': '#a855f7', 'bg-purple-600': '#9333ea'
-                    };
-                    return colorMap[player.avatarColor || 'bg-gray-500'] || '#6b7280';
-                  })();
-
-                  return (
-                    <div key={`compact-dark-${player.id}`} className="relative">
-                      <PlayerBox 
-                        player={player}
-                        size="sm"
-                        showPositions={true}
-                        className="rounded-md border-2 shadow-sm"
-                        style={{ 
-                          backgroundColor: `${playerColorHex}0A`,
-                          borderColor: `${playerColorHex}90`,
-                          color: playerColorHex
-                        }}
-                      />
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Colored Player Box with Enhanced Shadows */}
-            <div>
-              <h3 className="text-lg font-medium mb-3">Colored Player Box - Enhanced Shadows</h3>
-              <div className="bg-gray-50 p-6 rounded-lg space-y-4">
-                <p className="text-sm text-gray-600 mb-4">PlayerBox components with colored backgrounds and enhanced shadow effects</p>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {samplePlayers.slice(0, 3).map((player) => {
-                    const playerColorHex = (() => {
-                      const colorMap: Record<string, string> = {
-                        'bg-red-500': '#ef4444', 'bg-red-600': '#dc2626',
-                        'bg-orange-500': '#f97316', 'bg-orange-600': '#ea580c',
-                        'bg-yellow-600': '#ca8a04', 'bg-amber-600': '#d97706',
-                        'bg-green-600': '#16a34a', 'bg-green-700': '#15803d',
-                        'bg-teal-600': '#0d9488', 'bg-cyan-600': '#0891b2',
-                        'bg-blue-500': '#3b82f6', 'bg-blue-600': '#2563eb',
-                        'bg-purple-500': '#a855f7', 'bg-purple-600': '#9333ea'
-                      };
-                      return colorMap[player.avatarColor || 'bg-gray-500'] || '#6b7280';
-                    })();
-
-                    return (
-                      <div key={`enhanced-shadow-${player.id}`} className="relative">
-                        <PlayerBox 
-                          player={player}
-                          size="md"
-                          showPositions={true}
-                          className="rounded-xl shadow-xl border-2 p-4"
-                          style={{ 
-                            backgroundColor: `${playerColorHex}20`,
-                            borderColor: `${playerColorHex}30`
-                          }}
-                        />
-                      </div>
-                    );
-                  })}
-                </div>
               </div>
             </div>
 
@@ -995,7 +746,7 @@ export default function PlayerBoxExamples() {
                     })();
 
                     return (
-                      <div key={`large-colored-box-${player.id}`} className="relative">
+                      <div key={`large-colored-${player.id}`} className="relative">
                         <PlayerBox 
                           player={player}
                           size="lg"
@@ -1033,7 +784,7 @@ export default function PlayerBoxExamples() {
                   })();
 
                   return (
-                    <div key={`compact-colored-box-${player.id}`} className="relative">
+                    <div key={`compact-colored-${player.id}`} className="relative">
                       <PlayerBox 
                         player={player}
                         size="sm"
@@ -1050,8 +801,8 @@ export default function PlayerBoxExamples() {
               </div>
             </div>
 
-            {/* Premium Colored Player Boxes */}
-            <div>
+             {/* Premium Colored Player Boxes */}
+             <div>
               <h3 className="text-lg font-medium mb-3">Premium Colored Player Boxes</h3>
               <div className="bg-slate-50 p-6 rounded-lg space-y-4">
                 <p className="text-sm text-gray-600 mb-4">Premium styling with thick colored borders and consistent backgrounds</p>
@@ -1080,44 +831,6 @@ export default function PlayerBoxExamples() {
                           style={{ 
                             backgroundColor: `${playerColorHex}15`,
                             borderColor: `${playerColorHex}40`
-                          }}
-                        />
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-
-            {/* Gradient Colored Player Boxes */}
-            <div>
-              <h3 className="text-lg font-medium mb-3">Gradient Colored Player Boxes</h3>
-              <div className="bg-white p-6 rounded-lg border space-y-4">
-                <p className="text-sm text-gray-600 mb-4">PlayerBox components with gradient colored backgrounds</p>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {samplePlayers.slice(2, 5).map((player) => {
-                    const playerColorHex = (() => {
-                      const colorMap: Record<string, string> = {
-                        'bg-red-500': '#ef4444', 'bg-red-600': '#dc2626',
-                        'bg-orange-500': '#f97316', 'bg-orange-600': '#ea580c',
-                        'bg-yellow-600': '#ca8a04', 'bg-amber-600': '#d97706',
-                        'bg-green-600': '#16a34a', 'bg-green-700': '#15803d',
-                        'bg-teal-600': '#0d9488', 'bg-cyan-600': '#0891b2',
-                        'bg-blue-500': '#3b82f6', 'bg-blue-600': '#2563eb',
-                        'bg-purple-500': '#a855f7', 'bg-purple-600': '#9333ea'
-                      };
-                      return colorMap[player.avatarColor || 'bg-gray-500'] || '#6b7280';
-                    })();
-
-                    return (
-                      <div key={`gradient-box-${player.id}`} className="relative">
-                        <PlayerBox 
-                          player={player}
-                          size="md"
-                          showPositions={true}
-                          className="rounded-xl shadow-lg border-2 border-white p-4"
-                          style={{ 
-                            background: `linear-gradient(135deg, ${playerColorHex}25, ${playerColorHex}08)` 
                           }}
                         />
                       </div>
@@ -1186,7 +899,7 @@ export default function PlayerBoxExamples() {
                   })();
 
                   return (
-                    <div key={`minimal-box-${player.id}`} className="relative">
+                    <div key={`minimal-${player.id}`} className="relative">
                       <PlayerBox 
                         player={player}
                         size="sm"
@@ -1203,280 +916,6 @@ export default function PlayerBoxExamples() {
               </div>
             </div>
 
-            {/* Premium Luxury */}
-            <div>
-              <h3 className="text-lg font-medium mb-3">Premium Luxury</h3>
-              <div className="bg-slate-50 p-6 rounded-lg space-y-4">
-                <p className="text-sm text-gray-600 mb-4">High-end styling with metallic accents</p>
-                {samplePlayers.slice(2, 5).map((player) => (
-                  <div key={`luxury-${player.id}`} className="relative">
-                    <PlayerBox 
-                      player={player}
-                      size="lg"
-                      showPositions={true}
-                      className="[&>div>div:first-child]:border-4 [&>div>div:first-child]:border-slate-200 [&>div>div:first-child]:shadow-xl [&>div>div:first-child]:shadow-slate-500/30 [&>div>div:first-child]:ring-1 [&>div>div:first-child]:ring-slate-300"
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Double Border Effect - White + Color */}
-            <div>
-              <h3 className="text-lg font-medium mb-3">Double Border - White + Color</h3>
-              <div className="bg-white p-6 rounded-lg border space-y-4">
-                <p className="text-sm text-gray-600 mb-4">White outer border with thin inner colored border matching avatar</p>
-                {samplePlayers.slice(0, 5).map((player) => (
-                  <div key={`double-white-color-${player.id}`} className="relative">
-                    <PlayerBox 
-                      player={player}
-                      size="md"
-                      showPositions={true}
-                      className="[&>div>div:first-child]:border-4 [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-2 [&>div>div:first-child]:ring-current [&>div>div:first-child]:shadow-lg [&>div>div:first-child]:shadow-black/20"
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Triple Layer Border */}
-            <div>
-              <h3 className="text-lg font-medium mb-3">Triple Layer Border</h3>
-              <div className="bg-gray-50 p-6 rounded-lg space-y-4">
-                <p className="text-sm text-gray-600 mb-4">White border, colored ring, plus shadow for maximum depth</p>
-                {samplePlayers.slice(1, 4).map((player) => (
-                  <div key={`triple-${player.id}`} className="relative">
-                    <PlayerBox 
-                      player={player}
-                      size="lg"
-                      showPositions={true}
-                      className="[&>div>div:first-child]:border-[5px] [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-3 [&>div>div:first-child]:ring-current [&>div>div:first-child]:shadow-xl [&>div>div:first-child]:shadow-current/25"
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Subtle Double Border */}
-            <div>
-              <h3 className="text-lg font-medium mb-3">Subtle Double Border</h3>
-              <div className="bg-white p-6 rounded-lg border space-y-4">
-                <p className="text-sm text-gray-600 mb-4">Thinner borders for a more refined look</p>
-                {samplePlayers.slice(0, 4).map((player) => (
-                  <div key={`subtle-double-${player.id}`} className="relative">
-                    <PlayerBox 
-                      player={player}
-                      size="md"
-                      showPositions={true}
-                      className="[&>div>div:first-child]:border-3 [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-1 [&>div>div:first-child]:ring-current [&>div>div:first-child]:shadow-md [&>div>div:first-child]:shadow-black/15"
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Bold Double Border */}
-            <div>
-              <h3 className="text-lg font-medium mb-3">Bold Double Border</h3>
-              <div className="bg-white p-6 rounded-lg border space-y-4">
-                <p className="text-sm text-gray-600 mb-4">Thick white border with prominent colored inner ring</p>
-                {samplePlayers.slice(2, 5).map((player) => (
-                  <div key={`bold-double-${player.id}`} className="relative">
-                    <PlayerBox 
-                      player={player}
-                      size="lg"
-                      showPositions={true}
-                      className="[&>div>div:first-child]:border-[6px] [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-4 [&>div>div:first-child]:ring-current [&>div>div:first-child]:shadow-2xl [&>div>div:first-child]:shadow-black/30"
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Inverted Double Border */}
-            <div>
-              <h3 className="text-lg font-medium mb-3">Inverted Double Border</h3>
-              <div className="bg-gray-800 p-6 rounded-lg space-y-4">
-                <p className="text-sm text-gray-300 mb-4">Colored outer border with white inner ring on dark background</p>
-                {samplePlayers.slice(1, 4).map((player) => (
-                  <div key={`inverted-double-${player.id}`} className="relative">
-                    <PlayerBox 
-                      player={player}
-                      size="md"
-                      showPositions={true}
-                      className="[&_.player-name]:text-white [&_.player-positions]:text-gray-300 [&>div>div:first-child]:border-4 [&>div>div:first-child]:border-current [&>div>div:first-child]:ring-2 [&>div>div:first-child]:ring-white [&>div>div:first-child]:shadow-xl [&>div>div:first-child]:shadow-black/50"
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Gradient Double Border */}
-            <div>
-              <h3 className="text-lg font-medium mb-3">Gradient Double Border</h3>
-              <div className="bg-white p-6 rounded-lg border space-y-4">
-                <p className="text-sm text-gray-600 mb-4">White border with gradient-colored inner ring effects</p>
-                {samplePlayers.slice(0, 4).map((player, index) => (
-                  <div key={`gradient-double-${player.id}`} className="relative">
-                    <PlayerBox 
-                      player={player}
-                      size="md"
-                      showPositions={true}
-                      className={`[&>div>div:first-child]:border-4 [&>div>div:first-child]:border-white [&>div>div:first-child]:shadow-lg ${
-                        index === 0 ? '[&>div>div:first-child]:ring-2 [&>div>div:first-child]:ring-blue-400 [&>div>div:first-child]:shadow-blue-200/40' :
-                        index === 1 ? '[&>div>div:first-child]:ring-2 [&>div>div:first-child]:ring-green-400 [&>div>div:first-child]:shadow-green-200/40' :
-                        index === 2 ? '[&>div>div:first-child]:ring-2 [&>div>div:first-child]:ring-purple-400 [&>div>div:first-child]:shadow-purple-200/40' :
-                        '[&>div>div:first-child]:ring-2 [&>div>div:first-child]:ring-orange-400 [&>div>div:first-child]:shadow-orange-200/40'
-                      }`}
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Refined Double Border - Thin White */}
-            <div>
-              <h3 className="text-lg font-medium mb-3">Refined Double Border - Thin White</h3>
-              <div className="bg-white p-6 rounded-lg border space-y-4">
-                <p className="text-sm text-gray-600 mb-4">Thinner white outer border with colored inner ring for elegant refinement</p>
-                {samplePlayers.slice(0, 5).map((player) => (
-                  <div key={`refined-thin-${player.id}`} className="relative">
-                    <PlayerBox 
-                      player={player}
-                      size="md"
-                      showPositions={true}
-                      className="[&>div>div:first-child]:border-2 [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-2 [&>div>div:first-child]:ring-current [&>div>div:first-child]:shadow-lg [&>div>div:first-child]:shadow-black/15"
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Ultra-Thin Double Border */}
-            <div>
-              <h3 className="text-lg font-medium mb-3">Ultra-Thin Double Border</h3>
-              <div className="bg-gray-50 p-6 rounded-lg space-y-4">
-                <p className="text-sm text-gray-600 mb-4">Very thin borders for delicate, refined appearance</p>
-                {samplePlayers.slice(1, 4).map((player) => (
-                  <div key={`ultra-thin-${player.id}`} className="relative">
-                    <PlayerBox 
-                      player={player}
-                      size="md"
-                      showPositions={true}
-                      className="[&>div>div:first-child]:border [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-1 [&>div>div:first-child]:ring-current [&>div>div:first-child]:shadow-md [&>div>div:first-child]:shadow-black/10"
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Medium Thin Double Border */}
-            <div>
-              <h3 className="text-lg font-medium mb-3">Medium Thin Double Border</h3>
-              <div className="bg-white p-6 rounded-lg border space-y-4">
-                <p className="text-sm text-gray-600 mb-4">Balanced thin white border with subtle colored accent</p>
-                {samplePlayers.slice(0, 4).map((player) => (
-                  <div key={`medium-thin-${player.id}`} className="relative">
-                    <PlayerBox 
-                      player={player}
-                      size="md"
-                      showPositions={true}
-                      className="[&>div>div:first-child]:border-[3px] [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-1 [&>div>div:first-child]:ring-current [&>div>div:first-child]:shadow-md [&>div>div:first-child]:shadow-black/12"
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Asymmetric Double Border */}
-            <div>
-              <h3 className="text-lg font-medium mb-3">Asymmetric Double Border</h3>
-              <div className="bg-white p-6 rounded-lg border space-y-4">
-                <p className="text-sm text-gray-600 mb-4">Thin white border with thicker colored ring for emphasis</p>
-                {samplePlayers.slice(2, 5).map((player) => (
-                  <div key={`asymmetric-${player.id}`} className="relative">
-                    <PlayerBox 
-                      player={player}
-                      size="md"
-                      showPositions={true}
-                      className="[&>div>div:first-child]:border-2 [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-[3px] [&>div>div:first-child]:ring-current [&>div>div:first-child]:shadow-lg [&>div>div:first-child]:shadow-current/20"
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Soft Thin Double Border */}
-            <div>
-              <h3 className="text-lg font-medium mb-3">Soft Thin Double Border</h3>
-              <div className="bg-slate-50 p-6 rounded-lg space-y-4">
-                <p className="text-sm text-gray-600 mb-4">Gentle thin borders with soft shadows for professional look</p>
-                {samplePlayers.slice(1, 5).map((player) => (
-                  <div key={`soft-thin-${player.id}`} className="relative">
-                    <PlayerBox 
-                      player={player}
-                      size="md"
-                      showPositions={true}
-                      className="[&>div>div:first-child]:border-2 [&>div>div:first-child]:border-slate-200 [&>div>div:first-child]:ring-1 [&>div>div:first-child]:ring-current [&>div>div:first-child]:shadow-md [&>div>div:first-child]:shadow-slate-300/40"
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Crisp Thin Double Border */}
-            <div>
-              <h3 className="text-lg font-medium mb-3">Crisp Thin Double Border</h3>
-              <div className="bg-white p-6 rounded-lg border space-y-4">
-                <p className="text-sm text-gray-600 mb-4">Sharp, clean thin borders with high contrast</p>
-                {samplePlayers.slice(0, 3).map((player) => (
-                  <div key={`crisp-thin-${player.id}`} className="relative">
-                    <PlayerBox 
-                      player={player}
-                      size="lg"
-                      showPositions={true}
-                      className="[&>div>div:first-child]:border-2 [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-2 [&>div>div:first-child]:ring-current [&>div>div:first-child]:shadow-lg [&>div>div:first-child]:shadow-black/25"
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Crisp Thin Double Border - Medium */}
-            <div>
-              <h3 className="text-lg font-medium mb-3">Crisp Thin Double Border - Medium</h3>
-              <div className="bg-white p-6 rounded-lg border space-y-4">
-                <p className="text-sm text-gray-600 mb-4">Sharp, clean thin borders with medium-sized avatars</p>
-                {samplePlayers.slice(1, 5).map((player) => (
-                  <div key={`crisp-thin-medium-${player.id}`} className="relative">
-                    <PlayerBox 
-                      player={player}
-                      size="md"
-                      showPositions={true}
-                      className="[&>div>div:first-child]:border-2 [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-2 [&>div>div:first-child]:ring-current [&>div>div:first-child]:shadow-lg [&>div>div:first-child]:shadow-black/25"
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Professional Double Border */}
-            <div>
-              <h3 className="text-lg font-medium mb-3">Professional Double Border</h3>
-              <div className="bg-slate-100 p-6 rounded-lg space-y-4">
-                <p className="text-sm text-gray-600 mb-4">Clean corporate styling with white and accent borders</p>
-                {samplePlayers.slice(1, 5).map((player) => (
-                  <div key={`professional-double-${player.id}`} className="relative">
-                    <PlayerBox 
-                      player={player}
-                      size="md"
-                      showPositions={true}
-                      className="[&>div>div:first-child]:border-3 [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-1 [&>div>div:first-child]:ring-slate-400 [&>div>div:first-child]:shadow-lg [&>div>div:first-child]:shadow-slate-300/50"
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
           </div>
         </section>
       </div>
