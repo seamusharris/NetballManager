@@ -345,6 +345,138 @@ export default function TeamBoxExamples() {
             />
           </div>
         </section>
+
+        {/* Hover Effect Comparisons */}
+        <section>
+          <h2 className="text-2xl font-semibold mb-4">Hover Effect Comparisons</h2>
+          <div className="space-y-6">
+            
+            <div>
+              <h3 className="text-lg font-medium mb-3">1. Background Darkening Only</h3>
+              <div 
+                className="flex items-center justify-between p-3 rounded-lg border-2 transition-all duration-300 cursor-pointer"
+                style={{ 
+                  backgroundColor: `${sampleTeams[0].clubCode === 'WNC' ? '#ff2c36' : '#3b82f6'}15`,
+                  borderColor: sampleTeams[0].clubCode === 'WNC' ? '#ff2c36' : '#3b82f6'
+                }}
+                onMouseEnter={(e) => {
+                  const teamColor = sampleTeams[0].clubCode === 'WNC' ? '#ff2c36' : '#3b82f6';
+                  e.currentTarget.style.backgroundColor = `${teamColor}25`;
+                }}
+                onMouseLeave={(e) => {
+                  const teamColor = sampleTeams[0].clubCode === 'WNC' ? '#ff2c36' : '#3b82f6';
+                  e.currentTarget.style.backgroundColor = `${teamColor}15`;
+                }}
+              >
+                <div className="flex items-center space-x-3">
+                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: sampleTeams[0].clubCode === 'WNC' ? '#ff2c36' : '#3b82f6' }}></div>
+                  <div>
+                    <div className="font-semibold">{sampleTeams[0].name}</div>
+                    <div className="text-sm text-gray-600">{sampleTeams[0].division} • {sampleTeams[0].clubName}</div>
+                  </div>
+                </div>
+                <Badge variant="default">Background Only</Badge>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-medium mb-3">2. Shadow Change Only (Medium)</h3>
+              <div 
+                className="flex items-center justify-between p-3 rounded-lg border-2 transition-shadow duration-300 hover:shadow-md shadow-sm cursor-pointer"
+                style={{ 
+                  backgroundColor: `${sampleTeams[1].clubCode === 'WNC' ? '#ff2c36' : '#3b82f6'}15`,
+                  borderColor: sampleTeams[1].clubCode === 'WNC' ? '#ff2c36' : '#3b82f6'
+                }}
+              >
+                <div className="flex items-center space-x-3">
+                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: sampleTeams[1].clubCode === 'WNC' ? '#ff2c36' : '#3b82f6' }}></div>
+                  <div>
+                    <div className="font-semibold">{sampleTeams[1].name}</div>
+                    <div className="text-sm text-gray-600">{sampleTeams[1].division} • {sampleTeams[1].clubName}</div>
+                  </div>
+                </div>
+                <Badge variant="outline">Shadow Only (md)</Badge>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-medium mb-3">3. Shadow Change Only (Large)</h3>
+              <div 
+                className="flex items-center justify-between p-3 rounded-lg border-2 transition-shadow duration-300 hover:shadow-lg shadow-sm cursor-pointer"
+                style={{ 
+                  backgroundColor: `${sampleTeams[2].clubCode === 'WNC' ? '#ff2c36' : '#3b82f6'}15`,
+                  borderColor: sampleTeams[2].clubCode === 'WNC' ? '#ff2c36' : '#3b82f6'
+                }}
+              >
+                <div className="flex items-center space-x-3">
+                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: sampleTeams[2].clubCode === 'WNC' ? '#ff2c36' : '#3b82f6' }}></div>
+                  <div>
+                    <div className="font-semibold">{sampleTeams[2].name}</div>
+                    <div className="text-sm text-gray-600">{sampleTeams[2].division} • {sampleTeams[2].clubName}</div>
+                  </div>
+                </div>
+                <Badge variant="outline">Shadow Only (lg)</Badge>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-medium mb-3">4. Background Darkening + Medium Shadow</h3>
+              <div 
+                className="flex items-center justify-between p-3 rounded-lg border-2 transition-all duration-300 hover:shadow-md shadow-sm cursor-pointer"
+                style={{ 
+                  backgroundColor: `${sampleTeams[3].clubCode === 'WNC' ? '#ff2c36' : '#3b82f6'}15`,
+                  borderColor: sampleTeams[3].clubCode === 'WNC' ? '#ff2c36' : '#3b82f6'
+                }}
+                onMouseEnter={(e) => {
+                  const teamColor = sampleTeams[3].clubCode === 'WNC' ? '#ff2c36' : '#3b82f6';
+                  e.currentTarget.style.backgroundColor = `${teamColor}25`;
+                }}
+                onMouseLeave={(e) => {
+                  const teamColor = sampleTeams[3].clubCode === 'WNC' ? '#ff2c36' : '#3b82f6';
+                  e.currentTarget.style.backgroundColor = `${teamColor}15`;
+                }}
+              >
+                <div className="flex items-center space-x-3">
+                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: sampleTeams[3].clubCode === 'WNC' ? '#ff2c36' : '#3b82f6' }}></div>
+                  <div>
+                    <div className="font-semibold">{sampleTeams[3].name}</div>
+                    <div className="text-sm text-gray-600">{sampleTeams[3].division} • {sampleTeams[3].clubName}</div>
+                  </div>
+                </div>
+                <Badge variant="secondary">Background + Shadow (md)</Badge>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-medium mb-3">5. Background Darkening + Large Shadow</h3>
+              <div 
+                className="flex items-center justify-between p-3 rounded-lg border-2 transition-all duration-300 hover:shadow-lg shadow-sm cursor-pointer"
+                style={{ 
+                  backgroundColor: `${sampleTeams[4].clubCode === 'WNC' ? '#ff2c36' : '#3b82f6'}15`,
+                  borderColor: sampleTeams[4].clubCode === 'WNC' ? '#ff2c36' : '#3b82f6'
+                }}
+                onMouseEnter={(e) => {
+                  const teamColor = sampleTeams[4].clubCode === 'WNC' ? '#ff2c36' : '#3b82f6';
+                  e.currentTarget.style.backgroundColor = `${teamColor}25`;
+                }}
+                onMouseLeave={(e) => {
+                  const teamColor = sampleTeams[4].clubCode === 'WNC' ? '#ff2c36' : '#3b82f6';
+                  e.currentTarget.style.backgroundColor = `${teamColor}15`;
+                }}
+              >
+                <div className="flex items-center space-x-3">
+                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: sampleTeams[4].clubCode === 'WNC' ? '#ff2c36' : '#3b82f6' }}></div>
+                  <div>
+                    <div className="font-semibold">{sampleTeams[4].name}</div>
+                    <div className="text-sm text-gray-600">{sampleTeams[4].division} • {sampleTeams[4].clubName}</div>
+                  </div>
+                </div>
+                <Badge variant="secondary">Background + Shadow (lg)</Badge>
+              </div>
+            </div>
+
+          </div>
+        </section>
       </div>
     </PageTemplate>
   );
