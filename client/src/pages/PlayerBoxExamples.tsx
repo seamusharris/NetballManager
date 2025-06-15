@@ -74,9 +74,18 @@ export default function PlayerBoxExamples() {
         <section>
           <h2 className="text-2xl font-semibold mb-4">Basic PlayerBox</h2>
           <div className="space-y-4">
-            <PlayerBox player={samplePlayers[0]} />
-            <PlayerBox player={samplePlayers[1]} />
-            <PlayerBox player={samplePlayers[2]} />
+            <PlayerBox 
+              player={samplePlayers[0]} 
+              className="[&_.player-avatar]:border-4 [&_.player-avatar]:border-blue-700 [&_.player-avatar]:shadow-lg"
+            />
+            <PlayerBox 
+              player={samplePlayers[1]} 
+              className="[&_.player-avatar]:border-4 [&_.player-avatar]:border-green-800 [&_.player-avatar]:shadow-lg"
+            />
+            <PlayerBox 
+              player={samplePlayers[2]} 
+              className="[&_.player-avatar]:border-4 [&_.player-avatar]:border-purple-700 [&_.player-avatar]:shadow-lg"
+            />
           </div>
         </section>
 
@@ -86,15 +95,27 @@ export default function PlayerBoxExamples() {
           <div className="space-y-4">
             <div>
               <h3 className="text-lg font-medium mb-2">Small Size</h3>
-              <PlayerBox player={samplePlayers[0]} size="sm" />
+              <PlayerBox 
+                player={samplePlayers[0]} 
+                size="sm" 
+                className="[&_.player-avatar]:border-3 [&_.player-avatar]:border-blue-700 [&_.player-avatar]:shadow-md"
+              />
             </div>
             <div>
               <h3 className="text-lg font-medium mb-2">Medium Size (Default)</h3>
-              <PlayerBox player={samplePlayers[0]} size="md" />
+              <PlayerBox 
+                player={samplePlayers[0]} 
+                size="md" 
+                className="[&_.player-avatar]:border-4 [&_.player-avatar]:border-blue-700 [&_.player-avatar]:shadow-lg"
+              />
             </div>
             <div>
               <h3 className="text-lg font-medium mb-2">Large Size</h3>
-              <PlayerBox player={samplePlayers[0]} size="lg" />
+              <PlayerBox 
+                player={samplePlayers[0]} 
+                size="lg" 
+                className="[&_.player-avatar]:border-[5px] [&_.player-avatar]:border-blue-700 [&_.player-avatar]:shadow-xl"
+              />
             </div>
           </div>
         </section>
@@ -105,6 +126,7 @@ export default function PlayerBoxExamples() {
           <div className="space-y-4">
             <PlayerBox 
               player={samplePlayers[1]} 
+              className="[&_.player-avatar]:border-4 [&_.player-avatar]:border-green-800 [&_.player-avatar]:shadow-lg"
               actions={
                 <div className="flex gap-2">
                   <Button size="sm" variant="outline">
@@ -118,6 +140,7 @@ export default function PlayerBoxExamples() {
             />
             <PlayerBox 
               player={samplePlayers[4]} 
+              className="[&_.player-avatar]:border-4 [&_.player-avatar]:border-red-800 [&_.player-avatar]:shadow-lg"
               actions={
                 <div className="flex gap-2">
                   <Button size="sm" variant="default">
@@ -139,6 +162,7 @@ export default function PlayerBoxExamples() {
           <div className="space-y-4">
             <PlayerBox 
               player={samplePlayers[0]} 
+              className="[&_.player-avatar]:border-4 [&_.player-avatar]:border-blue-700 [&_.player-avatar]:shadow-lg"
               stats={[
                 { label: "Goals", value: 24 },
                 { label: "Assists", value: 8 },
@@ -147,6 +171,7 @@ export default function PlayerBoxExamples() {
             />
             <PlayerBox 
               player={samplePlayers[1]} 
+              className="[&_.player-avatar]:border-4 [&_.player-avatar]:border-green-800 [&_.player-avatar]:shadow-lg"
               stats={[
                 { label: "Intercepts", value: 12 },
                 { label: "Turnovers", value: 3 },
@@ -155,6 +180,7 @@ export default function PlayerBoxExamples() {
             />
             <PlayerBox 
               player={samplePlayers[4]} 
+              className="[&_.player-avatar]:border-4 [&_.player-avatar]:border-red-800 [&_.player-avatar]:shadow-lg"
               stats={[
                 { label: "Goals", value: 18 },
                 { label: "Accuracy", value: "85%" },
@@ -171,10 +197,12 @@ export default function PlayerBoxExamples() {
             <PlayerBox 
               player={samplePlayers[0]} 
               showPositions={false}
+              className="[&_.player-avatar]:border-4 [&_.player-avatar]:border-blue-700 [&_.player-avatar]:shadow-lg"
             />
             <PlayerBox 
               player={samplePlayers[1]} 
               showPositions={false}
+              className="[&_.player-avatar]:border-4 [&_.player-avatar]:border-green-800 [&_.player-avatar]:shadow-lg"
               stats={[
                 { label: "MVP", value: 2 },
                 { label: "Games", value: 8 }
@@ -190,6 +218,7 @@ export default function PlayerBoxExamples() {
             <PlayerBox 
               player={samplePlayers[3]} 
               size="lg"
+              className="[&_.player-avatar]:border-[5px] [&_.player-avatar]:border-orange-700 [&_.player-avatar]:shadow-xl"
               stats={[
                 { label: "Goals", value: 32 },
                 { label: "Assists", value: 15 },
@@ -210,6 +239,7 @@ export default function PlayerBoxExamples() {
               player={samplePlayers[2]} 
               size="sm"
               showPositions={false}
+              className="[&_.player-avatar]:border-3 [&_.player-avatar]:border-purple-700 [&_.player-avatar]:shadow-md"
               actions={
                 <Badge variant="secondary">
                   Inactive
@@ -223,14 +253,36 @@ export default function PlayerBoxExamples() {
         <section>
           <h2 className="text-2xl font-semibold mb-4">Different Avatar Colors</h2>
           <div className="space-y-4">
-            {samplePlayers.map((player, index) => (
-              <PlayerBox 
-                key={player.id}
-                player={player}
-                size="sm"
-                showPositions={false}
-              />
-            ))}
+            <PlayerBox 
+              player={samplePlayers[0]}
+              size="sm"
+              showPositions={false}
+              className="[&_.player-avatar]:border-3 [&_.player-avatar]:border-blue-700 [&_.player-avatar]:shadow-md"
+            />
+            <PlayerBox 
+              player={samplePlayers[1]}
+              size="sm"
+              showPositions={false}
+              className="[&_.player-avatar]:border-3 [&_.player-avatar]:border-green-800 [&_.player-avatar]:shadow-md"
+            />
+            <PlayerBox 
+              player={samplePlayers[2]}
+              size="sm"
+              showPositions={false}
+              className="[&_.player-avatar]:border-3 [&_.player-avatar]:border-purple-700 [&_.player-avatar]:shadow-md"
+            />
+            <PlayerBox 
+              player={samplePlayers[3]}
+              size="sm"
+              showPositions={false}
+              className="[&_.player-avatar]:border-3 [&_.player-avatar]:border-orange-700 [&_.player-avatar]:shadow-md"
+            />
+            <PlayerBox 
+              player={samplePlayers[4]}
+              size="sm"
+              showPositions={false}
+              className="[&_.player-avatar]:border-3 [&_.player-avatar]:border-red-800 [&_.player-avatar]:shadow-md"
+            />
           </div>
         </section>
 
