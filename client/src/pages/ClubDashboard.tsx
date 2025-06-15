@@ -13,7 +13,7 @@ import { ClubSwitcher } from '@/components/layout/ClubSwitcher';
 import RecentGames from '@/components/dashboard/RecentGames';
 
 export default function ClubDashboard() {
-  const { currentClub, currentClubId, isLoading: clubLoading } = useClub();
+  const { currentClub, currentClubId, setCurrentTeamId, isLoading: clubLoading } = useClub();
   const [, navigate] = useLocation();
 
   // Always call all hooks - handle enabled state through query options
