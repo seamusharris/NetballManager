@@ -798,8 +798,7 @@ export default function Preparation() {
     }
 
     // Find all games against this opponent
-    const opponentGames```text
- = completedGames
+    const opponentGames = completedGames
     .filter(game => {
       const isHomeGame = game.homeClubId === currentClubId;
       const isAwayGame = game.awayClubId === currentClubId;
