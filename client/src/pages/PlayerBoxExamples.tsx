@@ -698,7 +698,7 @@ export default function PlayerBoxExamples() {
             <div>
               <h3 className="text-lg font-medium mb-3">Avatar Inside Colored Player Box with Dark Border</h3>
               <div className="bg-white p-6 rounded-lg border space-y-4">
-                <p className="text-sm text-gray-600 mb-4">Complete PlayerBox components (avatar + details) inside colored containers with dark borders</p>
+                <p className="text-sm text-gray-600 mb-4">Complete PlayerBox components with consistent colored backgrounds and dark borders</p>
                 {samplePlayers.slice(0, 5).map((player) => {
                   const playerColorHex = (() => {
                     const colorMap: Record<string, string> = {
@@ -715,20 +715,16 @@ export default function PlayerBoxExamples() {
 
                   return (
                     <div key={`dark-border-container-${player.id}`} className="relative">
-                      <div 
-                        className="p-4 rounded-lg border-2 shadow-md"
+                      <PlayerBox 
+                        player={player}
+                        size="md"
+                        showPositions={true}
+                        className="rounded-lg border-2 shadow-md p-4"
                         style={{ 
                           backgroundColor: `${playerColorHex}10`,
                           borderColor: `${playerColorHex}80`
                         }}
-                      >
-                        <PlayerBox 
-                          player={player}
-                          size="md"
-                          showPositions={true}
-                          className="[&>div>div:first-child]:border-2 [&>div>div:first-child]:border-white [&>div>div:first-child]:shadow-md"
-                        />
-                      </div>
+                      />
                     </div>
                   );
                 })}
@@ -756,20 +752,16 @@ export default function PlayerBoxExamples() {
 
                   return (
                     <div key={`thick-border-${player.id}`} className="relative">
-                      <div 
-                        className="p-5 rounded-xl border-4 shadow-lg"
+                      <PlayerBox 
+                        player={player}
+                        size="md"
+                        showPositions={true}
+                        className="rounded-xl border-4 shadow-lg p-5"
                         style={{ 
                           backgroundColor: `${playerColorHex}08`,
                           borderColor: `${playerColorHex}C0`
                         }}
-                      >
-                        <PlayerBox 
-                          player={player}
-                          size="md"
-                          showPositions={true}
-                          className="[&>div>div:first-child]:border-3 [&>div>div:first-child]:border-white [&>div>div:first-child]:shadow-lg"
-                        />
-                      </div>
+                      />
                     </div>
                   );
                 })}
@@ -797,20 +789,16 @@ export default function PlayerBoxExamples() {
 
                   return (
                     <div key={`medium-bg-${player.id}`} className="relative">
-                      <div 
-                        className="p-4 rounded-lg border-3 shadow-md"
+                      <PlayerBox 
+                        player={player}
+                        size="md"
+                        showPositions={true}
+                        className="rounded-lg border-3 shadow-md p-4"
                         style={{ 
                           backgroundColor: `${playerColorHex}18`,
                           borderColor: `${playerColorHex}A0`
                         }}
-                      >
-                        <PlayerBox 
-                          player={player}
-                          size="md"
-                          showPositions={true}
-                          className="[&>div>div:first-child]:border-2 [&>div>div:first-child]:border-white [&>div>div:first-child]:shadow-md"
-                        />
-                      </div>
+                      />
                     </div>
                   );
                 })}
@@ -838,20 +826,16 @@ export default function PlayerBoxExamples() {
 
                   return (
                     <div key={`high-contrast-${player.id}`} className="relative">
-                      <div 
-                        className="p-4 rounded-lg border-3 shadow-lg"
+                      <PlayerBox 
+                        player={player}
+                        size="md"
+                        showPositions={true}
+                        className="rounded-lg border-3 shadow-lg p-4"
                         style={{ 
                           backgroundColor: `${playerColorHex}12`,
                           borderColor: playerColorHex
                         }}
-                      >
-                        <PlayerBox 
-                          player={player}
-                          size="md"
-                          showPositions={true}
-                          className="[&>div>div:first-child]:border-2 [&>div>div:first-child]:border-white [&>div>div:first-child]:shadow-lg"
-                        />
-                      </div>
+                      />
                     </div>
                   );
                 })}
@@ -862,7 +846,7 @@ export default function PlayerBoxExamples() {
             <div>
               <h3 className="text-lg font-medium mb-3">Compact Dark Border Style</h3>
               <div className="bg-white p-6 rounded-lg border space-y-3">
-                <p className="text-sm text-gray-600 mb-4">Smaller PlayerBox components with dark borders in colored containers</p>
+                <p className="text-sm text-gray-600 mb-4">Smaller PlayerBox components with dark borders and colored backgrounds</p>
                 {samplePlayers.map((player) => {
                   const playerColorHex = (() => {
                     const colorMap: Record<string, string> = {
@@ -879,20 +863,16 @@ export default function PlayerBoxExamples() {
 
                   return (
                     <div key={`compact-dark-${player.id}`} className="relative">
-                      <div 
-                        className="p-3 rounded-md border-2 shadow-sm"
+                      <PlayerBox 
+                        player={player}
+                        size="sm"
+                        showPositions={true}
+                        className="rounded-md border-2 shadow-sm p-3"
                         style={{ 
                           backgroundColor: `${playerColorHex}0A`,
                           borderColor: `${playerColorHex}90`
                         }}
-                      >
-                        <PlayerBox 
-                          player={player}
-                          size="sm"
-                          showPositions={true}
-                          className="[&>div>div:first-child]:border-2 [&>div>div:first-child]:border-white [&>div>div:first-child]:shadow-sm"
-                        />
-                      </div>
+                      />
                     </div>
                   );
                 })}
@@ -903,26 +883,37 @@ export default function PlayerBoxExamples() {
             <div>
               <h3 className="text-lg font-medium mb-3">Colored Player Box - Enhanced Shadows</h3>
               <div className="bg-gray-50 p-6 rounded-lg space-y-4">
-                <p className="text-sm text-gray-600 mb-4">PlayerBox components in colored containers with enhanced shadow effects</p>
+                <p className="text-sm text-gray-600 mb-4">PlayerBox components with colored backgrounds and enhanced shadow effects</p>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {samplePlayers.slice(0, 3).map((player) => (
-                    <div key={`enhanced-shadow-${player.id}`} className="relative">
-                      <div 
-                        className="p-4 rounded-xl shadow-xl border-2"
-                        style={{ 
-                          backgroundColor: `${player.avatarColor?.replace('bg-', '#') || '#6b7280'}20`,
-                          borderColor: `${player.avatarColor?.replace('bg-', '#') || '#6b7280'}30`
-                        }}
-                      >
+                  {samplePlayers.slice(0, 3).map((player) => {
+                    const playerColorHex = (() => {
+                      const colorMap: Record<string, string> = {
+                        'bg-red-500': '#ef4444', 'bg-red-600': '#dc2626',
+                        'bg-orange-500': '#f97316', 'bg-orange-600': '#ea580c',
+                        'bg-yellow-600': '#ca8a04', 'bg-amber-600': '#d97706',
+                        'bg-green-600': '#16a34a', 'bg-green-700': '#15803d',
+                        'bg-teal-600': '#0d9488', 'bg-cyan-600': '#0891b2',
+                        'bg-blue-500': '#3b82f6', 'bg-blue-600': '#2563eb',
+                        'bg-purple-500': '#a855f7', 'bg-purple-600': '#9333ea'
+                      };
+                      return colorMap[player.avatarColor || 'bg-gray-500'] || '#6b7280';
+                    })();
+
+                    return (
+                      <div key={`enhanced-shadow-${player.id}`} className="relative">
                         <PlayerBox 
                           player={player}
                           size="md"
                           showPositions={true}
-                          className="[&>div>div:first-child]:border-4 [&>div>div:first-child]:border-white [&>div>div:first-child]:shadow-xl"
+                          className="rounded-xl shadow-xl border-2 p-4"
+                          style={{ 
+                            backgroundColor: `${playerColorHex}20`,
+                            borderColor: `${playerColorHex}30`
+                          }}
                         />
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -931,26 +922,37 @@ export default function PlayerBoxExamples() {
             <div>
               <h3 className="text-lg font-medium mb-3">Large Colored Player Boxes</h3>
               <div className="bg-white p-6 rounded-lg border space-y-4">
-                <p className="text-sm text-gray-600 mb-4">Large PlayerBox components with avatar and details inside colored containers</p>
+                <p className="text-sm text-gray-600 mb-4">Large PlayerBox components with consistent colored backgrounds</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {samplePlayers.slice(1, 5).map((player) => (
-                    <div key={`large-colored-box-${player.id}`} className="relative">
-                      <div 
-                        className="p-6 rounded-2xl shadow-2xl border-2"
-                        style={{ 
-                          backgroundColor: `${player.avatarColor?.replace('bg-', '#') || '#6b7280'}18`,
-                          borderColor: `${player.avatarColor?.replace('bg-', '#') || '#6b7280'}25`
-                        }}
-                      >
+                  {samplePlayers.slice(1, 5).map((player) => {
+                    const playerColorHex = (() => {
+                      const colorMap: Record<string, string> = {
+                        'bg-red-500': '#ef4444', 'bg-red-600': '#dc2626',
+                        'bg-orange-500': '#f97316', 'bg-orange-600': '#ea580c',
+                        'bg-yellow-600': '#ca8a04', 'bg-amber-600': '#d97706',
+                        'bg-green-600': '#16a34a', 'bg-green-700': '#15803d',
+                        'bg-teal-600': '#0d9488', 'bg-cyan-600': '#0891b2',
+                        'bg-blue-500': '#3b82f6', 'bg-blue-600': '#2563eb',
+                        'bg-purple-500': '#a855f7', 'bg-purple-600': '#9333ea'
+                      };
+                      return colorMap[player.avatarColor || 'bg-gray-500'] || '#6b7280';
+                    })();
+
+                    return (
+                      <div key={`large-colored-box-${player.id}`} className="relative">
                         <PlayerBox 
                           player={player}
                           size="lg"
                           showPositions={true}
-                          className="[&>div>div:first-child]:border-4 [&>div>div:first-child]:border-white [&>div>div:first-child]:shadow-2xl"
+                          className="rounded-2xl shadow-2xl border-2 p-6"
+                          style={{ 
+                            backgroundColor: `${playerColorHex}18`,
+                            borderColor: `${playerColorHex}25`
+                          }}
                         />
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -959,25 +961,36 @@ export default function PlayerBoxExamples() {
             <div>
               <h3 className="text-lg font-medium mb-3">Compact Colored Player Boxes</h3>
               <div className="bg-gray-100 p-6 rounded-lg space-y-3">
-                <p className="text-sm text-gray-600 mb-4">Compact PlayerBox components with avatar inside colored box borders</p>
-                {samplePlayers.map((player) => (
-                  <div key={`compact-colored-box-${player.id}`} className="relative">
-                    <div 
-                      className="p-3 rounded-lg shadow-md border"
-                      style={{ 
-                        backgroundColor: `${player.avatarColor?.replace('bg-', '#') || '#6b7280'}12`,
-                        borderColor: `${player.avatarColor?.replace('bg-', '#') || '#6b7280'}20`
-                      }}
-                    >
+                <p className="text-sm text-gray-600 mb-4">Compact PlayerBox components with consistent colored backgrounds</p>
+                {samplePlayers.map((player) => {
+                  const playerColorHex = (() => {
+                    const colorMap: Record<string, string> = {
+                      'bg-red-500': '#ef4444', 'bg-red-600': '#dc2626',
+                      'bg-orange-500': '#f97316', 'bg-orange-600': '#ea580c',
+                      'bg-yellow-600': '#ca8a04', 'bg-amber-600': '#d97706',
+                      'bg-green-600': '#16a34a', 'bg-green-700': '#15803d',
+                      'bg-teal-600': '#0d9488', 'bg-cyan-600': '#0891b2',
+                      'bg-blue-500': '#3b82f6', 'bg-blue-600': '#2563eb',
+                      'bg-purple-500': '#a855f7', 'bg-purple-600': '#9333ea'
+                    };
+                    return colorMap[player.avatarColor || 'bg-gray-500'] || '#6b7280';
+                  })();
+
+                  return (
+                    <div key={`compact-colored-box-${player.id}`} className="relative">
                       <PlayerBox 
                         player={player}
                         size="sm"
                         showPositions={true}
-                        className="[&>div>div:first-child]:border-2 [&>div>div:first-child]:border-white [&>div>div:first-child]:shadow-md"
+                        className="rounded-lg shadow-md border p-3"
+                        style={{ 
+                          backgroundColor: `${playerColorHex}12`,
+                          borderColor: `${playerColorHex}20`
+                        }}
                       />
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 
@@ -985,26 +998,37 @@ export default function PlayerBoxExamples() {
             <div>
               <h3 className="text-lg font-medium mb-3">Premium Colored Player Boxes</h3>
               <div className="bg-slate-50 p-6 rounded-lg space-y-4">
-                <p className="text-sm text-gray-600 mb-4">Premium styling with thick colored borders and enhanced depth</p>
+                <p className="text-sm text-gray-600 mb-4">Premium styling with thick colored borders and consistent backgrounds</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {samplePlayers.slice(0, 4).map((player) => (
-                    <div key={`premium-colored-${player.id}`} className="relative">
-                      <div 
-                        className="p-5 rounded-xl shadow-2xl border-4"
-                        style={{ 
-                          backgroundColor: `${player.avatarColor?.replace('bg-', '#') || '#6b7280'}15`,
-                          borderColor: `${player.avatarColor?.replace('bg-', '#') || '#6b7280'}40`
-                        }}
-                      >
+                  {samplePlayers.slice(0, 4).map((player) => {
+                    const playerColorHex = (() => {
+                      const colorMap: Record<string, string> = {
+                        'bg-red-500': '#ef4444', 'bg-red-600': '#dc2626',
+                        'bg-orange-500': '#f97316', 'bg-orange-600': '#ea580c',
+                        'bg-yellow-600': '#ca8a04', 'bg-amber-600': '#d97706',
+                        'bg-green-600': '#16a34a', 'bg-green-700': '#15803d',
+                        'bg-teal-600': '#0d9488', 'bg-cyan-600': '#0891b2',
+                        'bg-blue-500': '#3b82f6', 'bg-blue-600': '#2563eb',
+                        'bg-purple-500': '#a855f7', 'bg-purple-600': '#9333ea'
+                      };
+                      return colorMap[player.avatarColor || 'bg-gray-500'] || '#6b7280';
+                    })();
+
+                    return (
+                      <div key={`premium-colored-${player.id}`} className="relative">
                         <PlayerBox 
                           player={player}
                           size="md"
                           showPositions={true}
-                          className="[&>div>div:first-child]:border-4 [&>div>div:first-child]:border-white [&>div>div:first-child]:shadow-xl [&>div>div:first-child]:ring-2 [&>div>div:first-child]:ring-white/30"
+                          className="rounded-xl shadow-2xl border-4 p-5"
+                          style={{ 
+                            backgroundColor: `${playerColorHex}15`,
+                            borderColor: `${playerColorHex}40`
+                          }}
                         />
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -1013,25 +1037,36 @@ export default function PlayerBoxExamples() {
             <div>
               <h3 className="text-lg font-medium mb-3">Gradient Colored Player Boxes</h3>
               <div className="bg-white p-6 rounded-lg border space-y-4">
-                <p className="text-sm text-gray-600 mb-4">PlayerBox components with avatar inside gradient colored containers</p>
+                <p className="text-sm text-gray-600 mb-4">PlayerBox components with gradient colored backgrounds</p>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {samplePlayers.slice(2, 5).map((player) => (
-                    <div key={`gradient-box-${player.id}`} className="relative">
-                      <div 
-                        className="p-4 rounded-xl shadow-lg border-2 border-white"
-                        style={{ 
-                          background: `linear-gradient(135deg, ${player.avatarColor?.replace('bg-', '#') || '#6b7280'}25, ${player.avatarColor?.replace('bg-', '#') || '#6b7280'}08)` 
-                        }}
-                      >
+                  {samplePlayers.slice(2, 5).map((player) => {
+                    const playerColorHex = (() => {
+                      const colorMap: Record<string, string> = {
+                        'bg-red-500': '#ef4444', 'bg-red-600': '#dc2626',
+                        'bg-orange-500': '#f97316', 'bg-orange-600': '#ea580c',
+                        'bg-yellow-600': '#ca8a04', 'bg-amber-600': '#d97706',
+                        'bg-green-600': '#16a34a', 'bg-green-700': '#15803d',
+                        'bg-teal-600': '#0d9488', 'bg-cyan-600': '#0891b2',
+                        'bg-blue-500': '#3b82f6', 'bg-blue-600': '#2563eb',
+                        'bg-purple-500': '#a855f7', 'bg-purple-600': '#9333ea'
+                      };
+                      return colorMap[player.avatarColor || 'bg-gray-500'] || '#6b7280';
+                    })();
+
+                    return (
+                      <div key={`gradient-box-${player.id}`} className="relative">
                         <PlayerBox 
                           player={player}
                           size="md"
                           showPositions={true}
-                          className="[&>div>div:first-child]:border-3 [&>div>div:first-child]:border-white [&>div>div:first-child]:shadow-xl"
+                          className="rounded-xl shadow-lg border-2 border-white p-4"
+                          style={{ 
+                            background: `linear-gradient(135deg, ${playerColorHex}25, ${playerColorHex}08)` 
+                          }}
                         />
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -1040,26 +1075,37 @@ export default function PlayerBoxExamples() {
             <div>
               <h3 className="text-lg font-medium mb-3">Dark Theme Colored Player Boxes</h3>
               <div className="bg-gray-800 p-6 rounded-lg space-y-4">
-                <p className="text-sm text-gray-300 mb-4">PlayerBox components with avatar inside darker colored containers for dark themes</p>
+                <p className="text-sm text-gray-300 mb-4">PlayerBox components with colored backgrounds for dark themes</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {samplePlayers.slice(1, 5).map((player) => (
-                    <div key={`dark-theme-${player.id}`} className="relative">
-                      <div 
-                        className="p-5 rounded-xl shadow-2xl border-2"
-                        style={{ 
-                          backgroundColor: `${player.avatarColor?.replace('bg-', '#') || '#6b7280'}30`,
-                          borderColor: `${player.avatarColor?.replace('bg-', '#') || '#6b7280'}50`
-                        }}
-                      >
+                  {samplePlayers.slice(1, 5).map((player) => {
+                    const playerColorHex = (() => {
+                      const colorMap: Record<string, string> = {
+                        'bg-red-500': '#ef4444', 'bg-red-600': '#dc2626',
+                        'bg-orange-500': '#f97316', 'bg-orange-600': '#ea580c',
+                        'bg-yellow-600': '#ca8a04', 'bg-amber-600': '#d97706',
+                        'bg-green-600': '#16a34a', 'bg-green-700': '#15803d',
+                        'bg-teal-600': '#0d9488', 'bg-cyan-600': '#0891b2',
+                        'bg-blue-500': '#3b82f6', 'bg-blue-600': '#2563eb',
+                        'bg-purple-500': '#a855f7', 'bg-purple-600': '#9333ea'
+                      };
+                      return colorMap[player.avatarColor || 'bg-gray-500'] || '#6b7280';
+                    })();
+
+                    return (
+                      <div key={`dark-theme-${player.id}`} className="relative">
                         <PlayerBox 
                           player={player}
                           size="md"
                           showPositions={true}
-                          className="[&_.player-name]:text-white [&_.player-positions]:text-gray-200 [&>div>div:first-child]:border-4 [&>div>div:first-child]:border-white [&>div>div:first-child]:shadow-2xl"
+                          className="[&_.player-name]:text-white [&_.player-positions]:text-gray-200 rounded-xl shadow-2xl border-2 p-5"
+                          style={{ 
+                            backgroundColor: `${playerColorHex}30`,
+                            borderColor: `${playerColorHex}50`
+                          }}
                         />
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -1068,25 +1114,36 @@ export default function PlayerBoxExamples() {
             <div>
               <h3 className="text-lg font-medium mb-3">Minimal Colored Player Boxes</h3>
               <div className="bg-white p-6 rounded-lg border space-y-4">
-                <p className="text-sm text-gray-600 mb-4">Clean minimal design with subtle colored containers housing complete PlayerBox components</p>
-                {samplePlayers.slice(0, 4).map((player) => (
-                  <div key={`minimal-box-${player.id}`} className="relative">
-                    <div 
-                      className="p-4 rounded-lg border shadow-sm"
-                      style={{ 
-                        backgroundColor: `${player.avatarColor?.replace('bg-', '#') || '#6b7280'}08`,
-                        borderColor: `${player.avatarColor?.replace('bg-', '#') || '#6b7280'}15`
-                      }}
-                    >
+                <p className="text-sm text-gray-600 mb-4">Clean minimal design with subtle colored backgrounds</p>
+                {samplePlayers.slice(0, 4).map((player) => {
+                  const playerColorHex = (() => {
+                    const colorMap: Record<string, string> = {
+                      'bg-red-500': '#ef4444', 'bg-red-600': '#dc2626',
+                      'bg-orange-500': '#f97316', 'bg-orange-600': '#ea580c',
+                      'bg-yellow-600': '#ca8a04', 'bg-amber-600': '#d97706',
+                      'bg-green-600': '#16a34a', 'bg-green-700': '#15803d',
+                      'bg-teal-600': '#0d9488', 'bg-cyan-600': '#0891b2',
+                      'bg-blue-500': '#3b82f6', 'bg-blue-600': '#2563eb',
+                      'bg-purple-500': '#a855f7', 'bg-purple-600': '#9333ea'
+                    };
+                    return colorMap[player.avatarColor || 'bg-gray-500'] || '#6b7280';
+                  })();
+
+                  return (
+                    <div key={`minimal-box-${player.id}`} className="relative">
                       <PlayerBox 
                         player={player}
                         size="sm"
                         showPositions={true}
-                        className="[&>div>div:first-child]:border-2 [&>div>div:first-child]:border-white [&>div>div:first-child]:shadow-sm"
+                        className="rounded-lg border shadow-sm p-4"
+                        style={{ 
+                          backgroundColor: `${playerColorHex}08`,
+                          borderColor: `${playerColorHex}15`
+                        }}
                       />
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 
