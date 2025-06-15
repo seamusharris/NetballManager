@@ -7,7 +7,7 @@ import { Helmet } from 'react-helmet';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Plus, Users, Trophy, Calendar, Activity } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { apiClient } from '@/lib/apiClient';
 import TeamForm from '@/components/teams/TeamForm';
 import { TEAM_NAME } from '@/lib/settings';
