@@ -36,6 +36,13 @@ export function OfficialScoreEntry({
     4: { home: 0, away: 0, notes: '' }
   });
 
+  // Fetch game data to get proper team mapping
+  const { data: gameData } = useQuery({
+    queryKey: ['/api/games', gameId],
+    queryFn: () => apiClient.get(`/api/games/${gameId}`),
+    enabled: !isNaN(gameId)
+  });
+
   // Fetch existing official scores
   const { data: officialScores, isLoading } = useQuery({
     queryKey: ['/api/games', gameId, 'scores'],
@@ -45,7 +52,7 @@ export function OfficialScoreEntry({
 
   // Load official scores into state
   useEffect(() => {
-    if (officialScores && officialScores.length > 0) {
+    if (officialScores && officialScores.length > 0 && gameData) {
       const newScores = { ...quarterScores };
 
       // Group scores by quarter
@@ -61,35 +68,41 @@ export function OfficialScoreEntry({
         };
       });
 
-      // Convert to home/away format for display
-      // We need the game data to know which team is home vs away
-      // For now, just use the team IDs directly - we'll fix the home/away mapping separately
+      // Convert to home/away format using actual game data
       Object.entries(scoresByQuarter).forEach(([quarter, teams]) => {
         const quarterNum = parseInt(quarter);
-        const teamIds = Object.keys(teams).map(Number);
+        const homeTeamId = gameData.homeTeamId;
+        const awayTeamId = gameData.awayTeamId;
 
-        if (teamIds.length >= 2) {
-          // Assume first team ID is "home" and second is "away" for display purposes
-          // This maintains functionality while we fix the proper team mapping
-          const team1Id = Math.min(...teamIds);
-          const team2Id = Math.max(...teamIds);
-
-          newScores[quarterNum] = {
-            home: teams[team1Id]?.score || 0,
-            away: teams[team2Id]?.score || 0,
-            notes: teams[team1Id]?.notes || teams[team2Id]?.notes || ''
-          };
-        }
+        newScores[quarterNum] = {
+          home: teams[homeTeamId]?.score || 0,
+          away: teams[awayTeamId]?.score || 0,
+          notes: teams[homeTeamId]?.notes || teams[awayTeamId]?.notes || ''
+        };
       });
 
       setQuarterScores(newScores);
     }
-  }, [officialScores]);
+  }, [officialScores, gameData]);
 
   // Save score mutation
   const saveScoreMutation = useMutation({
-    mutationFn: (data: { quarter: number, homeScore: number, awayScore: number, notes?: string }) =>
-      apiClient.post(`/api/games/${gameId}/scores`, data),
+    mutationFn: (data: { quarter: number, homeScore: number, awayScore: number, notes?: string }) => {
+      // Convert home/away scores to team-specific data using actual game data
+      if (!gameData) throw new Error('Game data not loaded');
+      
+      const homeTeamId = gameData.homeTeamId;
+      const awayTeamId = gameData.awayTeamId;
+      
+      return apiClient.post(`/api/games/${gameId}/scores`, {
+        quarter: data.quarter,
+        homeTeamId,
+        awayTeamId,
+        homeScore: data.homeScore,
+        awayScore: data.awayScore,
+        notes: data.notes
+      });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/games', gameId, 'scores'] });
       queryClient.invalidateQueries({ queryKey: ['/api/games', gameId] });
