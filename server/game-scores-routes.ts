@@ -18,32 +18,59 @@ export function registerGameScoresRoutes(app: Express) {
       // Limit batch size to prevent server overwhelm
       const limitedGameIds = gameIds.slice(0, 50);
 
-      console.log(`Batch scores request for club ${clubId}, games:`, limitedGameIds);
+      console.log(`Batch scores request for club ${clubId}, games: [${limitedGameIds.join(', ')}]`);
 
-      // Convert to integers and get scores directly
+      // Convert to integers
       const gameIdList = limitedGameIds.map(id => parseInt(id));
 
-      // Get all scores for the requested games using proper Drizzle ORM
+      // First, verify which games the club has access to by checking the games table
+      const accessibleGames = await db.select({ id: games.id })
+        .from(games)
+        .where(
+          and(
+            inArray(games.id, gameIdList),
+            or(
+              eq(games.homeClubId, clubId),
+              eq(games.awayClubId, clubId),
+              sql`EXISTS (
+                SELECT 1 FROM game_permissions gp 
+                WHERE gp.game_id = ${games.id} AND gp.club_id = ${clubId}
+              )`
+            )
+          )
+        );
+
+      const accessibleGameIds = accessibleGames.map(g => g.id);
+      console.log(`Batch scores: Club ${clubId} has access to games: [${accessibleGameIds.join(', ')}]`);
+
+      // Get scores only for accessible games
       const scores = await db.select()
         .from(gameScores)
-        .where(inArray(gameScores.gameId, gameIdList));
+        .where(inArray(gameScores.gameId, accessibleGameIds));
 
-      // Group scores by game ID
+      // Group scores by game ID - initialize all requested games first
       const scoresMap: Record<number, any[]> = {};
       limitedGameIds.forEach(gameId => {
         scoresMap[gameId] = [];
       });
 
+      // Populate with actual scores
       scores.forEach((score) => {
         const gameId = score.gameId;
-        if (scoresMap[gameId]) {
+        if (scoresMap[gameId] !== undefined) {
           scoresMap[gameId].push(score);
-        } else {
-          scoresMap[gameId] = [score];
         }
       });
 
-      console.log(`Batch scores response: found scores for ${Object.keys(scoresMap).filter(id => scoresMap[parseInt(id)].length > 0).length} games`);
+      const gamesWithScores = Object.keys(scoresMap).filter(id => scoresMap[parseInt(id)].length > 0).length;
+      console.log(`Batch scores response: found scores for ${gamesWithScores} games out of ${limitedGameIds.length} requested`);
+
+      // Debug log for missing games
+      const missingGames = limitedGameIds.filter(gameId => scoresMap[gameId].length === 0);
+      if (missingGames.length > 0) {
+        console.log(`Batch scores: Games without scores: [${missingGames.join(', ')}]`);
+      }
+
       res.json(scoresMap);
     } catch (error) {
       console.error('Error fetching batch game scores:', error);
