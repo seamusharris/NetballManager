@@ -70,13 +70,49 @@ export default function ClubDashboard() {
     enabled: !!currentClubId && userClubs.some(club => club.clubId === currentClubId),
   });
 
-  // Centralized stats fetching for completed games only
+  // Fetch official scores for completed games only
   const completedGameIds = useMemo(() => {
     return games?.filter(game => 
       game.statusIsCompleted && game.statusAllowsStatistics
     ).map(game => game.id) || [];
   }, [games]);
 
+  const { data: officialScores = {}, isLoading: isLoadingScores } = useQuery({
+    queryKey: ['official-scores', currentClubId, completedGameIds.sort().join(',')],
+    queryFn: async () => {
+      if (completedGameIds.length === 0) return {};
+
+      try {
+        // Fetch official scores for all completed games
+        const scoresMap: Record<number, any[]> = {};
+        
+        const scoresPromises = completedGameIds.map(async (gameId) => {
+          try {
+            const scores = await apiClient.get(`/api/games/${gameId}/scores`);
+            return { gameId, scores: scores || [] };
+          } catch (error) {
+            console.error(`ClubDashboard: Error fetching scores for game ${gameId}:`, error);
+            return { gameId, scores: [] };
+          }
+        });
+
+        const results = await Promise.all(scoresPromises);
+        results.forEach(({ gameId, scores }) => {
+          scoresMap[gameId] = scores;
+        });
+
+        return scoresMap;
+      } catch (error) {
+        console.error('ClubDashboard: Error fetching official scores:', error);
+        return {};
+      }
+    },
+    enabled: !!currentClubId && !clubLoading && completedGameIds.length > 0,
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 30 * 60 * 1000 // 30 minutes
+  });
+
+  // Also fetch centralized stats for display purposes (RecentGames component)
   const { data: centralizedStats = {}, isLoading: isLoadingStats } = useQuery({
     queryKey: ['centralized-stats', currentClubId, completedGameIds.sort().join(',')],
     queryFn: async () => {
@@ -116,8 +152,8 @@ export default function ClubDashboard() {
     const completedGames = games.filter(game => game.statusIsCompleted);
     const upcomingGames = games.filter(game => !game.statusIsCompleted);
 
-    // Calculate club-wide win rate using shared utility
-    const clubWinRateData = calculateClubWinRate(games, currentClubId!, centralizedStats);
+    // Calculate club-wide win rate using official scores
+    const clubWinRateData = calculateClubWinRate(games, currentClubId!, officialScores);
 
     return {
       activeTeams,
@@ -127,12 +163,12 @@ export default function ClubDashboard() {
       activePlayers: players.filter(player => player.active),
       clubWinRate: clubWinRateData
     };
-  }, [teams, games, players, currentClubId, centralizedStats]);
+  }, [teams, games, players, currentClubId, officialScores]);
 
   // Team performance metrics (memoized to prevent unnecessary recalculations)
   const teamPerformance = useMemo(() => activeTeams.map(team => {
-    // Use shared win rate calculator for consistent logic
-    const winRateData = calculateTeamWinRate(games, team.id, currentClubId!, centralizedStats);
+    // Use shared win rate calculator for consistent logic with official scores
+    const winRateData = calculateTeamWinRate(games, team.id, currentClubId!, officialScores);
 
     const teamPerf = {
       ...team,
@@ -144,7 +180,7 @@ export default function ClubDashboard() {
     };
 
     return teamPerf;
-  }), [activeTeams, games, currentClubId, centralizedStats]);
+  }), [activeTeams, games, currentClubId, officialScores]);
 
   // Recent games across all teams (memoized)
   const recentGames = useMemo(() => 
@@ -155,7 +191,7 @@ export default function ClubDashboard() {
   );
 
   // Now handle loading states after all hooks are called
-  const isLoading = isLoadingPlayers || isLoadingGames || isLoadingTeams || isLoadingSeasons || isLoadingActiveSeason || isLoadingStats || isLoadingClubs || isLoadingClubDetails;
+  const isLoading = isLoadingPlayers || isLoadingGames || isLoadingTeams || isLoadingSeasons || isLoadingActiveSeason || isLoadingStats || isLoadingScores || isLoadingClubs || isLoadingClubDetails;
 
   if (clubLoading || !currentClubId) {
     return (
