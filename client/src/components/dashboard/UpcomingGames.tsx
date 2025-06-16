@@ -81,7 +81,7 @@ export default function UpcomingGames({ games, opponents, className, seasonFilte
         ) : (
           <div className="text-center py-6">
             <p className="text-gray-500 mb-4">No upcoming games scheduled</p>
-            <Link href="/games" className="text-accent hover:underline">
+            <Link href={currentTeam ? `/games/${currentTeam.id}` : "/games"} className="text-accent hover:underline">
               Go to Games List
             </Link>
           </div>
