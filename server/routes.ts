@@ -2443,7 +2443,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   registerGameScoresRoutes(app);
 
   // Grant Warrandyte access to all games endpoint
-  app.post('/api/admin/grant-warrandyte-access', standardAuth({ requireClub: true }), async (req: AuthenticatedRequest, res) => {
+  app.post('/api/admin/grant-warrandyte-access', standardAuth({ requireClub: true }), async (req: AuthenticatedRequest, res) =>{
     try {
       const { grantWarrandyteAccessToAllGames } = await import('./grant-warrandyteaccess');
       await grantWarrandyteAccessToAllGames();
