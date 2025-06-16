@@ -44,7 +44,6 @@ export function TeamSwitcher({ mode = 'optional', className, onTeamChange }: Tea
 
     console.log('TeamSwitcher: Team changed:', { value, teamId, currentTeamId, location });
 
-    setInternalValue(value);
     setCurrentTeamId(teamId);
     onTeamChange?.(teamId);
 
