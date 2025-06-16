@@ -159,13 +159,13 @@ export default function Dashboard() {
         statsGames: Object.keys(batchData.stats || {}),
         rostersGames: Object.keys(batchData.rosters || {}),
         scoresGames: Object.keys(batchData.scores || {}),
-        totalGames: gameIdsArray.length
+        totalGames: allGameIds.length
       });
     }
     if (batchDataError) {
       console.error('Dashboard batch data error:', batchDataError);
     }
-  }, [batchData, batchDataError, gameIdsArray.length]);
+  }, [batchData, batchDataError, allGameIds.length]);
 
   // NOW we can do conditional returns after all hooks are called
   if (clubLoading || !currentClubId) {
