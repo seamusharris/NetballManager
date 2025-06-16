@@ -108,22 +108,22 @@ export default function Dashboard() {
     gcTime: 2 * 60 * 60 * 1000, // 2 hours garbage collection - increased
   });
 
-  // Centralized roster fetching for all games - optimized for team switching
-  const gameIdsArray = games?.map(g => g.id).sort() || [];
-  const gameIds = gameIdsArray.join(',');
+  // Centralized batch fetching for ALL games - widgets will filter as needed
+  const allGameIds = games?.map(g => g.id).sort() || [];
+  const gameIds = allGameIds.join(',');
 
   // Use unified data fetcher with aggressive caching for team switching
   const { data: batchData, isLoading: isLoadingBatchData, error: batchDataError } = useQuery({
     queryKey: ['dashboard-batch-data', currentClubId, currentTeamId, gameIds],
     queryFn: async () => {
-      if (gameIdsArray.length === 0) return { stats: {}, rosters: {}, scores: {} };
+      if (allGameIds.length === 0) return { stats: {}, rosters: {}, scores: {} };
 
-      console.log(`Dashboard fetching batch data for ${gameIdsArray.length} games with team ${currentTeamId}:`, gameIdsArray);
+      console.log(`Dashboard fetching batch data for ${allGameIds.length} games with team ${currentTeamId}:`, allGameIds);
 
       try {
         const { dataFetcher } = await import('@/lib/unifiedDataFetcher');
         const result = await dataFetcher.batchFetchGameData({
-          gameIds: gameIdsArray,
+          gameIds: allGameIds,
           clubId: currentClubId!,
           teamId: currentTeamId,
           includeStats: true,
@@ -138,7 +138,7 @@ export default function Dashboard() {
         throw error;
       }
     },
-    enabled: !!currentClubId && !!currentTeamId && gameIdsArray.length > 0 && !isLoadingGames,
+    enabled: !!currentClubId && !!currentTeamId && allGameIds.length > 0 && !isLoadingGames,
     staleTime: 30 * 60 * 1000, // 30 minutes - invalidation handles updates  
     gcTime: 60 * 60 * 1000, // 1 hour garbage collection
     refetchOnWindowFocus: false,

@@ -42,11 +42,12 @@ function RecentGames({ games, opponents, className, seasonFilter, activeSeason, 
     .slice(0, RECENT_GAMES_COUNT);
 
   // Debug centralized scores with more detail
-  console.log('RecentGames: Received centralizedScores (batch format):', centralizedScores);
+  console.log('RecentGames: Received centralizedScores (batch format) for all games:', Object.keys(centralizedScores || {}).length, 'games');
+  console.log('RecentGames: All available score game IDs:', Object.keys(centralizedScores || {}).map(id => parseInt(id)).sort());
   console.log('RecentGames: Recent games count:', recentGames.length);
   console.log('RecentGames: Recent games IDs:', recentGames.map(g => g.id));
 
-  // Transform and validate batch scores for each game
+  // Transform and validate batch scores for recent games only (filter from all available scores)
   const transformedScores = {};
   recentGames.forEach(game => {
     const gameScores = centralizedScores?.[game.id];
