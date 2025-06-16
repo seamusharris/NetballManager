@@ -951,8 +951,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Club CRUD routes - removed duplicate endpoint (enhanced version below includes statistics)
-
   app.post("/api/clubs", async (req, res) => {
     try {
       const { 
