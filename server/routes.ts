@@ -13,6 +13,8 @@ import {
   players, games, rosters, gameStats, seasons,
   POSITIONS
 } from "@shared/schema";
+import * as schema from "@shared/schema";
+import { eq, and } from "drizzle-orm";
 
 import { updatePlayerSeasonRelationships, getPlayerSeasons } from "./player-season-routes";
 import gameStatusRoutes from "./game-status-routes";
@@ -893,8 +895,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await client.query('BEGIN');
 
         // Check if player exists
-        const playerCheck = await```text
-client.query(
+        const playerCheck = await client.query(
           'SELECT id FROM players WHERE id = $1',
           [playerId]
         );
@@ -1644,9 +1645,11 @@ client.query(
         const gameData = {
           date: req.body.date,
           time: req.body.time,
-          homeTeamId: req.body.homeTeamId,          awayTeamId: null, // BYE games have no away team
+          homeTeamId: req.body.homeTeamId,
+          awayTeamId: null, // BYE games have no away team
           statusId: 6, // BYE status
-          seasonId: season_id,          round: req.body.round || null,
+          seasonId: season_id,
+          round: req.body.round || null,
           venue: req.body.venue || null,
           isInterClub: false,
           notes: req.body.notes || 'BYE round'
@@ -2440,11 +2443,10 @@ client.query(
   registerGameScoresRoutes(app);
 
   // Grant Warrandyte access to all games endpoint
-  app.post('/api/admin/grant-warrandyte-access', async (req, res) => {
+  app.post('/api/admin/grant-warrandyte-access', standardAuth({ requireClub: true }), async (req: AuthenticatedRequest, res) => {
     try {
       const { grantWarrandyteAccessToAllGames } = await import('./grant-warrandyteaccess');
       await grantWarrandyteAccessToAllGames();
-```text
       res.json({ message: 'Successfully granted Warrandyte access to all games' });
     } catch (error) {
       console.error('Error granting Warrandyte access:', error);
