@@ -112,53 +112,66 @@ export function calculateClubWinRate(
     let ourScore = 0;
     let theirScore = 0;
 
-    if (gameStats.length > 0) {
+    // Prioritize official scores from game status, then fall back to calculated stats
+    if (game.statusTeamGoals !== null && game.statusOpponentGoals !== null) {
+      // Use official scores from game status
+      ourScore = isHome ? (game.statusTeamGoals || 0) : (game.statusOpponentGoals || 0);
+      theirScore = isHome ? (game.statusOpponentGoals || 0) : (game.statusTeamGoals || 0);
+    } else if (gameStats.length > 0) {
       if (isInterClubGame) {
-        // For inter-club games, we need to determine the winner based on team-specific stats
-        // Get the home team and away team scores separately
+        // For inter-club games, get the scores for both teams
         const homeTeamStats = gameStats.filter(stat => stat.teamId === game.homeTeamId);
         const awayTeamStats = gameStats.filter(stat => stat.teamId === game.awayTeamId);
 
         const homeScore = homeTeamStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
         const awayScore = awayTeamStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
 
-        // For club-wide calculation, inter-club games don't affect win rate
-        // (one team wins, one loses - net effect is zero)
-        continue;
+        // For inter-club games, count both teams' performance
+        if (homeScore > awayScore) {
+          wins++;
+        } else if (homeScore < awayScore) {
+          losses++;
+        } else {
+          draws++;
+        }
+        
+        // Also count the away team's perspective
+        if (awayScore > homeScore) {
+          wins++;
+        } else if (awayScore < homeScore) {
+          losses++;
+        } else if (homeScore !== awayScore) { // Don't double count draws
+          draws++;
+        }
+        
+        continue; // Skip the normal scoring logic below
       } else {
         // Regular game against another club
-        // Filter stats to only include teams from our club
-        const ourClubStats = gameStats.filter(stat => {
-          // Check if this stat belongs to a team from our club
-          // We can determine this by checking if the game involves our club
-          return true; // All stats in this game should be from our club's perspective
-        });
-
-        ourClubStats.forEach(stat => {
+        // Use all stats from our club's teams
+        gameStats.forEach(stat => {
           ourScore += stat.goalsFor || 0;
           theirScore += stat.goalsAgainst || 0;
         });
       }
     } else {
-      // Fallback to game status scores
-      ourScore = isHome ? (game.statusTeamGoals || 0) : (game.statusOpponentGoals || 0);
-      theirScore = isHome ? (game.statusOpponentGoals || 0) : (game.statusTeamGoals || 0);
+      // No scores available
+      ourScore = 0;
+      theirScore = 0;
     }
 
-    if (ourScore > theirScore) {
-      wins++;
-    } else if (ourScore < theirScore) {
-      losses++;
-    } else {
-      draws++;
+    // Normal win/loss/draw logic for non-inter-club games
+    if (!isInterClubGame) {
+      if (ourScore > theirScore) {
+        wins++;
+      } else if (ourScore < theirScore) {
+        losses++;
+      } else {
+        draws++;
+      }
     }
   }
 
-  // Exclude inter-club games from total count
-  const nonInterClubGames = validGames.filter(game => 
-    !(game.homeClubId === clubId && game.awayClubId === clubId)
-  );
-  const totalGames = nonInterClubGames.length;
+  const totalGames = validGames.length;
   const winRate = totalGames > 0 ? (wins / totalGames) * 100 : 0;
 
   return {
