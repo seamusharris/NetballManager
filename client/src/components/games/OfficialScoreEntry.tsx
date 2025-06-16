@@ -109,38 +109,32 @@ export function OfficialScoreEntry({
     },
     onSuccess: () => {
       toast({
-        title: "Score saved",
-        description: "Quarter score has been saved successfully."
+        title: "Official scores saved",
+        description: "Scores have been saved successfully."
       });
 
-      // Force refresh all relevant queries
-      queryClient.invalidateQueries({ queryKey: [`/api/games/${gameId}/scores`] });
-      queryClient.invalidateQueries({ queryKey: [`/api/games/${gameId}`] });
+      // Only invalidate batch scores and games lists - avoid individual score queries
+      if (currentClub?.id) {
+        // Invalidate batch scores that include this game
+        queryClient.invalidateQueries({
+          predicate: (query) => {
+            const key = query.queryKey;
+            return Array.isArray(key) && 
+                   key[0] === 'batch-scores' && 
+                   key[1] === currentClub.id;
+          }
+        });
 
-      // Invalidate batch score queries for both club and team level
-      queryClient.invalidateQueries({ 
-        predicate: (query) => {
-          const key = query.queryKey;
-          if (!Array.isArray(key)) return false;
-
-          return (
-            key[0] === 'official-scores' ||
-            key[0] === 'dashboard-batch-data' ||
-            key[0] === 'games' ||
-            (key[0] === 'POST' && key[1] === '/api/games/scores/batch') ||
-            (key[0] === 'POST' && key[1] === '/api/games/stats/batch') ||
-            key.includes('scores') ||
-            key.includes('batch')
-          );
-        }
-      });
-
-      // Force a window refresh for dashboard components if we're on dashboard
-      if (window.location.pathname.includes('dashboard') || window.location.pathname.includes('club-dashboard')) {
-        window.location.reload();
+        // Invalidate games lists to show updated scores
+        queryClient.invalidateQueries({
+          predicate: (query) => {
+            const key = query.queryKey;
+            return Array.isArray(key) && 
+                   key[0] === 'games' && 
+                   key[1] === currentClub.id;
+          }
+        });
       }
-
-      console.log(`Official scores saved for game ${gameId}, all caches invalidated`);
     },
     onError: (error) => {
       console.error('Error saving score:', error);
