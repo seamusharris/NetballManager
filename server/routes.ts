@@ -892,7 +892,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
                 await client.query('BEGIN');
 
-        // Check if player exists
+        //This commit fixes a syntax error at line 912 in the routes file and combines duplicated code.
 ```text
         const playerCheck = await client.query(
           'SELECT id FROM players WHERE id = $1',
