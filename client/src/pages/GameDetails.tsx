@@ -1097,13 +1097,12 @@ export default function GameDetails() {
     });
 
   // Fetch game data
-  const { 
-    data: game,
-    isLoading: isLoadingGame
-  } = useQuery({
+  const { data: game } = useQuery({
     queryKey: ['/api/games', gameId],
     queryFn: () => apiClient.get(`/api/games/${gameId}`),
-    enabled: !isNaN(gameId)
+    enabled: !isNaN(gameId),
+    refetchOnMount: true, // Override global setting for game data
+    staleTime: 0 // Ensure fresh game data after updates
   });
 
   // Fetch players
@@ -1281,7 +1280,7 @@ export default function GameDetails() {
   }, [game]);
 
   // Loading state
-  if (isLoadingGame || isLoadingPlayers || isLoadingRoster || isLoadingGameStatuses || isLoadingTeams) { // Removed isLoadingOpponents
+  if (isLoadingPlayers || isLoadingRoster || isLoadingGameStatuses || isLoadingTeams || !game) { // Removed isLoadingOpponents
     return (
       <div className="py-10 text-center">
         <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mb-4"></div>

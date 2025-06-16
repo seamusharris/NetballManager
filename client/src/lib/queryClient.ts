@@ -151,6 +151,9 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
+    // Import apiClient here to avoid circular dependencies
+    const { apiClient } = await import('./apiClient');
+    
     // Fix URL format for game stats endpoints to ensure consistent RESTful path structure
     let url = queryKey[0] as string;
     if (typeof url === 'string') {
@@ -183,16 +186,16 @@ export const getQueryFn: <T>(options: {
       }
     }
 
-    const res = await fetch(url, {
-      credentials: "include",
-    });
-
-    if (unauthorizedBehavior === "returnNull" && res.status === 401) {
-      return null;
+    try {
+      // Use apiClient.get() to ensure proper headers are included
+      return await apiClient.get(url);
+    } catch (error: any) {
+      if (unauthorizedBehavior === "returnNull" && 
+          (error?.message?.includes('401') || error?.status === 401)) {
+        return null;
+      }
+      throw error;
     }
-
-    await throwIfResNotOk(res);
-    return await res.json();
   };
 
 /**
@@ -207,7 +210,7 @@ export const queryClient = new QueryClient({
       staleTime: 15 * 60 * 1000, // 15 minutes - increased for better navigation caching
       gcTime: 60 * 60 * 1000, // 1 hour - keep data longer in memory
       refetchOnWindowFocus: false,
-      refetchOnMount: false, // Changed to false to use cached data when available
+      refetchOnMount: true, // Changed back to true for proper cache invalidation
       refetchOnReconnect: false, // Changed to false to preserve cache across reconnects
       retry: (failureCount, error: any) => {
         // Don't retry on 4xx errors (client errors)
