@@ -162,18 +162,21 @@ export default function Games() {
 
       await apiRequest('POST', '/api/games', game);
 
-      // Invalidate games queries using the exact query keys
+      // Invalidate games queries using the correct query keys that match the actual queries
       if (currentClubId) {
-        // Invalidate the specific games query for current team
+        // Invalidate the specific games query for current team (matches the actual query key pattern)
         queryClient.invalidateQueries({
-          queryKey: ['/api/games'],
-          exact: false
+          queryKey: ['games', currentClubId, teamIdFromUrl || currentTeamId]
         });
 
-        // Invalidate batch scores for the games list
+        // Invalidate batch data for the games list
         queryClient.invalidateQueries({
-          queryKey: [`/api/games/batch-scores/${currentClubId}`],
-          exact: false
+          predicate: (query) => {
+            const key = query.queryKey;
+            return Array.isArray(key) && 
+                   key[0] === 'games-batch-data' && 
+                   key[1] === currentClubId;
+          }
         });
       }
       setIsDialogOpen(false);
