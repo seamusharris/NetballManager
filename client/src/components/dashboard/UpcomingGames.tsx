@@ -19,7 +19,7 @@ interface UpcomingGamesProps {
   batchStats?: Record<number, any[]>;
 }
 
-export default function UpcomingGames({ games, centralizedScoresMap, opponents, className, seasonFilter, activeSeason, batchStats }: UpcomingGamesProps) {
+function UpcomingGames({ games, centralizedScoresMap, opponents, className, seasonFilter, activeSeason, batchStats }: UpcomingGamesProps) {
   const { currentTeam } = useClub();
   // Filter for upcoming games using the new status system
   const upcomingGames = games
@@ -104,3 +104,7 @@ export default function UpcomingGames({ games, centralizedScoresMap, opponents, 
     </BaseWidget>
   );
 }
+
+// Export both as default and named export to handle different import styles
+export default UpcomingGames;
+export { UpcomingGames };
