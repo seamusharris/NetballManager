@@ -43,7 +43,7 @@ export default function RecentGames({ games, opponents, className, seasonFilter,
   // Debug centralized scores with more detail
   console.log('RecentGames received centralizedScores (batch format):', centralizedScores);
   console.log('RecentGames recentGames count:', recentGames.length);
-  
+
   // Transform and validate batch scores for each game
   recentGames.forEach(game => {
     const gameScores = centralizedScores?.[game.id];
@@ -87,7 +87,7 @@ export default function RecentGames({ games, opponents, className, seasonFilter,
               />
             ))
           )}
-        </div></old_str>
+        </div>
             ))
           )}
         </div>
