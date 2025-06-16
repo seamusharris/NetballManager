@@ -124,12 +124,18 @@ const TeamPerformance = ({ games, className, activeSeason, selectedSeason, centr
           let opponentScore = 0;
           let hasValidScores = false;
 
-          // Require official scores - throw error if not found
-          if (!officialScores || officialScores.length === 0) {
-            throw new Error(`No official scores found for completed game ${gameId} (${game.homeTeamName} vs ${game.awayTeamName}). All completed games must have official scores entered.`);
-          }
+          // DEBUG: Log what we're finding for this game
+          console.log(`TeamPerformance: Game ${gameId} debug:`, {
+            hasCentralizedScores: !!centralizedScores,
+            hasGameInCentralized: gameId in (centralizedScores || {}),
+            officialScoresFound: officialScores,
+            officialScoresLength: officialScores?.length,
+            isArray: Array.isArray(officialScores)
+          });
 
-          if (officialScores && officialScores.length > 0) {
+          // Check if we have official scores available
+          if (officialScores && Array.isArray(officialScores) && officialScores.length > 0) {
+
             console.log(`TeamPerformance: Using official scores for game ${gameId}:`, officialScores);
 
             // Calculate totals from official scores
