@@ -13,8 +13,6 @@ import {
   players, games, rosters, gameStats, seasons,
   POSITIONS
 } from "@shared/schema";
-import * as schema from "@shared/schema";
-import { eq, and } from "drizzle-orm";
 
 import { updatePlayerSeasonRelationships, getPlayerSeasons } from "./player-season-routes";
 import gameStatusRoutes from "./game-status-routes";
@@ -892,7 +890,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const client = await pool.connect();
 
       try {
-        await client.query('BEGIN');
+                await client.query('BEGIN');
 
         // Check if player exists
         const playerCheck = await client.query(
@@ -951,6 +949,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
+
+  // Club CRUD routes - removed duplicate endpoint (enhanced version below includes statistics)
 
   app.post("/api/clubs", async (req, res) => {
     try {
@@ -1645,8 +1645,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const gameData = {
           date: req.body.date,
           time: req.body.time,
-          homeTeamId: req.body.homeTeamId,
-          awayTeamId: null, // BYE games have no away team
+          homeTeamId: req.body.homeTeamId,          awayTeamId: null, // BYE games have no away team
           statusId: 6, // BYE status
           seasonId: season_id,
           round: req.body.round || null,
@@ -2443,7 +2442,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   registerGameScoresRoutes(app);
 
   // Grant Warrandyte access to all games endpoint
-  app.post('/api/admin/grant-warrandyte-access', standardAuth({ requireClub: true }), async (req: AuthenticatedRequest, res) =>{
+  app.post('/api/admin/grant-warrandyte-access', async (req, res) => {
     try {
       const { grantWarrandyteAccessToAllGames } = await import('./grant-warrandyteaccess');
       await grantWarrandyteAccessToAllGames();
@@ -3012,62 +3011,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: 'Failed to update game statistics' });
     }
   });
-
-  // Batch scores endpoint for dashboard widgets
-app.post('/api/games/scores/batch', standardAuth({ requireClub: true }), async (req: AuthenticatedRequest, res) => {
-  try {
-    const { gameIds } = req.body;
-    const currentClubId = req.user?.currentClubId;
-
-    if (!currentClubId) {
-      return res.status(400).json({ error: 'Club context required' });
-    }
-
-    if (!gameIds || !Array.isArray(gameIds)) {
-      return res.status(400).json({ error: 'gameIds array required' });
-    }
-
-    console.log(`Batch scores request for club ${currentClubId}, games: [${gameIds.join(', ')}]`);
-
-    // Fetch all scores for the requested games using raw SQL
-    const scoresResult = await db.execute(sql`
-      SELECT gs.*, g.home_club_id, g.away_club_id
-      FROM game_scores gs
-      JOIN games g ON gs.game_id = g.id
-      WHERE gs.game_id = ANY(${gameIds}) 
-        AND (g.home_club_id = ${currentClubId} OR g.away_club_id = ${currentClubId})
-    `);
-
-    // Group scores by game ID
-    const scoresByGame: Record<number, any[]> = {};
-
-    // Initialize all requested games first
-    gameIds.forEach(gameId => {
-      scoresByGame[gameId] = [];
-    });
-
-    // Then populate with actual scores
-    scoresResult.rows.forEach(score => {
-      if (scoresByGame[score.game_id]) {
-        scoresByGame[score.game_id].push(score);
-      }
-    });
-
-    const gamesWithScores = Object.keys(scoresByGame).filter(gameId => scoresByGame[parseInt(gameId)].length > 0).length;
-    console.log(`Batch scores response: found scores for ${gamesWithScores} games out of ${gameIds.length} requested`);
-
-    // Debug log for missing games
-    const missingGames = gameIds.filter(gameId => scoresByGame[gameId].length === 0);
-    if (missingGames.length > 0) {
-      console.log(`Batch scores: Games without scores: [${missingGames.join(', ')}]`);
-    }
-
-    res.json(scoresByGame);
-  } catch (error) {
-    console.error('Error in batch scores endpoint:', error);
-    res.status(500).json({ error: 'Failed to fetch batch scores' });
-  }
-});
 
   // Create HTTP server
   const httpServer = createServer(app);

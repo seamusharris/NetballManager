@@ -108,22 +108,22 @@ export default function Dashboard() {
     gcTime: 2 * 60 * 60 * 1000, // 2 hours garbage collection - increased
   });
 
-  // Centralized batch fetching for ALL games - widgets will filter as needed
-  const allGameIds = games?.map(g => g.id).sort() || [];
-  const gameIds = allGameIds.join(',');
+  // Centralized roster fetching for all games - optimized for team switching
+  const gameIdsArray = games?.map(g => g.id).sort() || [];
+  const gameIds = gameIdsArray.join(',');
 
   // Use unified data fetcher with aggressive caching for team switching
   const { data: batchData, isLoading: isLoadingBatchData, error: batchDataError } = useQuery({
     queryKey: ['dashboard-batch-data', currentClubId, currentTeamId, gameIds],
     queryFn: async () => {
-      if (allGameIds.length === 0) return { stats: {}, rosters: {}, scores: {} };
+      if (gameIdsArray.length === 0) return { stats: {}, rosters: {}, scores: {} };
 
-      console.log(`Dashboard fetching batch data for ${allGameIds.length} games with team ${currentTeamId}:`, allGameIds);
+      console.log(`Dashboard fetching batch data for ${gameIdsArray.length} games with team ${currentTeamId}:`, gameIdsArray);
 
       try {
         const { dataFetcher } = await import('@/lib/unifiedDataFetcher');
         const result = await dataFetcher.batchFetchGameData({
-          gameIds: allGameIds,
+          gameIds: gameIdsArray,
           clubId: currentClubId!,
           teamId: currentTeamId,
           includeStats: true,
@@ -138,7 +138,7 @@ export default function Dashboard() {
         throw error;
       }
     },
-    enabled: !!currentClubId && !!currentTeamId && allGameIds.length > 0 && !isLoadingGames,
+    enabled: !!currentClubId && !!currentTeamId && gameIdsArray.length > 0 && !isLoadingGames,
     staleTime: 30 * 60 * 1000, // 30 minutes - invalidation handles updates  
     gcTime: 60 * 60 * 1000, // 1 hour garbage collection
     refetchOnWindowFocus: false,
@@ -159,13 +159,13 @@ export default function Dashboard() {
         statsGames: Object.keys(batchData.stats || {}),
         rostersGames: Object.keys(batchData.rosters || {}),
         scoresGames: Object.keys(batchData.scores || {}),
-        totalGames: allGameIds.length
+        totalGames: gameIdsArray.length
       });
     }
     if (batchDataError) {
       console.error('Dashboard batch data error:', batchDataError);
     }
-  }, [batchData, batchDataError, allGameIds.length]);
+  }, [batchData, batchDataError, gameIdsArray.length]);
 
   // NOW we can do conditional returns after all hooks are called
   if (clubLoading || !currentClubId) {
