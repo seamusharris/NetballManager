@@ -114,7 +114,6 @@ export function registerGameScoresRoutes(app: Express) {
         target: [gameScores.gameId, gameScores.teamId, gameScores.quarter],
         set: {
           score: homeScore,
-          updatedAt: sql`CURRENT_TIMESTAMP`,
           notes: notes || null,
         }
       });
@@ -133,7 +132,6 @@ export function registerGameScoresRoutes(app: Express) {
         target: [gameScores.gameId, gameScores.teamId, gameScores.quarter],
         set: {
           score: awayScore,
-          updatedAt: sql`CURRENT_TIMESTAMP`,
         }
       });
 
