@@ -11,6 +11,7 @@ import { useClub } from '@/contexts/ClubContext';
 
 interface UpcomingGamesProps {
   games: Game[];
+  centralizedScoresMap?: { [gameId: number]: any[] };
   opponents: Opponent[];
   className?: string;
   seasonFilter?: string;
@@ -18,7 +19,7 @@ interface UpcomingGamesProps {
   batchStats?: Record<number, any[]>;
 }
 
-export default function UpcomingGames({ games, opponents, className, seasonFilter, activeSeason, batchStats }: UpcomingGamesProps) {
+export default function UpcomingGames({ games, centralizedScoresMap, opponents, className, seasonFilter, activeSeason, batchStats }: UpcomingGamesProps) {
   const { currentTeam } = useClub();
   // Filter for upcoming games using the new status system
   const upcomingGames = games

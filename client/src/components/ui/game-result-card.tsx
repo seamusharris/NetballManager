@@ -60,82 +60,64 @@ export function GameResultCard({
   // Memoize score calculation to avoid unnecessary recalculations
   const scores = useMemo(() => {
     try {
-      // Use only centralized scores - no individual API calls
+      // Use only centralized scores - no API calls
       const officialScores = centralizedScores || [];
 
-      console.log(`GameResultCard ${game.id}: Processing scores - statusIsCompleted: ${game.statusIsCompleted}, centralizedScores length: ${officialScores?.length || 0}`, officialScores?.slice(0, 2));
+      console.log(`GameResultCard ${game.id}: Processing scores - statusIsCompleted: ${game.statusIsCompleted}, centralizedScores length: ${officialScores.length}`, officialScores.slice(0, 2));
 
-      // If we have official scores for a completed game, calculate directly from them
-      if (game.statusIsCompleted && officialScores && officialScores.length > 0) {
-        // Group scores by team and calculate totals
-        const teamScores: Record<number, number> = {};
+      // Only process scores for completed games that have official scores
+      if (game.statusIsCompleted && officialScores.length > 0) {
+        // Calculate team and opponent scores from official scores
+        let teamScore = 0;
+        let opponentScore = 0;
 
+        // Group scores by team
+        const scoresByTeam: { [teamId: number]: number } = {};
         officialScores.forEach(score => {
-          if (!teamScores[score.teamId]) {
-            teamScores[score.teamId] = 0;
+          if (!scoresByTeam[score.teamId]) {
+            scoresByTeam[score.teamId] = 0;
           }
-          teamScores[score.teamId] += score.score;
+          scoresByTeam[score.teamId] += score.score;
         });
 
-        const homeTeamTotal = teamScores[game.homeTeamId] || 0;
-        const awayTeamTotal = teamScores[game.awayTeamId] || 0;
-
-        // Determine which team is "ours" for result calculation
-        let teamScore: number;
-        let opponentScore: number;
-
-        if (currentTeamId) {
-          if (game.homeTeamId === currentTeamId) {
-            teamScore = homeTeamTotal;
-            opponentScore = awayTeamTotal;
-          } else if (game.awayTeamId === currentTeamId) {
-            teamScore = awayTeamTotal;
-            opponentScore = homeTeamTotal;
-          } else {
-            // For club-wide view or unknown team, use home vs away
-            teamScore = homeTeamTotal;
-            opponentScore = awayTeamTotal;
-          }
+        // Determine team vs opponent scores
+        if (currentTeamId && scoresByTeam[currentTeamId]) {
+          teamScore = scoresByTeam[currentTeamId];
+          // Sum all other team scores as opponent
+          opponentScore = Object.entries(scoresByTeam)
+            .filter(([teamId]) => parseInt(teamId) !== currentTeamId)
+            .reduce((sum, [, score]) => sum + score, 0);
         } else {
-          // Default to home vs away
-          teamScore = homeTeamTotal;
-          opponentScore = awayTeamTotal;
+          // If no current team context, just show the scores as they are
+          const teamIds = Object.keys(scoresByTeam).map(id => parseInt(id));
+          if (teamIds.length >= 2) {
+            teamScore = scoresByTeam[teamIds[0]] || 0;
+            opponentScore = scoresByTeam[teamIds[1]] || 0;
+          }
         }
 
-        const result = teamScore > opponentScore ? 'win' : 
-                      teamScore < opponentScore ? 'loss' : 'draw';
-
+        const result = teamScore > opponentScore ? 'win' : teamScore < opponentScore ? 'loss' : 'draw';
         console.log(`GameResultCard ${game.id}: Official scores calculated - ${teamScore}-${opponentScore} (${result}) from ${officialScores.length} score entries`);
 
         return {
-          totalTeamScore: teamScore,
-          totalOpponentScore: opponentScore,
-          result,
-          quarters: []
+          quarterScores: [], // Simplified - not showing quarter breakdown in cards
+          finalScore: { for: teamScore, against: opponentScore }
         };
       }
 
-      // Determine which scores to use (prioritize official scores when available)
-      const scoresToUse = useOfficialPriority && officialScores?.length > 0
-        ? officialScores
-        : gameStats;
-
-      // Fall back to gameScoreService for other cases
-      return gameScoreService.calculateGameScoresSync(
-        scoresToUse || [], 
-        game.statusName, 
-        { teamGoals: game.statusTeamGoals, opponentGoals: game.statusOpponentGoals },
-        game.isInterClub,
-        game.homeTeamId,
-        game.awayTeamId,
-        currentTeamId,
-        centralizedScores //Pass the centralized scores for calculateGameScoresSync to handle
-      );
+      // Return empty scores for games without official scores
+      return {
+        quarterScores: [],
+        finalScore: { for: 0, against: 0 }
+      };
     } catch (error) {
-      console.error(`GameResultCard ${game.id}: Error calculating scores:`, error);
-      return null;
+      console.error(`GameResultCard ${game.id}: Error processing scores:`, error);
+      return {
+        quarterScores: [],
+        finalScore: { for: 0, against: 0 }
+      };
     }
-  }, [gameStats, centralizedScores, game, currentTeamId]);
+  }, [centralizedScores, game.id, game.statusIsCompleted, currentTeamId]);
 
   // Check if this is a BYE game using game status only
   const isByeGame = game.statusId === 6 || game.statusName === 'bye';
@@ -241,8 +223,8 @@ export function GameResultCard({
     if (isUpcoming) return "—";
 
     // Show calculated scores if available
-    if (scores && scores.totalTeamScore !== undefined && scores.totalOpponentScore !== undefined) {
-      return `${scores.totalTeamScore}-${scores.totalOpponentScore}`;
+    if (scores && scores.finalScore.for !== undefined && scores.finalScore.against !== undefined) {
+      return `${scores.finalScore.for}-${scores.finalScore.against}`;
     }
 
     // Show status scores if no calculated scores but status scores exist
@@ -315,8 +297,8 @@ export function GameResultCard({
           </div>
         ) : scores ? (
           <ScoreBadge 
-            teamScore={scores.totalTeamScore} 
-            opponentScore={scores.totalOpponentScore}
+            teamScore={scores.finalScore.for} 
+            opponentScore={scores.finalScore.against}
             result={scores.result}
             className="ml-auto"
           />
