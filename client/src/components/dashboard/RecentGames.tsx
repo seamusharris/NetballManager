@@ -9,6 +9,7 @@ import { ViewMoreButton } from '@/components/ui/view-more-button';
 import { RECENT_GAMES_COUNT } from '@/lib/constants';
 import { useClub } from '@/contexts/ClubContext';
 import { apiClient } from '@/lib/apiClient';
+import { statisticsService } from '@/lib/statisticsService';
 
 interface RecentGamesProps {
   games: Game[];
@@ -50,7 +51,7 @@ export default function RecentGames({ games, opponents, className, seasonFilter,
   recentGames.forEach(game => {
     const gameScores = centralizedScores?.[game.id];
     console.log(`RecentGames: Game ${game.id} (${game.awayTeamName} vs ${game.homeTeamName}) batch scores:`, gameScores);
-    
+
     if (gameScores && Array.isArray(gameScores) && gameScores.length > 0) {
       // Transform the batch format to the format expected by GameResultCard
       try {

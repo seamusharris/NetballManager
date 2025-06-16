@@ -15,9 +15,10 @@ interface UpcomingGamesProps {
   className?: string;
   seasonFilter?: string;
   activeSeason?: any;
+  batchStats?: Record<number, any[]>;
 }
 
-export default function UpcomingGames({ games, opponents, className, seasonFilter, activeSeason }: UpcomingGamesProps) {
+export default function UpcomingGames({ games, opponents, className, seasonFilter, activeSeason, batchStats }: UpcomingGamesProps) {
   const { currentTeam } = useClub();
   // Filter for upcoming games using the new status system
   const upcomingGames = games
@@ -36,7 +37,7 @@ export default function UpcomingGames({ games, opponents, className, seasonFilte
     if (game.awayTeamName === 'Bye' || game.awayTeamName === null) {
       return 'BYE';
     }
-    
+
     // Always show "Home Team vs Away Team" format
     return `${game.homeTeamName || 'Unknown'} vs ${game.awayTeamName || 'Unknown'}`;
   };

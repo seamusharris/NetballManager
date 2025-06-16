@@ -25,7 +25,8 @@ export default function ClubDashboard() {
     gcTime: 30 * 60 * 1000 // 30 minutes
   });
 
-  const { data: games = [], isLoading: isLoadingGames, error: gamesError } = useQuery<any[]>({
+  // Get games data with proper club context
+  const { data: games = [], isLoading: isLoadingGames } = useQuery<any[]>({
     queryKey: ['games', currentClubId, 'all-teams'],
     queryFn: () => apiClient.get('/api/games', { 'x-club-wide': 'true' }),
     enabled: !!currentClubId && !clubLoading,
