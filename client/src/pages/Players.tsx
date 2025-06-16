@@ -111,7 +111,7 @@ export default function Players() {
   const [selectedTeamFilter, setSelectedTeamFilter] = useState<string>('all');
 
   // Get players for non-team view
-  const { data: players = [], isLoading: isLoadingPlayers } = useQuery({
+  const { data: players = [], isLoading: isPlayersLoading } = useQuery({
     queryKey: ['players', currentClub?.id],
     queryFn: async () => {
       if (!currentClub?.id) return [];
@@ -300,9 +300,76 @@ export default function Players() {
     },
   });
 
-  const isLoading = teamId 
-    ? isLoadingTeamPlayers || isLoadingAvailablePlayers || isLoadingTeam
-    : isLoadingPlayers;
+  // Direct mutations following clubs/teams pattern - avoids CRUD hook 404 issues
+  const createMutation = useMutation({
+    mutationFn: (data: any) => apiClient.post('/api/players', data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['players', currentClubId] });
+      queryClient.invalidateQueries({ queryKey: ['clubs', currentClubId, 'players'] });
+      toast({
+        title: "Success",
+        description: "Player created successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create player",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, ...data }: any) => apiClient.patch(`/api/players/${id}`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['players', currentClubId] });
+      queryClient.invalidateQueries({ queryKey: ['clubs', currentClubId, 'players'] });
+      toast({
+        title: "Success",
+        description: "Player updated successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update player",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (playerId: number) => apiClient.delete(`/api/players/${playerId}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['players', currentClubId] });
+      queryClient.invalidateQueries({ queryKey: ['clubs', currentClubId, 'players'] });
+      toast({
+        title: "Success",
+        description: "Player deleted successfully",
+      });
+    },
+    onError: (error: any) => {
+      const errorMessage = error.message?.toLowerCase() || '';
+
+      if (errorMessage.includes('constraint') || errorMessage.includes('foreign key')) {
+        toast({
+          title: "Cannot Delete Player",
+          description: "This player has game statistics or other records. Please remove those first.",
+          variant: "destructive",
+        });
+      } else if (!errorMessage.includes('not found') && !errorMessage.includes('404')) {
+        // Only show error for real errors, not 404s from double execution
+        toast({
+          title: "Error",
+          description: `Failed to delete player: ${error.message}`,
+          variant: "destructive",
+        });
+      }
+    }
+  });
+
+  const isLoading = isPlayersLoading || createMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
 
   // Rename the teamPlayersData to teamPlayers
   const teamPlayers = teamPlayersData;
