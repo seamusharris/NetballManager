@@ -1,7 +1,7 @@
 import { Express } from 'express';
 import { db } from './db';
 import { gameScores, games } from '@shared/schema';
-import { eq, and, or, inArray } from 'drizzle-orm';
+import { eq, and, or, inArray, sql } from 'drizzle-orm';
 import { standardAuth, AuthenticatedRequest } from './auth-middleware';
 
 export function registerGameScoresRoutes(app: Express) {
