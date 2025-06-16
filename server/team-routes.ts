@@ -1,7 +1,7 @@
 import type { Express, Response } from "express";
 import { db } from "./db";
 import { sql, eq, and } from "drizzle-orm";
-import { teams, teamPlayers, playerSeasons } from "@shared/schema";
+import { teams, teamPlayers } from "@shared/schema";
 import { 
   AuthenticatedRequest, 
   requireClubAccess 
@@ -459,32 +459,13 @@ export function registerTeamRoutes(app: Express) {
         return res.status(400).json({ message: "Player is already on this team" });
       }
 
-      // Check if player is already in this season, if not add them
-      const existingPlayerSeason = await db.select()
-        .from(playerSeasons)
-        .where(and(
-          eq(playerSeasons.playerId, playerId),
-          eq(playerSeasons.seasonId, seasonId)
-        ))
-        .limit(1);
-
-      if (existingPlayerSeason.length === 0) {
-        await db.insert(playerSeasons)
-          .values({
-            playerId,
-            seasonId
-          })
-          .onConflictDoNothing({
-            target: [playerSeasons.playerId, playerSeasons.seasonId]
-          });
-      }
-
       const result = await db.insert(teamPlayers)
         .values({
           teamId,
           playerId,
           isRegular: isRegular || true
         })
+        .onConflictDoNothing()
         .returning();
 
       console.log(`Auto-assigned player ${playerId} to season ${seasonId} when adding to team ${teamId}`);
