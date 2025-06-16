@@ -104,16 +104,43 @@ export function OfficialScoreEntry({
       });
     },
     onSuccess: () => {
-      // Only invalidate the specific game's score queries
-      queryClient.invalidateQueries({ queryKey: ['/api/games', gameId, 'scores'] });
-
-      // Invalidate the specific game scores in the batch queries
-      queryClient.invalidateQueries({ 
-        queryKey: ['gameScores', gameId],
-        exact: false
+      // Comprehensive cache invalidation using predicate-based approach
+      queryClient.invalidateQueries({
+        predicate: (query) => {
+          const queryKey = query.queryKey;
+          return queryKey.some(key => {
+            if (typeof key === 'string') {
+              // Direct game score queries
+              if (key.includes(`/games/${gameId}/scores`)) return true;
+              if (key.includes(`game-${gameId}`)) return true;
+              
+              // Batch statistics queries
+              if (key.includes('batchGameStats')) return true;
+              if (key.includes('games/stats/batch')) return true;
+              
+              // Dashboard batch data queries
+              if (key.includes('dashboard-batch-data')) return true;
+              if (key.includes('centralized-scores')) return true;
+              
+              // Games list queries that might contain this game
+              if (key === '/api/games') return true;
+              
+              return false;
+            }
+            // Handle array-based query keys
+            if (Array.isArray(key) && key.includes(gameId)) return true;
+            
+            return false;
+          });
+        }
       });
 
-      // Clear only this game's cache
+      // Also invalidate specific patterns that contain the gameId
+      queryClient.invalidateQueries({ queryKey: ['gameScores', gameId], exact: false });
+      queryClient.invalidateQueries({ queryKey: ['gameScores'], exact: false });
+      queryClient.invalidateQueries({ queryKey: ['/api/games', gameId], exact: false });
+
+      // Clear global scores cache
       import('../../lib/scoresCache').then(({ invalidateGameCache }) => {
         invalidateGameCache(gameId);
       });
