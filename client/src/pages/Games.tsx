@@ -161,7 +161,21 @@ export default function Games() {
       }
 
       await apiRequest('POST', '/api/games', game);
-      queryClient.invalidateQueries({ queryKey: ['games'] });
+
+      // Invalidate games queries using the exact query keys
+      if (currentClubId) {
+        // Invalidate the specific games query for current team
+        queryClient.invalidateQueries({
+          queryKey: ['/api/games'],
+          exact: false
+        });
+
+        // Invalidate batch scores for the games list
+        queryClient.invalidateQueries({
+          queryKey: [`/api/games/batch-scores/${currentClubId}`],
+          exact: false
+        });
+      }
       setIsDialogOpen(false);
       toast({
         title: 'Success',

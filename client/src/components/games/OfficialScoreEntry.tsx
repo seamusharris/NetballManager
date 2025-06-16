@@ -115,34 +115,26 @@ export function OfficialScoreEntry({
         description: "Scores have been saved successfully."
       });
 
-      // Invalidate specific queries for this game
+      // Invalidate specific score-related queries
       queryClient.invalidateQueries({
         queryKey: ['/api/games', gameId, 'scores']
       });
 
-      // Only invalidate batch scores and games lists if we have club context
-      if (currentClub?.id) {
-        // Invalidate batch scores that include this game
-        queryClient.invalidateQueries({
-          predicate: (query) => {
-            const key = query.queryKey;
-            return Array.isArray(key) && 
-                   key[0] === '/api/games' && 
-                   key[2] === 'batch-scores' && 
-                   key[1] === currentClub.id;
-          }
-        });
+      // Invalidate the games list to show updated scores
+      queryClient.invalidateQueries({
+        queryKey: ['/api/games'],
+        exact: false
+      });
 
-        // Invalidate games lists to show updated scores
-        queryClient.invalidateQueries({
-          predicate: (query) => {
-            const key = query.queryKey;
-            return Array.isArray(key) && 
-                   key[0] === '/api/games' && 
-                   key[1] === currentClub.id;
-          }
-        });
-      }
+      // Invalidate batch scores queries
+      queryClient.invalidateQueries({
+        predicate: (query) => {
+          const key = query.queryKey;
+          return Array.isArray(key) && 
+                 typeof key[0] === 'string' && 
+                 key[0].includes('batch-scores');
+        }
+      });
     },
     onError: (error) => {
       console.error('Error saving score:', error);
