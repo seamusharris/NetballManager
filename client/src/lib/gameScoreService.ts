@@ -49,7 +49,7 @@ class GameScoreService {
           return this.createScoresFromOfficial(response, homeTeamId, awayTeamId, currentTeamId);
         }
       } catch (error) {
-        console.log(`No official scores found for game ${gameId}, using calculated scores`);
+        console.log(`No official scores found for game ${gameId}`);
       }
     }
 
@@ -57,6 +57,7 @@ class GameScoreService {
     if (officialScores && officialScores.length > 0) {
       return this.createScoresFromOfficial(officialScores, homeTeamId, awayTeamId, currentTeamId);
     }
+
     // Handle games with fixed scores from status (forfeit, etc.)
     if (statusScores && statusScores.teamGoals !== null && statusScores.opponentGoals !== null) {
       return this.createFixedScores(statusScores.teamGoals, statusScores.opponentGoals);
@@ -71,105 +72,9 @@ class GameScoreService {
       return this.createForfeitScores(false);
     }
 
-    // For inter-club games, calculate scores using reconciled data quarter by quarter
-    if (isInterClub && homeTeamId && awayTeamId && currentTeamId) {
-      const quarterScores = [];
-
-      for (let quarter = 1; quarter <= 4; quarter++) {
-        const quarterStats = gameStats.filter(stat => stat.quarter === quarter);
-
-        // Get stats for both teams
-        const homeTeamStats = quarterStats.filter(stat => stat.teamId === homeTeamId);
-        const awayTeamStats = quarterStats.filter(stat => stat.teamId === awayTeamId);
-
-        // Calculate home and away scores - prioritize home team stats, fallback to away team stats if needed
-        let homeScore = 0;
-        let awayScore = 0;
-
-        // For home score: prioritize home team's "goalsFor", fallback to away team's "goalsAgainst"
-        if (homeTeamStats.length > 0) {
-          homeScore = homeTeamStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
-        } else if (awayTeamStats.length > 0) {
-          homeScore = awayTeamStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
-        }
-
-        // For away score: prioritize home team's "goalsAgainst", fallback to away team's "goalsFor"
-        if (homeTeamStats.length > 0) {
-          awayScore = homeTeamStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
-        } else if (awayTeamStats.length > 0) {
-          awayScore = awayTeamStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
-        }
-
-        // Convert to current team perspective
-        let teamScore: number;
-        let opponentScore: number;
-
-        if (currentTeamId === homeTeamId) {
-          teamScore = homeScore;
-          opponentScore = awayScore;
-        } else {
-          teamScore = awayScore;
-          opponentScore = homeScore;
-        }
-
-        quarterScores.push({
-          quarter,
-          teamScore,
-          opponentScore
-        });
-      }
-
-      const totalTeamScore = quarterScores.reduce((sum, q) => sum + q.teamScore, 0);
-      const totalOpponentScore = quarterScores.reduce((sum, q) => sum + q.opponentScore, 0);
-
-      const result = totalTeamScore > totalOpponentScore ? 'win' : 
-                     totalTeamScore < totalOpponentScore ? 'loss' : 'draw';
-
-      return {
-        quarterScores,
-        totalTeamScore,
-        totalOpponentScore,
-        result
-      };
-    }
-
-    // Regular single-team game calculation - filter by current team if specified
-    const quarterScores = [];
-    for (let quarter = 1; quarter <= 4; quarter++) {
-      let quarterStats = gameStats.filter(stat => stat.quarter === quarter);
-
-      // Always filter by current team ID if available for consistent perspective
-      if (currentTeamId) {
-        quarterStats = quarterStats.filter(stat => stat.teamId === currentTeamId);
-      } else if (gameStats.length > 0 && gameStats[0].teamId) {
-        // Fallback to first team's perspective if no current team specified
-        const firstTeamId = gameStats[0].teamId;
-        quarterStats = quarterStats.filter(stat => stat.teamId === firstTeamId);
-        console.warn(`No currentTeamId provided, using team ${firstTeamId} perspective`);
-      }
-
-      const teamScore = quarterStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
-      const opponentScore = quarterStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
-
-      quarterScores.push({
-        quarter,
-        teamScore,
-        opponentScore
-      });
-    }
-
-    const totalTeamScore = quarterScores.reduce((sum, q) => sum + q.teamScore, 0);
-    const totalOpponentScore = quarterScores.reduce((sum, q) => sum + q.opponentScore, 0);
-
-    const result = totalTeamScore > totalOpponentScore ? 'win' : 
-                   totalTeamScore < totalOpponentScore ? 'loss' : 'draw';
-
-    return {
-      quarterScores,
-      totalTeamScore,
-      totalOpponentScore,
-      result
-    };
+    // If no official scores available, return empty scores
+    console.log(`No official scores available for game ${gameId || 'unknown'}`);
+    return this.createEmptyScores();
   }
 
   private createForfeitScores(isWin: boolean): GameScores {
@@ -253,6 +158,21 @@ class GameScoreService {
     };
   }
 
+
+  private createEmptyScores(): GameScores {
+    const quarterScores: QuarterScore[] = Array.from({ length: 4 }, (_, i) => ({
+      quarter: i + 1,
+      teamScore: 0,
+      opponentScore: 0
+    }));
+
+    return {
+      quarterScores,
+      totalTeamScore: 0,
+      totalOpponentScore: 0,
+      result: 'draw'
+    };
+  }
 
   private createScoresFromOfficial(
     officialScores: OfficialGameScore[], 
@@ -353,139 +273,9 @@ class GameScoreService {
       return this.createForfeitScores(false);
     }
 
-    // For inter-club games, calculate scores using reconciled data quarter by quarter
-    if (isInterClub && homeTeamId && awayTeamId && currentTeamId) {
-      const quarterScores = [];
-
-      for (let quarter = 1; quarter <= 4; quarter++) {
-        const quarterStats = gameStats.filter(stat => stat.quarter === quarter);
-
-        // Get stats for both teams
-        const homeTeamStats = quarterStats.filter(stat => stat.teamId === homeTeamId);
-        const awayTeamStats = quarterStats.filter(stat => stat.teamId === awayTeamId);
-
-        // Calculate home and away scores - prioritize home team stats, fallback to away team stats if needed
-        let homeScore = 0;
-        let awayScore = 0;
-
-        // For home score: prioritize home team's "goalsFor", fallback to away team's "goalsAgainst"
-        if (homeTeamStats.length > 0) {
-          homeScore = homeTeamStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
-        } else if (awayTeamStats.length > 0) {
-          homeScore = awayTeamStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
-        }
-
-        // For away score: prioritize home team's "goalsAgainst", fallback to away team's "goalsFor"
-        if (homeTeamStats.length > 0) {
-          awayScore = homeTeamStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
-        } else if (awayTeamStats.length > 0) {
-          awayScore = awayTeamStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
-        }
-
-        // Convert to current team perspective
-        let teamScore: number;
-        let opponentScore: number;
-
-        if (currentTeamId === homeTeamId) {
-          teamScore = homeScore;
-          opponentScore = awayScore;
-        } else {
-          teamScore = awayScore;
-          opponentScore = homeScore;
-        }
-
-        quarterScores.push({
-          quarter,
-          teamScore,
-          opponentScore
-        });
-      }
-
-      const totalTeamScore = quarterScores.reduce((sum, q) => sum + q.teamScore, 0);
-      const totalOpponentScore = quarterScores.reduce((sum, q) => sum + q.opponentScore, 0);
-
-      const result = totalTeamScore > totalOpponentScore ? 'win' : 
-                     totalTeamScore < totalOpponentScore ? 'loss' : 'draw';
-
-      return {
-        quarterScores,
-        totalTeamScore,
-        totalOpponentScore,
-        result
-      };
-    }
-
-    // Regular single-team game calculation - filter by current team if specified
-    const quarterScores = [];
-    for (let quarter = 1; quarter <= 4; quarter++) {
-      let quarterStats = gameStats.filter(stat => stat.quarter === quarter);
-
-      // Always filter by current team ID if available for consistent perspective
-      if (currentTeamId) {
-        quarterStats = quarterStats.filter(stat => stat.teamId === currentTeamId);
-      } else if (gameStats.length > 0 && gameStats[0].teamId) {
-        // Fallback to first team's perspective if no current team specified
-        const firstTeamId = gameStats[0].teamId;
-        quarterStats = quarterStats.filter(stat => stat.teamId === firstTeamId);
-        console.warn(`No currentTeamId provided, using team ${firstTeamId} perspective`);
-      }
-
-      const teamScore = quarterStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
-      const opponentScore = quarterStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
-
-      quarterScores.push({
-        quarter,
-        teamScore,
-        opponentScore
-      });
-    }
-
-    const totalTeamScore = quarterScores.reduce((sum, q) => sum + q.teamScore, 0);
-    const totalOpponentScore = quarterScores.reduce((sum, q) => sum + q.opponentScore, 0);
-
-    const result = totalTeamScore > totalOpponentScore ? 'win' : 
-                   totalOpponentScore < totalOpponentScore ? 'loss' : 'draw';
-
-    return {
-      quarterScores,
-      totalTeamScore,
-      totalOpponentScore,
-      result
-    };
+    // If no official scores available, return empty scores
+    return this.createEmptyScores();
   }
 }
 
 export const gameScoreService = new GameScoreService();
-/**
- * Calculates game scores, prioritizing official scores over calculated stats
- * Returns the total goals for and against for the team
- */
-export async function calculateGameScores(
-  gameStats: GameStat[], 
-  gameStatus?: string,
-  useHomePriority = false,
-  gameId?: number
-): Promise<{ teamScore: number; opponentScore: number; source: 'official' | 'calculated' }> {
-
-  // First, try to get official scores if gameId is provided
-  if (gameId) {
-    try {
-      const officialScores = await apiClient.get(`/api/games/${gameId}/scores`);
-      if (officialScores) {
-        // For now, return home team perspective - this could be enhanced based on current team context
-        return {
-          teamScore: officialScores.homeTeamTotal,
-          opponentScore: officialScores.awayTeamTotal,
-          source: 'official'
-        };
-      }
-    } catch (error) {
-      console.log('No official scores found, falling back to calculated scores');
-    }
-  }
-  return { 
-    teamScore: goalsFor, 
-    opponentScore: goalsAgainst,
-    source: 'calculated'
-  };
-}
