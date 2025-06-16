@@ -397,6 +397,7 @@ export default function ClubDashboard() {
               opponents={[]} 
               className="md:col-span-2" 
               centralizedStats={centralizedStats}
+              centralizedScores={officialScores}
               teams={teams}
               clubWide={true}
             />

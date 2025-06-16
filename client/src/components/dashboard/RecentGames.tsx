@@ -61,7 +61,7 @@ export default function RecentGames({ games, opponents, className, seasonFilter,
                 game={game}
                 layout="medium"
                 gameStats={centralizedStats?.[game.id] || []}
-                officialScores={centralizedScores?.[game.id]}
+                centralizedScores={centralizedScores?.[game.id]}
                 useOfficialPriority={true}
                 showDate={true}
                 showRound={true}
