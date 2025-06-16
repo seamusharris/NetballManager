@@ -108,15 +108,40 @@ export function OfficialScoreEntry({
       return apiClient.post(`/api/games/${gameId}/scores`, saveData);
     },
     onSuccess: () => {
-          // Use optimized cache invalidation
-          const clubId = parseInt(currentClubId!.toString());
-          invalidateScoresOnly(queryClient, gameId, clubId);
+      toast({
+        title: "Score saved",
+        description: "Quarter score has been saved successfully."
+      });
 
-          // Invalidate game cache for real-time score updates
-          invalidateGameCache(gameId);
+      // Force refresh all relevant queries
+      queryClient.invalidateQueries({ queryKey: [`/api/games/${gameId}/scores`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/games/${gameId}`] });
 
-          console.log(`Official scores saved for game ${gameId}, invalidated relevant caches for club ${clubId}`);
-        },
+      // Invalidate batch score queries for both club and team level
+      queryClient.invalidateQueries({ 
+        predicate: (query) => {
+          const key = query.queryKey;
+          if (!Array.isArray(key)) return false;
+
+          return (
+            key[0] === 'official-scores' ||
+            key[0] === 'dashboard-batch-data' ||
+            key[0] === 'games' ||
+            (key[0] === 'POST' && key[1] === '/api/games/scores/batch') ||
+            (key[0] === 'POST' && key[1] === '/api/games/stats/batch') ||
+            key.includes('scores') ||
+            key.includes('batch')
+          );
+        }
+      });
+
+      // Force a window refresh for dashboard components if we're on dashboard
+      if (window.location.pathname.includes('dashboard') || window.location.pathname.includes('club-dashboard')) {
+        window.location.reload();
+      }
+
+      console.log(`Official scores saved for game ${gameId}, all caches invalidated`);
+    },
     onError: (error) => {
       console.error('Error saving score:', error);
       toast({

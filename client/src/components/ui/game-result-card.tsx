@@ -50,11 +50,14 @@ export function GameResultCard({
     );
   }
 
-  // Calculate scores using centralized gameScoreService
+  // Memoize score calculation to avoid unnecessary recalculations
   const scores = useMemo(() => {
-    if (!game) return null;
-
     try {
+      // Always try to use centralized scores first if available
+      const scoresToUse = centralizedScores && centralizedScores.length > 0 ? centralizedScores : undefined;
+
+      console.log(`GameResultCard ${game.id}: Using centralized scores:`, scoresToUse);
+
       return gameScoreService.calculateGameScoresSync(
         gameStats || [], 
         game.statusName, 
@@ -63,13 +66,13 @@ export function GameResultCard({
         game.homeTeamId,
         game.awayTeamId,
         currentTeamId,
-        useOfficialPriority ? centralizedScores : undefined
+        scoresToUse
       );
     } catch (error) {
-      // Silently handle errors to avoid console clutter
+      console.error(`GameResultCard ${game.id}: Error calculating scores:`, error);
       return null;
     }
-  }, [gameStats, centralizedScores, useOfficialPriority, game, currentTeamId]);
+  }, [gameStats, centralizedScores, game, currentTeamId]);
 
   // Check if this is a BYE game using game status only
   const isByeGame = game.statusId === 6 || game.statusName === 'bye';

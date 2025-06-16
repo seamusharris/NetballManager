@@ -90,33 +90,20 @@ export default function ClubDashboard() {
           gameIds: completedGameIds
         });
 
-        console.log(`ClubDashboard: Batch scores received for ${Object.keys(scoresMap).length} games`);
+        console.log(`ClubDashboard: Batch scores received for ${Object.keys(scoresMap).length} games:`, scoresMap);
         return scoresMap || {};
       } catch (error) {
-        console.error('ClubDashboard: Batch scores fetch failed, falling back to individual requests:', error);
-        
-        // Fallback to individual requests (limited to prevent server overwhelm)
-        const scoresMap: Record<number, any[]> = {};
-        const fallbackGameIds = completedGameIds.slice(0, 10); // Limit fallback to 10 games
-        
-        for (const gameId of fallbackGameIds) {
-          try {
-            const scores = await apiClient.get(`/api/games/${gameId}/scores`);
-            scoresMap[gameId] = scores || [];
-          } catch (gameError) {
-            console.error(`ClubDashboard: Error fetching scores for game ${gameId}:`, gameError);
-            scoresMap[gameId] = [];
-          }
-        }
-
-        return scoresMap;
+        console.error('ClubDashboard: Batch scores fetch failed:', error);
+        return {};
       }
     },
     enabled: !!currentClubId && !clubLoading && completedGameIds.length > 0,
-    staleTime: 15 * 60 * 1000, // 15 minutes for batch data
-    gcTime: 45 * 60 * 1000, // 45 minutes for batch data
-    retry: 1, // Only retry once to avoid overwhelming server
-    retryDelay: 2000 // Wait 2 seconds before retry
+    staleTime: 5 * 60 * 1000, // Reduce to 5 minutes for more frequent updates
+    gcTime: 15 * 60 * 1000, // Reduce garbage collection time
+    retry: 1,
+    retryDelay: 1000,
+    refetchOnWindowFocus: true, // Refetch when window gains focus
+    refetchOnMount: true // Always refetch on mount
   });
 
   // Also fetch centralized stats for display purposes (RecentGames component)
