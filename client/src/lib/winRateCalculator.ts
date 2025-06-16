@@ -119,32 +119,9 @@ export function calculateClubWinRate(
       theirScore = isHome ? (game.statusOpponentGoals || 0) : (game.statusTeamGoals || 0);
     } else if (gameStats.length > 0) {
       if (isInterClubGame) {
-        // For inter-club games, get the scores for both teams
-        const homeTeamStats = gameStats.filter(stat => stat.teamId === game.homeTeamId);
-        const awayTeamStats = gameStats.filter(stat => stat.teamId === game.awayTeamId);
-
-        const homeScore = homeTeamStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
-        const awayScore = awayTeamStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
-
-        // For inter-club games, count both teams' performance
-        if (homeScore > awayScore) {
-          wins++;
-        } else if (homeScore < awayScore) {
-          losses++;
-        } else {
-          draws++;
-        }
-        
-        // Also count the away team's perspective
-        if (awayScore > homeScore) {
-          wins++;
-        } else if (awayScore < homeScore) {
-          losses++;
-        } else if (homeScore !== awayScore) { // Don't double count draws
-          draws++;
-        }
-        
-        continue; // Skip the normal scoring logic below
+        // For inter-club games, don't count them in club-wide win rate
+        // They're internal competitions that don't affect overall club performance
+        continue;
       } else {
         // Regular game against another club
         // Use all stats from our club's teams
@@ -154,12 +131,11 @@ export function calculateClubWinRate(
         });
       }
     } else {
-      // No scores available
-      ourScore = 0;
-      theirScore = 0;
+      // No scores available - skip this game
+      continue;
     }
 
-    // Normal win/loss/draw logic for non-inter-club games
+    // Normal win/loss/draw logic for external games only
     if (!isInterClubGame) {
       if (ourScore > theirScore) {
         wins++;
@@ -171,7 +147,11 @@ export function calculateClubWinRate(
     }
   }
 
-  const totalGames = validGames.length;
+  // Only count external games for club-wide statistics
+  const externalGames = validGames.filter(game => 
+    !(game.homeClubId === clubId && game.awayClubId === clubId)
+  );
+  const totalGames = externalGames.length;
   const winRate = totalGames > 0 ? (wins / totalGames) * 100 : 0;
 
   return {
