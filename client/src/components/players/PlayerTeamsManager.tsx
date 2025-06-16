@@ -36,13 +36,27 @@ export default function PlayerTeamsManager({
   
   // Fetch player's current teams
   const { data: playerTeams = [], isLoading: isTeamsLoading } = useQuery<Team[]>({
-    queryKey: [`/api/players/${player.id}/teams`],
+    queryKey: ['players', player.id, 'teams'],
+    queryFn: async () => {
+      const response = await fetch(`/api/players/${player.id}/teams`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch player teams');
+      }
+      return response.json();
+    },
     enabled: !!player?.id,
   });
   
   // Fetch all available teams
   const { data: allTeams = [], isLoading: isLoadingAllTeams } = useQuery<Team[]>({
-    queryKey: ['/api/teams/all'],
+    queryKey: ['teams', 'all'],
+    queryFn: async () => {
+      const response = await fetch('/api/teams/all');
+      if (!response.ok) {
+        throw new Error('Failed to fetch teams');
+      }
+      return response.json();
+    },
     enabled: !!player?.id,
   });
   
@@ -117,10 +131,11 @@ export default function PlayerTeamsManager({
       });
       
       // Invalidate relevant queries
-      queryClient.invalidateQueries({ queryKey: ['/api/players'] });
-      queryClient.invalidateQueries({ queryKey: [`/api/players/${player.id}`] });
-      queryClient.invalidateQueries({ queryKey: [`/api/players/${player.id}/teams`] });
-      queryClient.invalidateQueries({ queryKey: ['/api/teams'] });
+      queryClient.invalidateQueries({ queryKey: ['players'] });
+      queryClient.invalidateQueries({ queryKey: ['players', player.id] });
+      queryClient.invalidateQueries({ queryKey: ['players', player.id, 'teams'] });
+      queryClient.invalidateQueries({ queryKey: ['teams'] });
+      queryClient.invalidateQueries({ queryKey: ['teams', 'all'] });
       
       // Close the dialog
       onClose();
@@ -171,6 +186,7 @@ export default function PlayerTeamsManager({
           {/* Team selection */}
           <div className="bg-gray-50 rounded-lg p-4">
             <h3 className="text-sm font-medium mb-3">Available teams:</h3>
+            {console.log('PlayerTeamsManager - allTeams:', allTeams, 'isLoading:', isLoadingAllTeams)}
             <div className="space-y-3 max-h-60 overflow-y-auto">
               {isLoadingAllTeams ? (
                 <div className="text-sm text-gray-500 text-center py-4">
