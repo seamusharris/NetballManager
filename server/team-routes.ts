@@ -446,12 +446,26 @@ export function registerTeamRoutes(app: Express) {
 
       const seasonId = teamSeason.rows[0].season_id;
 
-      // Ensure player is assigned to the season
-      await db.execute(sql`
-        INSERT INTO player_seasons (player_id, season_id)
-        VALUES (${playerId}, ${seasonId})
-        ON CONFLICT (player_id, season_id) DO NOTHING
+      // Check if player is already on this team first
+      const existingAssignment = await db.execute(sql`
+        SELECT id FROM team_players WHERE team_id = ${teamId} AND player_id = ${playerId}
       `);
+
+      if (existingAssignment.rows.length > 0) {
+        return res.status(400).json({ message: "Player is already on this team" });
+      }
+
+      // Check if player is already in this season, if not add them
+      const existingPlayerSeason = await db.execute(sql`
+        SELECT id FROM player_seasons WHERE player_id = ${playerId} AND season_id = ${seasonId}
+      `);
+
+      if (existingPlayerSeason.rows.length === 0) {
+        await db.execute(sql`
+          INSERT INTO player_seasons (player_id, season_id)
+          VALUES (${playerId}, ${seasonId})
+        `);
+      }
 
       const result = await db.execute(sql`
         INSERT INTO team_players (team_id, player_id, is_regular)
