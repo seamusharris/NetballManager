@@ -52,8 +52,19 @@ export default function RecentGames({ games, opponents, className, seasonFilter,
     console.log(`RecentGames: Game ${game.id} (${game.awayTeamName} vs ${game.homeTeamName}) batch scores:`, gameScores);
     
     if (gameScores && Array.isArray(gameScores) && gameScores.length > 0) {
-      transformedScores[game.id] = gameScores;
-      console.log(`RecentGames: Game ${game.id} score details:`, gameScores.map(s => `Q${s.quarter}: T${s.teamId}=${s.score}`));
+      // Transform the batch format to the format expected by GameResultCard
+      transformedScores[game.id] = gameScores.map(score => ({
+        id: score.id,
+        gameId: score.gameId,
+        teamId: score.teamId,
+        quarter: score.quarter,
+        score: score.score,
+        enteredBy: score.enteredBy,
+        enteredAt: score.enteredAt,
+        updatedAt: score.updatedAt,
+        notes: score.notes
+      }));
+      console.log(`RecentGames: Game ${game.id} transformed scores:`, transformedScores[game.id].map(s => `Q${s.quarter}: T${s.teamId}=${s.score}`));
     } else {
       transformedScores[game.id] = [];
       console.log(`RecentGames: Game ${game.id} has no scores in batch data - setting empty array`);

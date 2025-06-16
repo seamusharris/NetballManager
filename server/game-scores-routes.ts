@@ -1,7 +1,7 @@
 import { Express } from 'express';
 import { db } from './db';
 import { gameScores, games } from '@shared/schema';
-import { eq, sql } from 'drizzle-orm';
+import { eq, sql, and, or, inArray } from 'drizzle-orm';
 import { standardAuth, AuthenticatedRequest } from './auth-middleware';
 
 export function registerGameScoresRoutes(app: Express) {
@@ -21,12 +21,18 @@ export function registerGameScoresRoutes(app: Express) {
       console.log(`Batch scores request for club ${clubId}, games:`, limitedGameIds);
 
       // Get all scores for the requested games in one query
+      const gameIdList = limitedGameIds.map(id => parseInt(id));
       const scores = await db.select()
         .from(gameScores)
         .innerJoin(games, eq(gameScores.gameId, games.id))
         .where(
-          sql`${gameScores.gameId} IN (${limitedGameIds.map(id => parseInt(id)).join(',')}) 
-              AND (${games.homeClubId} = ${clubId} OR ${games.awayClubId} = ${clubId})`
+          and(
+            inArray(gameScores.gameId, gameIdList),
+            or(
+              eq(games.homeClubId, clubId),
+              eq(games.awayClubId, clubId)
+            )
+          )
         );
 
       // Group scores by game ID
