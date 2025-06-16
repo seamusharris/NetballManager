@@ -1,9 +1,10 @@
+
 /**
- * Global scores cache for game statistics
+ * Global scores cache for official game scores
  * Provides persistent caching across component unmounts and page navigation
  */
 
-import { GameStat } from '@shared/schema';
+import { OfficialScore } from '@shared/schema';
 
 export interface GameScores {
   quarterScores: Record<string, { for: number; against: number }>;
@@ -14,7 +15,6 @@ export interface GameScores {
 const scoresCache = new Map<string, {
   scores: GameScores;
   timestamp: number;
-  statsHash: string;
   gameStatus?: string;
 }>();
 
@@ -24,35 +24,9 @@ const CACHE_TTL = 30 * 60 * 1000;
 /**
  * Generate a cache key for a game
  */
-function getCacheKey(gameId: number, stats?: GameStat[], gameStatus?: string): string {
+function getCacheKey(gameId: number, gameStatus?: string): string {
   const statusKey = gameStatus || 'unknown';
-  const statsHash = stats ? generateStatsHash(stats) : 'no-stats';
-  return `game-${gameId}-${statusKey}-${statsHash}`;
-}
-
-/**
- * Generate a hash for stats array to detect changes
- */
-function generateStatsHash(stats: GameStat[]): string {
-  if (!stats || stats.length === 0) return 'empty';
-
-  // Sort stats by id to ensure consistent hash
-  const sortedStats = [...stats].sort((a, b) => a.id - b.id);
-
-  // Create a simple hash from the stats data
-  const dataString = sortedStats.map(stat => 
-    `${stat.id}-${stat.quarter}-${stat.position}-${stat.goalsFor}-${stat.goalsAgainst}`
-  ).join('|');
-
-  // Simple hash function
-  let hash = 0;
-  for (let i = 0; i < dataString.length; i++) {
-    const char = dataString.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash; // Convert to 32-bit integer
-  }
-
-  return Math.abs(hash).toString(36);
+  return `game-${gameId}-${statusKey}`;
 }
 
 /**
@@ -67,10 +41,9 @@ function isCacheValid(timestamp: number): boolean {
  */
 export function getCachedScores(
   gameId: number, 
-  stats?: GameStat[], 
   gameStatus?: string
 ): GameScores | null {
-  const key = getCacheKey(gameId, stats, gameStatus);
+  const key = getCacheKey(gameId, gameStatus);
   const cached = scoresCache.get(key);
 
   if (!cached) {
@@ -91,18 +64,72 @@ export function getCachedScores(
 export function cacheScores(
   gameId: number, 
   scores: GameScores, 
-  stats?: GameStat[], 
   gameStatus?: string
 ): void {
-  const key = getCacheKey(gameId, stats, gameStatus);
-  const statsHash = stats ? generateStatsHash(stats) : 'no-stats';
+  const key = getCacheKey(gameId, gameStatus);
 
   scoresCache.set(key, {
     scores,
     timestamp: Date.now(),
-    statsHash,
     gameStatus
   });
+}
+
+/**
+ * Convert official scores to GameScores format
+ */
+export function convertOfficialScoresToGameScores(
+  officialScores: OfficialScore[],
+  currentTeamId: number
+): GameScores {
+  const quarterScores: Record<string, { for: number; against: number }> = {};
+  let totalTeamScore = 0;
+  let totalOpponentScore = 0;
+
+  // Group scores by quarter
+  const scoresByQuarter: Record<number, { [teamId: number]: number }> = {};
+  
+  officialScores.forEach(score => {
+    if (!scoresByQuarter[score.quarter]) {
+      scoresByQuarter[score.quarter] = {};
+    }
+    scoresByQuarter[score.quarter][score.teamId] = score.score;
+  });
+
+  // Convert to quarter scores format
+  Object.entries(scoresByQuarter).forEach(([quarter, teams]) => {
+    const quarterNum = parseInt(quarter);
+    const teamScore = teams[currentTeamId] || 0;
+    const opponentScore = Object.entries(teams)
+      .filter(([teamId]) => parseInt(teamId) !== currentTeamId)
+      .reduce((sum, [, score]) => sum + score, 0);
+
+    quarterScores[quarter] = {
+      for: teamScore,
+      against: opponentScore
+    };
+
+    totalTeamScore += teamScore;
+    totalOpponentScore += opponentScore;
+  });
+
+  return {
+    quarterScores,
+    finalScore: { for: totalTeamScore, against: totalOpponentScore }
+  };
+}
+
+/**
+ * Cache official scores for a game
+ */
+export function cacheOfficialScores(
+  gameId: number,
+  officialScores: OfficialScore[],
+  currentTeamId: number,
+  gameStatus?: string
+): void {
+  const gameScores = convertOfficialScoresToGameScores(officialScores, currentTeamId);
+  cacheScores(gameId, gameScores, gameStatus);
 }
 
 /**
