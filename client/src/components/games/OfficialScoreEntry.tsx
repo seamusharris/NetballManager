@@ -110,14 +110,14 @@ export function OfficialScoreEntry({
       return apiClient.post(`/api/games/${gameId}/scores`, saveData);
     },
     onSuccess: () => {
-      toast({
-        title: "Official scores saved",
-        description: "Scores have been saved successfully."
-      });
-
-      // Invalidate specific score-related queries
+      // Invalidate the scores query for this specific game
       queryClient.invalidateQueries({
         queryKey: ['/api/games', gameId, 'scores']
+      });
+
+      // Invalidate the specific game query (used by GameDetails page)
+      queryClient.invalidateQueries({
+        queryKey: ['/api/games', gameId]
       });
 
       // Invalidate games queries using the correct pattern (matches Games page queries)
@@ -138,6 +138,16 @@ export function OfficialScoreEntry({
             return Array.isArray(key) && 
                    key[0] === 'games-batch-data' && 
                    key[1] === currentClub.id;
+          }
+        });
+
+        // Invalidate batch scores queries that include this game
+        queryClient.invalidateQueries({
+          predicate: (query) => {
+            const key = query.queryKey;
+            return Array.isArray(key) && 
+                   typeof key[0] === 'string' && 
+                   key[0].includes('gameScores');
           }
         });
       }

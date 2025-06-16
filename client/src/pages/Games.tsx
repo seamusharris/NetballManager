@@ -12,6 +12,7 @@ import { useClub } from '@/contexts/ClubContext';
 import { Badge } from '@/components/ui/badge';
 import { TeamSwitcher } from '@/components/layout/TeamSwitcher';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { CACHE_KEYS } from '@/lib/cacheKeys';
 
 // Import new UI standards
 import { PageTemplate, ContentBox, ActionButton, ResponsiveGrid } from '@/components/ui/ui-standards';
