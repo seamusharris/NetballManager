@@ -446,19 +446,6 @@ export function registerTeamRoutes(app: Express) {
 
       const seasonId = teamSeason.rows[0].season_id;
 
-      // Check if player is already on this team first
-      const existingAssignment = await db.select()
-        .from(teamPlayers)
-        .where(and(
-          eq(teamPlayers.teamId, teamId),
-          eq(teamPlayers.playerId, playerId)
-        ))
-        .limit(1);
-
-      if (existingAssignment.length > 0) {
-        return res.status(400).json({ message: "Player is already on this team" });
-      }
-
       // Check if player is already on this team
       const existingAssignment = await db.select()
         .from(teamPlayers)
