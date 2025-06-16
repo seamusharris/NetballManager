@@ -99,58 +99,70 @@ const TeamPerformance = ({ games, className, activeSeason, selectedSeason, centr
       let actualGamesWithStats = 0;
 
       // Process each completed game
-      for (const gameId of completedGameIds) {
+      const gamePromises = completedGameIds.map(async (gameId) => {
         try {
           // Try to get official scores first
           const game = games.find(g => g.id === gameId);
-          if (!game) continue;
+          if (!game) return null;
 
           let gameStats = gameStatsMap[gameId] || [];
 
-          // Filter stats by current team - use the team ID from the context
-          if (currentTeamId && gameStats.length > 0) {
-            gameStats = gameStats.filter(stat => stat.teamId === currentTeamId);
-            
-          } else {
-            
-          }
+          // Don't filter stats here - let the score service handle team perspective
+          // The gameScoreService will filter appropriately based on game type and team context
 
-          
-
-          // For team performance, use live stats only (coach's record)
-          const scores = gameScoreService.calculateGameScoresSync(
+          // For team performance, prioritize official scores, fallback to calculated stats
+          const scores = await gameScoreService.calculateGameScores(
             gameStats,
             game.statusName,
-            undefined, // Don't use status scores for performance
+            {
+              teamGoals: game.statusTeamGoals,
+              opponentGoals: game.statusOpponentGoals
+            },
             game.isInterClub,
             game.homeTeamId,
             game.awayTeamId,
             currentTeamId, // Use current team ID from context
-            undefined // Don't use official scores for performance
+            undefined, // Let it fetch official scores
+            gameId
           );
 
-          // If we have any scores (official or calculated), count this game
-          if (scores.totalTeamScore > 0 || scores.totalOpponentScore > 0) {
-            actualGamesWithStats++;
-
-            // Add quarter scores to totals
-            scores.quarterScores.forEach(quarter => {
-              quarterScores[quarter.quarter].team += quarter.teamScore;
-              quarterScores[quarter.quarter].opponent += quarter.opponentScore;
-              quarterScores[quarter.quarter].count += 1;
-            });
-
-            totalTeamScore += scores.totalTeamScore;
-            totalOpponentScore += scores.totalOpponentScore;
-
-            // Determine outcome
-            const result = getWinLoseLabel(scores.totalTeamScore, scores.totalOpponentScore);
-            if (result === 'Win') wins++;
-            else if (result === 'Loss') losses++;
-            else draws++;
-          }
+          return {
+            gameId,
+            game,
+            scores
+          };
         } catch (error) {
           console.error(`Error calculating scores for game ${gameId}:`, error);
+          return null;
+        }
+      });
+
+      const gameResults = await Promise.all(gamePromises);
+
+      for (const result of gameResults) {
+        if (!result) continue;
+        
+        const { gameId, game, scores } = result;
+
+          // If we have any scores (official or calculated), count this game
+        if (scores.totalTeamScore > 0 || scores.totalOpponentScore > 0 || game.statusName === 'bye') {
+          actualGamesWithStats++;
+
+          // Add quarter scores to totals
+          scores.quarterScores.forEach(quarter => {
+            quarterScores[quarter.quarter].team += quarter.teamScore;
+            quarterScores[quarter.quarter].opponent += quarter.opponentScore;
+            quarterScores[quarter.quarter].count += 1;
+          });
+
+          totalTeamScore += scores.totalTeamScore;
+          totalOpponentScore += scores.totalOpponentScore;
+
+          // Determine outcome
+          const result = getWinLoseLabel(scores.totalTeamScore, scores.totalOpponentScore);
+          if (result === 'Win') wins++;
+          else if (result === 'Loss') losses++;
+          else draws++;
         }
       }
 

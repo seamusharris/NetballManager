@@ -46,7 +46,12 @@ export function calculateTeamWinRate(
     let ourScore = 0;
     let theirScore = 0;
 
-    if (gameStats.length > 0) {
+    // Prioritize official scores from game status, then fall back to calculated stats
+    if (game.statusTeamGoals !== null && game.statusOpponentGoals !== null) {
+      // Use official scores from game status
+      ourScore = isHome ? (game.statusTeamGoals || 0) : (game.statusOpponentGoals || 0);
+      theirScore = isHome ? (game.statusOpponentGoals || 0) : (game.statusTeamGoals || 0);
+    } else if (gameStats.length > 0) {
       // Use centralized statistics - filter to only this team's stats
       const teamStats = gameStats.filter(stat => stat.teamId === teamId);
       teamStats.forEach(stat => {
@@ -54,9 +59,9 @@ export function calculateTeamWinRate(
         theirScore += stat.goalsAgainst || 0;
       });
     } else {
-      // Fallback to game status scores
-      ourScore = isHome ? (game.statusTeamGoals || 0) : (game.statusOpponentGoals || 0);
-      theirScore = isHome ? (game.statusOpponentGoals || 0) : (game.statusTeamGoals || 0);
+      // No scores available
+      ourScore = 0;
+      theirScore = 0;
     }
 
     if (ourScore > theirScore) {
