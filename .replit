@@ -16,7 +16,7 @@ localPort = 5000
 externalPort = 80
 
 [workflows]
-runButton = "Start Dev Server"
+runButton = "Full Stack Development"
 
 [[workflows.workflow]]
 name = "Project"
@@ -44,3 +44,21 @@ mode = "sequential"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "npm run dev"
+
+[[workflows.workflow]]
+name = "Debug Dev Server"
+author = 42830490
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "NODE_ENV=development DEBUG=* npm run dev"
+
+[[workflows.workflow]]
+name = "Full Stack Development"
+author = 42830490
+mode = "parallel"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "NODE_ENV=development npm run dev"
