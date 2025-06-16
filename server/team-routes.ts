@@ -435,12 +435,31 @@ export function registerTeamRoutes(app: Express) {
       const teamId = parseInt(req.params.teamId);
       const { playerId, isRegular } = req.body;
 
+      // Get the team's season
+      const teamSeason = await db.execute(sql`
+        SELECT season_id FROM teams WHERE id = ${teamId}
+      `);
+
+      if (teamSeason.rows.length === 0) {
+        return res.status(404).json({ message: "Team not found" });
+      }
+
+      const seasonId = teamSeason.rows[0].season_id;
+
+      // Ensure player is assigned to the season
+      await db.execute(sql`
+        INSERT INTO player_seasons (player_id, season_id)
+        VALUES (${playerId}, ${seasonId})
+        ON CONFLICT (player_id, season_id) DO NOTHING
+      `);
+
       const result = await db.execute(sql`
         INSERT INTO team_players (team_id, player_id, is_regular)
         VALUES (${teamId}, ${playerId}, ${isRegular || true})
         RETURNING *
       `);
 
+      console.log(`Auto-assigned player ${playerId} to season ${seasonId} when adding to team ${teamId}`);
       res.status(201).json(result.rows[0]);
     } catch (error) {
       if (error.message?.includes('duplicate key')) {
@@ -704,17 +723,16 @@ export function registerTeamRoutes(app: Express) {
       `);
       console.log(`Team assignments for season ${seasonId}:`, teamAssignments.rows.map(r => `${r.display_name} -> ${r.team_name} (team_id: ${r.team_id})`));
 
-      // Get players from the team's club who are assigned to this season but not assigned to any team
+      // Get all active players from the team's club who are not assigned to any team in this season
+      // This is more inclusive - players will be auto-assigned to seasons when added to teams
       const availablePlayers = await db.execute(sql`
         SELECT p.id, p.display_name, p.first_name, p.last_name, p.date_of_birth, 
                p.position_preferences, p.active, p.avatar_color
         FROM players p
         JOIN club_players cp ON p.id = cp.player_id
-        JOIN player_seasons ps ON p.id = ps.player_id
         WHERE cp.club_id = ${teamClubId} 
           AND cp.is_active = true
           AND p.active = true
-          AND ps.season_id = ${seasonId}
           AND NOT EXISTS (
             SELECT 1
             FROM team_players tp

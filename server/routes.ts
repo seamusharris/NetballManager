@@ -890,7 +890,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const client = await pool.connect();
 
       try {
-        await client.query('BEGIN');
+                await client.query('BEGIN');
 
         // Check if player exists
         const playerCheck = await client.query(
@@ -1645,8 +1645,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const gameData = {
           date: req.body.date,
           time: req.body.time,
-          homeTeamId: req.body.homeTeamId,
-          awayTeamId: null, // BYE games have no away team
+          homeTeamId: req.body.homeTeamId,          awayTeamId: null, // BYE games have no away team
           statusId: 6, // BYE status
           seasonId: season_id,
           round: req.body.round || null,
@@ -2703,17 +2702,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`STEP 6 - Season players before team exclusion (${seasonPlayersWithoutTeamFilter.rows.length}):`, 
         seasonPlayersWithoutTeamFilter.rows.map(r => r.display_name));
 
-      // Get players from the club who are assigned to this season but not assigned to any team
+      // Get all active players from the club who are not assigned to any team in this season
+      // This query is more inclusive and will show all club players regardless of season assignment
       const unassignedPlayers = await db.execute(sql`
         SELECT p.id, p.display_name, p.first_name, p.last_name, p.date_of_birth, 
                p.position_preferences, p.active, p.avatar_color
         FROM players p
         JOIN club_players cp ON p.id = cp.player_id
-        JOIN player_seasons ps ON p.id = ps.player_id
         WHERE cp.club_id = ${clubId} 
           AND cp.is_active = true
           AND p.active = true
-          AND ps.season_id = ${seasonId}
           AND NOT EXISTS (
             SELECT 1
             FROM team_players tp
