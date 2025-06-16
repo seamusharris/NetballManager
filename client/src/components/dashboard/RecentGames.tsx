@@ -40,6 +40,12 @@ export default function RecentGames({ games, opponents, className, seasonFilter,
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, RECENT_GAMES_COUNT);
 
+  // Debug centralized scores
+  console.log('RecentGames centralizedScores:', centralizedScores);
+  recentGames.forEach(game => {
+    console.log(`Game ${game.id} has centralized scores:`, centralizedScores?.[game.id]);
+  });
+
   // Use centralized stats for game data
   const isLoading = false;
 
@@ -61,7 +67,7 @@ export default function RecentGames({ games, opponents, className, seasonFilter,
                 game={game}
                 layout="medium"
                 gameStats={centralizedStats?.[game.id] || []}
-                centralizedScores={centralizedScores?.[game.id]}
+                centralizedScores={centralizedScores?.[game.id] || []}
                 useOfficialPriority={true}
                 showDate={true}
                 showRound={true}

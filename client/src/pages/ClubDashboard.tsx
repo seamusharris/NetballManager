@@ -411,14 +411,14 @@ export default function ClubDashboard() {
           <CardContent>
             <div className="space-y-3">
               <RecentGames 
-              games={games} 
-              opponents={[]} 
-              className="md:col-span-2" 
-              centralizedStats={centralizedStats}
-              centralizedScores={officialScores}
-              teams={teams}
-              clubWide={true}
-            />
+                games={games} 
+                opponents={[]} 
+                className="md:col-span-2" 
+                centralizedStats={centralizedStats}
+                centralizedScores={officialScores}
+                teams={teams}
+                clubWide={true}
+              />
               {recentGames.length === 0 && (
                 <div className="text-center py-8 text-muted-foreground">
                   No recent games to display
