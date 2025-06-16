@@ -893,7 +893,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await client.query('BEGIN');
 
         // Check if player exists
-        const playerCheck = await client.query(
+        const playerCheck = await```text
+client.query(
           'SELECT id FROM players WHERE id = $1',
           [playerId]
         );
@@ -1645,8 +1646,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           time: req.body.time,
           homeTeamId: req.body.homeTeamId,          awayTeamId: null, // BYE games have no away team
           statusId: 6, // BYE status
-          seasonId: season_id,
-          round: req.body.round || null,
+          seasonId: season_id,          round: req.body.round || null,
           venue: req.body.venue || null,
           isInterClub: false,
           notes: req.body.notes || 'BYE round'
@@ -2444,6 +2444,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { grantWarrandyteAccessToAllGames } = await import('./grant-warrandyteaccess');
       await grantWarrandyteAccessToAllGames();
+```text
       res.json({ message: 'Successfully granted Warrandyte access to all games' });
     } catch (error) {
       console.error('Error granting Warrandyte access:', error);
