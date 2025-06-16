@@ -354,4 +354,3 @@ export function OfficialGameResultCard(props: Omit<GameResultCardProps, 'useOffi
 export function PerformanceGameResultCard(props: Omit<GameResultCardProps, 'useOfficialPriority'>) {
   return <GameResultCard {...props} useOfficialPriority={false} />;
 }
-```The code has been modified to remove individual score API calls and rely solely on centralized scores, updating score calculation to use only centralized data.
