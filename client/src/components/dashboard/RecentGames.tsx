@@ -23,7 +23,7 @@ interface RecentGamesProps {
   clubWide?: boolean; // When true, don't filter by current team
 }
 
-export default function RecentGames({ games, opponents, className, seasonFilter, activeSeason, centralizedStats, teams, centralizedScores, clubWide }: RecentGamesProps) {
+function RecentGames({ games, opponents, className, seasonFilter, activeSeason, centralizedStats, teams, centralizedScores, clubWide }: RecentGamesProps) {
   const { currentTeam } = useClub();
 
   // Filter for recent completed games using the new status system
@@ -123,3 +123,7 @@ export default function RecentGames({ games, opponents, className, seasonFilter,
     </BaseWidget>
   );
 }
+
+// Export both as default and named export to handle different import styles
+export default RecentGames;
+export { RecentGames };
