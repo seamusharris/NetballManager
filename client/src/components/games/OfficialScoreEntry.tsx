@@ -10,8 +10,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Save, Edit, Trophy, Clock } from 'lucide-react';
 import { apiClient } from '@/lib/apiClient';
 import { useToast } from '@/hooks/use-toast';
-import { invalidateGameCache } from '@/lib/scoresCache';
-import { invalidateGameScores } from '@/lib/cacheKeys';
+import { invalidateGameCache } from '@/lib/cacheInvalidation';
+import { invalidateScoresOnly } from '@/lib/cacheKeys';
 
 interface OfficialScoreEntryProps {
   gameId: number;
@@ -108,24 +108,15 @@ export function OfficialScoreEntry({
       return apiClient.post(`/api/games/${gameId}/scores`, saveData);
     },
     onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Official scores saved successfully"
-      });
+          // Use optimized cache invalidation
+          const clubId = parseInt(currentClubId!.toString());
+          invalidateScoresOnly(queryClient, gameId, clubId);
 
-      // Get club ID for precise invalidation
-      const clubId = gameData?.homeClubId || gameData?.awayClubId;
-      
-      // Use precise cache invalidation helper
-      invalidateGameCache(gameId);
-      if (clubId) {
-        invalidateGameScores(queryClient, gameId, clubId);
-      } else {
-        // Fallback if club ID not available
-        queryClient.invalidateQueries({ queryKey: ['/api/games', gameId, 'scores'] });
-        queryClient.invalidateQueries({ queryKey: ['/api/games', gameId] });
-      }
-    },
+          // Invalidate game cache for real-time score updates
+          invalidateGameCache(gameId);
+
+          console.log(`Official scores saved for game ${gameId}, invalidated relevant caches for club ${clubId}`);
+        },
     onError: (error) => {
       console.error('Error saving score:', error);
       toast({

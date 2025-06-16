@@ -83,33 +83,40 @@ export default function ClubDashboard() {
       if (completedGameIds.length === 0) return {};
 
       try {
-        // Fetch official scores for all completed games
-        const scoresMap: Record<number, any[]> = {};
+        console.log(`ClubDashboard: Batch fetching official scores for ${completedGameIds.length} completed games`);
         
-        const scoresPromises = completedGameIds.map(async (gameId) => {
+        // Use batch endpoint for better performance
+        const scoresMap = await apiClient.post('/api/games/scores/batch', {
+          gameIds: completedGameIds
+        });
+
+        console.log(`ClubDashboard: Batch scores received for ${Object.keys(scoresMap).length} games`);
+        return scoresMap || {};
+      } catch (error) {
+        console.error('ClubDashboard: Batch scores fetch failed, falling back to individual requests:', error);
+        
+        // Fallback to individual requests (limited to prevent server overwhelm)
+        const scoresMap: Record<number, any[]> = {};
+        const fallbackGameIds = completedGameIds.slice(0, 10); // Limit fallback to 10 games
+        
+        for (const gameId of fallbackGameIds) {
           try {
             const scores = await apiClient.get(`/api/games/${gameId}/scores`);
-            return { gameId, scores: scores || [] };
-          } catch (error) {
-            console.error(`ClubDashboard: Error fetching scores for game ${gameId}:`, error);
-            return { gameId, scores: [] };
+            scoresMap[gameId] = scores || [];
+          } catch (gameError) {
+            console.error(`ClubDashboard: Error fetching scores for game ${gameId}:`, gameError);
+            scoresMap[gameId] = [];
           }
-        });
-
-        const results = await Promise.all(scoresPromises);
-        results.forEach(({ gameId, scores }) => {
-          scoresMap[gameId] = scores;
-        });
+        }
 
         return scoresMap;
-      } catch (error) {
-        console.error('ClubDashboard: Error fetching official scores:', error);
-        return {};
       }
     },
     enabled: !!currentClubId && !clubLoading && completedGameIds.length > 0,
-    staleTime: 10 * 60 * 1000, // 10 minutes
-    gcTime: 30 * 60 * 1000 // 30 minutes
+    staleTime: 15 * 60 * 1000, // 15 minutes for batch data
+    gcTime: 45 * 60 * 1000, // 45 minutes for batch data
+    retry: 1, // Only retry once to avoid overwhelming server
+    retryDelay: 2000 // Wait 2 seconds before retry
   });
 
   // Also fetch centralized stats for display purposes (RecentGames component)

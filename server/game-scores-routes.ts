@@ -6,6 +6,51 @@ import { eq, sql } from 'drizzle-orm';
 import { standardAuth, AuthenticatedRequest } from './auth-middleware';
 
 export function registerGameScoresRoutes(app: Express) {
+  // Batch endpoint for multiple games' official scores
+  app.post('/api/games/scores/batch', standardAuth({ requireClubAccess: true }), async (req: AuthenticatedRequest, res) => {
+    try {
+      const { gameIds } = req.body;
+      const clubId = parseInt(req.headers['x-current-club-id'] as string);
+
+      if (!Array.isArray(gameIds) || gameIds.length === 0) {
+        return res.status(400).json({ error: 'gameIds array is required' });
+      }
+
+      // Limit batch size to prevent server overwhelm
+      const limitedGameIds = gameIds.slice(0, 50);
+
+      console.log(`Batch scores request for club ${clubId}, games:`, limitedGameIds);
+
+      // Get all scores for the requested games in one query
+      const scores = await db.select()
+        .from(gameScores)
+        .innerJoin(games, eq(gameScores.gameId, games.id))
+        .where(
+          sql`${gameScores.gameId} IN (${limitedGameIds.map(id => parseInt(id)).join(',')}) 
+              AND (${games.homeClubId} = ${clubId} OR ${games.awayClubId} = ${clubId})`
+        );
+
+      // Group scores by game ID
+      const scoresMap: Record<number, any[]> = {};
+      limitedGameIds.forEach(gameId => {
+        scoresMap[gameId] = [];
+      });
+
+      scores.forEach(({ gameScores: score }) => {
+        const gameId = score.gameId;
+        if (scoresMap[gameId]) {
+          scoresMap[gameId].push(score);
+        }
+      });
+
+      console.log(`Batch scores response: found scores for ${Object.keys(scoresMap).filter(id => scoresMap[parseInt(id)].length > 0).length} games`);
+      res.json(scoresMap);
+    } catch (error) {
+      console.error('Error fetching batch game scores:', error);
+      res.status(500).json({ error: 'Failed to fetch batch game scores' });
+    }
+  });
+
   // Get official scores for a game
   app.get('/api/games/:gameId/scores', standardAuth({ requireGameAccess: true }), async (req: AuthenticatedRequest, res) => {
   try {

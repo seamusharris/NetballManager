@@ -47,6 +47,10 @@ export const CACHE_KEYS = {
   batchScores: (clubId: number, gameIds: number[]) => 
     ['batch-scores', clubId, normalizeGameIds(gameIds)],
 
+  // Official scores with club context
+  officialScores: (clubId: number, gameIds: number[]) =>
+    ['official-scores', clubId, normalizeGameIds(gameIds)],
+
   // Dashboard aggregations
   dashboardData: (clubId: number, teamId: number | null) => 
     ['dashboard', clubId, teamId || 'all-teams'],
@@ -94,6 +98,16 @@ export const invalidateScoresOnly = (queryClient: any, gameId: number, clubId: n
   // Only invalidate score-related queries, not full game data
   queryClient.invalidateQueries({ queryKey: ['/api/games', gameId, 'scores'] });
   queryClient.invalidateQueries({ queryKey: ['scores', gameId] });
+
+  // Invalidate batch score caches that include this game
+  queryClient.invalidateQueries({
+    predicate: (query: any) => {
+      const key = query.queryKey;
+      return Array.isArray(key) && 
+             (key[0] === 'batch-scores' || key[0] === 'official-scores') && 
+             key[1] === clubId;
+    }
+  });
 
   // Update dashboard games list to reflect score changes
   queryClient.invalidateQueries({

@@ -51,12 +51,12 @@ export class UnifiedDataFetcher {
 
   private async executeBatchFetch(options: BatchFetchOptions) {
     const { clubId, teamId, includeStats, includeRosters, includeScores } = options;
-    
+
     // Normalize gameIds to array format
     const gameIds = Array.isArray(options.gameIds) 
       ? options.gameIds 
       : options.gameIds.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id));
-      
+
     const results: any = {};
 
     // Batch fetch stats
@@ -103,28 +103,36 @@ export class UnifiedDataFetcher {
       }
     }
 
-    // Batch fetch scores
-    if (includeScores) {
+    // Fetch scores if requested
+    if (includeScores && gameIds.length > 0) {
+      console.log(`UnifiedDataFetcher: Batch fetching scores for ${gameIds.length} games`);
+
       try {
-        const scorePromises = gameIds.map(gameId => 
-          apiClient.get(`/api/games/${gameId}/scores`)
-            .then(scores => ({ gameId, scores }))
-            .catch(error => ({ gameId, scores: [], error }))
-        );
-
-        const scoreResults = await Promise.all(scorePromises);
-        results.scores = {};
-
-        scoreResults.forEach(({ gameId, scores }) => {
-          results.scores[gameId] = scores;
-          queryClient.setQueryData(
-            [`/api/games/${gameId}/scores`], 
-            scores
-          );
+        // Use batch endpoint for better performance
+        const scoresMap = await apiClient.post('/api/games/scores/batch', {
+          gameIds: gameIds
         });
+
+        results.scores = scoresMap || {};
+        console.log(`UnifiedDataFetcher: Batch scores received for ${Object.keys(results.scores).length} games`);
       } catch (error) {
-        console.error('Batch score fetch failed:', error);
-        results.scores = {};
+        console.error('UnifiedDataFetcher: Batch scores fetch failed, falling back to individual requests:', error);
+
+        // Fallback to individual requests (limited)
+        const fallbackGameIds = gameIds.slice(0, 10);
+        const scoresMap: Record<number, any[]> = {};
+
+        for (const gameId of fallbackGameIds) {
+          try {
+            const scores = await apiClient.get(`/api/games/${gameId}/scores`);
+            scoresMap[gameId] = scores || [];
+          } catch (gameError) {
+            console.warn(`Failed to fetch scores for game ${gameId}:`, gameError);
+            scoresMap[gameId] = [];
+          }
+        }
+
+        results.scores = scoresMap;
       }
     }
 
