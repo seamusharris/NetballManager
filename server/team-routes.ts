@@ -1,7 +1,7 @@
 import type { Express, Response } from "express";
 import { db } from "./db";
-import { sql, eq } from "drizzle-orm";
-import { teams } from "@shared/schema";
+import { sql, eq, and } from "drizzle-orm";
+import { teams, teamPlayers, playerSeasons } from "@shared/schema";
 import { 
   AuthenticatedRequest, 
   requireClubAccess 
@@ -447,34 +447,46 @@ export function registerTeamRoutes(app: Express) {
       const seasonId = teamSeason.rows[0].season_id;
 
       // Check if player is already on this team first
-      const existingAssignment = await db.execute(sql`
-        SELECT id FROM team_players WHERE team_id = ${teamId} AND player_id = ${playerId}
-      `);
+      const existingAssignment = await db.select()
+        .from(teamPlayers)
+        .where(and(
+          eq(teamPlayers.teamId, teamId),
+          eq(teamPlayers.playerId, playerId)
+        ))
+        .limit(1);
 
-      if (existingAssignment.rows.length > 0) {
+      if (existingAssignment.length > 0) {
         return res.status(400).json({ message: "Player is already on this team" });
       }
 
       // Check if player is already in this season, if not add them
-      const existingPlayerSeason = await db.execute(sql`
-        SELECT id FROM player_seasons WHERE player_id = ${playerId} AND season_id = ${seasonId}
-      `);
+      const existingPlayerSeason = await db.select()
+        .from(playerSeasons)
+        .where(and(
+          eq(playerSeasons.playerId, playerId),
+          eq(playerSeasons.seasonId, seasonId)
+        ))
+        .limit(1);
 
-      if (existingPlayerSeason.rows.length === 0) {
-        await db.execute(sql`
-          INSERT INTO player_seasons (player_id, season_id)
-          VALUES (${playerId}, ${seasonId})
-        `);
+      if (existingPlayerSeason.length === 0) {
+        await db.insert(playerSeasons)
+          .values({
+            playerId,
+            seasonId
+          })
+          .onConflictDoNothing();
       }
 
-      const result = await db.execute(sql`
-        INSERT INTO team_players (team_id, player_id, is_regular)
-        VALUES (${teamId}, ${playerId}, ${isRegular || true})
-        RETURNING *
-      `);
+      const result = await db.insert(teamPlayers)
+        .values({
+          teamId,
+          playerId,
+          isRegular: isRegular || true
+        })
+        .returning();
 
       console.log(`Auto-assigned player ${playerId} to season ${seasonId} when adding to team ${teamId}`);
-      res.status(201).json(result.rows[0]);
+      res.status(201).json(result[0]);
     } catch (error) {
       if (error.message?.includes('duplicate key')) {
         res.status(400).json({ message: "Player is already on this team" });

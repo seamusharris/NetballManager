@@ -23,7 +23,7 @@ export function registerGameScoresRoutes(app: Express) {
       // Convert to integers and get scores directly
       const gameIdList = limitedGameIds.map(id => parseInt(id));
 
-      // Get all scores for the requested games
+      // Get all scores for the requested games using proper Drizzle ORM
       const scores = await db.select()
         .from(gameScores)
         .where(inArray(gameScores.gameId, gameIdList));
@@ -34,11 +34,12 @@ export function registerGameScoresRoutes(app: Express) {
         scoresMap[gameId] = [];
       });
 
-      scores.forEach((row) => {
-        const score = row.gameScores;
+      scores.forEach((score) => {
         const gameId = score.gameId;
         if (scoresMap[gameId]) {
           scoresMap[gameId].push(score);
+        } else {
+          scoresMap[gameId] = [score];
         }
       });
 
