@@ -53,17 +53,17 @@ export function GameResultCard({
   // Memoize score calculation to avoid unnecessary recalculations
   const scores = useMemo(() => {
     try {
-      // For completed games, always prioritize official scores if available
-      const scoresToUse = centralizedScores && centralizedScores.length > 0 ? centralizedScores : undefined;
+      // Use only centralized scores - no individual API calls
+      const officialScores = centralizedScores || [];
 
-      console.log(`GameResultCard ${game.id}: Processing scores - statusIsCompleted: ${game.statusIsCompleted}, centralizedScores length: ${scoresToUse?.length || 0}`, scoresToUse?.slice(0, 2));
+      console.log(`GameResultCard ${game.id}: Processing scores - statusIsCompleted: ${game.statusIsCompleted}, centralizedScores length: ${officialScores?.length || 0}`, officialScores?.slice(0, 2));
 
       // If we have official scores for a completed game, calculate directly from them
-      if (game.statusIsCompleted && scoresToUse && scoresToUse.length > 0) {
+      if (game.statusIsCompleted && officialScores && officialScores.length > 0) {
         // Group scores by team and calculate totals
         const teamScores: Record<number, number> = {};
-        
-        scoresToUse.forEach(score => {
+
+        officialScores.forEach(score => {
           if (!teamScores[score.teamId]) {
             teamScores[score.teamId] = 0;
           }
@@ -76,7 +76,7 @@ export function GameResultCard({
         // Determine which team is "ours" for result calculation
         let teamScore: number;
         let opponentScore: number;
-        
+
         if (currentTeamId) {
           if (game.homeTeamId === currentTeamId) {
             teamScore = homeTeamTotal;
@@ -98,7 +98,7 @@ export function GameResultCard({
         const result = teamScore > opponentScore ? 'win' : 
                       teamScore < opponentScore ? 'loss' : 'draw';
 
-        console.log(`GameResultCard ${game.id}: Official scores calculated - ${teamScore}-${opponentScore} (${result}) from ${scoresToUse.length} score entries`);
+        console.log(`GameResultCard ${game.id}: Official scores calculated - ${teamScore}-${opponentScore} (${result}) from ${officialScores.length} score entries`);
 
         return {
           totalTeamScore: teamScore,
@@ -108,16 +108,21 @@ export function GameResultCard({
         };
       }
 
+      // Determine which scores to use (prioritize official scores when available)
+      const scoresToUse = useOfficialPriority && officialScores?.length > 0
+        ? officialScores
+        : gameStats;
+
       // Fall back to gameScoreService for other cases
       return gameScoreService.calculateGameScoresSync(
-        gameStats || [], 
+        scoresToUse || [], 
         game.statusName, 
         { teamGoals: game.statusTeamGoals, opponentGoals: game.statusOpponentGoals },
         game.isInterClub,
         game.homeTeamId,
         game.awayTeamId,
         currentTeamId,
-        scoresToUse
+        centralizedScores //Pass the centralized scores for calculateGameScoresSync to handle
       );
     } catch (error) {
       console.error(`GameResultCard ${game.id}: Error calculating scores:`, error);
@@ -349,3 +354,4 @@ export function OfficialGameResultCard(props: Omit<GameResultCardProps, 'useOffi
 export function PerformanceGameResultCard(props: Omit<GameResultCardProps, 'useOfficialPriority'>) {
   return <GameResultCard {...props} useOfficialPriority={false} />;
 }
+```The code has been modified to remove individual score API calls and rely solely on centralized scores, updating score calculation to use only centralized data.

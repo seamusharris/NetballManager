@@ -22,7 +22,10 @@ export function registerGameScoresRoutes(app: Express) {
 
       // Get all scores for the requested games in one query
       const gameIdList = limitedGameIds.map(id => parseInt(id));
-      const scores = await db.select()
+      const scores = await db.select({
+        gameScores: gameScores,
+        games: games
+      })
         .from(gameScores)
         .innerJoin(games, eq(gameScores.gameId, games.id))
         .where(

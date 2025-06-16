@@ -53,18 +53,23 @@ export default function RecentGames({ games, opponents, className, seasonFilter,
     
     if (gameScores && Array.isArray(gameScores) && gameScores.length > 0) {
       // Transform the batch format to the format expected by GameResultCard
-      transformedScores[game.id] = gameScores.map(score => ({
-        id: score.id,
-        gameId: score.gameId,
-        teamId: score.teamId,
-        quarter: score.quarter,
-        score: score.score,
-        enteredBy: score.enteredBy,
-        enteredAt: score.enteredAt,
-        updatedAt: score.updatedAt,
-        notes: score.notes
-      }));
-      console.log(`RecentGames: Game ${game.id} transformed scores:`, transformedScores[game.id].map(s => `Q${s.quarter}: T${s.teamId}=${s.score}`));
+      try {
+        transformedScores[game.id] = gameScores.map(score => ({
+          id: score.id,
+          gameId: score.gameId,
+          teamId: score.teamId,
+          quarter: score.quarter,
+          score: score.score,
+          enteredBy: score.enteredBy,
+          enteredAt: score.enteredAt,
+          updatedAt: score.updatedAt,
+          notes: score.notes
+        }));
+        console.log(`RecentGames: Game ${game.id} transformed scores:`, transformedScores[game.id].map(s => `Q${s.quarter}: T${s.teamId}=${s.score}`));
+      } catch (error) {
+        console.error(`RecentGames: Error transforming scores for game ${game.id}:`, error);
+        transformedScores[game.id] = [];
+      }
     } else {
       transformedScores[game.id] = [];
       console.log(`RecentGames: Game ${game.id} has no scores in batch data - setting empty array`);
