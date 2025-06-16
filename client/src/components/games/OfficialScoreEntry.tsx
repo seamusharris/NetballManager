@@ -104,8 +104,40 @@ export function OfficialScoreEntry({
       });
     },
     onSuccess: () => {
+      // Invalidate specific game score queries
       queryClient.invalidateQueries({ queryKey: ['/api/games', gameId, 'scores'] });
       queryClient.invalidateQueries({ queryKey: ['/api/games', gameId] });
+      
+      // Invalidate batch score queries that include this game
+      queryClient.invalidateQueries({ 
+        predicate: (query) => {
+          const key = query.queryKey;
+          return key.some(k => 
+            typeof k === 'string' && (
+              k.includes('batch-scores') ||
+              k.includes('gameScores') ||
+              k.includes('batch-game-data')
+            )
+          );
+        }
+      });
+      
+      // Invalidate games list queries to refresh display
+      queryClient.invalidateQueries({ queryKey: ['/api/games'] });
+      queryClient.invalidateQueries({ 
+        predicate: (query) => {
+          const key = query.queryKey;
+          return key.some(k => 
+            typeof k === 'string' && k === '/api/games'
+          );
+        }
+      });
+      
+      // Clear the global scores cache for this specific game
+      import('../../lib/scoresCache').then(({ invalidateGameCache }) => {
+        invalidateGameCache(gameId);
+      });
+      
       setEditingQuarter(null);
       toast({
         title: "Score saved",
