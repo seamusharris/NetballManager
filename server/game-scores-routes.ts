@@ -1,7 +1,7 @@
 import { Express } from 'express';
 import { db } from './db';
 import { gameScores, games } from '@shared/schema';
-import { eq, sql, and, or, inArray } from 'drizzle-orm';
+import { eq, and, or, inArray } from 'drizzle-orm';
 import { standardAuth, AuthenticatedRequest } from './auth-middleware';
 
 export function registerGameScoresRoutes(app: Express) {
@@ -20,20 +20,13 @@ export function registerGameScoresRoutes(app: Express) {
 
       console.log(`Batch scores request for club ${clubId}, games:`, limitedGameIds);
 
-      // Get all scores for the requested games in one query
+      // Convert to integers and get scores directly
       const gameIdList = limitedGameIds.map(id => parseInt(id));
+
+      // Get all scores for the requested games
       const scores = await db.select()
         .from(gameScores)
-        .innerJoin(games, eq(gameScores.gameId, games.id))
-        .where(
-          and(
-            inArray(gameScores.gameId, gameIdList),
-            or(
-              eq(games.homeClubId, clubId),
-              eq(games.awayClubId, clubId)
-            )
-          )
-        );
+        .where(inArray(gameScores.gameId, gameIdList));
 
       // Group scores by game ID
       const scoresMap: Record<number, any[]> = {};
@@ -42,7 +35,7 @@ export function registerGameScoresRoutes(app: Express) {
       });
 
       scores.forEach((row) => {
-        const score = row.game_scores;
+        const score = row.gameScores;
         const gameId = score.gameId;
         if (scoresMap[gameId]) {
           scoresMap[gameId].push(score);
