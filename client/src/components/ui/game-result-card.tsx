@@ -53,11 +53,62 @@ export function GameResultCard({
   // Memoize score calculation to avoid unnecessary recalculations
   const scores = useMemo(() => {
     try {
-      // Always try to use centralized scores first if available
+      // For completed games, always prioritize official scores if available
       const scoresToUse = centralizedScores && centralizedScores.length > 0 ? centralizedScores : undefined;
 
-      console.log(`GameResultCard ${game.id}: Using centralized scores:`, scoresToUse);
+      console.log(`GameResultCard ${game.id}: Processing scores - statusIsCompleted: ${game.statusIsCompleted}, centralizedScores:`, scoresToUse);
 
+      // If we have official scores for a completed game, calculate directly from them
+      if (game.statusIsCompleted && scoresToUse && scoresToUse.length > 0) {
+        // Group scores by team and calculate totals
+        const teamScores: Record<number, number> = {};
+        
+        scoresToUse.forEach(score => {
+          if (!teamScores[score.teamId]) {
+            teamScores[score.teamId] = 0;
+          }
+          teamScores[score.teamId] += score.score;
+        });
+
+        const homeTeamTotal = teamScores[game.homeTeamId] || 0;
+        const awayTeamTotal = teamScores[game.awayTeamId] || 0;
+
+        // Determine which team is "ours" for result calculation
+        let teamScore: number;
+        let opponentScore: number;
+        
+        if (currentTeamId) {
+          if (game.homeTeamId === currentTeamId) {
+            teamScore = homeTeamTotal;
+            opponentScore = awayTeamTotal;
+          } else if (game.awayTeamId === currentTeamId) {
+            teamScore = awayTeamTotal;
+            opponentScore = homeTeamTotal;
+          } else {
+            // For club-wide view or unknown team, use home vs away
+            teamScore = homeTeamTotal;
+            opponentScore = awayTeamTotal;
+          }
+        } else {
+          // Default to home vs away
+          teamScore = homeTeamTotal;
+          opponentScore = awayTeamTotal;
+        }
+
+        const result = teamScore > opponentScore ? 'win' : 
+                      teamScore < opponentScore ? 'loss' : 'draw';
+
+        console.log(`GameResultCard ${game.id}: Official scores calculated - ${teamScore}-${opponentScore} (${result})`);
+
+        return {
+          totalTeamScore: teamScore,
+          totalOpponentScore: opponentScore,
+          result,
+          quarters: []
+        };
+      }
+
+      // Fall back to gameScoreService for other cases
       return gameScoreService.calculateGameScoresSync(
         gameStats || [], 
         game.statusName, 

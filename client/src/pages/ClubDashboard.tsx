@@ -172,8 +172,15 @@ export default function ClubDashboard() {
 
   // Team performance metrics (memoized to prevent unnecessary recalculations)
   const teamPerformance = useMemo(() => activeTeams.map(team => {
+    // Filter games for this specific team
+    const teamGames = games.filter(game => 
+      game.homeTeamId === team.id || game.awayTeamId === team.id
+    );
+
     // Use shared win rate calculator for consistent logic with official scores
-    const winRateData = calculateTeamWinRate(games, team.id, currentClubId!, officialScores);
+    const winRateData = calculateTeamWinRate(teamGames, team.id, currentClubId!, officialScores);
+
+    console.log(`Team ${team.name} (${team.id}): ${teamGames.length} games, win rate data:`, winRateData);
 
     const teamPerf = {
       ...team,
@@ -185,7 +192,7 @@ export default function ClubDashboard() {
     };
 
     return teamPerf;
-  }), [activeTeams, gamesHashKey, currentClubId, scoresHashKey]);
+  }), [activeTeams, games, currentClubId, officialScores]);
 
   // Recent games across all teams (memoized)
   const recentGames = useMemo(() => 
