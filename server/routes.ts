@@ -893,6 +893,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 await client.query('BEGIN');
 
         // Check if player exists
+```text
         const playerCheck = await client.query(
           'SELECT id FROM players WHERE id = $1',
           [playerId]
@@ -3011,6 +3012,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: 'Failed to update game statistics' });
     }
   });
+
+  // Batch scores endpoint for dashboard widgets
+app.post('/api/games/scores/batch', authenticateUser, async (req, res) => {
+  try {
+    const { gameIds } = req.body;
+    const currentClubId = req.currentClubId;
+
+    if (!currentClubId) {
+      return res.status(400).json({ error: 'Club context required' });
+    }
+
+    if (!gameIds || !Array.isArray(gameIds)) {
+      return res.status(400).json({ error: 'gameIds array required' });
+    }
+
+    console.log(`Batch scores request for club ${currentClubId}, games: [${gameIds.join(', ')}]`);
+
+    // Fetch all scores for the requested games
+    const scores = await db.select()
+      .from(gameScores)
+      .innerJoin(games, eq(gameScores.gameId, games.id))
+      .where(
+        and(
+          inArray(gameScores.gameId, gameIds),
+          or(
+            eq(games.homeClubId, currentClubId),
+            eq(games.awayClubId, currentClubId)
+          )
+        )
+      );
+
+    // Group scores by game ID
+    const scoresByGame: Record<number, any[]> = {};
+
+    // Initialize all requested games first
+    gameIds.forEach(gameId => {
+      scoresByGame[gameId] = [];
+    });
+
+    // Then populate with actual scores
+    scores.forEach(({ game_scores }) => {
+      if (scoresByGame[game_scores.gameId]) {
+        scoresByGame[game_scores.gameId].push(game_scores);
+      }
+    });
+
+    const gamesWithScores = Object.keys(scoresByGame).filter(gameId => scoresByGame[parseInt(gameId)].length > 0).length;
+    console.log(`Batch scores response: found scores for ${gamesWithScores} games out of ${gameIds.length} requested`);
+
+    // Debug log for missing games
+    const missingGames = gameIds.filter(gameId => scoresByGame[gameId].length === 0);
+    if (missingGames.length > 0) {
+      console.log(`Batch scores: Games without scores: [${missingGames.join(', ')}]`);
+    }
+
+    res.json(scoresByGame);
+  } catch (error) {
+    console.error('Error in batch scores endpoint:', error);
+    res.status(500).json({ error: 'Failed to fetch batch scores' });
+  }
+});
 
   // Create HTTP server
   const httpServer = createServer(app);
