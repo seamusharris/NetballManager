@@ -28,7 +28,8 @@ const CACHE_TTL = 15 * 60 * 1000;
 function getCacheKey(gameId: number, stats?: GameStat[], gameStatus?: string): string {
   const statusKey = gameStatus || 'unknown';
   const statsHash = stats ? generateStatsHash(stats) : 'no-stats';
-  return `game-${gameId}-${statusKey}-${statsHash}`;
+  const timestamp = Date.now();
+  return `game-${gameId}-${statusKey}-${statsHash}-${timestamp}`;
 }
 
 /**
