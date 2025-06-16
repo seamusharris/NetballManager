@@ -17,7 +17,7 @@ export default function Teams() {
   const [, setLocation] = useLocation();
   const [showForm, setShowForm] = useState(false);
   const [editingTeam, setEditingTeam] = useState<any>(null);
-  const { setCurrentTeamId } = useClub();
+  const { setCurrentTeamId, currentClubId, currentClub, isLoading: clubLoading } = useClub();
   const queryClient = useQueryClient();
 
   const { data: teams = [], isLoading: isLoadingTeams } = useQuery<any[]>({
