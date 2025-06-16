@@ -201,10 +201,27 @@ const TeamPerformance = ({ games, className, activeSeason, selectedSeason, centr
               continue;
             }
           }
+
+          // Only count games where we have valid scores
+          if (hasValidScores) {
+            actualGamesWithStats++;
+            totalTeamScore += teamScore;
+            totalOpponentScore += opponentScore;
+
+            // Determine outcome
+            const result = getWinLoseLabel(teamScore, opponentScore);
+            if (result === 'Win') wins++;
+            else if (result === 'Loss') losses++;
+            else draws++;
+
+            console.log(`TeamPerformance: Game ${gameId} result - Team: ${teamScore}, Opponent: ${opponentScore}, Result: ${result}`);
+          }
         } catch (error) {
           console.error(`TeamPerformance: Error processing game ${gameId}:`, error);
         }
       }
+
+      console.log(`TeamPerformance: Final stats - Games: ${actualGamesWithStats}, Wins: ${wins}, Losses: ${losses}, Draws: ${draws}, Team Goals: ${totalTeamScore}, Opponent Goals: ${totalOpponentScore}`);
 
     // Calculate averages
       const avgTeamScoreByQuarter: Record<number, number> = {};
