@@ -22,10 +22,7 @@ export function registerGameScoresRoutes(app: Express) {
 
       // Get all scores for the requested games in one query
       const gameIdList = limitedGameIds.map(id => parseInt(id));
-      const scores = await db.select({
-        gameScores: gameScores,
-        games: games
-      })
+      const scores = await db.select()
         .from(gameScores)
         .innerJoin(games, eq(gameScores.gameId, games.id))
         .where(
@@ -44,7 +41,8 @@ export function registerGameScoresRoutes(app: Express) {
         scoresMap[gameId] = [];
       });
 
-      scores.forEach(({ gameScores: score }) => {
+      scores.forEach((row) => {
+        const score = row.game_scores;
         const gameId = score.gameId;
         if (scoresMap[gameId]) {
           scoresMap[gameId].push(score);
