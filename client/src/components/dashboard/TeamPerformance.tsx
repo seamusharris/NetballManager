@@ -109,7 +109,14 @@ const TeamPerformance = ({ games, className, activeSeason, selectedSeason, centr
           // Skip bye games for scoring calculations
           if (game.statusName === 'bye') continue;
 
-          console.log(`TeamPerformance: Processing game ${gameId} - ${game.homeTeamName} vs ${game.awayTeamName}`);
+          // CRITICAL: Only process games where current team actually played
+          const isCurrentTeamInGame = game.homeTeamId === currentTeamId || game.awayTeamId === currentTeamId;
+          if (!isCurrentTeamInGame) {
+            console.log(`TeamPerformance: Skipping game ${gameId} - current team ${currentTeamId} not playing (${game.homeTeamName} vs ${game.awayTeamName})`);
+            continue;
+          }
+
+          console.log(`TeamPerformance: Processing game ${gameId} - ${game.homeTeamName} vs ${game.awayTeamName} (current team: ${currentTeamId})`);
 
           // Get official scores from centralized data
           const officialScores = centralizedScores?.[gameId];
@@ -140,26 +147,32 @@ const TeamPerformance = ({ games, className, activeSeason, selectedSeason, centr
             teamScore = Object.values(teamScoresByQuarter).reduce((sum, score) => sum + score, 0);
             opponentScore = Object.values(opponentScoresByQuarter).reduce((sum, score) => sum + score, 0);
 
-            // Add quarter-by-quarter data
-            for (let quarter = 1; quarter <= 4; quarter++) {
-              const teamQuarterScore = teamScoresByQuarter[quarter] || 0;
-              const opponentQuarterScore = opponentScoresByQuarter[quarter] || 0;
+            // Only proceed if we have scores for both teams
+            const hasCurrentTeamScores = Object.keys(teamScoresByQuarter).length > 0;
+            const hasOpponentScores = Object.keys(opponentScoresByQuarter).length > 0;
 
-              if (teamQuarterScore > 0 || opponentQuarterScore > 0) {
+            if (hasCurrentTeamScores && hasOpponentScores && (teamScore > 0 || opponentScore > 0)) {
+              // Add quarter-by-quarter data
+              for (let quarter = 1; quarter <= 4; quarter++) {
+                const teamQuarterScore = teamScoresByQuarter[quarter] || 0;
+                const opponentQuarterScore = opponentScoresByQuarter[quarter] || 0;
+
                 quarterScores[quarter].team += teamQuarterScore;
                 quarterScores[quarter].opponent += opponentQuarterScore;
                 quarterScores[quarter].count += 1;
               }
-            }
 
-            hasValidScores = true;
-            console.log(`TeamPerformance: Game ${gameId} official scores - Team: ${teamScore}, Opponent: ${opponentScore}`);
+              hasValidScores = true;
+              console.log(`TeamPerformance: Game ${gameId} official scores - Team ${currentTeamId}: ${teamScore}, Opponent ${opponentTeamId}: ${opponentScore}`);
+            } else {
+              console.warn(`TeamPerformance: Game ${gameId} missing valid scores - team scores: ${hasCurrentTeamScores}, opponent scores: ${hasOpponentScores}, teamScore: ${teamScore}, opponentScore: ${opponentScore}`);
+            }
           } else {
             // Fallback to calculated stats only if no official scores exist
             const gameStats = gameStatsMap[gameId] || [];
             const teamStats = gameStats.filter(stat => stat.teamId === currentTeamId);
 
-            if (teamStats.length > 0) {
+            if (teamStats.length > 0 && teamStats.some(stat => (stat.goalsFor || 0) > 0 || (stat.goalsAgainst || 0) > 0)) {
               console.log(`TeamPerformance: Using calculated stats for game ${gameId}`);
               teamScore = teamStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
               opponentScore = teamStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
@@ -182,25 +195,11 @@ const TeamPerformance = ({ games, className, activeSeason, selectedSeason, centr
               });
 
               hasValidScores = true;
+              console.log(`TeamPerformance: Game ${gameId} calculated scores - Team ${currentTeamId}: ${teamScore}, Opponent: ${opponentScore}`);
             } else {
-              console.warn(`TeamPerformance: No scores found for game ${gameId}`);
+              console.warn(`TeamPerformance: No valid stats found for team ${currentTeamId} in game ${gameId}`);
               continue;
             }
-          }
-
-          // Only count games where we have valid scores
-          if (hasValidScores) {
-            actualGamesWithStats++;
-            totalTeamScore += teamScore;
-            totalOpponentScore += opponentScore;
-
-            // Determine outcome
-            const result = getWinLoseLabel(teamScore, opponentScore);
-            if (result === 'Win') wins++;
-            else if (result === 'Loss') losses++;
-            else draws++;
-
-            console.log(`TeamPerformance: Game ${gameId} result - Team: ${teamScore}, Opponent: ${opponentScore}, Result: ${result}`);
           }
         } catch (error) {
           console.error(`TeamPerformance: Error processing game ${gameId}:`, error);
