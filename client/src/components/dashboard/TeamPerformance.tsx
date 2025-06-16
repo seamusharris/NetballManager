@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Game, GameStat } from '@shared/schema';
@@ -143,7 +142,7 @@ const TeamPerformance = ({ games, className, activeSeason, selectedSeason, centr
                 for (let quarter = 1; quarter <= 4; quarter++) {
                   const teamQuarterScore = teamScoresByQuarter[quarter] || 0;
                   const opponentQuarterScore = opponentScoresByQuarter[quarter] || 0;
-                  
+
                   if (teamQuarterScore > 0 || opponentQuarterScore > 0) {
                     quarterScores[quarter].team += teamQuarterScore;
                     quarterScores[quarter].opponent += opponentQuarterScore;
@@ -162,7 +161,7 @@ const TeamPerformance = ({ games, className, activeSeason, selectedSeason, centr
           if (!hasOfficialScores) {
             const gameStats = gameStatsMap[gameId] || [];
             const teamStats = gameStats.filter(stat => stat.teamId === currentTeamId);
-            
+
             if (teamStats.length > 0) {
               console.log(`TeamPerformance: Using calculated stats for game ${gameId}`);
               teamScore = teamStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);

@@ -474,7 +474,9 @@ export function registerTeamRoutes(app: Express) {
             playerId,
             seasonId
           })
-          .onConflictDoNothing();
+          .onConflictDoNothing({
+            target: [playerSeasons.playerId, playerSeasons.seasonId]
+          });
       }
 
       const result = await db.insert(teamPlayers)

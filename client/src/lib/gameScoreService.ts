@@ -279,3 +279,33 @@ class GameScoreService {
 }
 
 export const gameScoreService = new GameScoreService();
+
+export async function getGameScore(gameId: number): Promise<GameScoreData | null> {
+  try {
+    // Try official scores first
+    const officialResponse = await fetch(`/api/games/${gameId}/official-scores`);
+    if (officialResponse.ok) {
+      const officialScores = await officialResponse.json();
+      if (officialScores && officialScores.length > 0) {
+        console.log(`Using official scores for game ${gameId}:`, officialScores);
+        return calculateTotalScores(officialScores);
+      }
+    }
+
+    // Fall back to calculated scores from game stats
+    const statsResponse = await fetch(`/api/games/${gameId}/stats`);
+    if (statsResponse.ok) {
+      const stats = await statsResponse.json();
+      if (stats && stats.length > 0) {
+        console.log(`Using calculated scores for game ${gameId}:`, stats);
+        return calculateScoresFromStats(stats);
+      }
+    }
+
+    console.log(`No scores found for game ${gameId} - neither official nor calculated`);
+    return null;
+  } catch (error) {
+    console.error(`Error fetching scores for game ${gameId}:`, error);
+    return null;
+  }
+}
