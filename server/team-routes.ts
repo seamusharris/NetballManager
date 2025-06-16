@@ -459,13 +459,25 @@ export function registerTeamRoutes(app: Express) {
         return res.status(400).json({ message: "Player is already on this team" });
       }
 
+      // Check if player is already on this team
+      const existingAssignment = await db.select()
+        .from(teamPlayers)
+        .where(and(
+          eq(teamPlayers.teamId, teamId),
+          eq(teamPlayers.playerId, playerId)
+        ))
+        .limit(1);
+
+      if (existingAssignment.length > 0) {
+        return res.status(400).json({ message: "Player is already on this team" });
+      }
+
       const result = await db.insert(teamPlayers)
         .values({
           teamId,
           playerId,
           isRegular: isRegular || true
         })
-        .onConflictDoNothing()
         .returning();
 
       console.log(`Auto-assigned player ${playerId} to season ${seasonId} when adding to team ${teamId}`);
