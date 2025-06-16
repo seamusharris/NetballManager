@@ -1,4 +1,3 @@
-
 /**
  * Global scores cache for game statistics
  * Provides persistent caching across component unmounts and page navigation
@@ -19,8 +18,8 @@ const scoresCache = new Map<string, {
   gameStatus?: string;
 }>();
 
-// Cache TTL in milliseconds (15 minutes)
-const CACHE_TTL = 15 * 60 * 1000;
+// Cache TTL in milliseconds (30 minutes - longer since official scores change less frequently)
+const CACHE_TTL = 30 * 60 * 1000;
 
 /**
  * Generate a cache key for a game
@@ -37,15 +36,15 @@ function getCacheKey(gameId: number, stats?: GameStat[], gameStatus?: string): s
  */
 function generateStatsHash(stats: GameStat[]): string {
   if (!stats || stats.length === 0) return 'empty';
-  
+
   // Sort stats by id to ensure consistent hash
   const sortedStats = [...stats].sort((a, b) => a.id - b.id);
-  
+
   // Create a simple hash from the stats data
   const dataString = sortedStats.map(stat => 
     `${stat.id}-${stat.quarter}-${stat.position}-${stat.goalsFor}-${stat.goalsAgainst}`
   ).join('|');
-  
+
   // Simple hash function
   let hash = 0;
   for (let i = 0; i < dataString.length; i++) {
@@ -53,7 +52,7 @@ function generateStatsHash(stats: GameStat[]): string {
     hash = ((hash << 5) - hash) + char;
     hash = hash & hash; // Convert to 32-bit integer
   }
-  
+
   return Math.abs(hash).toString(36);
 }
 
@@ -74,16 +73,16 @@ export function getCachedScores(
 ): GameScores | null {
   const key = getCacheKey(gameId, stats, gameStatus);
   const cached = scoresCache.get(key);
-  
+
   if (!cached) {
     return null;
   }
-  
+
   if (!isCacheValid(cached.timestamp)) {
     scoresCache.delete(key);
     return null;
   }
-  
+
   return cached.scores;
 }
 
@@ -98,7 +97,7 @@ export function cacheScores(
 ): void {
   const key = getCacheKey(gameId, stats, gameStatus);
   const statsHash = stats ? generateStatsHash(stats) : 'no-stats';
-  
+
   scoresCache.set(key, {
     scores,
     timestamp: Date.now(),
@@ -112,13 +111,13 @@ export function cacheScores(
  */
 export function invalidateGameCache(gameId: number): void {
   const keysToDelete: string[] = [];
-  
+
   for (const key of scoresCache.keys()) {
     if (key.startsWith(`game-${gameId}-`)) {
       keysToDelete.push(key);
     }
   }
-  
+
   keysToDelete.forEach(key => scoresCache.delete(key));
 }
 
@@ -148,7 +147,7 @@ export function getCacheStats(): {
     timestamp: value.timestamp,
     age: Date.now() - value.timestamp
   }));
-  
+
   return {
     size: scoresCache.size,
     entries
