@@ -3011,10 +3011,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Batch scores endpoint for dashboard widgets
-app.post('/api/games/scores/batch', authenticateUser, async (req, res) => {
+app.post('/api/games/scores/batch', standardAuth({ requireClub: true }), async (req: AuthenticatedRequest, res) => {
   try {
     const { gameIds } = req.body;
-    const currentClubId = req.currentClubId;
+    const currentClubId = req.user?.currentClubId;
 
     if (!currentClubId) {
       return res.status(400).json({ error: 'Club context required' });
@@ -3026,19 +3026,14 @@ app.post('/api/games/scores/batch', authenticateUser, async (req, res) => {
 
     console.log(`Batch scores request for club ${currentClubId}, games: [${gameIds.join(', ')}]`);
 
-    // Fetch all scores for the requested games
-    const scores = await db.select()
-      .from(gameScores)
-      .innerJoin(games, eq(gameScores.gameId, games.id))
-      .where(
-        and(
-          inArray(gameScores.gameId, gameIds),
-          or(
-            eq(games.homeClubId, currentClubId),
-            eq(games.awayClubId, currentClubId)
-          )
-        )
-      );
+    // Fetch all scores for the requested games using raw SQL
+    const scoresResult = await db.execute(sql`
+      SELECT gs.*, g.home_club_id, g.away_club_id
+      FROM game_scores gs
+      JOIN games g ON gs.game_id = g.id
+      WHERE gs.game_id = ANY(${gameIds}) 
+        AND (g.home_club_id = ${currentClubId} OR g.away_club_id = ${currentClubId})
+    `);
 
     // Group scores by game ID
     const scoresByGame: Record<number, any[]> = {};
@@ -3049,9 +3044,9 @@ app.post('/api/games/scores/batch', authenticateUser, async (req, res) => {
     });
 
     // Then populate with actual scores
-    scores.forEach(({ game_scores }) => {
-      if (scoresByGame[game_scores.gameId]) {
-        scoresByGame[game_scores.gameId].push(game_scores);
+    scoresResult.rows.forEach(score => {
+      if (scoresByGame[score.game_id]) {
+        scoresByGame[score.game_id].push(score);
       }
     });
 
