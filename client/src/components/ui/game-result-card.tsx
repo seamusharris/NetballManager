@@ -6,6 +6,11 @@ import { ScoreBadge } from '@/components/ui/score-badge';
 import { GameBadge } from '@/components/ui/game-badge';
 import { cn } from '@/lib/utils';
 import { gameScoreService } from '@/lib/gameScoreService';
+import { useQuery } from '@tanstack/react-query';
+import { Badge } from './badge';
+import { Card } from './card';
+import { apiClient } from '@/lib/apiClient';
+import { useClub } from '@/contexts/ClubContext';
 
 export type GameResultLayout = 'narrow' | 'medium' | 'wide';
 
@@ -40,6 +45,8 @@ export function GameResultCard({
   currentTeamId,
   clubTeams = []
 }: GameResultCardProps) {
+  const { currentClubId } = useClub();
+  const statusIsCompleted = status === 'completed' || status === 'final' || status === 'finished';
 
   // Early return if no game data
   if (!game) {
