@@ -22,7 +22,7 @@ interface QueryParams {
 }
 
 export default function Games() {
-  const { currentClub, currentClubId, currentTeamId, currentTeam, isLoading: clubLoading } = useClub();
+  const { currentClub, currentClubId, currentTeamId, currentTeam, setCurrentTeamId, isLoading: clubLoading } = useClub();
   const params = useParams();
   const teamIdFromUrl = params.teamId ? parseInt(params.teamId) : null;
 
