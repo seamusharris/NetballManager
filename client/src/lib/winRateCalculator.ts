@@ -19,8 +19,8 @@ export interface GameWithStats {
 }
 
 /**
- * Calculate win rate for a team based on completed games with statistics
- * Only counts games that are completed AND allow statistics (excludes BYEs, forfeits, etc.)
+ * Calculate win rate for a team based on completed games with official scores only
+ * Only counts games that are completed AND have official scores entered
  */
 export function calculateTeamWinRate(
   games: GameWithStats[],
@@ -28,11 +28,13 @@ export function calculateTeamWinRate(
   clubId: number,
   centralizedStats: Record<number, any[]> = {}
 ): WinRateResult {
-  // Filter to only games where this team played and statistics are available
+  // Filter to only games where this team played and have official scores
   const validGames = games.filter(game => 
     game.statusIsCompleted && 
     game.statusAllowsStatistics &&
-    (game.homeTeamId === teamId || game.awayTeamId === teamId)
+    (game.homeTeamId === teamId || game.awayTeamId === teamId) &&
+    game.statusTeamGoals !== null && 
+    game.statusOpponentGoals !== null
   );
 
   let wins = 0;
@@ -41,28 +43,10 @@ export function calculateTeamWinRate(
 
   for (const game of validGames) {
     const isHome = game.homeTeamId === teamId;
-    const gameStats = centralizedStats[game.id] || [];
 
-    let ourScore = 0;
-    let theirScore = 0;
-
-    // Prioritize official scores from game status, then fall back to calculated stats
-    if (game.statusTeamGoals !== null && game.statusOpponentGoals !== null) {
-      // Use official scores from game status
-      ourScore = isHome ? (game.statusTeamGoals || 0) : (game.statusOpponentGoals || 0);
-      theirScore = isHome ? (game.statusOpponentGoals || 0) : (game.statusTeamGoals || 0);
-    } else if (gameStats.length > 0) {
-      // Use centralized statistics - filter to only this team's stats
-      const teamStats = gameStats.filter(stat => stat.teamId === teamId);
-      teamStats.forEach(stat => {
-        ourScore += stat.goalsFor || 0;
-        theirScore += stat.goalsAgainst || 0;
-      });
-    } else {
-      // No scores available
-      ourScore = 0;
-      theirScore = 0;
-    }
+    // Use only official scores from game status
+    const ourScore = isHome ? (game.statusTeamGoals || 0) : (game.statusOpponentGoals || 0);
+    const theirScore = isHome ? (game.statusOpponentGoals || 0) : (game.statusTeamGoals || 0);
 
     if (ourScore > theirScore) {
       wins++;
@@ -86,7 +70,7 @@ export function calculateTeamWinRate(
 }
 
 /**
- * Calculate club-wide win rate across all teams
+ * Calculate club-wide win rate across all teams using official scores only
  * For inter-club games, each team's performance counts as a separate game
  */
 export function calculateClubWinRate(
@@ -94,11 +78,13 @@ export function calculateClubWinRate(
   clubId: number,
   centralizedStats: Record<number, any[]> = {}
 ): WinRateResult {
-  // Filter to only games where this club played and statistics are available
+  // Filter to only games where this club played and have official scores
   const validGames = games.filter(game => 
     game.statusIsCompleted && 
     game.statusAllowsStatistics &&
-    (game.homeClubId === clubId || game.awayClubId === clubId)
+    (game.homeClubId === clubId || game.awayClubId === clubId) &&
+    game.statusTeamGoals !== null && 
+    game.statusOpponentGoals !== null
   );
 
   let wins = 0;
@@ -110,73 +96,33 @@ export function calculateClubWinRate(
     const isHomeClub = game.homeClubId === clubId;
     const isAwayClub = game.awayClubId === clubId;
     const isInterClubGame = game.homeClubId === clubId && game.awayClubId === clubId;
-    const gameStats = centralizedStats[game.id] || [];
 
     if (isInterClubGame) {
       // Inter-club game: each team counts as a separate game
-      // Get stats for each team and calculate their individual results
-      const homeTeamStats = gameStats.filter(stat => stat.teamId === game.homeTeamId);
-      const awayTeamStats = gameStats.filter(stat => stat.teamId === game.awayTeamId);
-
-      // Calculate home team result
-      if (homeTeamStats.length > 0) {
-        let homeScore = 0;
-        let homeOpponentScore = 0;
-        homeTeamStats.forEach(stat => {
-          homeScore += stat.goalsFor || 0;
-          homeOpponentScore += stat.goalsAgainst || 0;
-        });
-
-        if (homeScore > homeOpponentScore) {
-          wins++;
-        } else if (homeScore < homeOpponentScore) {
-          losses++;
-        } else {
-          draws++;
-        }
-        totalGames++;
+      // Home team result
+      if (game.statusTeamGoals! > game.statusOpponentGoals!) {
+        wins++;
+      } else if (game.statusTeamGoals! < game.statusOpponentGoals!) {
+        losses++;
+      } else {
+        draws++;
       }
+      totalGames++;
 
-      // Calculate away team result
-      if (awayTeamStats.length > 0) {
-        let awayScore = 0;
-        let awayOpponentScore = 0;
-        awayTeamStats.forEach(stat => {
-          awayScore += stat.goalsFor || 0;
-          awayOpponentScore += stat.goalsAgainst || 0;
-        });
-
-        if (awayScore > awayOpponentScore) {
-          wins++;
-        } else if (awayScore < awayOpponentScore) {
-          losses++;
-        } else {
-          draws++;
-        }
-        totalGames++;
+      // Away team result (opposite of home team)
+      if (game.statusOpponentGoals! > game.statusTeamGoals!) {
+        wins++;
+      } else if (game.statusOpponentGoals! < game.statusTeamGoals!) {
+        losses++;
+      } else {
+        draws++;
       }
+      totalGames++;
     } else {
       // Regular game against another club: count as one game
-      let ourScore = 0;
-      let theirScore = 0;
+      const ourScore = isHomeClub ? (game.statusTeamGoals || 0) : (game.statusOpponentGoals || 0);
+      const theirScore = isHomeClub ? (game.statusOpponentGoals || 0) : (game.statusTeamGoals || 0);
 
-      // Prioritize official scores from game status, then fall back to calculated stats
-      if (game.statusTeamGoals !== null && game.statusOpponentGoals !== null) {
-        // Use official scores from game status
-        ourScore = isHomeClub ? (game.statusTeamGoals || 0) : (game.statusOpponentGoals || 0);
-        theirScore = isHomeClub ? (game.statusOpponentGoals || 0) : (game.statusTeamGoals || 0);
-      } else if (gameStats.length > 0) {
-        // Use all stats from our club's teams in this game
-        gameStats.forEach(stat => {
-          ourScore += stat.goalsFor || 0;
-          theirScore += stat.goalsAgainst || 0;
-        });
-      } else {
-        // No scores available - skip this game
-        continue;
-      }
-
-      // Count the result
       if (ourScore > theirScore) {
         wins++;
       } else if (ourScore < theirScore) {
