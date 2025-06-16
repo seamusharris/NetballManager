@@ -1,4 +1,3 @@
-
 export interface WinRateResult {
   wins: number;
   losses: number;

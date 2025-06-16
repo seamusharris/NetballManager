@@ -52,7 +52,7 @@ class GameScoreService {
         console.log(`No official scores found for game ${gameId}, using calculated scores`);
       }
     }
-    
+
     // Use provided official scores if available
     if (officialScores && officialScores.length > 0) {
       return this.createScoresFromOfficial(officialScores, homeTeamId, awayTeamId, currentTeamId);
@@ -265,7 +265,7 @@ class GameScoreService {
 
     // Get all unique team IDs from official scores
     const teamIds = [...new Set(officialScores.map(s => s.teamId))];
-    
+
     // If we don't have homeTeamId/awayTeamId but we have team IDs from scores, use those
     if (!homeTeamId && !awayTeamId && teamIds.length >= 2) {
       homeTeamId = teamIds[0];
@@ -444,7 +444,7 @@ class GameScoreService {
     const totalOpponentScore = quarterScores.reduce((sum, q) => sum + q.opponentScore, 0);
 
     const result = totalTeamScore > totalOpponentScore ? 'win' : 
-                   totalTeamScore < totalOpponentScore ? 'loss' : 'draw';
+                   totalOpponentScore < totalOpponentScore ? 'loss' : 'draw';
 
     return {
       quarterScores,
