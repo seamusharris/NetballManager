@@ -142,7 +142,7 @@ export function useGamesScores(gameIds: number[], forceFresh = false) {
 
       if (game) {
         if (!forceFresh) {
-          const cached = getCachedScores(gameId, stats, game.status);
+          const cached = getCachedScores(gameId, game.status);
           if (cached) {
             newScoresMap[gameId] = cached;
             return;
@@ -205,7 +205,7 @@ export function useGamesScores(gameIds: number[], forceFresh = false) {
           return;
         }
 
-        cacheScores(gameId, scores, stats, game.status);
+        cacheScores(gameId, scores, game.status);
         newScoresMap[gameId] = scores;
       }
     });

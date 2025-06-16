@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Save, Edit, Trophy, Clock } from 'lucide-react';
 import { apiClient } from '@/lib/apiClient';
 import { useToast } from '@/hooks/use-toast';
+import { invalidateGameCache } from '@/lib/scoresCache';
 
 interface OfficialScoreEntryProps {
   gameId: number;
@@ -94,62 +95,31 @@ export function OfficialScoreEntry({
       const homeTeamId = gameData.homeTeamId;
       const awayTeamId = gameData.awayTeamId;
 
-      return apiClient.post(`/api/games/${gameId}/scores`, {
+      const saveData = {
         quarter: data.quarter,
         homeTeamId,
         awayTeamId,
         homeScore: data.homeScore,
         awayScore: data.awayScore,
         notes: data.notes
-      });
+      };
+
+      return apiClient.post(`/api/games/${gameId}/scores`, saveData);
     },
     onSuccess: () => {
-      // Comprehensive cache invalidation using predicate-based approach
-      queryClient.invalidateQueries({
-        predicate: (query) => {
-          const queryKey = query.queryKey;
-          return queryKey.some(key => {
-            if (typeof key === 'string') {
-              // Direct game score queries
-              if (key.includes(`/games/${gameId}/scores`)) return true;
-              if (key.includes(`game-${gameId}`)) return true;
-              
-              // Batch statistics queries
-              if (key.includes('batchGameStats')) return true;
-              if (key.includes('games/stats/batch')) return true;
-              
-              // Dashboard batch data queries
-              if (key.includes('dashboard-batch-data')) return true;
-              if (key.includes('centralized-scores')) return true;
-              
-              // Games list queries that might contain this game
-              if (key === '/api/games') return true;
-              
-              return false;
-            }
-            // Handle array-based query keys
-            if (Array.isArray(key) && key.includes(gameId)) return true;
-            
-            return false;
-          });
-        }
-      });
-
-      // Also invalidate specific patterns that contain the gameId
-      queryClient.invalidateQueries({ queryKey: ['gameScores', gameId], exact: false });
-      queryClient.invalidateQueries({ queryKey: ['gameScores'], exact: false });
-      queryClient.invalidateQueries({ queryKey: ['/api/games', gameId], exact: false });
-
-      // Clear global scores cache
-      import('../../lib/scoresCache').then(({ invalidateGameCache }) => {
-        invalidateGameCache(gameId);
-      });
-
-      setEditingQuarter(null);
       toast({
-        title: "Score saved",
-        description: "Official quarter score has been recorded",
+        title: "Success",
+        description: "Official scores saved successfully"
       });
+
+      // Invalidate all relevant caches and queries
+      invalidateGameCache(gameId);
+      queryClient.invalidateQueries({ queryKey: ['/api/games', gameId, 'scores'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/games', gameId] });
+      queryClient.invalidateQueries({ queryKey: ['games'] });
+      queryClient.invalidateQueries({ queryKey: ['batchGameStats'] });
+      queryClient.invalidateQueries({ queryKey: ['centralized-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['official-scores'] });
     },
     onError: (error) => {
       console.error('Error saving score:', error);

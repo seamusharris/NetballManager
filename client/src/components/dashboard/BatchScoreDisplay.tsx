@@ -79,7 +79,7 @@ export default function BatchScoreDisplay({ games, className }: BatchScoreDispla
           // Process forfeit games specially
           if (isForfeitGame(game)) {
             const forfeitScore = getForfeitGameScore(game);
-            cacheScores(game.id, forfeitScore, undefined, game.status);
+            cacheScores(game.id, forfeitScore, game.status);
             return;
           }
 
@@ -90,7 +90,7 @@ export default function BatchScoreDisplay({ games, className }: BatchScoreDispla
           try {
             // Calculate and cache scores directly instead of calling the service again
             const scores = statisticsService['calculateScoresFromStats'](stats, game.id);
-            cacheScores(game.id, scores, stats);
+            cacheScores(game.id, scores, game.status);
           } catch (calcError) {
             console.warn(`Error calculating scores for game ${game.id}:`, calcError);
           }

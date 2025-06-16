@@ -112,17 +112,17 @@ class GameScoreService {
 
   async getGameScoresWithCache(gameId: number, stats?: GameStat[], gameStatus?: GameStatus, statusScores?: { teamGoals: number | null, opponentGoals: number | null }): Promise<GameScores> {
     // Check cache first
-    const cachedScores = getCachedScores(gameId, stats, gameStatus);
+    const cachedScores = getCachedScores(gameId, gameStatus);
     if (cachedScores) {
       return this.convertLegacyScores(cachedScores);
     }
 
     // Calculate new scores
-    const scores = this.calculateGameScores(stats || [], gameStatus, statusScores);
+    const scores = await this.calculateGameScores(stats || [], gameStatus, statusScores, false, undefined, undefined, undefined, undefined, gameId);
 
     // Cache the result
     const legacyFormat = this.convertToLegacyFormat(scores);
-    cacheScores(gameId, legacyFormat, stats, gameStatus);
+    cacheScores(gameId, legacyFormat, gameStatus);
 
     return scores;
   }
