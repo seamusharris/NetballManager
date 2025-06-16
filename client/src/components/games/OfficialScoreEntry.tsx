@@ -11,6 +11,7 @@ import { Save, Edit, Trophy, Clock } from 'lucide-react';
 import { apiClient } from '@/lib/apiClient';
 import { useToast } from '@/hooks/use-toast';
 import { invalidateGameCache } from '@/lib/scoresCache';
+import { invalidateGameScores } from '@/lib/cacheKeys';
 
 interface OfficialScoreEntryProps {
   gameId: number;
@@ -112,14 +113,18 @@ export function OfficialScoreEntry({
         description: "Official scores saved successfully"
       });
 
-      // Invalidate all relevant caches and queries
+      // Get club ID for precise invalidation
+      const clubId = gameData?.homeClubId || gameData?.awayClubId;
+      
+      // Use precise cache invalidation helper
       invalidateGameCache(gameId);
-      queryClient.invalidateQueries({ queryKey: ['/api/games', gameId, 'scores'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/games', gameId] });
-      queryClient.invalidateQueries({ queryKey: ['games'] });
-      queryClient.invalidateQueries({ queryKey: ['batchGameStats'] });
-      queryClient.invalidateQueries({ queryKey: ['centralized-stats'] });
-      queryClient.invalidateQueries({ queryKey: ['official-scores'] });
+      if (clubId) {
+        invalidateGameScores(queryClient, gameId, clubId);
+      } else {
+        // Fallback if club ID not available
+        queryClient.invalidateQueries({ queryKey: ['/api/games', gameId, 'scores'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/games', gameId] });
+      }
     },
     onError: (error) => {
       console.error('Error saving score:', error);

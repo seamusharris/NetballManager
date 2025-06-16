@@ -165,6 +165,17 @@ export default function ClubDashboard() {
     };
   }, [teams, games, players, currentClubId, officialScores]);
 
+  // Memoize expensive calculations separately to prevent cascading re-renders
+  const gamesHashKey = useMemo(() => 
+    games.map(g => `${g.id}-${g.statusId}`).join(','), 
+    [games]
+  );
+  
+  const scoresHashKey = useMemo(() => 
+    JSON.stringify(Object.keys(officialScores).sort()), 
+    [officialScores]
+  );
+
   // Team performance metrics (memoized to prevent unnecessary recalculations)
   const teamPerformance = useMemo(() => activeTeams.map(team => {
     // Use shared win rate calculator for consistent logic with official scores
@@ -180,7 +191,7 @@ export default function ClubDashboard() {
     };
 
     return teamPerf;
-  }), [activeTeams, games, currentClubId, officialScores]);
+  }), [activeTeams, gamesHashKey, currentClubId, scoresHashKey]);
 
   // Recent games across all teams (memoized)
   const recentGames = useMemo(() => 
