@@ -101,7 +101,8 @@ export function GameResultCard({
 
         return {
           quarterScores: [], // Simplified - not showing quarter breakdown in cards
-          finalScore: { for: teamScore, against: opponentScore }
+          finalScore: { for: teamScore, against: opponentScore },
+          result: result
         };
       }
 
