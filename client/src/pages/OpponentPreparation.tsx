@@ -104,8 +104,7 @@ export default function OpponentPreparation() {
       const isHomeGame = game.homeClubId === currentClubId;
       const isAwayGame = game.awayClubId === currentClubId;
 
-      // Skip intra-club games
-      if (isHomeGame && isAwayGame) return;
+      // Note: We include intra-club games for opponent preparation analysis
 
       if (isHomeGame && !isAwayGame) {
         opponentTeamId = game.awayTeamId;
