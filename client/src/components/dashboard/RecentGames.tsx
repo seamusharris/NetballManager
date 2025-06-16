@@ -41,13 +41,17 @@ export default function RecentGames({ games, opponents, className, seasonFilter,
     .slice(0, RECENT_GAMES_COUNT);
 
   // Debug centralized scores with more detail
-  console.log('RecentGames received centralizedScores:', centralizedScores);
+  console.log('RecentGames received centralizedScores (batch format):', centralizedScores);
   console.log('RecentGames recentGames count:', recentGames.length);
+  
+  // Transform and validate batch scores for each game
   recentGames.forEach(game => {
     const gameScores = centralizedScores?.[game.id];
-    console.log(`Game ${game.id} (${game.awayTeamName} vs ${game.homeTeamName}) has centralized scores:`, gameScores);
+    console.log(`Game ${game.id} (${game.awayTeamName} vs ${game.homeTeamName}) extracting scores from batch:`, gameScores);
     if (gameScores && gameScores.length > 0) {
-      console.log(`Game ${game.id} score details:`, gameScores.map(s => `Q${s.quarter}: T${s.teamId}=${s.score}`));
+      console.log(`Game ${game.id} transformed score details:`, gameScores.map(s => `Q${s.quarter}: T${s.teamId}=${s.score}`));
+    } else {
+      console.log(`Game ${game.id} has no scores in batch data`);
     }
   });
 
@@ -80,7 +84,7 @@ export default function RecentGames({ games, opponents, className, seasonFilter,
                 className="mb-4"
                 currentTeamId={clubWide ? null : currentTeam?.id}
                 clubTeams={teams || []}
-              />
+              /></old_str>
             ))
           )}
         </div>

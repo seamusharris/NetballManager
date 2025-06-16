@@ -56,7 +56,7 @@ export function GameResultCard({
       // For completed games, always prioritize official scores if available
       const scoresToUse = centralizedScores && centralizedScores.length > 0 ? centralizedScores : undefined;
 
-      console.log(`GameResultCard ${game.id}: Processing scores - statusIsCompleted: ${game.statusIsCompleted}, centralizedScores:`, scoresToUse);
+      console.log(`GameResultCard ${game.id}: Processing scores - statusIsCompleted: ${game.statusIsCompleted}, centralizedScores length: ${scoresToUse?.length || 0}`, scoresToUse?.slice(0, 2));
 
       // If we have official scores for a completed game, calculate directly from them
       if (game.statusIsCompleted && scoresToUse && scoresToUse.length > 0) {
@@ -98,7 +98,7 @@ export function GameResultCard({
         const result = teamScore > opponentScore ? 'win' : 
                       teamScore < opponentScore ? 'loss' : 'draw';
 
-        console.log(`GameResultCard ${game.id}: Official scores calculated - ${teamScore}-${opponentScore} (${result})`);
+        console.log(`GameResultCard ${game.id}: Official scores calculated - ${teamScore}-${opponentScore} (${result}) from ${scoresToUse.length} score entries`);
 
         return {
           totalTeamScore: teamScore,
