@@ -12,6 +12,7 @@ import { apiClient } from '@/lib/apiClient';
 import { useToast } from '@/hooks/use-toast';
 import { invalidateGameCache } from '@/lib/cacheInvalidation';
 import { invalidateScoresOnly } from '@/lib/cacheKeys';
+import { useClub } from '@/contexts/ClubContext';
 
 interface OfficialScoreEntryProps {
   gameId: number;
@@ -28,6 +29,7 @@ export function OfficialScoreEntry({
 }: OfficialScoreEntryProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { currentClub } = useClub();
 
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingQuarter, setEditingQuarter] = useState<number | null>(null);
@@ -113,14 +115,20 @@ export function OfficialScoreEntry({
         description: "Scores have been saved successfully."
       });
 
-      // Only invalidate batch scores and games lists - avoid individual score queries
+      // Invalidate specific queries for this game
+      queryClient.invalidateQueries({
+        queryKey: ['/api/games', gameId, 'scores']
+      });
+
+      // Only invalidate batch scores and games lists if we have club context
       if (currentClub?.id) {
         // Invalidate batch scores that include this game
         queryClient.invalidateQueries({
           predicate: (query) => {
             const key = query.queryKey;
             return Array.isArray(key) && 
-                   key[0] === 'batch-scores' && 
+                   key[0] === '/api/games' && 
+                   key[2] === 'batch-scores' && 
                    key[1] === currentClub.id;
           }
         });
@@ -130,7 +138,7 @@ export function OfficialScoreEntry({
           predicate: (query) => {
             const key = query.queryKey;
             return Array.isArray(key) && 
-                   key[0] === 'games' && 
+                   key[0] === '/api/games' && 
                    key[1] === currentClub.id;
           }
         });
