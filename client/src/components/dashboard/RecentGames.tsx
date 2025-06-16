@@ -84,7 +84,10 @@ export default function RecentGames({ games, opponents, className, seasonFilter,
                 className="mb-4"
                 currentTeamId={clubWide ? null : currentTeam?.id}
                 clubTeams={teams || []}
-              /></old_str>
+              />
+            ))
+          )}
+        </div></old_str>
             ))
           )}
         </div>
