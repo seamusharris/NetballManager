@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -27,7 +26,7 @@ export function OfficialScoreEntry({
 }: OfficialScoreEntryProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  
+
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingQuarter, setEditingQuarter] = useState<number | null>(null);
   const [quarterScores, setQuarterScores] = useState<Record<number, { home: number, away: number, notes: string }>>({
@@ -48,10 +47,10 @@ export function OfficialScoreEntry({
   useEffect(() => {
     if (officialScores && officialScores.length > 0) {
       const newScores = { ...quarterScores };
-      
+
       // Group scores by quarter
       const scoresByQuarter: Record<number, { [teamId: number]: { score: number; notes?: string } }> = {};
-      
+
       officialScores.forEach((score: any) => {
         if (!scoresByQuarter[score.quarter]) {
           scoresByQuarter[score.quarter] = {};
@@ -61,20 +60,20 @@ export function OfficialScoreEntry({
           notes: score.notes
         };
       });
-      
+
       // Convert to home/away format for display
       // We need the game data to know which team is home vs away
       // For now, just use the team IDs directly - we'll fix the home/away mapping separately
       Object.entries(scoresByQuarter).forEach(([quarter, teams]) => {
         const quarterNum = parseInt(quarter);
         const teamIds = Object.keys(teams).map(Number);
-        
+
         if (teamIds.length >= 2) {
           // Assume first team ID is "home" and second is "away" for display purposes
           // This maintains functionality while we fix the proper team mapping
           const team1Id = Math.min(...teamIds);
           const team2Id = Math.max(...teamIds);
-          
+
           newScores[quarterNum] = {
             home: teams[team1Id]?.score || 0,
             away: teams[team2Id]?.score || 0,
@@ -82,7 +81,7 @@ export function OfficialScoreEntry({
           };
         }
       });
-      
+
       setQuarterScores(newScores);
     }
   }, [officialScores]);
@@ -236,7 +235,7 @@ export function OfficialScoreEntry({
                       const runningAway = Object.entries(quarterScores)
                         .filter(([q]) => parseInt(q) <= quarter)
                         .reduce((sum, [, scores]) => sum + scores.away, 0);
-                      
+
                       return (
                         <div key={quarter} className="bg-white border rounded p-2">
                           <div className="text-xs text-gray-500 mb-1">Q{quarter}</div>
@@ -269,7 +268,7 @@ export function OfficialScoreEntry({
               Enter the official quarter-by-quarter scores for this game
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="space-y-6 py-4">
             {/* Final Score Display */}
             <div className="bg-gray-50 p-4 rounded-lg">
@@ -341,7 +340,7 @@ export function OfficialScoreEntry({
                             />
                           </div>
                         </div>
-                        
+
                         <div>
                           <Label htmlFor={`notes-${quarter}`}>Notes (optional)</Label>
                           <Textarea
