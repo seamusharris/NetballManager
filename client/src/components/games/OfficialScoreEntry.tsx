@@ -90,10 +90,10 @@ export function OfficialScoreEntry({
     mutationFn: (data: { quarter: number, homeScore: number, awayScore: number, notes?: string }) => {
       // Convert home/away scores to team-specific data using actual game data
       if (!gameData) throw new Error('Game data not loaded');
-      
+
       const homeTeamId = gameData.homeTeamId;
       const awayTeamId = gameData.awayTeamId;
-      
+
       return apiClient.post(`/api/games/${gameId}/scores`, {
         quarter: data.quarter,
         homeTeamId,
@@ -104,35 +104,20 @@ export function OfficialScoreEntry({
       });
     },
     onSuccess: () => {
-      // Clear global scores cache first
+      // Only invalidate the specific game's score queries
+      queryClient.invalidateQueries({ queryKey: ['/api/games', gameId, 'scores'] });
+
+      // Invalidate the specific game scores in the batch queries
+      queryClient.invalidateQueries({ 
+        queryKey: ['gameScores', gameId],
+        exact: false
+      });
+
+      // Clear only this game's cache
       import('../../lib/scoresCache').then(({ invalidateGameCache }) => {
         invalidateGameCache(gameId);
       });
-      
-      // Invalidate all queries that might contain this game's data
-      queryClient.invalidateQueries({
-        predicate: (query) => {
-          const key = query.queryKey;
-          if (!Array.isArray(key)) return false;
-          
-          // Check if query key contains this game ID or batch data
-          return key.some(k => {
-            if (typeof k === 'string') {
-              return (
-                k.includes('/api/games') ||
-                k.includes('batch-scores') ||
-                k.includes('gameScores') ||
-                k.includes('batch-game-data') ||
-                k.includes('dashboard-batch-data') ||
-                k.includes('games-batch-data') ||
-                k.includes('centralized-scores')
-              );
-            }
-            return k === gameId;
-          });
-        }
-      });
-      
+
       setEditingQuarter(null);
       toast({
         title: "Score saved",
