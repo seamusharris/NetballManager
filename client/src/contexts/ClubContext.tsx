@@ -196,9 +196,7 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
     apiClient.setClubContext({ currentClubId, currentTeamId: teamId });
 
     // Update state after API client is set
-    startTransition(() => {
-      setCurrentTeamId(teamId);
-    });
+    setCurrentTeamId(teamId);
 
     // Cache invalidation disabled to prevent race conditions
     // Let React Query handle cache naturally through query key changes
