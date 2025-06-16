@@ -77,38 +77,30 @@ export default function ClubDashboard() {
     ).map(game => game.id) || [];
   }, [games]);
 
+    // All game ids for the club
+    const allGameIds = useMemo(() => {
+      return games?.map(game => game.id) || [];
+    }, [games]);
+
   const { data: officialScores = {}, isLoading: isLoadingScores } = useQuery({
-    queryKey: ['official-scores', currentClubId, completedGameIds.sort().join(',')],
+    queryKey: ['club-official-scores', allGameIds],
     queryFn: async () => {
-      if (completedGameIds.length === 0) return {};
+      if (allGameIds.length === 0) return {};
 
-      try {
-        console.log(`ClubDashboard: Batch fetching official scores for ${completedGameIds.length} completed games`);
-        
-        // Use batch endpoint for better performance
-        const scoresMap = await apiClient.post('/api/games/scores/batch', {
-          gameIds: completedGameIds
-        });
-
-        console.log(`ClubDashboard: Batch scores received for ${Object.keys(scoresMap).length} games:`, scoresMap);
-        return scoresMap || {};
-      } catch (error) {
-        console.error('ClubDashboard: Batch scores fetch failed:', error);
-        return {};
-      }
+      console.log('ClubDashboard: Fetching official scores for games:', allGameIds);
+      const response = await apiClient.post('/api/games/scores/batch', {
+        gameIds: allGameIds
+      });
+      console.log('ClubDashboard: Official scores batch response:', response);
+      return response || {};
     },
-    enabled: !!currentClubId && !clubLoading && completedGameIds.length > 0,
-    staleTime: 5 * 60 * 1000, // Reduce to 5 minutes for more frequent updates
-    gcTime: 15 * 60 * 1000, // Reduce garbage collection time
-    retry: 1,
-    retryDelay: 1000,
-    refetchOnWindowFocus: true, // Refetch when window gains focus
-    refetchOnMount: true // Always refetch on mount
+    enabled: allGameIds.length > 0,
+    staleTime: 1000 * 60 * 2, // 2 minutes for faster updates
   });
 
   // Also fetch centralized stats for display purposes (RecentGames component)
   const { data: centralizedStats = {}, isLoading: isLoadingStats } = useQuery({
-    queryKey: ['centralized-stats', currentClubId, completedGameIds.sort().join(',')],
+    queryKey: ['centralized-stats', completedGameIds.sort().join(',')],
     queryFn: async () => {
       if (completedGameIds.length === 0) return {};
 
@@ -164,7 +156,7 @@ export default function ClubDashboard() {
     games.map(g => `${g.id}-${g.statusId}`).join(','), 
     [games]
   );
-  
+
   const scoresHashKey = useMemo(() => 
     JSON.stringify(Object.keys(officialScores).sort()), 
     [officialScores]

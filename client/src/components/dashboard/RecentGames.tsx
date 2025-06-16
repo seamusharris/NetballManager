@@ -41,19 +41,26 @@ export default function RecentGames({ games, opponents, className, seasonFilter,
     .slice(0, RECENT_GAMES_COUNT);
 
   // Debug centralized scores with more detail
-  console.log('RecentGames received centralizedScores (batch format):', centralizedScores);
-  console.log('RecentGames recentGames count:', recentGames.length);
+  console.log('RecentGames: Received centralizedScores (batch format):', centralizedScores);
+  console.log('RecentGames: Recent games count:', recentGames.length);
+  console.log('RecentGames: Recent games IDs:', recentGames.map(g => g.id));
 
   // Transform and validate batch scores for each game
+  const transformedScores = {};
   recentGames.forEach(game => {
     const gameScores = centralizedScores?.[game.id];
-    console.log(`Game ${game.id} (${game.awayTeamName} vs ${game.homeTeamName}) extracting scores from batch:`, gameScores);
-    if (gameScores && gameScores.length > 0) {
-      console.log(`Game ${game.id} transformed score details:`, gameScores.map(s => `Q${s.quarter}: T${s.teamId}=${s.score}`));
+    console.log(`RecentGames: Game ${game.id} (${game.awayTeamName} vs ${game.homeTeamName}) batch scores:`, gameScores);
+    
+    if (gameScores && Array.isArray(gameScores) && gameScores.length > 0) {
+      transformedScores[game.id] = gameScores;
+      console.log(`RecentGames: Game ${game.id} score details:`, gameScores.map(s => `Q${s.quarter}: T${s.teamId}=${s.score}`));
     } else {
-      console.log(`Game ${game.id} has no scores in batch data`);
+      transformedScores[game.id] = [];
+      console.log(`RecentGames: Game ${game.id} has no scores in batch data - setting empty array`);
     }
   });
+
+  console.log('RecentGames: Final transformed scores object:', transformedScores);
 
   // Use centralized stats for game data
   const isLoading = false;
@@ -76,7 +83,7 @@ export default function RecentGames({ games, opponents, className, seasonFilter,
                 game={game}
                 layout="medium"
                 gameStats={centralizedStats?.[game.id] || []}
-                centralizedScores={centralizedScores?.[game.id] || []}
+                centralizedScores={transformedScores[game.id] || []}
                 useOfficialPriority={true}
                 showDate={true}
                 showRound={true}

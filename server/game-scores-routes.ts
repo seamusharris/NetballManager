@@ -1,4 +1,3 @@
-
 import { Express } from 'express';
 import { db } from './db';
 import { gameScores, games } from '@shared/schema';
@@ -55,15 +54,15 @@ export function registerGameScoresRoutes(app: Express) {
   app.get('/api/games/:gameId/scores', standardAuth({ requireGameAccess: true }), async (req: AuthenticatedRequest, res) => {
   try {
     const gameId = parseInt(req.params.gameId);
-    
+
     const scores = await db.select()
       .from(gameScores)
       .where(eq(gameScores.gameId, gameId));
-    
+
     if (scores.length === 0) {
       return res.json([]); // No official scores entered yet - return empty array
     }
-    
+
     res.json(scores);
   } catch (error) {
     console.error('Error fetching game scores:', error);
@@ -155,10 +154,10 @@ export function registerGameScoresRoutes(app: Express) {
   app.delete('/api/games/:gameId/scores', standardAuth({ requireGameAccess: true }), async (req: AuthenticatedRequest, res) => {
   try {
     const gameId = parseInt(req.params.gameId);
-    
+
     await db.delete(gameScores)
       .where(eq(gameScores.gameId, gameId));
-    
+
     res.json({ success: true });
   } catch (error) {
     console.error('Error deleting game scores:', error);
