@@ -689,6 +689,201 @@ export default function Preparation() {
                   </Card>
                 </div>
               )}
+
+              {/* Head-to-Head Games */}
+              {selectedGame && opponentName && opponentName !== 'BYE' && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <History className="h-5 w-5" />
+                      Head-to-Head Games vs {opponentName}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {(() => {
+                      // Find all games against this opponent
+                      const opponentGames = allGames.filter(game => {
+                        const gameOpponent = game.homeTeamId === currentTeamId 
+                          ? (game.awayTeamName || game.awayTeam?.name)
+                          : (game.homeTeamName || game.homeTeam?.name);
+                        return gameOpponent === opponentName;
+                      });
+
+                      const playedGames = opponentGames.filter(g => g.statusIsCompleted === true);
+                      const upcomingOpponentGames = opponentGames.filter(g => g.statusIsCompleted !== true);
+
+                      if (opponentGames.length === 0) {
+                        return (
+                          <div className="text-center py-8 text-gray-500">
+                            <Calendar className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                            <p>No previous or upcoming games found against {opponentName}</p>
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <div className="space-y-6">
+                          {/* Played Games */}
+                          {playedGames.length > 0 && (
+                            <div>
+                              <h4 className="font-semibold mb-3 text-green-700">
+                                Previous Games ({playedGames.length})
+                              </h4>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                {playedGames
+                                  .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                                  .slice(0, 6)
+                                  .map(game => {
+                                    const gameStats = centralizedStats[game.id] || [];
+                                    const ourStats = gameStats.filter(stat => stat.teamId === currentTeamId);
+                                    const theirStats = gameStats.filter(stat => stat.teamId !== currentTeamId);
+
+                                    const ourScore = ourStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
+                                    const theirScore = theirStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
+                                    const result = getWinLoseLabel(ourScore, theirScore);
+
+                                    return (
+                                      <div key={game.id} className="border rounded-lg p-3 bg-gray-50">
+                                        <div className="flex justify-between items-center mb-2">
+                                          <span className="text-sm font-medium">
+                                            Round {game.round}
+                                          </span>
+                                          <Badge variant={result === 'Win' ? 'default' : result === 'Draw' ? 'secondary' : 'destructive'}>
+                                            {result}
+                                          </Badge>
+                                        </div>
+                                        <div className="text-center">
+                                          <div className="text-lg font-bold">
+                                            {ourScore} - {theirScore}
+                                          </div>
+                                          <div className="text-xs text-gray-500">
+                                            {formatShortDate(game.date)}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Upcoming Games */}
+                          {upcomingOpponentGames.length > 0 && (
+                            <div>
+                              <h4 className="font-semibold mb-3 text-blue-700">
+                                Upcoming Games ({upcomingOpponentGames.length})
+                              </h4>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                {upcomingOpponentGames
+                                  .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+                                  .map(game => (
+                                    <div key={game.id} className={`border rounded-lg p-3 ${
+                                      game.id === selectedGameId ? 'bg-blue-50 border-blue-300' : 'bg-gray-50'
+                                    }`}>
+                                      <div className="flex justify-between items-center mb-2">
+                                        <span className="text-sm font-medium">
+                                          Round {game.round}
+                                        </span>
+                                        {game.id === selectedGameId && (
+                                          <Badge variant="outline" className="text-blue-700 border-blue-300">
+                                            Selected
+                                          </Badge>
+                                        )}
+                                      </div>
+                                      <div className="text-center">
+                                        <div className="text-sm font-medium">
+                                          {game.homeTeamId === currentTeamId ? 'vs' : '@'} {opponentName}
+                                        </div>
+                                        <div className="text-xs text-gray-500">
+                                          {formatShortDate(game.date)} {game.time}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Quarter-by-Quarter Analysis */}
+                          {playedGames.length > 0 && (
+                            <div>
+                              <h4 className="font-semibold mb-3 text-purple-700">
+                                Quarter Performance Analysis vs {opponentName}
+                              </h4>
+                              <div className="bg-purple-50 rounded-lg p-4">
+                                <div className="grid grid-cols-5 gap-2 mb-2 text-sm font-medium text-gray-600">
+                                  <div></div>
+                                  <div className="text-center">Q1</div>
+                                  <div className="text-center">Q2</div>
+                                  <div className="text-center">Q3</div>
+                                  <div className="text-center">Q4</div>
+                                </div>
+                                {(() => {
+                                  const quarterTotals = { us: [0, 0, 0, 0], them: [0, 0, 0, 0] };
+                                  let gameCount = 0;
+
+                                  playedGames.forEach(game => {
+                                    const gameStats = centralizedStats[game.id] || [];
+                                    const ourStats = gameStats.filter(stat => stat.teamId === currentTeamId);
+                                    const theirStats = gameStats.filter(stat => stat.teamId !== currentTeamId);
+
+                                    [1, 2, 3, 4].forEach(quarter => {
+                                      const ourQuarterStats = ourStats.filter(s => s.quarter === quarter);
+                                      const theirQuarterStats = theirStats.filter(s => s.quarter === quarter);
+
+                                      const ourQuarterScore = ourQuarterStats.reduce((sum, s) => sum + (s.goalsFor || 0), 0);
+                                      const theirQuarterScore = theirQuarterStats.reduce((sum, s) => sum + (s.goalsFor || 0), 0);
+
+                                      quarterTotals.us[quarter - 1] += ourQuarterScore;
+                                      quarterTotals.them[quarter - 1] += theirQuarterScore;
+                                    });
+                                    gameCount++;
+                                  });
+
+                                  return (
+                                    <>
+                                      <div className="grid grid-cols-5 gap-2 mb-1">
+                                        <div className="text-sm font-medium">Us</div>
+                                        {quarterTotals.us.map((total, index) => (
+                                          <div key={index} className="text-center p-2 bg-blue-100 rounded text-sm font-bold">
+                                            {gameCount > 0 ? (total / gameCount).toFixed(1) : '0.0'}
+                                          </div>
+                                        ))}
+                                      </div>
+                                      <div className="grid grid-cols-5 gap-2 mb-2">
+                                        <div className="text-sm font-medium">Them</div>
+                                        {quarterTotals.them.map((total, index) => (
+                                          <div key={index} className="text-center p-2 bg-red-100 rounded text-sm font-bold">
+                                            {gameCount > 0 ? (total / gameCount).toFixed(1) : '0.0'}
+                                          </div>
+                                        ))}
+                                      </div>
+                                      <div className="grid grid-cols-5 gap-2">
+                                        <div className="text-sm font-medium">Diff</div>
+                                        {quarterTotals.us.map((usTotal, index) => {
+                                          const diff = gameCount > 0 ? (usTotal - quarterTotals.them[index]) / gameCount : 0;
+                                          return (
+                                            <div key={index} className={`text-center p-2 rounded text-sm font-bold ${
+                                              diff > 0 ? 'bg-green-100 text-green-800' :
+                                              diff < 0 ? 'bg-red-100 text-red-800' : 'bg-gray-100'
+                                            }`}>
+                                              {diff > 0 ? '+' : ''}{diff.toFixed(1)}
+                                            </div>
+                                          );
+                                        })}
+                                      </div>
+                                    </>
+                                  );
+                                })()}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
+                  </CardContent>
+                </Card>
+              )}
             </TabsContent>
 
             {/* Opponent Analysis Tab */}

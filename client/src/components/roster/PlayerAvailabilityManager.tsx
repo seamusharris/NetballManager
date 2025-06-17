@@ -51,11 +51,18 @@ export default function PlayerAvailabilityManager({
     }
   });
 
-  // Load team players for the selected game
+  // Load team players for the selected game (only when gameId changes)
   useEffect(() => {
     const loadTeamPlayers = async () => {
       if (!gameId) {
         setTeamPlayers([]);
+        return;
+      }
+
+      // Use provided players if available to avoid extra API calls
+      if (players && players.length > 0) {
+        console.log(`Using provided players (${players.length}) for game ${gameId}`);
+        setTeamPlayers(players);
         return;
       }
 
@@ -90,16 +97,11 @@ export default function PlayerAvailabilityManager({
           console.log(`Loaded ${response.length} team players for team ${teamToLoad}`);
           setTeamPlayers(response);
         } catch (teamError) {
-          // If team-specific endpoint fails, try loading all club players and filter
-          console.log('Team players endpoint failed, trying club players with filter');
-          const allPlayers = await apiClient.get('/api/players');
-          console.log(`Loaded ${allPlayers.length} club players, using all as fallback`);
-          setTeamPlayers(allPlayers);
+          console.log('Team players endpoint failed, using fallback to props players');
+          setTeamPlayers(players);
         }
       } catch (error) {
         console.error('Error loading team players:', error);
-        // Final fallback to props players
-        console.log('Final fallback to props players');
         setTeamPlayers(players);
       } finally {
         setIsLoadingTeamPlayers(false);
@@ -107,7 +109,7 @@ export default function PlayerAvailabilityManager({
     };
 
     loadTeamPlayers();
-  }, [gameId, games, players]);
+  }, [gameId]); // Only depend on gameId to prevent excessive calls
 
   // Invalidate and refetch availability data when gameId changes
   useEffect(() => {
@@ -130,51 +132,51 @@ export default function PlayerAvailabilityManager({
       availabilityResponse
     });
 
-    if (!gameId) {
-      console.log('PlayerAvailabilityManager: No gameId, skipping conversion');
+    if (!gameId || teamPlayers.length === 0) {
+      console.log('PlayerAvailabilityManager: No gameId or no team players, skipping conversion');
       return;
     }
 
-    // Handle case when team players are available
-    if (teamPlayers.length > 0 && !isLoading && !isLoadingTeamPlayers) {
-      if (availabilityResponse && Array.isArray(availabilityResponse.availablePlayerIds)) {
-        console.log('PlayerAvailabilityManager: Converting API response to availability data');
-        console.log('TeamPlayers:', teamPlayers.map(p => ({ id: p.id, name: p.displayName })));
-        console.log('Available IDs from API:', availabilityResponse.availablePlayerIds);
-        
-        // Convert from API format (availablePlayerIds array) to boolean format
-        const teamPlayerIds = teamPlayers.map(p => p.id);
-        const filteredAvailableIds = availabilityResponse.availablePlayerIds.filter(id => teamPlayerIds.includes(id));
+    // Prevent processing if still loading
+    if (isLoading || isLoadingTeamPlayers) {
+      return;
+    }
 
-        const newAvailabilityData: Record<number, boolean> = {};
-        teamPlayers.forEach(player => {
-          newAvailabilityData[player.id] = filteredAvailableIds.includes(player.id);
-        });
+    if (availabilityResponse && Array.isArray(availabilityResponse.availablePlayerIds)) {
+      console.log('PlayerAvailabilityManager: Converting API response to availability data');
+      
+      // Convert from API format (availablePlayerIds array) to boolean format
+      const teamPlayerIds = teamPlayers.map(p => p.id);
+      const filteredAvailableIds = availabilityResponse.availablePlayerIds.filter(id => teamPlayerIds.includes(id));
 
-        console.log('PlayerAvailabilityManager: Final availability data:', newAvailabilityData);
-        setAvailabilityData(newAvailabilityData);
+      const newAvailabilityData: Record<number, boolean> = {};
+      teamPlayers.forEach(player => {
+        newAvailabilityData[player.id] = filteredAvailableIds.includes(player.id);
+      });
 
-        // Notify parent component
-        if (onAvailabilityChange) {
-          onAvailabilityChange(filteredAvailableIds);
-        }
-      } else if (availabilityError || !availabilityResponse) {
-        console.log('PlayerAvailabilityManager: Using fallback availability (all active players)');
-        // Fallback to all active team players on error or no response
-        const activeTeamPlayerIds = teamPlayers.filter(p => p.active).map(p => p.id);
-        const fallbackAvailabilityData: Record<number, boolean> = {};
-        teamPlayers.forEach(player => {
-          fallbackAvailabilityData[player.id] = player.active;
-        });
+      console.log('PlayerAvailabilityManager: Final availability data:', newAvailabilityData);
+      setAvailabilityData(newAvailabilityData);
 
-        console.log('PlayerAvailabilityManager: Fallback availability data:', fallbackAvailabilityData);
-        setAvailabilityData(fallbackAvailabilityData);
-        if (onAvailabilityChange) {
-          onAvailabilityChange(activeTeamPlayerIds);
-        }
+      // Notify parent component
+      if (onAvailabilityChange) {
+        onAvailabilityChange(filteredAvailableIds);
+      }
+    } else {
+      console.log('PlayerAvailabilityManager: No availability data, defaulting all active players to available');
+      // Default to all active team players available
+      const activeTeamPlayerIds = teamPlayers.filter(p => p.active !== false).map(p => p.id);
+      const defaultAvailabilityData: Record<number, boolean> = {};
+      teamPlayers.forEach(player => {
+        defaultAvailabilityData[player.id] = player.active !== false; // Default to available unless explicitly inactive
+      });
+
+      console.log('PlayerAvailabilityManager: Default availability data:', defaultAvailabilityData);
+      setAvailabilityData(defaultAvailabilityData);
+      if (onAvailabilityChange) {
+        onAvailabilityChange(activeTeamPlayerIds);
       }
     }
-  }, [availabilityResponse, isLoading, availabilityError, teamPlayers.length, isLoadingTeamPlayers, gameId]);
+  }, [availabilityResponse, isLoading, availabilityError, teamPlayers, gameId, isLoadingTeamPlayers]);
 
   // Handle availability change from shared component
   const handleAvailabilityChange = (newAvailabilityData: Record<number, boolean>) => {

@@ -96,10 +96,10 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen, isTablet }: Sid
       },
       { 
         path: '/teams', 
-        label: 'Next Game Prep', 
+        label: 'Game Preparation', 
         icon: <Target className="w-5 h-5" />, 
         disabled: true,
-        fallbackLabel: 'Next Game Prep (Select Team First)'
+        fallbackLabel: 'Game Preparation (Select Team First)'
       },
       { 
         path: '/teams', 
