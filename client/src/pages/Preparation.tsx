@@ -26,6 +26,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useBatchGameStatistics } from '@/components/statistics/hooks/useBatchGameStatistics';
 import { useBatchRosterData } from '@/components/statistics/hooks/useBatchRosterData';
 import DragDropLineupEditor from '@/components/roster/DragDropLineupEditor';
+import PlayerCombinationAnalysis from '@/components/dashboard/PlayerCombinationAnalysis';
+import UpcomingGameRecommendations from '@/components/dashboard/UpcomingGameRecommendations';
 import { 
   Trophy, Target, TrendingUp, Users, CheckCircle, Clock, 
   AlertTriangle, Lightbulb, ChevronRight, ArrowRight, 
@@ -939,9 +941,28 @@ export default function Preparation() {
 
             {/* Lineup Selection Tab */}
             <TabsContent value="lineup" className="space-y-4">
+              {/* Upcoming Game Recommendations */}
+              <UpcomingGameRecommendations
+                completedGames={completedGames}
+                upcomingGames={upcomingGames}
+                players={Array.isArray(teamPlayers) ? teamPlayers as Player[] : []}
+                centralizedStats={centralizedStats}
+                centralizedRosters={centralizedRosters}
+                currentTeamId={currentTeamId}
+              />
+
+              {/* Player Combination Analysis */}
+              <PlayerCombinationAnalysis
+                completedGames={completedGames}
+                players={Array.isArray(teamPlayers) ? teamPlayers as Player[] : []}
+                centralizedStats={centralizedStats}
+                centralizedRosters={centralizedRosters}
+                currentTeamId={currentTeamId}
+              />
+
               <Card>
                 <CardHeader>
-                  <CardTitle>Starting Lineup</CardTitle>
+                  <CardTitle>Starting Lineup Editor</CardTitle>
                   <p className="text-sm text-gray-600">
                     Create your starting lineup for the game vs {opponentName}
                   </p>
