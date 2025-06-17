@@ -1393,6 +1393,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 
   // ----- GAMES API -----
+  
+  // Unified games transformation function - ensures consistent camelCase response format
+  function transformGameRow(row: any) {
+    return {
+      id: row.id,
+      date: row.date,
+      time: row.time,
+      homeTeamId: row.home_team_id,
+      awayTeamId: row.away_team_id,
+      venue: row.venue,
+      isInterClub: row.is_inter_club,
+      statusId: row.status_id,
+      round: row.round,
+      seasonId: row.season_id,
+      notes: row.notes,
+      awardWinnerId: row.award_winner_id,
+
+      // Game Status fields (consistent camelCase)
+      statusName: row.status,
+      statusDisplayName: row.status_display_name,
+      statusIsCompleted: row.is_completed,
+      statusAllowsStatistics: row.allows_statistics,
+      statusTeamGoals: row.team_goals,
+      statusOpponentGoals: row.opponent_goals,
+
+      // Season fields (consistent camelCase)
+      seasonName: row.season_name,
+      seasonStartDate: row.season_start,
+      seasonEndDate: row.season_end,
+      seasonIsActive: row.season_active,
+
+      // Home Team fields (consistent camelCase)
+      homeTeamName: row.home_team_name,
+      homeTeamDivision: row.home_team_division,
+      homeClubId: row.home_club_id,
+      homeClubName: row.home_club_name,
+      homeClubCode: row.home_club_code,
+
+      // Away Team fields (consistent camelCase, null for Bye games)
+      awayTeamName: row.away_team_name,
+      awayTeamDivision: row.away_team_division,
+      awayClubId: row.away_club_id,
+      awayClubName: row.away_club_name,
+      awayClubCode: row.away_club_code,
+
+      // Legacy fields for backward compatibility
+      isBye: row.away_team_name === 'Bye'
+    };
+  }
+
   app.get("/api/games", standardAuth({ requireClub: true }), async (req: AuthenticatedRequest, res) => {
     try {
       // Add cache-busting headers
@@ -1400,62 +1450,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.set('Pragma', 'no-cache');
       res.set('Expires', '0');
 
-      // Check for club-wide flag FIRST - this takes precedence over everything
+      // Parse request context - UNIFIED approach
       const isClubWide = req.headers['x-club-wide'] === 'true';
       const teamId = !isClubWide && req.headers['x-current-team-id'] ? parseInt(req.headers['x-current-team-id'] as string, 10) : null;
-
-      // Debug all headers
-      console.log('Games endpoint headers:', {
-        'x-current-club-id': req.headers['x-current-club-id'],
-        'x-current-team-id': req.headers['x-current-team-id'],
-        'x-club-wide': req.headers['x-club-wide'],
-        'user-agent': req.headers['user-agent']?.substring(0, 50),
-        'all-headers': Object.keys(req.headers)
-      });
-
-      // Use club ID from user context (same as teams endpoint)
       const clubId = req.user?.currentClubId;
 
-      console.log(`Games endpoint: currentClubId=${clubId}, currentTeamId=${teamId}, isClubWide=${isClubWide}, user clubs:`, req.user?.clubs?.map(c => c.clubId));
+      console.log(`Games endpoint: clubId=${clubId}, teamId=${teamId}, isClubWide=${isClubWide}`);
 
       if (!clubId) {
-        console.log('Games endpoint: No club ID in request - header missing');
         return res.status(400).json({ error: 'Club context required - please refresh the page' });
       }
 
-      // Filter to include only games that this club has access to
-      if (clubId) {
-        if (isClubWide) {
-          console.log(`Fetching ALL games for club ${clubId} (club-wide view - team filter disabled)`);
-        } else if (teamId) {
-          console.log(`Fetching games for club ${clubId} and team ${teamId}`);
-        } else {
-          console.log(`Fetching ALL games for club ${clubId} (no team filter specified)`);
-        }
+      // SINGLE SQL QUERY - handles all request types with consistent field mapping
+      let whereClause = sql`WHERE (ht.club_id = ${clubId} OR at.club_id = ${clubId} OR EXISTS (
+        SELECT 1 FROM game_permissions gp 
+        WHERE gp.game_id = g.id AND gp.club_id = ${clubId}
+      ))`;
 
-        // Base clause for club access
-        let whereClause = sql`WHERE (ht.club_id = ${clubId} OR at.club_id = ${clubId} OR EXISTS (
+      // Add team filter only if specific team requested (not club-wide)
+      if (!isClubWide && teamId) {
+        whereClause = sql`WHERE (ht.club_id = ${clubId} OR at.club_id = ${clubId} OR EXISTS (
           SELECT 1 FROM game_permissions gp 
           WHERE gp.game_id = g.id AND gp.club_id = ${clubId}
-        ))`;
+        )) AND (g.home_team_id = ${teamId} OR g.away_team_id = ${teamId})`;
+      }
 
-        // Add team filter ONLY if NOT club-wide AND team ID is specified
-        if (!isClubWide && teamId) {
-          whereClause = sql`WHERE (ht.club_id = ${clubId} OR at.club_id = ${clubId} OR EXISTS (
-            SELECT 1 FROM game_permissions gp 
-            WHERE gp.game_id = g.id AND gp.club_id = ${clubId}
-          )) AND (g.home_team_id = ${teamId} OR g.away_team_id = ${teamId})`;
-        }
-
-        const result = await db.execute(sql`
+      const result = await db.execute(sql`
         SELECT 
           g.*,
-          gs.name as status, gs.display_name as status_display_name, gs.is_completed, gs.allows_statistics, gs.team_goals, gs.opponent_goals,
-          s.name as season_name, s.start_date as season_start, s.end_date as season_end, s.is_active as season_active,
-          ht.name as home_team_name, ht.division as home_team_division, ht.club_id as home_club_id,
-          at.name as away_team_name, at.division as away_team_division, at.club_id as away_club_id,
-          hc.name as home_club_name, hc.code as home_club_code,
-          ac.name as away_club_name, ac.code as away_club_code
+          gs.name as status, 
+          gs.display_name as status_display_name, 
+          gs.is_completed, 
+          gs.allows_statistics, 
+          gs.team_goals, 
+          gs.opponent_goals,
+          s.name as season_name, 
+          s.start_date as season_start, 
+          s.end_date as season_end, 
+          s.is_active as season_active,
+          ht.name as home_team_name, 
+          ht.division as home_team_division, 
+          ht.club_id as home_club_id,
+          at.name as away_team_name, 
+          at.division as away_team_division, 
+          at.club_id as away_club_id,
+          hc.name as home_club_name, 
+          hc.code as home_club_code,
+          ac.name as away_club_name, 
+          ac.code as away_club_code
         FROM games g
         LEFT JOIN game_statuses gs ON g.status_id = gs.id
         LEFT JOIN seasons s ON g.season_id = s.id
@@ -1469,60 +1511,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`Found ${result.rows.length} games for club ${clubId}`);
 
-
-
-      const games = result.rows.map(row => ({
-        id: row.id,
-        date: row.date,
-        time: row.time,
-        homeTeamId: row.home_team_id,
-        awayTeamId: row.away_team_id,
-        venue: row.venue,
-        isInterClub: row.is_inter_club,
-        statusId: row.status_id,
-        round: row.round,
-        seasonId: row.season_id,
-        notes: row.notes,
-        awardWinnerId: row.award_winner_id,
-
-        // Game Status fields (consistent camelCase)
-        statusName: row.status,
-        statusDisplayName: row.status_display_name,
-        statusIsCompleted: row.is_completed,
-        statusAllowsStatistics: row.allows_statistics,
-        statusTeamGoals: row.team_goals,
-        statusOpponentGoals: row.opponent_goals,
-
-        // Season fields (consistent camelCase)
-        seasonName: row.season_name,
-        seasonStartDate: row.season_start,
-        seasonEndDate: row.season_end,
-        seasonIsActive: row.season_active,
-
-        // Home Team fields (consistent camelCase)
-        homeTeamName: row.home_team_name,
-        homeTeamDivision: row.home_team_division,
-        homeClubId: row.home_club_id,
-        homeClubName: row.home_club_name,
-        homeClubCode: row.home_club_code,
-
-        // Away Team fields (consistent camelCase, null for Bye games)
-        awayTeamName: row.away_team_name,
-        awayTeamDivision: row.away_team_division,
-        awayClubId: row.away_club_id,
-        awayClubName: row.away_club_name,
-        awayClubCode: row.away_club_code,
-
-        // Legacy fields for backward compatibility
-        isBye: row.away_team_name === 'Bye'
-      }));
-
+      // UNIFIED TRANSFORMATION - guarantees consistent camelCase format
+      const games = result.rows.map(transformGameRow);
+      
       res.json(games);
-    } else {
-      // Fallback to old behavior
-      const { getGames } = await import('./db');
-      res.json(await getGames());
-    }
     } catch (error) {
       console.error('Error fetching games:', error);
       res.status(500).json({ message: "Failed to fetch games" });
