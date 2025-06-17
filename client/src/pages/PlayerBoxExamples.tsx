@@ -334,60 +334,60 @@ export default function PlayerBoxExamples() {
               <h4 className="text-sm font-medium mb-3 text-gray-700">Ultra Compact (Dense Allocation)</h4>
               <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-2">
                 <PlayerBox 
-                  player={{id: 15, displayName: "Holly", positionPreferences: ["GS"], avatarColor: "bg-blue-400"}}
+                  player={{id: 15, displayName: "Holly", positionPreferences: ["GS"], avatarColor: "bg-blue-500"}}
                   size="sm"
                   showPositions={true}
                   className="hover:shadow-md transition-shadow duration-200"
-                  style={{ borderColor: '#60a5fa', color: '#2563eb' }}
+                  style={{ borderColor: '#3b82f6', color: '#1d4ed8' }}
                 />
                 <PlayerBox 
-                  player={{id: 16, displayName: "Ivy", positionPreferences: ["GA"], avatarColor: "bg-green-400"}}
+                  player={{id: 16, displayName: "Ivy", positionPreferences: ["GA"], avatarColor: "bg-green-500"}}
                   size="sm"
                   showPositions={true}
                   className="hover:shadow-md transition-shadow duration-200"
-                  style={{ borderColor: '#4ade80', color: '#16a34a' }}
+                  style={{ borderColor: '#22c55e', color: '#15803d' }}
                 />
                 <PlayerBox 
-                  player={{id: 17, displayName: "Jade", positionPreferences: ["WA"], avatarColor: "bg-yellow-400"}}
+                  player={{id: 17, displayName: "Jade", positionPreferences: ["WA"], avatarColor: "bg-yellow-500"}}
                   size="sm"
                   showPositions={true}
                   className="hover:shadow-md transition-shadow duration-200"
-                  style={{ borderColor: '#facc15', color: '#ca8a04' }}
+                  style={{ borderColor: '#eab308', color: '#a16207' }}
                 />
                 <PlayerBox 
-                  player={{id: 18, displayName: "Kelly", positionPreferences: ["C"], avatarColor: "bg-orange-400"}}
+                  player={{id: 18, displayName: "Kelly", positionPreferences: ["C"], avatarColor: "bg-orange-500"}}
                   size="sm"
                   showPositions={true}
                   className="hover:shadow-md transition-shadow duration-200"
-                  style={{ borderColor: '#fb923c', color: '#ea580c' }}
+                  style={{ borderColor: '#f97316', color: '#ea580c' }}
                 />
                 <PlayerBox 
-                  player={{id: 19, displayName: "Lucy", positionPreferences: ["WD"], avatarColor: "bg-red-400"}}
+                  player={{id: 19, displayName: "Lucy", positionPreferences: ["WD"], avatarColor: "bg-red-500"}}
                   size="sm"
                   showPositions={true}
                   className="hover:shadow-md transition-shadow duration-200"
-                  style={{ borderColor: '#f87171', color: '#dc2626' }}
+                  style={{ borderColor: '#ef4444', color: '#dc2626' }}
                 />
                 <PlayerBox 
-                  player={{id: 20, displayName: "Maya", positionPreferences: ["GD"], avatarColor: "bg-purple-400"}}
+                  player={{id: 20, displayName: "Maya", positionPreferences: ["GD"], avatarColor: "bg-purple-500"}}
                   size="sm"
                   showPositions={true}
                   className="hover:shadow-md transition-shadow duration-200"
-                  style={{ borderColor: '#c084fc', color: '#9333ea' }}
+                  style={{ borderColor: '#a855f7', color: '#7e22ce' }}
                 />
                 <PlayerBox 
-                  player={{id: 21, displayName: "Nina", positionPreferences: ["GK"], avatarColor: "bg-pink-400"}}
+                  player={{id: 21, displayName: "Nina", positionPreferences: ["GK"], avatarColor: "bg-pink-500"}}
                   size="sm"
                   showPositions={true}
                   className="hover:shadow-md transition-shadow duration-200"
-                  style={{ borderColor: '#f472b6', color: '#db2777' }}
+                  style={{ borderColor: '#ec4899', color: '#be185d' }}
                 />
                 <PlayerBox 
-                  player={{id: 22, displayName: "Olive", avatarColor: "bg-indigo-400"}}
+                  player={{id: 22, displayName: "Olive", avatarColor: "bg-indigo-500"}}
                   size="sm"
                   showPositions={false}
                   className="hover:shadow-md transition-shadow duration-200"
-                  style={{ borderColor: '#818cf8', color: '#4f46e5' }}
+                  style={{ borderColor: '#6366f1', color: '#4338ca' }}
                 />
               </div>
             </div>
@@ -555,37 +555,258 @@ export default function PlayerBoxExamples() {
           </div>
         </div>
 
-        {/* Hover Animation Guidelines */}
+        {/* Subtle Hover Animation Examples */}
         <div className="mb-6">
-          <h3 className="text-lg font-medium mb-4 text-gray-800">Hover Animation Guidelines</h3>
+          <h3 className="text-lg font-medium mb-4 text-gray-800">Subtle Hover Animation Examples</h3>
           <div className="space-y-4">
             <div>
-              <h4 className="text-sm font-medium mb-2 text-gray-700">For Clickable Items (Like Court Position Ready)</h4>
-              <p className="text-sm text-gray-600 mb-2">Subtle scale and enhanced shadow for items that navigate somewhere</p>
-              <PlayerBox
-                player={{...samplePlayers[1], displayName: "Sarah Johnson", avatarColor: "bg-green-600"}}
-                size="md"
-                showPositions={true}
-                className="w-64 shadow-lg transition-all duration-200 hover:shadow-xl hover:scale-[1.02]"
-                style={{ 
-                  borderColor: '#16a34a',
-                  color: '#15803d'
-                }}
-              />
+              <h4 className="text-sm font-medium mb-2 text-gray-700">Court Position Ready Style - Subtle Scale & Enhanced Shadow</h4>
+              <p className="text-sm text-gray-600 mb-2">Perfect for clickable items that navigate to player details</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <PlayerBox
+                  player={{...samplePlayers[1], displayName: "Sarah Johnson", avatarColor: "bg-green-600"}}
+                  size="md"
+                  showPositions={true}
+                  className="shadow-lg transition-all duration-200 hover:shadow-xl hover:scale-[1.02]"
+                  style={{ 
+                    borderColor: '#16a34a',
+                    color: '#15803d'
+                  }}
+                />
+                <PlayerBox
+                  player={{...samplePlayers[3], displayName: "Mia Thompson", avatarColor: "bg-orange-500"}}
+                  size="md"
+                  showPositions={true}
+                  className="shadow-lg transition-all duration-200 hover:shadow-xl hover:scale-[1.02]"
+                  style={{ 
+                    borderColor: '#f97316',
+                    color: '#ea580c'
+                  }}
+                />
+                <PlayerBox
+                  player={{...samplePlayers[4], displayName: "Zoe Parker", avatarColor: "bg-red-500"}}
+                  size="md"
+                  showPositions={true}
+                  className="shadow-lg transition-all duration-200 hover:shadow-xl hover:scale-[1.02]"
+                  style={{ 
+                    borderColor: '#ef4444',
+                    color: '#dc2626'
+                  }}
+                />
+              </div>
             </div>
             <div>
-              <h4 className="text-sm font-medium mb-2 text-gray-700">For Display-Only Items</h4>
-              <p className="text-sm text-gray-600 mb-2">Minimal shadow change only</p>
-              <PlayerBox
-                player={{...samplePlayers[2], displayName: "Lily Chen", avatarColor: "bg-purple-500"}}
-                size="md"
-                showPositions={true}
-                className="w-64 hover:shadow-lg transition-shadow duration-200"
-                style={{ 
-                  borderColor: '#a855f7',
-                  color: '#7e22ce'
-                }}
-              />
+              <h4 className="text-sm font-medium mb-2 text-gray-700">Gentle Elevation - Shadow Change Only</h4>
+              <p className="text-sm text-gray-600 mb-2">For display-only items or less interactive elements</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <PlayerBox
+                  player={{...samplePlayers[2], displayName: "Lily Chen", avatarColor: "bg-purple-500"}}
+                  size="md"
+                  showPositions={true}
+                  className="shadow-md transition-shadow duration-200 hover:shadow-lg"
+                  style={{ 
+                    borderColor: '#a855f7',
+                    color: '#7e22ce'
+                  }}
+                />
+                <PlayerBox
+                  player={{...samplePlayers[0], displayName: "Emma Wilson", avatarColor: "bg-blue-500"}}
+                  size="md"
+                  showPositions={true}
+                  className="shadow-md transition-shadow duration-200 hover:shadow-lg"
+                  style={{ 
+                    borderColor: '#3b82f6',
+                    color: '#1d4ed8'
+                  }}
+                />
+              </div>
+            </div>
+            <div>
+              <h4 className="text-sm font-medium mb-2 text-gray-700">Brightness Adjustment - Avatar Enhancement</h4>
+              <p className="text-sm text-gray-600 mb-2">Background darkens while avatar brightens for visual interest</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="transition-all duration-300 cursor-pointer hover:brightness-90 [&:hover_.player-avatar]:brightness-[1.11]">
+                  <PlayerBox
+                    player={{...samplePlayers[1], displayName: "Sarah Johnson", avatarColor: "bg-green-600"}}
+                    size="md"
+                    showPositions={true}
+                    style={{ 
+                      borderColor: '#16a34a',
+                      color: '#15803d'
+                    }}
+                  />
+                </div>
+                <div className="transition-all duration-300 cursor-pointer hover:brightness-90 [&:hover_.player-avatar]:brightness-[1.11]">
+                  <PlayerBox
+                    player={{...samplePlayers[3], displayName: "Mia Thompson", avatarColor: "bg-orange-500"}}
+                    size="md"
+                    showPositions={true}
+                    style={{ 
+                      borderColor: '#f97316',
+                      color: '#ea580c'
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Enhanced Selection State Examples */}
+        <div className="mb-6">
+          <h3 className="text-lg font-medium mb-4 text-gray-800">Enhanced Selection States with Background Changes</h3>
+          <div className="space-y-6">
+            <div>
+              <h4 className="text-sm font-medium mb-2 text-gray-700">✅ Selected State with Stronger Background</h4>
+              <p className="text-sm text-gray-600 mb-3">More visually distinct with enhanced background color opacity</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="relative">
+                  <div 
+                    className="absolute top-1/2 right-3 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2 mr-3"
+                    style={{ backgroundColor: '#16a34a' }}
+                  >
+                    ✓
+                  </div>
+                  <PlayerBox
+                    player={{...samplePlayers[1], displayName: "Sarah Johnson", avatarColor: "bg-green-600"}}
+                    size="md"
+                    showPositions={true}
+                    className="shadow-md transition-all duration-200 hover:shadow-lg"
+                    style={{ 
+                      backgroundColor: '#16a34a25', // Stronger green background
+                      borderColor: '#16a34a',
+                      color: '#15803d'
+                    }}
+                  />
+                </div>
+                <div className="relative">
+                  <div 
+                    className="absolute top-1/2 right-3 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2 mr-3"
+                    style={{ backgroundColor: '#3b82f6' }}
+                  >
+                    ✓
+                  </div>
+                  <PlayerBox
+                    player={{...samplePlayers[0], displayName: "Emma Wilson", avatarColor: "bg-blue-500"}}
+                    size="md"
+                    showPositions={true}
+                    className="shadow-md transition-all duration-200 hover:shadow-lg"
+                    style={{ 
+                      backgroundColor: '#3b82f625', // Stronger blue background
+                      borderColor: '#3b82f6',
+                      color: '#1d4ed8'
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h4 className="text-sm font-medium mb-2 text-gray-700">⚪ Available State (Standard Background)</h4>
+              <p className="text-sm text-gray-600 mb-3">Normal light background for unselected players</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="relative">
+                  <div 
+                    className="absolute top-1/2 right-3 w-6 h-6 rounded border-2 bg-white cursor-pointer z-10 transform -translate-y-1/2 mr-3"
+                    style={{ borderColor: '#a855f7' }}
+                  >
+                  </div>
+                  <PlayerBox
+                    player={{...samplePlayers[2], displayName: "Lily Chen", avatarColor: "bg-purple-500"}}
+                    size="md"
+                    showPositions={true}
+                    className="shadow-md transition-all duration-200 hover:shadow-lg"
+                    style={{ 
+                      borderColor: '#a855f7',
+                      color: '#7e22ce'
+                    }}
+                  />
+                </div>
+                <div className="relative">
+                  <div 
+                    className="absolute top-1/2 right-3 w-6 h-6 rounded border-2 bg-white cursor-pointer z-10 transform -translate-y-1/2 mr-3"
+                    style={{ borderColor: '#f97316' }}
+                  >
+                  </div>
+                  <PlayerBox
+                    player={{...samplePlayers[3], displayName: "Mia Thompson", avatarColor: "bg-orange-500"}}
+                    size="md"
+                    showPositions={true}
+                    className="shadow-md transition-all duration-200 hover:shadow-lg"
+                    style={{ 
+                      borderColor: '#f97316',
+                      color: '#ea580c'
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h4 className="text-sm font-medium mb-2 text-gray-700">Mixed Selection Example with Enhanced Backgrounds</h4>
+              <p className="text-sm text-gray-600 mb-3">Shows contrast between selected (stronger background) and unselected players</p>
+              <div className="space-y-3">
+                {/* Selected Players with Enhanced Backgrounds */}
+                <div className="relative">
+                  <div 
+                    className="absolute top-1/2 right-3 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2 mr-3"
+                    style={{ backgroundColor: '#ef4444' }}
+                  >
+                    ✓
+                  </div>
+                  <PlayerBox
+                    player={{...samplePlayers[4], displayName: "Zoe Parker", avatarColor: "bg-red-500"}}
+                    size="md"
+                    showPositions={true}
+                    className="shadow-md transition-all duration-200 hover:shadow-lg"
+                    style={{ 
+                      backgroundColor: '#ef444425', // Enhanced red background
+                      borderColor: '#ef4444',
+                      color: '#dc2626'
+                    }}
+                  />
+                </div>
+                
+                {/* Unselected Player */}
+                <div className="relative">
+                  <div 
+                    className="absolute top-1/2 right-3 w-6 h-6 rounded border-2 bg-white cursor-pointer z-10 transform -translate-y-1/2 mr-3"
+                    style={{ borderColor: '#14b8a6' }}
+                  >
+                  </div>
+                  <PlayerBox
+                    player={{id: 6, displayName: "Kate Miller", positionPreferences: ["GA", "WA"], avatarColor: "bg-teal-500"}}
+                    size="md"
+                    showPositions={true}
+                    className="shadow-md transition-all duration-200 hover:shadow-lg"
+                    style={{ 
+                      borderColor: '#14b8a6',
+                      color: '#0d9488'
+                    }}
+                  />
+                </div>
+
+                {/* Another Selected Player */}
+                <div className="relative">
+                  <div 
+                    className="absolute top-1/2 right-3 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2 mr-3"
+                    style={{ backgroundColor: '#ec4899' }}
+                  >
+                    ✓
+                  </div>
+                  <PlayerBox
+                    player={{id: 7, displayName: "Jessica Adams", positionPreferences: ["GK", "GD"], avatarColor: "bg-pink-500"}}
+                    size="md"
+                    showPositions={true}
+                    className="shadow-md transition-all duration-200 hover:shadow-lg"
+                    style={{ 
+                      backgroundColor: '#ec489925', // Enhanced pink background
+                      borderColor: '#ec4899',
+                      color: '#be185d'
+                    }}
+                  />
+                </div>
+              </div>
             </div>
           </div>
         </div>
