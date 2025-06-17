@@ -24,8 +24,8 @@ const TeamDashboard = () => {
   const [location] = useLocation();
   const queryClient = useQueryClient();
   const { currentTeamId } = useClub();
-  const [selectedGameId, setSelectedGameId] = useState(null);
-  const [teams, setTeams] = useState([]);
+  const [selectedGameId, setSelectedGameId] = useState<number | null>(null);
+  const [teams, setTeams] = useState<any[]>([]);
   // Mocked game performance data (replace with actual data fetching)
   const [gamePerformances, setGamePerformances] = useState({
     1: {
@@ -34,7 +34,7 @@ const TeamDashboard = () => {
     },
   });
 
-  const nextGame = useNextGame(currentTeamId || 0);
+  const nextGame = useNextGame();
 
   const { data: players, isLoading: isLoadingPlayers, error: errorPlayers } = useQuery({
     queryKey: ['teamPlayers', currentTeamId],
@@ -55,7 +55,8 @@ const TeamDashboard = () => {
   });
 
   // Filter games for current team with proper type handling
-  const games = Array.isArray(allGames?.data) ? allGames.data.filter((game: any) => 
+  const gamesData = allGames?.data || allGames || [];
+  const games = Array.isArray(gamesData) ? gamesData.filter((game: any) => 
     game.homeTeamId === currentTeamId || game.awayTeamId === currentTeamId
   ) : [];
 
@@ -63,7 +64,8 @@ const TeamDashboard = () => {
     const fetchTeams = async () => {
       try {
         const response = await apiClient.get(`/api/teams`);
-        setTeams(Array.isArray(response?.data) ? response.data : []);
+        const teamsData = response?.data || response || [];
+        setTeams(Array.isArray(teamsData) ? teamsData : []);
       } catch (error) {
         console.error('Error fetching teams:', error);
       }
@@ -74,12 +76,14 @@ const TeamDashboard = () => {
 
   useEffect(() => {
     if (currentTeamId) {
-      queryClient.prefetchQuery(['teamPlayers', currentTeamId], () =>
-        apiClient.get(`/api/teams/${currentTeamId}/players`)
-      );
-      queryClient.prefetchQuery(['teamGames', currentTeamId], () =>
-        apiClient.get('/api/games')
-      );
+      queryClient.prefetchQuery({
+        queryKey: ['teamPlayers', currentTeamId],
+        queryFn: () => apiClient.get(`/api/teams/${currentTeamId}/players`)
+      });
+      queryClient.prefetchQuery({
+        queryKey: ['teamGames', currentTeamId],
+        queryFn: () => apiClient.get('/api/games')
+      });
     }
   }, [currentTeamId, queryClient]);
 
@@ -125,7 +129,7 @@ const TeamDashboard = () => {
   );
 
   return (
-    <PageTemplate pageHeader="Team Dashboard">
+    <PageTemplate title="Team Dashboard">
       <TeamSwitcher />
 
       <Tabs defaultValue="roster" className="w-full">
@@ -167,13 +171,22 @@ const TeamDashboard = () => {
                 )}
 
                 <div className="mb-4">
-                  <RosterSummary players={Array.isArray(players?.data) ? players.data : []} selectedGameId={selectedGameId} />
+                  <RosterSummary players={Array.isArray(players?.data) ? players.data : Array.isArray(players) ? players : []} selectedGameId={selectedGameId} />
                 </div>
                 <div className="mb-4">
-                  <PlayerAvailabilityManager players={Array.isArray(players?.data) ? players.data : []} gameId={selectedGameId} games={games} />
+                  <PlayerAvailabilityManager players={Array.isArray(players?.data) ? players.data : Array.isArray(players) ? players : []} gameId={selectedGameId || 0} games={games} />
                 </div>
                 <div>
-                  <DragDropRosterManager players={Array.isArray(players?.data) ? players.data : []} />
+                  <DragDropRosterManager 
+                    availablePlayers={Array.isArray(players?.data) ? players.data : Array.isArray(players) ? players : []}
+                    gameInfo={{
+                      id: selectedGameId || 0,
+                      date: new Date().toISOString().split('T')[0],
+                      time: '12:00',
+                      opponent: 'TBD'
+                    }}
+                    onRosterChange={() => {}}
+                  />
                 </div>
               </CardContent>
             </Card>
