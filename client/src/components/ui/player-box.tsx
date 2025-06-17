@@ -133,10 +133,14 @@ export function PlayerBox({
     ...style
   };
 
+  // Determine border class based on styling
+  const borderClass = useColoredStyling ? "" : "border-2";
+
   const playerBoxContent = (
     <div 
       className={cn(
-        "flex items-center space-x-3 rounded-lg border-2 shadow-md transition-shadow duration-200 hover:shadow-xl",
+        "flex items-center space-x-3 rounded-lg shadow-md transition-shadow duration-200 hover:shadow-xl",
+        borderClass,
         `${size === 'sm' ? 'p-3' : size === 'lg' ? 'p-5' : 'p-4'}`
       )}
       style={defaultStyle}
