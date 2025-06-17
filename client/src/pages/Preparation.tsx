@@ -77,13 +77,45 @@ export default function Preparation() {
   // Queries
   const { data: allGames = [], isLoading: gamesLoading } = useQuery<Game[]>({
     queryKey: ['/api/games', currentTeamId],
-    enabled: !!currentTeamId
+    enabled: !!currentTeamId,
+    queryFn: () => {
+      console.log(`Preparation: Fetching games for team ${currentTeamId} and club ${currentClubId}`);
+      return apiClient.get('/api/games');
+    },
+    select: (data) => {
+      console.log(`Preparation: Fetched ${data.length} games for team ${currentTeamId}`, data);
+      return data;
+    }
   });
 
   // Filter for upcoming games (not completed) and sort by date
   const upcomingGames = Array.isArray(allGames) ? (allGames as Game[])
-    .filter((game: Game) => game.statusIsCompleted === false)
+    .filter((game: Game) => {
+      // Debug logging for each game
+      console.log(`Preparation: Checking game ${game.id}:`, {
+        statusIsCompleted: game.statusIsCompleted,
+        statusName: game.statusName,
+        date: game.date,
+        homeTeamId: game.homeTeamId,
+        awayTeamId: game.awayTeamId,
+        currentTeamId
+      });
+      
+      // Check if this game involves our team
+      const involvesByThisTeam = game.homeTeamId === currentTeamId || game.awayTeamId === currentTeamId;
+      
+      // Check if it's not completed
+      const isNotCompleted = game.statusIsCompleted !== true;
+      
+      const shouldInclude = involvesByThisTeam && isNotCompleted;
+      
+      console.log(`Preparation: Game ${game.id} - involves team: ${involvesByThisTeam}, not completed: ${isNotCompleted}, should include: ${shouldInclude}`);
+      
+      return shouldInclude;
+    })
     .sort((a: Game, b: Game) => new Date(a.date).getTime() - new Date(b.date).getTime()) : [];
+
+  console.log(`Preparation: Found ${upcomingGames.length} upcoming games out of ${allGames.length} total games for team ${currentTeamId}`);
 
   const { data: teamPlayers = [], isLoading: playersLoading } = useQuery<Player[]>({
     queryKey: ['/api/players', currentTeamId],
