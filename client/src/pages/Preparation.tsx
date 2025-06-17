@@ -55,16 +55,16 @@ const TeamDashboard = () => {
     enabled: !!currentTeamId,
   });
 
-  // Filter games for current team
-  const games = allGames?.filter(game => 
+  // Filter games for current team with proper type handling
+  const games = Array.isArray(allGames) ? allGames.filter((game: any) => 
     game.homeTeamId === currentTeamId || game.awayTeamId === currentTeamId
-  ) || [];
+  ) : [];
 
-  // Get team info from club teams
-  const { clubTeams } = useClub();
-  const team = clubTeams?.find(t => t.id === currentTeamId);
-  const isLoadingTeam = false;
-  const errorTeam = null;
+  const { data: team, isLoading: isLoadingTeam, error: errorTeam } = useQuery({
+    queryKey: ['team', currentTeamId],
+    queryFn: () => apiClient.get(`/api/teams/${currentTeamId}`),
+    enabled: !!currentTeamId,
+  });
 
   useEffect(() => {
     if (currentTeamId) {
@@ -169,13 +169,13 @@ const TeamDashboard = () => {
                 )}
 
                 <div className="mb-4">
-                  <RosterSummary players={players} />
+                  <RosterSummary players={Array.isArray(players) ? players : []} selectedGameId={selectedGameId} />
                 </div>
                 <div className="mb-4">
-                  <PlayerAvailabilityManager players={players} teamId={currentTeamId} />
+                  <PlayerAvailabilityManager players={Array.isArray(players) ? players : []} />
                 </div>
                 <div>
-                  <DragDropRosterManager players={players} teamId={currentTeamId} />
+                  <DragDropRosterManager players={Array.isArray(players) ? players : []} teamId={currentTeamId} />
                 </div>
               </CardContent>
             </Card>
@@ -189,7 +189,7 @@ const TeamDashboard = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <PlayerCombinationAnalysis players={players} />
+                <PlayerCombinationAnalysis players={Array.isArray(players) ? players : []} games={games} centralizedStats={{}} centralizedRosters={{}} />
               </CardContent>
             </Card>
           </div>
