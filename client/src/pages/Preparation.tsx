@@ -166,7 +166,8 @@ export default function Preparation() {
   console.log(`Preparation: Found ${upcomingGames.length} upcoming games out of ${allGames.length} total games for team ${currentTeamId}`);
 
   const { data: teamPlayers = [], isLoading: playersLoading } = useQuery<Player[]>({
-    queryKey: ['/api/players', currentTeamId],
+    queryKey: ['/api/teams', currentTeamId, 'players'],
+    queryFn: () => apiClient.get(`/api/teams/${currentTeamId}/players`),
     enabled: !!currentTeamId
   });
 
