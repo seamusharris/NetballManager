@@ -112,7 +112,7 @@ export default function Preparation() {
   // State management
   const [selectedGameId, setSelectedGameId] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState('overview');
-  const [availabilityData, setAvailabilityData] = useState<Record<number, 'available' | 'unavailable' | 'maybe'>>({});
+  const [availabilityData, setAvailabilityData] = useState<Record<number, boolean>>({});
   const [selectedLineup, setSelectedLineup] = useState<Record<string, Player | null>>({
     GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null
   });
@@ -437,7 +437,7 @@ export default function Preparation() {
   };
 
   const [availablePlayerIds, setAvailablePlayerIds] = useState<number[]>([]);
-  
+
 
   if (gamesLoading || playersLoading) {
     return (
@@ -567,7 +567,7 @@ export default function Preparation() {
                         <div className="flex items-center justify-between">
                           <span className="text-sm">Player Availability</span>
                           <Badge variant="outline">
-                            {Object.values(availabilityData).filter(status => status === 'available').length}/{Array.isArray(teamPlayers) ? teamPlayers.length : 0}
+                            {Object.values(availabilityData).filter(status => status === true).length}/{Array.isArray(teamPlayers) ? teamPlayers.length : 0}
                           </Badge>
                         </div>
                         <div className="flex items-center justify-between">
@@ -943,7 +943,7 @@ export default function Preparation() {
                 </Button>
                 <Button 
                   onClick={() => setActiveTab('lineup')}
-                  disabled={Object.values(availabilityData).filter(status => status === 'available').length < 7}
+                  disabled={Object.values(availabilityData).filter(status => status === true).length < 7}
                 >
                   Set Lineup
                   <ArrowRight className="h-4 w-4 ml-1" />
@@ -990,7 +990,7 @@ export default function Preparation() {
                 </CardHeader>
                 <CardContent>
                   <DragDropLineupEditor
-                    availablePlayers={teamPlayers.filter((p: Player) => availabilityData[p.id] === 'available')}
+                    availablePlayers={teamPlayers.filter((p: Player) => availabilityData[p.id] === true)}
                     currentLineup={selectedLineup}
                     onLineupChange={setSelectedLineup}
                     onApplyRecommendation={(lineup) => {
@@ -1017,7 +1017,7 @@ export default function Preparation() {
                 </CardHeader>
                 <CardContent>
                   <DragDropRosterManager
-                    availablePlayers={teamPlayers.filter((p: Player) => availabilityData[p.id] === 'available')}
+                    availablePlayers={teamPlayers.filter((p: Player) => availabilityData[p.id] === true)}
                     gameInfo={{
                       opponent: opponentName || 'Unknown Opponent',
                       date: selectedGame?.date || '',
@@ -1077,7 +1077,7 @@ export default function Preparation() {
                           <div>
                             <span className="text-gray-600">Available Players</span>
                             <p className="font-semibold">
-                              {Object.values(availabilityData).filter(status => status === 'available').length}
+                              {Object.values(availabilityData).filter(status => status === true).length}
                             </p>
                           </div>
                           <div>

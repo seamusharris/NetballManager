@@ -122,7 +122,16 @@ export default function PlayerAvailabilityManager({
 
   // Convert API response to shared component format
   useEffect(() => {
-    if (!gameId || isLoading || isLoadingTeamPlayers) {
+    console.log('PlayerAvailabilityManager useEffect triggered:', {
+      gameId,
+      isLoading,
+      isLoadingTeamPlayers,
+      teamPlayersLength: teamPlayers.length,
+      availabilityResponse
+    });
+
+    if (!gameId) {
+      console.log('PlayerAvailabilityManager: No gameId, skipping conversion');
       return;
     }
 
@@ -130,6 +139,9 @@ export default function PlayerAvailabilityManager({
     if (teamPlayers.length > 0) {
       if (availabilityResponse && Array.isArray(availabilityResponse.availablePlayerIds)) {
         console.log('PlayerAvailabilityManager: Converting API response to availability data');
+        console.log('TeamPlayers:', teamPlayers.map(p => ({ id: p.id, name: p.displayName })));
+        console.log('Available IDs from API:', availabilityResponse.availablePlayerIds);
+        
         // Convert from API format (availablePlayerIds array) to boolean format
         const teamPlayerIds = teamPlayers.map(p => p.id);
         const filteredAvailableIds = availabilityResponse.availablePlayerIds.filter(id => teamPlayerIds.includes(id));
@@ -139,20 +151,21 @@ export default function PlayerAvailabilityManager({
           newAvailabilityData[player.id] = filteredAvailableIds.includes(player.id);
         });
 
-        console.log('PlayerAvailabilityManager: Setting availability data:', newAvailabilityData);
+        console.log('PlayerAvailabilityManager: Final availability data:', newAvailabilityData);
         setAvailabilityData(newAvailabilityData);
 
         // Notify parent component
         onAvailabilityChange?.(filteredAvailableIds);
-      } else if (availabilityError) {
+      } else if (availabilityError || !availabilityResponse) {
         console.log('PlayerAvailabilityManager: Using fallback availability (all active players)');
-        // Fallback to all active team players on error
+        // Fallback to all active team players on error or no response
         const activeTeamPlayerIds = teamPlayers.filter(p => p.active).map(p => p.id);
         const fallbackAvailabilityData: Record<number, boolean> = {};
         teamPlayers.forEach(player => {
           fallbackAvailabilityData[player.id] = player.active;
         });
 
+        console.log('PlayerAvailabilityManager: Fallback availability data:', fallbackAvailabilityData);
         setAvailabilityData(fallbackAvailabilityData);
         onAvailabilityChange?.(activeTeamPlayerIds);
       }
@@ -186,7 +199,7 @@ export default function PlayerAvailabilityManager({
   const selectedGame = games.find(game => game.id === gameId);
   const opponent = selectedGame?.opponentId ? opponents.find(o => o.id === selectedGame.opponentId) : null;
 
-  if (isLoading || isLoadingTeamPlayers) {
+  if ((isLoading || isLoadingTeamPlayers) && teamPlayers.length === 0) {
     return (
       <Card className="mb-6">
         <CardContent className="pt-6">
@@ -196,7 +209,7 @@ export default function PlayerAvailabilityManager({
     );
   }
 
-  const availableCount = Object.values(availabilityData).filter(isAvailable => isAvailable).length;
+  const availableCount = Object.values(availabilityData).filter(isAvailable => isAvailable === true).length;
 
   return (
     <Card className="mb-6">
