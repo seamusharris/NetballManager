@@ -208,258 +208,262 @@ export default function PlayerBoxExamples() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           
           {/* White Border + Shadow (Recommended Standard) */}
-          {(() => {
-            const player = samplePlayers[0];
-            const playerColorHex = (() => {
-              const colorMap: Record<string, string> = {
-                'bg-red-500': '#ef4444', 'bg-red-600': '#dc2626',
-                'bg-orange-500': '#f97316', 'bg-orange-600': '#ea580c',
-                'bg-yellow-600': '#ca8a04', 'bg-amber-600': '#d97706',
-                'bg-green-600': '#16a34a', 'bg-green-700': '#15803d',
-                'bg-teal-600': '#0d9488', 'bg-cyan-600': '#0891b2',
-                'bg-blue-500': '#3b82f6', 'bg-blue-600': '#2563eb',
-                'bg-purple-500': '#a855f7', 'bg-purple-600': '#9333ea'
-              };
-              return colorMap[player.avatarColor || 'bg-gray-500'] || '#6b7280';
-            })();
+          <div className="bg-white p-4 rounded-lg border">
+            <h3 className="text-lg font-medium mb-3 text-gray-800">White Border + Shadow</h3>
+            <p className="text-sm text-gray-600 mb-3">Recommended standard style for most use cases</p>
+            {(() => {
+              const player = samplePlayers[0];
+              const playerColorHex = (() => {
+                const colorMap: Record<string, string> = {
+                  'bg-red-500': '#ef4444', 'bg-red-600': '#dc2626',
+                  'bg-orange-500': '#f97316', 'bg-orange-600': '#ea580c',
+                  'bg-yellow-600': '#ca8a04', 'bg-amber-600': '#d97706',
+                  'bg-green-600': '#16a34a', 'bg-green-700': '#15803d',
+                  'bg-teal-600': '#0d9488', 'bg-cyan-600': '#0891b2',
+                  'bg-blue-500': '#3b82f6', 'bg-blue-600': '#2563eb',
+                  'bg-purple-500': '#a855f7', 'bg-purple-600': '#9333ea'
+                };
+                return colorMap[player.avatarColor || 'bg-gray-500'] || '#6b7280';
+              })();
 
-            return (
-              <div className="bg-white p-4 rounded-lg border-2" style={{ borderColor: playerColorHex }}>
-                <div className="flex justify-between items-start mb-3">
-                  <div className="flex-1">
-                    <h3 className="text-lg font-medium mb-1" style={{ color: playerColorHex }}>White Border + Shadow</h3>
-                    <p className="text-sm mb-3" style={{ color: playerColorHex }}>Recommended standard style for most use cases</p>
-                  </div>
+              return (
+                <div className="relative">
                   <div 
-                    className="w-6 h-6 border-2 rounded flex items-center justify-center cursor-pointer"
+                    className="absolute top-2 right-2 w-6 h-6 border-2 rounded flex items-center justify-center cursor-pointer z-10"
                     style={{ borderColor: playerColorHex, backgroundColor: 'white' }}
                   >
                     {/* Unselected state - empty box */}
                   </div>
-                </div>
-                <PlayerBox 
-                  player={player}
-                  size="md"
-                  showPositions={true}
-                  className="[&_.player-avatar]:border-4 [&_.player-avatar]:border-white [&_.player-avatar]:shadow-lg [&_.player-avatar]:shadow-black/15"
-                />
-              </div>
-            );
-          })()}
-
-          {/* Colored Background with Dark Border */}
-          {(() => {
-            const player = samplePlayers[1];
-            const playerColorHex = (() => {
-              const colorMap: Record<string, string> = {
-                'bg-red-500': '#ef4444', 'bg-red-600': '#dc2626',
-                'bg-orange-500': '#f97316', 'bg-orange-600': '#ea580c',
-                'bg-yellow-600': '#ca8a04', 'bg-amber-600': '#d97706',
-                'bg-green-600': '#16a34a', 'bg-green-700': '#15803d',
-                'bg-teal-600': '#0d9488', 'bg-cyan-600': '#0891b2',
-                'bg-blue-500': '#3b82f6', 'bg-blue-600': '#2563eb',
-                'bg-purple-500': '#a855f7', 'bg-purple-600': '#9333ea'
-              };
-              return colorMap[player.avatarColor || 'bg-gray-500'] || '#6b7280';
-            })();
-
-            return (
-              <div className="bg-white p-4 rounded-lg border-2" style={{ borderColor: playerColorHex }}>
-                <div className="flex justify-between items-start mb-3">
-                  <div className="flex-1">
-                    <h3 className="text-lg font-medium mb-1" style={{ color: playerColorHex }}>Colored Background + Dark Border</h3>
-                    <p className="text-sm mb-3" style={{ color: playerColorHex }}>For availability and selection interfaces</p>
-                  </div>
-                  <div 
-                    className="w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white"
-                    style={{ backgroundColor: playerColorHex }}
-                  >
-                    ✓
-                  </div>
-                </div>
-                <PlayerBox 
-                  player={player}
-                  size="md"
-                  showPositions={true}
-                  className="border-2 shadow-md"
-                  style={{ 
-                    backgroundColor: `${playerColorHex}15`,
-                    borderColor: `${playerColorHex}80`,
-                    color: playerColorHex
-                  }}
-                />
-              </div>
-            );
-          })()}
-
-          {/* Court Position Style */}
-          {(() => {
-            const player = samplePlayers[2];
-            const playerColorHex = (() => {
-              const colorMap: Record<string, string> = {
-                'bg-red-500': '#ef4444', 'bg-red-600': '#dc2626',
-                'bg-orange-500': '#f97316', 'bg-orange-600': '#ea580c',
-                'bg-yellow-600': '#ca8a04', 'bg-amber-600': '#d97706',
-                'bg-green-600': '#16a34a', 'bg-green-700': '#15803d',
-                'bg-teal-600': '#0d9488', 'bg-cyan-600': '#0891b2',
-                'bg-blue-500': '#3b82f6', 'bg-blue-600': '#2563eb',
-                'bg-purple-500': '#a855f7', 'bg-purple-600': '#9333ea'
-              };
-              return colorMap[player.avatarColor || 'bg-gray-500'] || '#6b7280';
-            })();
-
-            return (
-              <div className="bg-white p-4 rounded-lg border-2" style={{ borderColor: playerColorHex }}>
-                <div className="flex justify-between items-start mb-3">
-                  <div className="flex-1">
-                    <h3 className="text-lg font-medium mb-1" style={{ color: playerColorHex }}>Court Position Style</h3>
-                    <p className="text-sm mb-3" style={{ color: playerColorHex }}>For game lineups and court displays</p>
-                  </div>
-                  <div 
-                    className="w-6 h-6 border-2 rounded flex items-center justify-center cursor-pointer"
-                    style={{ borderColor: playerColorHex, backgroundColor: 'white' }}
-                  >
-                    {/* Unselected state - empty box */}
-                  </div>
-                </div>
-                <PlayerBox 
-                  player={player}
-                  size="md"
-                  showPositions={true}
-                  className="[&>div>div:first-child]:border-4 [&>div>div:first-child]:border-white [&>div>div:first-child]:shadow-lg [&>div>div:first-child]:shadow-black/25"
-                />
-              </div>
-            );
-          })()}
-
-          {/* Background Darkening Hover */}
-          {(() => {
-            const player = samplePlayers[3];
-            const playerColorHex = (() => {
-              const colorMap: Record<string, string> = {
-                'bg-red-500': '#ef4444', 'bg-red-600': '#dc2626',
-                'bg-orange-500': '#f97316', 'bg-orange-600': '#ea580c',
-                'bg-yellow-600': '#ca8a04', 'bg-amber-600': '#d97706',
-                'bg-green-600': '#16a34a', 'bg-green-700': '#15803d',
-                'bg-teal-600': '#0d9488', 'bg-cyan-600': '#0891b2',
-                'bg-blue-500': '#3b82f6', 'bg-blue-600': '#2563eb',
-                'bg-purple-500': '#a855f7', 'bg-purple-600': '#9333ea'
-              };
-              return colorMap[player.avatarColor || 'bg-gray-500'] || '#6b7280';
-            })();
-
-            return (
-              <div className="bg-white p-4 rounded-lg border-2" style={{ borderColor: playerColorHex }}>
-                <div className="flex justify-between items-start mb-3">
-                  <div className="flex-1">
-                    <h3 className="text-lg font-medium mb-1" style={{ color: playerColorHex }}>Background Darkening Hover</h3>
-                    <p className="text-sm mb-3" style={{ color: playerColorHex }}>Interactive style similar to games list</p>
-                  </div>
-                  <div 
-                    className="w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white"
-                    style={{ backgroundColor: playerColorHex }}
-                  >
-                    ✓
-                  </div>
-                </div>
-                <div 
-                  className="rounded-lg border-2 transition-all duration-300 cursor-pointer hover:brightness-90 [&:hover_.player-avatar]:brightness-[1.11]"
-                  style={{ 
-                    backgroundColor: `${playerColorHex}15`,
-                    borderColor: `${playerColorHex}80`,
-                    color: playerColorHex
-                  }}
-                >
                   <PlayerBox 
                     player={player}
                     size="md"
                     showPositions={true}
-                    className="[&>div]:bg-transparent [&>div]:border-0 [&>div]:shadow-none [&>div]:cursor-pointer [&>div>div:first-child]:border-2 [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-2 [&>div>div:first-child]:ring-current"
+                    className="border-2 [&_.player-avatar]:border-4 [&_.player-avatar]:border-white [&_.player-avatar]:shadow-lg [&_.player-avatar]:shadow-black/15"
+                    style={{ 
+                      borderColor: playerColorHex,
+                      color: playerColorHex
+                    }}
                   />
                 </div>
-              </div>
-            );
-          })()}
+              );
+            })()}
+          </div>
 
-          {/* Compact Style */}
-          {(() => {
-            const player = samplePlayers[4];
-            const playerColorHex = (() => {
-              const colorMap: Record<string, string> = {
-                'bg-red-500': '#ef4444', 'bg-red-600': '#dc2626',
-                'bg-orange-500': '#f97316', 'bg-orange-600': '#ea580c',
-                'bg-yellow-600': '#ca8a04', 'bg-amber-600': '#d97706',
-                'bg-green-600': '#16a34a', 'bg-green-700': '#15803d',
-                'bg-teal-600': '#0d9488', 'bg-cyan-600': '#0891b2',
-                'bg-blue-500': '#3b82f6', 'bg-blue-600': '#2563eb',
-                'bg-purple-500': '#a855f7', 'bg-purple-600': '#9333ea'
-              };
-              return colorMap[player.avatarColor || 'bg-gray-500'] || '#6b7280';
-            })();
+          {/* Colored Background with Dark Border */}
+          <div className="bg-white p-4 rounded-lg border">
+            <h3 className="text-lg font-medium mb-3 text-gray-800">Colored Background + Dark Border</h3>
+            <p className="text-sm text-gray-600 mb-3">For availability and selection interfaces</p>
+            {(() => {
+              const player = samplePlayers[1];
+              const playerColorHex = (() => {
+                const colorMap: Record<string, string> = {
+                  'bg-red-500': '#ef4444', 'bg-red-600': '#dc2626',
+                  'bg-orange-500': '#f97316', 'bg-orange-600': '#ea580c',
+                  'bg-yellow-600': '#ca8a04', 'bg-amber-600': '#d97706',
+                  'bg-green-600': '#16a34a', 'bg-green-700': '#15803d',
+                  'bg-teal-600': '#0d9488', 'bg-cyan-600': '#0891b2',
+                  'bg-blue-500': '#3b82f6', 'bg-blue-600': '#2563eb',
+                  'bg-purple-500': '#a855f7', 'bg-purple-600': '#9333ea'
+                };
+                return colorMap[player.avatarColor || 'bg-gray-500'] || '#6b7280';
+              })();
 
-            return (
-              <div className="bg-white p-4 rounded-lg border-2" style={{ borderColor: playerColorHex }}>
-                <div className="flex justify-between items-start mb-3">
-                  <div className="flex-1">
-                    <h3 className="text-lg font-medium mb-1" style={{ color: playerColorHex }}>Compact Style</h3>
-                    <p className="text-sm mb-3" style={{ color: playerColorHex }}>For dense layouts and lists</p>
-                  </div>
+              return (
+                <div className="relative">
                   <div 
-                    className="w-6 h-6 border-2 rounded flex items-center justify-center cursor-pointer"
-                    style={{ borderColor: playerColorHex, backgroundColor: 'white' }}
-                  >
-                    {/* Unselected state - empty box */}
-                  </div>
-                </div>
-                <PlayerBox 
-                  player={player}
-                  size="sm"
-                  showPositions={true}
-                  className="[&_.player-avatar]:border-2 [&_.player-avatar]:border-white [&_.player-avatar]:shadow-md [&_.player-avatar]:shadow-black/15"
-                />
-              </div>
-            );
-          })()}
-
-          {/* Premium Style */}
-          {(() => {
-            const player = samplePlayers[0];
-            const playerColorHex = (() => {
-              const colorMap: Record<string, string> = {
-                'bg-red-500': '#ef4444', 'bg-red-600': '#dc2626',
-                'bg-orange-500': '#f97316', 'bg-orange-600': '#ea580c',
-                'bg-yellow-600': '#ca8a04', 'bg-amber-600': '#d97706',
-                'bg-green-600': '#16a34a', 'bg-green-700': '#15803d',
-                'bg-teal-600': '#0d9488', 'bg-cyan-600': '#0891b2',
-                'bg-blue-500': '#3b82f6', 'bg-blue-600': '#2563eb',
-                'bg-purple-500': '#a855f7', 'bg-purple-600': '#9333ea'
-              };
-              return colorMap[player.avatarColor || 'bg-gray-500'] || '#6b7280';
-            })();
-
-            return (
-              <div className="bg-white p-4 rounded-lg border-2" style={{ borderColor: playerColorHex }}>
-                <div className="flex justify-between items-start mb-3">
-                  <div className="flex-1">
-                    <h3 className="text-lg font-medium mb-1" style={{ color: playerColorHex }}>Premium Style</h3>
-                    <p className="text-sm mb-3" style={{ color: playerColorHex }}>For featured content and highlights</p>
-                  </div>
-                  <div 
-                    className="w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white"
+                    className="absolute top-2 right-2 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10"
                     style={{ backgroundColor: playerColorHex }}
                   >
                     ✓
                   </div>
+                  <PlayerBox 
+                    player={player}
+                    size="md"
+                    showPositions={true}
+                    className="border-2 shadow-md"
+                    style={{ 
+                      backgroundColor: `${playerColorHex}15`,
+                      borderColor: `${playerColorHex}80`,
+                      color: playerColorHex
+                    }}
+                  />
                 </div>
-                <PlayerBox 
-                  player={player}
-                  size="lg"
-                  showPositions={true}
-                  className="[&>div>div:first-child]:border-4 [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-2 [&>div>div:first-child]:ring-current [&>div>div:first-child]:shadow-xl [&>div>div:first-child]:shadow-black/25"
-                />
-              </div>
-            );
-          })()}
+              );
+            })()}
+          </div>
+
+          {/* Court Position Style */}
+          <div className="bg-white p-4 rounded-lg border">
+            <h3 className="text-lg font-medium mb-3 text-gray-800">Court Position Style</h3>
+            <p className="text-sm text-gray-600 mb-3">For game lineups and court displays</p>
+            {(() => {
+              const player = samplePlayers[2];
+              const playerColorHex = (() => {
+                const colorMap: Record<string, string> = {
+                  'bg-red-500': '#ef4444', 'bg-red-600': '#dc2626',
+                  'bg-orange-500': '#f97316', 'bg-orange-600': '#ea580c',
+                  'bg-yellow-600': '#ca8a04', 'bg-amber-600': '#d97706',
+                  'bg-green-600': '#16a34a', 'bg-green-700': '#15803d',
+                  'bg-teal-600': '#0d9488', 'bg-cyan-600': '#0891b2',
+                  'bg-blue-500': '#3b82f6', 'bg-blue-600': '#2563eb',
+                  'bg-purple-500': '#a855f7', 'bg-purple-600': '#9333ea'
+                };
+                return colorMap[player.avatarColor || 'bg-gray-500'] || '#6b7280';
+              })();
+
+              return (
+                <div className="relative">
+                  <div 
+                    className="absolute top-2 right-2 w-6 h-6 border-2 rounded flex items-center justify-center cursor-pointer z-10"
+                    style={{ borderColor: playerColorHex, backgroundColor: 'white' }}
+                  >
+                    {/* Unselected state - empty box */}
+                  </div>
+                  <PlayerBox 
+                    player={player}
+                    size="md"
+                    showPositions={true}
+                    className="border-2 [&>div>div:first-child]:border-4 [&>div>div:first-child]:border-white [&>div>div:first-child]:shadow-lg [&>div>div:first-child]:shadow-black/25"
+                    style={{ 
+                      borderColor: playerColorHex,
+                      color: playerColorHex
+                    }}
+                  />
+                </div>
+              );
+            })()}
+          </div>
+
+          {/* Background Darkening Hover */}
+          <div className="bg-white p-4 rounded-lg border">
+            <h3 className="text-lg font-medium mb-3 text-gray-800">Background Darkening Hover</h3>
+            <p className="text-sm text-gray-600 mb-3">Interactive style similar to games list</p>
+            {(() => {
+              const player = samplePlayers[3];
+              const playerColorHex = (() => {
+                const colorMap: Record<string, string> = {
+                  'bg-red-500': '#ef4444', 'bg-red-600': '#dc2626',
+                  'bg-orange-500': '#f97316', 'bg-orange-600': '#ea580c',
+                  'bg-yellow-600': '#ca8a04', 'bg-amber-600': '#d97706',
+                  'bg-green-600': '#16a34a', 'bg-green-700': '#15803d',
+                  'bg-teal-600': '#0d9488', 'bg-cyan-600': '#0891b2',
+                  'bg-blue-500': '#3b82f6', 'bg-blue-600': '#2563eb',
+                  'bg-purple-500': '#a855f7', 'bg-purple-600': '#9333ea'
+                };
+                return colorMap[player.avatarColor || 'bg-gray-500'] || '#6b7280';
+              })();
+
+              return (
+                <div className="relative">
+                  <div 
+                    className="absolute top-2 right-2 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10"
+                    style={{ backgroundColor: playerColorHex }}
+                  >
+                    ✓
+                  </div>
+                  <div 
+                    className="rounded-lg border-2 transition-all duration-300 cursor-pointer hover:brightness-90 [&:hover_.player-avatar]:brightness-[1.11]"
+                    style={{ 
+                      backgroundColor: `${playerColorHex}15`,
+                      borderColor: `${playerColorHex}80`,
+                      color: playerColorHex
+                    }}
+                  >
+                    <PlayerBox 
+                      player={player}
+                      size="md"
+                      showPositions={true}
+                      className="[&>div]:bg-transparent [&>div]:border-0 [&>div]:shadow-none [&>div]:cursor-pointer [&>div>div:first-child]:border-2 [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-2 [&>div>div:first-child]:ring-current"
+                    />
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+
+          {/* Compact Style */}
+          <div className="bg-white p-4 rounded-lg border">
+            <h3 className="text-lg font-medium mb-3 text-gray-800">Compact Style</h3>
+            <p className="text-sm text-gray-600 mb-3">For dense layouts and lists</p>
+            {(() => {
+              const player = samplePlayers[4];
+              const playerColorHex = (() => {
+                const colorMap: Record<string, string> = {
+                  'bg-red-500': '#ef4444', 'bg-red-600': '#dc2626',
+                  'bg-orange-500': '#f97316', 'bg-orange-600': '#ea580c',
+                  'bg-yellow-600': '#ca8a04', 'bg-amber-600': '#d97706',
+                  'bg-green-600': '#16a34a', 'bg-green-700': '#15803d',
+                  'bg-teal-600': '#0d9488', 'bg-cyan-600': '#0891b2',
+                  'bg-blue-500': '#3b82f6', 'bg-blue-600': '#2563eb',
+                  'bg-purple-500': '#a855f7', 'bg-purple-600': '#9333ea'
+                };
+                return colorMap[player.avatarColor || 'bg-gray-500'] || '#6b7280';
+              })();
+
+              return (
+                <div className="relative">
+                  <div 
+                    className="absolute top-2 right-2 w-6 h-6 border-2 rounded flex items-center justify-center cursor-pointer z-10"
+                    style={{ borderColor: playerColorHex, backgroundColor: 'white' }}
+                  >
+                    {/* Unselected state - empty box */}
+                  </div>
+                  <PlayerBox 
+                    player={player}
+                    size="sm"
+                    showPositions={true}
+                    className="border-2 [&_.player-avatar]:border-2 [&_.player-avatar]:border-white [&_.player-avatar]:shadow-md [&_.player-avatar]:shadow-black/15"
+                    style={{ 
+                      borderColor: playerColorHex,
+                      color: playerColorHex
+                    }}
+                  />
+                </div>
+              );
+            })()}
+          </div>
+
+          {/* Premium Style */}
+          <div className="bg-white p-4 rounded-lg border">
+            <h3 className="text-lg font-medium mb-3 text-gray-800">Premium Style</h3>
+            <p className="text-sm text-gray-600 mb-3">For featured content and highlights</p>
+            {(() => {
+              const player = samplePlayers[0];
+              const playerColorHex = (() => {
+                const colorMap: Record<string, string> = {
+                  'bg-red-500': '#ef4444', 'bg-red-600': '#dc2626',
+                  'bg-orange-500': '#f97316', 'bg-orange-600': '#ea580c',
+                  'bg-yellow-600': '#ca8a04', 'bg-amber-600': '#d97706',
+                  'bg-green-600': '#16a34a', 'bg-green-700': '#15803d',
+                  'bg-teal-600': '#0d9488', 'bg-cyan-600': '#0891b2',
+                  'bg-blue-500': '#3b82f6', 'bg-blue-600': '#2563eb',
+                  'bg-purple-500': '#a855f7', 'bg-purple-600': '#9333ea'
+                };
+                return colorMap[player.avatarColor || 'bg-gray-500'] || '#6b7280';
+              })();
+
+              return (
+                <div className="relative">
+                  <div 
+                    className="absolute top-2 right-2 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10"
+                    style={{ backgroundColor: playerColorHex }}
+                  >
+                    ✓
+                  </div>
+                  <PlayerBox 
+                    player={player}
+                    size="lg"
+                    showPositions={true}
+                    className="border-2 [&>div>div:first-child]:border-4 [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-2 [&>div>div:first-child]:ring-current [&>div>div:first-child]:shadow-xl [&>div>div:first-child]:shadow-black/25"
+                    style={{ 
+                      borderColor: playerColorHex,
+                      color: playerColorHex
+                    }}
+                  />
+                </div>
+              );
+            })()}
+          </div>
         </div>
       </section>
       
