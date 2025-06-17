@@ -82,6 +82,278 @@ export default function PlayerBoxExamples() {
         </p>
       </div>
 
+      {/* Expanded Reference Section */}
+      <section className="mb-8 bg-gradient-to-r from-green-50 to-emerald-50 p-6 rounded-lg border border-green-200">
+        <h2 className="text-2xl font-semibold mb-4 text-green-800">Reference Collection - Based on Sarah Johnson's Design</h2>
+        <p className="text-green-700 mb-6">Comprehensive variations with different widths, layouts, stats, and color schemes</p>
+        
+        {/* Full Width Stats Examples */}
+        <div className="mb-8">
+          <h3 className="text-lg font-medium mb-4 text-green-800">Full Width with Statistics</h3>
+          <div className="space-y-4">
+            {/* Green - Sarah's Colors */}
+            <div className="w-full">
+              <div className="relative">
+                <div 
+                  className="absolute top-1/2 right-6 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2 mr-3"
+                  style={{ backgroundColor: '#16a34a' }}
+                >
+                  ✓
+                </div>
+                <PlayerBox 
+                  player={samplePlayers[1]}
+                  size="md"
+                  showPositions={true}
+                  stats={[
+                    { label: "Goals", value: "24" },
+                    { label: "Assists", value: "12" },
+                    { label: "Turnovers", value: "4" },
+                    { label: "Rating", value: "8.5" }
+                  ]}
+                  className="w-full shadow-md transition-shadow duration-200 hover:shadow-xl"
+                  style={{ 
+                    borderColor: '#16a34a',
+                    color: '#15803d'
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Blue Variation */}
+            <div className="w-full">
+              <div className="relative">
+                <div 
+                  className="absolute top-1/2 right-6 w-6 h-6 rounded border-2 bg-white cursor-pointer z-10 transform -translate-y-1/2 mr-3"
+                  style={{ borderColor: '#3b82f6' }}
+                >
+                </div>
+                <PlayerBox 
+                  player={{...samplePlayers[0], displayName: "Emma Wilson", avatarColor: "bg-blue-500"}}
+                  size="md"
+                  showPositions={true}
+                  stats={[
+                    { label: "Saves", value: "18" },
+                    { label: "Intercepts", value: "9" },
+                    { label: "Rebounds", value: "6" },
+                    { label: "Rating", value: "7.8" }
+                  ]}
+                  className="w-full shadow-md transition-shadow duration-200 hover:shadow-xl"
+                  style={{ 
+                    borderColor: '#3b82f6',
+                    color: '#1d4ed8'
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Purple Variation */}
+            <div className="w-full">
+              <div className="relative">
+                <div 
+                  className="absolute top-1/2 right-6 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2 mr-3"
+                  style={{ backgroundColor: '#a855f7' }}
+                >
+                  ✓
+                </div>
+                <PlayerBox 
+                  player={{...samplePlayers[2], displayName: "Lily Chen", avatarColor: "bg-purple-500"}}
+                  size="md"
+                  showPositions={true}
+                  stats={[
+                    { label: "Blocks", value: "15" },
+                    { label: "Steals", value: "7" },
+                    { label: "Deflections", value: "11" },
+                    { label: "Rating", value: "8.2" }
+                  ]}
+                  className="w-full shadow-md transition-shadow duration-200 hover:shadow-xl"
+                  style={{ 
+                    borderColor: '#a855f7',
+                    color: '#7e22ce'
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Court Position Ready Examples */}
+        <div className="mb-8">
+          <h3 className="text-lg font-medium mb-4 text-green-800">Court Position Ready (No Select Boxes)</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {/* Orange Court Position */}
+            <PlayerBox 
+              player={{...samplePlayers[3], displayName: "Mia Thompson", avatarColor: "bg-orange-500"}}
+              size="md"
+              showPositions={true}
+              className="shadow-lg transition-all duration-200 hover:shadow-xl hover:scale-[1.02]"
+              style={{ 
+                borderColor: '#f97316',
+                color: '#ea580c'
+              }}
+            />
+
+            {/* Red Court Position */}
+            <PlayerBox 
+              player={{...samplePlayers[4], displayName: "Zoe Parker", avatarColor: "bg-red-500"}}
+              size="md"
+              showPositions={true}
+              className="shadow-lg transition-all duration-200 hover:shadow-xl hover:scale-[1.02]"
+              style={{ 
+                borderColor: '#ef4444',
+                color: '#dc2626'
+              }}
+            />
+
+            {/* Teal Court Position */}
+            <PlayerBox 
+              player={{...samplePlayers[0], displayName: "Emma Wilson", avatarColor: "bg-teal-500"}}
+              size="md"
+              showPositions={true}
+              className="shadow-lg transition-all duration-200 hover:shadow-xl hover:scale-[1.02]"
+              style={{ 
+                borderColor: '#14b8a6',
+                color: '#0d9488'
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Compact Format Examples */}
+        <div className="mb-8">
+          <h3 className="text-lg font-medium mb-4 text-green-800">Compact Format Variations</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Compact with Select - Pink */}
+            <div className="relative">
+              <div 
+                className="absolute top-1/2 right-4 w-5 h-5 rounded border-2 bg-white cursor-pointer z-10 transform -translate-y-1/2 mr-3"
+                style={{ borderColor: '#ec4899' }}
+              >
+              </div>
+              <PlayerBox 
+                player={{...samplePlayers[1], displayName: "Sarah Johnson", avatarColor: "bg-pink-500"}}
+                size="sm"
+                showPositions={true}
+                className="shadow-md transition-shadow duration-200 hover:shadow-lg"
+                style={{ 
+                  borderColor: '#ec4899',
+                  color: '#be185d'
+                }}
+              />
+            </div>
+
+            {/* Compact with Select - Indigo */}
+            <div className="relative">
+              <div 
+                className="absolute top-1/2 right-4 w-5 h-5 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2 mr-3"
+                style={{ backgroundColor: '#6366f1' }}
+              >
+                ✓
+              </div>
+              <PlayerBox 
+                player={{...samplePlayers[2], displayName: "Lily Chen", avatarColor: "bg-indigo-500"}}
+                size="sm"
+                showPositions={true}
+                className="shadow-md transition-shadow duration-200 hover:shadow-lg"
+                style={{ 
+                  borderColor: '#6366f1',
+                  color: '#4338ca'
+                }}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Large Format Examples */}
+        <div className="mb-8">
+          <h3 className="text-lg font-medium mb-4 text-green-800">Large Format with Enhanced Styling</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Large with Select - Cyan */}
+            <div className="relative">
+              <div 
+                className="absolute top-1/2 right-6 w-7 h-7 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2 mr-3"
+                style={{ backgroundColor: '#06b6d4' }}
+              >
+                ✓
+              </div>
+              <PlayerBox 
+                player={{...samplePlayers[3], displayName: "Mia Thompson", avatarColor: "bg-cyan-500"}}
+                size="lg"
+                showPositions={true}
+                className="shadow-xl transition-all duration-200 hover:shadow-2xl hover:brightness-95"
+                style={{ 
+                  borderColor: '#06b6d4',
+                  color: '#0891b2'
+                }}
+              />
+            </div>
+
+            {/* Large with Select - Amber */}
+            <div className="relative">
+              <div 
+                className="absolute top-1/2 right-6 w-7 h-7 rounded border-2 bg-white cursor-pointer z-10 transform -translate-y-1/2 mr-3"
+                style={{ borderColor: '#f59e0b' }}
+              >
+              </div>
+              <PlayerBox 
+                player={{...samplePlayers[4], displayName: "Zoe Parker", avatarColor: "bg-amber-500"}}
+                size="lg"
+                showPositions={true}
+                className="shadow-xl transition-all duration-200 hover:shadow-2xl hover:brightness-95"
+                style={{ 
+                  borderColor: '#f59e0b',
+                  color: '#d97706'
+                }}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Mixed Selection States */}
+        <div className="mb-6">
+          <h3 className="text-lg font-medium mb-4 text-green-800">Mixed Selection States</h3>
+          <div className="space-y-3">
+            {/* Selected - Emerald */}
+            <div className="relative">
+              <div 
+                className="absolute top-1/2 right-4 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2 mr-3"
+                style={{ backgroundColor: '#10b981' }}
+              >
+                ✓
+              </div>
+              <PlayerBox 
+                player={{...samplePlayers[0], displayName: "Emma Wilson", avatarColor: "bg-emerald-500"}}
+                size="md"
+                showPositions={true}
+                className="shadow-md transition-all duration-200"
+                style={{ 
+                  borderColor: '#10b981',
+                  color: '#059669'
+                }}
+              />
+            </div>
+
+            {/* Unselected - Rose */}
+            <div className="relative">
+              <div 
+                className="absolute top-1/2 right-4 w-6 h-6 rounded border-2 bg-white cursor-pointer z-10 transform -translate-y-1/2 mr-3"
+                style={{ borderColor: '#f43f5e' }}
+              >
+              </div>
+              <PlayerBox 
+                player={{...samplePlayers[1], displayName: "Sarah Johnson", avatarColor: "bg-rose-500"}}
+                size="md"
+                showPositions={true}
+                className="shadow-md transition-all duration-200"
+                style={{ 
+                  borderColor: '#f43f5e',
+                  color: '#e11d48'
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Quick Reference Section */}
       <section className="mb-8 bg-blue-50 p-6 rounded-lg border border-blue-200">
         <h2 className="text-2xl font-semibold mb-4 text-blue-800">Quick Reference - Standard Player Box Styles</h2>
