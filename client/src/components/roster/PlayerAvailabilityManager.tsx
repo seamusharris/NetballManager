@@ -1,49 +1,16 @@
 import { useState, useEffect } from 'react';
-import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Check, XCircle } from 'lucide-react';
+import { Check } from 'lucide-react';
 import { Player, Game, Opponent } from '@shared/schema';
-import { formatShortDate, cn, getInitials } from '@/lib/utils';
+import { formatShortDate } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { useDataLoader } from '@/hooks/use-data-loader';
 import { apiClient } from '@/lib/apiClient';
 import { useQueryClient } from '@tanstack/react-query';
-
-// Define the PlayerAvatar component
-interface PlayerAvatarProps {
-  firstName: string;
-  lastName: string;
-  avatarColor: string;
-  size: 'sm' | 'md' | 'lg';
-}
-
-function PlayerAvatar({ firstName, lastName, avatarColor, size }: PlayerAvatarProps) {
-  let avatarSizeClass = 'w-6 h-6 text-[0.6rem]'; // Default small size
-  if (size === 'md') {
-    avatarSizeClass = 'w-8 h-8 text-sm';
-  } else if (size === 'lg') {
-    avatarSizeClass = 'w-10 h-10 text-base';
-  }
-
-  return (
-    <div
-      className={cn(
-        "rounded-full flex items-center justify-center text-white font-bold flex-shrink-0",
-        avatarSizeClass,
-        avatarColor
-      )}
-    >
-      <span className="font-semibold">
-        {getInitials(firstName, lastName)}
-      </span>
-    </div>
-  );
-}
+import { UnifiedPlayerAvailability } from '@/components/ui/unified-player-availability';
 
 interface PlayerAvailabilityManagerProps {
   gameId: number;
@@ -64,27 +31,23 @@ export default function PlayerAvailabilityManager({
   onAvailabilityChange,
   onGameChange
 }: PlayerAvailabilityManagerProps) {
-  const [availablePlayerIds, setAvailablePlayerIds] = useState<number[]>([]);
-  const [isSaving, setIsSaving] = useState(false);
   const [teamPlayers, setTeamPlayers] = useState<Player[]>([]);
   const [isLoadingTeamPlayers, setIsLoadingTeamPlayers] = useState(false);
+  const [availabilityData, setAvailabilityData] = useState<Record<number, 'available' | 'unavailable' | 'maybe'>>({});
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   // Use centralized data loading for availability
   const { 
-    data: availabilityData, 
+    data: availabilityResponse, 
     isLoading, 
     error: availabilityError,
     refetch: refetchAvailability
   } = useDataLoader<{availablePlayerIds: number[]}>(`/api/games/${gameId}/availability`, {
     enabled: !!gameId,
-    retry: 1, // Only retry once to avoid long delays
+    retry: 1,
     onError: (error) => {
       console.log('Player availability API error, falling back to all active players:', error);
-      // Fallback to all active players on error
-      const activePlayerIds = players.filter(p => p.active).map(p => p.id);
-      setAvailablePlayerIds(activePlayerIds);
     }
   });
 
@@ -109,9 +72,9 @@ export default function PlayerAvailabilityManager({
         const teamFromUrl = urlParams.get('teamId');
         const teamFromSession = sessionStorage.getItem('currentTeamId');
         const currentTeamId = teamFromUrl || teamFromSession;
-        
+
         let teamToLoad = selectedGame.homeTeamId;
-        
+
         // If we have current team context and it matches one of the teams in this game, use that
         if (currentTeamId) {
           const currentTeamIdNum = parseInt(currentTeamId);
@@ -121,7 +84,7 @@ export default function PlayerAvailabilityManager({
         }
 
         console.log(`Loading team players for team ${teamToLoad} (game ${gameId})`);
-        
+
         try {
           const response = await apiClient.get(`/api/teams/${teamToLoad}/players`);
           console.log(`Loaded ${response.length} team players for team ${teamToLoad}`);
@@ -150,45 +113,59 @@ export default function PlayerAvailabilityManager({
   useEffect(() => {
     if (gameId) {
       console.log('PlayerAvailabilityManager: gameId changed, refetching availability for game:', gameId);
-      // Invalidate the query cache for this specific game's availability
       queryClient.invalidateQueries({ 
         queryKey: [`/api/games/${gameId}/availability`] 
       });
-      // Also trigger a fresh fetch
       refetchAvailability();
     }
   }, [gameId, queryClient, refetchAvailability]);
 
-  // Effect to load availability data and set fallbacks
+  // Convert API response to shared component format
   useEffect(() => {
-    // Only proceed if we have a valid gameId
-    if (!gameId) {
+    if (!gameId || isLoading || isLoadingTeamPlayers || teamPlayers.length === 0) {
       return;
     }
 
-    // Wait for both availability loading to complete AND team players to be loaded
-    if (isLoading || isLoadingTeamPlayers || teamPlayers.length === 0) {
-      return;
-    }
-
-    // Handle successful availability data
-    if (availabilityData && Array.isArray(availabilityData.availablePlayerIds)) {
-      // Filter availability data to only include team players
+    if (availabilityResponse && Array.isArray(availabilityResponse.availablePlayerIds)) {
+      // Convert from API format (availablePlayerIds array) to shared component format
       const teamPlayerIds = teamPlayers.map(p => p.id);
-      const filteredAvailableIds = availabilityData.availablePlayerIds.filter(id => teamPlayerIds.includes(id));
-      setAvailablePlayerIds(filteredAvailableIds);
+      const filteredAvailableIds = availabilityResponse.availablePlayerIds.filter(id => teamPlayerIds.includes(id));
+
+      const newAvailabilityData: Record<number, 'available' | 'unavailable' | 'maybe'> = {};
+      teamPlayers.forEach(player => {
+        newAvailabilityData[player.id] = filteredAvailableIds.includes(player.id) ? 'available' : 'unavailable';
+      });
+
+      setAvailabilityData(newAvailabilityData);
+
+      // Notify parent component
       onAvailabilityChange?.(filteredAvailableIds);
     } else if (availabilityError) {
-      // Only fallback to active team players if there's an actual error
+      // Fallback to all active team players on error
       const activeTeamPlayerIds = teamPlayers.filter(p => p.active).map(p => p.id);
-      console.log('Setting fallback available team players (error case):', activeTeamPlayerIds);
-      setAvailablePlayerIds(activeTeamPlayerIds);
+      const fallbackAvailabilityData: Record<number, 'available' | 'unavailable' | 'maybe'> = {};
+      teamPlayers.forEach(player => {
+        fallbackAvailabilityData[player.id] = player.active ? 'available' : 'unavailable';
+      });
+
+      setAvailabilityData(fallbackAvailabilityData);
       onAvailabilityChange?.(activeTeamPlayerIds);
     }
-    // If still loading, don't set anything - wait for the data
-  }, [availabilityData, isLoading, availabilityError, teamPlayers, isLoadingTeamPlayers, gameId, onAvailabilityChange]);
+  }, [availabilityResponse, isLoading, availabilityError, teamPlayers, isLoadingTeamPlayers, gameId, onAvailabilityChange]);
 
-  // Early return if no gameId - moved after ALL hooks
+  // Handle availability change from shared component
+  const handleAvailabilityChange = (newAvailabilityData: Record<number, 'available' | 'unavailable' | 'maybe'>) => {
+    setAvailabilityData(newAvailabilityData);
+
+    // Convert back to array format for parent component
+    const availablePlayerIds = Object.entries(newAvailabilityData)
+      .filter(([_, status]) => status === 'available')
+      .map(([playerId, _]) => parseInt(playerId));
+
+    onAvailabilityChange?.(availablePlayerIds);
+  };
+
+  // Early return if no gameId
   if (!gameId) {
     console.log('PlayerAvailabilityManager: No game ID provided');
     return (
@@ -203,56 +180,6 @@ export default function PlayerAvailabilityManager({
   const selectedGame = games.find(game => game.id === gameId);
   const opponent = selectedGame?.opponentId ? opponents.find(o => o.id === selectedGame.opponentId) : null;
 
-  // Handle availability change
-  const handleAvailabilityChange = async (playerId: number, isAvailable: boolean) => {
-    // Update local state immediately for responsive UI
-    setAvailablePlayerIds(prev => {
-      const newIds = isAvailable
-        ? prev.includes(playerId) ? prev : [...prev, playerId]
-        : prev.filter(id => id !== playerId);
-
-      // Notify parent component of the change
-      onAvailabilityChange?.(newIds);
-
-      return newIds;
-    });
-
-    // Optimistically update
-    toast({
-      title: isAvailable ? "Player added to available list." : "Player removed from available list.",
-      duration: 2000,
-    })
-
-    // Save to backend using centralized API client
-    try {
-      setIsSaving(true);
-      await apiClient.patch(`/api/games/${gameId}/availability/${playerId}`, { isAvailable });
-
-      // Invalidate the cache for this game's availability to ensure fresh data on next load
-      queryClient.invalidateQueries({ 
-        queryKey: [`/api/games/${gameId}/availability`] 
-      });
-
-      console.log('Player availability updated and cache invalidated for game:', gameId, 'player:', playerId, 'available:', isAvailable);
-    } catch (error) {
-      console.error('Error updating availability:', error);
-      toast({
-        title: "Failed to update availability. Reverting...",
-        variant: "destructive",
-      });
-      // Revert local state on error
-      setAvailablePlayerIds(prev => {
-        if (!isAvailable) {
-          return prev.includes(playerId) ? prev : [...prev, playerId];
-        } else {
-          return prev.filter(id => id !== playerId);
-        }
-      });
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
   if (isLoading || isLoadingTeamPlayers) {
     return (
       <Card className="mb-6">
@@ -263,58 +190,7 @@ export default function PlayerAvailabilityManager({
     );
   }
 
-  // Sort team players by display name
-  const filteredPlayers = teamPlayers
-    .sort((a, b) => {
-      const displayNameA = a.displayName || `${a.firstName} ${a.lastName}`;
-      const displayNameB = b.displayName || `${b.firstName} ${b.lastName}`;
-      return displayNameA.localeCompare(displayNameB);
-    });
-
-  // Get player color using the player's own avatarColor property from their profile
-  const getPlayerColor = (player: Player) => {
-    // Use the player's stored avatarColor if it exists
-    if (player.avatarColor) {
-      // If it's already a Tailwind class (starts with 'bg-'), use it directly
-      if (player.avatarColor.startsWith('bg-')) {
-        return player.avatarColor;
-      }
-    }
-
-    // If the player doesn't have an avatarColor or it's not a Tailwind class,
-    // we use a default gray color - this should be very rare as all players
-    // should have colors assigned in the database
-    return 'bg-gray-400';
-  };
-
-  // Get color hex value for styling
-  const getColorHex = (colorClass: string) => {
-    // Convert bg-color-shade to a hex color for borders and text
-    const colorMap: Record<string, string> = {
-      'bg-red-500': '#ef4444',
-      'bg-emerald-600': '#059669',
-      'bg-teal-600': '#0d9488',
-      'bg-blue-600': '#2563eb',
-      'bg-indigo-600': '#4f46e5',
-      'bg-purple-600': '#9333ea',
-      'bg-pink-600': '#db2777',
-      'bg-pink-500': '#ec4899',
-      'bg-orange-500': '#f97316',
-      'bg-yellow-600': '#ca8a04',
-      'bg-rose-600': '#e11d48',
-      'bg-lime-600': '#65a30d',
-      'bg-sky-600': '#0284c7',
-      'bg-violet-600': '#7c3aed',
-      'bg-cyan-600': '#0891b2',   // Cyan - Holly's color
-      'bg-gray-400': '#9ca3af',
-      'bg-accent': '#0d9488',     // Accent (teal)
-      'bg-secondary': '#7c3aed',  // Secondary (violet)
-      'bg-primary': '#2563eb',    // Primary (blue)
-      'bg-green-600': '#16a34a'   // Green
-    };
-
-    return colorMap[colorClass] || '#9ca3af';
-  };
+  const availableCount = Object.values(availabilityData).filter(status => status === 'available').length;
 
   return (
     <Card className="mb-6">
@@ -330,7 +206,7 @@ export default function PlayerAvailabilityManager({
 
         <div className="flex justify-between items-center mt-4">
           <div className="flex items-center gap-4">
-            {/* Game selection dropdown - only show games for current team */}
+            {/* Game selection dropdown */}
             <Select 
               value={gameId?.toString() || ''} 
               onValueChange={(value) => {
@@ -357,84 +233,33 @@ export default function PlayerAvailabilityManager({
             </Select>
           </div>
           <div className="flex items-center gap-2">
-            <Label className="text-sm font-medium">
-              <Badge variant="outline" className="mr-1">
-                {availablePlayerIds.length}
-              </Badge>
-              Available
-            </Label>
+            <Badge variant="outline" className="mr-1">
+              {availableCount}
+            </Badge>
+            <span className="text-sm font-medium">Available</span>
             <Button 
               onClick={onComplete}
-              disabled={availablePlayerIds.length === 0}
+              disabled={availableCount === 0}
               className="ml-2"
             >
               <Check className="mr-2 h-4 w-4" />
-              Continue to Roster ({availablePlayerIds.length} available)
+              Continue to Roster ({availableCount} available)
             </Button>
           </div>
         </div>
       </CardHeader>
 
       <CardContent>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-2">
-          {filteredPlayers.length > 0 ? (
-            filteredPlayers.map(player => {
-              const isAvailable = availablePlayerIds.includes(player.id);
-              const playerColor = getPlayerColor(player);
-              const colorHex = getColorHex(playerColor);
-              const displayName = player.displayName || `${player.firstName} ${player.lastName}`;
-
-              return (
-                <div 
-                  key={player.id}
-                  className={cn(
-                    "p-4 border rounded-lg shadow-sm transition-all",
-                    isAvailable 
-                      ? "border-2 shadow" 
-                      : "opacity-75 border border-gray-200"
-                  )}
-                  style={{
-                    borderColor: isAvailable ? colorHex : '',
-                    backgroundColor: isAvailable ? `${colorHex}10` : ''
-                  }}
-                >
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-3">
-                      <PlayerAvatar 
-                        firstName={player.firstName}
-                        lastName={player.lastName}
-                        avatarColor={playerColor}
-                        size="md"
-                      />
-                      <div>
-                        <div className="font-medium">{displayName}</div>
-                        {player.positionPreferences && player.positionPreferences.length > 0 && (
-                          <div className="text-xs text-gray-500">
-                            {player.positionPreferences.join(', ')}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Switch
-                        checked={isAvailable}
-                        onCheckedChange={(checked) => {
-                          handleAvailabilityChange(player.id, checked);
-                        }}
-                        disabled={isSaving}
-                      />
-                    </div>
-                  </div>
-                </div>
-              );
-            })
-          ) : (
-            <div className="col-span-full py-6 text-center text-gray-500">
-              <XCircle className="mx-auto h-8 w-8 text-gray-400" />
-              <p className="mt-2">No players found for this team</p>
-            </div>
-          )}
-        </div>
+        <UnifiedPlayerAvailability
+          players={teamPlayers}
+          availabilityData={availabilityData}
+          onAvailabilityChange={handleAvailabilityChange}
+          title=""
+          showQuickActions={true}
+          gameId={gameId}
+          variant="detailed"
+          autoSave={true}
+        />
       </CardContent>
     </Card>
   );
