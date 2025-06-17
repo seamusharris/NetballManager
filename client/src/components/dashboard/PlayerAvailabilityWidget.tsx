@@ -48,20 +48,21 @@ export default function PlayerAvailabilityWidget({
   useEffect(() => {
     const fetchTeamPlayers = async () => {
       if (!currentTeamId) {
+        console.log('PlayerAvailabilityWidget: No currentTeamId, using all players');
         setTeamPlayers(players);
         return;
       }
 
       try {
         console.log('PlayerAvailabilityWidget: Fetching team players for team:', currentTeamId);
-
         const response = await apiClient.get(`/api/teams/${currentTeamId}/players`);
         setTeamPlayers(response);
-        console.log('Fetched team players:', response.length, 'for team:', currentTeamId);
+        console.log('PlayerAvailabilityWidget: Fetched team players:', response.length, 'for team:', currentTeamId);
+        console.log('PlayerAvailabilityWidget: Team player names:', response.map(p => p.displayName));
       } catch (error) {
-        console.error('Error fetching team players:', error);
+        console.error('PlayerAvailabilityWidget: Error fetching team players:', error);
         // Fallback to all players on error
-        console.log('Failed to fetch team players, using all players as fallback');
+        console.log('PlayerAvailabilityWidget: Failed to fetch team players, using all players as fallback');
         setTeamPlayers(players);
       }
     };

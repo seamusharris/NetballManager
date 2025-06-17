@@ -104,13 +104,26 @@ export default function PlayerAvailabilityManager({
 
       setIsLoadingTeamPlayers(true);
       try {
-        // Get team players for the home team (the team we're managing)
-        const response = await apiClient.get(`/api/teams/${selectedGame.homeTeamId}/players`);
-        console.log(`Loaded ${response.length} team players for team ${selectedGame.homeTeamId}`);
+        // Determine which team we're managing by checking current team context
+        const currentTeamId = sessionStorage.getItem('currentTeamId');
+        let teamToLoad = selectedGame.homeTeamId;
+        
+        // If we have current team context and it matches one of the teams in this game, use that
+        if (currentTeamId) {
+          const currentTeamIdNum = parseInt(currentTeamId);
+          if (currentTeamIdNum === selectedGame.homeTeamId || currentTeamIdNum === selectedGame.awayTeamId) {
+            teamToLoad = currentTeamIdNum;
+          }
+        }
+
+        console.log(`Loading team players for team ${teamToLoad} (game ${gameId})`);
+        const response = await apiClient.get(`/api/teams/${teamToLoad}/players`);
+        console.log(`Loaded ${response.length} team players for team ${teamToLoad}`);
         setTeamPlayers(response);
       } catch (error) {
         console.error('Error loading team players:', error);
         // Fallback to all club players if team players can't be loaded
+        console.log('Falling back to all club players');
         setTeamPlayers(players);
       } finally {
         setIsLoadingTeamPlayers(false);
