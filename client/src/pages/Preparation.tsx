@@ -941,12 +941,22 @@ export default function Preparation() {
 
             {/* Lineup Selection Tab */}
             <TabsContent value="lineup" className="space-y-4">
+              {/* Debug info */}
+              {process.env.NODE_ENV === 'development' && (
+                <div className="p-2 bg-gray-100 text-xs">
+                  <div>Completed games: {completedGames.length}</div>
+                  <div>Players: {Array.isArray(teamPlayers) ? teamPlayers.length : 0}</div>
+                  <div>Stats loaded: {Object.keys(centralizedStats || {}).length} games</div>
+                  <div>Rosters loaded: {Object.keys(centralizedRosters || {}).length} games</div>
+                </div>
+              )}
+
               {/* Upcoming Game Recommendations */}
               <UpcomingGameRecommendations
                 games={completedGames}
                 players={Array.isArray(teamPlayers) ? teamPlayers as Player[] : []}
-                centralizedStats={centralizedStats}
-                centralizedRosters={centralizedRosters}
+                centralizedStats={centralizedStats || {}}
+                centralizedRosters={centralizedRosters || {}}
                 currentClubId={currentClubId}
               />
 
@@ -954,8 +964,8 @@ export default function Preparation() {
               <PlayerCombinationAnalysis
                 games={completedGames}
                 players={Array.isArray(teamPlayers) ? teamPlayers as Player[] : []}
-                centralizedStats={centralizedStats}
-                centralizedRosters={centralizedRosters}
+                centralizedStats={centralizedStats || {}}
+                centralizedRosters={centralizedRosters || {}}
                 currentClubId={currentClubId}
               />
 
