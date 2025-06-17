@@ -541,7 +541,8 @@ export default function TeamAnalysis() {
   const totalWins = opponentTeamsData.reduce((sum, team) => sum + team.wins, 0);
   const totalLosses = opponentTeamsData.reduce((sum, team) => sum + team.losses, 0);
   const totalDraws = opponentTeamsData.reduce((sum, team) => sum + team.draws, 0);
-  const overallWinRate = calculateClubWinRate(completedGames, currentClubId, currentTeamId);
+  const overallWinRateData = calculateClubWinRate(completedGames, currentClubId, currentTeamId);
+  const overallWinRate = overallWinRateData.winRate;
 
   // Calculate detailed analytics for the first opponent (most played against)
   const selectedOpponentData = opponentTeamsData[0];
