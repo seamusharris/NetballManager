@@ -272,4 +272,4 @@ const useClub = () => {
 };
 
 export default ClubProvider;
-export { ClubProvider, useClub, ClubContext };
+export { useClub };
