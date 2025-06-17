@@ -158,7 +158,7 @@ export function PlayerBox({
       className={cn(
         "flex items-center space-x-3 rounded-lg shadow-md transition-shadow duration-200 hover:shadow-xl",
         borderClass,
-        `${size === 'sm' ? 'p-3' : size === 'lg' ? 'p-5' : 'p-4'}`
+        sizeClasses[size]
       )}
       style={defaultStyle}
     >
@@ -198,7 +198,7 @@ export function PlayerBox({
 
         {/* Stats positioned on the right */}
         {stats && stats.length > 0 && (
-          <div className="flex space-x-6 ml-4">
+          <div className="flex space-x-6 ml-6">
             {stats.map((stat, index) => (
               <div key={index} className="text-center">
                 <div className="text-2xl font-bold">
@@ -210,8 +210,7 @@ export function PlayerBox({
               </div>
             ))}
           </div>
-        )}
-      </div>
+        )}</div>
     </div>
   );
 
