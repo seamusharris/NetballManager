@@ -167,9 +167,9 @@ export function PlayerBox({
           "rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg",
           player.avatarColor || 'bg-gray-500',
           {
-            'w-10 h-10 text-sm': size === 'sm',
-            'w-12 h-12 text-base': size === 'md',
-            'w-16 h-16 text-lg': size === 'lg'
+            'w-10 h-10 text-xs': size === 'sm',
+            'w-12 h-12 text-sm': size === 'md',
+            'w-16 h-16 text-xl': size === 'lg'
           }
         )}
       >
