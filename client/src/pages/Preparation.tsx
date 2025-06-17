@@ -74,10 +74,15 @@ export default function Preparation() {
   });
 
   // Queries
-  const { data: upcomingGames = [], isLoading: gamesLoading } = useQuery({
+  const { data: allGames = [], isLoading: gamesLoading } = useQuery({
     queryKey: ['/api/games', currentTeamId],
     enabled: !!currentTeamId
   });
+
+  // Filter for upcoming games (not completed) and sort by date
+  const upcomingGames = allGames
+    .filter(game => !game.statusIsCompleted)
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
   const { data: teamPlayers = [], isLoading: playersLoading } = useQuery({
     queryKey: ['/api/players', currentTeamId],
