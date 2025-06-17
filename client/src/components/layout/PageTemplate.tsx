@@ -97,23 +97,21 @@ function Breadcrumbs({ items }: BreadcrumbsProps) {
           </BreadcrumbLink>
         </BreadcrumbItem>
         
-        {items.map((item, index) => (
-          <React.Fragment key={index}>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              {index === items.length - 1 ? (
-                <BreadcrumbPage>{item.label}</BreadcrumbPage>
-              ) : (
-                <BreadcrumbLink 
-                  onClick={() => item.href && navigate(item.href)}
-                  className={item.href ? "cursor-pointer" : ""}
-                >
-                  {item.label}
-                </BreadcrumbLink>
-              )}
-            </BreadcrumbItem>
-          </React.Fragment>
-        ))}
+        {items.map((item, index) => [
+          <BreadcrumbSeparator key={`separator-${index}`} />,
+          <BreadcrumbItem key={`item-${index}`}>
+            {index === items.length - 1 ? (
+              <BreadcrumbPage>{item.label}</BreadcrumbPage>
+            ) : (
+              <BreadcrumbLink 
+                onClick={() => item.href && navigate(item.href)}
+                className={item.href ? "cursor-pointer" : ""}
+              >
+                {item.label}
+              </BreadcrumbLink>
+            )}
+          </BreadcrumbItem>
+        ]).flat()}
       </BreadcrumbList>
     </Breadcrumb>
   );

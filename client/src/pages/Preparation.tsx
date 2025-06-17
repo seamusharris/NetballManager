@@ -44,6 +44,7 @@ interface Game {
   awayTeamId: number;
   homeTeam: { name: string; clubName: string };
   awayTeam: { name: string; clubName: string };
+  statusIsCompleted: boolean;
 }
 
 interface Player {
@@ -74,17 +75,17 @@ export default function Preparation() {
   });
 
   // Queries
-  const { data: allGames = [], isLoading: gamesLoading } = useQuery({
+  const { data: allGames = [], isLoading: gamesLoading } = useQuery<Game[]>({
     queryKey: ['/api/games', currentTeamId],
     enabled: !!currentTeamId
   });
 
   // Filter for upcoming games (not completed) and sort by date
-  const upcomingGames = allGames
-    .filter(game => !game.statusIsCompleted)
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  const upcomingGames = Array.isArray(allGames) ? (allGames as Game[])
+    .filter((game: Game) => !game.statusIsCompleted)
+    .sort((a: Game, b: Game) => new Date(a.date).getTime() - new Date(b.date).getTime()) : [];
 
-  const { data: teamPlayers = [], isLoading: playersLoading } = useQuery({
+  const { data: teamPlayers = [], isLoading: playersLoading } = useQuery<Player[]>({
     queryKey: ['/api/players', currentTeamId],
     enabled: !!currentTeamId
   });
@@ -197,7 +198,7 @@ export default function Preparation() {
                         <div className="flex items-center justify-between">
                           <span className="text-sm">Player Availability</span>
                           <Badge variant="outline">
-                            {Object.values(availabilityData).filter(status => status === 'available').length}/{teamPlayers.length}
+                            {Object.values(availabilityData).filter(status => status === 'available').length}/{Array.isArray(teamPlayers) ? teamPlayers.length : 0}
                           </Badge>
                         </div>
                         <div className="flex items-center justify-between">
