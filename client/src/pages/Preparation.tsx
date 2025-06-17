@@ -696,6 +696,18 @@ export default function Preparation() {
   // Fetch batch statistics for historical analysis
   const { statsMap: centralizedStats = {}, isLoading: statsLoading } = useBatchGameStatistics(gameIds);
   const { rostersMap: centralizedRosters = {}, isLoading: rostersLoading } = useBatchRosterData(gameIds);
+  
+  // Fetch official scores for accurate win rate calculation
+  const { data: centralizedScores = {}, isLoading: scoresLoading } = useQuery({
+    queryKey: ['game-scores-batch', gameIds],
+    queryFn: async () => {
+      if (gameIds.length === 0) return {};
+      const response = await apiClient.post('/api/games/scores/batch', { gameIds });
+      return response;
+    },
+    enabled: gameIds.length > 0,
+    staleTime: 5 * 60 * 1000,
+  });
 
   // Get upcoming games for this team
   const upcomingGames = useMemo(() => {
@@ -1091,7 +1103,7 @@ export default function Preparation() {
   const playerRecommendations = useMemo((): PlayerRecommendation[] => {
     if (!teamPlayers || !centralizedStats || !selectedGameId) return [];
 
-    // Debug: Check team performance calculation
+    // Debug: Check team performance calculation using official scores
     const teamGamesForWinRate = completedGames.filter(game => {
       const weAreHome = game.homeTeamId === currentTeamId;
       const weAreAway = game.awayTeamId === currentTeamId;
@@ -1100,35 +1112,69 @@ export default function Preparation() {
 
     let wins = 0, total = 0;
     teamGamesForWinRate.forEach(game => {
-      const gameStats = centralizedStats[game.id] || [];
-      if (gameStats.length === 0) return;
-
+      // Try to get official scores first from centralizedScores (batch format)
+      const gameOfficialScores = centralizedScores?.[game.id] || [];
+      
       let teamScore = 0;
       let opponentScore = 0;
+      let hasValidScore = false;
 
-      if (game.homeTeamId === currentTeamId) {
-        teamScore = gameStats
-          .filter(stat => stat.teamId === currentTeamId)
-          .reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
-        opponentScore = gameStats
-          .filter(stat => stat.teamId !== currentTeamId)
-          .reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
-      } else {
-        teamScore = gameStats
-          .filter(stat => stat.teamId === currentTeamId)
-          .reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
-        opponentScore = gameStats
-          .filter(stat => stat.teamId !== currentTeamId)
-          .reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
+      if (gameOfficialScores.length > 0) {
+        // Calculate from official scores
+        const isHome = game.homeTeamId === currentTeamId;
+        const ourTeamId = currentTeamId;
+        const theirTeamId = isHome ? game.awayTeamId : game.homeTeamId;
+
+        // Sum up scores for each team
+        gameOfficialScores.forEach(score => {
+          if (score.teamId === ourTeamId) {
+            teamScore += score.score;
+          } else if (score.teamId === theirTeamId) {
+            opponentScore += score.score;
+          }
+        });
+
+        // Check if we have scores for both teams
+        const ourTeamHasScores = gameOfficialScores.some(s => s.teamId === ourTeamId);
+        const theirTeamHasScores = gameOfficialScores.some(s => s.teamId === theirTeamId);
+        
+        hasValidScore = ourTeamHasScores && theirTeamHasScores;
+        
+        console.log(`Player Recommendations: Game ${game.id} - Official scores: Our team ${ourTeamId}: ${teamScore}, Their team ${theirTeamId}: ${opponentScore}, Valid: ${hasValidScore}`);
       }
 
-      if (teamScore > 0 || opponentScore > 0) { // Only count games with actual scores
+      // Fall back to game status fixed scores if no official scores
+      if (!hasValidScore && 
+          typeof game.statusTeamGoals === 'number' && 
+          typeof game.statusOpponentGoals === 'number') {
+        
+        const isHome = game.homeTeamId === currentTeamId;
+        
+        if (isHome) {
+          teamScore = game.statusTeamGoals;
+          opponentScore = game.statusOpponentGoals;
+        } else {
+          teamScore = game.statusOpponentGoals;
+          opponentScore = game.statusTeamGoals;
+        }
+        
+        hasValidScore = true;
+        console.log(`Player Recommendations: Game ${game.id} - Status scores: Team: ${teamScore}, Opponent: ${opponentScore}`);
+      }
+
+      // Only count games where we have valid scores
+      if (hasValidScore) {
         total++;
-        if (teamScore > opponentScore) wins++;
+        if (teamScore > opponentScore) {
+          wins++;
+        }
+        console.log(`Player Recommendations: Game ${game.id} result - ${teamScore > opponentScore ? 'WIN' : teamScore < opponentScore ? 'LOSS' : 'DRAW'} (${teamScore}-${opponentScore})`);
+      } else {
+        console.log(`Player Recommendations: Game ${game.id} - No valid scores, skipping`);
       }
     });
 
-    console.log(`Player Recommendations: Team ${currentTeamId} win rate calculation - ${wins} wins out of ${total} games = ${total > 0 ? ((wins/total)*100).toFixed(1) : 0}%`);
+    console.log(`Player Recommendations: Team ${currentTeamId} FINAL win rate calculation - ${wins} wins out of ${total} games = ${total > 0 ? ((wins/total)*100).toFixed(1) : 0}%`);
 
     const availablePlayers = teamPlayers.filter(p => 
       availabilityData[p.id] === 'available'
@@ -1513,7 +1559,7 @@ export default function Preparation() {
 
             {/* Game Analysis Overview */}
             <TabsContent value="overview" className="space-y-6">
-              {statsLoading || rostersLoading ? (
+              {statsLoading || rostersLoading || scoresLoading ? (
                 <LoadingState message="Analyzing game data and opponent history..." />
               ) : (
                 <>
