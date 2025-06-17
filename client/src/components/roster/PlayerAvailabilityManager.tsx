@@ -25,7 +25,6 @@ export default function PlayerAvailabilityManager({
   gameId,
   players,
   games,
-  opponents,
   onComplete,
   onAvailabilityChange,
   onGameChange
@@ -202,7 +201,6 @@ export default function PlayerAvailabilityManager({
   }
 
   const selectedGame = games.find(game => game.id === gameId);
-  const opponent = selectedGame?.opponentId ? opponents.find(o => o.id === selectedGame.opponentId) : null;
 
   if ((isLoading || isLoadingTeamPlayers) && teamPlayers.length === 0) {
     return (
@@ -221,9 +219,9 @@ export default function PlayerAvailabilityManager({
       <CardHeader className="pb-3">
         <CardTitle className="text-xl">
           Player Availability 
-          {selectedGame && opponent && (
+          {selectedGame && (
             <span className="font-normal text-gray-600 ml-2">
-              for Round {selectedGame.round} vs {opponent.teamName}
+              for Round {selectedGame.round} - {selectedGame.date}
             </span>
           )}
         </CardTitle>
@@ -246,10 +244,10 @@ export default function PlayerAvailabilityManager({
                   <SelectItem value="no-games" disabled>No games available</SelectItem>
                 ) : (
                   [...games]
-                    .sort((a, b) => (a.round || 0) - (b.round || 0))
+                    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
                     .map(game => (
                       <SelectItem key={game.id} value={game.id.toString()}>
-                        Round {game.round} - {game.homeTeamName} vs {game.awayTeamName} {game.statusIsCompleted ? "(Past)" : ""}
+                        {game.date} - {game.awayTeamId ? 'vs Away Team' : 'BYE'}
                       </SelectItem>
                     ))
                 )}
