@@ -86,7 +86,7 @@ export default function PlayerBoxExamples() {
       <section className="mb-8 bg-gradient-to-r from-green-50 to-emerald-50 p-6 rounded-lg border border-green-200">
         <h2 className="text-2xl font-semibold mb-4 text-green-800">Reference Collection - Based on Sarah Johnson's Design</h2>
         <p className="text-green-700 mb-6">Comprehensive variations with different widths, layouts, stats, and color schemes</p>
-        
+
         {/* Full Width Stats Examples */}
         <div className="mb-8">
           <h3 className="text-lg font-medium mb-4 text-green-800">Full Width with Statistics</h3>
@@ -222,59 +222,52 @@ export default function PlayerBoxExamples() {
         <div className="mb-8">
           <h3 className="text-lg font-medium mb-4 text-green-800">Small Court Position Allocation</h3>
           <p className="text-sm text-green-600 mb-4">Compact examples for allocating players to court positions - with and without position preferences</p>
-          
+
           <div className="space-y-6">
             {/* With Position Preferences */}
             <div>
               <h4 className="text-sm font-medium mb-3 text-green-700">With Position Preferences</h4>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
                 <PlayerBox 
-                  player={{...samplePlayers[0], displayName: "Emma W", positionPreferences: ["GA", "GS"], avatarColor: "bg-blue-500"}}
+                  player={{...samplePlayers[1], displayName: "Sarah J", positionPreferences: ["C", "WA"], avatarColor: "bg-green-600"}}
                   size="sm"
                   showPositions={true}
-                  className="hover:shadow-lg transition-shadow duration-200"
-                  style={{ borderColor: '#3b82f6', color: '#1d4ed8' }}
-                />
-                <PlayerBox 
-                  player={{...samplePlayers[1], displayName: "Sarah J", positionPreferences: ["C", "WA"], avatarColor: "bg-green-500"}}
-                  size="sm"
-                  showPositions={true}
-                  className="hover:shadow-lg transition-shadow duration-200"
-                  style={{ borderColor: '#22c55e', color: '#15803d' }}
+                  className="[&>div]:hover:shadow-lg [&>div]:transition-shadow [&>div]:duration-200"
+                  style={{ borderColor: '#16a34a', color: '#15803d' }}
                 />
                 <PlayerBox 
                   player={{...samplePlayers[2], displayName: "Lily C", positionPreferences: ["GK", "GD"], avatarColor: "bg-purple-500"}}
                   size="sm"
                   showPositions={true}
-                  className="hover:shadow-lg transition-shadow duration-200"
+                  className="[&>div]:hover:shadow-lg [&>div]:transition-shadow [&>div]:duration-200"
                   style={{ borderColor: '#a855f7', color: '#7e22ce' }}
                 />
                 <PlayerBox 
                   player={{...samplePlayers[3], displayName: "Mia T", positionPreferences: ["WA", "C"], avatarColor: "bg-orange-500"}}
                   size="sm"
                   showPositions={true}
-                  className="hover:shadow-lg transition-shadow duration-200"
+                  className="[&>div]:hover:shadow-lg [&>div]:transition-shadow [&>div]:duration-200"
                   style={{ borderColor: '#f97316', color: '#ea580c' }}
                 />
                 <PlayerBox 
                   player={{...samplePlayers[4], displayName: "Zoe P", positionPreferences: ["GD", "WD"], avatarColor: "bg-red-500"}}
                   size="sm"
                   showPositions={true}
-                  className="hover:shadow-lg transition-shadow duration-200"
+                  className="[&>div]:hover:shadow-lg [&>div]:transition-shadow [&>div]:duration-200"
                   style={{ borderColor: '#ef4444', color: '#dc2626' }}
                 />
                 <PlayerBox 
                   player={{id: 6, displayName: "Kate M", positionPreferences: ["GA", "WA"], avatarColor: "bg-pink-500"}}
                   size="sm"
                   showPositions={true}
-                  className="hover:shadow-lg transition-shadow duration-200"
+                  className="[&>div]:hover:shadow-lg [&>div]:transition-shadow [&>div]:duration-200"
                   style={{ borderColor: '#ec4899', color: '#be185d' }}
                 />
                 <PlayerBox 
                   player={{id: 7, displayName: "Jess R", positionPreferences: ["GK"], avatarColor: "bg-indigo-500"}}
                   size="sm"
                   showPositions={true}
-                  className="hover:shadow-lg transition-shadow duration-200"
+                  className="[&>div]:hover:shadow-lg [&>div]:transition-shadow [&>div]:duration-200"
                   style={{ borderColor: '#6366f1', color: '#4338ca' }}
                 />
               </div>
@@ -541,9 +534,9 @@ export default function PlayerBoxExamples() {
       <section className="mb-8 bg-blue-50 p-6 rounded-lg border border-blue-200">
         <h2 className="text-2xl font-semibold mb-4 text-blue-800">Quick Reference - Standard Player Box Styles</h2>
         <p className="text-blue-700 mb-6">These are the most commonly used player box variations in the app:</p>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          
+
           {/* White Border + Shadow (Recommended Standard) */}
           <div className="bg-white p-4 rounded-lg border">
             <h3 className="text-lg font-medium mb-3 text-gray-800">White Border + Shadow</h3>
@@ -633,9 +626,9 @@ export default function PlayerBoxExamples() {
       <section className="mb-8 bg-purple-50 p-6 rounded-lg border border-purple-200">
         <h2 className="text-2xl font-semibold mb-4 text-purple-800">Quick Reference - Standard Player Box Styles (Copy 3)</h2>
         <p className="text-purple-700 mb-6">These are the most commonly used player box variations in the app:</p>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          
+
           {/* White Border + Shadow (Recommended Standard) */}
           <div className="bg-white p-4 rounded-lg border">
             <h3 className="text-lg font-medium mb-3 text-gray-800">White Border + Shadow</h3>
@@ -811,7 +804,7 @@ export default function PlayerBoxExamples() {
                   }}
                 />
               </div>
-              
+
               {/* Unselected Player */}
               <div className="relative">
                 <div 
@@ -833,7 +826,7 @@ export default function PlayerBoxExamples() {
           </div>
         </div>
       </section>
-      
+
       <div className="space-y-8">
         {/* Basic PlayerBox */}
         <section>
@@ -892,7 +885,7 @@ export default function PlayerBoxExamples() {
                 </>
               }
             />
-            
+
             <PlayerBox 
               player={samplePlayers[1]}
               actions={

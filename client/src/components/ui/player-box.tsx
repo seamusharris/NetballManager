@@ -156,7 +156,7 @@ export function PlayerBox({
   const playerBoxContent = (
     <div 
       className={cn(
-        "flex items-center space-x-3 rounded-lg shadow-md transition-shadow duration-200 hover:shadow-xl",
+        "flex items-center space-x-3 rounded-lg shadow-md transition-shadow duration-200",
         borderClass,
         sizeClasses[size]
       )}
