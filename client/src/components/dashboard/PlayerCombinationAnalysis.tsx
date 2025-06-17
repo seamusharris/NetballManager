@@ -486,5 +486,5 @@ function PlayerCombinationAnalysis({
   );
 }
 
-
 export default PlayerCombinationAnalysis;
+export { PlayerCombinationAnalysis };
