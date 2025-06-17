@@ -25,23 +25,16 @@ const TeamDashboard = () => {
   const queryClient = useQueryClient();
   const { currentTeamId } = useClub();
   const [selectedGameId, setSelectedGameId] = useState(null);
-
-  const nextGame = useNextGame(currentTeamId);
-
   const [teams, setTeams] = useState([]);
+  // Mocked game performance data (replace with actual data fetching)
+  const [gamePerformances, setGamePerformances] = useState({
+    1: {
+      us: { q1: '15', q2: '20', q3: '18', q4: '22' },
+      them: { q1: '12', q2: '18', q3: '20', q4: '15' },
+    },
+  });
 
-  useEffect(() => {
-    const fetchTeams = async () => {
-      try {
-        const response = await apiClient.get(`/api/teams`);
-        setTeams(response.data);
-      } catch (error) {
-        console.error('Error fetching teams:', error);
-      }
-    };
-
-    fetchTeams();
-  }, []);
+  const nextGame = useNextGame(currentTeamId || 0);
 
   const { data: players, isLoading: isLoadingPlayers, error: errorPlayers } = useQuery({
     queryKey: ['teamPlayers', currentTeamId],
@@ -55,16 +48,29 @@ const TeamDashboard = () => {
     enabled: !!currentTeamId,
   });
 
-  // Filter games for current team with proper type handling
-  const games = Array.isArray(allGames) ? allGames.filter((game: any) => 
-    game.homeTeamId === currentTeamId || game.awayTeamId === currentTeamId
-  ) : [];
-
   const { data: team, isLoading: isLoadingTeam, error: errorTeam } = useQuery({
     queryKey: ['team', currentTeamId],
     queryFn: () => apiClient.get(`/api/teams/${currentTeamId}`),
     enabled: !!currentTeamId,
   });
+
+  // Filter games for current team with proper type handling
+  const games = Array.isArray(allGames?.data) ? allGames.data.filter((game: any) => 
+    game.homeTeamId === currentTeamId || game.awayTeamId === currentTeamId
+  ) : [];
+
+  useEffect(() => {
+    const fetchTeams = async () => {
+      try {
+        const response = await apiClient.get(`/api/teams`);
+        setTeams(Array.isArray(response?.data) ? response.data : []);
+      } catch (error) {
+        console.error('Error fetching teams:', error);
+      }
+    };
+
+    fetchTeams();
+  }, []);
 
   useEffect(() => {
     if (currentTeamId) {
@@ -88,14 +94,6 @@ const TeamDashboard = () => {
   if (!currentTeamId) {
     return <div>Please select a team.</div>;
   }
-
-  // Mocked game performance data (replace with actual data fetching)
-  const [gamePerformances, setGamePerformances] = useState({
-    [selectedGameId]: {
-      us: { q1: '15', q2: '20', q3: '18', q4: '22' },
-      them: { q1: '12', q2: '18', q3: '20', q4: '15' },
-    },
-  });
 
   // Fetch game performance when a game is selected
   useEffect(() => {
@@ -169,13 +167,13 @@ const TeamDashboard = () => {
                 )}
 
                 <div className="mb-4">
-                  <RosterSummary players={Array.isArray(players) ? players : []} selectedGameId={selectedGameId} />
+                  <RosterSummary players={Array.isArray(players?.data) ? players.data : []} selectedGameId={selectedGameId} />
                 </div>
                 <div className="mb-4">
-                  <PlayerAvailabilityManager players={Array.isArray(players) ? players : []} />
+                  <PlayerAvailabilityManager players={Array.isArray(players?.data) ? players.data : []} gameId={selectedGameId} games={games} />
                 </div>
                 <div>
-                  <DragDropRosterManager players={Array.isArray(players) ? players : []} teamId={currentTeamId} />
+                  <DragDropRosterManager players={Array.isArray(players?.data) ? players.data : []} />
                 </div>
               </CardContent>
             </Card>
@@ -189,7 +187,7 @@ const TeamDashboard = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <PlayerCombinationAnalysis players={Array.isArray(players) ? players : []} games={games} centralizedStats={{}} centralizedRosters={{}} />
+                <PlayerCombinationAnalysis players={Array.isArray(players?.data) ? players.data : []} games={games} centralizedStats={{}} centralizedRosters={{}} />
               </CardContent>
             </Card>
           </div>
