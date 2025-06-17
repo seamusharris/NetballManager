@@ -11,7 +11,8 @@ import { Loader2 } from 'lucide-react';
 import { apiClient } from '@/lib/apiClient';
 import TeamForm from '@/components/teams/TeamForm';
 import { TEAM_NAME } from '@/lib/settings';
-import { PageTemplate, ContentSection, ActionButton } from '@/components/ui/ui-standards';
+import { ContentSection, ActionButton } from '@/components/ui/ui-standards';
+import PageTemplate from '@/components/layout/PageTemplate';
 
 export default function Teams() {
   const [, setLocation] = useLocation();

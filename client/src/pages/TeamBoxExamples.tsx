@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Helmet } from 'react-helmet';
-import { PageTemplate } from '@/components/layout/PageTemplate';
+import PageTemplate from '@/components/layout/PageTemplate';
 import { TeamBox } from '@/components/ui/team-box';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
