@@ -66,7 +66,7 @@ export function UnifiedPlayerAvailability({
       newData[player.id] = true;
     });
     onAvailabilityChange(newData);
-    
+
     // Auto-save all changes if enabled and gameId provided
     if (autoSave && gameId) {
       saveBulkAvailability(newData);
@@ -79,7 +79,7 @@ export function UnifiedPlayerAvailability({
       newData[player.id] = false;
     });
     onAvailabilityChange(newData);
-    
+
     // Auto-save all changes if enabled and gameId provided
     if (autoSave && gameId) {
       saveBulkAvailability(newData);
@@ -96,7 +96,7 @@ export function UnifiedPlayerAvailability({
       await apiClient.post(`/api/games/${gameId}/availability`, {
         availablePlayerIds
       });
-      
+
       toast({
         title: "Availability updated",
         description: "Player availability saved successfully.",
@@ -203,58 +203,79 @@ export function UnifiedPlayerAvailability({
             const displayName = player.displayName || `${player.firstName} ${player.lastName}`;
 
             return (
-              <div 
-                key={player.id}
-                className={cn(
-                  "flex items-center gap-4 p-4 rounded-lg border-2 cursor-pointer transition-all duration-200",
-                  "hover:scale-105 hover:shadow-lg min-h-[100px]",
-                  isAvailable 
-                    ? "border-green-500 bg-green-50 shadow-sm" 
-                    : "shadow-md"
-                )}
-                style={{
-                  backgroundColor: isAvailable ? '#f0fdf4' : lightBackgroundColor,
-                  borderColor: isAvailable ? '#22c55e' : borderColor,
-                  color: playerColorHex
-                }}
-              >
-                {/* Avatar with White Border + Shadow styling */}
-                <div 
-                  className={`w-16 h-16 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 border-4 border-white shadow-lg ${player.avatarColor || 'bg-gray-500'}`}
-                >
-                  {player.firstName?.[0]}{player.lastName?.[0]}
-                </div>
-                
-                {/* Player Info */}
-                <div className="flex-1 min-w-0">
-                  <div className="font-semibold text-base truncate">
-                    {displayName}
-                  </div>
-                  {player.positionPreferences && player.positionPreferences.length > 0 && (
-                    <div className="text-sm opacity-75 mt-1">
-                      {player.positionPreferences.join(', ')}
-                    </div>
-                  )}
-                  {player.active === false && (
-                    <Badge variant="secondary" className="text-xs mt-1">Inactive</Badge>
-                  )}
-                </div>
-                
-                {/* Availability Switch */}
-                <div className="flex-shrink-0">
-                  <Switch
-                    checked={isAvailable}
-                    disabled={isSaving}
-                    onCheckedChange={(checked) => {
-                      handlePlayerAvailabilityChange(
-                        player.id, 
-                        checked === true
-                      );
+              {(() => {
+                const playerColorHex = (() => {
+                  const colorMap: Record<string, string> = {
+                    'bg-red-500': '#ef4444', 'bg-red-600': '#dc2626',
+                    'bg-orange-500': '#f97316', 'bg-orange-600': '#ea580c',
+                    'bg-yellow-600': '#ca8a04', 'bg-amber-600': '#d97706',
+                    'bg-green-600': '#16a34a', 'bg-green-700': '#15803d',
+                    'bg-teal-600': '#0d9488', 'bg-cyan-600': '#0891b2',
+                    'bg-blue-500': '#3b82f6', 'bg-blue-600': '#2563eb',
+                    'bg-purple-500': '#a855f7', 'bg-purple-600': '#9333ea'
+                  };
+                  return colorMap[player.avatarColor || 'bg-gray-500'] || '#6b7280';
+                })();
+
+                const isSelected = isAvailable;
+
+                return (
+                  <div
+                    key={player.id}
+                    className={`
+                      p-4 rounded-lg border-2 transition-all duration-200 cursor-pointer shadow-sm
+                      ${isSelected 
+                        ? 'border-green-500 bg-green-50 shadow-md' 
+                        : 'hover:shadow-md'
+                      }
+                    `}
+                    style={{ 
+                      backgroundColor: isSelected ? undefined : `${playerColorHex}15`,
+                      borderColor: isSelected ? undefined : `${playerColorHex}80`,
+                      color: isSelected ? undefined : playerColorHex
                     }}
-                    className="data-[state=checked]:bg-green-600"
-                  />
-                </div>
-              </div>
+                    onClick={() => handlePlayerAvailabilityChange(player.id, !isAvailable)}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className="flex-shrink-0">
+                        <PlayerAvatar 
+                          player={player} 
+                          size="md"
+                          className={`
+                            border-2 border-white shadow-lg shadow-black/15
+                            ${isSelected ? 'ring-2 ring-green-500' : ''}
+                          `}
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-sm font-medium truncate ${isSelected ? 'text-gray-900' : ''}`}>
+                          {displayName}
+                        </p>
+                        {player.positionPreferences && (
+                          <p className={`text-xs truncate ${isSelected ? 'text-gray-600' : 'opacity-80'}`}>
+                            {player.positionPreferences.join(', ')}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex-shrink-0">
+                        <div className={`
+                          w-5 h-5 rounded border-2 flex items-center justify-center
+                          ${isSelected 
+                            ? 'bg-green-500 border-green-500' 
+                            : 'border-gray-300 bg-white'
+                          }
+                        `}>
+                          {isSelected && (
+                            <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
             );
           })}
         </div>

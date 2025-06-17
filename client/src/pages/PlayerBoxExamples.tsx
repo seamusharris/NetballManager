@@ -68,6 +68,137 @@ export default function PlayerBoxExamples() {
           Different layouts and configurations of the PlayerBox component
         </p>
       </div>
+
+      {/* Quick Reference Section */}
+      <section className="mb-8 bg-blue-50 p-6 rounded-lg border border-blue-200">
+        <h2 className="text-2xl font-semibold mb-4 text-blue-800">Quick Reference - Standard Player Box Styles</h2>
+        <p className="text-blue-700 mb-6">These are the most commonly used player box variations in the app:</p>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          
+          {/* White Border + Shadow (Recommended Standard) */}
+          <div className="bg-white p-4 rounded-lg border">
+            <h3 className="text-lg font-medium mb-3 text-gray-800">White Border + Shadow</h3>
+            <p className="text-sm text-gray-600 mb-3">Recommended standard style for most use cases</p>
+            <PlayerBox 
+              player={samplePlayers[0]}
+              size="md"
+              showPositions={true}
+              className="[&_.player-avatar]:border-4 [&_.player-avatar]:border-white [&_.player-avatar]:shadow-lg [&_.player-avatar]:shadow-black/15"
+            />
+          </div>
+
+          {/* Colored Background with Dark Border */}
+          <div className="bg-white p-4 rounded-lg border">
+            <h3 className="text-lg font-medium mb-3 text-gray-800">Colored Background + Dark Border</h3>
+            <p className="text-sm text-gray-600 mb-3">For availability and selection interfaces</p>
+            {(() => {
+              const player = samplePlayers[1];
+              const playerColorHex = (() => {
+                const colorMap: Record<string, string> = {
+                  'bg-red-500': '#ef4444', 'bg-red-600': '#dc2626',
+                  'bg-orange-500': '#f97316', 'bg-orange-600': '#ea580c',
+                  'bg-yellow-600': '#ca8a04', 'bg-amber-600': '#d97706',
+                  'bg-green-600': '#16a34a', 'bg-green-700': '#15803d',
+                  'bg-teal-600': '#0d9488', 'bg-cyan-600': '#0891b2',
+                  'bg-blue-500': '#3b82f6', 'bg-blue-600': '#2563eb',
+                  'bg-purple-500': '#a855f7', 'bg-purple-600': '#9333ea'
+                };
+                return colorMap[player.avatarColor || 'bg-gray-500'] || '#6b7280';
+              })();
+
+              return (
+                <PlayerBox 
+                  player={player}
+                  size="md"
+                  showPositions={true}
+                  className="border-2 shadow-md"
+                  style={{ 
+                    backgroundColor: `${playerColorHex}15`,
+                    borderColor: `${playerColorHex}80`,
+                    color: playerColorHex
+                  }}
+                />
+              );
+            })()}
+          </div>
+
+          {/* Court Position Style */}
+          <div className="bg-white p-4 rounded-lg border">
+            <h3 className="text-lg font-medium mb-3 text-gray-800">Court Position Style</h3>
+            <p className="text-sm text-gray-600 mb-3">For game lineups and court displays</p>
+            <PlayerBox 
+              player={samplePlayers[2]}
+              size="md"
+              showPositions={true}
+              className="[&>div>div:first-child]:border-4 [&>div>div:first-child]:border-white [&>div>div:first-child]:shadow-lg [&>div>div:first-child]:shadow-black/25"
+            />
+          </div>
+
+          {/* Background Darkening Hover */}
+          <div className="bg-white p-4 rounded-lg border">
+            <h3 className="text-lg font-medium mb-3 text-gray-800">Background Darkening Hover</h3>
+            <p className="text-sm text-gray-600 mb-3">Interactive style similar to games list</p>
+            {(() => {
+              const player = samplePlayers[3];
+              const playerColorHex = (() => {
+                const colorMap: Record<string, string> = {
+                  'bg-red-500': '#ef4444', 'bg-red-600': '#dc2626',
+                  'bg-orange-500': '#f97316', 'bg-orange-600': '#ea580c',
+                  'bg-yellow-600': '#ca8a04', 'bg-amber-600': '#d97706',
+                  'bg-green-600': '#16a34a', 'bg-green-700': '#15803d',
+                  'bg-teal-600': '#0d9488', 'bg-cyan-600': '#0891b2',
+                  'bg-blue-500': '#3b82f6', 'bg-blue-600': '#2563eb',
+                  'bg-purple-500': '#a855f7', 'bg-purple-600': '#9333ea'
+                };
+                return colorMap[player.avatarColor || 'bg-gray-500'] || '#6b7280';
+              })();
+
+              return (
+                <div 
+                  className="rounded-lg border-2 transition-all duration-300 cursor-pointer hover:brightness-85 [&:hover_.player-avatar]:brightness-[1.18]"
+                  style={{ 
+                    backgroundColor: `${playerColorHex}18`,
+                    borderColor: `${playerColorHex}85`,
+                    color: playerColorHex
+                  }}
+                >
+                  <PlayerBox 
+                    player={player}
+                    size="md"
+                    showPositions={true}
+                    className="[&>div]:bg-transparent [&>div]:border-0 [&>div]:shadow-none [&>div]:cursor-pointer [&>div>div:first-child]:border-2 [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-2 [&>div>div:first-child]:ring-current"
+                  />
+                </div>
+              );
+            })()}
+          </div>
+
+          {/* Compact Style */}
+          <div className="bg-white p-4 rounded-lg border">
+            <h3 className="text-lg font-medium mb-3 text-gray-800">Compact Style</h3>
+            <p className="text-sm text-gray-600 mb-3">For dense layouts and lists</p>
+            <PlayerBox 
+              player={samplePlayers[4]}
+              size="sm"
+              showPositions={true}
+              className="[&_.player-avatar]:border-2 [&_.player-avatar]:border-white [&_.player-avatar]:shadow-md [&_.player-avatar]:shadow-black/15"
+            />
+          </div>
+
+          {/* Premium Style */}
+          <div className="bg-white p-4 rounded-lg border">
+            <h3 className="text-lg font-medium mb-3 text-gray-800">Premium Style</h3>
+            <p className="text-sm text-gray-600 mb-3">For featured content and highlights</p>
+            <PlayerBox 
+              player={samplePlayers[0]}
+              size="lg"
+              showPositions={true}
+              className="[&>div>div:first-child]:border-4 [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-2 [&>div>div:first-child]:ring-current [&>div>div:first-child]:shadow-xl [&>div>div:first-child]:shadow-black/25"
+            />
+          </div>
+        </div>
+      </section>
       
       <div className="space-y-8">
         {/* Basic PlayerBox */}
