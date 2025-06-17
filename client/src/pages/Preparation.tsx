@@ -696,7 +696,7 @@ export default function Preparation() {
   // Fetch batch statistics for historical analysis
   const { statsMap: centralizedStats = {}, isLoading: statsLoading } = useBatchGameStatistics(gameIds);
   const { rostersMap: centralizedRosters = {}, isLoading: rostersLoading } = useBatchRosterData(gameIds);
-  
+
   // Fetch official scores for accurate win rate calculation
   const { data: centralizedScores = {}, isLoading: scoresLoading } = useQuery({
     queryKey: ['game-scores-batch', gameIds],
@@ -793,7 +793,7 @@ export default function Preparation() {
     if (!selectedGame) return;
 
     const opponentTeamId = selectedGame.homeTeamId === currentTeamId 
-      ? selectedGame.awayTeamId 
+      ? selectedteamId 
       : selectedGame.homeTeamId;
 
     const opponentTeamName = selectedGame.homeTeamId === currentTeamId 
@@ -809,16 +809,14 @@ export default function Preparation() {
       return;
     }
 
-    // Find all games against this opponent
-    const opponentGames = completedGames
-    .filter(game => {
-      const isHomeGame = game.homeClubId === currentClubId;
-      const isAwayGame = game.awayClubId === currentClubId;
-
-      if (isHomeGame && !isAwayGame) {
-        return game.awayTeamId === opponentTeamId;
-      } else if (isAwayGame && !isHomeGame) {
-        return game.homeTeamId === opponentTeamId;
+    // Find all games against this opponent (including intra-club games)
+    const opponentGames = completedGames.filter(game => {
+      // Filter games where current team played against the specific opponent team
+      if (game.homeTeamId === currentTeamId && game.awayTeamId === opponentTeamId) {
+        return true;
+      }
+      if (game.awayTeamId === currentTeamId && game.homeTeamId === opponentTeamId) {
+        return true;
       }
       return false;
     });
@@ -985,7 +983,7 @@ export default function Preparation() {
 
     const recentResults = recentGames.map(game => {
       const gameStats = centralizedStats[game.id] || [];
-      
+
       // Calculate scores correctly for team vs opponent
       let teamScore = 0;
       let opponentScore = 0;
@@ -1010,7 +1008,7 @@ export default function Preparation() {
 
       const result = getWinLoseLabel(teamScore, opponentScore);
       console.log(`Team Insights: Game ${game.id} - Team: ${teamScore}, Opponent: ${opponentScore}, Result: ${result}`);
-      
+
       return result;
     });
 
@@ -1114,7 +1112,7 @@ export default function Preparation() {
     teamGamesForWinRate.forEach(game => {
       // Try to get official scores first from centralizedScores (batch format)
       const gameOfficialScores = centralizedScores?.[game.id] || [];
-      
+
       let teamScore = 0;
       let opponentScore = 0;
       let hasValidScore = false;
@@ -1137,9 +1135,9 @@ export default function Preparation() {
         // Check if we have scores for both teams
         const ourTeamHasScores = gameOfficialScores.some(s => s.teamId === ourTeamId);
         const theirTeamHasScores = gameOfficialScores.some(s => s.teamId === theirTeamId);
-        
+
         hasValidScore = ourTeamHasScores && theirTeamHasScores;
-        
+
         console.log(`Player Recommendations: Game ${game.id} - Official scores: Our team ${ourTeamId}: ${teamScore}, Their team ${theirTeamId}: ${opponentScore}, Valid: ${hasValidScore}`);
       }
 
@@ -1147,9 +1145,9 @@ export default function Preparation() {
       if (!hasValidScore && 
           typeof game.statusTeamGoals === 'number' && 
           typeof game.statusOpponentGoals === 'number') {
-        
+
         const isHome = game.homeTeamId === currentTeamId;
-        
+
         if (isHome) {
           teamScore = game.statusTeamGoals;
           opponentScore = game.statusOpponentGoals;
@@ -1157,7 +1155,7 @@ export default function Preparation() {
           teamScore = game.statusOpponentGoals;
           opponentScore = game.statusTeamGoals;
         }
-        
+
         hasValidScore = true;
         console.log(`Player Recommendations: Game ${game.id} - Status scores: Team: ${teamScore}, Opponent: ${opponentScore}`);
       }
@@ -1188,15 +1186,14 @@ export default function Preparation() {
           : selectedGame.homeTeamId)
       : null;
 
-    // Find games against this specific opponent
+    // Find all games against this opponent (including intra-club games)
     const opponentGames = completedGames.filter(game => {
-      const isHomeGame = game.homeClubId === currentClubId;
-      const isAwayGame = game.awayClubId === currentClubId;
-
-      if (isHomeGame && !isAwayGame) {
-        return game.awayTeamId === opponentTeamId;
-      } else if (isAwayGame && !isHomeGame) {
-        return game.homeTeamId === opponentTeamId;
+      // Filter games where current team played against the specific opponent team
+      if (game.homeTeamId === currentTeamId && game.awayTeamId === opponentTeamId) {
+        return true;
+      }
+      if (game.awayTeamId === currentTeamId && game.homeTeamId === opponentTeamId) {
+        return true;
       }
       return false;
     });
@@ -1616,7 +1613,8 @@ export default function Preparation() {
                             {Object.entries(teamInsights.positionStrengths)
                               .sort(([,a], [,b]) => b.efficiency - a.efficiency)
                               .slice(0, 4)
-                              .map(([position, stats]) => (
+                              .map(([position, stats]) =>```text
+ (
                                 <div key={position} className="flex items-center justify-between">
                                   <span className="font-medium">{position}</span>
                                   <div className="flex items-center gap-2">
