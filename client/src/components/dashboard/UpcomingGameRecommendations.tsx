@@ -332,3 +332,5 @@ export function UpcomingGameRecommendations({
     </div>
   );
 }
+
+export default UpcomingGameRecommendations;

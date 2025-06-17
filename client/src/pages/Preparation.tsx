@@ -26,8 +26,8 @@ import { useBatchGameStatistics } from '@/components/statistics/hooks/useBatchGa
 import { useBatchRosterData } from '@/components/statistics/hooks/useBatchRosterData';
 import DragDropLineupEditor from '@/components/roster/DragDropLineupEditor';
 import DragDropRosterManager from '@/components/roster/DragDropRosterManager';
-import PlayerCombinationAnalysis from '@/components/dashboard/PlayerCombinationAnalysis';
-import UpcomingGameRecommendations from '@/components/dashboard/UpcomingGameRecommendations';
+import { PlayerCombinationAnalysis } from '@/components/dashboard/PlayerCombinationAnalysis';
+import { UpcomingGameRecommendations } from '@/components/dashboard/UpcomingGameRecommendations';
 import { 
   Trophy, Target, TrendingUp, Users, CheckCircle, Clock, 
   AlertTriangle, Lightbulb, ChevronRight, ArrowRight, 
@@ -103,14 +103,22 @@ interface TeamAnalysisData {
 const NETBALL_POSITIONS = ['GS', 'GA', 'WA', 'C', 'WD', 'GD', 'GK'];
 const POSITIONS_ORDER = ['GS', 'GA', 'WA', 'C', 'WD', 'GD', 'GK'];
 
+interface PreparationParams {
+  gameId?: string;
+}
+
 export default function Preparation() {
   const { currentClubId, currentTeamId } = useClub();
-  const [, navigate] = useLocation();
+  const [location, navigate] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Extract gameId from URL (e.g., /preparation/123)
+  const gameIdFromUrl = location.split('/').pop();
+  const gameIdNumber = gameIdFromUrl && !isNaN(Number(gameIdFromUrl)) ? Number(gameIdFromUrl) : null;
+  
   // State management
-  const [selectedGameId, setSelectedGameId] = useState<number | null>(null);
+  const [selectedGameId, setSelectedGameId] = useState<number | null>(gameIdNumber);
   const [activeTab, setActiveTab] = useState('overview');
   const [availabilityData, setAvailabilityData] = useState<Record<number, boolean>>({});
   const [selectedLineup, setSelectedLineup] = useState<Record<string, Player | null>>({
@@ -438,6 +446,18 @@ export default function Preparation() {
 
   const [availablePlayerIds, setAvailablePlayerIds] = useState<number[]>([]);
 
+  // Auto-select game from URL parameter
+  useEffect(() => {
+    if (gameIdNumber && upcomingGames.length > 0) {
+      const gameExists = upcomingGames.find(game => game.id === gameIdNumber);
+      if (gameExists) {
+        setSelectedGameId(gameIdNumber);
+      }
+    } else if (upcomingGames.length > 0 && !selectedGameId) {
+      // Fallback to first upcoming game if no URL param
+      setSelectedGameId(upcomingGames[0].id);
+    }
+  }, [gameIdNumber, upcomingGames, selectedGameId]);
 
   if (gamesLoading || playersLoading) {
     return (

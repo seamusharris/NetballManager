@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -35,7 +34,7 @@ interface TeamSpecificResult extends CombinationResult {
   opponentGames: number;
 }
 
-export function PlayerCombinationAnalysis({ 
+function PlayerCombinationAnalysis({ 
   games, 
   players, 
   centralizedStats, 
@@ -59,7 +58,7 @@ export function PlayerCombinationAnalysis({
         .map(game => {
           const isHomeGame = game.homeClubId === currentClubId;
           const isAwayGame = game.awayClubId === currentClubId;
-          
+
           if (isHomeGame && !isAwayGame) {
             return game.awayTeamName;
           } else if (isAwayGame && !isHomeGame) {
@@ -88,7 +87,7 @@ export function PlayerCombinationAnalysis({
     if (size === playerIds.length) return [playerIds];
 
     const combinations: number[][] = [];
-    
+
     function backtrack(start: number, currentCombination: number[]) {
       if (currentCombination.length === size) {
         combinations.push([...currentCombination]);
@@ -127,7 +126,7 @@ export function PlayerCombinationAnalysis({
     completedGames.forEach(game => {
       const gameStats = centralizedStats[game.id] || [];
       const gameRosters = centralizedRosters[game.id] || [];
-      
+
       if (gameStats.length === 0 || gameRosters.length === 0) return;
 
       // Calculate game totals
@@ -137,7 +136,7 @@ export function PlayerCombinationAnalysis({
 
       // Get players who played in this game
       const playersInGame = Array.from(new Set(gameRosters.map(r => r.playerId))).filter(Boolean);
-      
+
       // Filter by position if specified
       let filteredPlayers = playersInGame;
       if (selectedPositions.length > 0) {
@@ -187,7 +186,7 @@ export function PlayerCombinationAnalysis({
         let opponent = null;
         const isHomeGame = game.homeClubId === currentClubId;
         const isAwayGame = game.awayClubId === currentClubId;
-        
+
         if (isHomeGame && !isAwayGame) {
           // We are home team, opponent is away team
           opponent = game.awayTeamName;
@@ -369,7 +368,7 @@ export function PlayerCombinationAnalysis({
                             {combo.effectiveness.toFixed(1)}
                           </Badge>
                         </div>
-                        
+
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
                           <div>
                             <div className="font-medium text-gray-600">Games Played</div>
@@ -449,7 +448,7 @@ export function PlayerCombinationAnalysis({
                             {combo.effectiveness.toFixed(1)}
                           </Badge>
                         </div>
-                        
+
                         <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-sm">
                           <div>
                             <div className="font-medium text-gray-600">Games vs Opponent</div>
@@ -486,3 +485,5 @@ export function PlayerCombinationAnalysis({
     </Card>
   );
 }
+
+export default PlayerCombinationAnalysis;

@@ -1,0 +1,41 @@
+
+import { useQuery } from '@tanstack/react-query';
+import { apiClient } from '@/lib/apiClient';
+import { useClub } from '@/contexts/ClubContext';
+
+interface Game {
+  id: number;
+  date: string;
+  time: string;
+  homeTeamId: number;
+  awayTeamId: number;
+  statusIsCompleted: boolean;
+  isBye?: boolean;
+}
+
+export function useNextGame() {
+  const { currentTeamId } = useClub();
+
+  return useQuery({
+    queryKey: ['next-game', currentTeamId],
+    queryFn: async (): Promise<Game | null> => {
+      if (!currentTeamId) return null;
+      
+      const games = await apiClient.get<Game[]>(`/api/games`);
+      
+      // Filter for upcoming games for the current team
+      const upcomingGames = games
+        .filter(game => {
+          const isCompleted = game.statusIsCompleted === true;
+          const isTeamGame = game.homeTeamId === currentTeamId || game.awayTeamId === currentTeamId;
+          
+          return !isCompleted && isTeamGame && !game.isBye;
+        })
+        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+      return upcomingGames[0] || null;
+    },
+    enabled: !!currentTeamId,
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+  });
+}

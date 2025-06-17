@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { TEAM_NAME } from '@/lib/settings';
 import { useClub } from '@/contexts/ClubContext';
+import { useNextGame } from '@/hooks/use-next-game';
 
 interface SidebarProps {
   isMobileOpen: boolean;
@@ -17,6 +18,7 @@ interface SidebarProps {
 export default function Sidebar({ isMobileOpen, setIsMobileOpen, isTablet }: SidebarProps) {
   const [location] = useLocation();
   const { currentTeamId, currentTeam } = useClub();
+  const { data: nextGame, isLoading: isLoadingNextGame } = useNextGame();
 
   const isActive = (path: string) => {
     if (path === '/' && location === '/') return true;
@@ -55,8 +57,8 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen, isTablet }: Sid
         icon: <ClipboardList className="w-5 h-5" /> 
       },
       { 
-        path: `/preparation/${currentTeamId}`, 
-        label: 'Game Preparation', 
+        path: nextGame ? `/preparation/${nextGame.id}` : `/games/${currentTeamId}`, 
+        label: nextGame ? 'Next Game Prep' : 'Game Preparation', 
         icon: <Target className="w-5 h-5" /> 
       },
       { 
@@ -94,10 +96,10 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen, isTablet }: Sid
       },
       { 
         path: '/teams', 
-        label: 'Game Preparation', 
+        label: 'Next Game Prep', 
         icon: <Target className="w-5 h-5" />, 
         disabled: true,
-        fallbackLabel: 'Game Preparation (Select Team First)'
+        fallbackLabel: 'Next Game Prep (Select Team First)'
       },
       { 
         path: '/teams', 
