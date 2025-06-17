@@ -896,6 +896,209 @@ export default function PlayerBoxExamples() {
               </div>
             </div>
 
+            {/* Working Select Example */}
+            <div>
+              <h4 className="text-sm font-medium mb-2 text-gray-700">Working Select Example</h4>
+              <p className="text-sm text-gray-600 mb-3">Click the boxes to see selection states in action</p>
+              <div className="space-y-3">
+                <div className="relative">
+                  <div 
+                    className="absolute top-1/2 right-3 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2 mr-3 transition-all duration-200"
+                    style={{ backgroundColor: selectedPlayers.has(50) ? '#16a34a' : 'transparent', border: selectedPlayers.has(50) ? 'none' : '2px solid #16a34a80' }}
+                    onClick={() => togglePlayerSelection(50)}
+                  >
+                    {selectedPlayers.has(50) && '✓'}
+                  </div>
+                  <PlayerBox 
+                    player={{id: 50, displayName: "Interactive Example 1", positionPreferences: ["GA", "GS"], avatarColor: "bg-green-600"}}
+                    size="md"
+                    showPositions={true}
+                    className="shadow-md transition-all duration-200 hover:shadow-lg cursor-pointer"
+                    style={{ 
+                      backgroundColor: selectedPlayers.has(50) ? '#16a34a25' : '#16a34a15',
+                      borderColor: '#16a34a',
+                      color: '#15803d'
+                    }}
+                    onClick={() => togglePlayerSelection(50)}
+                  />
+                </div>
+                <div className="relative">
+                  <div 
+                    className="absolute top-1/2 right-3 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2 mr-3 transition-all duration-200"
+                    style={{ backgroundColor: selectedPlayers.has(51) ? '#3b82f6' : 'transparent', border: selectedPlayers.has(51) ? 'none' : '2px solid #3b82f680' }}
+                    onClick={() => togglePlayerSelection(51)}
+                  >
+                    {selectedPlayers.has(51) && '✓'}
+                  </div>
+                  <PlayerBox 
+                    player={{id: 51, displayName: "Interactive Example 2", positionPreferences: ["C", "WA"], avatarColor: "bg-blue-500"}}
+                    size="md"
+                    showPositions={true}
+                    className="shadow-md transition-all duration-200 hover:shadow-lg cursor-pointer"
+                    style={{ 
+                      backgroundColor: selectedPlayers.has(51) ? '#3b82f625' : '#3b82f615',
+                      borderColor: '#3b82f6',
+                      color: '#1d4ed8'
+                    }}
+                    onClick={() => togglePlayerSelection(51)}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Badge Color Variations */}
+            <div>
+              <h4 className="text-sm font-medium mb-2 text-gray-700">Badge Color Variations - Adapting to Avatar Colors</h4>
+              <p className="text-sm text-gray-600 mb-3">Badges that adapt to work well with different avatar color schemes</p>
+              <div className="space-y-4">
+                
+                {/* Standard Badge Approach */}
+                <div>
+                  <h5 className="text-xs font-medium mb-2 text-gray-600">Standard Badge (Fixed Colors)</h5>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <PlayerBox
+                      player={{id: 30, displayName: "Standard Badge 1", avatarColor: "bg-green-600", active: false}}
+                      size="md"
+                      showPositions={true}
+                      className="shadow-md transition-shadow duration-200 hover:shadow-lg"
+                      style={{ borderColor: '#16a34a', color: '#15803d' }}
+                    />
+                    <PlayerBox
+                      player={{id: 31, displayName: "Standard Badge 2", avatarColor: "bg-purple-500", active: false}}
+                      size="md"
+                      showPositions={true}
+                      className="shadow-md transition-shadow duration-200 hover:shadow-lg"
+                      style={{ borderColor: '#a855f7', color: '#7e22ce' }}
+                    />
+                  </div>
+                </div>
+
+                {/* Color-Adapted Badge Approach */}
+                <div>
+                  <h5 className="text-xs font-medium mb-2 text-gray-600">Color-Adapted Badges (Matches Avatar Color)</h5>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <PlayerBox
+                      player={{id: 32, displayName: "Color-Adapted 1", avatarColor: "bg-green-600", active: false}}
+                      size="md"
+                      showPositions={true}
+                      customBadge={
+                        <div className="px-2 py-1 text-xs rounded" style={{ backgroundColor: '#16a34a25', color: '#15803d', border: '1px solid #16a34a50' }}>
+                          Inactive
+                        </div>
+                      }
+                      className="shadow-md transition-shadow duration-200 hover:shadow-lg"
+                      style={{ borderColor: '#16a34a', color: '#15803d' }}
+                    />
+                    <PlayerBox
+                      player={{id: 33, displayName: "Color-Adapted 2", avatarColor: "bg-purple-500", active: false}}
+                      size="md"
+                      showPositions={true}
+                      customBadge={
+                        <div className="px-2 py-1 text-xs rounded" style={{ backgroundColor: '#a855f725', color: '#7e22ce', border: '1px solid #a855f750' }}>
+                          Inactive
+                        </div>
+                      }
+                      className="shadow-md transition-shadow duration-200 hover:shadow-lg"
+                      style={{ borderColor: '#a855f7', color: '#7e22ce' }}
+                    />
+                  </div>
+                </div>
+
+                {/* Badge Type Examples */}
+                <div>
+                  <h5 className="text-xs font-medium mb-2 text-gray-600">Different Badge Types with Color Adaptation</h5>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {/* Season Badge */}
+                    <PlayerBox
+                      player={{id: 34, displayName: "Season Badge Example", avatarColor: "bg-orange-500", active: true}}
+                      size="md"
+                      showPositions={true}
+                      customBadge={
+                        <div className="px-2 py-1 text-xs rounded" style={{ backgroundColor: '#f9731625', color: '#ea580c', border: '1px solid #f9731650' }}>
+                          New
+                        </div>
+                      }
+                      className="shadow-md transition-shadow duration-200 hover:shadow-lg"
+                      style={{ borderColor: '#f97316', color: '#ea580c' }}
+                    />
+
+                    {/* Team Badge */}
+                    <PlayerBox
+                      player={{id: 35, displayName: "Team Badge Example", avatarColor: "bg-red-500", active: true}}
+                      size="md"
+                      showPositions={true}
+                      customBadge={
+                        <div className="px-2 py-1 text-xs rounded" style={{ backgroundColor: '#ef444425', color: '#dc2626', border: '1px solid #ef444450' }}>
+                          Captain
+                        </div>
+                      }
+                      className="shadow-md transition-shadow duration-200 hover:shadow-lg"
+                      style={{ borderColor: '#ef4444', color: '#dc2626' }}
+                    />
+
+                    {/* Status Badge */}
+                    <PlayerBox
+                      player={{id: 36, displayName: "Status Badge Example", avatarColor: "bg-amber-500", active: true}}
+                      size="md"
+                      showPositions={true}
+                      customBadge={
+                        <div className="px-2 py-1 text-xs rounded" style={{ backgroundColor: '#f59e0b25', color: '#d97706', border: '1px solid #f59e0b50' }}>
+                          Injured
+                        </div>
+                      }
+                      className="shadow-md transition-shadow duration-200 hover:shadow-lg"
+                      style={{ borderColor: '#f59e0b', color: '#d97706' }}
+                    />
+
+                    {/* Playing Status Badge */}
+                    <PlayerBox
+                      player={{id: 37, displayName: "Playing Status Example", avatarColor: "bg-teal-500", active: true}}
+                      size="md"
+                      showPositions={true}
+                      customBadge={
+                        <div className="px-2 py-1 text-xs rounded" style={{ backgroundColor: '#14b8a625', color: '#0d9488', border: '1px solid #14b8a650' }}>
+                          On Loan
+                        </div>
+                      }
+                      className="shadow-md transition-shadow duration-200 hover:shadow-lg"
+                      style={{ borderColor: '#14b8a6', color: '#0d9488' }}
+                    />
+                  </div>
+                </div>
+
+                {/* Contrast Badge Examples */}
+                <div>
+                  <h5 className="text-xs font-medium mb-2 text-gray-600">High-Contrast Badges (For Better Visibility)</h5>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <PlayerBox
+                      player={{id: 38, displayName: "High Contrast 1", avatarColor: "bg-indigo-500", active: false}}
+                      size="md"
+                      showPositions={true}
+                      customBadge={
+                        <div className="px-2 py-1 text-xs rounded bg-white text-gray-800 border border-gray-300 shadow-sm">
+                          Inactive
+                        </div>
+                      }
+                      className="shadow-md transition-shadow duration-200 hover:shadow-lg"
+                      style={{ borderColor: '#6366f1', color: '#4338ca' }}
+                    />
+                    <PlayerBox
+                      player={{id: 39, displayName: "High Contrast 2", avatarColor: "bg-slate-500", active: false}}
+                      size="md"
+                      showPositions={true}
+                      customBadge={
+                        <div className="px-2 py-1 text-xs rounded bg-gray-800 text-white">
+                          Inactive
+                        </div>
+                      }
+                      className="shadow-md transition-shadow duration-200 hover:shadow-lg"
+                      style={{ borderColor: '#64748b', color: '#475569' }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div>
               <h4 className="text-sm font-medium mb-2 text-gray-700">Small Size - Compact Layout with Consistent Heights</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">

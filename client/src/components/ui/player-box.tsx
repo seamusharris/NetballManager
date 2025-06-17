@@ -215,7 +215,11 @@ export function PlayerBox({
 
         {/* Stats positioned on the right */}
         {stats && stats.length > 0 && (
-          <div className="flex space-x-6 ml-6 mr-12">
+          <div className={cn(
+            "flex space-x-6 ml-6",
+            // Right margin should match the left margin of the avatar (space-x-3 = 12px)
+            sizeClasses[size] === "p-2" ? "mr-2" : sizeClasses[size] === "p-3" ? "mr-3" : "mr-4"
+          )}>
             {stats.map((stat, index) => (
               <div key={index} className="text-center">
                 <div className={`${size === 'sm' ? 'text-lg' : size === 'md' ? 'text-2xl' : 'text-3xl'} font-bold`}>
