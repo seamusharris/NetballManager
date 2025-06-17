@@ -470,6 +470,98 @@ export default function PlayerBoxExamples() {
           </div>
         </div>
       </section>
+
+      {/* Third Copy of Quick Reference Section */}
+      <section className="mb-8 bg-purple-50 p-6 rounded-lg border border-purple-200">
+        <h2 className="text-2xl font-semibold mb-4 text-purple-800">Quick Reference - Standard Player Box Styles (Copy 3)</h2>
+        <p className="text-purple-700 mb-6">These are the most commonly used player box variations in the app:</p>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          
+          {/* White Border + Shadow (Recommended Standard) */}
+          <div className="bg-white p-4 rounded-lg border">
+            <h3 className="text-lg font-medium mb-3 text-gray-800">White Border + Shadow</h3>
+            <p className="text-sm text-gray-600 mb-3">Recommended standard style for most use cases</p>
+            <PlayerBox 
+              player={samplePlayers[0]}
+              size="md"
+              showPositions={true}
+              className="[&_.player-avatar]:border-4 [&_.player-avatar]:border-white [&_.player-avatar]:shadow-lg [&_.player-avatar]:shadow-black/15"
+            />
+          </div>
+
+          {/* Colored Background + Dark Border */}
+          <div className="bg-white p-4 rounded-lg border">
+            <h3 className="text-lg font-medium mb-3 text-gray-800">Colored Background + Dark Border</h3>
+            <p className="text-sm text-gray-600 mb-3">Good for selection states and emphasis</p>
+            <PlayerBox 
+              player={samplePlayers[1]}
+              size="md"
+              showPositions={true}
+              className="shadow-md"
+            />
+          </div>
+
+          {/* Court Position Style */}
+          <div className="bg-white p-4 rounded-lg border">
+            <h3 className="text-lg font-medium mb-3 text-gray-800">Court Position Style</h3>
+            <p className="text-sm text-gray-600 mb-3">Enhanced styling for court positioning</p>
+            <PlayerBox 
+              player={samplePlayers[2]}
+              size="md"
+              showPositions={true}
+              className="[&>div>div:first-child]:border-4 [&>div>div:first-child]:border-white [&>div>div:first-child]:shadow-lg [&>div>div:first-child]:shadow-black/25"
+            />
+          </div>
+
+          {/* Background Darkening Hover */}
+          <div className="bg-white p-4 rounded-lg border">
+            <h3 className="text-lg font-medium mb-3 text-gray-800">Background Darkening Hover</h3>
+            <p className="text-sm text-gray-600 mb-3">Interactive hover effects with brightness control</p>
+            <div className="relative">
+              <div 
+                className="absolute top-1/2 right-4 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2"
+                style={{ backgroundColor: '#f97316' }}
+              >
+                ✓
+              </div>
+              <div 
+                className="rounded-lg transition-all duration-300 cursor-pointer hover:brightness-90 [&:hover_.player-avatar]:brightness-[1.11]"
+              >
+                <PlayerBox 
+                  player={samplePlayers[3]}
+                  size="md"
+                  showPositions={true}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Compact Style */}
+          <div className="bg-white p-4 rounded-lg border">
+            <h3 className="text-lg font-medium mb-3 text-gray-800">Compact Style</h3>
+            <p className="text-sm text-gray-600 mb-3">Smaller size for lists and condensed views</p>
+            <PlayerBox 
+              player={samplePlayers[4]}
+              size="sm"
+              showPositions={true}
+              className="[&_.player-avatar]:border-2 [&_.player-avatar]:border-white [&_.player-avatar]:shadow-md [&_.player-avatar]:shadow-black/15"
+            />
+          </div>
+
+          {/* Premium Style */}
+          <div className="bg-white p-4 rounded-lg border">
+            <h3 className="text-lg font-medium mb-3 text-gray-800">Premium Style</h3>
+            <p className="text-sm text-gray-600 mb-3">Enhanced styling with rings and larger size</p>
+            <PlayerBox 
+              player={samplePlayers[0]}
+              size="lg"
+              showPositions={true}
+              className="[&>div>div:first-child]:border-4 [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-2 [&>div>div:first-child]:ring-current [&>div>div:first-child]:shadow-xl [&>div>div:first-child]:shadow-black/25"
+            />
+          </div>
+        </div>
+      </section>
       
       <div className="space-y-8">
         {/* Basic PlayerBox */}
