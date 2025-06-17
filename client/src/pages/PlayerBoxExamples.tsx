@@ -235,9 +235,9 @@ export default function PlayerBoxExamples() {
           
           <div className="space-y-6">
             {/* Basic Stats */}
-            <div className="relative w-full">
+            <div className="relative w-full border-2 rounded-lg p-4" style={{ backgroundColor: '#3b82f615', borderColor: '#3b82f680' }}>
               <div 
-                className="absolute top-1/2 right-3 w-6 h-6 border-2 rounded flex items-center justify-center cursor-pointer z-10 transform -translate-y-1/2"
+                className="absolute top-4 right-4 w-6 h-6 border-2 rounded flex items-center justify-center cursor-pointer z-10"
                 style={{ 
                   borderColor: '#3b82f6', 
                   backgroundColor: '#3b82f6'
@@ -255,19 +255,15 @@ export default function PlayerBoxExamples() {
                   { label: "Goals", value: 24 },
                   { label: "Assists", value: 8 }
                 ]}
-                className="!border-0 !shadow-none [&_.player-avatar]:border-4 [&_.player-avatar]:border-white [&_.player-avatar]:shadow-lg [&_.player-avatar]:shadow-black/15 hover:brightness-90"
-                style={{ 
-                  backgroundColor: '#3b82f615',
-                  borderColor: '#3b82f680',
-                  color: '#3b82f6'
-                }}
+                className="[&>div]:!border-0 [&>div]:!shadow-none [&>div]:!bg-transparent [&_.player-avatar]:border-4 [&_.player-avatar]:border-white [&_.player-avatar]:shadow-lg [&_.player-avatar]:shadow-black/15"
+                style={{ color: '#3b82f6' }}
               />
             </div>
 
             {/* Extended Stats */}
-            <div className="relative w-full">
+            <div className="relative w-full border-2 rounded-lg p-4" style={{ backgroundColor: '#16a34a15', borderColor: '#16a34a80' }}>
               <div 
-                className="absolute top-1/2 right-3 w-6 h-6 border-2 rounded cursor-pointer z-10 transform -translate-y-1/2"
+                className="absolute top-4 right-4 w-6 h-6 border-2 rounded cursor-pointer z-10"
                 style={{ 
                   borderColor: '#16a34a', 
                   backgroundColor: 'white'
@@ -283,19 +279,15 @@ export default function PlayerBoxExamples() {
                   { label: "Accuracy", value: "92%" },
                   { label: "Games", value: 12 }
                 ]}
-                className="!border-0 !shadow-none [&_.player-avatar]:border-4 [&_.player-avatar]:border-white [&_.player-avatar]:shadow-lg [&_.player-avatar]:shadow-black/15 hover:brightness-90"
-                style={{ 
-                  backgroundColor: '#16a34a15',
-                  borderColor: '#16a34a80',
-                  color: '#16a34a'
-                }}
+                className="[&>div]:!border-0 [&>div]:!shadow-none [&>div]:!bg-transparent [&_.player-avatar]:border-4 [&_.player-avatar]:border-white [&_.player-avatar]:shadow-lg [&_.player-avatar]:shadow-black/15"
+                style={{ color: '#16a34a' }}
               />
             </div>
 
             {/* Performance Stats */}
-            <div className="relative w-full">
+            <div className="relative w-full border-2 rounded-lg p-4" style={{ backgroundColor: '#a855f715', borderColor: '#a855f780' }}>
               <div 
-                className="absolute top-1/2 right-3 w-6 h-6 border-2 rounded flex items-center justify-center cursor-pointer z-10 transform -translate-y-1/2"
+                className="absolute top-4 right-4 w-6 h-6 border-2 rounded flex items-center justify-center cursor-pointer z-10"
                 style={{ 
                   borderColor: '#a855f7', 
                   backgroundColor: '#a855f7'
@@ -314,12 +306,8 @@ export default function PlayerBoxExamples() {
                   { label: "Deflections", value: 23 },
                   { label: "Rating", value: "8.5" }
                 ]}
-                className="!border-0 !shadow-none [&_.player-avatar]:border-4 [&_.player-avatar]:border-white [&_.player-avatar]:shadow-lg [&_.player-avatar]:shadow-black/15 hover:brightness-90"
-                style={{ 
-                  backgroundColor: '#a855f715',
-                  borderColor: '#a855f780',
-                  color: '#a855f7'
-                }}
+                className="[&>div]:!border-0 [&>div]:!shadow-none [&>div]:!bg-transparent [&_.player-avatar]:border-4 [&_.player-avatar]:border-white [&_.player-avatar]:shadow-lg [&_.player-avatar]:shadow-black/15"
+                style={{ color: '#a855f7' }}
               />
             </div>
           </div>
@@ -489,9 +477,9 @@ export default function PlayerBoxExamples() {
             <div>
               <h4 className="text-lg font-medium mb-3 text-gray-700">Large Format with Extended Stats</h4>
               <div className="space-y-6">
-                <div className="relative w-full">
+                <div className="relative w-full border-2 rounded-lg p-6" style={{ backgroundColor: '#3b82f615', borderColor: '#3b82f680' }}>
                   <div 
-                    className="absolute top-1/2 right-3 w-8 h-8 border-2 rounded flex items-center justify-center cursor-pointer z-10 transform -translate-y-1/2"
+                    className="absolute top-6 right-6 w-8 h-8 border-2 rounded flex items-center justify-center cursor-pointer z-10"
                     style={{ 
                       borderColor: '#3b82f6', 
                       backgroundColor: '#3b82f6'
@@ -511,18 +499,14 @@ export default function PlayerBoxExamples() {
                       { label: "Accuracy", value: "94%" },
                       { label: "MVP", value: 3 }
                     ]}
-                    className="!border-0 !shadow-none [&_.player-avatar]:border-4 [&_.player-avatar]:border-white [&_.player-avatar]:shadow-lg [&_.player-avatar]:shadow-black/15 hover:brightness-90"
-                    style={{ 
-                      backgroundColor: '#3b82f615',
-                      borderColor: '#3b82f680',
-                      color: '#3b82f6'
-                    }}
+                    className="[&>div]:!border-0 [&>div]:!shadow-none [&>div]:!bg-transparent [&_.player-avatar]:border-4 [&_.player-avatar]:border-white [&_.player-avatar]:shadow-lg [&_.player-avatar]:shadow-black/15"
+                    style={{ color: '#3b82f6' }}
                   />
                 </div>
 
-                <div className="relative w-full">
+                <div className="relative w-full border-2 rounded-lg p-6" style={{ backgroundColor: '#16a34a15', borderColor: '#16a34a80' }}>
                   <div 
-                    className="absolute top-1/2 right-3 w-8 h-8 border-2 rounded cursor-pointer z-10 transform -translate-y-1/2"
+                    className="absolute top-6 right-6 w-8 h-8 border-2 rounded cursor-pointer z-10"
                     style={{ 
                       borderColor: '#16a34a', 
                       backgroundColor: 'white'
@@ -539,12 +523,8 @@ export default function PlayerBoxExamples() {
                       { label: "Games", value: 15 },
                       { label: "Rating", value: "9.1" }
                     ]}
-                    className="!border-0 !shadow-none [&_.player-avatar]:border-4 [&_.player-avatar]:border-white [&_.player-avatar]:shadow-lg [&_.player-avatar]:shadow-black/15 hover:brightness-90"
-                    style={{ 
-                      backgroundColor: '#16a34a15',
-                      borderColor: '#16a34a80',
-                      color: '#16a34a'
-                    }}
+                    className="[&>div]:!border-0 [&>div]:!shadow-none [&>div]:!bg-transparent [&_.player-avatar]:border-4 [&_.player-avatar]:border-white [&_.player-avatar]:shadow-lg [&_.player-avatar]:shadow-black/15"
+                    style={{ color: '#16a34a' }}
                   />
                 </div>
               </div>
@@ -560,7 +540,7 @@ export default function PlayerBoxExamples() {
             {/* Standard Hover */}
             <div className="relative">
               <div 
-                className="absolute top-1/2 right-4 w-6 h-6 border-2 rounded flex items-center justify-center cursor-pointer z-10 transform -translate-y-1/2"
+                className="absolute top-4 right-4 w-6 h-6 border-2 rounded flex items-center justify-center cursor-pointer z-10"
                 style={{ 
                   borderColor: '#dc2626', 
                   backgroundColor: '#dc2626'
@@ -571,7 +551,7 @@ export default function PlayerBoxExamples() {
                 </svg>
               </div>
               <div 
-                className="border-2 rounded-lg transition-all duration-300 cursor-pointer hover:brightness-85 hover:shadow-lg"
+                className="border-2 rounded-lg p-4 transition-all duration-300 cursor-pointer hover:brightness-85 hover:shadow-lg"
                 style={{ 
                   backgroundColor: '#dc262615',
                   borderColor: '#dc262680',
@@ -582,7 +562,7 @@ export default function PlayerBoxExamples() {
                   player={{...samplePlayers[4], avatarColor: "bg-red-600"}}
                   size="md"
                   showPositions={true}
-                  className="[&>div]:bg-transparent [&>div]:border-0 [&>div]:shadow-none [&_.player-avatar]:border-4 [&_.player-avatar]:border-white [&_.player-avatar]:shadow-lg [&_.player-avatar]:shadow-black/15"
+                  className="[&>div]:!bg-transparent [&>div]:!border-0 [&>div]:!shadow-none [&_.player-avatar]:border-4 [&_.player-avatar]:border-white [&_.player-avatar]:shadow-lg [&_.player-avatar]:shadow-black/15"
                 />
               </div>
             </div>
@@ -590,7 +570,7 @@ export default function PlayerBoxExamples() {
             {/* Enhanced Hover */}
             <div className="relative">
               <div 
-                className="absolute top-1/2 right-4 w-6 h-6 border-2 rounded cursor-pointer z-10 transform -translate-y-1/2"
+                className="absolute top-4 right-4 w-6 h-6 border-2 rounded cursor-pointer z-10"
                 style={{ 
                   borderColor: '#f97316', 
                   backgroundColor: 'white'
@@ -598,7 +578,7 @@ export default function PlayerBoxExamples() {
               >
               </div>
               <div 
-                className="border-2 rounded-lg transition-all duration-300 cursor-pointer hover:brightness-75 hover:scale-[1.02] hover:shadow-xl"
+                className="border-2 rounded-lg p-4 transition-all duration-300 cursor-pointer hover:brightness-75 hover:scale-[1.02] hover:shadow-xl"
                 style={{ 
                   backgroundColor: '#f9731615',
                   borderColor: '#f9731680',
@@ -609,7 +589,7 @@ export default function PlayerBoxExamples() {
                   player={{...samplePlayers[3], avatarColor: "bg-orange-500"}}
                   size="md"
                   showPositions={true}
-                  className="[&>div]:bg-transparent [&>div]:border-0 [&>div]:shadow-none [&_.player-avatar]:border-4 [&_.player-avatar]:border-white [&_.player-avatar]:shadow-lg [&_.player-avatar]:shadow-black/15"
+                  className="[&>div]:!bg-transparent [&>div]:!border-0 [&>div]:!shadow-none [&_.player-avatar]:border-4 [&_.player-avatar]:border-white [&_.player-avatar]:shadow-lg [&_.player-avatar]:shadow-black/15"
                 />
               </div>
             </div>
@@ -617,7 +597,7 @@ export default function PlayerBoxExamples() {
             {/* Subtle Hover */}
             <div className="relative">
               <div 
-                className="absolute top-1/2 right-4 w-6 h-6 border-2 rounded flex items-center justify-center cursor-pointer z-10 transform -translate-y-1/2"
+                className="absolute top-4 right-4 w-6 h-6 border-2 rounded flex items-center justify-center cursor-pointer z-10"
                 style={{ 
                   borderColor: '#a855f7', 
                   backgroundColor: '#a855f7'
@@ -628,7 +608,7 @@ export default function PlayerBoxExamples() {
                 </svg>
               </div>
               <div 
-                className="border-2 rounded-lg transition-all duration-300 cursor-pointer hover:brightness-90 hover:-translate-y-0.5"
+                className="border-2 rounded-lg p-4 transition-all duration-300 cursor-pointer hover:brightness-90 hover:-translate-y-0.5"
                 style={{ 
                   backgroundColor: '#a855f715',
                   borderColor: '#a855f780',
@@ -639,7 +619,7 @@ export default function PlayerBoxExamples() {
                   player={{...samplePlayers[2], avatarColor: "bg-purple-500"}}
                   size="md"
                   showPositions={true}
-                  className="[&>div]:bg-transparent [&>div]:border-0 [&>div]:shadow-none [&_.player-avatar]:border-4 [&_.player-avatar]:border-white [&_.player-avatar]:shadow-lg [&_.player-avatar]:shadow-black/15"
+                  className="[&>div]:!bg-transparent [&>div]:!border-0 [&>div]:!shadow-none [&_.player-avatar]:border-4 [&_.player-avatar]:border-white [&_.player-avatar]:shadow-lg [&_.player-avatar]:shadow-black/15"
                 />
               </div>
             </div>
@@ -651,9 +631,9 @@ export default function PlayerBoxExamples() {
           <h3 className="text-2xl font-semibold mb-6 text-gray-800">Special Use Cases</h3>
           
           <div className="space-y-6">
-            {/* Court Position Ready */}
+            {/* Court Position Ready - With Selection */}
             <div>
-              <h4 className="text-lg font-medium mb-3 text-gray-700">Court Position Ready</h4>
+              <h4 className="text-lg font-medium mb-3 text-gray-700">Court Position Ready - With Selection</h4>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 {["GS", "GA", "WA", "C"].map((position, index) => {
                   const colors = ['#ef4444', '#f97316', '#16a34a', '#3b82f6'];
@@ -681,6 +661,99 @@ export default function PlayerBoxExamples() {
                         size="md"
                         showPositions={true}
                         className="border-2 [&_.player-avatar]:border-4 [&_.player-avatar]:border-white [&_.player-avatar]:shadow-lg [&_.player-avatar]:shadow-black/15 hover:brightness-90"
+                        style={{ 
+                          backgroundColor: `${colors[index]}15`,
+                          borderColor: `${colors[index]}80`,
+                          color: colors[index]
+                        }}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Court Position Ready - No Selection (Display Only) */}
+            <div>
+              <h4 className="text-lg font-medium mb-3 text-gray-700">Court Position Ready - Display Only (No Selection)</h4>
+              <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
+                {["GS", "GA", "WA", "C", "WD", "GD", "GK"].map((position, index) => {
+                  const colors = ['#ef4444', '#f97316', '#16a34a', '#3b82f6', '#9333ea', '#0d9488', '#dc2626'];
+                  const bgColors = ['bg-red-500', 'bg-orange-500', 'bg-green-600', 'bg-blue-500', 'bg-purple-600', 'bg-teal-600', 'bg-red-600'];
+                  
+                  return (
+                    <div key={`court-${position}`}>
+                      <PlayerBox 
+                        player={{
+                          ...samplePlayers[index % samplePlayers.length],
+                          avatarColor: bgColors[index],
+                          positionPreferences: [position]
+                        }}
+                        size="md"
+                        showPositions={true}
+                        className="border-2 [&_.player-avatar]:border-4 [&_.player-avatar]:border-white [&_.player-avatar]:shadow-lg [&_.player-avatar]:shadow-black/15 hover:brightness-90"
+                        style={{ 
+                          backgroundColor: `${colors[index]}15`,
+                          borderColor: `${colors[index]}80`,
+                          color: colors[index]
+                        }}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Court Position - Large Format Display */}
+            <div>
+              <h4 className="text-lg font-medium mb-3 text-gray-700">Court Position - Large Format Display</h4>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                {["GS", "GA", "WA", "C"].map((position, index) => {
+                  const colors = ['#ef4444', '#f97316', '#16a34a', '#3b82f6'];
+                  const bgColors = ['bg-red-500', 'bg-orange-500', 'bg-green-600', 'bg-blue-500'];
+                  
+                  return (
+                    <div key={`large-court-${position}`}>
+                      <PlayerBox 
+                        player={{
+                          ...samplePlayers[index],
+                          avatarColor: bgColors[index],
+                          positionPreferences: [position]
+                        }}
+                        size="lg"
+                        showPositions={true}
+                        className="border-2 [&_.player-avatar]:border-4 [&_.player-avatar]:border-white [&_.player-avatar]:shadow-lg [&_.player-avatar]:shadow-black/15 hover:brightness-90"
+                        style={{ 
+                          backgroundColor: `${colors[index]}15`,
+                          borderColor: `${colors[index]}80`,
+                          color: colors[index]
+                        }}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Court Position - Compact Format */}
+            <div>
+              <h4 className="text-lg font-medium mb-3 text-gray-700">Court Position - Compact Format</h4>
+              <div className="grid grid-cols-2 md:grid-cols-7 gap-3">
+                {["GS", "GA", "WA", "C", "WD", "GD", "GK"].map((position, index) => {
+                  const colors = ['#ef4444', '#f97316', '#16a34a', '#3b82f6', '#9333ea', '#0d9488', '#dc2626'];
+                  const bgColors = ['bg-red-500', 'bg-orange-500', 'bg-green-600', 'bg-blue-500', 'bg-purple-600', 'bg-teal-600', 'bg-red-600'];
+                  
+                  return (
+                    <div key={`compact-court-${position}`}>
+                      <PlayerBox 
+                        player={{
+                          ...samplePlayers[index % samplePlayers.length],
+                          avatarColor: bgColors[index],
+                          positionPreferences: [position]
+                        }}
+                        size="sm"
+                        showPositions={true}
+                        className="border-2 [&_.player-avatar]:border-3 [&_.player-avatar]:border-white [&_.player-avatar]:shadow-md [&_.player-avatar]:shadow-black/15 hover:brightness-90"
                         style={{ 
                           backgroundColor: `${colors[index]}15`,
                           borderColor: `${colors[index]}80`,
