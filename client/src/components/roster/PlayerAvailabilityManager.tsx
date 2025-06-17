@@ -104,8 +104,12 @@ export default function PlayerAvailabilityManager({
 
       setIsLoadingTeamPlayers(true);
       try {
-        // Determine which team we're managing by checking current team context
-        const currentTeamId = sessionStorage.getItem('currentTeamId');
+        // Get current team context from URL or session storage
+        const urlParams = new URLSearchParams(window.location.search);
+        const teamFromUrl = urlParams.get('teamId');
+        const teamFromSession = sessionStorage.getItem('currentTeamId');
+        const currentTeamId = teamFromUrl || teamFromSession;
+        
         let teamToLoad = selectedGame.homeTeamId;
         
         // If we have current team context and it matches one of the teams in this game, use that
@@ -117,13 +121,22 @@ export default function PlayerAvailabilityManager({
         }
 
         console.log(`Loading team players for team ${teamToLoad} (game ${gameId})`);
-        const response = await apiClient.get(`/api/teams/${teamToLoad}/players`);
-        console.log(`Loaded ${response.length} team players for team ${teamToLoad}`);
-        setTeamPlayers(response);
+        
+        try {
+          const response = await apiClient.get(`/api/teams/${teamToLoad}/players`);
+          console.log(`Loaded ${response.length} team players for team ${teamToLoad}`);
+          setTeamPlayers(response);
+        } catch (teamError) {
+          // If team-specific endpoint fails, try loading all club players and filter
+          console.log('Team players endpoint failed, trying club players with filter');
+          const allPlayers = await apiClient.get('/api/players');
+          console.log(`Loaded ${allPlayers.length} club players, using all as fallback`);
+          setTeamPlayers(allPlayers);
+        }
       } catch (error) {
         console.error('Error loading team players:', error);
-        // Fallback to all club players if team players can't be loaded
-        console.log('Falling back to all club players');
+        // Final fallback to props players
+        console.log('Final fallback to props players');
         setTeamPlayers(players);
       } finally {
         setIsLoadingTeamPlayers(false);

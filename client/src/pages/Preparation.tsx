@@ -26,6 +26,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useBatchGameStatistics } from '@/components/statistics/hooks/useBatchGameStatistics';
 import { useBatchRosterData } from '@/components/statistics/hooks/useBatchRosterData';
 import DragDropLineupEditor from '@/components/roster/DragDropLineupEditor';
+import DragDropRosterManager from '@/components/roster/DragDropRosterManager';
 import PlayerCombinationAnalysis from '@/components/dashboard/PlayerCombinationAnalysis';
 import UpcomingGameRecommendations from '@/components/dashboard/UpcomingGameRecommendations';
 import { 
@@ -986,6 +987,36 @@ export default function Preparation() {
                       toast({
                         title: "Lineup Applied",
                         description: "Recommended lineup has been applied to the editor",
+                      });
+                    }}
+                  />
+                </CardContent>
+              </Card>
+
+              {/* Full Roster Management Interface */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Grid3X3 className="h-5 w-5 text-purple-600" />
+                    Complete Roster Management
+                  </CardTitle>
+                  <p className="text-sm text-gray-600">
+                    Manage full quarter-by-quarter roster assignments for {opponentName}
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  <DragDropRosterManager
+                    availablePlayers={teamPlayers.filter((p: Player) => availabilityData[p.id] === 'available')}
+                    gameInfo={{
+                      opponent: opponentName || 'Unknown Opponent',
+                      date: selectedGame?.date || '',
+                      time: selectedGame?.time || ''
+                    }}
+                    onRosterChange={(roster) => {
+                      console.log('Full roster changed:', roster);
+                      toast({
+                        title: "Roster Updated",
+                        description: "Quarter-by-quarter roster has been updated",
                       });
                     }}
                   />
