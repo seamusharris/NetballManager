@@ -115,6 +115,8 @@ export default function QuarterPerformanceWidget({
     validGameIds.forEach(gameId => {
       const gameStats = gameStatsMap[gameId];
       console.log(`QuarterPerformanceWidget processing game ${gameId}:`, gameStats ? `${gameStats.length} stats` : 'no stats');
+      
+      // Skip if no data available
       if (!gameStats || gameStats.length === 0) return;
 
       const gameQuarterScores: Record<number, { team: number, opponent: number }> = {
@@ -124,19 +126,28 @@ export default function QuarterPerformanceWidget({
         4: { team: 0, opponent: 0 }
       };
 
+      // Process stats to calculate quarter scores
       gameStats.forEach(stat => {
         if (stat.quarter < 1 || stat.quarter > 4) return;
         const quarter = stat.quarter;
-        gameQuarterScores[quarter].team += stat.goalsFor || 0;
-        gameQuarterScores[quarter].opponent += stat.goalsAgainst || 0;
+        
+        // Add goals for the team
+        if (stat.teamId === games.find(g => g.id === gameId)?.homeTeamId || 
+            stat.teamId === games.find(g => g.id === gameId)?.awayTeamId) {
+          gameQuarterScores[quarter].team += stat.goalsFor || 0;
+          gameQuarterScores[quarter].opponent += stat.goalsAgainst || 0;
+        }
       });
 
+      // Add to overall totals if we have valid quarter data
       Object.keys(gameQuarterScores).forEach(quarterStr => {
         const quarter = parseInt(quarterStr);
         const quarterScore = gameQuarterScores[quarter];
-        quarterScores[quarter].team += quarterScore.team;
-        quarterScores[quarter].opponent += quarterScore.opponent;
-        quarterScores[quarter].count += 1;
+        if (quarterScore.team > 0 || quarterScore.opponent > 0) {
+          quarterScores[quarter].team += quarterScore.team;
+          quarterScores[quarter].opponent += quarterScore.opponent;
+          quarterScores[quarter].count += 1;
+        }
       });
     });
 

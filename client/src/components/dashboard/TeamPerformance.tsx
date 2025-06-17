@@ -119,12 +119,14 @@ const TeamPerformance = ({ games, className, activeSeason, selectedSeason, centr
           try {
             // Get official scores from centralized data
             const officialScores = centralizedScores?.[gameId] || [];
+            // Get game stats for fallback
+            const gameStats = gameStatsMap[gameId] || [];
             
-            console.log(`TeamPerformance: Processing game ${gameId} - Official scores count: ${officialScores.length}`);
+            console.log(`TeamPerformance: Processing game ${gameId} - Official scores count: ${officialScores.length}, Stats count: ${gameStats.length}`);
 
             // Use gameScoreService for consistent score calculation
             const gameScores = gameScoreService.calculateGameScoresSync(
-              [], // gameStats - not needed when we have official scores
+              gameStats, // Include game stats for fallback
               game.statusName, // game status
               { teamGoals: game.statusTeamGoals, opponentGoals: game.statusOpponentGoals }, // status scores
               game.isInterClub, // is inter club
@@ -139,16 +141,17 @@ const TeamPerformance = ({ games, className, activeSeason, selectedSeason, centr
 
             // Add quarter-by-quarter data from gameScores
             gameScores.quarterScores.forEach(qScore => {
-              if (qScore.teamScore > 0 || qScore.opponentScore > 0) {
+              if (qScore.quarter >= 1 && qScore.quarter <= 4) {
                 quarterScores[qScore.quarter].team += qScore.teamScore;
                 quarterScores[qScore.quarter].opponent += qScore.opponentScore;
                 quarterScores[qScore.quarter].count += 1;
               }
             });
 
-            hasValidScores = (teamScore > 0 || opponentScore > 0);
+            hasValidScores = (teamScore > 0 || opponentScore > 0) || gameScores.quarterScores.length > 0;
             
             const scoreSource = officialScores.length > 0 ? 'official' : 
+                              gameStats.length > 0 ? 'stats' :
                               (game.statusTeamGoals !== null && game.statusOpponentGoals !== null) ? 'fixed' : 'none';
             
             console.log(`TeamPerformance: Game ${gameId} scores (${scoreSource}) - Team: ${teamScore}, Opponent: ${opponentScore}, Result: ${gameScores.result}`);

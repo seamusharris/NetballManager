@@ -104,6 +104,16 @@ class ApiClient {
         throw new Error(`HTTP ${response.status}: ${errorText}`);
       }
 
+      // Handle empty responses (common with DELETE requests)
+      const contentType = response.headers.get('content-type');
+      const contentLength = response.headers.get('content-length');
+      
+      if (contentLength === '0' || !contentType?.includes('application/json')) {
+        console.log(`API Client: Empty or non-JSON response`);
+        console.log(`=== API CLIENT REQUEST SUCCESS END ===\n`);
+        return {} as T;
+      }
+
       const result = await response.json();
       console.log(`API Client: SUCCESS Response:`, result);
       console.log(`=== API CLIENT REQUEST SUCCESS END ===\n`);

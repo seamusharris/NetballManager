@@ -68,7 +68,7 @@ export default function OpponentPreparation() {
       if (currentTeamId) {
         headers['x-current-team-id'] = currentTeamId.toString();
       }
-      return apiClient.get('/api/games', { headers });
+      return apiClient.get('/api/games', headers);
     },
     enabled: !!currentClubId,
   });
@@ -90,11 +90,14 @@ export default function OpponentPreparation() {
   const { rostersMap: centralizedRosters = {}, isLoading: isLoadingRosters } = useBatchRosterData(gameIds);
 
   useEffect(() => {
-    if (!centralizedStats || Object.keys(centralizedStats).length === 0 || completedGames.length === 0) return;
+    if (!centralizedStats || Object.keys(centralizedStats).length === 0 || !games || games.length === 0) return;
+
+    const completedGamesInEffect = games.filter(game => game.statusIsCompleted && game.statusAllowsStatistics);
+    if (completedGamesInEffect.length === 0) return;
 
     const opponentTeamsMap = new Map<number, OpponentTeam>();
 
-    completedGames.forEach(game => {
+    completedGamesInEffect.forEach(game => {
       // Determine which team is the opponent
       let opponentTeamId: number | null = null;
       let opponentTeamName = '';
@@ -182,7 +185,7 @@ export default function OpponentPreparation() {
     opponentsList.sort((a, b) => new Date(b.lastPlayed).getTime() - new Date(a.lastPlayed).getTime());
 
     setOpponents(opponentsList);
-  }, [centralizedStats, completedGames, currentClubId]);
+  }, [centralizedStats, games, currentClubId, currentTeamId]);
 
   const analyzeGame = (game: any): GameAnalysis => {
     const gameStats = centralizedStats[game.id] || [];
