@@ -487,6 +487,10 @@ export default function PlayerBoxExamples() {
               size="md"
               showPositions={true}
               className="[&_.player-avatar]:border-4 [&_.player-avatar]:border-white [&_.player-avatar]:shadow-lg [&_.player-avatar]:shadow-black/15"
+              style={{ 
+                borderColor: '#3b82f680',
+                color: '#1d4ed8'
+              }}
             />
           </div>
 
