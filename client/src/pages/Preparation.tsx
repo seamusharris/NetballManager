@@ -2639,7 +2639,7 @@ export default function Preparation() {
                             </div>
                           </>
                         );
-                      })()}
+                      })()
                     </div>
 
                     {/* Current Selection Summary */}
