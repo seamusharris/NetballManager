@@ -227,7 +227,7 @@ export function PlayerBox({
             "flex space-x-6 ml-6",
             // Adjust right margin based on select box presence and size
             hasSelect 
-              ? (size === 'sm' ? "mr-8" : size === 'md' ? "mr-10" : "mr-12") // More space when select is present
+              ? (size === 'sm' ? "mr-12" : size === 'md' ? "mr-14" : "mr-16") // More space when select is present
               : (sizeClasses[size] === "p-2" ? "mr-2" : sizeClasses[size] === "p-3" ? "mr-3" : "mr-4") // Match avatar spacing when no select
           )}>
             {stats.map((stat, index) => (

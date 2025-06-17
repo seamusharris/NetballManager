@@ -123,6 +123,7 @@ export default function PlayerBoxExamples() {
                     { label: "Turnovers", value: "4" },
                     { label: "Rating", value: "8.5" }
                   ]}
+                  hasSelect={true}
                   className="w-full shadow-md transition-shadow duration-200 hover:shadow-lg"
                   style={{ 
                     borderColor: '#16a34a',
