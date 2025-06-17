@@ -201,8 +201,6 @@ export function UnifiedPlayerAvailability({
             const lightBackgroundColor = `${playerColorHex}20`;
             const borderColor = `${playerColorHex}80`;
             const displayName = player.displayName || `${player.firstName} ${player.lastName}`;
-
-            const playerColorHex = getPlayerColorHex(player);
             const isSelected = isAvailable;
 
             return (
