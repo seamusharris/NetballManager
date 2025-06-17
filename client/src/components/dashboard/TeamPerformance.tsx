@@ -221,6 +221,15 @@ const TeamPerformance = ({ games, className, activeSeason, selectedSeason, centr
 
       // Calculate overall metrics using only games that have actual statistics
       const winRate = actualGamesWithStats > 0 ? Math.round((wins / actualGamesWithStats) * 100) : 0;
+      
+      console.log(`TeamPerformance Win Rate Calculation for team ${currentTeamId}:`, {
+        wins,
+        losses,
+        draws,
+        actualGamesWithStats,
+        calculatedWinRate: winRate,
+        totalCompletedGames: completedGameIds.length
+      });
 
       // Calculate dynamic average team score from actual game data
       const avgTeamScore = actualGamesWithStats > 0 
@@ -238,6 +247,15 @@ const TeamPerformance = ({ games, className, activeSeason, selectedSeason, centr
         : 0;
 
       // Performance calculation completed
+
+      console.log(`TeamPerformance Final State Update for team ${currentTeamId}:`, {
+        teamWinRate: winRate,
+        totalTeamScore,
+        totalOpponentScore,
+        avgTeamScore,
+        avgOpponentScore,
+        actualGamesWithStats
+      });
 
       setQuarterPerformance({
         avgTeamScoreByQuarter,
