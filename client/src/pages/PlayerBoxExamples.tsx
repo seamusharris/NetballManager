@@ -152,6 +152,7 @@ export default function PlayerBoxExamples() {
                     { label: "Rebounds", value: "6" },
                     { label: "Rating", value: "7.8" }
                   ]}
+                  hasSelect={true}
                   className="w-full shadow-md transition-all duration-200 hover:shadow-lg cursor-pointer"
                   style={{ 
                     backgroundColor: selectedPlayers.has(2) ? '#3b82f625' : '#3b82f615',
@@ -182,6 +183,7 @@ export default function PlayerBoxExamples() {
                     { label: "Deflections", value: "11" },
                     { label: "Rating", value: "8.2" }
                   ]}
+                  hasSelect={true}
                   className="w-full shadow-md transition-all duration-200 hover:shadow-lg cursor-pointer"
                   style={{ 
                     backgroundColor: selectedPlayers.has(3) ? '#a855f725' : '#a855f715',
@@ -913,6 +915,7 @@ export default function PlayerBoxExamples() {
                     player={{id: 50, displayName: "Interactive Example 1", positionPreferences: ["GA", "GS"], avatarColor: "bg-green-600"}}
                     size="md"
                     showPositions={true}
+                    hasSelect={true}
                     className="shadow-md transition-all duration-200 hover:shadow-lg cursor-pointer"
                     style={{ 
                       backgroundColor: selectedPlayers.has(50) ? '#16a34a25' : '#16a34a15',
@@ -934,6 +937,7 @@ export default function PlayerBoxExamples() {
                     player={{id: 51, displayName: "Interactive Example 2", positionPreferences: ["C", "WA"], avatarColor: "bg-blue-500"}}
                     size="md"
                     showPositions={true}
+                    hasSelect={true}
                     className="shadow-md transition-all duration-200 hover:shadow-lg cursor-pointer"
                     style={{ 
                       backgroundColor: selectedPlayers.has(51) ? '#3b82f625' : '#3b82f615',
@@ -963,6 +967,7 @@ export default function PlayerBoxExamples() {
                     player={{id: 60, displayName: "White Background 1", positionPreferences: ["GA", "GS"], avatarColor: "bg-green-600"}}
                     size="md"
                     showPositions={true}
+                    hasSelect={true}
                     className="shadow-md transition-all duration-200 hover:shadow-lg cursor-pointer"
                     style={{ 
                       backgroundColor: selectedPlayers.has(60) ? '#16a34a25' : '#ffffff',
@@ -984,6 +989,7 @@ export default function PlayerBoxExamples() {
                     player={{id: 61, displayName: "White Background 2", positionPreferences: ["C", "WA"], avatarColor: "bg-blue-500"}}
                     size="md"
                     showPositions={true}
+                    hasSelect={true}
                     className="shadow-md transition-all duration-200 hover:shadow-lg cursor-pointer"
                     style={{ 
                       backgroundColor: selectedPlayers.has(61) ? '#3b82f625' : '#ffffff',
@@ -1005,6 +1011,7 @@ export default function PlayerBoxExamples() {
                     player={{id: 62, displayName: "White Background 3", positionPreferences: ["GK", "GD"], avatarColor: "bg-purple-500"}}
                     size="md"
                     showPositions={true}
+                    hasSelect={true}
                     className="shadow-md transition-all duration-200 hover:shadow-lg cursor-pointer"
                     style={{ 
                       backgroundColor: selectedPlayers.has(62) ? '#a855f725' : '#ffffff',

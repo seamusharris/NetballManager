@@ -25,6 +25,7 @@ interface PlayerBoxProps {
   style?: React.CSSProperties;
   onClick?: () => void;
   customBadge?: React.ReactNode;
+  hasSelect?: boolean;
 }
 
 export function PlayerBox({ 
@@ -36,7 +37,8 @@ export function PlayerBox({
   size = "md",
   style = {},
   onClick,
-  customBadge
+  customBadge,
+  hasSelect = false
 }: PlayerBoxProps) {
   // Add null safety check
   if (!player) {
@@ -223,8 +225,10 @@ export function PlayerBox({
         {stats && stats.length > 0 && (
           <div className={cn(
             "flex space-x-6 ml-6",
-            // Right margin should match the left margin of the avatar (space-x-3 = 12px)
-            sizeClasses[size] === "p-2" ? "mr-2" : sizeClasses[size] === "p-3" ? "mr-3" : "mr-4"
+            // Adjust right margin based on select box presence and size
+            hasSelect 
+              ? (size === 'sm' ? "mr-8" : size === 'md' ? "mr-10" : "mr-12") // More space when select is present
+              : (sizeClasses[size] === "p-2" ? "mr-2" : sizeClasses[size] === "p-3" ? "mr-3" : "mr-4") // Match avatar spacing when no select
           )}>
             {stats.map((stat, index) => (
               <div key={index} className="text-center">
