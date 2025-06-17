@@ -54,19 +54,19 @@ export function PlayerBox({
 
   const textSizes = {
     sm: {
-      name: "text-xs",
+      name: "text-sm",
       position: "text-xs",
-      stats: "text-xs"
+      stats: "text-sm"
     },
     md: {
-      name: "text-sm",
-      position: "text-xs", 
-      stats: "text-sm"
+      name: "text-base",
+      position: "text-sm", 
+      stats: "text-base"
     },
     lg: {
-      name: "text-base",
-      position: "text-sm",
-      stats: "text-sm"
+      name: "text-lg",
+      position: "text-base",
+      stats: "text-lg"
     }
   };
 
@@ -198,10 +198,10 @@ export function PlayerBox({
 
         {/* Stats positioned on the right */}
         {stats && stats.length > 0 && (
-          <div className="flex space-x-6 ml-6">
+          <div className="flex space-x-6 ml-6 mr-12">
             {stats.map((stat, index) => (
               <div key={index} className="text-center">
-                <div className="text-2xl font-bold">
+                <div className={`${size === 'sm' ? 'text-lg' : size === 'md' ? 'text-2xl' : 'text-3xl'} font-bold`}>
                   {stat.value}
                 </div>
                 <div className={`${textSizes[size].stats} opacity-75`}>

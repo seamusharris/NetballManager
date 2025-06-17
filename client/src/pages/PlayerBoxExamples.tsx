@@ -95,7 +95,7 @@ export default function PlayerBoxExamples() {
             <div className="w-full">
               <div className="relative">
                 <div 
-                  className="absolute top-1/2 right-6 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2 mr-3"
+                  className="absolute top-1/2 right-3 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2"
                   style={{ backgroundColor: '#16a34a' }}
                 >
                   ✓
@@ -123,7 +123,7 @@ export default function PlayerBoxExamples() {
             <div className="w-full">
               <div className="relative">
                 <div 
-                  className="absolute top-1/2 right-6 w-6 h-6 rounded border-2 bg-white cursor-pointer z-10 transform -translate-y-1/2 mr-3"
+                  className="absolute top-1/2 right-3 w-6 h-6 rounded border-2 bg-white cursor-pointer z-10 transform -translate-y-1/2"
                   style={{ borderColor: '#3b82f6' }}
                 >
                 </div>
@@ -150,7 +150,7 @@ export default function PlayerBoxExamples() {
             <div className="w-full">
               <div className="relative">
                 <div 
-                  className="absolute top-1/2 right-6 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2 mr-3"
+                  className="absolute top-1/2 right-3 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2"
                   style={{ backgroundColor: '#a855f7' }}
                 >
                   ✓
