@@ -40,11 +40,17 @@ interface Game {
   id: number;
   date: string;
   time: string;
+  round?: string;
   homeTeamId: number;
   awayTeamId: number;
-  homeTeam: { name: string; clubName: string };
-  awayTeam: { name: string; clubName: string };
+  homeTeamName?: string;
+  awayTeamName?: string;
+  homeClubName?: string;
+  awayClubName?: string;
+  homeTeam?: { name: string; clubName: string };
+  awayTeam?: { name: string; clubName: string };
   statusIsCompleted: boolean;
+  statusName?: string;
 }
 
 interface Player {
@@ -128,9 +134,18 @@ export default function Preparation() {
 
   const opponentName = useMemo(() => {
     if (!selectedGame) return null;
-    return selectedGame.homeTeamId === currentTeamId 
-      ? selectedGame.awayTeam?.name 
-      : selectedGame.homeTeam?.name;
+    
+    // Handle BYE games
+    if (selectedGame.awayTeamName === 'Bye' || selectedGame.homeTeamName === 'Bye') {
+      return 'BYE';
+    }
+    
+    // Determine opponent based on which team we are
+    if (selectedGame.homeTeamId === currentTeamId) {
+      return selectedGame.awayTeamName || selectedGame.awayTeam?.name || 'Unknown Team';
+    } else {
+      return selectedGame.homeTeamName || selectedGame.homeTeam?.name || 'Unknown Team';
+    }
   }, [selectedGame, currentTeamId]);
 
   // Handle applying selections to roster
@@ -176,14 +191,18 @@ export default function Preparation() {
                   <SelectValue placeholder="Choose a game to prepare for..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {upcomingGames.map((game: Game) => (
-                    <SelectItem key={game.id} value={game.id.toString()}>
-                      {new Date(game.date).toLocaleDateString()} - vs{' '}
-                      {game.homeTeamId === currentTeamId 
-                        ? game.awayTeam?.name 
-                        : game.homeTeam?.name}
-                    </SelectItem>
-                  ))}
+                  {upcomingGames.map((game: Game) => {
+                    const opponent = game.homeTeamId === currentTeamId 
+                      ? (game.awayTeamName || game.awayTeam?.name || 'Unknown Team')
+                      : (game.homeTeamName || game.homeTeam?.name || 'Unknown Team');
+                    
+                    return (
+                      <SelectItem key={game.id} value={game.id.toString()}>
+                        {new Date(game.date).toLocaleDateString()} - vs {opponent}
+                        {game.round && ` (Round ${game.round})`}
+                      </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
             )}
@@ -218,10 +237,30 @@ export default function Preparation() {
                           <span>Time:</span>
                           <span>{selectedGame.time}</span>
                         </div>
+                        {selectedGame.round && (
+                          <div className="flex justify-between">
+                            <span>Round:</span>
+                            <span>{selectedGame.round}</span>
+                          </div>
+                        )}
+                        <div className="flex justify-between">
+                          <span>Venue:</span>
+                          <span>{selectedGame.homeTeamId === currentTeamId ? 'Home' : 'Away'}</span>
+                        </div>
                         <div className="flex justify-between">
                           <span>Opponent:</span>
-                          <span className="font-medium">{opponentName}</span>
+                          <span className="font-medium">{opponentName || 'Unknown Opponent'}</span>
                         </div>
+                        {opponentName !== 'BYE' && opponentName !== 'Unknown Opponent' && (
+                          <div className="flex justify-between">
+                            <span>Opponent Club:</span>
+                            <span className="text-xs">
+                              {selectedGame.homeTeamId === currentTeamId 
+                                ? (selectedGame.awayClubName || 'Unknown Club')
+                                : (selectedGame.homeClubName || 'Unknown Club')}
+                            </span>
+                          </div>
+                        )}
                       </div>
                     </div>
                     <div>
