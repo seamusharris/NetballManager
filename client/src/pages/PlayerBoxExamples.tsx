@@ -529,29 +529,66 @@ export default function PlayerBoxExamples() {
           </div>
         </div>
 
-         {/* Hover Animation Example */}
-         <div className="mb-6">
-            <h3 className="text-lg font-medium mb-4 text-gray-800">Hover Animation Example</h3>
-            <p className="text-gray-700 mb-3">Demonstrates a scaling hover effect.</p>
-            <PlayerBox
-              player={samplePlayers[0]}
-              size="md"
-              showPositions={true}
-              className="transition-transform transform hover:scale-105 duration-300 shadow-md"
-            />
+         {/* Shadow Comparison Examples */}
+        <div className="mb-6">
+          <h3 className="text-lg font-medium mb-4 text-gray-800">Shadow Comparison: Mismatched vs Properly Proportioned</h3>
+          <div className="space-y-4">
+            <div>
+              <h4 className="text-sm font-medium mb-2 text-gray-700">❌ Mismatched Shadow (Too Big for Box)</h4>
+              <div className="w-64 p-3 bg-blue-50 border-2 border-blue-300 rounded-lg shadow-2xl">
+                <p className="text-sm text-blue-800">Small box with oversized shadow creates visual imbalance</p>
+              </div>
+            </div>
+            <div>
+              <h4 className="text-sm font-medium mb-2 text-gray-700">✅ Properly Proportioned Shadow</h4>
+              <PlayerBox
+                player={{...samplePlayers[0], displayName: "Emma Wilson", avatarColor: "bg-blue-500"}}
+                size="md"
+                showPositions={true}
+                className="w-64 shadow-md transition-shadow duration-200 hover:shadow-lg"
+                style={{ 
+                  borderColor: '#3b82f6',
+                  color: '#1d4ed8'
+                }}
+              />
+            </div>
           </div>
+        </div>
 
-          {/* Design Recommendation Example: Standard */}
-          <div className="mb-6">
-            <h3 className="text-lg font-medium mb-4 text-gray-800">Design Recommendation: Standard</h3>
-            <p className="text-gray-700 mb-3">A clean, standard design for general use.</p>
-            <PlayerBox
-              player={samplePlayers[1]}
-              size="md"
-              showPositions={true}
-              className="shadow-sm border border-gray-200 rounded-md"
-            />
+        {/* Hover Animation Guidelines */}
+        <div className="mb-6">
+          <h3 className="text-lg font-medium mb-4 text-gray-800">Hover Animation Guidelines</h3>
+          <div className="space-y-4">
+            <div>
+              <h4 className="text-sm font-medium mb-2 text-gray-700">For Clickable Items (Like Court Position Ready)</h4>
+              <p className="text-sm text-gray-600 mb-2">Subtle scale and enhanced shadow for items that navigate somewhere</p>
+              <PlayerBox
+                player={{...samplePlayers[1], displayName: "Sarah Johnson", avatarColor: "bg-green-600"}}
+                size="md"
+                showPositions={true}
+                className="w-64 shadow-lg transition-all duration-200 hover:shadow-xl hover:scale-[1.02]"
+                style={{ 
+                  borderColor: '#16a34a',
+                  color: '#15803d'
+                }}
+              />
+            </div>
+            <div>
+              <h4 className="text-sm font-medium mb-2 text-gray-700">For Display-Only Items</h4>
+              <p className="text-sm text-gray-600 mb-2">Minimal shadow change only</p>
+              <PlayerBox
+                player={{...samplePlayers[2], displayName: "Lily Chen", avatarColor: "bg-purple-500"}}
+                size="md"
+                showPositions={true}
+                className="w-64 hover:shadow-lg transition-shadow duration-200"
+                style={{ 
+                  borderColor: '#a855f7',
+                  color: '#7e22ce'
+                }}
+              />
+            </div>
           </div>
+        </div>
       </section>
 
       {/* Quick Reference Section */}

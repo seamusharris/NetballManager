@@ -169,7 +169,7 @@ export function PlayerBox({
           {
             'w-10 h-10 text-sm': size === 'sm',
             'w-14 h-14 text-base': size === 'md',
-            'w-18 h-18 text-2xl': size === 'lg'
+            'w-20 h-20 text-2xl': size === 'lg'
           }
         )}
       >
