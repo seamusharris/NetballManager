@@ -104,39 +104,26 @@ export default function OpponentPreparation() {
       const isHomeGame = game.homeClubId === currentClubId;
       const isAwayGame = game.awayClubId === currentClubId;
 
-      // Note: We include intra-club games for opponent preparation analysis
-
-      if (isHomeGame && !isAwayGame) {
-        // We are home team, opponent is away team
+      // Check if we're involved in this game at all
+      const weAreHome = currentTeamId && game.homeTeamId === currentTeamId;
+      const weAreAway = currentTeamId && game.awayTeamId === currentTeamId;
+      
+      if (weAreHome) {
+        // We are the home team, opponent is away team
         opponentTeamId = game.awayTeamId;
         opponentTeamName = game.awayTeamName;
         opponentClubName = game.awayClubName;
         opponentDivision = game.awayTeamDivision;
-      } else if (isAwayGame && !isHomeGame) {
-        // We are away team, opponent is home team
+      } else if (weAreAway) {
+        // We are the away team, opponent is home team
         opponentTeamId = game.homeTeamId;
         opponentTeamName = game.homeTeamName;
         opponentClubName = game.homeClubName;
         opponentDivision = game.homeTeamDivision;
-      } else if (isHomeGame && isAwayGame) {
-        // Intra-club game: both teams are from our club
-        // Determine opponent based on current team context
-        if (currentTeamId && game.homeTeamId === currentTeamId) {
-          // We are the home team, opponent is away team
-          opponentTeamId = game.awayTeamId;
-          opponentTeamName = game.awayTeamName;
-          opponentClubName = game.awayClubName;
-          opponentDivision = game.awayTeamDivision;
-        } else if (currentTeamId && game.awayTeamId === currentTeamId) {
-          // We are the away team, opponent is home team
-          opponentTeamId = game.homeTeamId;
-          opponentTeamName = game.homeTeamName;
-          opponentClubName = game.homeClubName;
-          opponentDivision = game.homeTeamDivision;
-        }
       }
 
-      if (!opponentTeamId || opponentTeamName === 'Bye') return;
+      // Skip if we're not involved in this game or it's a bye
+      if (!opponentTeamId || opponentTeamName === 'Bye' || (!weAreHome && !weAreAway)) return;
 
       if (!opponentTeamsMap.has(opponentTeamId)) {
         opponentTeamsMap.set(opponentTeamId, {
