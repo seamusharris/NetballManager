@@ -238,9 +238,10 @@ export default function PlayerBoxExamples() {
                     player={player}
                     size="md"
                     showPositions={true}
-                    className="[&_.player-avatar]:border-4 [&_.player-avatar]:border-white [&_.player-avatar]:shadow-lg [&_.player-avatar]:shadow-black/15"
+                    className="border-2 [&_.player-avatar]:border-4 [&_.player-avatar]:border-white [&_.player-avatar]:shadow-lg [&_.player-avatar]:shadow-black/15"
                     style={{ 
                       backgroundColor: `${playerColorHex}15`,
+                      borderColor: `${playerColorHex}80`,
                       color: playerColorHex
                     }}
                   />
@@ -280,9 +281,10 @@ export default function PlayerBoxExamples() {
                     player={player}
                     size="md"
                     showPositions={true}
-                    className="shadow-md"
+                    className="border-2 shadow-md"
                     style={{ 
                       backgroundColor: `${playerColorHex}15`,
+                      borderColor: `${playerColorHex}80`,
                       color: playerColorHex
                     }}
                   />
@@ -322,9 +324,10 @@ export default function PlayerBoxExamples() {
                     player={player}
                     size="md"
                     showPositions={true}
-                    className="[&>div>div:first-child]:border-4 [&>div>div:first-child]:border-white [&>div>div:first-child]:shadow-lg [&>div>div:first-child]:shadow-black/25"
+                    className="border-2 [&>div>div:first-child]:border-4 [&>div>div:first-child]:border-white [&>div>div:first-child]:shadow-lg [&>div>div:first-child]:shadow-black/25"
                     style={{ 
                       backgroundColor: `${playerColorHex}15`,
+                      borderColor: `${playerColorHex}80`,
                       color: playerColorHex
                     }}
                   />
@@ -361,9 +364,10 @@ export default function PlayerBoxExamples() {
                     ✓
                   </div>
                   <div 
-                    className="rounded-lg transition-all duration-300 cursor-pointer hover:brightness-90 [&:hover_.player-avatar]:brightness-[1.11]"
+                    className="rounded-lg border-2 transition-all duration-300 cursor-pointer hover:brightness-90 [&:hover_.player-avatar]:brightness-[1.11]"
                     style={{ 
                       backgroundColor: `${playerColorHex}15`,
+                      borderColor: `${playerColorHex}80`,
                       color: playerColorHex
                     }}
                   >
@@ -410,9 +414,10 @@ export default function PlayerBoxExamples() {
                     player={player}
                     size="sm"
                     showPositions={true}
-                    className="[&_.player-avatar]:border-2 [&_.player-avatar]:border-white [&_.player-avatar]:shadow-md [&_.player-avatar]:shadow-black/15"
+                    className="border-2 [&_.player-avatar]:border-2 [&_.player-avatar]:border-white [&_.player-avatar]:shadow-md [&_.player-avatar]:shadow-black/15"
                     style={{ 
                       backgroundColor: `${playerColorHex}15`,
+                      borderColor: `${playerColorHex}80`,
                       color: playerColorHex
                     }}
                   />
@@ -443,7 +448,7 @@ export default function PlayerBoxExamples() {
               return (
                 <div className="relative">
                   <div 
-                    className="absolute top-2 right-2 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10"
+                    className="absolute top-1/2 right-4 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2"
                     style={{ backgroundColor: playerColorHex }}
                   >
                     ✓
@@ -454,7 +459,8 @@ export default function PlayerBoxExamples() {
                     showPositions={true}
                     className="border-2 [&>div>div:first-child]:border-4 [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-2 [&>div>div:first-child]:ring-current [&>div>div:first-child]:shadow-xl [&>div>div:first-child]:shadow-black/25"
                     style={{ 
-                      borderColor: playerColorHex,
+                      backgroundColor: `${playerColorHex}15`,
+                      borderColor: `${playerColorHex}80`,
                       color: playerColorHex
                     }}
                   />
