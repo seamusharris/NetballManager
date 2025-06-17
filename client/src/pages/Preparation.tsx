@@ -40,8 +40,9 @@ const Preparation = () => {
   const nextGame = useNextGame();
 
   const { data: players, isLoading: isLoadingPlayers, error: errorPlayers } = useQuery({
-    queryKey: ['players'],
-    queryFn: () => apiClient.get('/api/players'),
+    queryKey: ['teamPlayers', currentTeamId],
+    queryFn: () => apiClient.get(`/api/teams/${currentTeamId}/players`),
+    enabled: !!currentTeamId,
   });
 
   const { data: allGames, isLoading: isLoadingGames, error: errorGames } = useQuery({
@@ -227,14 +228,31 @@ const Preparation = () => {
 
           {/* Player Availability Step */}
           {currentStep === 'availability' && selectedGameId && (
-            <PlayerAvailabilityManager
-              gameId={selectedGameId}
-              players={playersData}
-              games={games}
-              onComplete={handleAvailabilityComplete}
-              onAvailabilityChange={setAvailablePlayerIds}
-              onGameChange={(gameId) => setSelectedGameId(gameId)}
-            />
+            <div className="space-y-4">
+              <PlayerAvailabilityManager
+                gameId={selectedGameId}
+                players={playersData}
+                games={games}
+                onComplete={handleAvailabilityComplete}
+                onAvailabilityChange={setAvailablePlayerIds}
+                onGameChange={(gameId) => setSelectedGameId(gameId)}
+              />
+              
+              <div className="flex justify-between">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setCurrentStep('game-selection')}
+                >
+                  ← Back to Game Selection
+                </Button>
+                <Button 
+                  onClick={handleAvailabilityComplete}
+                  disabled={availablePlayerIds.length === 0}
+                >
+                  Continue to Team Lineup → 
+                </Button>
+              </div>
+            </div>
           )}
 
           {/* Roster Management Step */}
