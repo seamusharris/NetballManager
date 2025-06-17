@@ -23,6 +23,8 @@ interface PlayerBoxProps {
   className?: string;
   size?: 'sm' | 'md' | 'lg';
   style?: React.CSSProperties;
+  onClick?: () => void;
+  customBadge?: React.ReactNode;
 }
 
 export function PlayerBox({ 
@@ -32,7 +34,9 @@ export function PlayerBox({
   stats,
   className = "",
   size = "md",
-  style = {}
+  style = {},
+  onClick,
+  customBadge
 }: PlayerBoxProps) {
   // Add null safety check
   if (!player) {
@@ -158,9 +162,11 @@ export function PlayerBox({
       className={cn(
         "flex items-center space-x-3 rounded-lg shadow-md transition-shadow duration-200",
         borderClass,
-        sizeClasses[size]
+        sizeClasses[size],
+        onClick && "cursor-pointer"
       )}
       style={defaultStyle}
+      onClick={onClick}
     >
       <div 
         className={cn(
@@ -190,14 +196,20 @@ export function PlayerBox({
                   ? player.positionPreferences.join(', ') 
                   : 'No position preferences'}
               </span>
-              {player.active === false && (
-                <Badge variant="secondary" className="text-xs">Inactive</Badge>
+              {customBadge ? customBadge : (
+                player.active === false && (
+                  <Badge variant="secondary" className="text-xs">Inactive</Badge>
+                )
               )}
             </div>
           )}
 
-          {!showPositions && player.active === false && (
-            <Badge variant="secondary" className="text-xs mt-1">Inactive</Badge>
+          {!showPositions && (
+            customBadge ? customBadge : (
+              player.active === false && (
+                <Badge variant="secondary" className="text-xs mt-1">Inactive</Badge>
+              )
+            )
           )}
         </div>
 

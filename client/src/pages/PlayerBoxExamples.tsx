@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Helmet } from 'react-helmet';
 import PageTemplate from '@/components/layout/PageTemplate';
 import { PlayerBox } from '@/components/ui/player-box';
@@ -62,6 +62,19 @@ export default function PlayerBoxExamples() {
   ];
 
   const samplePlayer = samplePlayers[0];
+    const [selectedPlayers, setSelectedPlayers] = useState(new Set());
+
+  const togglePlayerSelection = (playerId) => {
+    setSelectedPlayers((prevSelectedPlayers) => {
+      const newSelectedPlayers = new Set(prevSelectedPlayers);
+      if (newSelectedPlayers.has(playerId)) {
+        newSelectedPlayers.delete(playerId);
+      } else {
+        newSelectedPlayers.add(playerId);
+      }
+      return newSelectedPlayers;
+    });
+  };
 
   return (
     <PageTemplate 
@@ -123,9 +136,11 @@ export default function PlayerBoxExamples() {
             <div className="w-full">
               <div className="relative">
                 <div 
-                  className="absolute top-1/2 right-3 w-6 h-6 rounded border-2 bg-white cursor-pointer z-10 transform -translate-y-1/2 mr-3"
-                  style={{ borderColor: '#3b82f6' }}
+                  className="absolute top-1/2 right-3 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2 mr-3 transition-all duration-200"
+                  style={{ backgroundColor: selectedPlayers.has(2) ? '#3b82f6' : 'transparent', border: selectedPlayers.has(2) ? 'none' : '2px solid #3b82f680' }}
+                  onClick={() => togglePlayerSelection(2)}
                 >
+                  {selectedPlayers.has(2) && '✓'}
                 </div>
                 <PlayerBox 
                   player={{...samplePlayers[0], displayName: "Emma Wilson", avatarColor: "bg-blue-500"}}
@@ -137,23 +152,25 @@ export default function PlayerBoxExamples() {
                     { label: "Rebounds", value: "6" },
                     { label: "Rating", value: "7.8" }
                   ]}
-                  className="w-full shadow-md transition-shadow duration-200 hover:shadow-lg"
+                  className="w-full shadow-md transition-all duration-200 hover:shadow-lg cursor-pointer"
                   style={{ 
+                    backgroundColor: selectedPlayers.has(2) ? '#3b82f625' : '#3b82f615',
                     borderColor: '#3b82f6',
                     color: '#1d4ed8'
                   }}
-                />
-              </div>
+                  onClick={() => togglePlayerSelection(2)}
+                /></div>
             </div>
 
             {/* Purple Variation */}
             <div className="w-full">
               <div className="relative">
                 <div 
-                  className="absolute top-1/2 right-3 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2 mr-3"
-                  style={{ backgroundColor: '#a855f7' }}
+                  className="absolute top-1/2 right-3 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2 mr-3 transition-all duration-200"
+                  style={{ backgroundColor: selectedPlayers.has(3) ? '#a855f7' : 'transparent', border: selectedPlayers.has(3) ? 'none' : '2px solid #a855f780' }}
+                  onClick={() => togglePlayerSelection(3)}
                 >
-                  ✓
+                  {selectedPlayers.has(3) && '✓'}
                 </div>
                 <PlayerBox 
                   player={{...samplePlayers[2], displayName: "Lily Chen", avatarColor: "bg-purple-500"}}
@@ -165,13 +182,14 @@ export default function PlayerBoxExamples() {
                     { label: "Deflections", value: "11" },
                     { label: "Rating", value: "8.2" }
                   ]}
-                  className="w-full shadow-md transition-shadow duration-200 hover:shadow-lg"
+                  className="w-full shadow-md transition-all duration-200 hover:shadow-lg cursor-pointer"
                   style={{ 
+                    backgroundColor: selectedPlayers.has(3) ? '#a855f725' : '#a855f715',
                     borderColor: '#a855f7',
                     color: '#7e22ce'
                   }}
-                />
-              </div>
+                  onClick={() => togglePlayerSelection(3)}
+                /></div>
             </div>
           </div>
         </div>
@@ -766,7 +784,7 @@ export default function PlayerBoxExamples() {
                     }}
                   />
                 </div>
-                
+
                 {/* Unselected Player */}
                 <div className="relative">
                   <div 
@@ -815,7 +833,7 @@ export default function PlayerBoxExamples() {
         <div className="mb-6">
           <h3 className="text-lg font-medium mb-4 text-gray-800">Inline Badge Examples - Consistent Box Heights</h3>
           <p className="text-gray-700 mb-4">Badges positioned inline with text content ensure all boxes maintain the same height, whether they have badges or not.</p>
-          
+
           <div className="space-y-6">
             <div>
               <h4 className="text-sm font-medium mb-2 text-gray-700">Medium Size - Mixed Active/Inactive States</h4>
@@ -961,7 +979,7 @@ export default function PlayerBoxExamples() {
               <h4 className="text-sm font-medium mb-2 text-gray-700">Mixed Size Comparison - All Heights Aligned</h4>
               <p className="text-sm text-gray-600 mb-3">Notice how badges appear inline and all boxes maintain consistent heights within each size group</p>
               <div className="space-y-4">
-                
+
                 {/* Small Size Group */}
                 <div>
                   <h5 className="text-xs font-medium mb-2 text-gray-600">Small Size Group</h5>
