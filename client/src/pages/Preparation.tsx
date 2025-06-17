@@ -16,7 +16,7 @@ import { LoadingState } from '@/components/ui/loading-state';
 import { ErrorDisplay } from '@/components/ui/error-display';
 import { PlayerAvatar } from '@/components/ui/player-avatar';
 import { PlayerBox } from '@/components/ui/player-box';
-import { PlayerAvailabilitySelector } from '@/components/ui/player-availability-selector';
+import PlayerAvailabilityManager from '@/components/roster/PlayerAvailabilityManager';
 import { PageTemplate } from '@/components/layout/PageTemplate';
 import { CourtDisplay } from '@/components/ui/court-display';
 import { ResultBadge } from '@/components/ui/result-badge';
@@ -918,11 +918,19 @@ export default function Preparation() {
                   </p>
                 </CardHeader>
                 <CardContent>
-                  <PlayerAvailabilitySelector
+                  <PlayerAvailabilityManager
                     gameId={selectedGame.id}
                     players={Array.isArray(teamPlayers) ? teamPlayers as Player[] : []}
-                    availabilityData={availabilityData}
-                    onAvailabilityChange={(data) => setAvailabilityData(data)}
+                    games={upcomingGames}
+                    opponents={[]}
+                    onAvailabilityChange={(availablePlayerIds) => {
+                      const newAvailabilityData: Record<number, 'available' | 'unavailable' | 'maybe'> = {};
+                      teamPlayers.forEach(player => {
+                        newAvailabilityData[player.id] = availablePlayerIds.includes(player.id) ? 'available' : 'unavailable';
+                      });
+                      setAvailabilityData(newAvailabilityData);
+                    }}
+                    onGameChange={(gameId) => setSelectedGameId(gameId)}
                   />
                 </CardContent>
               </Card>
