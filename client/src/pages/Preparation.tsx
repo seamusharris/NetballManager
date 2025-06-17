@@ -952,16 +952,54 @@ export default function Preparation() {
       return;
     }
 
+    console.log('Team Insights: Analyzing completed games for team', currentTeamId);
+    console.log('Team Insights: Completed games:', completedGames.length);
+
+    // Filter games where current team actually played
+    const teamGames = completedGames.filter(game => {
+      const weAreHome = game.homeTeamId === currentTeamId;
+      const weAreAway = game.awayTeamId === currentTeamId;
+      return weAreHome || weAreAway;
+    });
+
+    console.log('Team Insights: Games where team', currentTeamId, 'played:', teamGames.length);
+
     // Calculate momentum
-    const recentGames = [...completedGames]
+    const recentGames = [...teamGames]
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
       .slice(-5);
 
+    console.log('Team Insights: Recent games for momentum calculation:', recentGames.map(g => g.id));
+
     const recentResults = recentGames.map(game => {
       const gameStats = centralizedStats[game.id] || [];
-      const teamScore = gameStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
-      const opponentScore = gameStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
-      return getWinLoseLabel(teamScore, opponentScore);
+      
+      // Calculate scores correctly for team vs opponent
+      let teamScore = 0;
+      let opponentScore = 0;
+
+      if (game.homeTeamId === currentTeamId) {
+        // We are home team - our stats show goalsFor, opponent stats show goalsAgainst to us
+        teamScore = gameStats
+          .filter(stat => stat.teamId === currentTeamId)
+          .reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
+        opponentScore = gameStats
+          .filter(stat => stat.teamId !== currentTeamId)
+          .reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
+      } else {
+        // We are away team
+        teamScore = gameStats
+          .filter(stat => stat.teamId === currentTeamId)
+          .reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
+        opponentScore = gameStats
+          .filter(stat => stat.teamId !== currentTeamId)
+          .reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
+      }
+
+      const result = getWinLoseLabel(teamScore, opponentScore);
+      console.log(`Team Insights: Game ${game.id} - Team: ${teamScore}, Opponent: ${opponentScore}, Result: ${result}`);
+      
+      return result;
     });
 
     const winWeight = 3, drawWeight = 1, lossWeight = -2;
@@ -1052,6 +1090,45 @@ export default function Preparation() {
   // Generate player recommendations based on selected game
   const playerRecommendations = useMemo((): PlayerRecommendation[] => {
     if (!teamPlayers || !centralizedStats || !selectedGameId) return [];
+
+    // Debug: Check team performance calculation
+    const teamGamesForWinRate = completedGames.filter(game => {
+      const weAreHome = game.homeTeamId === currentTeamId;
+      const weAreAway = game.awayTeamId === currentTeamId;
+      return weAreHome || weAreAway;
+    });
+
+    let wins = 0, total = 0;
+    teamGamesForWinRate.forEach(game => {
+      const gameStats = centralizedStats[game.id] || [];
+      if (gameStats.length === 0) return;
+
+      let teamScore = 0;
+      let opponentScore = 0;
+
+      if (game.homeTeamId === currentTeamId) {
+        teamScore = gameStats
+          .filter(stat => stat.teamId === currentTeamId)
+          .reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
+        opponentScore = gameStats
+          .filter(stat => stat.teamId !== currentTeamId)
+          .reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
+      } else {
+        teamScore = gameStats
+          .filter(stat => stat.teamId === currentTeamId)
+          .reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
+        opponentScore = gameStats
+          .filter(stat => stat.teamId !== currentTeamId)
+          .reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
+      }
+
+      if (teamScore > 0 || opponentScore > 0) { // Only count games with actual scores
+        total++;
+        if (teamScore > opponentScore) wins++;
+      }
+    });
+
+    console.log(`Player Recommendations: Team ${currentTeamId} win rate calculation - ${wins} wins out of ${total} games = ${total > 0 ? ((wins/total)*100).toFixed(1) : 0}%`);
 
     const availablePlayers = teamPlayers.filter(p => 
       availabilityData[p.id] === 'available'
