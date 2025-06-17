@@ -810,6 +810,217 @@ export default function PlayerBoxExamples() {
             </div>
           </div>
         </div>
+
+        {/* Inline Badge Examples for Consistent Height */}
+        <div className="mb-6">
+          <h3 className="text-lg font-medium mb-4 text-gray-800">Inline Badge Examples - Consistent Box Heights</h3>
+          <p className="text-gray-700 mb-4">Badges positioned inline with text content ensure all boxes maintain the same height, whether they have badges or not.</p>
+          
+          <div className="space-y-6">
+            <div>
+              <h4 className="text-sm font-medium mb-2 text-gray-700">Medium Size - Mixed Active/Inactive States</h4>
+              <div className="space-y-3">
+                {/* Active Player - No Badge */}
+                <PlayerBox
+                  player={{...samplePlayers[1], displayName: "Sarah Johnson", avatarColor: "bg-green-600", active: true}}
+                  size="md"
+                  showPositions={true}
+                  className="shadow-md transition-shadow duration-200 hover:shadow-lg"
+                  style={{ 
+                    borderColor: '#16a34a',
+                    color: '#15803d'
+                  }}
+                />
+
+                {/* Inactive Player - Inline Badge */}
+                <PlayerBox
+                  player={{...samplePlayers[2], displayName: "Lily Chen", avatarColor: "bg-purple-500", active: false}}
+                  size="md"
+                  showPositions={true}
+                  className="shadow-md transition-shadow duration-200 hover:shadow-lg"
+                  style={{ 
+                    borderColor: '#a855f7',
+                    color: '#7e22ce'
+                  }}
+                />
+
+                {/* Active Player with Stats - No Badge */}
+                <PlayerBox
+                  player={{...samplePlayers[0], displayName: "Emma Wilson", avatarColor: "bg-blue-500", active: true}}
+                  size="md"
+                  showPositions={true}
+                  stats={[
+                    { label: "Goals", value: "15" },
+                    { label: "Assists", value: "8" }
+                  ]}
+                  className="shadow-md transition-shadow duration-200 hover:shadow-lg"
+                  style={{ 
+                    borderColor: '#3b82f6',
+                    color: '#1d4ed8'
+                  }}
+                />
+
+                {/* Inactive Player with Stats - Inline Badge */}
+                <PlayerBox
+                  player={{...samplePlayers[3], displayName: "Mia Thompson", avatarColor: "bg-orange-500", active: false}}
+                  size="md"
+                  showPositions={true}
+                  stats={[
+                    { label: "Goals", value: "12" },
+                    { label: "Assists", value: "6" }
+                  ]}
+                  className="shadow-md transition-shadow duration-200 hover:shadow-lg"
+                  style={{ 
+                    borderColor: '#f97316',
+                    color: '#ea580c'
+                  }}
+                />
+              </div>
+            </div>
+
+            <div>
+              <h4 className="text-sm font-medium mb-2 text-gray-700">Small Size - Compact Layout with Consistent Heights</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {/* Active Players */}
+                <PlayerBox
+                  player={{id: 15, displayName: "Rachel Green", positionPreferences: ["GA", "GS"], avatarColor: "bg-emerald-500", active: true}}
+                  size="sm"
+                  showPositions={true}
+                  className="shadow-md transition-shadow duration-200 hover:shadow-lg"
+                  style={{ 
+                    borderColor: '#10b981',
+                    color: '#059669'
+                  }}
+                />
+
+                <PlayerBox
+                  player={{id: 16, displayName: "Monica Geller", positionPreferences: ["C", "WA"], avatarColor: "bg-rose-500", active: false}}
+                  size="sm"
+                  showPositions={true}
+                  className="shadow-md transition-shadow duration-200 hover:shadow-lg"
+                  style={{ 
+                    borderColor: '#f43f5e',
+                    color: '#e11d48'
+                  }}
+                />
+
+                <PlayerBox
+                  player={{id: 17, displayName: "Phoebe Buffay", positionPreferences: ["GK"], avatarColor: "bg-amber-500", active: true}}
+                  size="sm"
+                  showPositions={true}
+                  className="shadow-md transition-shadow duration-200 hover:shadow-lg"
+                  style={{ 
+                    borderColor: '#f59e0b',
+                    color: '#d97706'
+                  }}
+                />
+
+                <PlayerBox
+                  player={{id: 18, displayName: "Joey Tribbiani", positionPreferences: ["GD", "WD"], avatarColor: "bg-cyan-500", active: false}}
+                  size="sm"
+                  showPositions={true}
+                  className="shadow-md transition-shadow duration-200 hover:shadow-lg"
+                  style={{ 
+                    borderColor: '#06b6d4',
+                    color: '#0891b2'
+                  }}
+                />
+              </div>
+            </div>
+
+            <div>
+              <h4 className="text-sm font-medium mb-2 text-gray-700">Large Size - Enhanced Layout with Status Badges</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Active Player - Large */}
+                <PlayerBox
+                  player={{...samplePlayers[4], displayName: "Zoe Parker", avatarColor: "bg-red-500", active: true}}
+                  size="lg"
+                  showPositions={true}
+                  className="shadow-md transition-shadow duration-200 hover:shadow-lg"
+                  style={{ 
+                    borderColor: '#ef4444',
+                    color: '#dc2626'
+                  }}
+                />
+
+                {/* Inactive Player - Large with Badge */}
+                <PlayerBox
+                  player={{id: 19, displayName: "Charlotte York", positionPreferences: ["GA", "WA", "C"], avatarColor: "bg-violet-500", active: false}}
+                  size="lg"
+                  showPositions={true}
+                  className="shadow-md transition-shadow duration-200 hover:shadow-lg"
+                  style={{ 
+                    borderColor: '#8b5cf6',
+                    color: '#7c3aed'
+                  }}
+                />
+              </div>
+            </div>
+
+            <div>
+              <h4 className="text-sm font-medium mb-2 text-gray-700">Mixed Size Comparison - All Heights Aligned</h4>
+              <p className="text-sm text-gray-600 mb-3">Notice how badges appear inline and all boxes maintain consistent heights within each size group</p>
+              <div className="space-y-4">
+                
+                {/* Small Size Group */}
+                <div>
+                  <h5 className="text-xs font-medium mb-2 text-gray-600">Small Size Group</h5>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    <PlayerBox
+                      player={{id: 20, displayName: "Carrie B", positionPreferences: ["GS"], avatarColor: "bg-pink-500", active: true}}
+                      size="sm"
+                      showPositions={true}
+                      className="hover:shadow-md transition-shadow duration-200"
+                      style={{ borderColor: '#ec4899', color: '#be185d' }}
+                    />
+                    <PlayerBox
+                      player={{id: 21, displayName: "Miranda H", positionPreferences: ["GK"], avatarColor: "bg-indigo-500", active: false}}
+                      size="sm"
+                      showPositions={true}
+                      className="hover:shadow-md transition-shadow duration-200"
+                      style={{ borderColor: '#6366f1', color: '#4338ca' }}
+                    />
+                    <PlayerBox
+                      player={{id: 22, displayName: "Samantha J", positionPreferences: ["C"], avatarColor: "bg-teal-500", active: true}}
+                      size="sm"
+                      showPositions={true}
+                      className="hover:shadow-md transition-shadow duration-200"
+                      style={{ borderColor: '#14b8a6', color: '#0d9488' }}
+                    />
+                    <PlayerBox
+                      player={{id: 23, displayName: "Jessica P", positionPreferences: ["WA"], avatarColor: "bg-slate-500", active: false}}
+                      size="sm"
+                      showPositions={true}
+                      className="hover:shadow-md transition-shadow duration-200"
+                      style={{ borderColor: '#64748b', color: '#475569' }}
+                    />
+                  </div>
+                </div>
+
+                {/* Medium Size Group */}
+                <div>
+                  <h5 className="text-xs font-medium mb-2 text-gray-600">Medium Size Group</h5>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <PlayerBox
+                      player={{id: 24, displayName: "Blair Waldorf", positionPreferences: ["GA", "GS"], avatarColor: "bg-purple-500", active: true}}
+                      size="md"
+                      showPositions={true}
+                      className="shadow-md transition-shadow duration-200 hover:shadow-lg"
+                      style={{ borderColor: '#a855f7', color: '#7e22ce' }}
+                    />
+                    <PlayerBox
+                      player={{id: 25, displayName: "Serena van der Woodsen", positionPreferences: ["C", "WA"], avatarColor: "bg-yellow-500", active: false}}
+                      size="md"
+                      showPositions={true}
+                      className="shadow-md transition-shadow duration-200 hover:shadow-lg"
+                      style={{ borderColor: '#eab308', color: '#a16207' }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
 
       {/* Quick Reference Section */}

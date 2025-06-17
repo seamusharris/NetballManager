@@ -184,14 +184,19 @@ export function PlayerBox({
           </div>
 
           {showPositions && (
-            <div className={`${textSizes[size].position} player-positions`}>
-              {Array.isArray(player.positionPreferences) && player.positionPreferences.length > 0 
-                ? player.positionPreferences.join(', ') 
-                : 'No position preferences'}
+            <div className={`${textSizes[size].position} player-positions flex items-center gap-2`}>
+              <span>
+                {Array.isArray(player.positionPreferences) && player.positionPreferences.length > 0 
+                  ? player.positionPreferences.join(', ') 
+                  : 'No position preferences'}
+              </span>
+              {player.active === false && (
+                <Badge variant="secondary" className="text-xs">Inactive</Badge>
+              )}
             </div>
           )}
 
-          {player.active === false && (
+          {!showPositions && player.active === false && (
             <Badge variant="secondary" className="text-xs mt-1">Inactive</Badge>
           )}
         </div>
