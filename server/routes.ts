@@ -1450,9 +1450,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.set('Pragma', 'no-cache');
       res.set('Expires', '0');
 
-      // Parse request context - UNIFIED approach
+      // Parse request context from headers
       const isClubWide = req.headers['x-club-wide'] === 'true';
-      const teamId = !isClubWide && req.headers['x-current-team-id'] ? parseInt(req.headers['x-current-team-id'] as string, 10) : null;
+      const teamId = req.headers['x-current-team-id'] ? parseInt(req.headers['x-current-team-id'] as string, 10) : null;
       const clubId = req.user?.currentClubId;
 
       console.log(`Games endpoint: clubId=${clubId}, teamId=${teamId}, isClubWide=${isClubWide}`);
@@ -1461,18 +1461,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: 'Club context required - please refresh the page' });
       }
 
-      // SINGLE SQL QUERY - handles all request types with consistent field mapping
-      let whereClause = sql`WHERE (ht.club_id = ${clubId} OR at.club_id = ${clubId} OR EXISTS (
+      // OPTIMIZED SINGLE SQL QUERY - build specific WHERE clause based on request type
+      let baseWhereClause = `(ht.club_id = ${clubId} OR at.club_id = ${clubId} OR EXISTS (
         SELECT 1 FROM game_permissions gp 
         WHERE gp.game_id = g.id AND gp.club_id = ${clubId}
       ))`;
 
-      // Add team filter only if specific team requested (not club-wide)
+      // Build team-specific WHERE clause if needed
+      let finalWhereClause = baseWhereClause;
       if (!isClubWide && teamId) {
-        whereClause = sql`WHERE (ht.club_id = ${clubId} OR at.club_id = ${clubId} OR EXISTS (
-          SELECT 1 FROM game_permissions gp 
-          WHERE gp.game_id = g.id AND gp.club_id = ${clubId}
-        )) AND (g.home_team_id = ${teamId} OR g.away_team_id = ${teamId})`;
+        finalWhereClause = `${baseWhereClause} AND (g.home_team_id = ${teamId} OR g.away_team_id = ${teamId})`;
       }
 
       const result = await db.execute(sql`
@@ -1505,13 +1503,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         LEFT JOIN teams at ON g.away_team_id = at.id
         LEFT JOIN clubs hc ON ht.club_id = hc.id
         LEFT JOIN clubs ac ON at.club_id = ac.id
-        ${whereClause}
+        WHERE ${sql.raw(finalWhereClause)}
         ORDER BY g.date DESC, g.time DESC
       `);
 
-      console.log(`Found ${result.rows.length} games for club ${clubId}`);
+      console.log(`Found ${result.rows.length} games for club ${clubId}${!isClubWide && teamId ? `, team ${teamId}` : ' (club-wide)'}`);
 
-      // UNIFIED TRANSFORMATION - guarantees consistent camelCase format
+      // UNIFIED TRANSFORMATION - guarantees consistent camelCase format including statusIsCompleted
       const games = result.rows.map(transformGameRow);
       
       res.json(games);
