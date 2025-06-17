@@ -528,6 +528,30 @@ export default function PlayerBoxExamples() {
             </div>
           </div>
         </div>
+
+         {/* Hover Animation Example */}
+         <div className="mb-6">
+            <h3 className="text-lg font-medium mb-4 text-gray-800">Hover Animation Example</h3>
+            <p className="text-gray-700 mb-3">Demonstrates a scaling hover effect.</p>
+            <PlayerBox
+              player={samplePlayers[0]}
+              size="md"
+              showPositions={true}
+              className="transition-transform transform hover:scale-105 duration-300 shadow-md"
+            />
+          </div>
+
+          {/* Design Recommendation Example: Standard */}
+          <div className="mb-6">
+            <h3 className="text-lg font-medium mb-4 text-gray-800">Design Recommendation: Standard</h3>
+            <p className="text-gray-700 mb-3">A clean, standard design for general use.</p>
+            <PlayerBox
+              player={samplePlayers[1]}
+              size="md"
+              showPositions={true}
+              className="shadow-sm border border-gray-200 rounded-md"
+            />
+          </div>
       </section>
 
       {/* Quick Reference Section */}
