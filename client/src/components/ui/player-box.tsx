@@ -133,8 +133,8 @@ export function PlayerBox({
     ...style
   };
 
-  // Determine border class based on styling
-  const borderClass = useColoredStyling ? "" : "border-2";
+  // Always include border
+  const borderClass = "border-2";
 
   const playerBoxContent = (
     <div 
