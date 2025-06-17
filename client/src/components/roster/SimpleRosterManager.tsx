@@ -67,7 +67,7 @@ export default function SimpleRosterManager({
 
   // Show all valid games, not just upcoming ones
   const allGames = gamesWithoutByes.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  
+
   console.log(`SimpleRosterManager: Showing ${allGames.length} games for team context`);
   const selectedGame = games.find(game => game.id === selectedGameId);
   const selectedOpponent = opponents.find(opponent => selectedGame?.opponentId === opponent.id);

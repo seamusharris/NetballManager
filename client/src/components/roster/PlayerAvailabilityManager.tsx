@@ -142,7 +142,7 @@ export default function PlayerAvailabilityManager({
       return;
     }
 
-    if (availabilityResponse && Array.isArray(availabilityResponse.availablePlayerIds)) {
+    if (availabilityResponse && Array.isArray(availabilityResponse.availablePlayerIds) && availabilityResponse.availablePlayerIds.length > 0) {
       console.log('PlayerAvailabilityManager: Converting API response to availability data');
       
       // Convert from API format (availablePlayerIds array) to boolean format
@@ -162,15 +162,15 @@ export default function PlayerAvailabilityManager({
         onAvailabilityChange(filteredAvailableIds);
       }
     } else {
-      console.log('PlayerAvailabilityManager: No availability data, defaulting all active players to available');
-      // Default to all active team players available
+      console.log('PlayerAvailabilityManager: No saved availability data, defaulting all active players to available');
+      // Default to all active team players available (this is the proper default behavior)
       const activeTeamPlayerIds = teamPlayers.filter(p => p.active !== false).map(p => p.id);
       const defaultAvailabilityData: Record<number, boolean> = {};
       teamPlayers.forEach(player => {
-        defaultAvailabilityData[player.id] = player.active !== false; // Default to available unless explicitly inactive
+        defaultAvailabilityData[player.id] = player.active !== false; // Default all active players to available
       });
 
-      console.log('PlayerAvailabilityManager: Default availability data:', defaultAvailabilityData);
+      console.log('PlayerAvailabilityManager: Default availability data (all active available):', defaultAvailabilityData);
       setAvailabilityData(defaultAvailabilityData);
       if (onAvailabilityChange) {
         onAvailabilityChange(activeTeamPlayerIds);
