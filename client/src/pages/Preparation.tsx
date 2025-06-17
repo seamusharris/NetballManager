@@ -82,7 +82,7 @@ export default function Preparation() {
 
   // Filter for upcoming games (not completed) and sort by date
   const upcomingGames = Array.isArray(allGames) ? (allGames as Game[])
-    .filter((game: Game) => !game.statusIsCompleted)
+    .filter((game: Game) => game.statusIsCompleted === false)
     .sort((a: Game, b: Game) => new Date(a.date).getTime() - new Date(b.date).getTime()) : [];
 
   const { data: teamPlayers = [], isLoading: playersLoading } = useQuery<Player[]>({
