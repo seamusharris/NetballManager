@@ -39,6 +39,7 @@ export function PlayerBox({
     return null;
   }
 
+  // Size-based styling
   const sizeClasses = {
     sm: "p-2",
     md: "p-3", 
@@ -46,9 +47,27 @@ export function PlayerBox({
   };
 
   const avatarSizes = {
-    sm: "h-12 w-12 text-base",
-    md: "h-16 w-16 text-xl",
-    lg: "h-20 w-20 text-2xl"
+    sm: 8, // 32px
+    md: 12, // 48px  
+    lg: 16  // 64px
+  };
+
+  const textSizes = {
+    sm: {
+      name: "text-xs",
+      position: "text-xs",
+      stats: "text-xs"
+    },
+    md: {
+      name: "text-sm",
+      position: "text-xs", 
+      stats: "text-sm"
+    },
+    lg: {
+      name: "text-base",
+      position: "text-sm",
+      stats: "text-sm"
+    }
   };
 
   const playerInitials = (() => {
@@ -160,12 +179,12 @@ export function PlayerBox({
       {/* Player Details */}
       <div className="flex-1 flex items-center">
         <div className="flex-1">
-          <div className="text-lg font-bold player-name">
+          <div className={`${textSizes[size].name} font-bold player-name`}>
             {player.displayName}
           </div>
 
           {showPositions && (
-            <div className="text-sm player-positions">
+            <div className={`${textSizes[size].position} player-positions`}>
               {Array.isArray(player.positionPreferences) && player.positionPreferences.length > 0 
                 ? player.positionPreferences.join(', ') 
                 : 'No position preferences'}
@@ -185,7 +204,7 @@ export function PlayerBox({
                 <div className="text-2xl font-bold">
                   {stat.value}
                 </div>
-                <div className="text-sm opacity-75">
+                <div className={`${textSizes[size].stats} opacity-75`}>
                   {stat.label}
                 </div>
               </div>
