@@ -43,7 +43,14 @@ export function registerGameScoresRoutes(app: Express) {
         }
       });
 
-      console.log(`Batch scores response: found scores for ${Object.keys(scoresMap).filter(id => scoresMap[parseInt(id)].length > 0).length} games`);
+      const gamesWithScores = Object.keys(scoresMap).filter(id => scoresMap[parseInt(id)].length > 0);
+      const gamesWithoutScores = gameIds.filter(id => !gamesWithScores.includes(id.toString()));
+      
+      console.log(`Batch scores response: found scores for ${gamesWithScores.length} games: [${gamesWithScores.join(', ')}]`);
+      if (gamesWithoutScores.length > 0) {
+        console.log(`Batch scores response: NO scores found for ${gamesWithoutScores.length} games: [${gamesWithoutScores.join(', ')}]`);
+      }
+      
       res.json(scoresMap);
     } catch (error) {
       console.error('Error fetching batch game scores:', error);
