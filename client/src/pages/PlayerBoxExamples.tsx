@@ -503,7 +503,10 @@ export default function PlayerBoxExamples() {
               size="md"
               showPositions={true}
               className="shadow-md"
-              style={{ borderColor: '#16a34a80' }}
+              style={{ 
+                borderColor: '#16a34a80',
+                color: '#15803d'
+              }}
             />
           </div>
 
@@ -516,6 +519,10 @@ export default function PlayerBoxExamples() {
               size="md"
               showPositions={true}
               className="[&>div>div:first-child]:border-4 [&>div>div:first-child]:border-white [&>div>div:first-child]:shadow-lg [&>div>div:first-child]:shadow-black/25"
+              style={{ 
+                borderColor: '#a855f780',
+                color: '#7e22ce'
+              }}
             />
           </div>
 
@@ -537,6 +544,10 @@ export default function PlayerBoxExamples() {
                   player={samplePlayers[3]}
                   size="md"
                   showPositions={true}
+                  style={{ 
+                    borderColor: '#f9731680',
+                    color: '#ea580c'
+                  }}
                 />
               </div>
             </div>
@@ -551,6 +562,10 @@ export default function PlayerBoxExamples() {
               size="sm"
               showPositions={true}
               className="[&_.player-avatar]:border-2 [&_.player-avatar]:border-white [&_.player-avatar]:shadow-md [&_.player-avatar]:shadow-black/15"
+              style={{ 
+                borderColor: '#ef444480',
+                color: '#dc2626'
+              }}
             />
           </div>
 
@@ -563,7 +578,98 @@ export default function PlayerBoxExamples() {
               size="lg"
               showPositions={true}
               className="[&>div>div:first-child]:border-4 [&>div>div:first-child]:border-white [&>div>div:first-child]:ring-2 [&>div>div:first-child]:ring-current [&>div>div:first-child]:shadow-xl [&>div>div:first-child]:shadow-black/25"
+              style={{ 
+                borderColor: '#3b82f680',
+                color: '#1d4ed8'
+              }}
             />
+          </div>
+
+          {/* Selected State with Checkmark */}
+          <div className="bg-white p-4 rounded-lg border">
+            <h3 className="text-lg font-medium mb-3 text-gray-800">Selected State</h3>
+            <p className="text-sm text-gray-600 mb-3">Player selected with checkmark indicator</p>
+            <div className="relative">
+              <div 
+                className="absolute top-1/2 right-4 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2"
+                style={{ backgroundColor: '#16a34a' }}
+              >
+                ✓
+              </div>
+              <PlayerBox 
+                player={samplePlayers[1]}
+                size="md"
+                showPositions={true}
+                style={{ 
+                  borderColor: '#16a34a80',
+                  color: '#15803d'
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Unselected State */}
+          <div className="bg-white p-4 rounded-lg border">
+            <h3 className="text-lg font-medium mb-3 text-gray-800">Unselected State</h3>
+            <p className="text-sm text-gray-600 mb-3">Player available for selection</p>
+            <div className="relative">
+              <div 
+                className="absolute top-1/2 right-4 w-6 h-6 rounded border-2 border-gray-300 bg-white cursor-pointer z-10 transform -translate-y-1/2"
+              >
+              </div>
+              <PlayerBox 
+                player={samplePlayers[2]}
+                size="md"
+                showPositions={true}
+                style={{ 
+                  borderColor: '#a855f780',
+                  color: '#7e22ce'
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Multiple Selection States */}
+          <div className="bg-white p-4 rounded-lg border">
+            <h3 className="text-lg font-medium mb-3 text-gray-800">Multiple Selection Example</h3>
+            <p className="text-sm text-gray-600 mb-3">Mix of selected and unselected players</p>
+            <div className="space-y-3">
+              {/* Selected Player */}
+              <div className="relative">
+                <div 
+                  className="absolute top-1/2 right-4 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2"
+                  style={{ backgroundColor: '#ef4444' }}
+                >
+                  ✓
+                </div>
+                <PlayerBox 
+                  player={samplePlayers[4]}
+                  size="sm"
+                  showPositions={true}
+                  style={{ 
+                    borderColor: '#ef444480',
+                    color: '#dc2626'
+                  }}
+                />
+              </div>
+              
+              {/* Unselected Player */}
+              <div className="relative">
+                <div 
+                  className="absolute top-1/2 right-4 w-5 h-5 rounded border-2 border-gray-300 bg-white cursor-pointer z-10 transform -translate-y-1/2"
+                >
+                </div>
+                <PlayerBox 
+                  player={samplePlayers[3]}
+                  size="sm"
+                  showPositions={true}
+                  style={{ 
+                    borderColor: '#f9731680',
+                    color: '#ea580c'
+                  }}
+                />
+              </div>
+            </div>
           </div>
         </div>
       </section>
