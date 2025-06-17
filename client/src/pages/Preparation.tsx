@@ -69,7 +69,7 @@ export default function Preparation() {
   // State management
   const [selectedGameId, setSelectedGameId] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState('overview');
-  const [availabilityData, setAvailabilityData] = useState<Record<number, string>>({});
+  const [availabilityData, setAvailabilityData] = useState<Record<number, 'available' | 'unavailable' | 'maybe'>>({});
   const [selectedLineup, setSelectedLineup] = useState<Record<string, Player | null>>({
     GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null
   });
@@ -226,8 +226,9 @@ export default function Preparation() {
                 <CardContent>
                   <PlayerAvailabilitySelector
                     gameId={selectedGame.id}
-                    players={teamPlayers}
-                    onAvailabilityChange={setAvailabilityData}
+                    players={Array.isArray(teamPlayers) ? teamPlayers as Player[] : []}
+                    availabilityData={availabilityData}
+                    onAvailabilityChange={(data) => setAvailabilityData(data)}
                   />
                 </CardContent>
               </Card>

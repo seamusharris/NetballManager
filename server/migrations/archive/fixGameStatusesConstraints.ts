@@ -122,7 +122,7 @@ export async function fixGameStatusesConstraints(): Promise<boolean> {
           ${status.colorClass}, ${status.sortOrder}, ${status.isActive}
         );
       `);
-    }</old_str>
+    }
 
     log("Recreated game_statuses with standard entries", "migration");
 
