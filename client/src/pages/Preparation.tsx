@@ -23,7 +23,7 @@ import React from 'react';
 const TeamDashboard = () => {
   const [location] = useLocation();
   const queryClient = useQueryClient();
-  const { currentTeamId } = useClubContext();
+  const { currentTeamId } = useClub();
   const [selectedGameId, setSelectedGameId] = useState(null);
 
   const nextGame = useNextGame(currentTeamId);

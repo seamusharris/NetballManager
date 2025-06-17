@@ -45,9 +45,9 @@ interface ClubContextType {
   isInitialized: boolean;
 }
 
-export const ClubContext = createContext<ClubContextType | undefined>(undefined);
+const ClubContext = createContext<ClubContextType | undefined>(undefined);
 
-export function ClubProvider({ children }: { children: React.ReactNode }) {
+function ClubProvider({ children }: { children: React.ReactNode }) {
   const [currentClubId, setCurrentClubId] = useState<number | null>(null);
   const [currentTeamId, setCurrentTeamId] = useState<number | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
@@ -262,7 +262,7 @@ export function ClubProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-export const useClub = () => {
+const useClub = () => {
   const context = useContext(ClubContext);
   if (context === undefined) {
     console.error('useClub called outside ClubProvider. Check component hierarchy.');
@@ -270,3 +270,6 @@ export const useClub = () => {
   }
   return context;
 };
+
+export default ClubProvider;
+export { ClubProvider, useClub, ClubContext };
