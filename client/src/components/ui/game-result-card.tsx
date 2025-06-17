@@ -46,7 +46,7 @@ export function GameResultCard({
   clubTeams = []
 }: GameResultCardProps) {
   const { currentClubId } = useClub();
-  const statusIsCompleted = status === 'completed' || status === 'final' || status === 'finished';
+  const statusIsCompleted = game.statusIsCompleted;
 
   // Early return if no game data
   if (!game) {
