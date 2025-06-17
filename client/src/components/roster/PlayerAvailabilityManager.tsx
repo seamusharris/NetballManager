@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Check } from 'lucide-react';
-import { Player, Game, Opponent } from '@shared/schema';
+import { Player, Game } from '@shared/schema';
 import { formatShortDate } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
@@ -16,7 +16,6 @@ interface PlayerAvailabilityManagerProps {
   gameId: number;
   players: Player[];
   games: Game[];
-  opponents: Opponent[];
   onComplete?: () => void;
   onAvailabilityChange?: (availablePlayerIds: number[]) => void;
   onGameChange?: (gameId: number) => void;
