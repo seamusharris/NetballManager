@@ -124,10 +124,8 @@ export function PlayerBox({
   const darkerBorderColor = getDarkerColorHex(player.avatarColor);
   const lightBackgroundColor = `${playerColorHex}15`; // Light background with transparency
 
-  // Determine if we should use colored styling
-  const useColoredStyling = style && (style.backgroundColor || style.borderColor);
-  
-  const defaultStyle = useColoredStyling ? style : {
+  // Always apply default background and border, but allow overrides
+  const defaultStyle = {
     backgroundColor: lightBackgroundColor,
     borderColor: darkerBorderColor,
     ...style
