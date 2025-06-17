@@ -221,7 +221,7 @@ export default function PlayerAvailabilityManager({
           Player Availability 
           {selectedGame && (
             <span className="font-normal text-gray-600 ml-2">
-              for Round {selectedGame.round} - {selectedGame.date}
+              for {selectedGame.date}
             </span>
           )}
         </CardTitle>

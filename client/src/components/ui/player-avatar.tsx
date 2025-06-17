@@ -1,5 +1,6 @@
 import React from 'react';
 import { cn, getInitials } from '@/lib/utils';
+import { Player } from '@shared/schema';
 
 interface PlayerAvatarProps {
   player: Player;
@@ -10,7 +11,7 @@ interface PlayerAvatarProps {
   useStandardStyling?: boolean; // New prop for consistent White Border + Shadow styling
 }
 
-export function PlayerAvatar({ 
+export default function PlayerAvatar({ 
   player, 
   size = 'md', 
   className,
