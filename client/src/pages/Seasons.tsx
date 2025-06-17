@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
-import { PageTemplate } from '@/components/layout/PageTemplate';
+import PageTemplate from '@/components/layout/PageTemplate';
 import { useLocation } from 'wouter';
 
 export default function Seasons() {

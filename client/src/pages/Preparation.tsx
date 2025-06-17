@@ -8,7 +8,7 @@ import { Calendar, MapPin, Users, BarChart3, Target, Trophy, Clock } from 'lucid
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { apiClient } from '@/lib/apiClient';
 import { useToast } from '@/hooks/use-toast';
-import { PageTemplate } from '@/components/layout/PageTemplate';
+import PageTemplate from '@/components/layout/PageTemplate';
 import { TeamSwitcher } from '@/components/layout/TeamSwitcher';
 import { useClub } from '@/contexts/ClubContext';
 import PlayerCombinationAnalysis from '@/components/dashboard/PlayerCombinationAnalysis';

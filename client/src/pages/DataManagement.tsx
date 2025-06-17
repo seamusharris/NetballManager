@@ -16,7 +16,7 @@ import {
   DialogTitle
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { BackButton } from "@/components/ui/back-button";
+import BackButton from "@/components/ui/back-button";
 
 export default function DataManagement() {
   const { toast } = useToast();

@@ -36,7 +36,7 @@ interface BreadcrumbItem {
   href?: string;
 }
 
-export function PageTemplate({ 
+function PageTemplate({ 
   title, 
   subtitle, 
   breadcrumbs, 
@@ -116,3 +116,5 @@ function Breadcrumbs({ items }: BreadcrumbsProps) {
     </Breadcrumb>
   );
 }
+
+export default PageTemplate;

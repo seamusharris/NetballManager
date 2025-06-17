@@ -15,7 +15,7 @@ import { Save, Undo, Redo, Plus, Minus, RefreshCw, RotateCcw } from 'lucide-reac
 import { Helmet } from 'react-helmet';
 import BackButton from '@/components/ui/back-button';
 import { clearGameCache, clearAllCache } from '@/lib/scoresCache';
-import { PageTemplate } from '@/components/layout/PageTemplate';
+import PageTemplate from '@/components/layout/PageTemplate';
 import { AlertTriangle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";

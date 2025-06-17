@@ -15,7 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useLocation } from 'wouter';
 import { apiClient } from '@/lib/apiClient';
 import { useCrudMutations } from '@/hooks/use-crud-mutations';
-import { PageTemplate } from '@/components/layout/PageTemplate';
+import PageTemplate from '@/components/layout/PageTemplate';
 import { ContentSection } from '@/components/layout/ContentSection';
 import { ActionButton } from '@/components/ui/ActionButton';
 import { PageActions } from '@/components/layout/PageActions';

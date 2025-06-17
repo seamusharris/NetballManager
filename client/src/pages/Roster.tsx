@@ -12,7 +12,7 @@ import PlayerAvailabilityManager from '@/components/roster/PlayerAvailabilityMan
 import { useLocation, useParams } from 'wouter';
 import { Game, Player, Opponent } from '@shared/schema';
 import { useClub } from '@/contexts/ClubContext';
-import { PageTemplate } from '@/components/layout/PageTemplate';
+import PageTemplate from '@/components/layout/PageTemplate';
 
 export default function Roster() {
   const params = useParams();

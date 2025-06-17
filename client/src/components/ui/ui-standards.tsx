@@ -1,6 +1,6 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
-import { PageTemplate as BasePageTemplate } from '@/components/layout/PageTemplate';
+import BasePageTemplate from '@/components/layout/PageTemplate';
 
 // ============================================================================
 // PAGE STRUCTURE COMPONENTS
