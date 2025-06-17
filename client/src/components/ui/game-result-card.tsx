@@ -84,7 +84,7 @@ export function GameResultCard({
         if (currentTeamId) {
           // Current team's score
           teamScore = scoresByTeam[currentTeamId] || 0;
-          
+
           // Opponent's score (sum of all other teams)
           opponentScore = Object.entries(scoresByTeam)
             .filter(([teamId]) => parseInt(teamId) !== currentTeamId)
@@ -267,7 +267,7 @@ export function GameResultCard({
       {/* Left side - Opponent and details */}
       <div className="flex-1 min-w-0">
         <div className={cn('font-semibold text-gray-800 truncate', config.textSize)}>
-          {getOpponentDisplay()}
+          {isByeGame ? "Bye" : `${game.homeTeamName || 'Unknown'} vs ${game.awayTeamName || 'Unknown'}`}
         </div>
 
         {/* Details row */}
