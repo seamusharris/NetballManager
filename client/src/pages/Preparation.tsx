@@ -926,9 +926,9 @@ export default function Preparation() {
                     games={upcomingGames}
                     opponents={[]}
                     onAvailabilityChange={(availablePlayerIds) => {
-                      const newAvailabilityData: Record<number, 'available' | 'unavailable' | 'maybe'> = {};
+                      const newAvailabilityData: Record<number, boolean> = {};
                       teamPlayers.forEach(player => {
-                        newAvailabilityData[player.id] = availablePlayerIds.includes(player.id) ? 'available' : 'unavailable';
+                        newAvailabilityData[player.id] = availablePlayerIds.includes(player.id);
                       });
                       setAvailabilityData(newAvailabilityData);
                     }}

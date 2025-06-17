@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
@@ -13,8 +12,8 @@ import { useToast } from '@/hooks/use-toast';
 
 interface UnifiedPlayerAvailabilityProps {
   players: Player[];
-  availabilityData: Record<number, 'available' | 'unavailable' | 'maybe'>;
-  onAvailabilityChange: (data: Record<number, 'available' | 'unavailable' | 'maybe'>) => void;
+  availabilityData: Record<number, boolean>;
+  onAvailabilityChange: (data: Record<number, boolean>) => void;
   title?: string;
   showQuickActions?: boolean;
   className?: string;
@@ -67,36 +66,33 @@ export function UnifiedPlayerAvailability({
     return colorMap[colorClass] || '#9ca3af';
   };
 
-  const handleSetAllAvailable = () => {
-    const allAvailable = players.reduce((acc, player) => {
-      acc[player.id] = 'available';
-      return acc;
-    }, {} as Record<number, 'available' | 'unavailable' | 'maybe'>);
-    onAvailabilityChange(allAvailable);
+  const handleSelectAll = () => {
+    const newData: Record<number, boolean> = {};
+    players.forEach(player => {
+      newData[player.id] = true;
+    });
+    onAvailabilityChange(newData);
   };
 
-  const handleSetAllUnavailable = () => {
-    const allUnavailable = players.reduce((acc, player) => {
-      acc[player.id] = 'unavailable';
-      return acc;
-    }, {} as Record<number, 'available' | 'unavailable' | 'maybe'>);
-    onAvailabilityChange(allUnavailable);
+  const handleSelectNone = () => {
+    const newData: Record<number, boolean> = {};
+    players.forEach(player => {
+      newData[player.id] = false;
+    });
+    onAvailabilityChange(newData);
   };
 
-  const handlePlayerAvailabilityChange = async (playerId: number, availability: 'available' | 'unavailable' | 'maybe') => {
-    // Optimistically update local state immediately
-    const newAvailabilityData = {
-      ...availabilityData,
-      [playerId]: availability
-    };
-    onAvailabilityChange(newAvailabilityData);
+  const handlePlayerAvailabilityChange = async (playerId: number, isAvailable: boolean) => {
+    const newData = { ...availabilityData, [playerId]: isAvailable };
+    onAvailabilityChange(newData);
 
-    // Auto-save if enabled and gameId is provided
+    // Auto-save if enabled and gameId provided
     if (autoSave && gameId) {
       setIsSaving(true);
       try {
-        const isAvailable = availability === 'available';
-        await apiClient.patch(`/api/games/${gameId}/availability/${playerId}`, { isAvailable });
+        await apiClient.patch(`/api/games/${gameId}/availability/${playerId}`, {
+          isAvailable
+        });
         toast({
           title: "Availability updated",
           description: `Player availability updated successfully.`,
@@ -108,7 +104,7 @@ export function UnifiedPlayerAvailability({
           title: "Error updating availability",
           description: "Failed to update player availability. Please try again.",
         });
-        
+
         // Revert optimistic update on error
         onAvailabilityChange(availabilityData);
       } finally {
@@ -123,7 +119,7 @@ export function UnifiedPlayerAvailability({
     return displayNameA.localeCompare(displayNameB);
   });
 
-  const availableCount = Object.values(availabilityData).filter(status => status === 'available').length;
+  const availableCount = Object.values(availabilityData).filter(status => status === true).length;
 
   return (
     <Card className={className}>
@@ -135,7 +131,7 @@ export function UnifiedPlayerAvailability({
               <Button 
                 variant="outline" 
                 size="sm" 
-                onClick={handleSetAllAvailable}
+                onClick={handleSelectAll}
                 disabled={isSaving}
               >
                 <Zap className="h-4 w-4 mr-1" />
@@ -144,7 +140,7 @@ export function UnifiedPlayerAvailability({
               <Button 
                 variant="outline" 
                 size="sm" 
-                onClick={handleSetAllUnavailable}
+                onClick={handleSelectNone}
                 disabled={isSaving}
               >
                 <RotateCcw className="h-4 w-4 mr-1" />
@@ -169,11 +165,10 @@ export function UnifiedPlayerAvailability({
             : "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
         )}>
           {sortedPlayers.map(player => {
-            const status = availabilityData[player.id] || 'unavailable';
+            const isAvailable = availabilityData[player.id] === true;
             const playerColor = getPlayerColor(player);
             const colorHex = getColorHex(playerColor);
             const displayName = player.displayName || `${player.firstName} ${player.lastName}`;
-            const isAvailable = status === 'available';
 
             return (
               <div 
@@ -218,7 +213,7 @@ export function UnifiedPlayerAvailability({
                       onCheckedChange={(checked) => {
                         handlePlayerAvailabilityChange(
                           player.id, 
-                          checked ? 'available' : 'unavailable'
+                          checked === true
                         );
                       }}
                     />

@@ -33,7 +33,7 @@ export default function PlayerAvailabilityManager({
 }: PlayerAvailabilityManagerProps) {
   const [teamPlayers, setTeamPlayers] = useState<Player[]>([]);
   const [isLoadingTeamPlayers, setIsLoadingTeamPlayers] = useState(false);
-  const [availabilityData, setAvailabilityData] = useState<Record<number, 'available' | 'unavailable' | 'maybe'>>({});
+  const [availabilityData, setAvailabilityData] = useState<Record<number, boolean>>({});
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -122,44 +122,50 @@ export default function PlayerAvailabilityManager({
 
   // Convert API response to shared component format
   useEffect(() => {
-    if (!gameId || isLoading || isLoadingTeamPlayers || teamPlayers.length === 0) {
+    if (!gameId || isLoading || isLoadingTeamPlayers) {
       return;
     }
 
-    if (availabilityResponse && Array.isArray(availabilityResponse.availablePlayerIds)) {
-      // Convert from API format (availablePlayerIds array) to shared component format
-      const teamPlayerIds = teamPlayers.map(p => p.id);
-      const filteredAvailableIds = availabilityResponse.availablePlayerIds.filter(id => teamPlayerIds.includes(id));
+    // Handle case when team players are available
+    if (teamPlayers.length > 0) {
+      if (availabilityResponse && Array.isArray(availabilityResponse.availablePlayerIds)) {
+        console.log('PlayerAvailabilityManager: Converting API response to availability data');
+        // Convert from API format (availablePlayerIds array) to boolean format
+        const teamPlayerIds = teamPlayers.map(p => p.id);
+        const filteredAvailableIds = availabilityResponse.availablePlayerIds.filter(id => teamPlayerIds.includes(id));
 
-      const newAvailabilityData: Record<number, 'available' | 'unavailable' | 'maybe'> = {};
-      teamPlayers.forEach(player => {
-        newAvailabilityData[player.id] = filteredAvailableIds.includes(player.id) ? 'available' : 'unavailable';
-      });
+        const newAvailabilityData: Record<number, boolean> = {};
+        teamPlayers.forEach(player => {
+          newAvailabilityData[player.id] = filteredAvailableIds.includes(player.id);
+        });
 
-      setAvailabilityData(newAvailabilityData);
+        console.log('PlayerAvailabilityManager: Setting availability data:', newAvailabilityData);
+        setAvailabilityData(newAvailabilityData);
 
-      // Notify parent component
-      onAvailabilityChange?.(filteredAvailableIds);
-    } else if (availabilityError) {
-      // Fallback to all active team players on error
-      const activeTeamPlayerIds = teamPlayers.filter(p => p.active).map(p => p.id);
-      const fallbackAvailabilityData: Record<number, 'available' | 'unavailable' | 'maybe'> = {};
-      teamPlayers.forEach(player => {
-        fallbackAvailabilityData[player.id] = player.active ? 'available' : 'unavailable';
-      });
+        // Notify parent component
+        onAvailabilityChange?.(filteredAvailableIds);
+      } else if (availabilityError) {
+        console.log('PlayerAvailabilityManager: Using fallback availability (all active players)');
+        // Fallback to all active team players on error
+        const activeTeamPlayerIds = teamPlayers.filter(p => p.active).map(p => p.id);
+        const fallbackAvailabilityData: Record<number, boolean> = {};
+        teamPlayers.forEach(player => {
+          fallbackAvailabilityData[player.id] = player.active;
+        });
 
-      setAvailabilityData(fallbackAvailabilityData);
-      onAvailabilityChange?.(activeTeamPlayerIds);
+        setAvailabilityData(fallbackAvailabilityData);
+        onAvailabilityChange?.(activeTeamPlayerIds);
+      }
     }
   }, [availabilityResponse, isLoading, availabilityError, teamPlayers, isLoadingTeamPlayers, gameId, onAvailabilityChange]);
 
   // Handle availability change from shared component
-  const handleAvailabilityChange = (newAvailabilityData: Record<number, 'available' | 'unavailable' | 'maybe'>) => {
+  const handleAvailabilityChange = (newAvailabilityData: Record<number, boolean>) => {
     setAvailabilityData(newAvailabilityData);
 
     // Convert back to array format for parent component
     const availablePlayerIds = Object.entries(newAvailabilityData)
-      .filter(([_, status]) => status === 'available')
+      .filter(([_, isAvailable]) => isAvailable)
       .map(([playerId, _]) => parseInt(playerId));
 
     onAvailabilityChange?.(availablePlayerIds);
@@ -190,7 +196,7 @@ export default function PlayerAvailabilityManager({
     );
   }
 
-  const availableCount = Object.values(availabilityData).filter(status => status === 'available').length;
+  const availableCount = Object.values(availabilityData).filter(isAvailable => isAvailable).length;
 
   return (
     <Card className="mb-6">
