@@ -233,11 +233,11 @@ export default function PlayerBoxExamples() {
         <div className="mb-10">
           <h3 className="text-2xl font-semibold mb-6 text-gray-800">With Statistics</h3>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="space-y-6">
             {/* Basic Stats */}
-            <div className="relative">
+            <div className="relative w-full">
               <div 
-                className="absolute top-1/2 right-4 w-6 h-6 border-2 rounded flex items-center justify-center cursor-pointer z-10 transform -translate-y-1/2"
+                className="absolute top-1/2 right-3 w-6 h-6 border-2 rounded flex items-center justify-center cursor-pointer z-10 transform -translate-y-1/2"
                 style={{ 
                   borderColor: '#3b82f6', 
                   backgroundColor: '#3b82f6'
@@ -255,7 +255,7 @@ export default function PlayerBoxExamples() {
                   { label: "Goals", value: 24 },
                   { label: "Assists", value: 8 }
                 ]}
-                className="border-2 [&_.player-avatar]:border-4 [&_.player-avatar]:border-white [&_.player-avatar]:shadow-lg [&_.player-avatar]:shadow-black/15 hover:brightness-90"
+                className="!border-0 !shadow-none [&_.player-avatar]:border-4 [&_.player-avatar]:border-white [&_.player-avatar]:shadow-lg [&_.player-avatar]:shadow-black/15 hover:brightness-90"
                 style={{ 
                   backgroundColor: '#3b82f615',
                   borderColor: '#3b82f680',
@@ -265,9 +265,9 @@ export default function PlayerBoxExamples() {
             </div>
 
             {/* Extended Stats */}
-            <div className="relative">
+            <div className="relative w-full">
               <div 
-                className="absolute top-1/2 right-4 w-6 h-6 border-2 rounded cursor-pointer z-10 transform -translate-y-1/2"
+                className="absolute top-1/2 right-3 w-6 h-6 border-2 rounded cursor-pointer z-10 transform -translate-y-1/2"
                 style={{ 
                   borderColor: '#16a34a', 
                   backgroundColor: 'white'
@@ -283,7 +283,7 @@ export default function PlayerBoxExamples() {
                   { label: "Accuracy", value: "92%" },
                   { label: "Games", value: 12 }
                 ]}
-                className="border-2 [&_.player-avatar]:border-4 [&_.player-avatar]:border-white [&_.player-avatar]:shadow-lg [&_.player-avatar]:shadow-black/15 hover:brightness-90"
+                className="!border-0 !shadow-none [&_.player-avatar]:border-4 [&_.player-avatar]:border-white [&_.player-avatar]:shadow-lg [&_.player-avatar]:shadow-black/15 hover:brightness-90"
                 style={{ 
                   backgroundColor: '#16a34a15',
                   borderColor: '#16a34a80',
@@ -293,9 +293,9 @@ export default function PlayerBoxExamples() {
             </div>
 
             {/* Performance Stats */}
-            <div className="relative">
+            <div className="relative w-full">
               <div 
-                className="absolute top-1/2 right-4 w-6 h-6 border-2 rounded flex items-center justify-center cursor-pointer z-10 transform -translate-y-1/2"
+                className="absolute top-1/2 right-3 w-6 h-6 border-2 rounded flex items-center justify-center cursor-pointer z-10 transform -translate-y-1/2"
                 style={{ 
                   borderColor: '#a855f7', 
                   backgroundColor: '#a855f7'
@@ -314,7 +314,7 @@ export default function PlayerBoxExamples() {
                   { label: "Deflections", value: 23 },
                   { label: "Rating", value: "8.5" }
                 ]}
-                className="border-2 [&_.player-avatar]:border-4 [&_.player-avatar]:border-white [&_.player-avatar]:shadow-lg [&_.player-avatar]:shadow-black/15 hover:brightness-90"
+                className="!border-0 !shadow-none [&_.player-avatar]:border-4 [&_.player-avatar]:border-white [&_.player-avatar]:shadow-lg [&_.player-avatar]:shadow-black/15 hover:brightness-90"
                 style={{ 
                   backgroundColor: '#a855f715',
                   borderColor: '#a855f780',
@@ -488,10 +488,10 @@ export default function PlayerBoxExamples() {
             {/* Large Format */}
             <div>
               <h4 className="text-lg font-medium mb-3 text-gray-700">Large Format with Extended Stats</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="relative">
+              <div className="space-y-6">
+                <div className="relative w-full">
                   <div 
-                    className="absolute top-1/2 right-6 w-8 h-8 border-2 rounded flex items-center justify-center cursor-pointer z-10 transform -translate-y-1/2"
+                    className="absolute top-1/2 right-3 w-8 h-8 border-2 rounded flex items-center justify-center cursor-pointer z-10 transform -translate-y-1/2"
                     style={{ 
                       borderColor: '#3b82f6', 
                       backgroundColor: '#3b82f6'
@@ -511,7 +511,7 @@ export default function PlayerBoxExamples() {
                       { label: "Accuracy", value: "94%" },
                       { label: "MVP", value: 3 }
                     ]}
-                    className="border-2 [&_.player-avatar]:border-4 [&_.player-avatar]:border-white [&_.player-avatar]:shadow-lg [&_.player-avatar]:shadow-black/15 hover:brightness-90"
+                    className="!border-0 !shadow-none [&_.player-avatar]:border-4 [&_.player-avatar]:border-white [&_.player-avatar]:shadow-lg [&_.player-avatar]:shadow-black/15 hover:brightness-90"
                     style={{ 
                       backgroundColor: '#3b82f615',
                       borderColor: '#3b82f680',
@@ -520,9 +520,9 @@ export default function PlayerBoxExamples() {
                   />
                 </div>
 
-                <div className="relative">
+                <div className="relative w-full">
                   <div 
-                    className="absolute top-1/2 right-6 w-8 h-8 border-2 rounded cursor-pointer z-10 transform -translate-y-1/2"
+                    className="absolute top-1/2 right-3 w-8 h-8 border-2 rounded cursor-pointer z-10 transform -translate-y-1/2"
                     style={{ 
                       borderColor: '#16a34a', 
                       backgroundColor: 'white'
@@ -539,7 +539,7 @@ export default function PlayerBoxExamples() {
                       { label: "Games", value: 15 },
                       { label: "Rating", value: "9.1" }
                     ]}
-                    className="border-2 [&_.player-avatar]:border-4 [&_.player-avatar]:border-white [&_.player-avatar]:shadow-lg [&_.player-avatar]:shadow-black/15 hover:brightness-90"
+                    className="!border-0 !shadow-none [&_.player-avatar]:border-4 [&_.player-avatar]:border-white [&_.player-avatar]:shadow-lg [&_.player-avatar]:shadow-black/15 hover:brightness-90"
                     style={{ 
                       backgroundColor: '#16a34a15',
                       borderColor: '#16a34a80',
