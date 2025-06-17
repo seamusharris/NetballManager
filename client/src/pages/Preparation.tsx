@@ -943,21 +943,20 @@ export default function Preparation() {
             <TabsContent value="lineup" className="space-y-4">
               {/* Upcoming Game Recommendations */}
               <UpcomingGameRecommendations
-                completedGames={completedGames}
-                upcomingGames={upcomingGames}
+                games={completedGames}
                 players={Array.isArray(teamPlayers) ? teamPlayers as Player[] : []}
                 centralizedStats={centralizedStats}
                 centralizedRosters={centralizedRosters}
-                currentTeamId={currentTeamId}
+                currentClubId={currentClubId}
               />
 
               {/* Player Combination Analysis */}
               <PlayerCombinationAnalysis
-                completedGames={completedGames}
+                games={completedGames}
                 players={Array.isArray(teamPlayers) ? teamPlayers as Player[] : []}
                 centralizedStats={centralizedStats}
                 centralizedRosters={centralizedRosters}
-                currentTeamId={currentTeamId}
+                currentClubId={currentClubId}
               />
 
               <Card>
