@@ -499,6 +499,7 @@ export default function PlayerBoxExamples() {
               size="md"
               showPositions={true}
               className="shadow-md"
+              style={{ borderColor: '#16a34a80' }}
             />
           </div>
 
