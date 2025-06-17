@@ -22,7 +22,7 @@ interface UnifiedPlayerAvailabilityProps {
   autoSave?: boolean;
 }
 
-export function UnifiedPlayerAvailability({
+export default function UnifiedPlayerAvailability({
   players,
   availabilityData,
   onAvailabilityChange,
@@ -289,4 +289,3 @@ export function UnifiedPlayerAvailability({
   );
 }
 
-export default UnifiedPlayerAvailability;

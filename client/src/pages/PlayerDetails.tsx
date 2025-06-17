@@ -18,7 +18,7 @@ import {
 import { Player, Game, GameStat, allPositions, Position, Season } from "@shared/schema";
 import { cn, getInitials } from "@/lib/utils";
 import PlayerAvatar from "@/components/ui/player-avatar";
-import { BackButton } from "@/components/ui/back-button";
+import BackButton from "@/components/ui/back-button";
 import { Award, Target, Shield, Activity, Edit, Trash2, Calendar, Users } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";

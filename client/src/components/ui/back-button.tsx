@@ -12,13 +12,13 @@ interface BackButtonProps {
   size?: "default" | "sm" | "lg" | "icon";
 }
 
-export const BackButton: React.FC<BackButtonProps> = ({ 
+export default function BackButton({ 
   fallbackPath = '/', 
   className = "mb-4",
   children,
   variant = "outline",
   size = "sm"
-}) => {
+}: BackButtonProps) {
   const [, navigate] = useLocation();
   const { getPreviousPath, getPreviousTitle, canGoBack } = useNavigationStack();
 
@@ -50,4 +50,4 @@ export const BackButton: React.FC<BackButtonProps> = ({
       {buttonText}
     </Button>
   );
-};
+}
