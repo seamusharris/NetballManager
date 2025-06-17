@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -65,7 +64,7 @@ const PlayerCard = ({
 }) => {
   const avatarSize = size === "sm" ? "h-8 w-8" : "h-10 w-10";
   const cardSize = size === "sm" ? "p-2" : "p-3";
-  
+
   return (
     <div className={`
       ${cardSize} rounded-lg border-2 transition-all duration-200
@@ -198,19 +197,19 @@ export default function DragDropRosterManager({ availablePlayers, gameInfo, onRo
         ...assignments,
         [currentQuarter]: { ...assignments[currentQuarter] }
       };
-      
+
       // Clear the player from any previous position in this quarter
       Object.keys(newAssignments[currentQuarter]).forEach(pos => {
         if (newAssignments[currentQuarter][pos] === draggedPlayer) {
           newAssignments[currentQuarter][pos] = null;
         }
       });
-      
+
       // If there's already a player in the target position, remove them
       if (newAssignments[currentQuarter][position] !== null) {
         newAssignments[currentQuarter][position] = null;
       }
-      
+
       // Assign the dragged player to the new position
       newAssignments[currentQuarter][position] = draggedPlayer;
       setAssignments(newAssignments);
@@ -473,7 +472,7 @@ export default function DragDropRosterManager({ availablePlayers, gameInfo, onRo
           <h4 className="text-lg font-semibold text-gray-800">Available Players - Quarter {currentQuarter}</h4>
           <Badge variant="secondary">{availablePlayersForDrag.length} players</Badge>
         </div>
-        
+
         <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
           {availablePlayersForDrag.length > 0 ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">

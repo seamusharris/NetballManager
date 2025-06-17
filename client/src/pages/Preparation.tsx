@@ -729,7 +729,7 @@ export default function Preparation() {
                               <h4 className="font-semibold mb-3 text-green-700">
                                 Previous Games ({playedGames.length})
                               </h4>
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                              <div className="space-y-3">
                                 {playedGames
                                   .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
                                   .slice(0, 6)
@@ -743,22 +743,26 @@ export default function Preparation() {
                                     const result = getWinLoseLabel(ourScore, theirScore);
 
                                     return (
-                                      <div key={game.id} className="border rounded-lg p-3 bg-gray-50">
-                                        <div className="flex justify-between items-center mb-2">
-                                          <span className="text-sm font-medium">
-                                            Round {game.round}
-                                          </span>
+                                      <div key={game.id} className="flex items-center justify-between p-3 bg-white border rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                                        <div className="flex items-center space-x-3">
+                                          <div className="text-center">
+                                            <div className="text-xs text-gray-500">Round</div>
+                                            <div className="font-semibold">{game.round}</div>
+                                          </div>
+                                          <div className="text-center">
+                                            <div className="text-xs text-gray-500">vs {opponentName}</div>
+                                            <div className="text-sm text-gray-600">{formatShortDate(game.date)}</div>
+                                          </div>
+                                        </div>
+                                        <div className="flex items-center space-x-3">
+                                          <div className="text-center">
+                                            <div className="text-lg font-bold">
+                                              {ourScore} - {theirScore}
+                                            </div>
+                                          </div>
                                           <Badge variant={result === 'Win' ? 'default' : result === 'Draw' ? 'secondary' : 'destructive'}>
                                             {result}
                                           </Badge>
-                                        </div>
-                                        <div className="text-center">
-                                          <div className="text-lg font-bold">
-                                            {ourScore} - {theirScore}
-                                          </div>
-                                          <div className="text-xs text-gray-500">
-                                            {formatShortDate(game.date)}
-                                          </div>
                                         </div>
                                       </div>
                                     );
@@ -773,30 +777,29 @@ export default function Preparation() {
                               <h4 className="font-semibold mb-3 text-blue-700">
                                 Upcoming Games ({upcomingOpponentGames.length})
                               </h4>
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                              <div className="space-y-3">
                                 {upcomingOpponentGames
                                   .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
                                   .map(game => (
-                                    <div key={game.id} className={`border rounded-lg p-3 ${
-                                      game.id === selectedGameId ? 'bg-blue-50 border-blue-300' : 'bg-gray-50'
+                                    <div key={game.id} className={`flex items-center justify-between p-3 border rounded-lg shadow-sm hover:shadow-md transition-shadow ${
+                                      game.id === selectedGameId ? 'bg-blue-50 border-blue-300' : 'bg-white'
                                     }`}>
-                                      <div className="flex justify-between items-center mb-2">
-                                        <span className="text-sm font-medium">
-                                          Round {game.round}
-                                        </span>
+                                      <div className="flex items-center space-x-3">
+                                        <div className="text-center">
+                                          <div className="text-xs text-gray-500">Round</div>
+                                          <div className="font-semibold">{game.round}</div>
+                                        </div>
+                                        <div className="text-center">
+                                          <div className="text-xs text-gray-500">{game.homeTeamId === currentTeamId ? 'vs' : '@'} {opponentName}</div>
+                                          <div className="text-sm text-gray-600">{formatShortDate(game.date)} {game.time}</div>
+                                        </div>
+                                      </div>
+                                      <div className="flex items-center space-x-3">
                                         {game.id === selectedGameId && (
                                           <Badge variant="outline" className="text-blue-700 border-blue-300">
                                             Selected
                                           </Badge>
                                         )}
-                                      </div>
-                                      <div className="text-center">
-                                        <div className="text-sm font-medium">
-                                          {game.homeTeamId === currentTeamId ? 'vs' : '@'} {opponentName}
-                                        </div>
-                                        <div className="text-xs text-gray-500">
-                                          {formatShortDate(game.date)} {game.time}
-                                        </div>
                                       </div>
                                     </div>
                                   ))}
@@ -840,10 +843,14 @@ export default function Preparation() {
                                     gameCount++;
                                   });
 
+                                  const ourTeamName = selectedGame?.homeTeamId === currentTeamId 
+                                    ? selectedGame?.homeTeamName || 'Us'
+                                    : selectedGame?.awayTeamName || 'Us';
+
                                   return (
                                     <>
                                       <div className="grid grid-cols-5 gap-2 mb-1">
-                                        <div className="text-sm font-medium">Us</div>
+                                        <div className="text-sm font-medium">{ourTeamName}</div>
                                         {quarterTotals.us.map((total, index) => (
                                           <div key={index} className="text-center p-2 bg-blue-100 rounded text-sm font-bold">
                                             {gameCount > 0 ? (total / gameCount).toFixed(1) : '0.0'}
@@ -851,7 +858,7 @@ export default function Preparation() {
                                         ))}
                                       </div>
                                       <div className="grid grid-cols-5 gap-2 mb-2">
-                                        <div className="text-sm font-medium">Them</div>
+                                        <div className="text-sm font-medium">{opponentName}</div>
                                         {quarterTotals.them.map((total, index) => (
                                           <div key={index} className="text-center p-2 bg-red-100 rounded text-sm font-bold">
                                             {gameCount > 0 ? (total / gameCount).toFixed(1) : '0.0'}
@@ -1195,29 +1202,6 @@ export default function Preparation() {
                 centralizedRosters={centralizedRosters || {}}
                 currentClubId={currentClubId}
               />
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Starting Lineup Editor</CardTitle>
-                  <p className="text-sm text-gray-600">
-                    Create your starting lineup for the game vs {opponentName}
-                  </p>
-                </CardHeader>
-                <CardContent>
-                  <DragDropLineupEditor
-                    availablePlayers={teamPlayers.filter((p: Player) => availabilityData[p.id] === true)}
-                    currentLineup={selectedLineup}
-                    onLineupChange={setSelectedLineup}
-                    onApplyRecommendation={(lineup) => {
-                      setSelectedLineup(lineup);
-                      toast({
-                        title: "Lineup Applied",
-                        description: "Recommended lineup has been applied to the editor",
-                      });
-                    }}
-                  />
-                </CardContent>
-              </Card>
 
               {/* Full Roster Management Interface */}
               <Card>

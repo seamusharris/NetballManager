@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -83,7 +82,7 @@ export function UpcomingGameRecommendations({
       const historicalGames = completedGames.filter(game => {
         const gameIsHome = game.homeClubId === currentClubId;
         const gameIsAway = game.awayClubId === currentClubId;
-        
+
         if (gameIsHome && !gameIsAway) {
           return game.awayTeamName === opponent;
         } else if (gameIsAway && !gameIsHome) {
@@ -96,12 +95,12 @@ export function UpcomingGameRecommendations({
 
       // Calculate historical record
       let wins = 0, losses = 0, draws = 0;
-      
+
       historicalGames.forEach(game => {
         const gameStats = centralizedStats[game.id] || [];
         const ourScore = gameStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
         const theirScore = gameStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
-        
+
         if (ourScore > theirScore) wins++;
         else if (ourScore < theirScore) losses++;
         else draws++;
@@ -109,11 +108,11 @@ export function UpcomingGameRecommendations({
 
       // Analyze effective lineups against this opponent
       const lineupMap = new Map();
-      
+
       historicalGames.forEach(game => {
         const gameStats = centralizedStats[game.id] || [];
         const gameRosters = centralizedRosters[game.id] || [];
-        
+
         // Group by quarter
         const quarterData = new Map();
         gameRosters.forEach(roster => {
@@ -122,7 +121,7 @@ export function UpcomingGameRecommendations({
           }
           quarterData.get(roster.quarter).roster.push(roster);
         });
-        
+
         gameStats.forEach(stat => {
           if (quarterData.has(stat.quarter)) {
             quarterData.get(stat.quarter).stats.push(stat);
@@ -133,7 +132,7 @@ export function UpcomingGameRecommendations({
         quarterData.forEach((data, quarter) => {
           const positions = ['GK', 'GD', 'WD', 'C', 'WA', 'GA', 'GS'];
           const positionLineup = {};
-          
+
           positions.forEach(position => {
             const playerInPosition = data.roster.find(r => r.position === position);
             if (playerInPosition) {
@@ -144,7 +143,7 @@ export function UpcomingGameRecommendations({
 
           if (Object.keys(positionLineup).length === 7) {
             const lineupKey = positions.map(pos => `${pos}:${positionLineup[pos]}`).join(',');
-            
+
             if (!lineupMap.has(lineupKey)) {
               lineupMap.set(lineupKey, {
                 formation: positionLineup,
@@ -158,7 +157,7 @@ export function UpcomingGameRecommendations({
             const lineupData = lineupMap.get(lineupKey);
             const quarterGoalsFor = data.stats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
             const quarterGoalsAgainst = data.stats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
-            
+
             lineupData.quarters.push(quarter);
             lineupData.totalGoalsFor += quarterGoalsFor;
             lineupData.totalGoalsAgainst += quarterGoalsAgainst;
@@ -174,7 +173,7 @@ export function UpcomingGameRecommendations({
           const avgGoalsFor = data.totalGoalsFor / data.quarters.length;
           const avgGoalsAgainst = data.totalGoalsAgainst / data.quarters.length;
           const goalDiff = avgGoalsFor - avgGoalsAgainst;
-          
+
           // Calculate win rate for games this lineup was used
           let lineupWins = 0;
           data.gamesPlayed.forEach(gameId => {
@@ -183,7 +182,7 @@ export function UpcomingGameRecommendations({
             const theirScore = gameStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
             if (ourScore > theirScore) lineupWins++;
           });
-          
+
           const winRate = (lineupWins / data.gamesPlayed.size) * 100;
           const effectiveness = goalDiff + (winRate / 10);
 
@@ -261,7 +260,7 @@ export function UpcomingGameRecommendations({
                 {new Date(rec.game.date).toLocaleDateString()}
               </Badge>
             </div>
-            
+
             {/* Historical Record */}
             <div className="bg-gray-50 rounded-lg p-3">
               <div className="flex items-center justify-between">
@@ -281,7 +280,7 @@ export function UpcomingGameRecommendations({
               <Target className="h-4 w-4" />
               Recommended Lineups
             </h4>
-            
+
             {rec.recommendedLineups.map((lineup, lineupIndex) => (
               <div key={lineupIndex} className="border rounded-lg p-4 bg-gray-50">
                 <div className="flex items-center justify-between mb-3">
@@ -289,7 +288,7 @@ export function UpcomingGameRecommendations({
                     <TrendingUp className="h-3 w-3 mr-1" />
                     #{lineupIndex + 1} Effectiveness: {lineup.effectiveness.toFixed(1)}
                   </Badge>
-                  
+
                   <div className="flex gap-4 text-sm">
                     <span className="font-medium">Win Rate: {lineup.winRate.toFixed(0)}%</span>
                     <span>Avg Goals: {lineup.averageGoalsFor.toFixed(1)}</span>

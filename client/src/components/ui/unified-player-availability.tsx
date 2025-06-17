@@ -174,15 +174,15 @@ export function UnifiedPlayerAvailability({
               <div 
                 key={player.id}
                 className={cn(
-                  "p-4 border rounded-lg shadow-sm transition-all",
-                  isAvailable 
-                    ? "border-2 shadow" 
-                    : "opacity-75 border border-gray-200"
-                )}
-                style={{
-                  borderColor: isAvailable ? colorHex : '',
-                  backgroundColor: isAvailable ? `${colorHex}10` : ''
-                }}
+            "flex flex-col items-center gap-2 p-3 rounded-lg border-2 cursor-pointer transition-all duration-200",
+            "hover:scale-105 hover:shadow-sm",
+            isAvailable 
+              ? "border-green-600 shadow-md" 
+              : "border-gray-400 hover:border-gray-500"
+          )}
+          style={{
+            backgroundColor: isAvailable ? '#f0fdf4' : (player.avatarColor ? player.avatarColor.replace('bg-', '') + '20' : '#f8fafc')
+          }}
               >
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-3">
