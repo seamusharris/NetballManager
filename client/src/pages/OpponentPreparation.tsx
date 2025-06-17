@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet';
 import { useQuery } from '@tanstack/react-query';
@@ -110,7 +109,7 @@ export default function OpponentPreparation() {
       // Check if we're involved in this game at all
       const weAreHome = currentTeamId && game.homeTeamId === currentTeamId;
       const weAreAway = currentTeamId && game.awayTeamId === currentTeamId;
-      
+
       if (weAreHome) {
         // We are the home team, opponent is away team
         opponentTeamId = game.awayTeamId;
@@ -216,7 +215,7 @@ export default function OpponentPreparation() {
       const posStats = gameStats.filter(stat => stat.position === position);
       const goalsFor = posStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
       const goalsAgainst = posStats.reduce((sum, stat) => sum + (stat.goalsAgainst || 0), 0);
-      
+
       positionPerformance[position] = {
         goalsFor,
         goalsAgainst,
@@ -389,7 +388,7 @@ export default function OpponentPreparation() {
                           {selectedOpponentData.draws > 0 && ` - ${selectedOpponentData.draws}D`}
                         </span>
                       </div>
-                      
+
                       <div>
                         <div className="flex justify-between mb-2">
                           <span>Win Rate</span>
@@ -498,7 +497,7 @@ export default function OpponentPreparation() {
                             </Button>
                           </div>
                         </CardHeader>
-                        
+
                         {analysis.notes && (
                           <CardContent className="pt-0">
                             <div className="bg-yellow-50 border-l-4 border-yellow-400 p-3 rounded">
@@ -600,7 +599,7 @@ export default function OpponentPreparation() {
                               <li>• Review winning game notes for patterns</li>
                             </ul>
                           </div>
-                          
+
                           <div>
                             <h4 className="font-medium text-red-700 mb-2">When We Struggle ({losses.length} games):</h4>
                             <ul className="text-sm space-y-1 text-red-600">
@@ -699,7 +698,7 @@ export default function OpponentPreparation() {
                           <p className="text-sm text-blue-700">{game.notes}</p>
                         </div>
                       ))}
-                    
+
                     {selectedOpponentData.games.filter(game => game.notes && game.notes.trim()).length === 0 && (
                       <p className="text-gray-500 text-center py-4">No coaching notes recorded for games against this opponent.</p>
                     )}
@@ -772,8 +771,7 @@ export default function OpponentPreparation() {
         )}
 
         {/* No opponents message */}
-        {!isLoading && opponents.length === 0 && (
-          <Card>
+        {!isLoading && opponents.length === 0 && (          <Card>
             <CardContent className="text-center py-8">
               <Target className="h-12 w-12 mx-auto text-gray-400 mb-4" />
               <h3 className="text-lg font-semibold mb-2">No Previous Opponents</h3>

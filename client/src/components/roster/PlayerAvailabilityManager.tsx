@@ -118,7 +118,7 @@ export default function PlayerAvailabilityManager({
       });
       refetchAvailability();
     }
-  }, [gameId, queryClient, refetchAvailability]);
+  }, [gameId]);
 
   // Convert API response to shared component format
   useEffect(() => {
@@ -136,7 +136,7 @@ export default function PlayerAvailabilityManager({
     }
 
     // Handle case when team players are available
-    if (teamPlayers.length > 0) {
+    if (teamPlayers.length > 0 && !isLoading && !isLoadingTeamPlayers) {
       if (availabilityResponse && Array.isArray(availabilityResponse.availablePlayerIds)) {
         console.log('PlayerAvailabilityManager: Converting API response to availability data');
         console.log('TeamPlayers:', teamPlayers.map(p => ({ id: p.id, name: p.displayName })));
@@ -155,7 +155,9 @@ export default function PlayerAvailabilityManager({
         setAvailabilityData(newAvailabilityData);
 
         // Notify parent component
-        onAvailabilityChange?.(filteredAvailableIds);
+        if (onAvailabilityChange) {
+          onAvailabilityChange(filteredAvailableIds);
+        }
       } else if (availabilityError || !availabilityResponse) {
         console.log('PlayerAvailabilityManager: Using fallback availability (all active players)');
         // Fallback to all active team players on error or no response
@@ -167,10 +169,12 @@ export default function PlayerAvailabilityManager({
 
         console.log('PlayerAvailabilityManager: Fallback availability data:', fallbackAvailabilityData);
         setAvailabilityData(fallbackAvailabilityData);
-        onAvailabilityChange?.(activeTeamPlayerIds);
+        if (onAvailabilityChange) {
+          onAvailabilityChange(activeTeamPlayerIds);
+        }
       }
     }
-  }, [availabilityResponse, isLoading, availabilityError, teamPlayers, isLoadingTeamPlayers, gameId, onAvailabilityChange]);
+  }, [availabilityResponse, isLoading, availabilityError, teamPlayers.length, isLoadingTeamPlayers, gameId]);
 
   // Handle availability change from shared component
   const handleAvailabilityChange = (newAvailabilityData: Record<number, boolean>) => {
