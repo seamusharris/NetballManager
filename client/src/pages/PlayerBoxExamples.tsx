@@ -95,7 +95,7 @@ export default function PlayerBoxExamples() {
             <div className="w-full">
               <div className="relative">
                 <div 
-                  className="absolute top-1/2 right-3 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2"
+                  className="absolute top-1/2 right-3 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2 mr-3"
                   style={{ backgroundColor: '#16a34a' }}
                 >
                   ✓
@@ -110,7 +110,7 @@ export default function PlayerBoxExamples() {
                     { label: "Turnovers", value: "4" },
                     { label: "Rating", value: "8.5" }
                   ]}
-                  className="w-full shadow-md transition-shadow duration-200 hover:shadow-xl"
+                  className="w-full shadow-md transition-shadow duration-200 hover:shadow-lg"
                   style={{ 
                     borderColor: '#16a34a',
                     color: '#15803d'
@@ -123,7 +123,7 @@ export default function PlayerBoxExamples() {
             <div className="w-full">
               <div className="relative">
                 <div 
-                  className="absolute top-1/2 right-3 w-6 h-6 rounded border-2 bg-white cursor-pointer z-10 transform -translate-y-1/2"
+                  className="absolute top-1/2 right-3 w-6 h-6 rounded border-2 bg-white cursor-pointer z-10 transform -translate-y-1/2 mr-3"
                   style={{ borderColor: '#3b82f6' }}
                 >
                 </div>
@@ -137,7 +137,7 @@ export default function PlayerBoxExamples() {
                     { label: "Rebounds", value: "6" },
                     { label: "Rating", value: "7.8" }
                   ]}
-                  className="w-full shadow-md transition-shadow duration-200 hover:shadow-xl"
+                  className="w-full shadow-md transition-shadow duration-200 hover:shadow-lg"
                   style={{ 
                     borderColor: '#3b82f6',
                     color: '#1d4ed8'
@@ -150,7 +150,7 @@ export default function PlayerBoxExamples() {
             <div className="w-full">
               <div className="relative">
                 <div 
-                  className="absolute top-1/2 right-3 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2"
+                  className="absolute top-1/2 right-3 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2 mr-3"
                   style={{ backgroundColor: '#a855f7' }}
                 >
                   ✓
@@ -165,7 +165,7 @@ export default function PlayerBoxExamples() {
                     { label: "Deflections", value: "11" },
                     { label: "Rating", value: "8.2" }
                   ]}
-                  className="w-full shadow-md transition-shadow duration-200 hover:shadow-xl"
+                  className="w-full shadow-md transition-shadow duration-200 hover:shadow-lg"
                   style={{ 
                     borderColor: '#a855f7',
                     color: '#7e22ce'
@@ -232,42 +232,42 @@ export default function PlayerBoxExamples() {
                   player={{...samplePlayers[1], displayName: "Sarah J", positionPreferences: ["C", "WA"], avatarColor: "bg-green-600"}}
                   size="sm"
                   showPositions={true}
-                  className="[&>div]:hover:shadow-lg [&>div]:transition-shadow [&>div]:duration-200"
+                  className="shadow-md transition-shadow duration-200 hover:shadow-lg"
                   style={{ borderColor: '#16a34a', color: '#15803d' }}
                 />
                 <PlayerBox 
                   player={{...samplePlayers[2], displayName: "Lily C", positionPreferences: ["GK", "GD"], avatarColor: "bg-purple-500"}}
                   size="sm"
                   showPositions={true}
-                  className="[&>div]:hover:shadow-lg [&>div]:transition-shadow [&>div]:duration-200"
+                  className="shadow-md transition-shadow duration-200 hover:shadow-lg"
                   style={{ borderColor: '#a855f7', color: '#7e22ce' }}
                 />
                 <PlayerBox 
                   player={{...samplePlayers[3], displayName: "Mia T", positionPreferences: ["WA", "C"], avatarColor: "bg-orange-500"}}
                   size="sm"
                   showPositions={true}
-                  className="[&>div]:hover:shadow-lg [&>div]:transition-shadow [&>div]:duration-200"
+                  className="shadow-md transition-shadow duration-200 hover:shadow-lg"
                   style={{ borderColor: '#f97316', color: '#ea580c' }}
                 />
                 <PlayerBox 
                   player={{...samplePlayers[4], displayName: "Zoe P", positionPreferences: ["GD", "WD"], avatarColor: "bg-red-500"}}
                   size="sm"
                   showPositions={true}
-                  className="[&>div]:hover:shadow-lg [&>div]:transition-shadow [&>div]:duration-200"
+                  className="shadow-md transition-shadow duration-200 hover:shadow-lg"
                   style={{ borderColor: '#ef4444', color: '#dc2626' }}
                 />
                 <PlayerBox 
                   player={{id: 6, displayName: "Kate M", positionPreferences: ["GA", "WA"], avatarColor: "bg-pink-500"}}
                   size="sm"
                   showPositions={true}
-                  className="[&>div]:hover:shadow-lg [&>div]:transition-shadow [&>div]:duration-200"
+                  className="shadow-md transition-shadow duration-200 hover:shadow-lg"
                   style={{ borderColor: '#ec4899', color: '#be185d' }}
                 />
                 <PlayerBox 
                   player={{id: 7, displayName: "Jess R", positionPreferences: ["GK"], avatarColor: "bg-indigo-500"}}
                   size="sm"
                   showPositions={true}
-                  className="[&>div]:hover:shadow-lg [&>div]:transition-shadow [&>div]:duration-200"
+                  className="shadow-md transition-shadow duration-200 hover:shadow-lg"
                   style={{ borderColor: '#6366f1', color: '#4338ca' }}
                 />
               </div>
@@ -446,7 +446,7 @@ export default function PlayerBoxExamples() {
             {/* Large with Select - Cyan */}
             <div className="relative">
               <div 
-                className="absolute top-1/2 right-6 w-7 h-7 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2 mr-3"
+                className="absolute top-1/2 right-3 w-7 h-7 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2 mr-3"
                 style={{ backgroundColor: '#06b6d4' }}
               >
                 ✓
@@ -455,7 +455,7 @@ export default function PlayerBoxExamples() {
                 player={{...samplePlayers[3], displayName: "Mia Thompson", avatarColor: "bg-cyan-500"}}
                 size="lg"
                 showPositions={true}
-                className="shadow-xl transition-all duration-200 hover:shadow-2xl hover:brightness-95"
+                className="shadow-md transition-shadow duration-200 hover:shadow-lg"
                 style={{ 
                   borderColor: '#06b6d4',
                   color: '#0891b2'
@@ -466,7 +466,7 @@ export default function PlayerBoxExamples() {
             {/* Large with Select - Amber */}
             <div className="relative">
               <div 
-                className="absolute top-1/2 right-6 w-7 h-7 rounded border-2 bg-white cursor-pointer z-10 transform -translate-y-1/2 mr-3"
+                className="absolute top-1/2 right-3 w-7 h-7 rounded border-2 bg-white cursor-pointer z-10 transform -translate-y-1/2 mr-3"
                 style={{ borderColor: '#f59e0b' }}
               >
               </div>
@@ -474,7 +474,7 @@ export default function PlayerBoxExamples() {
                 player={{...samplePlayers[4], displayName: "Zoe Parker", avatarColor: "bg-amber-500"}}
                 size="lg"
                 showPositions={true}
-                className="shadow-xl transition-all duration-200 hover:shadow-2xl hover:brightness-95"
+                className="shadow-md transition-shadow duration-200 hover:shadow-lg"
                 style={{ 
                   borderColor: '#f59e0b',
                   color: '#d97706'
@@ -491,7 +491,7 @@ export default function PlayerBoxExamples() {
             {/* Selected - Emerald */}
             <div className="relative">
               <div 
-                className="absolute top-1/2 right-4 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2 mr-3"
+                className="absolute top-1/2 right-3 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2 mr-3"
                 style={{ backgroundColor: '#10b981' }}
               >
                 ✓
@@ -500,7 +500,7 @@ export default function PlayerBoxExamples() {
                 player={{...samplePlayers[0], displayName: "Emma Wilson", avatarColor: "bg-emerald-500"}}
                 size="md"
                 showPositions={true}
-                className="shadow-md transition-all duration-200"
+                className="shadow-md transition-shadow duration-200 hover:shadow-lg"
                 style={{ 
                   borderColor: '#10b981',
                   color: '#059669'
@@ -511,7 +511,7 @@ export default function PlayerBoxExamples() {
             {/* Unselected - Rose */}
             <div className="relative">
               <div 
-                className="absolute top-1/2 right-4 w-6 h-6 rounded border-2 bg-white cursor-pointer z-10 transform -translate-y-1/2 mr-3"
+                className="absolute top-1/2 right-3 w-6 h-6 rounded border-2 bg-white cursor-pointer z-10 transform -translate-y-1/2 mr-3"
                 style={{ borderColor: '#f43f5e' }}
               >
               </div>
@@ -519,7 +519,7 @@ export default function PlayerBoxExamples() {
                 player={{...samplePlayers[1], displayName: "Sarah Johnson", avatarColor: "bg-rose-500"}}
                 size="md"
                 showPositions={true}
-                className="shadow-md transition-all duration-200"
+                className="shadow-md transition-shadow duration-200 hover:shadow-lg"
                 style={{ 
                   borderColor: '#f43f5e',
                   color: '#e11d48'

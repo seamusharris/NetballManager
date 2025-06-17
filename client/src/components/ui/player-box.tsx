@@ -168,8 +168,8 @@ export function PlayerBox({
           player.avatarColor || 'bg-gray-500',
           {
             'w-10 h-10 text-sm': size === 'sm',
-            'w-12 h-12 text-base': size === 'md',
-            'w-16 h-16 text-2xl': size === 'lg'
+            'w-14 h-14 text-base': size === 'md',
+            'w-18 h-18 text-2xl': size === 'lg'
           }
         )}
       >
