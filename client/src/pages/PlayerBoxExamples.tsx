@@ -69,6 +69,685 @@ export default function PlayerBoxExamples() {
         </p>
       </div>
 
+      {/* COMPREHENSIVE REFERENCE SECTION - Based on Sarah Johnson's styling */}
+      <section className="mb-12 bg-gradient-to-br from-blue-50 via-purple-50 to-indigo-50 p-8 rounded-xl border-2 border-blue-200">
+        <h2 className="text-3xl font-bold mb-6 text-blue-800">Comprehensive Reference - Sarah Johnson Base Styling</h2>
+        <p className="text-blue-700 mb-8 text-lg">All variations based on the Sarah Johnson card styling from Quick Reference Copy 3</p>
+        
+        {/* Width Variations */}
+        <div className="mb-10">
+          <h3 className="text-2xl font-semibold mb-6 text-gray-800">Width & Layout Variations</h3>
+          
+          {/* Compact Width */}
+          <div className="mb-8">
+            <h4 className="text-lg font-medium mb-4 text-gray-700">Compact Layout (300px)</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {samplePlayers.slice(0, 3).map((player, index) => {
+                const playerColorHex = (() => {
+                  const colorMap: Record<string, string> = {
+                    'bg-red-500': '#ef4444', 'bg-red-600': '#dc2626',
+                    'bg-orange-500': '#f97316', 'bg-orange-600': '#ea580c',
+                    'bg-yellow-600': '#ca8a04', 'bg-amber-600': '#d97706',
+                    'bg-green-600': '#16a34a', 'bg-green-700': '#15803d',
+                    'bg-teal-600': '#0d9488', 'bg-cyan-600': '#0891b2',
+                    'bg-blue-500': '#3b82f6', 'bg-blue-600': '#2563eb',
+                    'bg-purple-500': '#a855f7', 'bg-purple-600': '#9333ea'
+                  };
+                  return colorMap[player.avatarColor || 'bg-gray-500'] || '#6b7280';
+                })();
+
+                return (
+                  <div key={`compact-${player.id}`} className="w-80 relative">
+                    <div 
+                      className="absolute top-1/2 right-4 w-5 h-5 border-2 rounded flex items-center justify-center cursor-pointer z-10 transform -translate-y-1/2"
+                      style={{ 
+                        borderColor: playerColorHex, 
+                        backgroundColor: index === 1 ? playerColorHex : 'white'
+                      }}
+                    >
+                      {index === 1 && (
+                        <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      )}
+                    </div>
+                    <PlayerBox 
+                      player={player}
+                      size="sm"
+                      showPositions={true}
+                      className="border-2 [&_.player-avatar]:border-4 [&_.player-avatar]:border-white [&_.player-avatar]:shadow-lg [&_.player-avatar]:shadow-black/15 hover:brightness-90"
+                      style={{ 
+                        backgroundColor: `${playerColorHex}15`,
+                        borderColor: `${playerColorHex}80`,
+                        color: playerColorHex
+                      }}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Standard Width */}
+          <div className="mb-8">
+            <h4 className="text-lg font-medium mb-4 text-gray-700">Standard Layout (400px)</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {samplePlayers.slice(1, 3).map((player, index) => {
+                const playerColorHex = (() => {
+                  const colorMap: Record<string, string> = {
+                    'bg-red-500': '#ef4444', 'bg-red-600': '#dc2626',
+                    'bg-orange-500': '#f97316', 'bg-orange-600': '#ea580c',
+                    'bg-yellow-600': '#ca8a04', 'bg-amber-600': '#d97706',
+                    'bg-green-600': '#16a34a', 'bg-green-700': '#15803d',
+                    'bg-teal-600': '#0d9488', 'bg-cyan-600': '#0891b2',
+                    'bg-blue-500': '#3b82f6', 'bg-blue-600': '#2563eb',
+                    'bg-purple-500': '#a855f7', 'bg-purple-600': '#9333ea'
+                  };
+                  return colorMap[player.avatarColor || 'bg-gray-500'] || '#6b7280';
+                })();
+
+                return (
+                  <div key={`standard-${player.id}`} className="w-96 relative">
+                    <div 
+                      className="absolute top-1/2 right-4 w-6 h-6 border-2 rounded flex items-center justify-center cursor-pointer z-10 transform -translate-y-1/2"
+                      style={{ 
+                        borderColor: playerColorHex, 
+                        backgroundColor: index === 0 ? playerColorHex : 'white'
+                      }}
+                    >
+                      {index === 0 && (
+                        <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      )}
+                    </div>
+                    <PlayerBox 
+                      player={player}
+                      size="md"
+                      showPositions={true}
+                      className="border-2 [&_.player-avatar]:border-4 [&_.player-avatar]:border-white [&_.player-avatar]:shadow-lg [&_.player-avatar]:shadow-black/15 hover:brightness-90"
+                      style={{ 
+                        backgroundColor: `${playerColorHex}15`,
+                        borderColor: `${playerColorHex}80`,
+                        color: playerColorHex
+                      }}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Wide Layout */}
+          <div className="mb-8">
+            <h4 className="text-lg font-medium mb-4 text-gray-700">Wide Layout (500px)</h4>
+            <div className="space-y-4">
+              {samplePlayers.slice(2, 4).map((player, index) => {
+                const playerColorHex = (() => {
+                  const colorMap: Record<string, string> = {
+                    'bg-red-500': '#ef4444', 'bg-red-600': '#dc2626',
+                    'bg-orange-500': '#f97316', 'bg-orange-600': '#ea580c',
+                    'bg-yellow-600': '#ca8a04', 'bg-amber-600': '#d97706',
+                    'bg-green-600': '#16a34a', 'bg-green-700': '#15803d',
+                    'bg-teal-600': '#0d9488', 'bg-cyan-600': '#0891b2',
+                    'bg-blue-500': '#3b82f6', 'bg-blue-600': '#2563eb',
+                    'bg-purple-500': '#a855f7', 'bg-purple-600': '#9333ea'
+                  };
+                  return colorMap[player.avatarColor || 'bg-gray-500'] || '#6b7280';
+                })();
+
+                return (
+                  <div key={`wide-${player.id}`} className="w-[500px] relative">
+                    <div 
+                      className="absolute top-1/2 right-4 w-6 h-6 border-2 rounded flex items-center justify-center cursor-pointer z-10 transform -translate-y-1/2"
+                      style={{ 
+                        borderColor: playerColorHex, 
+                        backgroundColor: index === 1 ? playerColorHex : 'white'
+                      }}
+                    >
+                      {index === 1 && (
+                        <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      )}
+                    </div>
+                    <PlayerBox 
+                      player={player}
+                      size="lg"
+                      showPositions={true}
+                      className="border-2 [&_.player-avatar]:border-4 [&_.player-avatar]:border-white [&_.player-avatar]:shadow-lg [&_.player-avatar]:shadow-black/15 hover:brightness-90"
+                      style={{ 
+                        backgroundColor: `${playerColorHex}15`,
+                        borderColor: `${playerColorHex}80`,
+                        color: playerColorHex
+                      }}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Stats Variations */}
+        <div className="mb-10">
+          <h3 className="text-2xl font-semibold mb-6 text-gray-800">With Statistics</h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Basic Stats */}
+            <div className="relative">
+              <div 
+                className="absolute top-1/2 right-4 w-6 h-6 border-2 rounded flex items-center justify-center cursor-pointer z-10 transform -translate-y-1/2"
+                style={{ 
+                  borderColor: '#3b82f6', 
+                  backgroundColor: '#3b82f6'
+                }}
+              >
+                <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <PlayerBox 
+                player={samplePlayers[0]}
+                size="md"
+                showPositions={true}
+                stats={[
+                  { label: "Goals", value: 24 },
+                  { label: "Assists", value: 8 }
+                ]}
+                className="border-2 [&_.player-avatar]:border-4 [&_.player-avatar]:border-white [&_.player-avatar]:shadow-lg [&_.player-avatar]:shadow-black/15 hover:brightness-90"
+                style={{ 
+                  backgroundColor: '#3b82f615',
+                  borderColor: '#3b82f680',
+                  color: '#3b82f6'
+                }}
+              />
+            </div>
+
+            {/* Extended Stats */}
+            <div className="relative">
+              <div 
+                className="absolute top-1/2 right-4 w-6 h-6 border-2 rounded cursor-pointer z-10 transform -translate-y-1/2"
+                style={{ 
+                  borderColor: '#16a34a', 
+                  backgroundColor: 'white'
+                }}
+              >
+              </div>
+              <PlayerBox 
+                player={samplePlayers[1]}
+                size="md"
+                showPositions={true}
+                stats={[
+                  { label: "Goals", value: 18 },
+                  { label: "Accuracy", value: "92%" },
+                  { label: "Games", value: 12 }
+                ]}
+                className="border-2 [&_.player-avatar]:border-4 [&_.player-avatar]:border-white [&_.player-avatar]:shadow-lg [&_.player-avatar]:shadow-black/15 hover:brightness-90"
+                style={{ 
+                  backgroundColor: '#16a34a15',
+                  borderColor: '#16a34a80',
+                  color: '#16a34a'
+                }}
+              />
+            </div>
+
+            {/* Performance Stats */}
+            <div className="relative">
+              <div 
+                className="absolute top-1/2 right-4 w-6 h-6 border-2 rounded flex items-center justify-center cursor-pointer z-10 transform -translate-y-1/2"
+                style={{ 
+                  borderColor: '#a855f7', 
+                  backgroundColor: '#a855f7'
+                }}
+              >
+                <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <PlayerBox 
+                player={samplePlayers[2]}
+                size="md"
+                showPositions={true}
+                stats={[
+                  { label: "Intercepts", value: 15 },
+                  { label: "Deflections", value: 23 },
+                  { label: "Rating", value: "8.5" }
+                ]}
+                className="border-2 [&_.player-avatar]:border-4 [&_.player-avatar]:border-white [&_.player-avatar]:shadow-lg [&_.player-avatar]:shadow-black/15 hover:brightness-90"
+                style={{ 
+                  backgroundColor: '#a855f715',
+                  borderColor: '#a855f780',
+                  color: '#a855f7'
+                }}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Color Variations */}
+        <div className="mb-10">
+          <h3 className="text-2xl font-semibold mb-6 text-gray-800">Color Palette Variations</h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Red Variation */}
+            <div className="relative">
+              <div 
+                className="absolute top-1/2 right-4 w-6 h-6 border-2 rounded flex items-center justify-center cursor-pointer z-10 transform -translate-y-1/2"
+                style={{ 
+                  borderColor: '#ef4444', 
+                  backgroundColor: '#ef4444'
+                }}
+              >
+                <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <PlayerBox 
+                player={{...samplePlayers[0], avatarColor: "bg-red-500"}}
+                size="md"
+                showPositions={true}
+                className="border-2 [&_.player-avatar]:border-4 [&_.player-avatar]:border-white [&_.player-avatar]:shadow-lg [&_.player-avatar]:shadow-black/15 hover:brightness-90"
+                style={{ 
+                  backgroundColor: '#ef444415',
+                  borderColor: '#ef444480',
+                  color: '#ef4444'
+                }}
+              />
+            </div>
+
+            {/* Orange Variation */}
+            <div className="relative">
+              <div 
+                className="absolute top-1/2 right-4 w-6 h-6 border-2 rounded cursor-pointer z-10 transform -translate-y-1/2"
+                style={{ 
+                  borderColor: '#f97316', 
+                  backgroundColor: 'white'
+                }}
+              >
+              </div>
+              <PlayerBox 
+                player={{...samplePlayers[0], avatarColor: "bg-orange-500"}}
+                size="md"
+                showPositions={true}
+                className="border-2 [&_.player-avatar]:border-4 [&_.player-avatar]:border-white [&_.player-avatar]:shadow-lg [&_.player-avatar]:shadow-black/15 hover:brightness-90"
+                style={{ 
+                  backgroundColor: '#f9731615',
+                  borderColor: '#f9731680',
+                  color: '#f97316'
+                }}
+              />
+            </div>
+
+            {/* Teal Variation */}
+            <div className="relative">
+              <div 
+                className="absolute top-1/2 right-4 w-6 h-6 border-2 rounded flex items-center justify-center cursor-pointer z-10 transform -translate-y-1/2"
+                style={{ 
+                  borderColor: '#0d9488', 
+                  backgroundColor: '#0d9488'
+                }}
+              >
+                <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <PlayerBox 
+                player={{...samplePlayers[0], avatarColor: "bg-teal-600"}}
+                size="md"
+                showPositions={true}
+                className="border-2 [&_.player-avatar]:border-4 [&_.player-avatar]:border-white [&_.player-avatar]:shadow-lg [&_.player-avatar]:shadow-black/15 hover:brightness-90"
+                style={{ 
+                  backgroundColor: '#0d948815',
+                  borderColor: '#0d948880',
+                  color: '#0d9488'
+                }}
+              />
+            </div>
+
+            {/* Amber Variation */}
+            <div className="relative">
+              <div 
+                className="absolute top-1/2 right-4 w-6 h-6 border-2 rounded cursor-pointer z-10 transform -translate-y-1/2"
+                style={{ 
+                  borderColor: '#d97706', 
+                  backgroundColor: 'white'
+                }}
+              >
+              </div>
+              <PlayerBox 
+                player={{...samplePlayers[0], avatarColor: "bg-amber-600"}}
+                size="md"
+                showPositions={true}
+                className="border-2 [&_.player-avatar]:border-4 [&_.player-avatar]:border-white [&_.player-avatar]:shadow-lg [&_.player-avatar]:shadow-black/15 hover:brightness-90"
+                style={{ 
+                  backgroundColor: '#d9770615',
+                  borderColor: '#d9770680',
+                  color: '#d97706'
+                }}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Density Variations */}
+        <div className="mb-10">
+          <h3 className="text-2xl font-semibold mb-6 text-gray-800">Density & Size Variations</h3>
+          
+          <div className="space-y-6">
+            {/* Compact Density */}
+            <div>
+              <h4 className="text-lg font-medium mb-3 text-gray-700">Compact Density</h4>
+              <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                {samplePlayers.map((player, index) => {
+                  const playerColorHex = (() => {
+                    const colorMap: Record<string, string> = {
+                      'bg-red-500': '#ef4444', 'bg-red-600': '#dc2626',
+                      'bg-orange-500': '#f97316', 'bg-orange-600': '#ea580c',
+                      'bg-yellow-600': '#ca8a04', 'bg-amber-600': '#d97706',
+                      'bg-green-600': '#16a34a', 'bg-green-700': '#15803d',
+                      'bg-teal-600': '#0d9488', 'bg-cyan-600': '#0891b2',
+                      'bg-blue-500': '#3b82f6', 'bg-blue-600': '#2563eb',
+                      'bg-purple-500': '#a855f7', 'bg-purple-600': '#9333ea'
+                    };
+                    return colorMap[player.avatarColor || 'bg-gray-500'] || '#6b7280';
+                  })();
+
+                  return (
+                    <div key={`compact-density-${player.id}`} className="relative">
+                      <div 
+                        className="absolute top-1/2 right-2 w-4 h-4 border border-current rounded cursor-pointer z-10 transform -translate-y-1/2"
+                        style={{ 
+                          borderColor: playerColorHex, 
+                          backgroundColor: index % 2 === 0 ? playerColorHex : 'white'
+                        }}
+                      >
+                        {index % 2 === 0 && (
+                          <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        )}
+                      </div>
+                      <PlayerBox 
+                        player={player}
+                        size="sm"
+                        showPositions={false}
+                        className="border-2 [&_.player-avatar]:border-2 [&_.player-avatar]:border-white [&_.player-avatar]:shadow-md [&_.player-avatar]:shadow-black/15 hover:brightness-90"
+                        style={{ 
+                          backgroundColor: `${playerColorHex}15`,
+                          borderColor: `${playerColorHex}80`,
+                          color: playerColorHex
+                        }}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Large Format */}
+            <div>
+              <h4 className="text-lg font-medium mb-3 text-gray-700">Large Format with Extended Stats</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="relative">
+                  <div 
+                    className="absolute top-1/2 right-6 w-8 h-8 border-2 rounded flex items-center justify-center cursor-pointer z-10 transform -translate-y-1/2"
+                    style={{ 
+                      borderColor: '#3b82f6', 
+                      backgroundColor: '#3b82f6'
+                    }}
+                  >
+                    <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <PlayerBox 
+                    player={samplePlayers[0]}
+                    size="lg"
+                    showPositions={true}
+                    stats={[
+                      { label: "Goals", value: 45 },
+                      { label: "Assists", value: 12 },
+                      { label: "Accuracy", value: "94%" },
+                      { label: "MVP", value: 3 }
+                    ]}
+                    className="border-2 [&_.player-avatar]:border-4 [&_.player-avatar]:border-white [&_.player-avatar]:shadow-lg [&_.player-avatar]:shadow-black/15 hover:brightness-90"
+                    style={{ 
+                      backgroundColor: '#3b82f615',
+                      borderColor: '#3b82f680',
+                      color: '#3b82f6'
+                    }}
+                  />
+                </div>
+
+                <div className="relative">
+                  <div 
+                    className="absolute top-1/2 right-6 w-8 h-8 border-2 rounded cursor-pointer z-10 transform -translate-y-1/2"
+                    style={{ 
+                      borderColor: '#16a34a', 
+                      backgroundColor: 'white'
+                    }}
+                  >
+                  </div>
+                  <PlayerBox 
+                    player={samplePlayers[1]}
+                    size="lg"
+                    showPositions={true}
+                    stats={[
+                      { label: "Intercepts", value: 28 },
+                      { label: "Deflections", value: 34 },
+                      { label: "Games", value: 15 },
+                      { label: "Rating", value: "9.1" }
+                    ]}
+                    className="border-2 [&_.player-avatar]:border-4 [&_.player-avatar]:border-white [&_.player-avatar]:shadow-lg [&_.player-avatar]:shadow-black/15 hover:brightness-90"
+                    style={{ 
+                      backgroundColor: '#16a34a15',
+                      borderColor: '#16a34a80',
+                      color: '#16a34a'
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Interactive States */}
+        <div className="mb-10">
+          <h3 className="text-2xl font-semibold mb-6 text-gray-800">Interactive States & Hover Effects</h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Standard Hover */}
+            <div className="relative">
+              <div 
+                className="absolute top-1/2 right-4 w-6 h-6 border-2 rounded flex items-center justify-center cursor-pointer z-10 transform -translate-y-1/2"
+                style={{ 
+                  borderColor: '#dc2626', 
+                  backgroundColor: '#dc2626'
+                }}
+              >
+                <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div 
+                className="border-2 rounded-lg transition-all duration-300 cursor-pointer hover:brightness-85 hover:shadow-lg"
+                style={{ 
+                  backgroundColor: '#dc262615',
+                  borderColor: '#dc262680',
+                  color: '#dc2626'
+                }}
+              >
+                <PlayerBox 
+                  player={{...samplePlayers[4], avatarColor: "bg-red-600"}}
+                  size="md"
+                  showPositions={true}
+                  className="[&>div]:bg-transparent [&>div]:border-0 [&>div]:shadow-none [&_.player-avatar]:border-4 [&_.player-avatar]:border-white [&_.player-avatar]:shadow-lg [&_.player-avatar]:shadow-black/15"
+                />
+              </div>
+            </div>
+
+            {/* Enhanced Hover */}
+            <div className="relative">
+              <div 
+                className="absolute top-1/2 right-4 w-6 h-6 border-2 rounded cursor-pointer z-10 transform -translate-y-1/2"
+                style={{ 
+                  borderColor: '#f97316', 
+                  backgroundColor: 'white'
+                }}
+              >
+              </div>
+              <div 
+                className="border-2 rounded-lg transition-all duration-300 cursor-pointer hover:brightness-75 hover:scale-[1.02] hover:shadow-xl"
+                style={{ 
+                  backgroundColor: '#f9731615',
+                  borderColor: '#f9731680',
+                  color: '#f97316'
+                }}
+              >
+                <PlayerBox 
+                  player={{...samplePlayers[3], avatarColor: "bg-orange-500"}}
+                  size="md"
+                  showPositions={true}
+                  className="[&>div]:bg-transparent [&>div]:border-0 [&>div]:shadow-none [&_.player-avatar]:border-4 [&_.player-avatar]:border-white [&_.player-avatar]:shadow-lg [&_.player-avatar]:shadow-black/15"
+                />
+              </div>
+            </div>
+
+            {/* Subtle Hover */}
+            <div className="relative">
+              <div 
+                className="absolute top-1/2 right-4 w-6 h-6 border-2 rounded flex items-center justify-center cursor-pointer z-10 transform -translate-y-1/2"
+                style={{ 
+                  borderColor: '#a855f7', 
+                  backgroundColor: '#a855f7'
+                }}
+              >
+                <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div 
+                className="border-2 rounded-lg transition-all duration-300 cursor-pointer hover:brightness-90 hover:-translate-y-0.5"
+                style={{ 
+                  backgroundColor: '#a855f715',
+                  borderColor: '#a855f780',
+                  color: '#a855f7'
+                }}
+              >
+                <PlayerBox 
+                  player={{...samplePlayers[2], avatarColor: "bg-purple-500"}}
+                  size="md"
+                  showPositions={true}
+                  className="[&>div]:bg-transparent [&>div]:border-0 [&>div]:shadow-none [&_.player-avatar]:border-4 [&_.player-avatar]:border-white [&_.player-avatar]:shadow-lg [&_.player-avatar]:shadow-black/15"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Special Use Cases */}
+        <div className="mb-8">
+          <h3 className="text-2xl font-semibold mb-6 text-gray-800">Special Use Cases</h3>
+          
+          <div className="space-y-6">
+            {/* Court Position Ready */}
+            <div>
+              <h4 className="text-lg font-medium mb-3 text-gray-700">Court Position Ready</h4>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                {["GS", "GA", "WA", "C"].map((position, index) => {
+                  const colors = ['#ef4444', '#f97316', '#16a34a', '#3b82f6'];
+                  const bgColors = ['bg-red-500', 'bg-orange-500', 'bg-green-600', 'bg-blue-500'];
+                  
+                  return (
+                    <div key={position} className="relative">
+                      <div 
+                        className="absolute top-1/2 right-4 w-6 h-6 border-2 rounded flex items-center justify-center cursor-pointer z-10 transform -translate-y-1/2"
+                        style={{ 
+                          borderColor: colors[index], 
+                          backgroundColor: colors[index]
+                        }}
+                      >
+                        <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                      <PlayerBox 
+                        player={{
+                          ...samplePlayers[index],
+                          avatarColor: bgColors[index],
+                          positionPreferences: [position]
+                        }}
+                        size="md"
+                        showPositions={true}
+                        className="border-2 [&_.player-avatar]:border-4 [&_.player-avatar]:border-white [&_.player-avatar]:shadow-lg [&_.player-avatar]:shadow-black/15 hover:brightness-90"
+                        style={{ 
+                          backgroundColor: `${colors[index]}15`,
+                          borderColor: `${colors[index]}80`,
+                          color: colors[index]
+                        }}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Mixed Selection States */}
+            <div>
+              <h4 className="text-lg font-medium mb-3 text-gray-700">Mixed Selection States</h4>
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                {samplePlayers.map((player, index) => {
+                  const playerColorHex = (() => {
+                    const colorMap: Record<string, string> = {
+                      'bg-red-500': '#ef4444', 'bg-red-600': '#dc2626',
+                      'bg-orange-500': '#f97316', 'bg-orange-600': '#ea580c',
+                      'bg-yellow-600': '#ca8a04', 'bg-amber-600': '#d97706',
+                      'bg-green-600': '#16a34a', 'bg-green-700': '#15803d',
+                      'bg-teal-600': '#0d9488', 'bg-cyan-600': '#0891b2',
+                      'bg-blue-500': '#3b82f6', 'bg-blue-600': '#2563eb',
+                      'bg-purple-500': '#a855f7', 'bg-purple-600': '#9333ea'
+                    };
+                    return colorMap[player.avatarColor || 'bg-gray-500'] || '#6b7280';
+                  })();
+
+                  const isSelected = index === 0 || index === 2 || index === 4;
+                  
+                  return (
+                    <div key={`mixed-${player.id}`} className="relative">
+                      <div 
+                        className="absolute top-1/2 right-3 w-5 h-5 border-2 rounded flex items-center justify-center cursor-pointer z-10 transform -translate-y-1/2"
+                        style={{ 
+                          borderColor: playerColorHex, 
+                          backgroundColor: isSelected ? playerColorHex : 'white'
+                        }}
+                      >
+                        {isSelected && (
+                          <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        )}
+                      </div>
+                      <PlayerBox 
+                        player={player}
+                        size="sm"
+                        showPositions={true}
+                        className="border-2 [&_.player-avatar]:border-3 [&_.player-avatar]:border-white [&_.player-avatar]:shadow-md [&_.player-avatar]:shadow-black/15 hover:brightness-90"
+                        style={{ 
+                          backgroundColor: `${playerColorHex}15`,
+                          borderColor: `${playerColorHex}80`,
+                          color: playerColorHex
+                        }}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Quick Reference Section */}
       <section className="mb-8 bg-blue-50 p-6 rounded-lg border border-blue-200">
         <h2 className="text-2xl font-semibold mb-4 text-blue-800">Quick Reference - Standard Player Box Styles</h2>
