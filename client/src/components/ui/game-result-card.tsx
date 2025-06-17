@@ -67,45 +67,24 @@ export function GameResultCard({
 
       // Only process scores for completed games that have official scores
       if (game.statusIsCompleted && officialScores.length > 0) {
-        // Calculate team and opponent scores from official scores
-        let teamScore = 0;
-        let opponentScore = 0;
+        // Use the gameScoreService to properly calculate scores with game context
+        const gameScores = gameScoreService.calculateGameScoresSync(
+          [], // gameStats - not needed for official scores
+          game.statusName, // game status
+          { teamGoals: game.statusTeamGoals, opponentGoals: game.statusOpponentGoals }, // status scores
+          game.isInterClub, // is inter club
+          game.homeTeamId, // proper home team ID
+          game.awayTeamId, // proper away team ID
+          currentTeamId, // current team context
+          officialScores // official scores
+        );
 
-        // Group scores by team
-        const scoresByTeam: { [teamId: number]: number } = {};
-        officialScores.forEach(score => {
-          if (!scoresByTeam[score.teamId]) {
-            scoresByTeam[score.teamId] = 0;
-          }
-          scoresByTeam[score.teamId] += score.score;
-        });
-
-        // Determine team vs opponent scores from current team's perspective
-        if (currentTeamId) {
-          // Current team's score
-          teamScore = scoresByTeam[currentTeamId] || 0;
-
-          // Opponent's score (sum of all other teams)
-          opponentScore = Object.entries(scoresByTeam)
-            .filter(([teamId]) => parseInt(teamId) !== currentTeamId)
-            .reduce((sum, [, score]) => sum + score, 0);
-        } else {
-          // If no current team context, show home vs away
-          const teamIds = Object.keys(scoresByTeam).map(id => parseInt(id));
-          if (teamIds.length >= 2) {
-            // Default to first team as "team" and second as "opponent"
-            teamScore = scoresByTeam[teamIds[0]] || 0;
-            opponentScore = scoresByTeam[teamIds[1]] || 0;
-          }
-        }
-
-        const result = teamScore > opponentScore ? 'win' : teamScore < opponentScore ? 'loss' : 'draw';
-        console.log(`GameResultCard ${game.id}: Official scores calculated - ${teamScore}-${opponentScore} (${result}) from ${officialScores.length} score entries`);
+        console.log(`GameResultCard ${game.id}: Official scores calculated - ${gameScores.totalTeamScore}-${gameScores.totalOpponentScore} (${gameScores.result}) from ${officialScores.length} score entries`);
 
         return {
-          quarterScores: [], // Simplified - not showing quarter breakdown in cards
-          finalScore: { for: teamScore, against: opponentScore },
-          result: result
+          quarterScores: gameScores.quarterScores,
+          finalScore: { for: gameScores.totalTeamScore, against: gameScores.totalOpponentScore },
+          result: gameScores.result
         };
       }
 
@@ -121,7 +100,7 @@ export function GameResultCard({
         finalScore: { for: 0, against: 0 }
       };
     }
-  }, [centralizedScores, game.id, game.statusIsCompleted, currentTeamId]);
+  }, [centralizedScores, game.id, game.statusIsCompleted, currentTeamId, game.homeTeamId, game.awayTeamId, game.isInterClub, game.statusName, game.statusTeamGoals, game.statusOpponentGoals]);
 
   // Check if this is a BYE game using game status only
   const isByeGame = game.statusId === 6 || game.statusName === 'bye';
