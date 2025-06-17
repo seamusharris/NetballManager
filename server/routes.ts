@@ -1461,51 +1461,86 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: 'Club context required - please refresh the page' });
       }
 
-      // OPTIMIZED SINGLE SQL QUERY - build specific WHERE clause based on request type
-      let baseWhereClause = `(ht.club_id = ${clubId} OR at.club_id = ${clubId} OR EXISTS (
-        SELECT 1 FROM game_permissions gp 
-        WHERE gp.game_id = g.id AND gp.club_id = ${clubId}
-      ))`;
-
-      // Build team-specific WHERE clause if needed
-      let finalWhereClause = baseWhereClause;
+      // Use parameterized queries for better security and consistency
+      let result;
+      
       if (!isClubWide && teamId) {
-        finalWhereClause = `${baseWhereClause} AND (g.home_team_id = ${teamId} OR g.away_team_id = ${teamId})`;
+        // Team-specific query
+        result = await db.execute(sql`
+          SELECT 
+            g.*,
+            gs.name as status, 
+            gs.display_name as status_display_name, 
+            gs.is_completed, 
+            gs.allows_statistics, 
+            gs.team_goals, 
+            gs.opponent_goals,
+            s.name as season_name, 
+            s.start_date as season_start, 
+            s.end_date as season_end, 
+            s.is_active as season_active,
+            ht.name as home_team_name, 
+            ht.division as home_team_division, 
+            ht.club_id as home_club_id,
+            at.name as away_team_name, 
+            at.division as away_team_division, 
+            at.club_id as away_club_id,
+            hc.name as home_club_name, 
+            hc.code as home_club_code,
+            ac.name as away_club_name, 
+            ac.code as away_club_code
+          FROM games g
+          LEFT JOIN game_statuses gs ON g.status_id = gs.id
+          LEFT JOIN seasons s ON g.season_id = s.id
+          LEFT JOIN teams ht ON g.home_team_id = ht.id
+          LEFT JOIN teams at ON g.away_team_id = at.id
+          LEFT JOIN clubs hc ON ht.club_id = hc.id
+          LEFT JOIN clubs ac ON at.club_id = ac.id
+          WHERE (ht.club_id = ${clubId} OR at.club_id = ${clubId} OR EXISTS (
+            SELECT 1 FROM game_permissions gp 
+            WHERE gp.game_id = g.id AND gp.club_id = ${clubId}
+          )) AND (g.home_team_id = ${teamId} OR g.away_team_id = ${teamId})
+          ORDER BY g.date DESC, g.time DESC
+        `);
+      } else {
+        // Club-wide query
+        result = await db.execute(sql`
+          SELECT 
+            g.*,
+            gs.name as status, 
+            gs.display_name as status_display_name, 
+            gs.is_completed, 
+            gs.allows_statistics, 
+            gs.team_goals, 
+            gs.opponent_goals,
+            s.name as season_name, 
+            s.start_date as season_start, 
+            s.end_date as season_end, 
+            s.is_active as season_active,
+            ht.name as home_team_name, 
+            ht.division as home_team_division, 
+            ht.club_id as home_club_id,
+            at.name as away_team_name, 
+            at.division as away_team_division, 
+            at.club_id as away_club_id,
+            hc.name as home_club_name, 
+            hc.code as home_club_code,
+            ac.name as away_club_name, 
+            ac.code as away_club_code
+          FROM games g
+          LEFT JOIN game_statuses gs ON g.status_id = gs.id
+          LEFT JOIN seasons s ON g.season_id = s.id
+          LEFT JOIN teams ht ON g.home_team_id = ht.id
+          LEFT JOIN teams at ON g.away_team_id = at.id
+          LEFT JOIN clubs hc ON ht.club_id = hc.id
+          LEFT JOIN clubs ac ON at.club_id = ac.id
+          WHERE (ht.club_id = ${clubId} OR at.club_id = ${clubId} OR EXISTS (
+            SELECT 1 FROM game_permissions gp 
+            WHERE gp.game_id = g.id AND gp.club_id = ${clubId}
+          ))
+          ORDER BY g.date DESC, g.time DESC
+        `);
       }
-
-      const result = await db.execute(sql`
-        SELECT 
-          g.*,
-          gs.name as status, 
-          gs.display_name as status_display_name, 
-          gs.is_completed, 
-          gs.allows_statistics, 
-          gs.team_goals, 
-          gs.opponent_goals,
-          s.name as season_name, 
-          s.start_date as season_start, 
-          s.end_date as season_end, 
-          s.is_active as season_active,
-          ht.name as home_team_name, 
-          ht.division as home_team_division, 
-          ht.club_id as home_club_id,
-          at.name as away_team_name, 
-          at.division as away_team_division, 
-          at.club_id as away_club_id,
-          hc.name as home_club_name, 
-          hc.code as home_club_code,
-          ac.name as away_club_name, 
-          ac.code as away_club_code
-        FROM games g
-        LEFT JOIN game_statuses gs ON g.status_id = gs.id
-        LEFT JOIN seasons s ON g.season_id = s.id
-        LEFT JOIN teams ht ON g.home_team_id = ht.id
-        LEFT JOIN teams at ON g.away_team_id = at.id
-        LEFT JOIN clubs hc ON ht.club_id = hc.id
-        LEFT JOIN clubs ac ON at.club_id = ac.id
-        WHERE ${sql.raw(finalWhereClause)}
-        ORDER BY g.date DESC, g.time DESC
-      `);
 
       console.log(`Found ${result.rows.length} games for club ${clubId}${!isClubWide && teamId ? `, team ${teamId}` : ' (club-wide)'}`);
 

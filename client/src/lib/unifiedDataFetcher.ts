@@ -28,22 +28,32 @@ export class UnifiedDataFetcher {
   async batchFetchGameData(options: BatchFetchOptions) {
     const { gameIds, clubId, teamId, includeStats = true, includeRosters = true, includeScores = true } = options;
 
-    if (gameIds.length === 0) return {};
+    if (gameIds.length === 0) return { stats: {}, rosters: {}, scores: {} };
+
+    // Normalize and validate game IDs
+    const normalizedGameIds = Array.isArray(gameIds) 
+      ? gameIds.filter(id => id && !isNaN(Number(id))).map(Number).sort()
+      : [];
+
+    if (normalizedGameIds.length === 0) return { stats: {}, rosters: {}, scores: {} };
 
     // Create batch key for deduplication
-    const batchKey = `${clubId}-${teamId || 'all'}-${gameIds.sort().join(',')}-${includeStats}-${includeRosters}-${includeScores}`;
+    const batchKey = `${clubId}-${teamId || 'all'}-${normalizedGameIds.join(',')}-${includeStats}-${includeRosters}-${includeScores}`;
 
     // Return existing promise if batch is already in progress
     if (this.pendingBatches.has(batchKey)) {
+      console.log(`UnifiedDataFetcher: Returning existing batch request for key: ${batchKey}`);
       return this.pendingBatches.get(batchKey);
     }
 
-    const batchPromise = this.executeBatchFetch(options);
+    const batchPromise = this.executeBatchFetch({ ...options, gameIds: normalizedGameIds });
     this.pendingBatches.set(batchKey, batchPromise);
 
-    // Clean up after completion
+    // Clean up after completion with error handling
     batchPromise.finally(() => {
       this.pendingBatches.delete(batchKey);
+    }).catch(error => {
+      console.warn(`UnifiedDataFetcher: Batch request failed for key ${batchKey}:`, error);
     });
 
     return batchPromise;

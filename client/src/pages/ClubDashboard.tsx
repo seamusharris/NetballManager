@@ -99,39 +99,39 @@ export default function ClubDashboard() {
     staleTime: 1000 * 60 * 2, // 2 minutes for faster updates
   });
 
-  // Also fetch centralized stats for display purposes (RecentGames component)
-  const { data: centralizedStats = {}, isLoading: isLoadingStats } = useQuery({
-    queryKey: ['centralized-stats', completedGameIds.sort().join(',')],
+  // Use unified data fetcher for consistency with other pages
+  const { data: batchData, isLoading: isLoadingBatchData } = useQuery({
+    queryKey: ['club-dashboard-batch-data', currentClubId, allGameIds.sort().join(',')],
     queryFn: async () => {
-      if (completedGameIds.length === 0) return {};
+      if (allGameIds.length === 0) return { stats: {}, rosters: {}, scores: {} };
+
+      console.log(`ClubDashboard fetching batch data for ${allGameIds.length} games`);
 
       try {
-        // Use batch endpoint for better performance
-        const batchResponse = await apiClient.post('/api/games/stats/batch', {
-          gameIds: completedGameIds
+        const { dataFetcher } = await import('@/lib/unifiedDataFetcher');
+        const result = await dataFetcher.batchFetchGameData({
+          gameIds: allGameIds,
+          clubId: currentClubId!,
+          teamId: undefined, // Club-wide, no specific team
+          includeStats: true,
+          includeRosters: false, // Don't need rosters for club dashboard
+          includeScores: true
         });
-        return batchResponse;
-      } catch (error) {
-        console.error('ClubDashboard: Batch stats fetch failed, falling back to individual requests:', error);
 
-        // Fallback to individual requests
-        const statsMap: Record<number, any[]> = {};
-        for (const gameId of completedGameIds) {
-          try {
-            const stats = await apiClient.get(`/api/games/${gameId}/stats`);
-            statsMap[gameId] = stats || [];
-          } catch (error) {
-            console.error(`ClubDashboard: Error fetching stats for game ${gameId}:`, error);
-            statsMap[gameId] = [];
-          }
-        }
-        return statsMap;
+        console.log('ClubDashboard batch data result:', result);
+        return result;
+      } catch (error) {
+        console.error('ClubDashboard batch data fetch error:', error);
+        throw error;
       }
     },
-    enabled: !!currentClubId && !clubLoading && completedGameIds.length > 0,
-    staleTime: 10 * 60 * 1000, // 10 minutes (increased for better caching)
-    gcTime: 30 * 60 * 1000 // 30 minutes (increased for better caching)
+    enabled: !!currentClubId && !clubLoading && allGameIds.length > 0,
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 30 * 60 * 1000 // 30 minutes
   });
+
+  const centralizedStats = batchData?.stats || {};
+  const isLoadingStats = isLoadingBatchData;
 
   // Calculate club-wide metrics (memoized to prevent unnecessary recalculations)
   const { activeTeams, completedGames, upcomingGames, totalPlayers, activePlayers, clubWinRate } = useMemo(() => {
