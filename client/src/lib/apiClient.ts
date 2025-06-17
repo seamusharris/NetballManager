@@ -158,7 +158,7 @@ class ApiClient {
   }
 }
 
-export const apiClient = new ApiClient();
+export const apiClient = new ApiClient('/api');
 
 // Helper function for mutations with automatic cache invalidation
 export async function mutateWithInvalidation<T>(
