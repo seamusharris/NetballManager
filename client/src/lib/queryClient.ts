@@ -187,10 +187,8 @@ export const getQueryFn: <T>(options: {
     }
 
     try {
-      // Remove /api prefix since apiClient already adds it
-      const cleanUrl = url.startsWith('/api') ? url.substring(4) : url;
       // Use apiClient.get() to ensure proper headers are included
-      return await apiClient.get(cleanUrl);
+      return await apiClient.get(url);
     } catch (error: any) {
       if (unauthorizedBehavior === "returnNull" && 
           (error?.message?.includes('401') || error?.status === 401)) {
