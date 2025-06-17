@@ -946,6 +946,77 @@ export default function PlayerBoxExamples() {
               </div>
             </div>
 
+            {/* Working Select with White Background Examples */}
+            <div>
+              <h4 className="text-sm font-medium mb-2 text-gray-700">Working Select Examples - White Background</h4>
+              <p className="text-sm text-gray-600 mb-3">White background for unselected state, colored background when selected</p>
+              <div className="space-y-3">
+                <div className="relative">
+                  <div 
+                    className="absolute top-1/2 right-3 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2 mr-3 transition-all duration-200"
+                    style={{ backgroundColor: selectedPlayers.has(60) ? '#16a34a' : 'transparent', border: selectedPlayers.has(60) ? 'none' : '2px solid #16a34a80' }}
+                    onClick={() => togglePlayerSelection(60)}
+                  >
+                    {selectedPlayers.has(60) && '✓'}
+                  </div>
+                  <PlayerBox 
+                    player={{id: 60, displayName: "White Background 1", positionPreferences: ["GA", "GS"], avatarColor: "bg-green-600"}}
+                    size="md"
+                    showPositions={true}
+                    className="shadow-md transition-all duration-200 hover:shadow-lg cursor-pointer"
+                    style={{ 
+                      backgroundColor: selectedPlayers.has(60) ? '#16a34a25' : '#ffffff',
+                      borderColor: '#16a34a',
+                      color: '#15803d'
+                    }}
+                    onClick={() => togglePlayerSelection(60)}
+                  />
+                </div>
+                <div className="relative">
+                  <div 
+                    className="absolute top-1/2 right-3 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2 mr-3 transition-all duration-200"
+                    style={{ backgroundColor: selectedPlayers.has(61) ? '#3b82f6' : 'transparent', border: selectedPlayers.has(61) ? 'none' : '2px solid #3b82f680' }}
+                    onClick={() => togglePlayerSelection(61)}
+                  >
+                    {selectedPlayers.has(61) && '✓'}
+                  </div>
+                  <PlayerBox 
+                    player={{id: 61, displayName: "White Background 2", positionPreferences: ["C", "WA"], avatarColor: "bg-blue-500"}}
+                    size="md"
+                    showPositions={true}
+                    className="shadow-md transition-all duration-200 hover:shadow-lg cursor-pointer"
+                    style={{ 
+                      backgroundColor: selectedPlayers.has(61) ? '#3b82f625' : '#ffffff',
+                      borderColor: '#3b82f6',
+                      color: '#1d4ed8'
+                    }}
+                    onClick={() => togglePlayerSelection(61)}
+                  />
+                </div>
+                <div className="relative">
+                  <div 
+                    className="absolute top-1/2 right-3 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2 mr-3 transition-all duration-200"
+                    style={{ backgroundColor: selectedPlayers.has(62) ? '#a855f7' : 'transparent', border: selectedPlayers.has(62) ? 'none' : '2px solid #a855f780' }}
+                    onClick={() => togglePlayerSelection(62)}
+                  >
+                    {selectedPlayers.has(62) && '✓'}
+                  </div>
+                  <PlayerBox 
+                    player={{id: 62, displayName: "White Background 3", positionPreferences: ["GK", "GD"], avatarColor: "bg-purple-500"}}
+                    size="md"
+                    showPositions={true}
+                    className="shadow-md transition-all duration-200 hover:shadow-lg cursor-pointer"
+                    style={{ 
+                      backgroundColor: selectedPlayers.has(62) ? '#a855f725' : '#ffffff',
+                      borderColor: '#a855f7',
+                      color: '#7e22ce'
+                    }}
+                    onClick={() => togglePlayerSelection(62)}
+                  />
+                </div>
+              </div>
+            </div>
+
             {/* Badge Color Variations */}
             <div>
               <h4 className="text-sm font-medium mb-2 text-gray-700">Badge Color Variations - Adapting to Avatar Colors</h4>
@@ -1107,7 +1178,7 @@ export default function PlayerBoxExamples() {
                   player={{id: 15, displayName: "Rachel Green", positionPreferences: ["GA", "GS"], avatarColor: "bg-emerald-500", active: true}}
                   size="sm"
                   showPositions={true}
-                  className="shadow-md transition-shadow duration-200 hover:shadow-lg"
+                  className="hover:shadow-md transition-shadow duration-200"
                   style={{ 
                     borderColor: '#10b981',
                     color: '#059669'
@@ -1118,7 +1189,7 @@ export default function PlayerBoxExamples() {
                   player={{id: 16, displayName: "Monica Geller", positionPreferences: ["C", "WA"], avatarColor: "bg-rose-500", active: false}}
                   size="sm"
                   showPositions={true}
-                  className="shadow-md transition-shadow duration-200 hover:shadow-lg"
+                  className="hover:shadow-md transition-shadow duration-200"
                   style={{ 
                     borderColor: '#f43f5e',
                     color: '#e11d48'
@@ -1129,7 +1200,7 @@ export default function PlayerBoxExamples() {
                   player={{id: 17, displayName: "Phoebe Buffay", positionPreferences: ["GK"], avatarColor: "bg-amber-500", active: true}}
                   size="sm"
                   showPositions={true}
-                  className="shadow-md transition-shadow duration-200 hover:shadow-lg"
+                  className="hover:shadow-md transition-shadow duration-200"
                   style={{ 
                     borderColor: '#f59e0b',
                     color: '#d97706'
@@ -1140,7 +1211,7 @@ export default function PlayerBoxExamples() {
                   player={{id: 18, displayName: "Joey Tribbiani", positionPreferences: ["GD", "WD"], avatarColor: "bg-cyan-500", active: false}}
                   size="sm"
                   showPositions={true}
-                  className="shadow-md transition-shadow duration-200 hover:shadow-lg"
+                  className="hover:shadow-md transition-shadow duration-200"
                   style={{ 
                     borderColor: '#06b6d4',
                     color: '#0891b2'
@@ -1191,28 +1262,28 @@ export default function PlayerBoxExamples() {
                       player={{id: 20, displayName: "Carrie B", positionPreferences: ["GS"], avatarColor: "bg-pink-500", active: true}}
                       size="sm"
                       showPositions={true}
-                      className="hover:shadow-md transition-shadow duration-200"
+                      className="hover:shadow-md transition-shadow duration-200 min-h-[4rem]"
                       style={{ borderColor: '#ec4899', color: '#be185d' }}
                     />
                     <PlayerBox
                       player={{id: 21, displayName: "Miranda H", positionPreferences: ["GK"], avatarColor: "bg-indigo-500", active: false}}
                       size="sm"
                       showPositions={true}
-                      className="hover:shadow-md transition-shadow duration-200"
+                      className="hover:shadow-md transition-shadow duration-200 min-h-[4rem]"
                       style={{ borderColor: '#6366f1', color: '#4338ca' }}
                     />
                     <PlayerBox
                       player={{id: 22, displayName: "Samantha J", positionPreferences: ["C"], avatarColor: "bg-teal-500", active: true}}
                       size="sm"
                       showPositions={true}
-                      className="hover:shadow-md transition-shadow duration-200"
+                      className="hover:shadow-md transition-shadow duration-200 min-h-[4rem]"
                       style={{ borderColor: '#14b8a6', color: '#0d9488' }}
                     />
                     <PlayerBox
                       player={{id: 23, displayName: "Jessica P", positionPreferences: ["WA"], avatarColor: "bg-slate-500", active: false}}
                       size="sm"
                       showPositions={true}
-                      className="hover:shadow-md transition-shadow duration-200"
+                      className="hover:shadow-md transition-shadow duration-200 min-h-[4rem]"
                       style={{ borderColor: '#64748b', color: '#475569' }}
                     />
                   </div>

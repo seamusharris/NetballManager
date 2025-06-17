@@ -196,20 +196,26 @@ export function PlayerBox({
                   ? player.positionPreferences.join(', ') 
                   : 'No position preferences'}
               </span>
-              {customBadge ? customBadge : (
+              {customBadge ? (
+                <span className="inline-flex items-center">{customBadge}</span>
+              ) : (
                 player.active === false && (
-                  <Badge variant="secondary" className="text-xs">Inactive</Badge>
+                  <Badge variant="secondary" className="text-xs ml-1">Inactive</Badge>
                 )
               )}
             </div>
           )}
 
           {!showPositions && (
-            customBadge ? customBadge : (
-              player.active === false && (
-                <Badge variant="secondary" className="text-xs mt-1">Inactive</Badge>
-              )
-            )
+            <div className={`${textSizes[size].position} flex items-center gap-2 min-h-[1.25rem]`}>
+              {customBadge ? (
+                <span className="inline-flex items-center">{customBadge}</span>
+              ) : (
+                player.active === false && (
+                  <Badge variant="secondary" className="text-xs">Inactive</Badge>
+                )
+              )}
+            </div>
           )}
         </div>
 
