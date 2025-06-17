@@ -116,7 +116,7 @@ export default function Preparation() {
   // Extract gameId from URL (e.g., /preparation/123)
   const gameIdFromUrl = location.split('/').pop();
   const gameIdNumber = gameIdFromUrl && !isNaN(Number(gameIdFromUrl)) ? Number(gameIdFromUrl) : null;
-  
+
   // State management
   const [selectedGameId, setSelectedGameId] = useState<number | null>(gameIdNumber);
   const [activeTab, setActiveTab] = useState('overview');
