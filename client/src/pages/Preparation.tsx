@@ -33,7 +33,7 @@ const TeamDashboard = () => {
   useEffect(() => {
     const fetchTeams = async () => {
       try {
-        const response = await apiClient.get(`/teams`);
+        const response = await apiClient.get(`/api/teams`);
         setTeams(response.data);
       } catch (error) {
         console.error('Error fetching teams:', error);
@@ -45,29 +45,29 @@ const TeamDashboard = () => {
 
   const { data: players, isLoading: isLoadingPlayers, error: errorPlayers } = useQuery({
     queryKey: ['teamPlayers', currentTeamId],
-    queryFn: () => apiClient.get(`/teams/${currentTeamId}/players`).then((res) => res.data),
+    queryFn: () => apiClient.get(`/api/teams/${currentTeamId}/players`),
     enabled: !!currentTeamId,
   });
 
   const { data: games, isLoading: isLoadingGames, error: errorGames } = useQuery({
     queryKey: ['teamGames', currentTeamId],
-    queryFn: () => apiClient.get(`/teams/${currentTeamId}/games`).then((res) => res.data),
+    queryFn: () => apiClient.get(`/api/teams/${currentTeamId}/games`),
     enabled: !!currentTeamId,
   });
 
   const { data: team, isLoading: isLoadingTeam, error: errorTeam } = useQuery({
     queryKey: ['team', currentTeamId],
-    queryFn: () => apiClient.get(`/teams/${currentTeamId}`).then((res) => res.data),
+    queryFn: () => apiClient.get(`/api/teams/${currentTeamId}`),
     enabled: !!currentTeamId,
   });
 
   useEffect(() => {
     if (currentTeamId) {
       queryClient.prefetchQuery(['teamPlayers', currentTeamId], () =>
-        apiClient.get(`/teams/${currentTeamId}/players`).then((res) => res.data)
+        apiClient.get(`/api/teams/${currentTeamId}/players`)
       );
       queryClient.prefetchQuery(['teamGames', currentTeamId], () =>
-        apiClient.get(`/teams/${currentTeamId}/games`).then((res) => res.data)
+        apiClient.get(`/api/teams/${currentTeamId}/games`)
       );
     }
   }, [currentTeamId, queryClient]);
