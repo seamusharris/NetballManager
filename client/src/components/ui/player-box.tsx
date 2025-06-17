@@ -1,8 +1,8 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { getInitials } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 
 interface PlayerBoxProps {
   player: {
@@ -22,6 +22,7 @@ interface PlayerBoxProps {
   }[];
   className?: string;
   size?: 'sm' | 'md' | 'lg';
+  style?: React.CSSProperties;
 }
 
 export function PlayerBox({ 
@@ -30,7 +31,8 @@ export function PlayerBox({
   showPositions = true, 
   stats,
   className = "",
-  size = "md" 
+  size = "md",
+  style = {}
 }: PlayerBoxProps) {
   // Add null safety check
   if (!player) {
@@ -97,27 +99,33 @@ export function PlayerBox({
 
   const playerBoxContent = (
     <div 
-      className={`flex items-center p-4 rounded-lg border-2 transition-shadow duration-300 hover:shadow-md shadow-sm cursor-pointer ${sizeClasses[size]}`}
-      style={{
-        backgroundColor: lightBackgroundColor,
-        borderColor: darkerBorderColor,
-        color: playerColor
-      }}
+      className={cn(
+        "flex items-center space-x-3 p-4 rounded-lg border border-gray-200 bg-white shadow-md transition-shadow duration-200 hover:shadow-xl",
+        `${size === 'sm' ? 'p-3' : size === 'lg' ? 'p-5' : 'p-4'}`
+      )}
+      style={style}
     >
-      {/* Avatar Circle */}
       <div 
-        className={`${avatarSizes[size]} rounded-full flex items-center justify-center text-white font-bold shadow-md flex-shrink-0 player-avatar ${player.avatarColor || 'bg-gray-700'}`}
+        className={cn(
+          "rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 player-avatar border-4 border-white shadow-lg",
+          player.avatarColor || 'bg-gray-500',
+          {
+            'w-10 h-10 text-sm': size === 'sm',
+            'w-12 h-12 text-base': size === 'md',
+            'w-16 h-16 text-lg': size === 'lg'
+          }
+        )}
       >
         {playerInitials}
       </div>
-      
+
       {/* Player Details */}
-      <div className="flex-1 flex items-center ml-4">
+      <div className="flex-1 flex items-center">
         <div className="flex-1">
           <div className="text-lg font-bold player-name">
             {player.displayName}
           </div>
-          
+
           {showPositions && (
             <div className="text-sm player-positions">
               {Array.isArray(player.positionPreferences) && player.positionPreferences.length > 0 
@@ -125,12 +133,12 @@ export function PlayerBox({
                 : 'No position preferences'}
             </div>
           )}
-          
+
           {player.active === false && (
             <Badge variant="secondary" className="text-xs mt-1">Inactive</Badge>
           )}
         </div>
-        
+
         {/* Stats positioned on the right */}
         {stats && stats.length > 0 && (
           <div className="flex space-x-6 ml-4">

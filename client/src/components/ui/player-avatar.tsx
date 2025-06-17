@@ -1,41 +1,41 @@
-
 import React from 'react';
 import { cn, getInitials } from '@/lib/utils';
 
 interface PlayerAvatarProps {
-  firstName: string;
-  lastName: string;
-  avatarColor?: string;
+  player: Player;
   size?: 'sm' | 'md' | 'lg' | 'xl';
   className?: string;
+  style?: React.CSSProperties;
+  showBorder?: boolean;
+  useStandardStyling?: boolean; // New prop for consistent White Border + Shadow styling
 }
 
-const sizeClasses = {
-  sm: 'h-6 w-6 text-xs',
-  md: 'h-8 w-8 text-sm',
-  lg: 'h-10 w-10 text-sm',
-  xl: 'h-16 w-16 text-lg'
-};
-
 export function PlayerAvatar({ 
-  firstName, 
-  lastName, 
-  avatarColor = 'bg-gray-500', 
-  size = 'md',
-  className 
+  player, 
+  size = 'md', 
+  className,
+  style,
+  showBorder = false,
+  useStandardStyling = true // Default to true for consistent styling
 }: PlayerAvatarProps) {
   return (
-    <div 
+    <div
       className={cn(
-        "rounded-full flex items-center justify-center text-white font-semibold flex-shrink-0",
-        sizeClasses[size],
-        avatarColor,
+        "flex items-center justify-center rounded-full text-white font-bold",
+        player.avatarColor || 'bg-gray-500',
+        {
+          'w-8 h-8 text-xs': size === 'sm',
+          'w-12 h-12 text-sm': size === 'md',
+          'w-16 h-16 text-base': size === 'lg',
+          'w-20 h-20 text-lg': size === 'xl'
+        },
+        useStandardStyling && "border-4 border-white shadow-lg",
+        showBorder && !useStandardStyling && "ring-2 ring-white ring-offset-2",
         className
       )}
+      style={style}
     >
-      <span className="font-semibold">
-        {getInitials(firstName, lastName)}
-      </span>
+      {player.firstName?.[0]}{player.lastName?.[0]}
     </div>
   );
 }

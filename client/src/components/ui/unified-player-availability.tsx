@@ -207,10 +207,10 @@ export function UnifiedPlayerAvailability({
                 key={player.id}
                 className={cn(
                   "flex items-center gap-4 p-4 rounded-lg border-2 cursor-pointer transition-all duration-200",
-                  "hover:scale-105 hover:shadow-md min-h-[100px]",
+                  "hover:scale-105 hover:shadow-lg min-h-[100px]",
                   isAvailable 
                     ? "border-green-500 bg-green-50 shadow-sm" 
-                    : ""
+                    : "shadow-md"
                 )}
                 style={{
                   backgroundColor: isAvailable ? '#f0fdf4' : lightBackgroundColor,
@@ -218,9 +218,9 @@ export function UnifiedPlayerAvailability({
                   color: playerColorHex
                 }}
               >
-                {/* Avatar */}
+                {/* Avatar with White Border + Shadow styling */}
                 <div 
-                  className={`w-16 h-16 rounded-full flex items-center justify-center text-white font-bold shadow-md flex-shrink-0 ${player.avatarColor || 'bg-gray-500'}`}
+                  className={`w-16 h-16 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 border-4 border-white shadow-lg ${player.avatarColor || 'bg-gray-500'}`}
                 >
                   {player.firstName?.[0]}{player.lastName?.[0]}
                 </div>
