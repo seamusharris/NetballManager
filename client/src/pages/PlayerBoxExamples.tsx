@@ -614,7 +614,8 @@ export default function PlayerBoxExamples() {
             <p className="text-sm text-gray-600 mb-3">Player available for selection</p>
             <div className="relative">
               <div 
-                className="absolute top-1/2 right-4 w-6 h-6 rounded border-2 border-gray-300 bg-white cursor-pointer z-10 transform -translate-y-1/2"
+                className="absolute top-1/2 right-4 w-6 h-6 rounded border-2 bg-white cursor-pointer z-10 transform -translate-y-1/2"
+                style={{ borderColor: '#a855f780' }}
               >
               </div>
               <PlayerBox 
@@ -656,7 +657,8 @@ export default function PlayerBoxExamples() {
               {/* Unselected Player */}
               <div className="relative">
                 <div 
-                  className="absolute top-1/2 right-4 w-5 h-5 rounded border-2 border-gray-300 bg-white cursor-pointer z-10 transform -translate-y-1/2"
+                  className="absolute top-1/2 right-4 w-5 h-5 rounded border-2 bg-white cursor-pointer z-10 transform -translate-y-1/2"
+                  style={{ borderColor: '#f9731680' }}
                 >
                 </div>
                 <PlayerBox 
