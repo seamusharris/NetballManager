@@ -49,17 +49,22 @@ const TeamDashboard = () => {
     enabled: !!currentTeamId,
   });
 
-  const { data: games, isLoading: isLoadingGames, error: errorGames } = useQuery({
+  const { data: allGames, isLoading: isLoadingGames, error: errorGames } = useQuery({
     queryKey: ['teamGames', currentTeamId],
-    queryFn: () => apiClient.get(`/api/teams/${currentTeamId}/games`),
+    queryFn: () => apiClient.get('/api/games'),
     enabled: !!currentTeamId,
   });
 
-  const { data: team, isLoading: isLoadingTeam, error: errorTeam } = useQuery({
-    queryKey: ['team', currentTeamId],
-    queryFn: () => apiClient.get(`/api/teams/${currentTeamId}`),
-    enabled: !!currentTeamId,
-  });
+  // Filter games for current team
+  const games = allGames?.filter(game => 
+    game.homeTeamId === currentTeamId || game.awayTeamId === currentTeamId
+  ) || [];
+
+  // Get team info from club teams
+  const { clubTeams } = useClub();
+  const team = clubTeams?.find(t => t.id === currentTeamId);
+  const isLoadingTeam = false;
+  const errorTeam = null;
 
   useEffect(() => {
     if (currentTeamId) {
@@ -67,7 +72,7 @@ const TeamDashboard = () => {
         apiClient.get(`/api/teams/${currentTeamId}/players`)
       );
       queryClient.prefetchQuery(['teamGames', currentTeamId], () =>
-        apiClient.get(`/api/teams/${currentTeamId}/games`)
+        apiClient.get('/api/games')
       );
     }
   }, [currentTeamId, queryClient]);
@@ -114,14 +119,11 @@ const TeamDashboard = () => {
   }, [selectedGameId]);
 
   // Find the selected game
-  const selectedGame = games?.find((game) => game.id === selectedGameId);
+  const selectedGame = games.find((game) => game.id === selectedGameId);
 
-  // Get previous games against the same opponent
-  const previousGames = games?.filter(
-    (game) =>
-      game.opponentName === selectedGame?.opponentName &&
-      game.id !== selectedGameId &&
-      new Date(game.date) < new Date()
+  // Get previous games (simplified - just get past games for now)
+  const previousGames = games.filter((game) => 
+    game.id !== selectedGameId && new Date(game.date) < new Date()
   );
 
   return (
