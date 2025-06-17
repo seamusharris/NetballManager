@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { useLocation } from 'wouter';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -148,17 +147,17 @@ export default function Preparation() {
         awayTeamId: game.awayTeamId,
         currentTeamId
       });
-      
+
       // Check if this game involves our team
       const involvesByThisTeam = game.homeTeamId === currentTeamId || game.awayTeamId === currentTeamId;
-      
+
       // Check if it's not completed
       const isNotCompleted = game.statusIsCompleted !== true;
-      
+
       const shouldInclude = involvesByThisTeam && isNotCompleted;
-      
+
       console.log(`Preparation: Game ${game.id} - involves team: ${involvesByThisTeam}, not completed: ${isNotCompleted}, should include: ${shouldInclude}`);
-      
+
       return shouldInclude;
     })
     .sort((a: Game, b: Game) => new Date(a.date).getTime() - new Date(b.date).getTime()) : [];
@@ -186,12 +185,12 @@ export default function Preparation() {
 
   const opponentName = useMemo(() => {
     if (!selectedGame) return null;
-    
+
     // Handle BYE games
     if (selectedGame.awayTeamName === 'Bye' || selectedGame.homeTeamName === 'Bye') {
       return 'BYE';
     }
-    
+
     // Determine opponent based on which team we are
     if (selectedGame.homeTeamId === currentTeamId) {
       return selectedGame.awayTeamName || selectedGame.awayTeam?.name || 'Unknown Team';
@@ -230,17 +229,17 @@ export default function Preparation() {
 
     sortedGames.forEach(game => {
       const gameStats = centralizedStats[game.id] || [];
-      
+
       // Calculate team vs opponent stats from game statistics
       const ourStats = gameStats.filter(stat => stat.teamId === currentTeamId);
       const theirStats = gameStats.filter(stat => stat.teamId !== currentTeamId);
-      
+
       const ourScore = ourStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
       const theirScore = theirStats.reduce((sum, stat) => sum + (stat.goalsFor || 0), 0);
-      
+
       totalOurScore += ourScore;
       totalTheirScore += theirScore;
-      
+
       const result = getWinLoseLabel(ourScore, theirScore);
       if (result === 'Win') {
         wins++;
@@ -255,10 +254,10 @@ export default function Preparation() {
       [1, 2, 3, 4].forEach(quarter => {
         const ourQuarterStats = ourStats.filter(s => s.quarter === quarter);
         const theirQuarterStats = theirStats.filter(s => s.quarter === quarter);
-        
+
         const quarterFor = ourQuarterStats.reduce((sum, s) => sum + (s.goalsFor || 0), 0);
         const quarterAgainst = theirQuarterStats.reduce((sum, s) => sum + (s.goalsFor || 0), 0);
-        
+
         quarterPerformance[quarter].for += quarterFor;
         quarterPerformance[quarter].against += quarterAgainst;
       });
@@ -437,6 +436,9 @@ export default function Preparation() {
     }
   };
 
+  const [availablePlayerIds, setAvailablePlayerIds] = useState<number[]>([]);
+  
+
   if (gamesLoading || playersLoading) {
     return (
       <PageTemplate title="Team Preparation">
@@ -477,7 +479,7 @@ export default function Preparation() {
                     const opponent = game.homeTeamId === currentTeamId 
                       ? (game.awayTeamName || game.awayTeam?.name || 'Unknown Team')
                       : (game.homeTeamName || game.homeTeam?.name || 'Unknown Team');
-                    
+
                     return (
                       <SelectItem key={game.id} value={game.id.toString()}>
                         {new Date(game.date).toLocaleDateString()} - vs {opponent}
