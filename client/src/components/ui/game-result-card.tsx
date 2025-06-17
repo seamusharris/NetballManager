@@ -65,27 +65,35 @@ export function GameResultCard({
 
       console.log(`GameResultCard ${game.id}: Processing scores - statusIsCompleted: ${game.statusIsCompleted}, centralizedScores length: ${officialScores.length}`, officialScores.slice(0, 2));
 
-      // Only process scores for completed games that have official scores
-      if (game.statusIsCompleted && officialScores.length > 0) {
-        // Use the gameScoreService to properly calculate scores with game context
-        const gameScores = gameScoreService.calculateGameScoresSync(
-          [], // gameStats - not needed for official scores
-          game.statusName, // game status
-          { teamGoals: game.statusTeamGoals, opponentGoals: game.statusOpponentGoals }, // status scores
-          game.isInterClub, // is inter club
-          game.homeTeamId, // proper home team ID
-          game.awayTeamId, // proper away team ID
-          currentTeamId, // current team context
-          officialScores // official scores
-        );
+      // Process scores for completed games
+      if (game.statusIsCompleted) {
+        // Check if game has fixed scores from status (forfeit, etc.)
+        const hasFixedScores = game.statusTeamGoals !== null && game.statusTeamGoals !== undefined && 
+                              game.statusOpponentGoals !== null && game.statusOpponentGoals !== undefined;
 
-        console.log(`GameResultCard ${game.id}: Official scores calculated - ${gameScores.totalTeamScore}-${gameScores.totalOpponentScore} (${gameScores.result}) from ${officialScores.length} score entries`);
+        if (hasFixedScores || officialScores.length > 0) {
+          // Use the gameScoreService to properly calculate scores with game context
+          const gameScores = gameScoreService.calculateGameScoresSync(
+            [], // gameStats - not needed for official scores
+            game.statusName, // game status
+            { teamGoals: game.statusTeamGoals, opponentGoals: game.statusOpponentGoals }, // status scores
+            game.isInterClub, // is inter club
+            game.homeTeamId, // proper home team ID
+            game.awayTeamId, // proper away team ID
+            currentTeamId, // current team context
+            officialScores // official scores
+          );
 
-        return {
-          quarterScores: gameScores.quarterScores,
-          finalScore: { for: gameScores.totalTeamScore, against: gameScores.totalOpponentScore },
-          result: gameScores.result
-        };
+          const scoreType = hasFixedScores ? 'fixed' : 'official';
+          const scoreCount = hasFixedScores ? 'status scores' : `${officialScores.length} score entries`;
+          console.log(`GameResultCard ${game.id}: ${scoreType} scores calculated - ${gameScores.totalTeamScore}-${gameScores.totalOpponentScore} (${gameScores.result}) from ${scoreCount}`);
+
+          return {
+            quarterScores: gameScores.quarterScores,
+            finalScore: { for: gameScores.totalTeamScore, against: gameScores.totalOpponentScore },
+            result: gameScores.result
+          };
+        }
       }
 
       // Return empty scores for games without official scores
