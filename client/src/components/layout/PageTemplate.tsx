@@ -2,7 +2,7 @@ import React from 'react';
 import { useLocation } from 'wouter';
 import { Home, ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { BackButton } from '@/components/ui/back-button';
+import BackButton from '@/components/ui/back-button';
 import { PAGE_STRUCTURE, SPACING_STANDARDS } from '@/components/dashboard/widget-standards';
 import {
   Breadcrumb,

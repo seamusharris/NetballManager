@@ -13,7 +13,7 @@ import { Game, Player, GameStat, Roster, Position, allPositions } from '@shared/
 import { getInitials, formatShortDate, positionLabels, generatePlayerAvatarColor } from '@/lib/utils';
 import { Save, Undo, Redo, Plus, Minus, RefreshCw, RotateCcw } from 'lucide-react';
 import { Helmet } from 'react-helmet';
-import { BackButton } from '@/components/ui/back-button';
+import BackButton from '@/components/ui/back-button';
 import { clearGameCache, clearAllCache } from '@/lib/scoresCache';
 import { PageTemplate } from '@/components/layout/PageTemplate';
 import { AlertTriangle } from "lucide-react";

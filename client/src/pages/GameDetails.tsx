@@ -33,7 +33,7 @@ import {
   Edit, BarChart3, ClipboardList, Activity, CalendarRange, ActivitySquare, Trash2,
   FileText, Printer
 } from 'lucide-react';
-import { BackButton } from '@/components/ui/back-button';
+import BackButton from '@/components/ui/back-button';
 import { Separator } from '@/components/ui/separator';
 import { formatDate, cn, tailwindToHex, convertTailwindToHex, getInitials } from '@/lib/utils';
 import { TeamSwitcher } from '@/components/layout/TeamSwitcher';

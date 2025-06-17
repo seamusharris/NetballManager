@@ -28,7 +28,7 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { TEAM_NAME, TEAM_SHORT_NAME, TIMEZONE, COMMON_TIMEZONES } from '@/lib/settings';
-import { BackButton } from '@/components/ui/back-button';
+import BackButton from '@/components/ui/back-button';
 import { Download, Upload, Database, FileText, AlertCircle, CheckCircle, Trash2 } from "lucide-react";
 import { exportAllData, importData } from "@/lib/dataExportImport";
 import { queryClient } from '@/lib/queryClient';
