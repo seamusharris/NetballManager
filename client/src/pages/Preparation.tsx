@@ -12,11 +12,11 @@ import { PageTemplate } from '@/components/layout/PageTemplate';
 import { TeamSwitcher } from '@/components/layout/TeamSwitcher';
 import { useClubContext } from '@/contexts/ClubContext';
 import PlayerCombinationAnalysis from '@/components/dashboard/PlayerCombinationAnalysis';
-import { PlayerAvailabilityManager } from '@/components/roster/PlayerAvailabilityManager';
-import { DragDropRosterManager } from '@/components/roster/DragDropRosterManager';
-import { RosterSummary } from '@/components/roster/RosterSummary';
+import PlayerAvailabilityManager from '@/components/roster/PlayerAvailabilityManager';
+import DragDropRosterManager from '@/components/roster/DragDropRosterManager';
+import RosterSummary from '@/components/roster/RosterSummary';
 import { useNextGame } from '@/hooks/use-next-game';
-import { UpcomingGameRecommendations } from '@/components/dashboard/UpcomingGameRecommendations';
+import UpcomingGameRecommendations from '@/components/dashboard/UpcomingGameRecommendations';
 import { GameResultCard } from '@/components/ui/game-result-card';
 import React from 'react';
 

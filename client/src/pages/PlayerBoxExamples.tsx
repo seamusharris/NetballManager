@@ -203,7 +203,7 @@ export default function PlayerBoxExamples() {
       <div className="space-y-8">
         {/* Basic PlayerBox */}
         <section>
-          <h2 className="text-2xl font-semibold mb-4">Basic PlayerBox (Original Style)</h2>
+          <h2 className="text-2xl font-semibold mb-4">Basic PlayerBox (Now with Colored Backgrounds)</h2>
           <div className="space-y-4">
             <PlayerBox player={samplePlayers[0]} />
             <PlayerBox player={samplePlayers[1]} />

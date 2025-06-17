@@ -10,7 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useDataLoader } from '@/hooks/use-data-loader';
 import { apiClient } from '@/lib/apiClient';
 import { useQueryClient } from '@tanstack/react-query';
-import { UnifiedPlayerAvailability } from '@/components/ui/unified-player-availability';
+import UnifiedPlayerAvailability from '@/components/ui/unified-player-availability';
 
 interface PlayerAvailabilityManagerProps {
   gameId: number;

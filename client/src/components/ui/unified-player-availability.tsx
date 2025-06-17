@@ -60,6 +60,30 @@ export function UnifiedPlayerAvailability({
     return colorMap[player.avatarColor || 'bg-gray-500'] || '#6b7280';
   };
 
+  const getDarkerPlayerColorHex = (player: Player) => {
+    const colorMap: Record<string, string> = {
+      'bg-red-500': '#b91c1c', 'bg-red-600': '#9f1239', 'bg-red-700': '#881337',
+      'bg-orange-500': '#c2410c', 'bg-orange-600': '#9a3412', 'bg-orange-700': '#7c2d12',
+      'bg-amber-500': '#b45309', 'bg-amber-600': '#92400e', 'bg-amber-700': '#78350f',
+      'bg-yellow-500': '#a16207', 'bg-yellow-600': '#854d0e', 'bg-yellow-700': '#713f12',
+      'bg-lime-500': '#4d7c0f', 'bg-lime-600': '#3f6212', 'bg-lime-700': '#365314',
+      'bg-green-500': '#15803d', 'bg-green-600': '#166534', 'bg-green-700': '#14532d',
+      'bg-emerald-500': '#047857', 'bg-emerald-600': '#065f46', 'bg-emerald-700': '#064e3b',
+      'bg-teal-500': '#0f766e', 'bg-teal-600': '#115e59', 'bg-teal-700': '#134e4a',
+      'bg-cyan-500': '#0e7490', 'bg-cyan-600': '#0c6380', 'bg-cyan-700': '#0b5274',
+      'bg-sky-500': '#0369a1', 'bg-sky-600': '#075985', 'bg-sky-700': '#0c4a6e',
+      'bg-blue-500': '#1d4ed8', 'bg-blue-600': '#1e40af', 'bg-blue-700': '#1e3a8a',
+      'bg-indigo-500': '#4338ca', 'bg-indigo-600': '#3730a3', 'bg-indigo-700': '#312e81',
+      'bg-violet-500': '#6d28d9', 'bg-violet-600': '#5b21b6', 'bg-violet-700': '#4c1d95',
+      'bg-purple-500': '#7e22ce', 'bg-purple-600': '#6b21a8', 'bg-purple-700': '#581c87',
+      'bg-fuchsia-500': '#a21caf', 'bg-fuchsia-600': '#86198f', 'bg-fuchsia-700': '#6d28d9',
+      'bg-pink-500': '#be185d', 'bg-pink-600': '#9d174d', 'bg-pink-700': '#831843',
+      'bg-rose-500': '#be123c', 'bg-rose-600': '#9f1239', 'bg-rose-700': '#881337',
+      'bg-gray-500': '#374151', 'bg-gray-600': '#262f3f', 'bg-gray-700': '#1f2937'
+    };
+    return colorMap[player.avatarColor || 'bg-gray-700'] || '#374151';
+  };
+
   const handleSelectAll = () => {
     const newData: Record<number, boolean> = {};
     players.forEach(player => {
@@ -198,8 +222,7 @@ export function UnifiedPlayerAvailability({
           {sortedPlayers.map(player => {
             const isAvailable = availabilityData[player.id] === true;
             const playerColorHex = getPlayerColorHex(player);
-            const lightBackgroundColor = `${playerColorHex}20`;
-            const borderColor = `${playerColorHex}80`;
+            const darkerBorderColor = getDarkerPlayerColorHex(player);
             const displayName = player.displayName || `${player.firstName} ${player.lastName}`;
             const isSelected = isAvailable;
 
@@ -215,7 +238,7 @@ export function UnifiedPlayerAvailability({
                 `}
                 style={{ 
                   backgroundColor: isSelected ? undefined : `${playerColorHex}15`,
-                  borderColor: isSelected ? undefined : `${playerColorHex}80`,
+                  borderColor: isSelected ? undefined : darkerBorderColor,
                   color: isSelected ? undefined : playerColorHex
                 }}
                 onClick={() => handlePlayerAvailabilityChange(player.id, !isAvailable)}
@@ -265,3 +288,5 @@ export function UnifiedPlayerAvailability({
     </Card>
   );
 }
+
+export default UnifiedPlayerAvailability;
