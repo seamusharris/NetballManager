@@ -28,7 +28,7 @@ import { Suspense } from 'react'; // Import Suspense
 // Assuming PositionOpponentAnalysis is in the same directory, otherwise adjust path
 import PositionOpponentAnalysis from './PositionOpponentAnalysis';
 import PlayerAnalyticsWidget from './PlayerAnalyticsWidget';
-import { PlayerCombinationAnalysis } from './PlayerCombinationAnalysis';
+import PlayerCombinationAnalysis from './PlayerCombinationAnalysis';
 import { TeamPositionAnalysis } from './TeamPositionAnalysis';
 import { UpcomingGameRecommendations } from './UpcomingGameRecommendations';
 

@@ -26,8 +26,8 @@ import { useBatchGameStatistics } from '@/components/statistics/hooks/useBatchGa
 import { useBatchRosterData } from '@/components/statistics/hooks/useBatchRosterData';
 import DragDropLineupEditor from '@/components/roster/DragDropLineupEditor';
 import DragDropRosterManager from '@/components/roster/DragDropRosterManager';
-import { PlayerCombinationAnalysis } from '@/components/dashboard/PlayerCombinationAnalysis';
-import { UpcomingGameRecommendations } from '@/components/dashboard/UpcomingGameRecommendations';
+import PlayerCombinationAnalysis from '@/components/dashboard/PlayerCombinationAnalysis';
+import UpcomingGameRecommendations from '@/components/dashboard/UpcomingGameRecommendations';
 import { 
   Trophy, Target, TrendingUp, Users, CheckCircle, Clock, 
   AlertTriangle, Lightbulb, ChevronRight, ArrowRight, 
