@@ -80,17 +80,20 @@ export function GameResultCard({
           scoresByTeam[score.teamId] += score.score;
         });
 
-        // Determine team vs opponent scores
-        if (currentTeamId && scoresByTeam[currentTeamId]) {
-          teamScore = scoresByTeam[currentTeamId];
-          // Sum all other team scores as opponent
+        // Determine team vs opponent scores from current team's perspective
+        if (currentTeamId) {
+          // Current team's score
+          teamScore = scoresByTeam[currentTeamId] || 0;
+          
+          // Opponent's score (sum of all other teams)
           opponentScore = Object.entries(scoresByTeam)
             .filter(([teamId]) => parseInt(teamId) !== currentTeamId)
             .reduce((sum, [, score]) => sum + score, 0);
         } else {
-          // If no current team context, just show the scores as they are
+          // If no current team context, show home vs away
           const teamIds = Object.keys(scoresByTeam).map(id => parseInt(id));
           if (teamIds.length >= 2) {
+            // Default to first team as "team" and second as "opponent"
             teamScore = scoresByTeam[teamIds[0]] || 0;
             opponentScore = scoresByTeam[teamIds[1]] || 0;
           }
