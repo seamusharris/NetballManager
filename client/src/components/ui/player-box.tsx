@@ -169,10 +169,10 @@ export function PlayerBox({
   const playerBoxContent = (
     <div 
       className={cn(
-        "flex items-center space-x-3 rounded-lg shadow-md transition-shadow duration-200",
+        "flex items-center space-x-3 rounded-lg shadow-md transition-all duration-200",
         borderClass,
         sizeClasses[size],
-        onClick && "cursor-pointer"
+        onClick && "cursor-pointer hover:shadow-xl hover:scale-[1.02]"
       )}
       style={defaultStyle}
       onClick={onClick}
