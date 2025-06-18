@@ -17,7 +17,8 @@ import { useToast } from '@/hooks/use-toast';
 import { apiClient } from '@/lib/apiClient';
 import CourtDisplay from '@/components/ui/court-display';
 import SharedPlayerAvailability from '@/components/ui/shared-player-availability';
-import type { Game, Player, Roster } from '@shared/schema';
+import DragDropLineupEditor from '@/components/roster/DragDropLineupEditor';
+import type { Game, Player, Roster, Position } from '@shared/schema';
 
 interface LineupTabProps {
   game: Game;
@@ -46,7 +47,9 @@ export function LineupTab({ game, players, rosters, onRosterUpdate }: LineupTabP
   const [activeStep, setActiveStep] = useState<'availability' | 'recommendations' | 'builder' | 'assignments'>('availability');
   const [playerAvailability, setPlayerAvailability] = useState<PlayerAvailabilityData>({});
   const [recommendations, setRecommendations] = useState<LineupRecommendation[]>([]);
-  const [selectedLineup, setSelectedLineup] = useState<Record<string, number | null>>({});
+  const [selectedLineup, setSelectedLineup] = useState<Record<Position, Player | null>>({
+    GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null
+  });
   const [confidenceFilter, setConfidenceFilter] = useState<'all' | 'high' | 'medium' | 'low'>('all');
   const { toast } = useToast();
 
@@ -222,9 +225,11 @@ export function LineupTab({ game, players, rosters, onRosterUpdate }: LineupTabP
   };
 
   const handleApplyRecommendation = (recommendation: LineupRecommendation) => {
-    const newLineup: Record<string, number | null> = {};
+    const newLineup: Record<Position, Player | null> = {} as Record<Position, Player | null>;
     POSITIONS.forEach(position => {
-      newLineup[position] = recommendation.formation[position] || null;
+      const playerId = recommendation.formation[position];
+      const player = playerId ? players.find(p => p.id === playerId) : null;
+      newLineup[position as Position] = player || null;
     });
     setSelectedLineup(newLineup);
     setActiveStep('builder');
@@ -371,17 +376,19 @@ export function LineupTab({ game, players, rosters, onRosterUpdate }: LineupTabP
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Layout className="h-5 w-5" />
-                Custom Lineup Builder
+                Drag & Drop Lineup Builder
               </CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Drag players from the bench to court positions or between positions to create your lineup
+              </p>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-8">
-                <Layout className="h-8 w-8 mx-auto text-gray-400 mb-2" />
-                <p className="text-gray-600">Lineup builder will be implemented here</p>
-                <p className="text-sm text-gray-500 mt-1">
-                  This will include court layout, drag-and-drop functionality, and position assignments
-                </p>
-              </div>
+              <DragDropLineupEditor
+                availablePlayers={players.filter(p => playerAvailability[p.id] === 'available')}
+                currentLineup={selectedLineup}
+                onLineupChange={setSelectedLineup}
+                onApplyRecommendation={(lineup) => setSelectedLineup(lineup)}
+              />
             </CardContent>
           </Card>
         </TabsContent>
