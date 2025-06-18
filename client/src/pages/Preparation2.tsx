@@ -1095,22 +1095,17 @@ export default function Preparation2() {
                       date: selectedGame.date,
                       time: selectedGame.time
                     }}
+                    gameId={selectedGameId}
                     onRosterChange={setCurrentRoster}
+                    onRosterSaved={() => {
+                      toast({
+                        title: "Success",
+                        description: "Roster saved successfully!"
+                      });
+                    }}
                   />
                   
-                  {/* Save Roster Button */}
-                  <div className="flex justify-end">
-                    <Button 
-                      onClick={handleSaveRoster}
-                      disabled={Object.values(currentRoster).every(quarter => 
-                        Object.values(quarter).every(playerId => playerId === null)
-                      )}
-                      className="min-w-32"
-                    >
-                      <Save className="h-4 w-4 mr-2" />
-                      Save Roster
-                    </Button>
-                  </div>
+                  
                 </div>
               </div>
             )}

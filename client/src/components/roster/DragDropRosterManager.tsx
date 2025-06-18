@@ -5,6 +5,9 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useToast } from '@/hooks/use-toast';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { apiRequest } from '@/lib/apiClient';
 import { 
   Users, 
   RotateCcw, 
@@ -18,7 +21,8 @@ import {
   ChevronLeft,
   Eye,
   Edit,
-  Trash2
+  Trash2,
+  Save
 } from 'lucide-react';
 import { PlayerBox } from '@/components/ui/player-box';
 import { getPlayerColorHex, getDarkerColorHex, getLighterColorHex, getMediumColorHex } from '@/lib/playerColorUtils';
@@ -41,7 +45,9 @@ interface GameInfo {
 interface DragDropRosterManagerProps {
   availablePlayers: Player[];
   gameInfo: GameInfo;
+  gameId?: number;
   onRosterChange: (roster: Record<number, Record<string, number | null>>) => void;
+  onRosterSaved?: () => void;
 }
 
 const NETBALL_POSITIONS = ['GS', 'GA', 'WA', 'C', 'WD', 'GD', 'GK'];
@@ -137,7 +143,10 @@ const PositionSlot = ({
   );
 };
 
-export default function DragDropRosterManager({ availablePlayers, gameInfo, onRosterChange }: DragDropRosterManagerProps) {
+export default function DragDropRosterManager({ availablePlayers, gameInfo, gameId, onRosterChange, onRosterSaved }: DragDropRosterManagerProps) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  
   const [currentQuarter, setCurrentQuarter] = useState(1);
   const [assignments, setAssignments] = useState<Record<number, Record<string, number | null>>>({
     1: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
@@ -153,6 +162,69 @@ export default function DragDropRosterManager({ availablePlayers, gameInfo, onRo
   const [isDragging, setIsDragging] = useState(false);
   const [draggedElement, setDraggedElement] = useState<HTMLElement | null>(null);
   const [clone, setClone] = useState<HTMLElement | null>(null);
+
+  // Save roster mutation
+  const saveRosterMutation = useMutation({
+    mutationFn: async () => {
+      if (!gameId) {
+        throw new Error('No game selected');
+      }
+
+      // Delete existing roster entries first
+      await apiRequest('DELETE', `/api/games/${gameId}/rosters`, {});
+
+      // Create roster assignments array
+      const rosterAssignments: Array<{
+        gameId: number;
+        quarter: number;
+        position: string;
+        playerId: number;
+      }> = [];
+
+      Object.entries(assignments).forEach(([quarter, positions]) => {
+        Object.entries(positions).forEach(([position, playerId]) => {
+          if (playerId) {
+            rosterAssignments.push({
+              gameId: gameId,
+              quarter: parseInt(quarter),
+              position,
+              playerId
+            });
+          }
+        });
+      });
+
+      // Save each roster assignment
+      const savePromises = rosterAssignments.map(assignment =>
+        apiRequest('POST', '/api/rosters', assignment)
+      );
+
+      await Promise.all(savePromises);
+      return rosterAssignments.length;
+    },
+    onSuccess: (savedCount) => {
+      // Invalidate roster queries
+      queryClient.invalidateQueries({ queryKey: [`/api/games/${gameId}/rosters`] });
+      
+      // Notify parent component
+      if (onRosterSaved) {
+        onRosterSaved();
+      }
+
+      toast({
+        title: "Roster Saved",
+        description: `Successfully saved ${savedCount} roster assignments`,
+      });
+    },
+    onError: (error) => {
+      console.error("Error saving roster:", error);
+      toast({
+        title: "Save Error",
+        description: "There was an error saving the roster. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
 
   const handleDragStart = (playerId: number) => {
     setDraggedPlayer(playerId);
@@ -355,6 +427,34 @@ export default function DragDropRosterManager({ availablePlayers, gameInfo, onRo
     onRosterChange(newAssignments);
   };
 
+  // Save roster handler
+  const handleSaveRoster = () => {
+    if (!gameId) {
+      toast({
+        title: "Error",
+        description: "Please select a game to save the roster for.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Check if roster has any assignments
+    const hasAssignments = Object.values(assignments).some(quarter =>
+      Object.values(quarter).some(playerId => playerId !== null)
+    );
+
+    if (!hasAssignments) {
+      toast({
+        title: "Empty Roster",
+        description: "Please assign some players before saving.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    saveRosterMutation.mutate();
+  };
+
   const currentQuarterAssignments = assignments[currentQuarter];
   const assignedPlayerIds = Object.values(currentQuarterAssignments).filter(id => id !== null);
   const availablePlayersForDrag = availablePlayers.filter(p => !assignedPlayerIds.includes(p.id));
@@ -450,6 +550,23 @@ export default function DragDropRosterManager({ availablePlayers, gameInfo, onRo
           >
             <Trash2 className="h-4 w-4 mr-1" />
             Reset All
+          </Button>
+          <Button
+            onClick={handleSaveRoster}
+            disabled={saveRosterMutation.isPending}
+            className="bg-primary hover:bg-primary/90"
+          >
+            {saveRosterMutation.isPending ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                Saving...
+              </>
+            ) : (
+              <>
+                <Save className="h-4 w-4 mr-1" />
+                Save Roster
+              </>
+            )}
           </Button>
 
           {/* Copy Quarter Controls */}
