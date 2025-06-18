@@ -99,11 +99,11 @@ const PositionSlot = ({
         >
           <PlayerBox 
             player={player}
-            showPositions={false}
+            showPositions={true}
             size="sm"
             className="transition-all duration-200"
             style={{
-                  backgroundColor: player ? getLighterColorHex(player.avatarColor) : 'transparent',
+                  backgroundColor: player ? getMediumColorHex(player.avatarColor) : 'transparent',
                   borderColor: player ? getDarkerColorHex(player.avatarColor) : '#ddd',
                   color: player ? getDarkerColorHex(player.avatarColor) : '#666'
                 }}
@@ -446,7 +446,7 @@ export default function DragDropRosterManager({ availablePlayers, gameInfo, onRo
                     showPositions={true}
                     className="transition-all duration-200"
                     style={{
-                backgroundColor: getLighterColorHex(player.avatarColor),
+                backgroundColor: getMediumColorHex(player.avatarColor),
                 borderColor: getDarkerColorHex(player.avatarColor),
                 color: getDarkerColorHex(player.avatarColor)
               }}
