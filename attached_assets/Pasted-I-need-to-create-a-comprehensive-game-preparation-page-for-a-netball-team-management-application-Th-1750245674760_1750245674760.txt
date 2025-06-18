@@ -1,0 +1,77 @@
+I need to create a comprehensive game preparation page for a netball team management application. The page should help coaches prepare for upcoming games by providing analysis, lineup recommendations, and strategic planning tools.
+
+Please create a new page at `client/src/pages/GamePreparation.tsx` with the following structure:
+
+1. Main Layout:
+- Use the existing PageTemplate component
+- Implement a tabbed interface with 4 main sections: Overview, Analysis, Lineup, and Strategy
+- Include a header showing the next game details and opponent
+
+2. Tab Structure:
+```typescript
+type Tab = 'overview' | 'analysis' | 'lineup' | 'strategy';
+
+interface GamePreparationProps {
+  gameId: number;
+  teamId: number;
+  clubId: number;
+}
+```
+
+3. Required Components:
+- Overview Tab:
+  * Next game details
+  * Team form statistics
+  * Opponent analysis
+  * Top recommended lineups
+
+- Analysis Tab:
+  * Historical performance against opponent
+  * Quarter-by-quarter analysis
+  * Position performance analysis
+  * Player matchup analysis
+
+- Lineup Tab:
+  * Recommended lineups based on historical data
+  * Custom lineup builder
+  * Player availability management
+  * Position assignment interface
+
+- Strategy Tab:
+  * Game plan creation
+  * Key matchup identification
+  * Tactical notes
+  * Pre-game objectives
+
+4. Data Requirements:
+- Use existing API endpoints:
+  * /api/games for game data
+  * /api/teams for team data
+  * /api/players for player data
+  * /api/statistics for performance data
+
+5. Integration Points:
+- Use existing components:
+  * TeamPositionAnalysis
+  * PlayerPerformance
+  * OpponentPreparation
+  * CourtLayout
+
+6. State Management:
+- Use React Query for data fetching
+- Implement local state for:
+  * Selected tab
+  * Current lineup
+  * Player availability
+  * Tactical notes
+
+Please create the initial page structure and implement the Overview tab first. The page should be responsive and follow the existing design system.
+
+Key features to implement:
+1. Tab navigation
+2. Data fetching and loading states
+3. Error handling
+4. Responsive layout
+5. Integration with existing components
+
+The page should be accessible at /game-preparation/:gameId
