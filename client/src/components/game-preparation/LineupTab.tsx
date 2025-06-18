@@ -7,7 +7,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Save, RotateCcw, Users, Target, Layout } from 'lucide-react';
 import SharedPlayerAvailability from '@/components/ui/shared-player-availability';
 import DragDropLineupEditor from '@/components/roster/DragDropLineupEditor';
-import { CourtDisplay } from '@/components/ui/court-display';
+import CourtDisplay from '@/components/ui/court-display';
 import { UpcomingGameRecommendations } from '@/components/dashboard/UpcomingGameRecommendations';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/apiClient';

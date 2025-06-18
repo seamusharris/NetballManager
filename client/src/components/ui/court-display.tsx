@@ -32,7 +32,7 @@ export default function CourtDisplay({
   showStats = false,
   showPositionLabels = true,
   className = ''
-}: CourtDisplayProps) => {
+}: CourtDisplayProps) {
   // Group roster by quarter and position
   const rosterByQuarter = React.useMemo(() => {
     if (!roster || !Array.isArray(roster)) return {};
