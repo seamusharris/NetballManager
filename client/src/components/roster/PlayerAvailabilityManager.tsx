@@ -45,7 +45,6 @@ export default function PlayerAvailabilityManager({
     refetch: refetchAvailability
   } = useDataLoader<{availablePlayerIds: number[]}>(`/api/games/${gameId}/availability`, {
     enabled: !!gameId,
-    retry: 1,
     onError: (error) => {
       console.log('Player availability API error, falling back to all active players:', error);
     }
@@ -94,8 +93,8 @@ export default function PlayerAvailabilityManager({
 
         try {
           const response = await apiClient.get(`/api/teams/${teamToLoad}/players`);
-          console.log(`Loaded ${response.length} team players for team ${teamToLoad}`);
-          setTeamPlayers(response);
+          console.log(`Loaded ${Array.isArray(response) ? response.length : 'unknown count'} team players for team ${teamToLoad}`);
+          setTeamPlayers(Array.isArray(response) ? response : []);
         } catch (teamError) {
           console.log('Team players endpoint failed, using fallback to props players');
           setTeamPlayers(players);

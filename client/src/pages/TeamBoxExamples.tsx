@@ -845,10 +845,10 @@ export default function TeamBoxExamples() {
                   <div className="text-green-400 font-mono">{'>'} LEGENDARY STATUS {'<'}</div>
                 </div>
                 <div className="font-mono space-y-2">
-                  <div className="text-green-400">> TEAM: <span className="text-white">WNC EMUS</span></div>
-                  <div className="text-green-400">> DIVISION: <span className="text-white">15U/1s</span></div>
-                  <div className="text-green-400">> STATUS: <span className="text-white blink">UNDEFEATED</span></div>
-                  <div className="text-green-400">> WINS: <span className="text-white">24/24</span></div>
+                  <div className="text-green-400">&gt; TEAM: <span className="text-white">WNC EMUS</span></div>
+                  <div className="text-green-400">&gt; DIVISION: <span className="text-white">15U/1s</span></div>
+                  <div className="text-green-400">&gt; STATUS: <span className="text-white blink">UNDEFEATED</span></div>
+                  <div className="text-green-400">&gt; WINS: <span className="text-white">24/24</span></div>
                 </div>
                 <div className="mt-6 text-center">
                   <div className="inline-block px-4 py-2 border border-green-400 text-green-400 font-mono text-sm">
