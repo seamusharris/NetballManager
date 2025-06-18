@@ -83,6 +83,7 @@ export default function Preparation2() {
   const [selectedGameId, setSelectedGameId] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState('overview');
   const [availablePlayers, setAvailablePlayers] = useState<any[]>([]);
+  const [playerAvailability, setPlayerAvailability] = useState<Record<number, boolean>>({});
   const [recommendations, setRecommendations] = useState<GameRecommendation[]>([]);
   const [historicalPerformance, setHistoricalPerformance] = useState<HistoricalPerformance | null>(null);
   const [previousGames, setPreviousGames] = useState<any[]>([]);
@@ -1031,6 +1032,7 @@ export default function Preparation2() {
                 players={allPlayers}
                 games={upcomingGames}
                 onAvailabilityChange={setAvailablePlayers}
+                onAvailabilityStateChange={setPlayerAvailability}
               />
             )}
           </TabsContent>
@@ -1087,7 +1089,7 @@ export default function Preparation2() {
                 {/* Full Roster Manager */}
                 <div className="space-y-4">
                   <DragDropRosterManager
-                    availablePlayers={allPlayers}
+                    availablePlayers={allPlayers.filter(player => playerAvailability[player.id] === true)}
                     gameInfo={{
                       opponent: opponent,
                       date: selectedGame.date,

@@ -18,6 +18,7 @@ interface PlayerAvailabilityManagerProps {
   games: Game[];
   onComplete?: () => void;
   onAvailabilityChange?: (availablePlayerIds: number[]) => void;
+  onAvailabilityStateChange?: (availabilityState: Record<number, boolean>) => void;
   onGameChange?: (gameId: number) => void;
 }
 
@@ -27,6 +28,7 @@ export default function PlayerAvailabilityManager({
   games,
   onComplete,
   onAvailabilityChange,
+  onAvailabilityStateChange,
   onGameChange
 }: PlayerAvailabilityManagerProps) {
   const [teamPlayers, setTeamPlayers] = useState<Player[]>([]);
@@ -186,6 +188,7 @@ export default function PlayerAvailabilityManager({
       .map(([playerId, _]) => parseInt(playerId));
 
     onAvailabilityChange?.(availablePlayerIds);
+    onAvailabilityStateChange?.(newAvailabilityData);
 
     // Auto-save if gameId is provided
     if (gameId) {
