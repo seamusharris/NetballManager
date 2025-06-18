@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { getInitials } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 import { getPlayerColorHex, getDarkerColorHex, getLighterColorHex } from '@/lib/playerColorUtils';
+import { PLAYER_BOX_STYLES } from '@/lib/playerBoxStyles';
 
 interface PlayerBoxProps {
   player: {
@@ -119,7 +120,7 @@ export function PlayerBox({
         "flex items-center space-x-3 rounded-lg shadow-md transition-all duration-200",
         borderClass,
         sizeClasses[size],
-        onClick && "cursor-pointer hover:shadow-xl hover:scale-[1.02]"
+        onClick && PLAYER_BOX_STYLES.interactive
       )}
       style={defaultStyle}
       onClick={onClick}

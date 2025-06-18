@@ -1,6 +1,7 @@
 import { Player } from '@shared/schema';
 import { PlayerBox } from '@/components/ui/player-box';
 import { getPlayerColorHex, getDarkerColorHex, getLighterColorHex, getMediumColorHex } from '@/lib/playerColorUtils';
+import { getPlayerBoxCheckboxStyles } from '@/lib/playerBoxStyles';
 
 interface SelectablePlayerBoxProps {
   player: Player;
@@ -40,11 +41,8 @@ export function SelectablePlayerBox({
   return (
     <div className="relative">
       <div 
-        className="absolute top-1/2 right-3 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2 mr-3 transition-all duration-200"
-        style={{ 
-          backgroundColor: isSelected ? playerColorHex : 'transparent', 
-          border: isSelected ? 'none' : `2px solid ${playerColorHex}80` 
-        }}
+        className="absolute top-1/2 right-3 z-10 transform -translate-y-1/2 mr-3"
+        {...getPlayerBoxCheckboxStyles(isSelected, playerColorHex)}
         onClick={handleClick}
       >
         {isSelected && '✓'}

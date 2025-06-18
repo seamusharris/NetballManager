@@ -8,6 +8,7 @@ import PlayerAvatar from '@/components/ui/player-avatar';
 import { cn } from '@/lib/utils';
 import { apiClient } from '@/lib/apiClient';
 import { getPlayerColorHex, getLighterColorHex, getMediumColorHex } from '@/lib/playerColorUtils';
+import { getPlayerBoxContainerClasses, getPlayerBoxCheckboxStyles, getPlayerBoxBackgroundStyle } from '@/lib/playerBoxStyles';
 import { Badge } from '@/components/ui/badge';
 import { Zap, RotateCcw } from 'lucide-react';
 
@@ -156,16 +157,13 @@ export default function SharedPlayerAvailability({
             return (
               <div 
                 key={player.id}
-                className={cn(
-                  "p-4 border rounded-lg shadow-md transition-all duration-200 hover:shadow-lg hover:scale-[1.02] cursor-pointer",
-                  isAvailable 
-                    ? "border-2" 
-                    : "border border-gray-200"
+                className={getPlayerBoxContainerClasses(isAvailable)}
+                style={getPlayerBoxBackgroundStyle(
+                  isAvailable,
+                  getPlayerColorHex(playerColor),
+                  getLighterColorHex(playerColor),
+                  getMediumColorHex(playerColor)
                 )}
-                style={{
-                  borderColor: getPlayerColorHex(playerColor),
-                  backgroundColor: isAvailable ? getMediumColorHex(playerColor) : getLighterColorHex(playerColor)
-                }}
                 onClick={() => {
                   if (!isSaving) {
                     handlePlayerAvailabilityChange(
@@ -197,12 +195,7 @@ export default function SharedPlayerAvailability({
                   </div>
                   <div className="flex items-center gap-2">
                     <div 
-                      className="w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white transition-all duration-200"
-                      style={{ 
-                        backgroundColor: isAvailable ? getPlayerColorHex(playerColor) : 'transparent', 
-                        border: isAvailable ? 'none' : `2px solid ${getPlayerColorHex(playerColor)}80` 
-                      }}
-                      
+                      {...getPlayerBoxCheckboxStyles(isAvailable, getPlayerColorHex(playerColor))}
                     >
                       {isAvailable && '✓'}
                     </div>
