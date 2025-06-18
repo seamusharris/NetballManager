@@ -103,7 +103,7 @@ const PositionSlot = ({
             size="sm"
             className="transition-all duration-200"
             style={{
-                  backgroundColor: player ? getMediumColorHex(player.avatarColor) : 'transparent',
+                  backgroundColor: player ? getLighterColorHex(player.avatarColor) : 'transparent',
                   borderColor: player ? getDarkerColorHex(player.avatarColor) : '#ddd',
                   color: player ? getDarkerColorHex(player.avatarColor) : '#666'
                 }}
