@@ -13,10 +13,10 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Progress } from '@/components/ui/progress';
 import { CourtDisplay } from '@/components/ui/court-display';
-import { PlayerAvatar } from '@/components/ui/player-avatar';
+import PlayerAvatar from '@/components/ui/player-avatar';
 import DragDropLineupEditor from '@/components/roster/DragDropLineupEditor';
 import { useToast } from '@/hooks/use-toast';
-import { apiClient } from '@/lib/queryClient';
+import { apiRequest } from '@/lib/queryClient';
 import { 
   Users, 
   Target, 

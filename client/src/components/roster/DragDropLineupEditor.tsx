@@ -3,7 +3,7 @@ import React, { useState, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { PlayerAvatar } from '@/components/ui/player-avatar';
+import PlayerAvatar from '@/components/ui/player-avatar';
 import { CourtDisplay } from '@/components/ui/court-display';
 import { RotateCcw, Users, Target } from 'lucide-react';
 import { Player, Position } from '@/shared/api-types';

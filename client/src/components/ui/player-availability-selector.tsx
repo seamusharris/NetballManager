@@ -3,7 +3,7 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { PlayerAvatar } from '@/components/ui/player-avatar';
+import PlayerAvatar from '@/components/ui/player-avatar';
 import { Player } from '@/shared/api-types';
 import { cn, getInitials } from '@/lib/utils';
 import { Zap, RotateCcw } from 'lucide-react';
