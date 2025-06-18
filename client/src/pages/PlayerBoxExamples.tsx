@@ -1081,6 +1081,198 @@ export default function PlayerBoxExamples() {
               </div>
             </div>
 
+            {/* Colored Background with White Interior When Selected */}
+            <div>
+              <h4 className="text-sm font-medium mb-2 text-gray-700">Colored Background with White Interior When Selected</h4>
+              <p className="text-sm text-gray-600 mb-3">Colored player box background with white interior background when selected</p>
+              <div className="space-y-3">
+                <div className="relative">
+                  <div 
+                    className="absolute top-1/2 right-3 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2 mr-3 transition-all duration-200"
+                    style={{ backgroundColor: selectedPlayers.has(70) ? '#16a34a' : 'transparent', border: selectedPlayers.has(70) ? 'none' : '2px solid #15803d' }}
+                    onClick={() => togglePlayerSelection(70)}
+                  >
+                    {selectedPlayers.has(70) && '✓'}
+                  </div>
+                  <PlayerBox 
+                    player={{id: 70, displayName: "Green Border Example", positionPreferences: ["GA", "GS"], avatarColor: "bg-green-600"}}
+                    size="md"
+                    showPositions={true}
+                    hasSelect={true}
+                    className="shadow-md transition-all duration-200 hover:shadow-lg cursor-pointer"
+                    style={{ 
+                      backgroundColor: selectedPlayers.has(70) ? '#ffffff' : '#16a34a15',
+                      borderColor: '#15803d',
+                      color: '#15803d'
+                    }}
+                    onClick={() => togglePlayerSelection(70)}
+                  />
+                </div>
+                <div className="relative">
+                  <div 
+                    className="absolute top-1/2 right-3 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2 mr-3 transition-all duration-200"
+                    style={{ backgroundColor: selectedPlayers.has(71) ? '#3b82f6' : 'transparent', border: selectedPlayers.has(71) ? 'none' : '2px solid #1d4ed8' }}
+                    onClick={() => togglePlayerSelection(71)}
+                  >
+                    {selectedPlayers.has(71) && '✓'}
+                  </div>
+                  <PlayerBox 
+                    player={{id: 71, displayName: "Blue Border Example", positionPreferences: ["C", "WA"], avatarColor: "bg-blue-500"}}
+                    size="md"
+                    showPositions={true}
+                    hasSelect={true}
+                    className="shadow-md transition-all duration-200 hover:shadow-lg cursor-pointer"
+                    style={{ 
+                      backgroundColor: selectedPlayers.has(71) ? '#ffffff' : '#3b82f615',
+                      borderColor: '#1d4ed8',
+                      color: '#1d4ed8'
+                    }}
+                    onClick={() => togglePlayerSelection(71)}
+                  />
+                </div>
+                <div className="relative">
+                  <div 
+                    className="absolute top-1/2 right-3 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2 mr-3 transition-all duration-200"
+                    style={{ backgroundColor: selectedPlayers.has(72) ? '#a855f7' : 'transparent', border: selectedPlayers.has(72) ? 'none' : '2px solid #7e22ce' }}
+                    onClick={() => togglePlayerSelection(72)}
+                  >
+                    {selectedPlayers.has(72) && '✓'}
+                  </div>
+                  <PlayerBox 
+                    player={{id: 72, displayName: "Purple Border Example", positionPreferences: ["GK", "GD"], avatarColor: "bg-purple-500"}}
+                    size="md"
+                    showPositions={true}
+                    hasSelect={true}
+                    className="shadow-md transition-all duration-200 hover:shadow-lg cursor-pointer"
+                    style={{ 
+                      backgroundColor: selectedPlayers.has(72) ? '#ffffff' : '#a855f715',
+                      borderColor: '#7e22ce',
+                      color: '#7e22ce'
+                    }}
+                    onClick={() => togglePlayerSelection(72)}
+                  />
+                </div>
+                <div className="relative">
+                  <div 
+                    className="absolute top-1/2 right-3 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2 mr-3 transition-all duration-200"
+                    style={{ backgroundColor: selectedPlayers.has(73) ? '#f97316' : 'transparent', border: selectedPlayers.has(73) ? 'none' : '2px solid #ea580c' }}
+                    onClick={() => togglePlayerSelection(73)}
+                  >
+                    {selectedPlayers.has(73) && '✓'}
+                  </div>
+                  <PlayerBox 
+                    player={{id: 73, displayName: "Orange Border Example", positionPreferences: ["WA", "C"], avatarColor: "bg-orange-500"}}
+                    size="md"
+                    showPositions={true}
+                    hasSelect={true}
+                    className="shadow-md transition-all duration-200 hover:shadow-lg cursor-pointer"
+                    style={{ 
+                      backgroundColor: selectedPlayers.has(73) ? '#ffffff' : '#f9731615',
+                      borderColor: '#ea580c',
+                      color: '#ea580c'
+                    }}
+                    onClick={() => togglePlayerSelection(73)}
+                  />
+                </div>
+                <div className="relative">
+                  <div 
+                    className="absolute top-1/2 right-3 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2 mr-3 transition-all duration-200"
+                    style={{ backgroundColor: selectedPlayers.has(74) ? '#ef4444' : 'transparent', border: selectedPlayers.has(74) ? 'none' : '2px solid #dc2626' }}
+                    onClick={() => togglePlayerSelection(74)}
+                  >
+                    {selectedPlayers.has(74) && '✓'}
+                  </div>
+                  <PlayerBox 
+                    player={{id: 74, displayName: "Red Border Example", positionPreferences: ["GD", "WD"], avatarColor: "bg-red-500"}}
+                    size="md"
+                    showPositions={true}
+                    hasSelect={true}
+                    className="shadow-md transition-all duration-200 hover:shadow-lg cursor-pointer"
+                    style={{ 
+                      backgroundColor: selectedPlayers.has(74) ? '#ffffff' : '#ef444415',
+                      borderColor: '#dc2626',
+                      color: '#dc2626'
+                    }}
+                    onClick={() => togglePlayerSelection(74)}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Mixed Selection States with Darker Select Borders */}
+            <div>
+              <h4 className="text-sm font-medium mb-2 text-gray-700">Mixed Selection States with Darker Select Box Borders</h4>
+              <p className="text-sm text-gray-600 mb-3">Select boxes use darker border colors that match the PlayerBox outer border</p>
+              <div className="space-y-3">
+                <div className="relative">
+                  <div 
+                    className="absolute top-1/2 right-3 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2 mr-3 transition-all duration-200"
+                    style={{ backgroundColor: selectedPlayers.has(80) ? '#14b8a6' : 'transparent', border: selectedPlayers.has(80) ? 'none' : '2px solid #0d9488' }}
+                    onClick={() => togglePlayerSelection(80)}
+                  >
+                    {selectedPlayers.has(80) && '✓'}
+                  </div>
+                  <PlayerBox 
+                    player={{id: 80, displayName: "Teal Dark Border", positionPreferences: ["GA", "GS"], avatarColor: "bg-teal-500"}}
+                    size="md"
+                    showPositions={true}
+                    hasSelect={true}
+                    className="shadow-md transition-all duration-200 hover:shadow-lg cursor-pointer"
+                    style={{ 
+                      backgroundColor: selectedPlayers.has(80) ? '#ffffff' : '#14b8a615',
+                      borderColor: '#0d9488',
+                      color: '#0d9488'
+                    }}
+                    onClick={() => togglePlayerSelection(80)}
+                  />
+                </div>
+                <div className="relative">
+                  <div 
+                    className="absolute top-1/2 right-3 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2 mr-3 transition-all duration-200"
+                    style={{ backgroundColor: selectedPlayers.has(81) ? '#6366f1' : 'transparent', border: selectedPlayers.has(81) ? 'none' : '2px solid #4338ca' }}
+                    onClick={() => togglePlayerSelection(81)}
+                  >
+                    {selectedPlayers.has(81) && '✓'}
+                  </div>
+                  <PlayerBox 
+                    player={{id: 81, displayName: "Indigo Dark Border", positionPreferences: ["C", "WA"], avatarColor: "bg-indigo-500"}}
+                    size="md"
+                    showPositions={true}
+                    hasSelect={true}
+                    className="shadow-md transition-all duration-200 hover:shadow-lg cursor-pointer"
+                    style={{ 
+                      backgroundColor: selectedPlayers.has(81) ? '#ffffff' : '#6366f115',
+                      borderColor: '#4338ca',
+                      color: '#4338ca'
+                    }}
+                    onClick={() => togglePlayerSelection(81)}
+                  />
+                </div>
+                <div className="relative">
+                  <div 
+                    className="absolute top-1/2 right-3 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2 mr-3 transition-all duration-200"
+                    style={{ backgroundColor: selectedPlayers.has(82) ? '#ec4899' : 'transparent', border: selectedPlayers.has(82) ? 'none' : '2px solid #be185d' }}
+                    onClick={() => togglePlayerSelection(82)}
+                  >
+                    {selectedPlayers.has(82) && '✓'}
+                  </div>
+                  <PlayerBox 
+                    player={{id: 82, displayName: "Pink Dark Border", positionPreferences: ["GK", "GD"], avatarColor: "bg-pink-500"}}
+                    size="md"
+                    showPositions={true}
+                    hasSelect={true}
+                    className="shadow-md transition-all duration-200 hover:shadow-lg cursor-pointer"
+                    style={{ 
+                      backgroundColor: selectedPlayers.has(82) ? '#ffffff' : '#ec489915',
+                      borderColor: '#be185d',
+                      color: '#be185d'
+                    }}
+                    onClick={() => togglePlayerSelection(82)}
+                  />
+                </div>
+              </div>
+            </div>
+
             {/* Badge Color Variations */}
             <div>
               <h4 className="text-sm font-medium mb-2 text-gray-700">Badge Color Variations - Adapting to Avatar Colors</h4>
