@@ -30,7 +30,7 @@ interface GameResultCardProps {
   clubTeams?: any[];
 }
 
-export function GameResultCard({ 
+export default function GameResultCard({ 
   game, 
   layout = 'medium',
   className,
@@ -334,6 +334,3 @@ export function OfficialGameResultCard(props: Omit<GameResultCardProps, 'useOffi
 export function PerformanceGameResultCard(props: Omit<GameResultCardProps, 'useOfficialPriority'>) {
   return <GameResultCard {...props} useOfficialPriority={false} />;
 }
-
-// Default export
-export default GameResultCard;

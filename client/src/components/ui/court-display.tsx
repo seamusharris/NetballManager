@@ -24,7 +24,7 @@ interface CourtDisplayProps {
   className?: string;
 }
 
-export const CourtDisplay = ({
+export default function CourtDisplay({
   roster,
   players,
   quarter,

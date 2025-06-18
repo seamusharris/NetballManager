@@ -22,7 +22,7 @@ interface SharedPlayerAvailabilityProps {
   variant?: 'compact' | 'detailed';
 }
 
-export function SharedPlayerAvailability({
+export default function SharedPlayerAvailability({
   players,
   availabilityData,
   onAvailabilityChange,
