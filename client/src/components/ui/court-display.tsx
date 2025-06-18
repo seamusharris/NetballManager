@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Position, POSITIONS } from '@shared/schema';
 import { convertTailwindToHex } from '@/lib/utils';
