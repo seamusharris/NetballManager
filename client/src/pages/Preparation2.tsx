@@ -331,6 +331,15 @@ export default function Preparation2() {
   const selectedGame = upcomingGames.find((g: any) => g.id === selectedGameId);
   const opponent = selectedGame ? getOpponentName(selectedGame) : '';
 
+  // Debug logging to understand team context
+  console.log('Preparation2 Debug:', {
+    currentTeamId,
+    currentClubId,
+    upcomingGamesCount: upcomingGames.length,
+    nextGame,
+    selectedGame
+  });
+
   if (loadingGames || loadingPlayers) {
     return (
       <PageTemplate 
