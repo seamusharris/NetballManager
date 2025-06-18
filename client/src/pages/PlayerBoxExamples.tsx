@@ -257,7 +257,7 @@ export default function PlayerBoxExamples() {
                   style={{ borderColor: '#16a34a', color: '#15803d' }}
                 />
                 <PlayerBox 
-                  player={{...samplePlayers[2], displayName: "Lily C", positionPreferences: ["GK", "GD"], avatarColor: "bg-purple-500"}}
+                  player={{...samplePlayers[2], displayName: "Lily C", positionPreferences: ["GK", "GD"], avatarColor: "bg-purple-500", active: true}}
                   size="sm"
                   showPositions={true}
                   className="shadow-md transition-all duration-200 hover:shadow-lg hover:scale-[1.02] cursor-pointer"
