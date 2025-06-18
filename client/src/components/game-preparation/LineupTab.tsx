@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -9,8 +10,6 @@ import SharedPlayerAvailability from '@/components/ui/shared-player-availability
 import DragDropLineupEditor from '@/components/roster/DragDropLineupEditor';
 import CourtDisplay from '@/components/ui/court-display';
 import { UpcomingGameRecommendations } from '@/components/dashboard/UpcomingGameRecommendations';
-import { useQuery } from '@tanstack/react-query';
-import { apiClient } from '@/lib/apiClient';
 import type { Game, Player, Roster } from '@shared/schema';
 
 interface LineupTabProps {
@@ -37,21 +36,8 @@ export function LineupTab({ game, players, rosters, onRosterUpdate }: LineupTabP
     setLocalRosters(rosters);
   }, [rosters]);
 
-  // Show loading state if game data is not available (after hooks)
-  if (!game || !game.id || !players || players.length === 0) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading lineup data...</p>
-        </div>
-      </div>
-    );
-  }
-
   const handleSaveChanges = async () => {
     try {
-      // Save roster changes
       await onRosterUpdate(localRosters);
       setHasUnsavedChanges(false);
     } catch (error) {

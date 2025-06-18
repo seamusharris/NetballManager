@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
@@ -113,19 +114,6 @@ export default function SharedPlayerAvailability({
     }
   };
 
-  // Early return if players data isn't ready
-  if (!players || players.length === 0) {
-    return (
-      <Card className={className}>
-        <CardContent className="pt-6">
-          <div className="text-center text-muted-foreground">
-            Loading player data...
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
   const sortedPlayers = [...players].sort((a, b) => {
     const displayNameA = a.displayName || `${a.firstName} ${a.lastName}`;
     const displayNameB = b.displayName || `${b.firstName} ${b.lastName}`;
@@ -201,9 +189,7 @@ export default function SharedPlayerAvailability({
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-3">
                     <PlayerAvatar 
-                      firstName={player.firstName}
-                      lastName={player.lastName}
-                      avatarColor={playerColor}
+                      player={player}
                       size={variant === 'compact' ? 'sm' : 'md'}
                     />
                     <div>
