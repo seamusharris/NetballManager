@@ -9,7 +9,7 @@ import { GameBadge } from '@/components/ui/game-badge';
 import { ResultBadge } from '@/components/ui/result-badge';
 import { ScoreBadge } from '@/components/ui/score-badge';
 import { BaseWidget, CustomHeaderWidget } from '@/components/ui/base-widget';
-import { GameResultCard } from '@/components/ui/game-result-card';
+import GameResultCard from '@/components/ui/game-result-card';
 import { Badge } from '@/components/ui/badge';
 import { 
   Users, TrendingUp, Calendar, Edit, Eye, Trash2, Settings, 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { CourtDisplay } from '@/components/ui/court-display';
+import CourtDisplay from '@/components/ui/court-display';
 import { POSITIONS } from '@shared/schema';
 
 interface CourtViewProps {

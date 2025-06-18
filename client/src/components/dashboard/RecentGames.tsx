@@ -4,7 +4,7 @@ import { Link } from 'wouter';
 import { Game, Opponent, GameStat } from '@shared/schema';
 import { formatShortDate } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
-import { GameResultCard } from '@/components/ui/game-result-card';
+import GameResultCard from '@/components/ui/game-result-card';
 import { ViewMoreButton } from '@/components/ui/view-more-button';
 import { RECENT_GAMES_COUNT } from '@/lib/constants';
 import { useClub } from '@/contexts/ClubContext';

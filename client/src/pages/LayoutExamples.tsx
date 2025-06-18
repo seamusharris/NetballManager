@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { PlayerBox } from '@/components/ui/player-box';
 import { TeamBox } from '@/components/ui/team-box';
-import { GameResultCard } from '@/components/ui/game-result-card';
+import GameResultCard from '@/components/ui/game-result-card';
 import { BaseWidget } from '@/components/ui/base-widget';
 import { 
   Grid, Columns, Rows, Layout, Monitor, Smartphone, 

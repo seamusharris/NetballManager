@@ -17,7 +17,7 @@ import DragDropRosterManager from '@/components/roster/DragDropRosterManager';
 import RosterSummary from '@/components/roster/RosterSummary';
 import { useNextGame } from '@/hooks/use-next-game';
 import UpcomingGameRecommendations from '@/components/dashboard/UpcomingGameRecommendations';
-import { GameResultCard } from '@/components/ui/game-result-card';
+import GameResultCard from '@/components/ui/game-result-card';
 
 const Preparation = () => {
   const queryClient = useQueryClient();

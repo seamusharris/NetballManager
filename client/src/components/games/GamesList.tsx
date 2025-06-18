@@ -39,7 +39,7 @@ import { GameStatusDialog } from './GameStatusDialog';
 import { useClub } from '@/contexts/ClubContext';
 import { TeamSwitcher } from '@/components/layout/TeamSwitcher';
 import { gameScoreService } from '@/lib/gameScoreService';
-import { GameResultCard } from '@/components/ui/game-result-card';
+import GameResultCard from '@/components/ui/game-result-card';
 
 interface GamesListProps {
   games: Game[];

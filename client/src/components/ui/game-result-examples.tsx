@@ -1,5 +1,5 @@
 import React from 'react';
-import { GameResultCard, NarrowGameResultCard, MediumGameResultCard, WideGameResultCard } from './game-result-card';
+import GameResultCard, { NarrowGameResultCard, MediumGameResultCard, WideGameResultCard } from './game-result-card';
 import { Game } from '@shared/schema';
 
 // Example game data for demonstration
