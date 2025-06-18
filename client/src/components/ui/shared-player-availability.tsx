@@ -1,15 +1,15 @@
-
 import React, { useState } from 'react';
-import { Switch } from '@/components/ui/switch';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import PlayerAvatar from '@/components/ui/player-avatar';
-import { Player } from '@/shared/api-types';
-import { cn } from '@/lib/utils';
-import { Zap, RotateCcw } from 'lucide-react';
-import { apiClient } from '@/lib/apiClient';
+import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
+import { Player } from '@shared/schema';
+import PlayerAvatar from '@/components/ui/player-avatar';
+import { cn } from '@/lib/utils';
+import { apiClient } from '@/lib/apiClient';
+import { getPlayerColorHex, getLighterColorHex } from '@/lib/playerColorUtils';
+import { Badge } from '@/components/ui/badge';
+import { Zap, RotateCcw } from 'lucide-react';
 
 interface SharedPlayerAvailabilityProps {
   players: Player[];
@@ -40,29 +40,6 @@ export default function SharedPlayerAvailability({
       return player.avatarColor;
     }
     return 'bg-gray-400';
-  };
-
-  const getColorHex = (colorClass: string) => {
-    const colorMap: Record<string, string> = {
-      'bg-red-500': '#ef4444',
-      'bg-emerald-600': '#059669',
-      'bg-teal-600': '#0d9488',
-      'bg-blue-600': '#2563eb',
-      'bg-indigo-600': '#4f46e5',
-      'bg-purple-600': '#9333ea',
-      'bg-pink-600': '#db2777',
-      'bg-pink-500': '#ec4899',
-      'bg-orange-500': '#f97316',
-      'bg-yellow-600': '#ca8a04',
-      'bg-rose-600': '#e11d48',
-      'bg-lime-600': '#65a30d',
-      'bg-sky-600': '#0284c7',
-      'bg-violet-600': '#7c3aed',
-      'bg-cyan-600': '#0891b2',
-      'bg-gray-400': '#9ca3af',
-      'bg-green-600': '#16a34a'
-    };
-    return colorMap[colorClass] || '#9ca3af';
   };
 
   const handleSetAllAvailable = () => {
@@ -166,11 +143,8 @@ export default function SharedPlayerAvailability({
             : "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
         )}>
           {sortedPlayers.map(player => {
-            const status = availabilityData[player.id] || 'unavailable';
             const playerColor = getPlayerColor(player);
-            const colorHex = getColorHex(playerColor);
-            const displayName = player.displayName || `${player.firstName} ${player.lastName}`;
-            const isAvailable = status === 'available';
+            const isAvailable = availabilityData[player.id] === 'available';
 
             return (
               <div 
@@ -182,8 +156,8 @@ export default function SharedPlayerAvailability({
                     : "opacity-75 border border-gray-200"
                 )}
                 style={{
-                  borderColor: isAvailable ? colorHex : '',
-                  backgroundColor: isAvailable ? `${colorHex}10` : ''
+                  borderColor: isAvailable ? getPlayerColorHex(playerColor) : '',
+                  backgroundColor: isAvailable ? getLighterColorHex(playerColor) : ''
                 }}
               >
                 <div className="flex justify-between items-center">
@@ -197,7 +171,7 @@ export default function SharedPlayerAvailability({
                         "font-medium",
                         variant === 'compact' ? "text-sm" : ""
                       )}>
-                        {displayName}
+                        {player.displayName}
                       </div>
                       {player.positionPreferences && player.positionPreferences.length > 0 && variant === 'detailed' && (
                         <div className="text-xs text-gray-500">
