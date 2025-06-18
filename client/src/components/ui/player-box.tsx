@@ -208,8 +208,8 @@ export function PlayerBox({
             </div>
           )}
 
-          {!showPositions && (
-            <div className={`${textSizes[size].position} flex items-center gap-2 min-h-[1.25rem]`}>
+          {!showPositions && (customBadge || player.active === false) && (
+            <div className={`${textSizes[size].position} flex items-center gap-2`}>
               {customBadge ? (
                 <span className="inline-flex items-center">{customBadge}</span>
               ) : (
