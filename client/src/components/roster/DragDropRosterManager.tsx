@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/apiClient';
 import { 
   Users, 
@@ -154,6 +154,13 @@ export default function DragDropRosterManager({ availablePlayers, gameInfo, game
     3: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
     4: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null }
   });
+
+  // Fetch existing roster data
+  const { data: existingRoster, isLoading: isLoadingRoster } = useQuery({
+    queryKey: [`/api/games/${gameId}/rosters`],
+    queryFn: () => gameId ? apiRequest('GET', `/api/games/${gameId}/rosters`) : Promise.resolve([]),
+    enabled: !!gameId,
+  });
   const [draggedPlayer, setDraggedPlayer] = useState<number | null>(null);
   const [dragOverPosition, setDragOverPosition] = useState<string | null>(null);
   
@@ -162,6 +169,28 @@ export default function DragDropRosterManager({ availablePlayers, gameInfo, game
   const [isDragging, setIsDragging] = useState(false);
   const [draggedElement, setDraggedElement] = useState<HTMLElement | null>(null);
   const [clone, setClone] = useState<HTMLElement | null>(null);
+
+  // Load existing roster data when it becomes available
+  useEffect(() => {
+    if (existingRoster && Array.isArray(existingRoster)) {
+      const newAssignments = {
+        1: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
+        2: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
+        3: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
+        4: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null }
+      };
+
+      // Populate assignments from existing roster data
+      existingRoster.forEach((entry: any) => {
+        if (entry.quarter && entry.position && entry.playerId) {
+          newAssignments[entry.quarter as keyof typeof newAssignments][entry.position] = entry.playerId;
+        }
+      });
+
+      setAssignments(newAssignments);
+      onRosterChange(newAssignments);
+    }
+  }, [existingRoster, onRosterChange]);
 
   // Save roster mutation
   const saveRosterMutation = useMutation({
@@ -205,6 +234,9 @@ export default function DragDropRosterManager({ availablePlayers, gameInfo, game
     onSuccess: (savedCount) => {
       // Invalidate roster queries
       queryClient.invalidateQueries({ queryKey: [`/api/games/${gameId}/rosters`] });
+      
+      // Refetch the roster data to ensure UI is updated
+      queryClient.refetchQueries({ queryKey: [`/api/games/${gameId}/rosters`] });
       
       // Notify parent component
       if (onRosterSaved) {
@@ -458,6 +490,22 @@ export default function DragDropRosterManager({ availablePlayers, gameInfo, game
   const currentQuarterAssignments = assignments[currentQuarter];
   const assignedPlayerIds = Object.values(currentQuarterAssignments).filter(id => id !== null);
   const availablePlayersForDrag = availablePlayers.filter(p => !assignedPlayerIds.includes(p.id));
+
+  // Show loading state while fetching roster data
+  if (isLoadingRoster) {
+    return (
+      <div className="space-y-6">
+        <div className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-semibold text-lg">vs {gameInfo.opponent}</h3>
+              <p className="text-sm text-gray-600">Loading roster data...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Summaries
   const playerSummary = availablePlayers.reduce((acc, player) => {
