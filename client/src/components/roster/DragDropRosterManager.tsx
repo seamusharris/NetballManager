@@ -20,7 +20,7 @@ import {
   Edit,
   Trash2
 } from 'lucide-react';
-import { SelectablePlayerBox } from '@/components/ui/selectable-player-box';
+import { PlayerBox } from '@/components/ui/player-box';
 
 interface Player {
   id: number;
@@ -484,12 +484,11 @@ export default function DragDropRosterManager({ availablePlayers, gameInfo, onRo
                   onDragStart={() => handleDragStart(player.id)}
                   className="cursor-move transform hover:scale-105 transition-transform"
                 >
-                  <SelectablePlayerBox
+                  <PlayerBox
                     player={player}
-                    isSelected={false}
-                    onSelectionChange={() => {}} // No selection functionality needed here, just drag
                     size="sm"
                     showPositions={true}
+                    className="transition-all duration-200"
                     style={{
                       opacity: draggedPlayer === player.id ? 0.5 : 1,
                       transform: draggedPlayer === player.id ? 'scale(0.95)' : 'scale(1)'
