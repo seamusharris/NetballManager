@@ -6,7 +6,7 @@ import { TeamBox } from '@/components/ui/team-box';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Edit, Trash2, Users, Calendar, Trophy, Target, TrendingUp, Eye, Star, BarChart3, Settings, Play, Award, Zap } from 'lucide-react';
+import { Edit, Trash2, Users, Calendar, Trophy, Target, TrendingUp, Eye, Star, BarChart3, Settings, Play, Award, Zap, Heart, Share } from 'lucide-react';
 
 export default function TeamBoxExamples() {
   const sampleTeams = [

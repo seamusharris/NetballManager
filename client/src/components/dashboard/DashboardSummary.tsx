@@ -29,8 +29,8 @@ import { Suspense } from 'react'; // Import Suspense
 import PositionOpponentAnalysis from './PositionOpponentAnalysis';
 import PlayerAnalyticsWidget from './PlayerAnalyticsWidget';
 import PlayerCombinationAnalysis from './PlayerCombinationAnalysis';
-import { TeamPositionAnalysis } from './TeamPositionAnalysis';
-import { UpcomingGameRecommendations } from './UpcomingGameRecommendations';
+import TeamPositionAnalysis from './TeamPositionAnalysis';
+import UpcomingGameRecommendations from './UpcomingGameRecommendations';
 
 interface DashboardSummaryProps {
   players: any[];
