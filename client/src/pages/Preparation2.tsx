@@ -675,9 +675,11 @@ export default function Preparation2() {
   };
 
   const handleCopyRecommendation = (recommendation: GameRecommendation) => {
+    setCurrentLineup(recommendation.formation);
+    setActiveTab('lineup');
     toast({
       title: "Lineup Copied",
-      description: `${recommendation.title} has been applied to your roster`
+      description: `${recommendation.title} has been copied to the lineup manager.`
     });
   };
 
@@ -952,17 +954,65 @@ export default function Preparation2() {
           {/* Lineup Management Tab */}
           <TabsContent value="lineup">
             {selectedGameId && selectedGame && (
-              <DragDropRosterManager
-                availablePlayers={allPlayers}
-                gameInfo={{
-                  opponent: opponent,
-                  date: selectedGame.date,
-                  time: selectedGame.time
-                }}
-                onRosterChange={(roster) => {
-                  console.log('Roster changed:', roster);
-                }}
-              />
+              <div className="space-y-6">
+                {/* Current Lineup Display */}
+                {Object.values(currentLineup).some(player => player !== null) && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Users className="h-5 w-5" />
+                        Current Lineup
+                      </CardTitle>
+                      <p className="text-sm text-muted-foreground">
+                        Lineup copied from recommendations
+                      </p>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-7 gap-4">
+                        {['GK', 'GD', 'WD', 'C', 'WA', 'GA', 'GS'].map(position => (
+                          <div key={position} className="text-center">
+                            <div className="bg-muted rounded-lg p-3 mb-2">
+                              <div className="text-sm font-medium text-muted-foreground mb-1">
+                                {position}
+                              </div>
+                              <div className="text-sm font-semibold">
+                                {currentLineup[position] || 'Empty'}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="flex gap-2 mt-4">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => setCurrentLineup({
+                            GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null
+                          })}
+                        >
+                          Clear Lineup
+                        </Button>
+                        <Button variant="outline" size="sm">
+                          Export to Roster Manager
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Full Roster Manager */}
+                <DragDropRosterManager
+                  availablePlayers={allPlayers}
+                  gameInfo={{
+                    opponent: opponent,
+                    date: selectedGame.date,
+                    time: selectedGame.time
+                  }}
+                  onRosterChange={(roster) => {
+                    console.log('Roster changed:', roster);
+                  }}
+                />
+              </div>
             )}
           </TabsContent>
 
