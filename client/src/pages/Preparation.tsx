@@ -311,11 +311,11 @@ const Preparation = () => {
 
               {/* Game Recommendations */}
               <UpcomingGameRecommendations
-                upcomingGames={[selectedGameInfo]}
-                recentGames={recentGames}
+                games={games}
                 players={playersData}
-                gamePerformances={gamePerformances}
-                teams={teams}
+                centralizedStats={gamePerformances}
+                centralizedRosters={{}}
+                currentClubId={team?.club_id}
               />
             </div>
           )}
