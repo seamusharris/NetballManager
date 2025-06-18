@@ -103,6 +103,7 @@ export default function PlayerBoxExamples() {
         {/* Full Width Stats Examples */}
         <div className="mb-8">
           <h3 className="text-lg font-medium mb-4 text-gray-800">Full Width with Statistics</h3>
+          <p className="text-sm text-gray-600 mb-4"><strong>Reference:</strong> <code>full-width-stats</code></p>
           <div className="space-y-4">
             {/* Green - Sarah's Colors */}
             <div className="w-full">
@@ -200,6 +201,7 @@ export default function PlayerBoxExamples() {
         {/* Court Position Ready Examples */}
         <div className="mb-8">
           <h3 className="text-lg font-medium mb-4 text-gray-800">Court Position Ready (No Select Boxes)</h3>
+          <p className="text-sm text-gray-600 mb-4"><strong>Reference:</strong> <code>court-position-ready</code></p>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {/* Orange Court Position */}
             <PlayerBox 
@@ -242,12 +244,13 @@ export default function PlayerBoxExamples() {
         {/* Small Court Position Allocation Examples */}
         <div className="mb-8">
           <h3 className="text-lg font-medium mb-4 text-gray-800">Small Court Position Allocation</h3>
-          <p className="text-sm text-gray-600 mb-4">Compact examples for allocating players to court positions - with and without position preferences</p>
+          <p className="text-sm text-gray-600 mb-4"><strong>Reference:</strong> <code>small-court-allocation</code> - Compact examples for allocating players to court positions - with and without position preferences</p>
 
           <div className="space-y-6">
             {/* With Position Preferences */}
             <div>
               <h4 className="text-sm font-medium mb-3 text-gray-700">With Position Preferences</h4>
+              <p className="text-xs text-gray-500 mb-3"><strong>Ref:</strong> <code>small-with-positions</code></p>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
                 <PlayerBox 
                   player={{...samplePlayers[1], displayName: "Sarah J", positionPreferences: ["C", "WA"], avatarColor: "bg-green-600"}}
@@ -297,6 +300,7 @@ export default function PlayerBoxExamples() {
             {/* Medium-Small Names Only */}
             <div>
               <h4 className="text-sm font-medium mb-3 text-gray-700">Medium-Small Names Only (Longer Names, No Wrapping)</h4>
+              <p className="text-xs text-gray-500 mb-3"><strong>Ref:</strong> <code>medium-small-names</code></p>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
                 <PlayerBox 
                   player={{id: 40, displayName: "Alexandria M", avatarColor: "bg-cyan-500"}}
@@ -353,6 +357,7 @@ export default function PlayerBoxExamples() {
             {/* Names Only */}
             <div>
               <h4 className="text-sm font-medium mb-3 text-gray-700">Small Names Only (Compact)</h4>
+              <p className="text-xs text-gray-500 mb-3"><strong>Ref:</strong> <code>small-names-only</code></p>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-3">
                 <PlayerBox 
                   player={{id: 8, displayName: "Amy L", avatarColor: "bg-cyan-500"}}
@@ -409,6 +414,7 @@ export default function PlayerBoxExamples() {
             {/* Ultra Compact for Dense Lists */}
             <div>
               <h4 className="text-sm font-medium mb-3 text-gray-700">Ultra Compact (Dense Allocation)</h4>
+              <p className="text-xs text-gray-500 mb-3"><strong>Ref:</strong> <code>ultra-compact</code></p>
               <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-2">
                 <PlayerBox 
                   player={{id: 15, displayName: "Holly", positionPreferences: ["GS"], avatarColor: "bg-blue-500"}}
@@ -474,6 +480,7 @@ export default function PlayerBoxExamples() {
         {/* Compact Format Examples */}
         <div className="mb-8">
           <h3 className="text-lg font-medium mb-4 text-gray-800">Compact Format Variations</h3>
+          <p className="text-sm text-gray-600 mb-4"><strong>Reference:</strong> <code>compact-format</code></p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Compact with Select - Pink */}
             <div className="relative">
@@ -519,6 +526,7 @@ export default function PlayerBoxExamples() {
         {/* Large Format Examples */}
         <div className="mb-8">
           <h3 className="text-lg font-medium mb-4 text-gray-800">Large Format with Enhanced Styling</h3>
+          <p className="text-sm text-gray-600 mb-4"><strong>Reference:</strong> <code>large-format</code></p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Large with Select - Cyan */}
             <div className="relative">
@@ -564,6 +572,7 @@ export default function PlayerBoxExamples() {
         {/* Mixed Selection States */}
         <div className="mb-6">
           <h3 className="text-lg font-medium mb-4 text-gray-800">Mixed Selection States</h3>
+          <p className="text-sm text-gray-600 mb-4"><strong>Reference:</strong> <code>mixed-selection</code></p>
           <div className="space-y-3">
             {/* Selected - Emerald */}
             <div className="relative">
