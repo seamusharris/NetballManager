@@ -175,6 +175,7 @@ export default function PlayerAvailabilityManager({
       if (onAvailabilityChange) {
         onAvailabilityChange(activeTeamPlayerIds);
       }
+      onAvailabilityStateChange?.(defaultAvailabilityData);
     }
   }, [availabilityResponse, isLoading, availabilityError, teamPlayers, gameId, isLoadingTeamPlayers]);
 
