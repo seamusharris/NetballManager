@@ -518,6 +518,37 @@ input[type=number] {
   transition: none !important;
 }
 
+/* Touch drag and drop support */
+.touch-manipulation {
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+.touch-manipulation.select-none {
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Dragging state styles */
+.dragging-active {
+  opacity: 0.3 !important;
+  transform: scale(0.95) !important;
+}
+
+/* Drop zone highlighting for touch */
+[data-position] {
+  transition: all 0.2s ease;
+}
+
+[data-position]:hover,
+[data-position].drag-over {
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
 /* Touch-optimized stat button colors with colored borders */
 .touch-manipulation.bg-green-100 {
   @apply border-green-200;
