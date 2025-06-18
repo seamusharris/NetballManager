@@ -57,7 +57,8 @@ const PositionSlot = ({
   onDragStart,
   onTouchStart,
   onTouchMove,
-  onTouchEnd
+  onTouchEnd,
+  onTouchCancel
 }: {
   position: string,
   player?: Player,
@@ -534,6 +535,7 @@ export default function DragDropRosterManager({ availablePlayers, gameInfo, onRo
                   onTouchStart={handleTouchStart}
                   onTouchMove={handleTouchMove}
                   onTouchEnd={handleTouchEnd}
+                  onTouchCancel={handleTouchCancel}
                 />
               </div>
             ))}
@@ -564,6 +566,7 @@ export default function DragDropRosterManager({ availablePlayers, gameInfo, onRo
                   onTouchStart={handleTouchStart}
                   onTouchMove={handleTouchMove}
                   onTouchEnd={handleTouchEnd}
+                  onTouchCancel={handleTouchCancel}
                 />
               </div>
             ))}
