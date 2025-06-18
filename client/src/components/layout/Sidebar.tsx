@@ -84,42 +84,42 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen, isTablet }: Sid
     ] : [
       // Disabled links when no team selected
       { 
-        path: '/teams', 
+        path: '/teams-dashboard-disabled', 
         label: 'Team Dashboard', 
         icon: <Home className="w-5 h-5" />, 
         disabled: true,
         fallbackLabel: 'Select Team First'
       },
       { 
-        path: '/teams', 
+        path: '/games-disabled', 
         label: 'Games', 
         icon: <Calendar className="w-5 h-5" />, 
         disabled: true,
         fallbackLabel: 'Games (Select Team First)'
       },
       { 
-        path: '/teams', 
+        path: '/roster-disabled', 
         label: 'Roster', 
         icon: <ClipboardList className="w-5 h-5" />, 
         disabled: true,
         fallbackLabel: 'Roster (Select Team First)'
       },
       { 
-        path: '/teams', 
+        path: '/game-preparation-disabled', 
         label: 'Game Preparation', 
         icon: <Target className="w-5 h-5" />, 
         disabled: true,
         fallbackLabel: 'Game Preparation (Select Team First)'
       },
       { 
-        path: '/teams', 
+        path: '/opponent-preparation-disabled', 
         label: 'Opponent Preparation', 
         icon: <Target className="w-5 h-5" />, 
         disabled: true,
         fallbackLabel: 'Opponent Preparation (Select Team First)'
       },
       { 
-        path: '/teams', 
+        path: '/team-analysis-disabled', 
         label: 'Team Analysis', 
         icon: <Trophy className="w-5 h-5" />, 
         disabled: true,

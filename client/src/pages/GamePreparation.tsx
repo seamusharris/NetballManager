@@ -24,7 +24,7 @@ import OpponentPreparation from '@/pages/OpponentPreparation';
 import CourtDisplay from '@/components/ui/court-display';
 import DragDropRosterManager from '@/components/roster/DragDropRosterManager';
 import PlayerAvailabilityManager from '@/components/roster/PlayerAvailabilityManager';
-import { AnalysisTab } from '@/components/game-preparation/AnalysisTab';
+import AnalysisTab from '@/components/game-preparation/AnalysisTab';
 import LineupTab from '@/components/game-preparation/LineupTab';
 import GameResultCard from '@/components/ui/game-result-card';
 
