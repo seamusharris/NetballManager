@@ -644,24 +644,15 @@ export default function GamePreparation() {
 
           {/* Lineup Tab */}
           <TabsContent value="lineup">
-            {game && players ? (
-              <LineupTab
-                game={game}
-                players={players}
-                rosters={[]}
-                onRosterUpdate={(rosters) => {
-                  console.log('Roster updated:', rosters);
-                  // Handle roster update here if needed
-                }}
-              />
-            ) : (
-              <div className="flex items-center justify-center p-8">
-                <div className="text-center">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
-                  <p className="text-muted-foreground">Loading game data...</p>
-                </div>
-              </div>
-            )}
+            <LineupTab
+              game={game}
+              players={players || []}
+              rosters={[]}
+              onRosterUpdate={(rosters) => {
+                console.log('Roster updated:', rosters);
+                // Handle roster update here if needed
+              }}
+            />
           </TabsContent>
 
           {/* Strategy Tab */}

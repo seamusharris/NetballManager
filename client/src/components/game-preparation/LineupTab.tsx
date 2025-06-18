@@ -36,6 +36,18 @@ export function LineupTab({ game, players, rosters, onRosterUpdate }: LineupTabP
     setLocalRosters(rosters);
   }, [rosters]);
 
+  // Show loading state if game data is not available (after hooks)
+  if (!game || !game.id || !players) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading lineup data...</p>
+        </div>
+      </div>
+    );
+  }
+
   const handleSaveChanges = async () => {
     try {
       // Save roster changes
