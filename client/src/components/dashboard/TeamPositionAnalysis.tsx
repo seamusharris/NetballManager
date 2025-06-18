@@ -35,10 +35,10 @@ interface OpponentSpecificLineup extends PositionLineup {
 }
 
 function TeamPositionAnalysis({ 
-  games, 
-  players, 
-  centralizedStats, 
-  centralizedRosters,
+  games = [], 
+  players = [], 
+  centralizedStats = {}, 
+  centralizedRosters = {},
   currentClubId 
 }: TeamPositionAnalysisProps) {
   const [selectedOpponent, setSelectedOpponent] = useState<string>('all');
@@ -51,6 +51,12 @@ function TeamPositionAnalysis({
 
   // Get unique opponents from games
   useEffect(() => {
+    // Ensure games is an array before processing
+    if (!Array.isArray(games)) {
+      setOpponents([]);
+      return;
+    }
+
     const uniqueOpponents = Array.from(new Set(
       games
         .filter(game => game.statusIsCompleted && game.statusAllowsStatistics)
@@ -81,6 +87,13 @@ function TeamPositionAnalysis({
   }, [centralizedStats, centralizedRosters, selectedQuarter, currentClubId]);
 
   const calculatePositionLineups = () => {
+    // Ensure games is an array before processing
+    if (!Array.isArray(games)) {
+      setGeneralLineups([]);
+      setOpponentSpecificLineups([]);
+      return;
+    }
+
     const completedGames = games.filter(game => 
       game.statusIsCompleted && 
       game.statusAllowsStatistics &&
