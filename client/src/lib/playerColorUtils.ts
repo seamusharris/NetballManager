@@ -27,20 +27,26 @@ export const getPlayerColorHex = (avatarColor?: string): string => {
   return colorMap[avatarColor] || '#6b7280';
 };
 
-// Generate darker color using CSS color-mix function
-export const getDarkerColorHex = (avatarColor?: string): string => {
-  const baseColor = getPlayerColorHex(avatarColor);
-  return `color-mix(in srgb, ${baseColor} 70%, black 30%)`;
-};
-
-// Generate lighter color using CSS color-mix function  
+// Generate very light background color (matches ~15% opacity)
 export const getLighterColorHex = (avatarColor?: string): string => {
   const baseColor = getPlayerColorHex(avatarColor);
   return `color-mix(in srgb, ${baseColor} 15%, white 85%)`;
 };
 
-// Generate medium opacity color for backgrounds
-export const getMediumOpacityColorHex = (avatarColor?: string): string => {
+// Generate medium background color (matches ~25% opacity)
+export const getMediumColorHex = (avatarColor?: string): string => {
   const baseColor = getPlayerColorHex(avatarColor);
   return `color-mix(in srgb, ${baseColor} 25%, white 75%)`;
+};
+
+// Generate darker color for text/borders (matches interactive example)
+export const getDarkerColorHex = (avatarColor?: string): string => {
+  const baseColor = getPlayerColorHex(avatarColor);
+  return `color-mix(in srgb, ${baseColor} 70%, black 30%)`;
+};
+
+// Generate much darker color for enhanced contrast
+export const getMuchDarkerColorHex = (avatarColor?: string): string => {
+  const baseColor = getPlayerColorHex(avatarColor);
+  return `color-mix(in srgb, ${baseColor} 50%, black 50%)`;
 };

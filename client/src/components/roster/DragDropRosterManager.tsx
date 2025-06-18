@@ -21,6 +21,7 @@ import {
   Trash2
 } from 'lucide-react';
 import { PlayerBox } from '@/components/ui/player-box';
+import { getPlayerColorHex, getDarkerColorHex, getLighterColorHex, getMediumColorHex } from '@/lib/playerColorUtils';
 
 interface Player {
   id: number;
@@ -101,6 +102,11 @@ const PositionSlot = ({
             showPositions={false}
             size="sm"
             className="transition-all duration-200"
+            style={{
+                  backgroundColor: player ? getMediumColorHex(player.avatarColor) : 'transparent',
+                  borderColor: player ? getDarkerColorHex(player.avatarColor) : '#ddd',
+                  color: player ? getDarkerColorHex(player.avatarColor) : '#666'
+                }}
           />
         </div>
       ) : (
@@ -440,9 +446,10 @@ export default function DragDropRosterManager({ availablePlayers, gameInfo, onRo
                     showPositions={true}
                     className="transition-all duration-200"
                     style={{
-                      opacity: draggedPlayer === player.id ? 0.5 : 1,
-                      transform: draggedPlayer === player.id ? 'scale(0.95)' : 'scale(1)'
-                    }}
+                backgroundColor: getLighterColorHex(player.avatarColor),
+                borderColor: getDarkerColorHex(player.avatarColor),
+                color: getDarkerColorHex(player.avatarColor)
+              }}
                   />
                 </div>
               ))}
