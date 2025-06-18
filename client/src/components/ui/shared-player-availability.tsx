@@ -113,6 +113,19 @@ export default function SharedPlayerAvailability({
     }
   };
 
+  // Early return if players data isn't ready
+  if (!players || players.length === 0) {
+    return (
+      <Card className={className}>
+        <CardContent className="pt-6">
+          <div className="text-center text-muted-foreground">
+            Loading player data...
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   const sortedPlayers = [...players].sort((a, b) => {
     const displayNameA = a.displayName || `${a.firstName} ${a.lastName}`;
     const displayNameB = b.displayName || `${b.firstName} ${b.lastName}`;

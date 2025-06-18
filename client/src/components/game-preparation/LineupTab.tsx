@@ -38,7 +38,7 @@ export function LineupTab({ game, players, rosters, onRosterUpdate }: LineupTabP
   }, [rosters]);
 
   // Show loading state if game data is not available (after hooks)
-  if (!game || !game.id || !players) {
+  if (!game || !game.id || !players || players.length === 0) {
     return (
       <div className="flex items-center justify-center p-8">
         <div className="text-center">
