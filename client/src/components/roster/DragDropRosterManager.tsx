@@ -570,78 +570,90 @@ export default function DragDropRosterManager({ availablePlayers, gameInfo, game
         </div>
       </div>
 
-      {/* Quarter Selection and Controls */}
-      <div className="flex items-center justify-between">
-        <Tabs value={currentQuarter.toString()} onValueChange={(value) => setCurrentQuarter(parseInt(value))}>
-          <TabsList className="grid grid-cols-4">
-            <TabsTrigger value="1">Quarter 1</TabsTrigger>
-            <TabsTrigger value="2">Quarter 2</TabsTrigger>
-            <TabsTrigger value="3">Quarter 3</TabsTrigger>
-            <TabsTrigger value="4">Quarter 4</TabsTrigger>
-          </TabsList>
-        </Tabs>
+      {/* Quarter Selection */}
+      <div className="space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <Tabs value={currentQuarter.toString()} onValueChange={(value) => setCurrentQuarter(parseInt(value))}>
+            <TabsList className="grid grid-cols-4">
+              <TabsTrigger value="1">Quarter 1</TabsTrigger>
+              <TabsTrigger value="2">Quarter 2</TabsTrigger>
+              <TabsTrigger value="3">Quarter 3</TabsTrigger>
+              <TabsTrigger value="4">Quarter 4</TabsTrigger>
+            </TabsList>
+          </Tabs>
 
-        {/* Quarter Management Controls */}
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleResetQuarter}
-          >
-            <RotateCcw className="h-4 w-4 mr-1" />
-            Reset Quarter
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleResetAll}
-          >
-            <Trash2 className="h-4 w-4 mr-1" />
-            Reset All
-          </Button>
-          <Button
-            onClick={handleSaveRoster}
-            disabled={saveRosterMutation.isPending}
-            className="bg-primary hover:bg-primary/90"
-          >
-            {saveRosterMutation.isPending ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                Saving...
-              </>
-            ) : (
-              <>
-                <Save className="h-4 w-4 mr-1" />
-                Save Roster
-              </>
-            )}
-          </Button>
-
-          {/* Copy Quarter Controls */}
+          {/* Primary Action Buttons */}
           <div className="flex items-center gap-2">
-            {[1, 2, 3, 4].map(sourceQuarter => (
-              <Select
-                key={sourceQuarter}
-                onValueChange={(value) => {
-                  if (value) {
-                    handleCopyQuarter(sourceQuarter, parseInt(value));
-                  }
-                }}
-              >
-                <SelectTrigger className="w-[140px] text-xs">
-                  <SelectValue placeholder={`Copy Q${sourceQuarter} to...`} />
-                </SelectTrigger>
-                <SelectContent>
-                  {[1, 2, 3, 4]
-                    .filter(q => q !== sourceQuarter)
-                    .map(targetQuarter => (
-                      <SelectItem key={targetQuarter} value={targetQuarter.toString()}>
-                        Quarter {targetQuarter}
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
-            ))}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleResetQuarter}
+              className="flex-shrink-0"
+            >
+              <RotateCcw className="h-4 w-4 mr-1" />
+              Reset Quarter
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleResetAll}
+              className="flex-shrink-0"
+            >
+              <Trash2 className="h-4 w-4 mr-1" />
+              Reset All
+            </Button>
+            <Button
+              onClick={handleSaveRoster}
+              disabled={saveRosterMutation.isPending}
+              className="bg-primary hover:bg-primary/90 flex-shrink-0"
+            >
+              {saveRosterMutation.isPending ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="h-4 w-4 mr-1" />
+                  Save Roster
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
+
+        {/* Copy Quarter Controls - Now on a separate row */}
+        <div className="bg-gray-50 rounded-lg p-3 border">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+            <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
+              <ArrowUpDown className="h-4 w-4" />
+              Copy Quarter:
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 flex-1">
+              {[1, 2, 3, 4].map(sourceQuarter => (
+                <Select
+                  key={sourceQuarter}
+                  onValueChange={(value) => {
+                    if (value) {
+                      handleCopyQuarter(sourceQuarter, parseInt(value));
+                    }
+                  }}
+                >
+                  <SelectTrigger className="w-full text-xs">
+                    <SelectValue placeholder={`Q${sourceQuarter} to...`} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[1, 2, 3, 4]
+                      .filter(q => q !== sourceQuarter)
+                      .map(targetQuarter => (
+                        <SelectItem key={targetQuarter} value={targetQuarter.toString()}>
+                          Quarter {targetQuarter}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              ))}
+            </div>
           </div>
         </div>
       </div>
