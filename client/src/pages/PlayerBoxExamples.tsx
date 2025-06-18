@@ -1,18 +1,19 @@
 {/* Mixed Selection Examples */}
-              <div className="relative">
-                <input 
-                  type="checkbox" 
-                  className="absolute top-2 right-2 w-4 h-4 text-blue-600 bg-white border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
-                />
-                <PlayerBox 
-                  player={{...samplePlayers[0], displayName: "Sarah J", positionPreferences: ["WA", "C"], avatarColor: "bg-blue-500"}}
-                  size="sm"
-                  showPositions={true}
-                  className="shadow-md transition-shadow duration-200 hover:shadow-lg"
-                  style={{ borderColor: '#3b82f6', color: '#1d4ed8' }}
-                />
-              </div>
-              <div className="relative">
+              <>
+                <div className="relative">
+                  <input 
+                    type="checkbox" 
+                    className="absolute top-2 right-2 w-4 h-4 text-blue-600 bg-white border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                  />
+                  <PlayerBox 
+                    player={{...samplePlayers[0], displayName: "Sarah J", positionPreferences: ["WA", "C"], avatarColor: "bg-blue-500"}}
+                    size="sm"
+                    showPositions={true}
+                    className="shadow-md transition-shadow duration-200 hover:shadow-lg"
+                    style={{ borderColor: '#3b82f6', color: '#1d4ed8' }}
+                  />
+                </div>
+                <div className="relative">
                 <input 
                   type="checkbox" 
                   checked
@@ -55,3 +56,4 @@
                   style={{ borderColor: '#ec4899', color: '#be185d' }}
                 />
               </div>
+              </>
