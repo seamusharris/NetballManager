@@ -129,21 +129,26 @@ export function LineupTab({ game, players, rosters, onRosterUpdate }: LineupTabP
   }, [playerAvailability, players]);
 
   const generateLineupRecommendations = (availablePlayers: Player[]) => {
-    const newRecommendations: LineupRecommendation[] = [];
+    try {
+      const newRecommendations: LineupRecommendation[] = [];
 
-    // Position-optimized lineup
-    const positionOptimized = generatePositionOptimizedLineup(availablePlayers);
-    if (positionOptimized) newRecommendations.push(positionOptimized);
+      // Position-optimized lineup
+      const positionOptimized = generatePositionOptimizedLineup(availablePlayers);
+      if (positionOptimized) newRecommendations.push(positionOptimized);
 
-    // Experience-based lineup
-    const experienceBased = generateExperienceBasedLineup(availablePlayers);
-    if (experienceBased) newRecommendations.push(experienceBased);
+      // Experience-based lineup
+      const experienceBased = generateExperienceBasedLineup(availablePlayers);
+      if (experienceBased) newRecommendations.push(experienceBased);
 
-    // Balanced lineup
-    const balanced = generateBalancedLineup(availablePlayers);
-    if (balanced) newRecommendations.push(balanced);
+      // Balanced lineup
+      const balanced = generateBalancedLineup(availablePlayers);
+      if (balanced) newRecommendations.push(balanced);
 
-    setRecommendations(newRecommendations.sort((a, b) => b.effectiveness - a.effectiveness));
+      setRecommendations(newRecommendations.sort((a, b) => b.effectiveness - a.effectiveness));
+    } catch (error) {
+      console.error('Error generating lineup recommendations:', error);
+      setRecommendations([]);
+    }
   };
 
   const generatePositionOptimizedLineup = (availablePlayers: Player[]): LineupRecommendation | null => {
@@ -575,6 +580,10 @@ function PlayerAvailabilityCard({
   onStatusChange: (status: 'available' | 'unavailable' | 'maybe') => void;
   onNotesChange: (notes: string) => void;
 }) {
+  if (!player || !availability) {
+    return null;
+  }
+  
   const displayName = player.displayName || `${player.firstName} ${player.lastName}`;
   const isAvailable = availability.status === 'available';
 
@@ -584,9 +593,7 @@ function PlayerAvailabilityCard({
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-3">
             <PlayerAvatar
-              firstName={player.firstName}
-              lastName={player.lastName}
-              avatarColor={player.avatarColor || 'bg-gray-400'}
+              player={player}
               size="sm"
             />
             <div>

@@ -1,4 +1,3 @@
-
 // Helper functions to convert Tailwind class to hex and generate dynamic colors using CSS functions
 export const getPlayerColorHex = (avatarColor?: string): string => {
   if (!avatarColor) return '#6b7280'; // gray-500 fallback
