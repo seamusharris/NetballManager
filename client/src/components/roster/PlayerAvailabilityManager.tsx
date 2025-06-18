@@ -396,8 +396,8 @@ export default function PlayerAvailabilityManager({
                     <div 
                       className="absolute top-1/2 right-3 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2 mr-3 transition-all duration-200"
                       style={{ 
-                        backgroundColor: isSelected ? darkerColorHex : 'transparent', 
-                        border: isSelected ? 'none' : `2px solid ${darkerColorHex}80` 
+                        backgroundColor: isSelected ? playerColorHex : 'transparent', 
+                        border: isSelected ? 'none' : `2px solid ${playerColorHex}80` 
                       }}
                       onClick={() => {
                         const newData = { ...availabilityData, [player.id]: !isSelected };
@@ -413,7 +413,7 @@ export default function PlayerAvailabilityManager({
                       hasSelect={true}
                       className="shadow-md transition-all duration-200 hover:shadow-lg cursor-pointer"
                       style={{ 
-                        backgroundColor: isSelected ? '#ffffff' : `${playerColorHex}15`,
+                        backgroundColor: isSelected ? `${playerColorHex}25` : `${playerColorHex}15`,
                         borderColor: playerColorHex,
                         color: darkerColorHex
                       }}
