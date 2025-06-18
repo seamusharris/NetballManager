@@ -157,14 +157,22 @@ export default function SharedPlayerAvailability({
               <div 
                 key={player.id}
                 className={cn(
-                  "p-4 border rounded-lg shadow-sm transition-all",
+                  "p-4 border rounded-lg shadow-md transition-all duration-200 hover:shadow-lg cursor-pointer",
                   isAvailable 
-                    ? "border-2 shadow" 
-                    : "opacity-75 border border-gray-200"
+                    ? "border-2" 
+                    : "border border-gray-200"
                 )}
                 style={{
                   borderColor: getPlayerColorHex(playerColor),
                   backgroundColor: isAvailable ? getMediumColorHex(playerColor) : getLighterColorHex(playerColor)
+                }}
+                onClick={() => {
+                  if (!isSaving) {
+                    handlePlayerAvailabilityChange(
+                      player.id, 
+                      isAvailable ? 'unavailable' : 'available'
+                    );
+                  }
                 }}
               >
                 <div className="flex justify-between items-center">
@@ -194,14 +202,7 @@ export default function SharedPlayerAvailability({
                         backgroundColor: isAvailable ? getPlayerColorHex(playerColor) : 'transparent', 
                         border: isAvailable ? 'none' : `2px solid ${getPlayerColorHex(playerColor)}80` 
                       }}
-                      onClick={() => {
-                        if (!isSaving) {
-                          handlePlayerAvailabilityChange(
-                            player.id, 
-                            isAvailable ? 'unavailable' : 'available'
-                          );
-                        }
-                      }}
+                      
                     >
                       {isAvailable && '✓'}
                     </div>
