@@ -27,7 +27,7 @@ export default function Layout({ children }: LayoutProps) {
   }, []);
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex h-screen overflow-hidden w-full max-w-full">
       {/* Overlay to close sidebar when clicking outside on tablet/mobile */}
       {isMobileOpen && isTablet && (
         <div 
@@ -38,7 +38,7 @@ export default function Layout({ children }: LayoutProps) {
 
       <Sidebar isMobileOpen={isMobileOpen} setIsMobileOpen={setIsMobileOpen} isTablet={isTablet} />
 
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden w-full max-w-full">
         <Header setIsMobileOpen={setIsMobileOpen} isTablet={isTablet} />
 
         <main className={cn(
