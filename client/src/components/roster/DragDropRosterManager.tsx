@@ -45,56 +45,6 @@ interface DragDropRosterManagerProps {
 
 const NETBALL_POSITIONS = ['GS', 'GA', 'WA', 'C', 'WD', 'GD', 'GK'];
 
-// Enhanced Player Card Component
-const PlayerCard = ({ 
-  player, 
-  showPositions = true, 
-  size = "md", 
-  className = "",
-  isDragging = false,
-  isCompatible = true,
-  isAssigned = false
-}: {
-  player: Player,
-  showPositions?: boolean,
-  size?: "sm" | "md",
-  className?: string,
-  isDragging?: boolean,
-  isCompatible?: boolean,
-  isAssigned?: boolean
-}) => {
-  const avatarSize = size === "sm" ? "h-8 w-8" : "h-10 w-10";
-  const cardSize = size === "sm" ? "p-2" : "p-3";
-
-  return (
-    <div className={`
-      ${cardSize} rounded-lg border-2 transition-all duration-200
-      ${isDragging ? 'opacity-50 scale-95 border-blue-400 bg-blue-50' : ''}
-      ${isCompatible ? 'border-green-200 hover:border-green-300' : 'border-red-200 hover:border-red-300'}
-      ${isAssigned ? 'bg-gray-50 border-gray-300' : 'bg-white hover:shadow-md'}
-      ${className}
-    `}>
-      <div className="flex flex-col items-center space-y-1">
-        <Avatar className={avatarSize}>
-          <AvatarFallback className={`${player.avatarColor || 'bg-gray-400'} text-white text-xs font-semibold`}>
-            {player.displayName.split(' ').map(n => n[0]).join('')}
-          </AvatarFallback>
-        </Avatar>
-        <div className="text-sm font-medium text-center">{player.displayName}</div>
-        {showPositions && (
-          <div className="flex flex-wrap gap-1 justify-center">
-            {player.positionPreferences.map(pos => (
-              <Badge key={pos} variant="secondary" className="text-xs px-1 py-0">
-                {pos}
-              </Badge>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
-
 // Enhanced Position Slot Component
 const PositionSlot = ({ 
   position, 
@@ -146,11 +96,11 @@ const PositionSlot = ({
           draggable
           onDragStart={() => onDragStart(player.id)}
         >
-          <PlayerCard 
+          <PlayerBox 
             player={player}
             showPositions={false}
             size="sm"
-            isAssigned={true}
+            className="transition-all duration-200"
           />
         </div>
       ) : (

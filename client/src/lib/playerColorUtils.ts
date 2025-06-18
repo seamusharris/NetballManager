@@ -1,5 +1,5 @@
 
-// Helper functions to convert Tailwind class to hex for dynamic styling
+// Helper functions to convert Tailwind class to hex and generate dynamic colors using CSS functions
 export const getPlayerColorHex = (avatarColor?: string): string => {
   if (!avatarColor) return '#6b7280'; // gray-500 fallback
 
@@ -27,29 +27,20 @@ export const getPlayerColorHex = (avatarColor?: string): string => {
   return colorMap[avatarColor] || '#6b7280';
 };
 
+// Generate darker color using CSS color-mix function
 export const getDarkerColorHex = (avatarColor?: string): string => {
-  if (!avatarColor) return '#374151'; // gray-700 fallback
+  const baseColor = getPlayerColorHex(avatarColor);
+  return `color-mix(in srgb, ${baseColor} 70%, black 30%)`;
+};
 
-  const darkerColorMap: Record<string, string> = {
-    'bg-red-500': '#b91c1c', 'bg-red-600': '#991b1b', 'bg-red-700': '#7f1d1d',
-    'bg-orange-500': '#c2410c', 'bg-orange-600': '#9a3412', 'bg-orange-700': '#7c2d12',
-    'bg-amber-500': '#b45309', 'bg-amber-600': '#92400e', 'bg-amber-700': '#78350f',
-    'bg-yellow-500': '#a16207', 'bg-yellow-600': '#854d0e', 'bg-yellow-700': '#713f12',
-    'bg-lime-500': '#4d7c0f', 'bg-lime-600': '#365314', 'bg-lime-700': '#1a2e05',
-    'bg-green-500': '#15803d', 'bg-green-600': '#166534', 'bg-green-700': '#14532d',
-    'bg-emerald-500': '#047857', 'bg-emerald-600': '#065f46', 'bg-emerald-700': '#064e3b',
-    'bg-teal-500': '#0f766e', 'bg-teal-600': '#0d9488', 'bg-teal-700': '#134e4a',
-    'bg-cyan-500': '#0e7490', 'bg-cyan-600': '#0891b2', 'bg-cyan-700': '#155e75',
-    'bg-sky-500': '#0369a1', 'bg-sky-600': '#0284c7', 'bg-sky-700': '#0c4a6e',
-    'bg-blue-500': '#1d4ed8', 'bg-blue-600': '#1e40af', 'bg-blue-700': '#1e3a8a',
-    'bg-indigo-500': '#4338ca', 'bg-indigo-600': '#3730a3', 'bg-indigo-700': '#312e81',
-    'bg-violet-500': '#6d28d9', 'bg-violet-600': '#5b21b6', 'bg-violet-700': '#4c1d95',
-    'bg-purple-500': '#7e22ce', 'bg-purple-600': '#6b21a8', 'bg-purple-700': '#581c87',
-    'bg-fuchsia-500': '#a21caf', 'bg-fuchsia-600': '#86198f', 'bg-fuchsia-700': '#701a75',
-    'bg-pink-500': '#be185d', 'bg-pink-600': '#9d174d', 'bg-pink-700': '#831843',
-    'bg-rose-500': '#be123c', 'bg-rose-600': '#9f1239', 'bg-rose-700': '#881337',
-    'bg-gray-500': '#374151', 'bg-gray-600': '#1f2937', 'bg-gray-700': '#111827'
-  };
+// Generate lighter color using CSS color-mix function  
+export const getLighterColorHex = (avatarColor?: string): string => {
+  const baseColor = getPlayerColorHex(avatarColor);
+  return `color-mix(in srgb, ${baseColor} 15%, white 85%)`;
+};
 
-  return darkerColorMap[avatarColor] || '#374151';
+// Generate medium opacity color for backgrounds
+export const getMediumOpacityColorHex = (avatarColor?: string): string => {
+  const baseColor = getPlayerColorHex(avatarColor);
+  return `color-mix(in srgb, ${baseColor} 25%, white 75%)`;
 };

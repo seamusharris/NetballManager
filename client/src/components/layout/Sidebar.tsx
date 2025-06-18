@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'wouter';
 import { cn } from '@/lib/utils';
+import { useNextGame } from '@/hooks/use-next-game';
 import { 
   X, Menu, Home, Users, ClipboardList, Calendar, CalendarRange, 
   BarChart, Database, SettingsIcon, Zap, Trophy, Building2, Target
 } from 'lucide-react';
 import { TEAM_NAME } from '@/lib/settings';
 import { useClub } from '@/contexts/ClubContext';
-import { useNextGame } from '@/hooks/use-next-game';
 
 interface SidebarProps {
   isMobileOpen: boolean;
@@ -52,7 +52,7 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen, isTablet }: Sid
         icon: <Calendar className="w-5 h-5" /> 
       },
       { 
-        path: `/roster`, 
+        path: nextGame ? `/roster/${nextGame.id}` : `/roster`,
         label: 'Roster', 
         icon: <ClipboardList className="w-5 h-5" /> 
       },

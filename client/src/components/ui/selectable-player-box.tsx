@@ -1,7 +1,6 @@
-
 import { Player } from '@shared/schema';
 import { PlayerBox } from '@/components/ui/player-box';
-import { getPlayerColorHex, getDarkerColorHex } from '@/lib/playerColorUtils';
+import { getPlayerColorHex, getDarkerColorHex, getLighterColorHex, getMediumOpacityColorHex } from '@/lib/playerColorUtils';
 
 interface SelectablePlayerBoxProps {
   player: Player;
@@ -23,16 +22,18 @@ export function SelectablePlayerBox({
   style = {}
 }: SelectablePlayerBoxProps) {
   const playerColorHex = getPlayerColorHex(player.avatarColor);
-  const darkerColorHex = getDarkerColorHex(player.avatarColor);
+  const darkerBorderColor = getDarkerColorHex(player.avatarColor);
+  const lightBackgroundColor = getLighterColorHex(player.avatarColor);
+  const mediumBackgroundColor = getMediumOpacityColorHex(player.avatarColor);
 
   const handleClick = () => {
     onSelectionChange(player.id, !isSelected);
   };
 
   const mergedStyle = {
-    backgroundColor: isSelected ? `${playerColorHex}25` : `${playerColorHex}15`,
+    backgroundColor: isSelected ? mediumBackgroundColor : lightBackgroundColor,
     borderColor: playerColorHex,
-    color: darkerColorHex,
+    color: darkerBorderColor,
     ...style
   };
 

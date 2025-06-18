@@ -332,7 +332,7 @@ export default function PlayerAvailabilityManager({
               .sort((a, b) => (a.displayName || '').localeCompare(b.displayName || ''))
               .map(player => {
                 const isSelected = availabilityData[player.id] === true;
-                
+
                 return (
                   <SelectablePlayerBox
                     key={player.id}
