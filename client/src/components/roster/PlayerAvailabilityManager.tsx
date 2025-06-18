@@ -142,7 +142,7 @@ export default function PlayerAvailabilityManager({
 
     if (availabilityResponse && Array.isArray(availabilityResponse.availablePlayerIds) && availabilityResponse.availablePlayerIds.length > 0) {
       console.log('PlayerAvailabilityManager: Converting API response to availability data');
-      
+
       // Convert from API format (availablePlayerIds array) to boolean format
       const teamPlayerIds = teamPlayers.map(p => p.id);
       const filteredAvailableIds = availabilityResponse.availablePlayerIds.filter(id => teamPlayerIds.includes(id));
@@ -193,7 +193,7 @@ export default function PlayerAvailabilityManager({
         await apiClient.post(`/api/games/${gameId}/availability`, {
           availablePlayerIds
         });
-        
+
         toast({
           title: "Availability updated",
           description: "Player availability saved successfully.",
@@ -354,9 +354,9 @@ export default function PlayerAvailabilityManager({
                       hasSelect={true}
                       className="shadow-md transition-all duration-200 hover:shadow-lg cursor-pointer"
                       style={{ 
-                        backgroundColor: isSelected ? '#16a34a25' : undefined,
-                        borderColor: isSelected ? '#16a34a' : undefined,
-                        color: isSelected ? '#158044' : undefined
+                        backgroundColor: isSelected ? '#16a34a25' : '#ffffff',
+                        borderColor: '#16a34a',
+                        color: '#15803d'
                       }}
                       onClick={() => {
                         const newData = { ...availabilityData, [player.id]: !isSelected };
