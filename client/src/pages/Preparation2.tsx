@@ -87,24 +87,25 @@ export default function Preparation2() {
   const [historicalPerformance, setHistoricalPerformance] = useState<HistoricalPerformance | null>(null);
   const [previousGames, setPreviousGames] = useState<any[]>([]);
 
-  // Load upcoming games
+  // Load upcoming games for the current team
   const { data: upcomingGames = [], isLoading: loadingGames } = useStandardQuery({
-    queryKey: ['games', currentClubId, currentTeamId],
     endpoint: '/api/games',
-    params: { clubId: currentClubId, teamId: currentTeamId }
+    dependencies: [currentTeamId || 'no-team'],
+    enabled: !!currentTeamId
   });
 
   // Load all players for the team
   const { data: allPlayers = [], isLoading: loadingPlayers } = useStandardQuery({
-    queryKey: ['team-players', currentTeamId],
-    endpoint: `/api/teams/${currentTeamId}/players`
+    endpoint: `/api/teams/${currentTeamId}/players`,
+    dependencies: [currentTeamId || 'no-team'],
+    enabled: !!currentTeamId
   });
 
   // Load completed games for historical analysis
   const { data: completedGames = [], isLoading: loadingHistory } = useStandardQuery({
-    queryKey: ['completed-games', currentClubId, currentTeamId],
     endpoint: '/api/games',
-    params: { clubId: currentClubId, teamId: currentTeamId, completed: true }
+    dependencies: [currentTeamId || 'no-team', 'completed'],
+    enabled: !!currentTeamId
   });
 
   // Get next upcoming game
@@ -321,9 +322,8 @@ export default function Preparation2() {
       const player = allPlayers.find((p: any) => p.displayName === playerName);
       return {
         quarter: 1,
-        position: position,
+        position: position as 'GK' | 'GD' | 'WD' | 'C' | 'WA' | 'GA' | 'GS',
         playerId: player ? player.id : null,
-        playerName: playerName,
       };
     });
   };
@@ -578,10 +578,17 @@ export default function Preparation2() {
 
           {/* Lineup Management Tab */}
           <TabsContent value="lineup">
-            {selectedGameId && (
+            {selectedGameId && selectedGame && (
               <DragDropRosterManager
-                gameId={selectedGameId}
-                players={allPlayers}
+                availablePlayers={allPlayers}
+                gameInfo={{
+                  opponent: opponent,
+                  date: selectedGame.date,
+                  time: selectedGame.time
+                }}
+                onRosterChange={(roster) => {
+                  console.log('Roster changed:', roster);
+                }}
               />
             )}
           </TabsContent>
