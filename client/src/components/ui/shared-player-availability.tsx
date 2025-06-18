@@ -157,7 +157,7 @@ export default function SharedPlayerAvailability({
                 )}
                 style={{
                   borderColor: isAvailable ? getPlayerColorHex(playerColor) : '',
-                  backgroundColor: isAvailable ? getLighterColorHex(playerColor) : ''
+                  backgroundColor: isAvailable ? getPlayerColorHex(playerColor) : getLighterColorHex(playerColor)
                 }}
               >
                 <div className="flex justify-between items-center">
