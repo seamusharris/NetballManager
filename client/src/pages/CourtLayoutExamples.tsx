@@ -5,7 +5,7 @@ import PageTemplate from '@/components/layout/PageTemplate';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { CourtDisplay } from '@/components/ui/court-display';
+import CourtDisplay from '@/components/ui/court-display';
 import { CourtView } from '@/components/roster/CourtView';
 import { BalancedCourtView } from '@/components/roster/BalancedCourtView';
 import { 

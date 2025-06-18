@@ -20,7 +20,7 @@ import { useToast } from '@/hooks/use-toast';
 import { formatShortDate } from '@/lib/utils';
 import PlayerAvailabilityManager from '@/components/roster/PlayerAvailabilityManager';
 import DragDropRosterManager from '@/components/roster/DragDropRosterManager';
-import { CourtDisplay } from '@/components/ui/court-display';
+import CourtDisplay from '@/components/ui/court-display';
 
 interface GameRecommendation {
   id: string;

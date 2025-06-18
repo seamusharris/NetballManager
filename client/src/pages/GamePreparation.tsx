@@ -21,7 +21,7 @@ import PageTemplate from '@/components/layout/PageTemplate';
 import TeamPositionAnalysis from '@/components/dashboard/TeamPositionAnalysis';
 import PlayerPerformance from '@/components/dashboard/PlayerPerformance';
 import OpponentPreparation from '@/pages/OpponentPreparation';
-import { CourtDisplay } from '@/components/ui/court-display';
+import CourtDisplay from '@/components/ui/court-display';
 import DragDropRosterManager from '@/components/roster/DragDropRosterManager';
 import PlayerAvailabilityManager from '@/components/roster/PlayerAvailabilityManager';
 import { AnalysisTab } from '@/components/game-preparation/AnalysisTab';
