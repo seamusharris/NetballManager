@@ -10,7 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useDataLoader } from '@/hooks/use-data-loader';
 import { apiClient } from '@/lib/apiClient';
 import { useQueryClient } from '@tanstack/react-query';
-import UnifiedPlayerAvailability from '@/components/ui/unified-player-availability';
+import { PlayerBox } from '@/components/ui/player-box';
 
 interface PlayerAvailabilityManagerProps {
   gameId: number;
@@ -176,8 +176,8 @@ export default function PlayerAvailabilityManager({
     }
   }, [availabilityResponse, isLoading, availabilityError, teamPlayers, gameId, isLoadingTeamPlayers]);
 
-  // Handle availability change from shared component
-  const handleAvailabilityChange = (newAvailabilityData: Record<number, boolean>) => {
+  // Handle availability change with auto-save
+  const handleAvailabilityChange = async (newAvailabilityData: Record<number, boolean>) => {
     setAvailabilityData(newAvailabilityData);
 
     // Convert back to array format for parent component
@@ -186,6 +186,27 @@ export default function PlayerAvailabilityManager({
       .map(([playerId, _]) => parseInt(playerId));
 
     onAvailabilityChange?.(availablePlayerIds);
+
+    // Auto-save if gameId is provided
+    if (gameId) {
+      try {
+        await apiClient.post(`/api/games/${gameId}/availability`, {
+          availablePlayerIds
+        });
+        
+        toast({
+          title: "Availability updated",
+          description: "Player availability saved successfully.",
+        });
+      } catch (error) {
+        console.error("Failed to save player availability:", error);
+        toast({
+          variant: "destructive",
+          title: "Error saving availability",
+          description: "Failed to save player availability. Please try again.",
+        });
+      }
+    }
   };
 
   // Early return if no gameId
@@ -272,16 +293,81 @@ export default function PlayerAvailabilityManager({
       </CardHeader>
 
       <CardContent>
-        <UnifiedPlayerAvailability
-          players={teamPlayers}
-          availabilityData={availabilityData}
-          onAvailabilityChange={handleAvailabilityChange}
-          title=""
-          showQuickActions={true}
-          gameId={gameId}
-          variant="detailed"
-          autoSave={true}
-        />
+        <div className="space-y-4">
+          {/* Quick Actions */}
+          <div className="flex justify-between items-center">
+            <div className="flex space-x-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => {
+                  const newData: Record<number, boolean> = {};
+                  teamPlayers.forEach(player => {
+                    newData[player.id] = true;
+                  });
+                  handleAvailabilityChange(newData);
+                }}
+              >
+                Select All
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => {
+                  const newData: Record<number, boolean> = {};
+                  teamPlayers.forEach(player => {
+                    newData[player.id] = false;
+                  });
+                  handleAvailabilityChange(newData);
+                }}
+              >
+                Clear All
+              </Button>
+            </div>
+          </div>
+
+          {/* Player Selection Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {teamPlayers
+              .sort((a, b) => (a.displayName || '').localeCompare(b.displayName || ''))
+              .map(player => {
+                const isSelected = availabilityData[player.id] === true;
+                return (
+                  <div key={player.id} className="relative">
+                    <div 
+                      className="absolute top-1/2 right-3 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2 mr-3 transition-all duration-200"
+                      style={{ 
+                        backgroundColor: isSelected ? '#16a34a' : 'transparent', 
+                        border: isSelected ? 'none' : '2px solid #16a34a80' 
+                      }}
+                      onClick={() => {
+                        const newData = { ...availabilityData, [player.id]: !isSelected };
+                        handleAvailabilityChange(newData);
+                      }}
+                    >
+                      {isSelected && '✓'}
+                    </div>
+                    <PlayerBox 
+                      player={player}
+                      size="md"
+                      showPositions={true}
+                      hasSelect={true}
+                      className="shadow-md transition-all duration-200 hover:shadow-lg cursor-pointer"
+                      style={{ 
+                        backgroundColor: isSelected ? '#16a34a25' : undefined,
+                        borderColor: isSelected ? '#16a34a' : undefined,
+                        color: isSelected ? '#158044' : undefined
+                      }}
+                      onClick={() => {
+                        const newData = { ...availabilityData, [player.id]: !isSelected };
+                        handleAvailabilityChange(newData);
+                      }}
+                    />
+                  </div>
+                );
+              })}
+          </div>
+        </div>
       </CardContent>
     </Card>
   );
