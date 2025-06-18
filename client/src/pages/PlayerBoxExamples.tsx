@@ -4,7 +4,7 @@ import PageTemplate from '@/components/layout/PageTemplate';
 import { PlayerBox } from '@/components/ui/player-box';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Edit, Trash2, UserPlus, Award } from 'lucide-react';
+import { Edit, Trash2, UserPlus, Award, Printer } from 'lucide-react';
 
 export default function PlayerBoxExamples() {
   const samplePlayers = [
@@ -76,6 +76,10 @@ export default function PlayerBoxExamples() {
     });
   };
 
+  const handlePrint = () => {
+    window.print();
+  };
+
   return (
     <PageTemplate 
       title="PlayerBox Examples" 
@@ -83,10 +87,81 @@ export default function PlayerBoxExamples() {
         { label: "Component Examples", href: "/component-examples" },
         { label: "PlayerBox Examples" }
       ]}
+      actions={
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={handlePrint}
+          className="no-print flex items-center gap-2"
+        >
+          <Printer className="h-4 w-4" />
+          Print Examples
+        </Button>
+      }
     >
       <Helmet>
         <title>PlayerBox Examples - Component Library</title>
         <meta name="description" content="Explore different variations and configurations of the PlayerBox component for netball team management applications." />
+        <style type="text/css">{`
+          @media print {
+            .no-print {
+              display: none !important;
+            }
+            
+            body {
+              font-size: 12px;
+              line-height: 1.3;
+            }
+            
+            .prose {
+              max-width: none !important;
+            }
+            
+            /* Ensure grids stack properly in print */
+            .grid {
+              break-inside: avoid;
+              page-break-inside: avoid;
+            }
+            
+            /* Reduce spacing for print */
+            .space-y-8 > * + * {
+              margin-top: 1rem !important;
+            }
+            
+            .space-y-6 > * + * {
+              margin-top: 0.75rem !important;
+            }
+            
+            .space-y-4 > * + * {
+              margin-top: 0.5rem !important;
+            }
+            
+            /* Ensure sections don't break across pages */
+            section {
+              break-inside: avoid;
+              page-break-inside: avoid;
+            }
+            
+            /* Optimize card shadows for print */
+            .shadow-md, .shadow-lg {
+              box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1) !important;
+            }
+            
+            /* Ensure colors print well */
+            .bg-white {
+              background-color: white !important;
+            }
+            
+            /* Make text more readable in print */
+            .text-gray-700 {
+              color: #374151 !important;
+            }
+            
+            .text-gray-600 {
+              color: #4b5563 !important;
+            }
+          }
+        `}</style>
       </Helmet>
 
       <div className="prose max-w-none mb-6">
