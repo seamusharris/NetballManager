@@ -31,9 +31,9 @@ export function SelectablePlayerBox({
   };
 
   const mergedStyle = {
-    backgroundColor: isSelected ? '#ffffff' : `${playerColorHex}15`,
-    borderColor: isSelected ? playerColorHex : darkerTextColor,
-    color: isSelected ? darkerTextColor : playerColorHex,
+    backgroundColor: isSelected ? mediumBackgroundColor : lightBackgroundColor,
+    borderColor: darkerTextColor,
+    color: darkerTextColor,
     ...style
   };
 
