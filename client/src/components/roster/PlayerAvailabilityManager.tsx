@@ -332,13 +332,72 @@ export default function PlayerAvailabilityManager({
               .sort((a, b) => (a.displayName || '').localeCompare(b.displayName || ''))
               .map(player => {
                 const isSelected = availabilityData[player.id] === true;
+                
+                // Helper function to convert Tailwind class to hex for dynamic styling
+                const getPlayerColorHex = (avatarColor?: string): string => {
+                  if (!avatarColor) return '#6b7280'; // gray-500 fallback
+
+                  const colorMap: Record<string, string> = {
+                    'bg-red-500': '#ef4444', 'bg-red-600': '#dc2626', 'bg-red-700': '#b91c1c',
+                    'bg-orange-500': '#f97316', 'bg-orange-600': '#ea580c', 'bg-orange-700': '#c2410c',
+                    'bg-amber-500': '#f59e0b', 'bg-amber-600': '#d97706', 'bg-amber-700': '#b45309',
+                    'bg-yellow-500': '#eab308', 'bg-yellow-600': '#ca8a04', 'bg-yellow-700': '#a16207',
+                    'bg-lime-500': '#84cc16', 'bg-lime-600': '#65a30d', 'bg-lime-700': '#4d7c0f',
+                    'bg-green-500': '#22c55e', 'bg-green-600': '#16a34a', 'bg-green-700': '#15803d',
+                    'bg-emerald-500': '#10b981', 'bg-emerald-600': '#059669', 'bg-emerald-700': '#047857',
+                    'bg-teal-500': '#14b8a6', 'bg-teal-600': '#0d9488', 'bg-teal-700': '#0f766e',
+                    'bg-cyan-500': '#06b6d4', 'bg-cyan-600': '#0891b2', 'bg-cyan-700': '#0e7490',
+                    'bg-sky-500': '#0ea5e9', 'bg-sky-600': '#0284c7', 'bg-sky-700': '#0369a1',
+                    'bg-blue-500': '#3b82f6', 'bg-blue-600': '#2563eb', 'bg-blue-700': '#1d4ed8',
+                    'bg-indigo-500': '#6366f1', 'bg-indigo-600': '#4f46e5', 'bg-indigo-700': '#4338ca',
+                    'bg-violet-500': '#8b5cf6', 'bg-violet-600': '#7c3aed', 'bg-violet-700': '#6d28d9',
+                    'bg-purple-500': '#a855f7', 'bg-purple-600': '#9333ea', 'bg-purple-700': '#7e22ce',
+                    'bg-fuchsia-500': '#d946ef', 'bg-fuchsia-600': '#c026d3', 'bg-fuchsia-700': '#a21caf',
+                    'bg-pink-500': '#ec4899', 'bg-pink-600': '#db2777', 'bg-pink-700': '#be185d',
+                    'bg-rose-500': '#f43f5e', 'bg-rose-600': '#e11d48', 'bg-rose-700': '#be123c',
+                    'bg-gray-500': '#6b7280', 'bg-gray-600': '#4b5563', 'bg-gray-700': '#374151'
+                  };
+
+                  return colorMap[avatarColor] || '#6b7280';
+                };
+
+                const getDarkerColorHex = (avatarColor?: string): string => {
+                  if (!avatarColor) return '#374151'; // gray-700 fallback
+
+                  const darkerColorMap: Record<string, string> = {
+                    'bg-red-500': '#b91c1c', 'bg-red-600': '#991b1b', 'bg-red-700': '#7f1d1d',
+                    'bg-orange-500': '#c2410c', 'bg-orange-600': '#9a3412', 'bg-orange-700': '#7c2d12',
+                    'bg-amber-500': '#b45309', 'bg-amber-600': '#92400e', 'bg-amber-700': '#78350f',
+                    'bg-yellow-500': '#a16207', 'bg-yellow-600': '#854d0e', 'bg-yellow-700': '#713f12',
+                    'bg-lime-500': '#4d7c0f', 'bg-lime-600': '#365314', 'bg-lime-700': '#1a2e05',
+                    'bg-green-500': '#15803d', 'bg-green-600': '#166534', 'bg-green-700': '#14532d',
+                    'bg-emerald-500': '#047857', 'bg-emerald-600': '#065f46', 'bg-emerald-700': '#064e3b',
+                    'bg-teal-500': '#0f766e', 'bg-teal-600': '#0d9488', 'bg-teal-700': '#134e4a',
+                    'bg-cyan-500': '#0e7490', 'bg-cyan-600': '#0891b2', 'bg-cyan-700': '#155e75',
+                    'bg-sky-500': '#0369a1', 'bg-sky-600': '#0284c7', 'bg-sky-700': '#0c4a6e',
+                    'bg-blue-500': '#1d4ed8', 'bg-blue-600': '#1e40af', 'bg-blue-700': '#1e3a8a',
+                    'bg-indigo-500': '#4338ca', 'bg-indigo-600': '#3730a3', 'bg-indigo-700': '#312e81',
+                    'bg-violet-500': '#6d28d9', 'bg-violet-600': '#5b21b6', 'bg-violet-700': '#4c1d95',
+                    'bg-purple-500': '#7e22ce', 'bg-purple-600': '#6b21a8', 'bg-purple-700': '#581c87',
+                    'bg-fuchsia-500': '#a21caf', 'bg-fuchsia-600': '#86198f', 'bg-fuchsia-700': '#701a75',
+                    'bg-pink-500': '#be185d', 'bg-pink-600': '#9d174d', 'bg-pink-700': '#831843',
+                    'bg-rose-500': '#be123c', 'bg-rose-600': '#9f1239', 'bg-rose-700': '#881337',
+                    'bg-gray-500': '#374151', 'bg-gray-600': '#1f2937', 'bg-gray-700': '#111827'
+                  };
+
+                  return darkerColorMap[avatarColor] || '#374151';
+                };
+
+                const playerColorHex = getPlayerColorHex(player.avatarColor);
+                const darkerColorHex = getDarkerColorHex(player.avatarColor);
+                
                 return (
                   <div key={player.id} className="relative">
                     <div 
                       className="absolute top-1/2 right-3 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2 mr-3 transition-all duration-200"
                       style={{ 
-                        backgroundColor: isSelected ? '#16a34a' : 'transparent', 
-                        border: isSelected ? 'none' : '2px solid #16a34a80' 
+                        backgroundColor: isSelected ? darkerColorHex : 'transparent', 
+                        border: isSelected ? 'none' : `2px solid ${darkerColorHex}80` 
                       }}
                       onClick={() => {
                         const newData = { ...availabilityData, [player.id]: !isSelected };
@@ -353,6 +412,11 @@ export default function PlayerAvailabilityManager({
                       showPositions={true}
                       hasSelect={true}
                       className="shadow-md transition-all duration-200 hover:shadow-lg cursor-pointer"
+                      style={{ 
+                        backgroundColor: isSelected ? '#ffffff' : `${playerColorHex}15`,
+                        borderColor: playerColorHex,
+                        color: darkerColorHex
+                      }}
                       onClick={() => {
                         const newData = { ...availabilityData, [player.id]: !isSelected };
                         handleAvailabilityChange(newData);
