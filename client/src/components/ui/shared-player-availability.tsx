@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
@@ -106,7 +105,7 @@ export default function SharedPlayerAvailability({
         title: "Error updating availability",
         description: "Failed to update player availability. Please try again.",
       });
-      
+
       // Revert optimistic update on error
       onAvailabilityChange(availabilityData);
     } finally {

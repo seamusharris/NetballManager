@@ -24,6 +24,7 @@ export function LineupTab({ game, players, rosters, onRosterUpdate }: LineupTabP
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [localRosters, setLocalRosters] = useState<Roster[]>(rosters);
   const [activeSubTab, setActiveSubTab] = useState('availability');
+  const [availabilityData, setAvailabilityData] = useState<Record<number, 'available' | 'unavailable' | 'maybe'>>({});
 
   // Track changes to rosters
   useEffect(() => {
@@ -67,9 +68,8 @@ export function LineupTab({ game, players, rosters, onRosterUpdate }: LineupTabP
     setLocalRosters(updatedRosters);
   };
 
-  const handleAvailabilityChange = (playerId: number, available: boolean) => {
-    // Handle availability changes if needed
-    console.log(`Player ${playerId} availability: ${available}`);
+  const handleAvailabilityChange = (newAvailabilityData: Record<number, 'available' | 'unavailable' | 'maybe'>) => {
+    setAvailabilityData(newAvailabilityData);
   };
 
   return (
@@ -137,6 +137,7 @@ export function LineupTab({ game, players, rosters, onRosterUpdate }: LineupTabP
               <SharedPlayerAvailability
                 gameId={game.id}
                 players={players}
+                availabilityData={availabilityData}
                 onAvailabilityChange={handleAvailabilityChange}
               />
             </CardContent>
