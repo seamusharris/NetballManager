@@ -87,24 +87,17 @@ export default function Preparation2() {
   const [historicalPerformance, setHistoricalPerformance] = useState<HistoricalPerformance | null>(null);
   const [previousGames, setPreviousGames] = useState<any[]>([]);
 
-  // Load upcoming games for the current team
+  // Load upcoming games for the current team (API automatically filters by team context)
   const { data: upcomingGames = [], isLoading: loadingGames } = useStandardQuery({
     endpoint: '/api/games',
-    dependencies: [currentTeamId || 'no-team'],
+    dependencies: [currentTeamId],
     enabled: !!currentTeamId
   });
 
   // Load all players for the team
   const { data: allPlayers = [], isLoading: loadingPlayers } = useStandardQuery({
     endpoint: `/api/teams/${currentTeamId}/players`,
-    dependencies: [currentTeamId || 'no-team'],
-    enabled: !!currentTeamId
-  });
-
-  // Load completed games for historical analysis
-  const { data: completedGames = [], isLoading: loadingHistory } = useStandardQuery({
-    endpoint: '/api/games',
-    dependencies: [currentTeamId || 'no-team', 'completed'],
+    dependencies: [currentTeamId],
     enabled: !!currentTeamId
   });
 
