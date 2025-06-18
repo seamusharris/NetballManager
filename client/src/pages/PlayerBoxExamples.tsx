@@ -619,33 +619,7 @@ export default function PlayerBoxExamples() {
           </div>
         </div>
 
-         {/* Shadow Comparison Examples */}
-        <div className="mb-6">
-          <h3 className="text-lg font-medium mb-4 text-gray-800">Shadow Comparison: Mismatched vs Properly Proportioned</h3>
-          <div className="space-y-4">
-            <div>
-              <h4 className="text-sm font-medium mb-2 text-gray-700">❌ Mismatched Shadow (Too Big for Box)</h4>
-              <div className="w-64 p-3 bg-blue-50 border-2 border-blue-300 rounded-lg shadow-2xl">
-                <p className="text-sm text-blue-800">Small box with oversized shadow creates visual imbalance</p>
-              </div>
-            </div>
-            <div>
-              <h4 className="text-sm font-medium mb-2 text-gray-700">✅ Properly Proportioned Shadow</h4>
-              <PlayerBox
-                player={{...samplePlayers[0], displayName: "Emma Wilson", avatarColor: "bg-blue-500"}}
-                size="md"
-                showPositions={true}
-                className="w-64 shadow-md transition-shadow duration-200 hover:shadow-lg"
-                style={{ 
-                  borderColor: '#3b82f6',
-                  color: '#1d4ed8'
-                }}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Subtle Hover Animation Examples */}
+         {/* Subtle Hover Animation Examples */}
         <div className="mb-6">
           <h3 className="text-lg font-medium mb-4 text-gray-800">Subtle Hover Animation Examples</h3>
           <div className="space-y-4">
@@ -685,60 +659,7 @@ export default function PlayerBoxExamples() {
                 />
               </div>
             </div>
-            <div>
-              <h4 className="text-sm font-medium mb-2 text-gray-700">Gentle Elevation - Shadow Change Only</h4>
-              <p className="text-sm text-gray-600 mb-2">For display-only items or less interactive elements</p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <PlayerBox
-                  player={{...samplePlayers[2], displayName: "Lily Chen", avatarColor: "bg-purple-500"}}
-                  size="md"
-                  showPositions={true}
-                  className="shadow-md transition-shadow duration-200 hover:shadow-lg"
-                  style={{ 
-                    borderColor: '#a855f7',
-                    color: '#7e22ce'
-                  }}
-                />
-                <PlayerBox
-                  player={{...samplePlayers[0], displayName: "Emma Wilson", avatarColor: "bg-blue-500"}}
-                  size="md"
-                  showPositions={true}
-                  className="shadow-md transition-shadow duration-200 hover:shadow-lg"
-                  style={{ 
-                    borderColor: '#3b82f6',
-                    color: '#1d4ed8'
-                  }}
-                />
-              </div>
-            </div>
-            <div>
-              <h4 className="text-sm font-medium mb-2 text-gray-700">Brightness Adjustment - Avatar Enhancement</h4>
-              <p className="text-sm text-gray-600 mb-2">Background darkens while avatar brightens for visual interest</p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="transition-all duration-300 cursor-pointer hover:brightness-90 [&:hover_.player-avatar]:brightness-[1.11]">
-                  <PlayerBox
-                    player={{...samplePlayers[1], displayName: "Sarah Johnson", avatarColor: "bg-green-600"}}
-                    size="md"
-                    showPositions={true}
-                    style={{ 
-                      borderColor: '#16a34a',
-                      color: '#15803d'
-                    }}
-                  />
-                </div>
-                <div className="transition-all duration-300 cursor-pointer hover:brightness-90 [&:hover_.player-avatar]:brightness-[1.11]">
-                  <PlayerBox
-                    player={{...samplePlayers[3], displayName: "Mia Thompson", avatarColor: "bg-orange-500"}}
-                    size="md"
-                    showPositions={true}
-                    style={{ 
-                      borderColor: '#f97316',
-                      color: '#ea580c'
-                    }}
-                  />
-                </div>
-              </div>
-            </div>
+            
           </div>
         </div>
 
@@ -1207,80 +1128,6 @@ export default function PlayerBoxExamples() {
                       color: '#dc2626'
                     }}
                     onClick={() => togglePlayerSelection(74)}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Mixed Selection States with Darker Select Borders */}
-            <div>
-              <h4 className="text-sm font-medium mb-2 text-gray-700">Mixed Selection States with Darker Select Box Borders</h4>
-              <p className="text-sm text-gray-600 mb-3">Select boxes use darker border colors that match the PlayerBox outer border</p>
-              <div className="space-y-3">
-                <div className="relative">
-                  <div 
-                    className="absolute top-1/2 right-3 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2 mr-3 transition-all duration-200"
-                    style={{ backgroundColor: selectedPlayers.has(80) ? '#14b8a6' : 'transparent', border: selectedPlayers.has(80) ? 'none' : '2px solid #0d9488' }}
-                    onClick={() => togglePlayerSelection(80)}
-                  >
-                    {selectedPlayers.has(80) && '✓'}
-                  </div>
-                  <PlayerBox 
-                    player={{id: 80, displayName: "Teal Dark Border", positionPreferences: ["GA", "GS"], avatarColor: "bg-teal-500"}}
-                    size="md"
-                    showPositions={true}
-                    hasSelect={true}
-                    className="shadow-md transition-all duration-200 hover:shadow-lg cursor-pointer"
-                    style={{ 
-                      backgroundColor: selectedPlayers.has(80) ? '#ffffff' : '#14b8a615',
-                      borderColor: '#0d9488',
-                      color: '#0d9488'
-                    }}
-                    onClick={() => togglePlayerSelection(80)}
-                  />
-                </div>
-                <div className="relative">
-                  <div 
-                    className="absolute top-1/2 right-3 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2 mr-3 transition-all duration-200"
-                    style={{ backgroundColor: selectedPlayers.has(81) ? '#6366f1' : 'transparent', border: selectedPlayers.has(81) ? 'none' : '2px solid #4338ca' }}
-                    onClick={() => togglePlayerSelection(81)}
-                  >
-                    {selectedPlayers.has(81) && '✓'}
-                  </div>
-                  <PlayerBox 
-                    player={{id: 81, displayName: "Indigo Dark Border", positionPreferences: ["C", "WA"], avatarColor: "bg-indigo-500"}}
-                    size="md"
-                    showPositions={true}
-                    hasSelect={true}
-                    className="shadow-md transition-all duration-200 hover:shadow-lg cursor-pointer"
-                    style={{ 
-                      backgroundColor: selectedPlayers.has(81) ? '#ffffff' : '#6366f115',
-                      borderColor: '#4338ca',
-                      color: '#4338ca'
-                    }}
-                    onClick={() => togglePlayerSelection(81)}
-                  />
-                </div>
-                <div className="relative">
-                  <div 
-                    className="absolute top-1/2 right-3 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2 mr-3 transition-all duration-200"
-                    style={{ backgroundColor: selectedPlayers.has(82) ? '#ec4899' : 'transparent', border: selectedPlayers.has(82) ? 'none' : '2px solid #be185d' }}
-                    onClick={() => togglePlayerSelection(82)}
-                  >
-                    {selectedPlayers.has(82) && '✓'}
-                  </div>
-                  <PlayerBox 
-                    player={{id: 82, displayName: "Pink Dark Border", positionPreferences: ["GK", "GD"], avatarColor: "bg-pink-500"}}
-                    size="md"
-                    showPositions={true}
-                    hasSelect={true}
-                    className="shadow-md transition-all duration-200 hover:shadow-lg cursor-pointer"
-                    style={{ 
-                      backgroundColor: selectedPlayers.has(82) ? '#ffffff' : '#ec489915',
-                      borderColor: '#be185d',
-                      color: '#be185d'
-                    }}
-                    onClick={() => togglePlayerSelection(82)}
                   />
                 </div>
               </div>
