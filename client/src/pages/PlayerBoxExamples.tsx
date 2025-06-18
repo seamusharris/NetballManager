@@ -300,51 +300,51 @@ export default function PlayerBoxExamples() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
                 <PlayerBox 
                   player={{id: 40, displayName: "Alexandria M", avatarColor: "bg-cyan-500"}}
-                  size="ms"
+                  size="sm"
                   showPositions={false}
-                  className="hover:shadow-lg transition-shadow duration-200"
+                  className="hover:shadow-lg transition-shadow duration-200 min-h-[4rem]"
                   style={{ borderColor: '#06b6d4', color: '#0891b2' }}
                 />
                 <PlayerBox 
                   player={{id: 41, displayName: "Bella Katherine", avatarColor: "bg-teal-500"}}
-                  size="ms"
+                  size="sm"
                   showPositions={false}
-                  className="hover:shadow-lg transition-shadow duration-200"
+                  className="hover:shadow-lg transition-shadow duration-200 min-h-[4rem]"
                   style={{ borderColor: '#14b8a6', color: '#0d9488' }}
                 />
                 <PlayerBox 
                   player={{id: 42, displayName: "Charlotte-Rose D", avatarColor: "bg-amber-500"}}
-                  size="ms"
+                  size="sm"
                   showPositions={false}
-                  className="hover:shadow-lg transition-shadow duration-200"
+                  className="hover:shadow-lg transition-shadow duration-200 min-h-[4rem]"
                   style={{ borderColor: '#f59e0b', color: '#d97706' }}
                 />
                 <PlayerBox 
                   player={{id: 43, displayName: "Daisy-Mae H", avatarColor: "bg-emerald-500"}}
-                  size="ms"
+                  size="sm"
                   showPositions={false}
-                  className="hover:shadow-lg transition-shadow duration-200"
+                  className="hover:shadow-lg transition-shadow duration-200 min-h-[4rem]"
                   style={{ borderColor: '#10b981', color: '#059669' }}
                 />
                 <PlayerBox 
                   player={{id: 44, displayName: "Elizabeth S", avatarColor: "bg-violet-500"}}
-                  size="ms"
+                  size="sm"
                   showPositions={false}
-                  className="hover:shadow-lg transition-shadow duration-200"
+                  className="hover:shadow-lg transition-shadow duration-200 min-h-[4rem]"
                   style={{ borderColor: '#8b5cf6', color: '#7c3aed' }}
                 />
                 <PlayerBox 
                   player={{id: 45, displayName: "Francesca-Belle", avatarColor: "bg-rose-500"}}
-                  size="ms"
+                  size="sm"
                   showPositions={false}
-                  className="hover:shadow-lg transition-shadow duration-200"
+                  className="hover:shadow-lg transition-shadow duration-200 min-h-[4rem]"
                   style={{ borderColor: '#f43f5e', color: '#e11d48' }}
                 />
                 <PlayerBox 
                   player={{id: 46, displayName: "Gabriella W", avatarColor: "bg-slate-500"}}
-                  size="ms"
+                  size="sm"
                   showPositions={false}
-                  className="hover:shadow-lg transition-shadow duration-200"
+                  className="hover:shadow-lg transition-shadow duration-200 min-h-[4rem]"
                   style={{ borderColor: '#64748b', color: '#475569' }}
                 />
               </div>
@@ -358,49 +358,49 @@ export default function PlayerBoxExamples() {
                   player={{id: 8, displayName: "Amy L", avatarColor: "bg-cyan-500"}}
                   size="sm"
                   showPositions={false}
-                  className="hover:shadow-lg transition-shadow duration-200"
+                  className="hover:shadow-lg transition-shadow duration-200 min-h-[4rem]"
                   style={{ borderColor: '#06b6d4', color: '#0891b2' }}
                 />
                 <PlayerBox 
                   player={{id: 9, displayName: "Bella K", avatarColor: "bg-teal-500"}}
                   size="sm"
                   showPositions={false}
-                  className="hover:shadow-lg transition-shadow duration-200"
+                  className="hover:shadow-lg transition-shadow duration-200 min-h-[4rem]"
                   style={{ borderColor: '#14b8a6', color: '#0d9488' }}
                 />
                 <PlayerBox 
                   player={{id: 10, displayName: "Chloe D", avatarColor: "bg-amber-500"}}
                   size="sm"
                   showPositions={false}
-                  className="hover:shadow-lg transition-shadow duration-200"
+                  className="hover:shadow-lg transition-shadow duration-200 min-h-[4rem]"
                   style={{ borderColor: '#f59e0b', color: '#d97706' }}
                 />
                 <PlayerBox 
                   player={{id: 11, displayName: "Daisy H", avatarColor: "bg-emerald-500"}}
                   size="sm"
                   showPositions={false}
-                  className="hover:shadow-lg transition-shadow duration-200"
+                  className="hover:shadow-lg transition-shadow duration-200 min-h-[4rem]"
                   style={{ borderColor: '#10b981', color: '#059669' }}
                 />
                 <PlayerBox 
                   player={{id: 12, displayName: "Ella S", avatarColor: "bg-violet-500"}}
                   size="sm"
                   showPositions={false}
-                  className="hover:shadow-lg transition-shadow duration-200"
+                  className="hover:shadow-lg transition-shadow duration-200 min-h-[4rem]"
                   style={{ borderColor: '#8b5cf6', color: '#7c3aed' }}
                 />
                 <PlayerBox 
                   player={{id: 13, displayName: "Fiona B", avatarColor: "bg-rose-500"}}
                   size="sm"
                   showPositions={false}
-                  className="hover:shadow-lg transition-shadow duration-200"
+                  className="hover:shadow-lg transition-shadow duration-200 min-h-[4rem]"
                   style={{ borderColor: '#f43f5e', color: '#e11d48' }}
                 />
                 <PlayerBox 
                   player={{id: 14, displayName: "Grace W", avatarColor: "bg-slate-500"}}
                   size="sm"
                   showPositions={false}
-                  className="hover:shadow-lg transition-shadow duration-200"
+                  className="hover:shadow-lg transition-shadow duration-200 min-h-[4rem]"
                   style={{ borderColor: '#64748b', color: '#475569' }}
                 />
               </div>
@@ -414,56 +414,56 @@ export default function PlayerBoxExamples() {
                   player={{id: 15, displayName: "Holly", positionPreferences: ["GS"], avatarColor: "bg-blue-500"}}
                   size="sm"
                   showPositions={true}
-                  className="hover:shadow-md transition-shadow duration-200"
+                  className="hover:shadow-md transition-shadow duration-200 min-h-[4rem]"
                   style={{ borderColor: '#3b82f6', color: '#1d4ed8' }}
                 />
                 <PlayerBox 
                   player={{id: 16, displayName: "Ivy", positionPreferences: ["GA"], avatarColor: "bg-green-500"}}
                   size="sm"
                   showPositions={true}
-                  className="hover:shadow-md transition-shadow duration-200"
+                  className="hover:shadow-md transition-shadow duration-200 min-h-[4rem]"
                   style={{ borderColor: '#22c55e', color: '#15803d' }}
                 />
                 <PlayerBox 
                   player={{id: 17, displayName: "Jade", positionPreferences: ["WA"], avatarColor: "bg-yellow-500"}}
                   size="sm"
                   showPositions={true}
-                  className="hover:shadow-md transition-shadow duration-200"
+                  className="hover:shadow-md transition-shadow duration-200 min-h-[4rem]"
                   style={{ borderColor: '#eab308', color: '#a16207' }}
                 />
                 <PlayerBox 
                   player={{id: 18, displayName: "Kelly", positionPreferences: ["C"], avatarColor: "bg-orange-500"}}
                   size="sm"
                   showPositions={true}
-                  className="hover:shadow-md transition-shadow duration-200"
+                  className="hover:shadow-md transition-shadow duration-200 min-h-[4rem]"
                   style={{ borderColor: '#f97316', color: '#ea580c' }}
                 />
                 <PlayerBox 
                   player={{id: 19, displayName: "Lucy", positionPreferences: ["WD"], avatarColor: "bg-red-500"}}
                   size="sm"
                   showPositions={true}
-                  className="hover:shadow-md transition-shadow duration-200"
+                  className="hover:shadow-md transition-shadow duration-200 min-h-[4rem]"
                   style={{ borderColor: '#ef4444', color: '#dc2626' }}
                 />
                 <PlayerBox 
                   player={{id: 20, displayName: "Maya", positionPreferences: ["GD"], avatarColor: "bg-purple-500"}}
                   size="sm"
                   showPositions={true}
-                  className="hover:shadow-md transition-shadow duration-200"
+                  className="hover:shadow-md transition-shadow duration-200 min-h-[4rem]"
                   style={{ borderColor: '#a855f7', color: '#7e22ce' }}
                 />
                 <PlayerBox 
                   player={{id: 21, displayName: "Nina", positionPreferences: ["GK"], avatarColor: "bg-pink-500"}}
                   size="sm"
                   showPositions={true}
-                  className="hover:shadow-md transition-shadow duration-200"
+                  className="hover:shadow-md transition-shadow duration-200 min-h-[4rem]"
                   style={{ borderColor: '#ec4899', color: '#be185d' }}
                 />
                 <PlayerBox 
                   player={{id: 22, displayName: "Olive", avatarColor: "bg-indigo-500"}}
                   size="sm"
                   showPositions={false}
-                  className="hover:shadow-md transition-shadow duration-200"
+                  className="hover:shadow-md transition-shadow duration-200 min-h-[4rem]"
                   style={{ borderColor: '#6366f1', color: '#4338ca' }}
                 />
               </div>
