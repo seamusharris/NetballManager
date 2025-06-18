@@ -431,7 +431,7 @@ export default function GamePreparation() {
                             const avgScore = Math.floor(Math.random() * 15) + 8; // Mock data
                             const opponentAvg = Math.floor(Math.random() * 15) + 8;
                             const performance = avgScore > opponentAvg ? 'good' : avgScore === opponentAvg ? 'neutral' : 'poor';
-                            
+
                             return (
                               <div key={quarter} className="text-center p-4 rounded-lg border-2 border-dashed border-gray-200 hover:border-blue-300 transition-colors">
                                 <div className="text-lg font-bold text-gray-600 mb-2">Q{quarter}</div>
@@ -463,7 +463,7 @@ export default function GamePreparation() {
                             );
                           })}
                         </div>
-                        
+
                         {/* Performance Trend Chart */}
                         <div className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg">
                           <h4 className="font-semibold mb-3 text-gray-800">Performance Trend</h4>
@@ -482,7 +482,7 @@ export default function GamePreparation() {
                             })}
                           </div>
                         </div>
-                        
+
                         <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div className="p-3 bg-green-50 rounded-lg border border-green-200">
                             <div className="flex items-center gap-2 mb-1">
@@ -642,16 +642,26 @@ export default function GamePreparation() {
             </div>
           </TabsContent>
 
-          <TabsContent value="lineup" className="space-y-6">
-          <LineupTab
-            gameId={gameId!}
-            teamId={currentTeamId!}
-            players={players}
-            historicalLineups={[]}
-            playerAvailability={[]}
-            recommendedLineups={[]}
-          />
-        </TabsContent>
+          {/* Lineup Tab */}
+          <TabsContent value="lineup">
+            {game && players ? (
+              <LineupTab
+                gameId={gameId!}
+                teamId={currentTeamId!}
+                players={players}
+                historicalLineups={[]}
+                playerAvailability={[]}
+                recommendedLineups={[]}
+              />
+            ) : (
+              <div className="flex items-center justify-center p-8">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
+                  <p className="text-muted-foreground">Loading game data...</p>
+                </div>
+              </div>
+            )}
+          </TabsContent>
 
           {/* Strategy Tab */}
           <TabsContent value="strategy" className="space-y-6">
