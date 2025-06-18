@@ -42,7 +42,7 @@ export const getMediumColorHex = (avatarColor?: string): string => {
 // Generate darker color for text/borders (matches interactive example)
 export const getDarkerColorHex = (avatarColor?: string): string => {
   const baseColor = getPlayerColorHex(avatarColor);
-  return `color-mix(in srgb, ${baseColor} 70%, black 30%)`;
+  return `color-mix(in srgb, ${baseColor} 85%, black 15%)`;
 };
 
 // Generate much darker color for enhanced contrast
