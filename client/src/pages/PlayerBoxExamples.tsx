@@ -208,11 +208,12 @@ export default function PlayerBoxExamples() {
               player={{...samplePlayers[3], displayName: "Mia Thompson", avatarColor: "bg-orange-500"}}
               size="md"
               showPositions={true}
-              className="shadow-lg transition-all duration-200 hover:shadow-xl hover:scale-[1.02]"
+              className="shadow-lg"
               style={{ 
                 borderColor: '#f97316',
                 color: '#ea580c'
               }}
+              onClick={() => {}}
             />
 
             {/* Red Court Position */}
@@ -220,11 +221,12 @@ export default function PlayerBoxExamples() {
               player={{...samplePlayers[4], displayName: "Zoe Parker", avatarColor: "bg-red-500"}}
               size="md"
               showPositions={true}
-              className="shadow-lg transition-all duration-200 hover:shadow-xl hover:scale-[1.02]"
+              className="shadow-lg"
               style={{ 
                 borderColor: '#ef4444',
                 color: '#dc2626'
               }}
+              onClick={() => {}}
             />
 
             {/* Teal Court Position */}
@@ -232,11 +234,12 @@ export default function PlayerBoxExamples() {
               player={{...samplePlayers[0], displayName: "Emma Wilson", avatarColor: "bg-teal-500"}}
               size="md"
               showPositions={true}
-              className="shadow-lg transition-all duration-200 hover:shadow-xl hover:scale-[1.02]"
+              className="shadow-lg"
               style={{ 
                 borderColor: '#14b8a6',
                 color: '#0d9488'
               }}
+              onClick={() => {}}
             />
           </div>
         </div>
@@ -256,8 +259,9 @@ export default function PlayerBoxExamples() {
                   player={{...samplePlayers[1], displayName: "Sarah J", positionPreferences: ["C", "WA"], avatarColor: "bg-green-600"}}
                   size="sm"
                   showPositions={true}
-                  className="shadow-md transition-all duration-200 hover:shadow-lg hover:scale-[1.02] cursor-pointer"
+                  className="shadow-md"
                   style={{ borderColor: '#16a34a', color: '#15803d' }}
+                  onClick={() => {}}
                 />
                 <PlayerBox 
                   player={{...samplePlayers[2], displayName: "Lily C", positionPreferences: ["GK", "GD"], avatarColor: "bg-purple-500", active: true}}
