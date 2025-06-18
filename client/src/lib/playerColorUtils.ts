@@ -27,16 +27,16 @@ export const getPlayerColorHex = (avatarColor?: string): string => {
   return colorMap[avatarColor] || '#6b7280';
 };
 
-// Generate very light background color (matches ~15% opacity)
+// Generate very light background color (matches Interactive Example 1 unselected)
 export const getLighterColorHex = (avatarColor?: string): string => {
   const baseColor = getPlayerColorHex(avatarColor);
-  return `color-mix(in srgb, ${baseColor} 15%, white 85%)`;
+  return `color-mix(in srgb, ${baseColor} 8%, white 92%)`;
 };
 
-// Generate medium background color (matches ~25% opacity)
+// Generate medium background color (matches Interactive Example 1 selected)
 export const getMediumColorHex = (avatarColor?: string): string => {
   const baseColor = getPlayerColorHex(avatarColor);
-  return `color-mix(in srgb, ${baseColor} 25%, white 75%)`;
+  return `color-mix(in srgb, ${baseColor} 15%, white 85%)`;
 };
 
 // Generate darker color for text/borders (matches interactive example)
