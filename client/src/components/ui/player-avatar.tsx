@@ -19,6 +19,10 @@ export default function PlayerAvatar({
   showBorder = false,
   useStandardStyling = true // Default to true for consistent styling
 }: PlayerAvatarProps) {
+  if (!player) {
+    return null;
+  }
+
   return (
     <div
       className={cn(
