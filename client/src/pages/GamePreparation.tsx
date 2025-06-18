@@ -24,6 +24,8 @@ import OpponentPreparation from '@/pages/OpponentPreparation';
 import { CourtDisplay } from '@/components/ui/court-display';
 import DragDropRosterManager from '@/components/roster/DragDropRosterManager';
 import PlayerAvailabilityManager from '@/components/roster/PlayerAvailabilityManager';
+import { AnalysisTab } from '@/components/game-preparation/AnalysisTab';
+import LineupTab from '@/components/game-preparation/LineupTab';
 
 type Tab = 'overview' | 'analysis' | 'lineup' | 'strategy';
 
@@ -93,30 +95,30 @@ export default function GamePreparation() {
     queryKey: ['historicalGames', currentTeamId, game?.awayTeamId || game?.homeTeamId],
     queryFn: async () => {
       if (!game || !currentTeamId) return [];
-      
+
       // Get all games for the current team using existing API
       const headers: Record<string, string> = {};
       if (currentTeamId) {
         headers['x-current-team-id'] = currentTeamId.toString();
       }
       const allGames = await apiClient.get('/api/games', headers);
-      
+
       // Determine the opponent team ID
       const opponentTeamId = game.homeTeamId === currentTeamId ? game.awayTeamId : game.homeTeamId;
-      
+
       // Filter for completed games against this specific opponent
       const historicalMatches = allGames.filter((g: any) => {
         // Skip the current game
         if (g.id === game.id) return false;
-        
+
         // Only include completed games
         if (!g.statusIsCompleted) return false;
-        
+
         // Check if this game was against the same opponent team ID
         const gameOpponentId = g.homeTeamId === currentTeamId ? g.awayTeamId : g.homeTeamId;
         return gameOpponentId === opponentTeamId;
       });
-      
+
       console.log(`Historical games against opponent team ${opponentTeamId}:`, historicalMatches);
       return historicalMatches;
     },
@@ -506,127 +508,16 @@ export default function GamePreparation() {
             </div>
           </TabsContent>
 
-          {/* Lineup Tab */}
           <TabsContent value="lineup" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-              {/* Player Availability */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Users className="h-5 w-5" />
-                    Player Availability
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {gameId && (
-                    <PlayerAvailabilityManager
-                      gameId={gameId}
-                      players={players}
-                      games={[game]}
-                      onAvailabilityStateChange={setPlayerAvailability}
-                    />
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Recommended Lineups */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Star className="h-5 w-5" />
-                    Recommended Lineups
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="font-medium">Balanced Formation</span>
-                      <Badge variant="outline">85% win rate</Badge>
-                    </div>
-                    <p className="text-xs text-gray-600">
-                      Strong all-around performance based on player stats
-                    </p>
-                  </div>
-                  <div className="p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="font-medium">Defensive Focus</span>
-                      <Badge variant="outline">78% win rate</Badge>
-                    </div>
-                    <p className="text-xs text-gray-600">
-                      Optimized for strong defensive pressure
-                    </p>
-                  </div>
-                  <div className="p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="font-medium">High Scoring</span>
-                      <Badge variant="outline">82% win rate</Badge>
-                    </div>
-                    <p className="text-xs text-gray-600">
-                      Maximizes offensive potential
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Current Lineup */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Target className="h-5 w-5" />
-                    Current Lineup
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {['GK', 'GD', 'WD', 'C', 'WA', 'GA', 'GS'].map(position => (
-                      <div key={position} className="flex justify-between items-center p-2 border rounded">
-                        <span className="font-medium">{position}</span>
-                        <span className="text-sm text-gray-600">
-                          {selectedLineup[position] ? 
-                            players.find((p: any) => p.id === selectedLineup[position])?.displayName || 'Unknown' 
-                            : 'Not assigned'
-                          }
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                  <Button className="w-full mt-4" variant="outline">
-                    Auto-Fill Best Lineup
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Full Roster Manager */}
-            {gameId && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Complete Roster Management</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <DragDropRosterManager
-                    availablePlayers={players.filter((player: any) => 
-                      player.active && (playerAvailability[player.id] !== false)
-                    )}
-                    gameInfo={{
-                      opponent: opponent,
-                      date: game.date,
-                      time: game.time
-                    }}
-                    gameId={gameId}
-                    onRosterChange={() => {}}
-                    onRosterSaved={() => {
-                      toast({
-                        title: "Success",
-                        description: "Roster saved successfully!"
-                      });
-                    }}
-                  />
-                </CardContent>
-              </Card>
-            )}
-          </TabsContent>
+          <LineupTab
+            gameId={gameId!}
+            teamId={currentTeamId!}
+            players={players}
+            historicalLineups={[]}
+            playerAvailability={[]}
+            recommendedLineups={[]}
+          />
+        </TabsContent>
 
           {/* Strategy Tab */}
           <TabsContent value="strategy" className="space-y-6">
