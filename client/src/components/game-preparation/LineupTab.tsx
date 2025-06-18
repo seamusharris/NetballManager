@@ -7,8 +7,6 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Switch } from '@/components/ui/switch';
-import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { 
   Users, Target, Layout, Save, RotateCcw, Zap, 
@@ -18,7 +16,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { apiClient } from '@/lib/apiClient';
 import CourtDisplay from '@/components/ui/court-display';
-import PlayerAvatar from '@/components/ui/player-avatar';
+import SharedPlayerAvailability from '@/components/ui/shared-player-availability';
 import type { Game, Player, Roster } from '@shared/schema';
 
 interface LineupTabProps {
@@ -28,14 +26,8 @@ interface LineupTabProps {
   onRosterUpdate: (rosters: Roster[]) => void;
 }
 
-interface PlayerAvailability {
-  playerId: number;
-  status: 'available' | 'unavailable' | 'maybe';
-  notes?: string;
-  positions: string[];
-  lastUpdated: string;
-  updatedBy: string;
-}
+// Using shared availability format (boolean-based)
+type PlayerAvailabilityData = Record<number, 'available' | 'unavailable' | 'maybe'>;
 
 interface LineupRecommendation {
   id: string;
@@ -52,11 +44,7 @@ const POSITIONS = ['GS', 'GA', 'WA', 'C', 'WD', 'GD', 'GK'];
 
 export function LineupTab({ game, players, rosters, onRosterUpdate }: LineupTabProps) {
   const [activeStep, setActiveStep] = useState<'availability' | 'recommendations' | 'builder' | 'assignments'>('availability');
-  const [playerAvailability, setPlayerAvailability] = useState<Record<number, PlayerAvailability>>({});
-  const [statusFilter, setStatusFilter] = useState<'all' | 'available' | 'unavailable' | 'maybe'>('all');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isSaving, setIsSaving] = useState(false);
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [playerAvailability, setPlayerAvailability] = useState<PlayerAvailabilityData>({});
   const [recommendations, setRecommendations] = useState<LineupRecommendation[]>([]);
   const [selectedLineup, setSelectedLineup] = useState<Record<string, number | null>>({});
   const [confidenceFilter, setConfidenceFilter] = useState<'all' | 'high' | 'medium' | 'low'>('all');
@@ -68,46 +56,25 @@ export function LineupTab({ game, players, rosters, onRosterUpdate }: LineupTabP
       try {
         const response = await apiClient.get(`/api/games/${game.id}/availability`);
         if (response?.availablePlayerIds) {
-          const initialData: Record<number, PlayerAvailability> = {};
+          const initialData: PlayerAvailabilityData = {};
           players.forEach(player => {
-            initialData[player.id] = {
-              playerId: player.id,
-              status: response.availablePlayerIds.includes(player.id) ? 'available' : 'unavailable',
-              notes: '',
-              positions: player.positionPreferences || [],
-              lastUpdated: new Date().toISOString(),
-              updatedBy: 'Current User'
-            };
+            initialData[player.id] = response.availablePlayerIds.includes(player.id) ? 'available' : 'unavailable';
           });
           setPlayerAvailability(initialData);
         } else {
           // Default all active players to available
-          const defaultData: Record<number, PlayerAvailability> = {};
+          const defaultData: PlayerAvailabilityData = {};
           players.forEach(player => {
-            defaultData[player.id] = {
-              playerId: player.id,
-              status: player.active !== false ? 'available' : 'unavailable',
-              notes: '',
-              positions: player.positionPreferences || [],
-              lastUpdated: new Date().toISOString(),
-              updatedBy: 'Current User'
-            };
+            defaultData[player.id] = player.active !== false ? 'available' : 'unavailable';
           });
           setPlayerAvailability(defaultData);
         }
       } catch (error) {
         console.error('Failed to load player availability:', error);
         // Default all players to available on error
-        const defaultData: Record<number, PlayerAvailability> = {};
+        const defaultData: PlayerAvailabilityData = {};
         players.forEach(player => {
-          defaultData[player.id] = {
-            playerId: player.id,
-            status: 'available',
-            notes: '',
-            positions: player.positionPreferences || [],
-            lastUpdated: new Date().toISOString(),
-            updatedBy: 'Current User'
-          };
+          defaultData[player.id] = 'available';
         });
         setPlayerAvailability(defaultData);
       }
@@ -120,7 +87,7 @@ export function LineupTab({ game, players, rosters, onRosterUpdate }: LineupTabP
 
   // Generate recommendations when availability changes
   useEffect(() => {
-    const availablePlayers = players.filter(p => playerAvailability[p.id]?.status === 'available');
+    const availablePlayers = players.filter(p => playerAvailability[p.id] === 'available');
     if (availablePlayers.length >= 7) {
       generateLineupRecommendations(availablePlayers);
     } else {
@@ -250,68 +217,8 @@ export function LineupTab({ game, players, rosters, onRosterUpdate }: LineupTabP
     };
   };
 
-  const handleStatusChange = (playerId: number, status: 'available' | 'unavailable' | 'maybe') => {
-    setPlayerAvailability(prev => ({
-      ...prev,
-      [playerId]: {
-        ...prev[playerId],
-        status,
-        lastUpdated: new Date().toISOString()
-      }
-    }));
-    setHasUnsavedChanges(true);
-  };
-
-  const handleNotesChange = (playerId: number, notes: string) => {
-    setPlayerAvailability(prev => ({
-      ...prev,
-      [playerId]: {
-        ...prev[playerId],
-        notes,
-        lastUpdated: new Date().toISOString()
-      }
-    }));
-    setHasUnsavedChanges(true);
-  };
-
-  const handleMarkAllAvailable = () => {
-    const updated = { ...playerAvailability };
-    players.forEach(player => {
-      if (updated[player.id]) {
-        updated[player.id].status = 'available';
-        updated[player.id].lastUpdated = new Date().toISOString();
-      }
-    });
-    setPlayerAvailability(updated);
-    setHasUnsavedChanges(true);
-  };
-
-  const handleSaveAvailability = async () => {
-    setIsSaving(true);
-    try {
-      const availablePlayerIds = Object.entries(playerAvailability)
-        .filter(([_, data]) => data.status === 'available')
-        .map(([playerId, _]) => parseInt(playerId));
-
-      await apiClient.post(`/api/games/${game.id}/availability`, {
-        availablePlayerIds
-      });
-
-      setHasUnsavedChanges(false);
-      toast({
-        title: "Availability saved",
-        description: "Player availability has been updated successfully.",
-      });
-    } catch (error) {
-      console.error('Failed to save availability:', error);
-      toast({
-        variant: "destructive",
-        title: "Error saving availability",
-        description: "Failed to save player availability. Please try again.",
-      });
-    } finally {
-      setIsSaving(false);
-    }
+  const handleAvailabilityChange = (data: PlayerAvailabilityData) => {
+    setPlayerAvailability(data);
   };
 
   const handleApplyRecommendation = (recommendation: LineupRecommendation) => {
@@ -327,17 +234,6 @@ export function LineupTab({ game, players, rosters, onRosterUpdate }: LineupTabP
     });
   };
 
-  // Filter players for availability section
-  const filteredPlayers = players.filter(player => {
-    const availability = playerAvailability[player.id];
-    const matchesStatus = statusFilter === 'all' || availability?.status === statusFilter;
-    const matchesSearch = searchQuery === '' || 
-      player.displayName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      `${player.firstName} ${player.lastName}`.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    return matchesStatus && matchesSearch;
-  });
-
   // Filter recommendations
   const filteredRecommendations = recommendations.filter(rec => {
     return confidenceFilter === 'all' || 
@@ -346,7 +242,7 @@ export function LineupTab({ game, players, rosters, onRosterUpdate }: LineupTabP
       (confidenceFilter === 'low' && rec.confidence < 60);
   });
 
-  const availableCount = Object.values(playerAvailability).filter(data => data.status === 'available').length;
+  const availableCount = Object.values(playerAvailability).filter(status => status === 'available').length;
   const canProceed = availableCount >= 7;
 
   return (
@@ -380,19 +276,7 @@ export function LineupTab({ game, players, rosters, onRosterUpdate }: LineupTabP
         </Badge>
       </div>
 
-      {/* Unsaved Changes Alert */}
-      {hasUnsavedChanges && (
-        <Alert className="border-amber-200 bg-amber-50">
-          <Save className="h-4 w-4" />
-          <AlertDescription className="flex items-center justify-between">
-            <span>You have unsaved availability changes</span>
-            <Button size="sm" onClick={handleSaveAvailability} disabled={isSaving}>
-              <Save className="h-3 w-3 mr-1" />
-              Save Changes
-            </Button>
-          </AlertDescription>
-        </Alert>
-      )}
+      
 
       <Tabs value={activeStep} onValueChange={(value) => setActiveStep(value as any)} className="w-full">
         <TabsList className="grid w-full grid-cols-3">
@@ -412,88 +296,26 @@ export function LineupTab({ game, players, rosters, onRosterUpdate }: LineupTabP
 
         {/* Player Availability Tab */}
         <TabsContent value="availability" className="space-y-6">
-          <Card>
-            <CardHeader className="pb-4">
-              <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5" />
-                  Player Availability for {game.homeTeamName} vs {game.awayTeamName}
-                </CardTitle>
-                <div className="flex space-x-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={handleMarkAllAvailable}
-                    disabled={isSaving}
-                  >
-                    <Zap className="h-4 w-4 mr-1" />
-                    Mark All Available
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    onClick={handleSaveAvailability}
-                    disabled={isSaving || !hasUnsavedChanges}
-                  >
-                    <Save className="h-4 w-4 mr-1" />
-                    Save Availability
-                  </Button>
-                </div>
-              </div>
-              
-              {/* Filters */}
-              <div className="flex gap-4 mt-4">
-                <Select value={statusFilter} onValueChange={(value: any) => setStatusFilter(value)}>
-                  <SelectTrigger className="w-48">
-                    <SelectValue placeholder="Filter by status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Players</SelectItem>
-                    <SelectItem value="available">Available</SelectItem>
-                    <SelectItem value="unavailable">Unavailable</SelectItem>
-                    <SelectItem value="maybe">Maybe</SelectItem>
-                  </SelectContent>
-                </Select>
-                <div className="relative flex-1 max-w-sm">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                  <Input
-                    placeholder="Search players..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2 mt-2">
-                <Badge variant="outline">{availableCount}</Badge>
-                <span className="text-sm text-gray-600">Available Players</span>
-                {!canProceed && (
-                  <Badge variant="destructive" className="ml-2">
-                    Need {7 - availableCount} more players
-                  </Badge>
-                )}
-              </div>
-            </CardHeader>
-
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredPlayers.map(player => {
-                  const availability = playerAvailability[player.id];
-                  if (!availability) return null;
-
-                  return (
-                    <PlayerAvailabilityCard
-                      key={player.id}
-                      player={player}
-                      availability={availability}
-                      onStatusChange={(status) => handleStatusChange(player.id, status)}
-                      onNotesChange={(notes) => handleNotesChange(player.id, notes)}
-                    />
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
+          <div className="mb-4">
+            {!canProceed && (
+              <Alert className="border-amber-200 bg-amber-50">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  Need at least 7 available players to generate lineup recommendations. Currently have {availableCount} available.
+                </AlertDescription>
+              </Alert>
+            )}
+          </div>
+          
+          <SharedPlayerAvailability
+            players={players}
+            availabilityData={playerAvailability}
+            onAvailabilityChange={handleAvailabilityChange}
+            title={`Player Availability for ${game.homeTeamName} vs ${game.awayTeamName}`}
+            showQuickActions={true}
+            gameId={game.id}
+            variant="detailed"
+          />
         </TabsContent>
 
         {/* Recommendations Tab */}
@@ -568,92 +390,7 @@ export function LineupTab({ game, players, rosters, onRosterUpdate }: LineupTabP
   );
 }
 
-// Player Availability Card Component
-function PlayerAvailabilityCard({ 
-  player, 
-  availability, 
-  onStatusChange, 
-  onNotesChange 
-}: {
-  player: Player;
-  availability: PlayerAvailability;
-  onStatusChange: (status: 'available' | 'unavailable' | 'maybe') => void;
-  onNotesChange: (notes: string) => void;
-}) {
-  if (!player || !availability) {
-    return null;
-  }
-  
-  const displayName = player.displayName || `${player.firstName} ${player.lastName}`;
-  const isAvailable = availability.status === 'available';
 
-  return (
-    <Card className={`transition-all ${isAvailable ? 'border-green-200 bg-green-50' : 'border-gray-200'}`}>
-      <CardContent className="p-4">
-        <div className="flex items-start justify-between mb-3">
-          <div className="flex items-center gap-3">
-            <PlayerAvatar
-              player={player}
-              size="sm"
-            />
-            <div>
-              <div className="font-medium">{displayName}</div>
-              {player.positionPreferences && player.positionPreferences.length > 0 && (
-                <div className="text-xs text-gray-500">
-                  {player.positionPreferences.join(', ')}
-                </div>
-              )}
-            </div>
-          </div>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger>
-                <Badge variant={
-                  availability.status === 'available' ? 'default' :
-                  availability.status === 'maybe' ? 'secondary' : 'outline'
-                }>
-                  {availability.status}
-                </Badge>
-              </TooltipTrigger>
-              <TooltipContent>
-                Last updated: {new Date(availability.lastUpdated).toLocaleString()}
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
-
-        <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium">Status:</span>
-            <Select 
-              value={availability.status} 
-              onValueChange={(value: 'available' | 'unavailable' | 'maybe') => onStatusChange(value)}
-            >
-              <SelectTrigger className="h-8 text-xs">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="available">Available</SelectItem>
-                <SelectItem value="maybe">Maybe</SelectItem>
-                <SelectItem value="unavailable">Unavailable</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
-            <label className="text-sm font-medium block mb-1">Notes:</label>
-            <Textarea
-              placeholder="Add notes..."
-              value={availability.notes || ''}
-              onChange={(e) => onNotesChange(e.target.value)}
-              className="text-xs h-16 resize-none"
-            />
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
 
 // Recommendation Card Component
 function RecommendationCard({
