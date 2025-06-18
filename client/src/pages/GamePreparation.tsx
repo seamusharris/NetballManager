@@ -92,9 +92,29 @@ export default function GamePreparation() {
   const { data: historicalGames = [], isLoading: loadingHistory } = useQuery({
     queryKey: ['historicalGames', currentTeamId, game?.awayTeamId || game?.homeTeamId],
     queryFn: async () => {
-      if (!game) return [];
+      if (!game || !currentTeamId) return [];
+      
+      // Get all games for the current team
+      const allGames = await apiClient.get(`/api/teams/${currentTeamId}/games`);
+      
+      // Determine the opponent team ID
       const opponentTeamId = game.homeTeamId === currentTeamId ? game.awayTeamId : game.homeTeamId;
-      return apiClient.get(`/api/teams/${currentTeamId}/games?opponent=${opponentTeamId}`);
+      
+      // Filter for completed games against this specific opponent
+      const historicalMatches = allGames.filter((g: any) => {
+        // Skip the current game
+        if (g.id === game.id) return false;
+        
+        // Only include completed games
+        if (!g.statusIsCompleted) return false;
+        
+        // Check if this game was against the same opponent
+        const gameOpponentId = g.homeTeamId === currentTeamId ? g.awayTeamId : g.homeTeamId;
+        return gameOpponentId === opponentTeamId;
+      });
+      
+      console.log(`Historical games against opponent team ${opponentTeamId}:`, historicalMatches);
+      return historicalMatches;
     },
     enabled: !!game && !!currentTeamId
   });
@@ -410,25 +430,34 @@ export default function GamePreparation() {
                     <div className="space-y-4">
                       <div className="text-center p-4 bg-blue-50 rounded-lg">
                         <div className="text-2xl font-bold text-blue-700">
-                          {Math.round((historicalGames.filter((g: any) => g.result === 'win').length / historicalGames.length) * 100)}%
+                          {historicalGames.length}
                         </div>
-                        <div className="text-sm text-blue-600">Win Rate vs {opponent}</div>
+                        <div className="text-sm text-blue-600">Previous Games vs {opponent}</div>
                       </div>
                       <div className="space-y-2">
-                        {historicalGames.slice(0, 3).map((game: any, index: number) => (
+                        {historicalGames.slice(0, 5).map((game: any, index: number) => (
                           <div key={index} className="flex justify-between items-center p-2 bg-gray-50 rounded">
                             <span className="text-sm">{formatShortDate(game.date)}</span>
-                            <Badge variant={game.result === 'win' ? 'default' : 'destructive'}>
-                              {game.finalScore}
-                            </Badge>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-gray-500">Round {game.round}</span>
+                              <Badge variant="outline">{game.statusDisplayName}</Badge>
+                            </div>
                           </div>
                         ))}
                       </div>
+                      {historicalGames.length > 5 && (
+                        <p className="text-xs text-gray-500 text-center">
+                          ...and {historicalGames.length - 5} more games
+                        </p>
+                      )}
                     </div>
                   ) : (
                     <div className="text-center py-8">
                       <AlertCircle className="h-8 w-8 mx-auto text-gray-400 mb-2" />
                       <p className="text-gray-600">No previous matches against {opponent}</p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        This will show completed games against the same opponent team
+                      </p>
                     </div>
                   )}
                 </CardContent>
