@@ -94,8 +94,12 @@ export default function GamePreparation() {
     queryFn: async () => {
       if (!game || !currentTeamId) return [];
       
-      // Get all games for the current team
-      const allGames = await apiClient.get(`/api/teams/${currentTeamId}/games`);
+      // Get all games for the current team using existing API
+      const headers: Record<string, string> = {};
+      if (currentTeamId) {
+        headers['x-current-team-id'] = currentTeamId.toString();
+      }
+      const allGames = await apiClient.get('/api/games', headers);
       
       // Determine the opponent team ID
       const opponentTeamId = game.homeTeamId === currentTeamId ? game.awayTeamId : game.homeTeamId;
@@ -108,7 +112,7 @@ export default function GamePreparation() {
         // Only include completed games
         if (!g.statusIsCompleted) return false;
         
-        // Check if this game was against the same opponent
+        // Check if this game was against the same opponent team ID
         const gameOpponentId = g.homeTeamId === currentTeamId ? g.awayTeamId : g.homeTeamId;
         return gameOpponentId === opponentTeamId;
       });
