@@ -114,7 +114,7 @@ export default function SharedPlayerAvailability({
     }
   };
 
-  const sortedPlayers = [...players].sort((a, b) => {
+  const sortedPlayers = (players || []).filter(player => player).sort((a, b) => {
     const displayNameA = a.displayName || `${a.firstName} ${a.lastName}`;
     const displayNameB = b.displayName || `${b.firstName} ${b.lastName}`;
     return displayNameA.localeCompare(displayNameB);
