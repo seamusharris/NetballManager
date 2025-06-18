@@ -83,7 +83,7 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen, isTablet }: Sid
         label: 'Team Dashboard', 
         icon: <Home className="w-5 h-5" />, 
         disabled: true,
-        fallbackLabel: 'Team Dashboard (Select Team First)'
+        fallbackLabel: 'Select Team First'
       },
       { 
         path: '/teams', 

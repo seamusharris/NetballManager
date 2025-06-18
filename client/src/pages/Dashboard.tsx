@@ -55,13 +55,13 @@ export default function Dashboard() {
         setLocation('/teams');
         return;
       }
-    } else if (!teamIdFromUrl && clubTeams.length > 0) {
+    } else if (!teamIdFromUrl) {
       console.log('Dashboard: No team ID in URL, redirecting to teams page');
       // No team ID provided, redirect to teams page
       setLocation('/teams');
       return;
     }
-  }, [params.teamId, clubTeams, setLocation]);
+  }, [params.teamId, clubTeams, setLocation, currentTeamId, setCurrentTeamId]);
 
   // Debug team switching
   useEffect(() => {
