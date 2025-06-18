@@ -294,9 +294,65 @@ export default function PlayerBoxExamples() {
               </div>
             </div>
 
+            {/* Medium-Small Names Only */}
+            <div>
+              <h4 className="text-sm font-medium mb-3 text-gray-700">Medium-Small Names Only (Longer Names, No Wrapping)</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
+                <PlayerBox 
+                  player={{id: 40, displayName: "Alexandria M", avatarColor: "bg-cyan-500"}}
+                  size="ms"
+                  showPositions={false}
+                  className="hover:shadow-lg transition-shadow duration-200"
+                  style={{ borderColor: '#06b6d4', color: '#0891b2' }}
+                />
+                <PlayerBox 
+                  player={{id: 41, displayName: "Bella Katherine", avatarColor: "bg-teal-500"}}
+                  size="ms"
+                  showPositions={false}
+                  className="hover:shadow-lg transition-shadow duration-200"
+                  style={{ borderColor: '#14b8a6', color: '#0d9488' }}
+                />
+                <PlayerBox 
+                  player={{id: 42, displayName: "Charlotte-Rose D", avatarColor: "bg-amber-500"}}
+                  size="ms"
+                  showPositions={false}
+                  className="hover:shadow-lg transition-shadow duration-200"
+                  style={{ borderColor: '#f59e0b', color: '#d97706' }}
+                />
+                <PlayerBox 
+                  player={{id: 43, displayName: "Daisy-Mae H", avatarColor: "bg-emerald-500"}}
+                  size="ms"
+                  showPositions={false}
+                  className="hover:shadow-lg transition-shadow duration-200"
+                  style={{ borderColor: '#10b981', color: '#059669' }}
+                />
+                <PlayerBox 
+                  player={{id: 44, displayName: "Elizabeth S", avatarColor: "bg-violet-500"}}
+                  size="ms"
+                  showPositions={false}
+                  className="hover:shadow-lg transition-shadow duration-200"
+                  style={{ borderColor: '#8b5cf6', color: '#7c3aed' }}
+                />
+                <PlayerBox 
+                  player={{id: 45, displayName: "Francesca-Belle", avatarColor: "bg-rose-500"}}
+                  size="ms"
+                  showPositions={false}
+                  className="hover:shadow-lg transition-shadow duration-200"
+                  style={{ borderColor: '#f43f5e', color: '#e11d48' }}
+                />
+                <PlayerBox 
+                  player={{id: 46, displayName: "Gabriella W", avatarColor: "bg-slate-500"}}
+                  size="ms"
+                  showPositions={false}
+                  className="hover:shadow-lg transition-shadow duration-200"
+                  style={{ borderColor: '#64748b', color: '#475569' }}
+                />
+              </div>
+            </div>
+
             {/* Names Only */}
             <div>
-              <h4 className="text-sm font-medium mb-3 text-gray-700">Names Only (No Position Preferences)</h4>
+              <h4 className="text-sm font-medium mb-3 text-gray-700">Small Names Only (Compact)</h4>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-3">
                 <PlayerBox 
                   player={{id: 8, displayName: "Amy L", avatarColor: "bg-cyan-500"}}

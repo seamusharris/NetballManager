@@ -21,7 +21,7 @@ interface PlayerBoxProps {
     value: string | number;
   }[];
   className?: string;
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'sm' | 'ms' | 'md' | 'lg';
   style?: React.CSSProperties;
   onClick?: () => void;
   customBadge?: React.ReactNode;
@@ -48,12 +48,14 @@ export function PlayerBox({
   // Size-based styling
   const sizeClasses = {
     sm: "p-2",
+    ms: "p-2.5", // Medium-small: between small and medium
     md: "p-3", 
     lg: "p-4"
   };
 
   const avatarSizes = {
     sm: 8, // 32px
+    ms: 10, // 40px - between small and medium
     md: 12, // 48px  
     lg: 16  // 64px
   };
@@ -61,6 +63,11 @@ export function PlayerBox({
   const textSizes = {
     sm: {
       name: "text-sm",
+      position: "text-xs",
+      stats: "text-sm"
+    },
+    ms: {
+      name: "text-sm", // Same as small but with more space
       position: "text-xs",
       stats: "text-sm"
     },
@@ -176,6 +183,7 @@ export function PlayerBox({
           player.avatarColor || 'bg-gray-500',
           {
             'w-10 h-10 text-sm': size === 'sm',
+            'w-12 h-12 text-sm': size === 'ms',
             'w-14 h-14 text-base': size === 'md',
             'w-20 h-20 text-2xl': size === 'lg'
           }
@@ -227,8 +235,8 @@ export function PlayerBox({
             "flex space-x-6 ml-6",
             // Adjust right margin based on select box presence and size
             hasSelect 
-              ? (size === 'sm' ? "mr-12" : size === 'md' ? "mr-14" : "mr-16") // More space when select is present
-              : (sizeClasses[size] === "p-2" ? "mr-2" : sizeClasses[size] === "p-3" ? "mr-3" : "mr-4") // Match avatar spacing when no select
+              ? (size === 'sm' ? "mr-12" : size === 'ms' ? "mr-13" : size === 'md' ? "mr-14" : "mr-16") // More space when select is present
+              : (sizeClasses[size] === "p-2" ? "mr-2" : sizeClasses[size] === "p-2.5" ? "mr-2.5" : sizeClasses[size] === "p-3" ? "mr-3" : "mr-4") // Match avatar spacing when no select
           )}>
             {stats.map((stat, index) => (
               <div key={index} className="text-center">
