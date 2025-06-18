@@ -7,7 +7,7 @@ import { Player } from '@shared/schema';
 import PlayerAvatar from '@/components/ui/player-avatar';
 import { cn } from '@/lib/utils';
 import { apiClient } from '@/lib/apiClient';
-import { getPlayerColorHex, getLighterColorHex } from '@/lib/playerColorUtils';
+import { getPlayerColorHex, getLighterColorHex, getMediumColorHex } from '@/lib/playerColorUtils';
 import { Badge } from '@/components/ui/badge';
 import { Zap, RotateCcw } from 'lucide-react';
 
@@ -156,8 +156,8 @@ export default function SharedPlayerAvailability({
                     : "opacity-75 border border-gray-200"
                 )}
                 style={{
-                  borderColor: isAvailable ? getPlayerColorHex(playerColor) : '',
-                  backgroundColor: isAvailable ? getPlayerColorHex(playerColor) : getLighterColorHex(playerColor)
+                  borderColor: getPlayerColorHex(playerColor),
+                  backgroundColor: isAvailable ? getMediumColorHex(playerColor) : getLighterColorHex(playerColor)
                 }}
               >
                 <div className="flex justify-between items-center">
