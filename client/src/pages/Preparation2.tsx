@@ -1089,7 +1089,7 @@ export default function Preparation2() {
                 {/* Full Roster Manager */}
                 <div className="space-y-4">
                   <DragDropRosterManager
-                    availablePlayers={allPlayers.filter(player => playerAvailability[player.id] === true)}
+                    availablePlayers={allPlayers.filter((player: any) => playerAvailability[player.id] === true)}
                     gameInfo={{
                       opponent: opponent,
                       date: selectedGame.date,
