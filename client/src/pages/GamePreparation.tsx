@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'wouter';
 import { Helmet } from 'react-helmet';
@@ -54,7 +53,7 @@ export default function GamePreparation() {
   const gameId = params.gameId ? parseInt(params.gameId) : undefined;
   const { currentClubId, currentTeamId } = useClub();
   const { toast } = useToast();
-  
+
   const [activeTab, setActiveTab] = useState<Tab>('overview');
   const [selectedLineup, setSelectedLineup] = useState<Record<string, number | null>>({});
   const [playerAvailability, setPlayerAvailability] = useState<Record<number, boolean>>({});
@@ -266,7 +265,7 @@ export default function GamePreparation() {
           {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              
+
               {/* Team Form */}
               <Card>
                 <CardHeader className="pb-3">
@@ -400,7 +399,7 @@ export default function GamePreparation() {
           {/* Analysis Tab */}
           <TabsContent value="analysis" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              
+
               {/* Historical Performance */}
               <Card>
                 <CardHeader>
@@ -477,7 +476,7 @@ export default function GamePreparation() {
           {/* Lineup Tab */}
           <TabsContent value="lineup" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              
+
               {/* Player Availability */}
               <Card>
                 <CardHeader>
@@ -599,7 +598,7 @@ export default function GamePreparation() {
           {/* Strategy Tab */}
           <TabsContent value="strategy" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              
+
               {/* Game Plan */}
               <Card>
                 <CardHeader>

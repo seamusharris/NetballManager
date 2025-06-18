@@ -34,7 +34,7 @@ interface OpponentSpecificLineup extends PositionLineup {
   opponentGames: number;
 }
 
-export function TeamPositionAnalysis({ 
+function TeamPositionAnalysis({ 
   games, 
   players, 
   centralizedStats, 
@@ -523,3 +523,5 @@ export function TeamPositionAnalysis({
     </Card>
   );
 }
+
+export default TeamPositionAnalysis;
