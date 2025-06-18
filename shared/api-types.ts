@@ -1,4 +1,3 @@
-
 /**
  * TypeScript interfaces for API responses - enforce flat camelCase structure
  */
@@ -24,12 +23,6 @@ export interface ApiGame {
   seasonYear?: number;
   seasonStartDate?: string;
   seasonEndDate?: string;
-  
-  // Opponent fields (flat)
-  opponentId?: number;
-  opponentTeamName?: string;
-  opponentPrimaryContact?: string;
-  opponentContactInfo?: string;
   
   // Team fields (flat)
   homeTeamId?: number;

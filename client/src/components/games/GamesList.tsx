@@ -29,7 +29,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Edit, Trash2, Search, Eye } from 'lucide-react';
-import { Game, Opponent, GameStatus } from '@shared/schema';
+import { Game, GameStatus } from '@shared/schema';
 import { formatDate, formatShortDate } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
 import { GameScoreDisplay } from '@/components/statistics/GameScoreDisplay';
