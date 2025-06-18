@@ -146,6 +146,13 @@ export default function SharedPlayerAvailability({
             const playerColor = getPlayerColor(player);
             const isAvailable = availabilityData[player.id] === 'available';
 
+            const handleToggleAvailability = (playerId: number, newAvailability: boolean) => {
+              handlePlayerAvailabilityChange(
+                playerId,
+                newAvailability ? 'available' : 'unavailable'
+              );
+            };
+
             return (
               <div 
                 key={player.id}
