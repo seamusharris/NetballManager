@@ -353,11 +353,6 @@ export default function PlayerAvailabilityManager({
                       showPositions={true}
                       hasSelect={true}
                       className="shadow-md transition-all duration-200 hover:shadow-lg cursor-pointer"
-                      style={{ 
-                        backgroundColor: isSelected ? '#16a34a25' : '#ffffff',
-                        borderColor: '#16a34a',
-                        color: '#15803d'
-                      }}
                       onClick={() => {
                         const newData = { ...availabilityData, [player.id]: !isSelected };
                         handleAvailabilityChange(newData);
