@@ -261,7 +261,14 @@ const Preparation = () => {
               <DragDropRosterManager
                 availablePlayers={playersData.filter((p: any) => availablePlayerIds.includes(p.id))}
                 gameInfo={selectedGameInfo}
+                gameId={selectedGameId}
                 onRosterChange={setRosterAssignments}
+                onRosterSaved={() => {
+                  toast({
+                    title: "Success",
+                    description: "Roster saved successfully!"
+                  });
+                }}
               />
               
               <RosterSummary
