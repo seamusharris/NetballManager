@@ -286,7 +286,7 @@ const Preparation = () => {
           )}
 
           {/* Analysis Step */}
-          {currentStep === 'analysis' && selectedGameId && (
+          {currentStep === 'analysis' && selectedGameId && selectedGameInfo && (
             <div className="space-y-6">
               <Card>
                 <CardHeader>
@@ -305,13 +305,18 @@ const Preparation = () => {
                         {availablePlayerIds.length} players available, roster assigned for all quarters
                       </p>
                     </div>
-                    
-                    <div className="p-4 bg-blue-50 rounded-lg">
-                      <p className="text-blue-800 font-medium">Game recommendations will be displayed here</p>
-                    </div>
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Game Recommendations */}
+              <UpcomingGameRecommendations
+                upcomingGames={[selectedGameInfo]}
+                recentGames={recentGames}
+                players={playersData}
+                gamePerformances={gamePerformances}
+                teams={teams}
+              />
             </div>
           )}
         </TabsContent>
