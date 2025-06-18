@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { Player } from '@shared/schema';
 import PlayerAvatar from '@/components/ui/player-avatar';
@@ -181,7 +181,7 @@ export default function SharedPlayerAvailability({
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Switch
+                    <Checkbox
                       checked={isAvailable}
                       disabled={isSaving}
                       onCheckedChange={(checked) => {
