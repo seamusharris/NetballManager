@@ -1,13 +1,10 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useToast } from '@/hooks/use-toast';
-import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
-import { apiRequest } from '@/lib/apiClient';
 import { 
   Users, 
   RotateCcw, 
@@ -21,8 +18,7 @@ import {
   ChevronLeft,
   Eye,
   Edit,
-  Trash2,
-  Save
+  Trash2
 } from 'lucide-react';
 import { PlayerBox } from '@/components/ui/player-box';
 import { getPlayerColorHex, getDarkerColorHex, getLighterColorHex, getMediumColorHex } from '@/lib/playerColorUtils';
@@ -45,9 +41,7 @@ interface GameInfo {
 interface DragDropRosterManagerProps {
   availablePlayers: Player[];
   gameInfo: GameInfo;
-  gameId?: number;
   onRosterChange: (roster: Record<number, Record<string, number | null>>) => void;
-  onRosterSaved?: () => void;
 }
 
 const NETBALL_POSITIONS = ['GS', 'GA', 'WA', 'C', 'WD', 'GD', 'GK'];
@@ -60,11 +54,7 @@ const PositionSlot = ({
   isCompatible = true,
   onDrop,
   courtSection,
-  onDragStart,
-  onTouchStart,
-  onTouchMove,
-  onTouchEnd,
-  onTouchCancel
+  onDragStart
 }: {
   position: string,
   player?: Player,
@@ -72,11 +62,7 @@ const PositionSlot = ({
   isCompatible?: boolean,
   onDrop: () => void,
   courtSection: 'attacking' | 'center' | 'defending',
-  onDragStart: (playerId: number) => void,
-  onTouchStart: (e: React.TouchEvent, playerId: number) => void,
-  onTouchMove: (e: React.TouchEvent) => void,
-  onTouchEnd: (e: React.TouchEvent) => void,
-  onTouchCancel: (e: React.TouchEvent) => void
+  onDragStart: (playerId: number) => void
 }) => {
   const sectionColors = {
     attacking: 'bg-gradient-to-br from-red-50 to-red-100 border-red-200',
@@ -86,10 +72,9 @@ const PositionSlot = ({
 
   return (
     <div
-      data-position={position}
       className={`
         relative border-2 border-dashed rounded-xl p-4 text-center min-h-[140px] 
-        transition-all duration-300 flex flex-col justify-center touch-manipulation
+        transition-all duration-300 flex flex-col justify-center
         ${isDropTarget && isCompatible ? 'border-green-400 bg-green-50 scale-105' : ''}
         ${isDropTarget && !isCompatible ? 'border-red-400 bg-red-50' : ''}
         ${!isDropTarget ? sectionColors[courtSection] : ''}
@@ -108,25 +93,15 @@ const PositionSlot = ({
       {/* Player or Drop Zone */}
       {player ? (
         <div 
-          className="cursor-move touch-manipulation select-none flex items-center justify-center h-full" 
+          className="cursor-move" 
           draggable
           onDragStart={() => onDragStart(player.id)}
-          onTouchStart={(e) => onTouchStart(e, player.id)}
-          onTouchMove={onTouchMove}
-          onTouchEnd={onTouchEnd}
-          onTouchCancel={onTouchCancel}
-          style={{ touchAction: 'none' }}
         >
           <PlayerBox 
             player={player}
             showPositions={true}
             size="sm"
-            className="transition-all duration-200 w-full text-center"
-            style={{
-                  backgroundColor: player ? getMediumColorHex(player.avatarColor) : 'transparent',
-                  borderColor: player ? getDarkerColorHex(player.avatarColor) : '#ddd',
-                  color: player ? getDarkerColorHex(player.avatarColor) : '#666'
-                }}
+            className="transition-all duration-200"
           />
         </div>
       ) : (
@@ -143,10 +118,7 @@ const PositionSlot = ({
   );
 };
 
-export default function DragDropRosterManager({ availablePlayers, gameInfo, gameId, onRosterChange, onRosterSaved }: DragDropRosterManagerProps) {
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-  
+export default function DragDropRosterManager({ availablePlayers, gameInfo, onRosterChange }: DragDropRosterManagerProps) {
   const [currentQuarter, setCurrentQuarter] = useState(1);
   const [assignments, setAssignments] = useState<Record<number, Record<string, number | null>>>({
     1: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
@@ -154,109 +126,8 @@ export default function DragDropRosterManager({ availablePlayers, gameInfo, game
     3: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
     4: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null }
   });
-
-  // Fetch existing roster data
-  const { data: existingRoster, isLoading: isLoadingRoster } = useQuery({
-    queryKey: [`/api/games/${gameId}/rosters`],
-    queryFn: () => gameId ? apiRequest('GET', `/api/games/${gameId}/rosters`) : Promise.resolve([]),
-    enabled: !!gameId,
-  });
   const [draggedPlayer, setDraggedPlayer] = useState<number | null>(null);
   const [dragOverPosition, setDragOverPosition] = useState<string | null>(null);
-  
-  // Touch state
-  const [touchStart, setTouchStart] = useState<{ x: number; y: number } | null>(null);
-  const [isDragging, setIsDragging] = useState(false);
-  const [draggedElement, setDraggedElement] = useState<HTMLElement | null>(null);
-  const [clone, setClone] = useState<HTMLElement | null>(null);
-
-  // Load existing roster data when it becomes available
-  useEffect(() => {
-    if (existingRoster && Array.isArray(existingRoster)) {
-      const newAssignments = {
-        1: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
-        2: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
-        3: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
-        4: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null }
-      };
-
-      // Populate assignments from existing roster data
-      existingRoster.forEach((entry: any) => {
-        if (entry.quarter && entry.position && entry.playerId) {
-          newAssignments[entry.quarter as keyof typeof newAssignments][entry.position] = entry.playerId;
-        }
-      });
-
-      setAssignments(newAssignments);
-      onRosterChange(newAssignments);
-    }
-  }, [existingRoster, onRosterChange]);
-
-  // Save roster mutation
-  const saveRosterMutation = useMutation({
-    mutationFn: async () => {
-      if (!gameId) {
-        throw new Error('No game selected');
-      }
-
-      // Delete existing roster entries first
-      await apiRequest('DELETE', `/api/games/${gameId}/rosters`, {});
-
-      // Create roster assignments array
-      const rosterAssignments: Array<{
-        gameId: number;
-        quarter: number;
-        position: string;
-        playerId: number;
-      }> = [];
-
-      Object.entries(assignments).forEach(([quarter, positions]) => {
-        Object.entries(positions).forEach(([position, playerId]) => {
-          if (playerId) {
-            rosterAssignments.push({
-              gameId: gameId,
-              quarter: parseInt(quarter),
-              position,
-              playerId
-            });
-          }
-        });
-      });
-
-      // Save each roster assignment
-      const savePromises = rosterAssignments.map(assignment =>
-        apiRequest('POST', '/api/rosters', assignment)
-      );
-
-      await Promise.all(savePromises);
-      return rosterAssignments.length;
-    },
-    onSuccess: (savedCount) => {
-      // Invalidate roster queries
-      queryClient.invalidateQueries({ queryKey: [`/api/games/${gameId}/rosters`] });
-      
-      // Refetch the roster data to ensure UI is updated
-      queryClient.refetchQueries({ queryKey: [`/api/games/${gameId}/rosters`] });
-      
-      // Notify parent component
-      if (onRosterSaved) {
-        onRosterSaved();
-      }
-
-      toast({
-        title: "Roster Saved",
-        description: `Successfully saved ${savedCount} roster assignments`,
-      });
-    },
-    onError: (error) => {
-      console.error("Error saving roster:", error);
-      toast({
-        title: "Save Error",
-        description: "There was an error saving the roster. Please try again.",
-        variant: "destructive",
-      });
-    }
-  });
 
   const handleDragStart = (playerId: number) => {
     setDraggedPlayer(playerId);
@@ -268,126 +139,6 @@ export default function DragDropRosterManager({ availablePlayers, gameInfo, game
   };
 
   const handleDragLeave = () => {
-    setDragOverPosition(null);
-  };
-
-  // Touch handlers
-  const handleTouchStart = (e: React.TouchEvent, playerId: number) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const touch = e.touches[0];
-    const target = e.currentTarget as HTMLElement;
-    
-    // Clean up any existing drag state
-    cleanup();
-    
-    setTouchStart({ x: touch.clientX, y: touch.clientY });
-    setDraggedPlayer(playerId);
-    setDraggedElement(target);
-    setIsDragging(false);
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (!touchStart || !draggedElement) return;
-    
-    e.preventDefault();
-    const touch = e.touches[0];
-    const deltaX = touch.clientX - touchStart.x;
-    const deltaY = touch.clientY - touchStart.y;
-    
-    // Start dragging after moving 10px
-    if (!isDragging && (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10)) {
-      setIsDragging(true);
-      
-      // Create visual clone
-      const rect = draggedElement.getBoundingClientRect();
-      const cloneElement = draggedElement.cloneNode(true) as HTMLElement;
-      cloneElement.style.position = 'fixed';
-      cloneElement.style.top = `${rect.top}px`;
-      cloneElement.style.left = `${rect.left}px`;
-      cloneElement.style.width = `${rect.width}px`;
-      cloneElement.style.height = `${rect.height}px`;
-      cloneElement.style.opacity = '0.8';
-      cloneElement.style.pointerEvents = 'none';
-      cloneElement.style.zIndex = '9999';
-      cloneElement.style.transform = 'rotate(5deg) scale(1.05)';
-      cloneElement.style.boxShadow = '0 8px 32px rgba(0,0,0,0.3)';
-      
-      document.body.appendChild(cloneElement);
-      setClone(cloneElement);
-      
-      draggedElement.style.opacity = '0.3';
-    }
-    
-    if (isDragging && clone) {
-      // Calculate the offset from the center of the clone
-      const cloneWidth = parseInt(clone.style.width) || 0;
-      const cloneHeight = parseInt(clone.style.height) || 0;
-      
-      // Position clone centered on touch point
-      clone.style.left = `${touch.clientX - cloneWidth / 2}px`;
-      clone.style.top = `${touch.clientY - cloneHeight / 2}px`;
-      
-      // Check what's under the touch point
-      const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
-      const positionSlot = elementBelow?.closest('[data-position]');
-      
-      if (positionSlot) {
-        const position = positionSlot.getAttribute('data-position');
-        setDragOverPosition(position);
-      } else {
-        setDragOverPosition(null);
-      }
-    }
-  };
-
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    if (!isDragging) {
-      // Just a tap, not a drag
-      cleanup();
-      return;
-    }
-    
-    const touch = e.changedTouches[0];
-    const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
-    const positionSlot = elementBelow?.closest('[data-position]');
-    
-    if (positionSlot && draggedPlayer) {
-      const position = positionSlot.getAttribute('data-position');
-      if (position) {
-        handleDrop(position);
-      }
-    }
-    
-    cleanup();
-  };
-
-  const handleTouchCancel = (e: React.TouchEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    cleanup();
-  };
-
-  const cleanup = () => {
-    if (clone && clone.parentNode) {
-      try {
-        document.body.removeChild(clone);
-      } catch (e) {
-        // Clone might have already been removed
-      }
-      setClone(null);
-    }
-    if (draggedElement) {
-      draggedElement.style.opacity = '';
-    }
-    
-    setTouchStart(null);
-    setIsDragging(false);
-    setDraggedElement(null);
-    setDraggedPlayer(null);
     setDragOverPosition(null);
   };
 
@@ -459,53 +210,9 @@ export default function DragDropRosterManager({ availablePlayers, gameInfo, game
     onRosterChange(newAssignments);
   };
 
-  // Save roster handler
-  const handleSaveRoster = () => {
-    if (!gameId) {
-      toast({
-        title: "Error",
-        description: "Please select a game to save the roster for.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    // Check if roster has any assignments
-    const hasAssignments = Object.values(assignments).some(quarter =>
-      Object.values(quarter).some(playerId => playerId !== null)
-    );
-
-    if (!hasAssignments) {
-      toast({
-        title: "Empty Roster",
-        description: "Please assign some players before saving.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    saveRosterMutation.mutate();
-  };
-
   const currentQuarterAssignments = assignments[currentQuarter];
   const assignedPlayerIds = Object.values(currentQuarterAssignments).filter(id => id !== null);
   const availablePlayersForDrag = availablePlayers.filter(p => !assignedPlayerIds.includes(p.id));
-
-  // Show loading state while fetching roster data
-  if (isLoadingRoster) {
-    return (
-      <div className="space-y-6">
-        <div className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-semibold text-lg">vs {gameInfo.opponent}</h3>
-              <p className="text-sm text-gray-600">Loading roster data...</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   // Summaries
   const playerSummary = availablePlayers.reduce((acc, player) => {
@@ -570,90 +277,61 @@ export default function DragDropRosterManager({ availablePlayers, gameInfo, game
         </div>
       </div>
 
-      {/* Quarter Selection */}
-      <div className="space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <Tabs value={currentQuarter.toString()} onValueChange={(value) => setCurrentQuarter(parseInt(value))}>
-            <TabsList className="grid grid-cols-4">
-              <TabsTrigger value="1">Quarter 1</TabsTrigger>
-              <TabsTrigger value="2">Quarter 2</TabsTrigger>
-              <TabsTrigger value="3">Quarter 3</TabsTrigger>
-              <TabsTrigger value="4">Quarter 4</TabsTrigger>
-            </TabsList>
-          </Tabs>
+      {/* Quarter Selection and Controls */}
+      <div className="flex items-center justify-between">
+        <Tabs value={currentQuarter.toString()} onValueChange={(value) => setCurrentQuarter(parseInt(value))}>
+          <TabsList className="grid grid-cols-4">
+            <TabsTrigger value="1">Quarter 1</TabsTrigger>
+            <TabsTrigger value="2">Quarter 2</TabsTrigger>
+            <TabsTrigger value="3">Quarter 3</TabsTrigger>
+            <TabsTrigger value="4">Quarter 4</TabsTrigger>
+          </TabsList>
+        </Tabs>
 
-          {/* Primary Action Buttons */}
+        {/* Quarter Management Controls */}
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleResetQuarter}
+          >
+            <RotateCcw className="h-4 w-4 mr-1" />
+            Reset Quarter
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleResetAll}
+          >
+            <Trash2 className="h-4 w-4 mr-1" />
+            Reset All
+          </Button>
+
+          {/* Copy Quarter Controls */}
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleResetQuarter}
-              className="flex-shrink-0"
-            >
-              <RotateCcw className="h-4 w-4 mr-1" />
-              Reset Quarter
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleResetAll}
-              className="flex-shrink-0"
-            >
-              <Trash2 className="h-4 w-4 mr-1" />
-              Reset All
-            </Button>
-            <Button
-              onClick={handleSaveRoster}
-              disabled={saveRosterMutation.isPending}
-              className="bg-primary hover:bg-primary/90 flex-shrink-0"
-            >
-              {saveRosterMutation.isPending ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Saving...
-                </>
-              ) : (
-                <>
-                  <Save className="h-4 w-4 mr-1" />
-                  Save Roster
-                </>
-              )}
-            </Button>
-          </div>
-        </div>
-
-        {/* Copy Quarter Controls - Now on a separate row */}
-        <div className="bg-gray-50 rounded-lg p-3 border">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-            <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
-              <ArrowUpDown className="h-4 w-4" />
-              Copy Quarter:
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 flex-1">
-              {[1, 2, 3, 4].map(sourceQuarter => (
-                <Select
-                  key={sourceQuarter}
-                  onValueChange={(value) => {
-                    if (value) {
-                      handleCopyQuarter(sourceQuarter, parseInt(value));
-                    }
-                  }}
-                >
-                  <SelectTrigger className="w-full text-xs">
-                    <SelectValue placeholder={`Q${sourceQuarter} to...`} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {[1, 2, 3, 4]
-                      .filter(q => q !== sourceQuarter)
-                      .map(targetQuarter => (
-                        <SelectItem key={targetQuarter} value={targetQuarter.toString()}>
-                          Quarter {targetQuarter}
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
-              ))}
-            </div>
+            {[1, 2, 3, 4].map(sourceQuarter => (
+              <Select
+                key={sourceQuarter}
+                onValueChange={(value) => {
+                  if (value) {
+                    handleCopyQuarter(sourceQuarter, parseInt(value));
+                  }
+                }}
+              >
+                <SelectTrigger className="w-[140px] text-xs">
+                  <SelectValue placeholder={`Copy Q${sourceQuarter} to...`} />
+                </SelectTrigger>
+                <SelectContent>
+                  {[1, 2, 3, 4]
+                    .filter(q => q !== sourceQuarter)
+                    .map(targetQuarter => (
+                      <SelectItem key={targetQuarter} value={targetQuarter.toString()}>
+                        Quarter {targetQuarter}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            ))}
           </div>
         </div>
       </div>
@@ -679,10 +357,6 @@ export default function DragDropRosterManager({ availablePlayers, gameInfo, game
                 onDrop={() => handleDrop(position)}
                 courtSection="attacking"
                 onDragStart={handleDragStart}
-                onTouchStart={handleTouchStart}
-                onTouchMove={handleTouchMove}
-                onTouchEnd={handleTouchEnd}
-                onTouchCancel={handleTouchCancel}
               />
             ))}
           </div>
@@ -709,10 +383,6 @@ export default function DragDropRosterManager({ availablePlayers, gameInfo, game
                   onDrop={() => handleDrop(position)}
                   courtSection="center"
                   onDragStart={handleDragStart}
-                  onTouchStart={handleTouchStart}
-                  onTouchMove={handleTouchMove}
-                  onTouchEnd={handleTouchEnd}
-                  onTouchCancel={handleTouchCancel}
                 />
               </div>
             ))}
@@ -740,10 +410,6 @@ export default function DragDropRosterManager({ availablePlayers, gameInfo, game
                   onDrop={() => handleDrop(position)}
                   courtSection="defending"
                   onDragStart={handleDragStart}
-                  onTouchStart={handleTouchStart}
-                  onTouchMove={handleTouchMove}
-                  onTouchEnd={handleTouchEnd}
-                  onTouchCancel={handleTouchCancel}
                 />
               </div>
             ))}
@@ -767,23 +433,13 @@ export default function DragDropRosterManager({ availablePlayers, gameInfo, game
                   key={player.id}
                   draggable
                   onDragStart={() => handleDragStart(player.id)}
-                  onTouchStart={(e) => handleTouchStart(e, player.id)}
-                  onTouchMove={handleTouchMove}
-                  onTouchEnd={handleTouchEnd}
-                  onTouchCancel={handleTouchCancel}
-                  className="cursor-move transform hover:scale-105 transition-transform touch-manipulation select-none"
-                  style={{ touchAction: 'none' }}
+                  className="cursor-move transform hover:scale-105 transition-transform"
                 >
                   <PlayerBox
                     player={player}
                     size="sm"
                     showPositions={true}
                     className="transition-all duration-200"
-                    style={{
-                backgroundColor: getMediumColorHex(player.avatarColor),
-                borderColor: getDarkerColorHex(player.avatarColor),
-                color: getDarkerColorHex(player.avatarColor)
-              }}
                   />
                 </div>
               ))}
