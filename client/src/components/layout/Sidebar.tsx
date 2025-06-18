@@ -135,12 +135,12 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen, isTablet }: Sid
   return (
     <aside 
       className={cn(
-        "bg-white w-64 h-full fixed inset-y-0 left-0 z-30 shadow-lg transform transition-transform duration-300",
-        // Only show by default on large screens
-        isTablet ? "" : "translate-x-0 static inset-0",
-        // Slide in/out on tablet
+        "bg-white w-64 h-full shadow-lg transform transition-transform duration-300",
+        // Desktop: static positioning
+        !isTablet ? "static inset-0 translate-x-0" : "",
+        // Tablet: fixed positioning with slide animation
+        isTablet ? "fixed inset-y-0 left-0 z-30" : "",
         isTablet && isMobileOpen ? "translate-x-0" : "",
-        // Hidden by default on tablet
         isTablet && !isMobileOpen ? "-translate-x-full" : ""
       )}
     >
@@ -149,13 +149,14 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen, isTablet }: Sid
           <span className="text-white text-xl">🏐</span>
           <h1 className="text-white font-heading font-bold text-lg truncate max-w-[160px]">{TEAM_NAME} Stats</h1>
         </div>
-        <button 
-          className="text-white focus:outline-none"
-          style={{ display: isTablet ? 'block' : 'none' }}
-          onClick={() => setIsMobileOpen(false)}
-        >
-          <X className="w-5 h-5" />
-        </button>
+        {isTablet && (
+          <button 
+            className="text-white focus:outline-none"
+            onClick={() => setIsMobileOpen(false)}
+          >
+            <X className="w-5 h-5" />
+          </button>
+        )}
       </div>
       <div className="px-4 py-6">
         <p className="text-gray-500 text-xs uppercase font-bold tracking-wider mb-4 px-2">Navigation</p>

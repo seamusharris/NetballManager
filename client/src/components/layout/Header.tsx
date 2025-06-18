@@ -64,8 +64,8 @@ export default function Header({ setIsMobileOpen, isTablet }: HeaderProps) {
             <Menu className="h-5 w-5" />
           </Button>
 
-          {/* Desktop navigation dropdown - hide when sidebar is visible */}
-          <div className="hidden md:flex lg:hidden items-center space-x-4">
+          {/* Tablet navigation dropdown - show when sidebar is hidden */}
+          <div className={cn("items-center space-x-4", isTablet ? "flex" : "hidden")}>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="text-blue-600 hover:bg-blue-600 hover:text-white transition-colors duration-200 focus:outline-none">

@@ -15,7 +15,10 @@ export default function Layout({ children }: LayoutProps) {
   useEffect(() => {
     const checkScreenSize = () => {
       // Include both regular iPads and larger 12" iPad Pro (up to 1366px)
-      setIsTablet(window.innerWidth >= 768 && window.innerWidth < 1367);
+      // Also consider touch devices
+      const width = window.innerWidth;
+      const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+      setIsTablet((width >= 768 && width < 1367) || (isTouch && width >= 768 && width <= 1024));
     };
 
     checkScreenSize();
@@ -26,10 +29,9 @@ export default function Layout({ children }: LayoutProps) {
   return (
     <div className="flex h-screen overflow-hidden">
       {/* Overlay to close sidebar when clicking outside on tablet/mobile */}
-      {isMobileOpen && (
+      {isMobileOpen && isTablet && (
         <div 
           className="fixed inset-0 bg-black bg-opacity-30 z-20"
-          style={{ display: isTablet || window.innerWidth < 1024 ? 'block' : 'none' }}
           onClick={() => setIsMobileOpen(false)}
         />
       )}
