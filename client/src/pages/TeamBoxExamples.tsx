@@ -597,6 +597,316 @@ export default function TeamBoxExamples() {
           </div>
         </section>
 
+        {/* Dark Mode Variations */}
+        <section>
+          <h2 className="text-2xl font-semibold mb-6">Dark Theme Variations</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-gray-900 p-6 rounded-xl">
+              <h3 className="text-white text-lg font-semibold mb-4">Dark Premium Card</h3>
+              <div 
+                className="p-6 rounded-lg border-2 bg-gray-800 text-white"
+                style={{ borderColor: '#ff2c36' }}
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center space-x-3">
+                    <div 
+                      className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold"
+                      style={{ backgroundColor: '#ff2c36' }}
+                    >
+                      WNC
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-xl text-white">Elite Squad</h3>
+                      <p className="text-gray-300">Premium Division</p>
+                    </div>
+                  </div>
+                  <Badge className="bg-gold text-black">VIP</Badge>
+                </div>
+                <div className="grid grid-cols-3 gap-4 mb-4">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-gold">12</div>
+                    <div className="text-xs text-gray-400">Championships</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-gold">95%</div>
+                    <div className="text-xs text-gray-400">Win Rate</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-gold">★</div>
+                    <div className="text-xs text-gray-400">Hall of Fame</div>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <Button className="flex-1 bg-gradient-to-r from-yellow-400 to-orange-500 text-black">
+                    <Trophy className="h-4 w-4 mr-2" />
+                    View Legacy
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-gradient-to-br from-purple-900 to-blue-900 p-6 rounded-xl">
+              <h3 className="text-white text-lg font-semibold mb-4">Neon Glow Effect</h3>
+              <div 
+                className="p-6 rounded-lg bg-black/50 backdrop-blur-sm border-2 text-white shadow-2xl"
+                style={{ 
+                  borderColor: '#10b981',
+                  boxShadow: '0 0 20px rgba(16, 185, 129, 0.3)'
+                }}
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center space-x-3">
+                    <div 
+                      className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold animate-pulse"
+                      style={{ 
+                        backgroundColor: '#10b981',
+                        boxShadow: '0 0 15px rgba(16, 185, 129, 0.5)'
+                      }}
+                    >
+                      DC
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-xl">Cyber Team</h3>
+                      <p className="text-green-300">Digital League</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div className="text-center">
+                    <div className="text-xl font-bold text-green-400">ONLINE</div>
+                    <div className="text-xs text-gray-400">Status</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-xl font-bold text-green-400">24/7</div>
+                    <div className="text-xs text-gray-400">Active</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Card Deck Style */}
+        <section>
+          <h2 className="text-2xl font-semibold mb-6">Playing Card Inspired Designs</h2>
+          <div className="flex flex-wrap gap-4 justify-center">
+            {sampleTeams.slice(0, 4).map((team, index) => (
+              <div 
+                key={team.id}
+                className="w-64 h-80 bg-white rounded-xl shadow-lg border-2 border-gray-200 relative overflow-hidden transform hover:scale-105 transition-transform duration-300"
+                style={{ 
+                  background: `linear-gradient(135deg, ${index % 2 === 0 ? '#ff2c36' : '#10b981'} 0%, white 30%)`
+                }}
+              >
+                <div className="absolute top-4 left-4 text-white">
+                  <div className="text-2xl font-bold">{team.clubCode}</div>
+                  <div className="text-sm">#{index + 1}</div>
+                </div>
+                <div className="absolute top-4 right-4 text-white">
+                  <Trophy className="h-6 w-6" />
+                </div>
+                
+                <div className="absolute bottom-0 left-0 right-0 bg-white p-4 rounded-t-xl">
+                  <h3 className="font-bold text-lg mb-2">{team.name}</h3>
+                  <p className="text-sm text-gray-600 mb-3">{team.division}</p>
+                  <div className="flex justify-between text-sm">
+                    <span>Rank: #{index + 1}</span>
+                    <span>★ {8 + index}.{5 - index}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Social Media Style Cards */}
+        <section>
+          <h2 className="text-2xl font-semibold mb-6">Social Media Inspired</h2>
+          <div className="space-y-6">
+            <div className="max-w-md mx-auto bg-white rounded-xl shadow-lg border border-gray-200">
+              <div className="p-4">
+                <div className="flex items-center space-x-3 mb-4">
+                  <div 
+                    className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold"
+                    style={{ backgroundColor: '#ff2c36' }}
+                  >
+                    WNC
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold">WNC Champions</h3>
+                    <p className="text-sm text-gray-500">@wncchampions • 2h</p>
+                  </div>
+                  <Button size="sm" variant="outline">Follow</Button>
+                </div>
+                
+                <p className="text-gray-800 mb-4">
+                  🏆 Another incredible win! Our team chemistry is at an all-time high. 
+                  Ready for the championship! #NetballLife #Champions
+                </p>
+                
+                <div className="grid grid-cols-3 gap-4 mb-4 p-4 bg-gray-50 rounded-lg">
+                  <div className="text-center">
+                    <div className="font-bold text-lg">45</div>
+                    <div className="text-xs text-gray-600">Goals</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="font-bold text-lg">12</div>
+                    <div className="text-xs text-gray-600">Wins</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="font-bold text-lg">92%</div>
+                    <div className="text-xs text-gray-600">Accuracy</div>
+                  </div>
+                </div>
+                
+                <div className="flex justify-between text-sm text-gray-500 border-t pt-3">
+                  <button className="flex items-center space-x-1 hover:text-red-500">
+                    <Heart className="h-4 w-4" />
+                    <span>245 likes</span>
+                  </button>
+                  <button className="flex items-center space-x-1 hover:text-blue-500">
+                    <Share className="h-4 w-4" />
+                    <span>Share</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Mobile App Style */}
+        <section>
+          <h2 className="text-2xl font-semibold mb-6">Mobile App Interface Style</h2>
+          <div className="max-w-sm mx-auto bg-gray-100 p-4 rounded-3xl shadow-xl">
+            <div className="space-y-3">
+              {sampleTeams.slice(0, 3).map((team, index) => (
+                <div 
+                  key={team.id}
+                  className="flex items-center justify-between p-4 bg-white rounded-2xl shadow-sm"
+                >
+                  <div className="flex items-center space-x-3">
+                    <div 
+                      className="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold"
+                      style={{ backgroundColor: team.clubCode === 'WNC' ? '#ff2c36' : '#10b981' }}
+                    >
+                      {team.clubCode}
+                    </div>
+                    <div>
+                      <div className="font-semibold text-sm">{team.name}</div>
+                      <div className="text-xs text-gray-500">{team.division}</div>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-sm font-bold text-green-600">LIVE</div>
+                    <div className="text-xs text-gray-500">Q{index + 1}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Retro/Vintage Style */}
+        <section>
+          <h2 className="text-2xl font-semibold mb-6">Retro Championship Certificates</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div 
+              className="relative p-8 bg-gradient-to-br from-yellow-100 to-orange-100 border-8 border-double border-yellow-600 rounded-lg"
+              style={{ 
+                backgroundImage: 'radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.1) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%)'
+              }}
+            >
+              <div className="text-center">
+                <div className="text-4xl mb-2">🏆</div>
+                <h3 className="text-2xl font-bold text-yellow-800 mb-2">CHAMPIONS</h3>
+                <div className="text-lg font-semibold text-yellow-700">WNC Dingoes</div>
+                <div className="text-sm text-yellow-600 mb-4">13U/3s Division</div>
+                <div className="border-t-2 border-yellow-600 pt-4">
+                  <div className="text-xs text-yellow-700">SEASON WINNERS</div>
+                  <div className="text-lg font-bold text-yellow-800">AUTUMN 2025</div>
+                </div>
+              </div>
+              <div className="absolute top-2 left-2 w-4 h-4 border-2 border-yellow-600 rounded-full"></div>
+              <div className="absolute top-2 right-2 w-4 h-4 border-2 border-yellow-600 rounded-full"></div>
+              <div className="absolute bottom-2 left-2 w-4 h-4 border-2 border-yellow-600 rounded-full"></div>
+              <div className="absolute bottom-2 right-2 w-4 h-4 border-2 border-yellow-600 rounded-full"></div>
+            </div>
+
+            <div className="relative p-6 bg-black text-white rounded-lg overflow-hidden">
+              <div 
+                className="absolute inset-0 opacity-10"
+                style={{
+                  backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.1) 10px, rgba(255,255,255,0.1) 20px)'
+                }}
+              ></div>
+              <div className="relative z-10">
+                <div className="text-center mb-6">
+                  <div className="text-green-400 text-4xl font-mono mb-2">█ HALL OF FAME █</div>
+                  <div className="text-green-400 font-mono">{'>'} LEGENDARY STATUS {'<'}</div>
+                </div>
+                <div className="font-mono space-y-2">
+                  <div className="text-green-400">> TEAM: <span className="text-white">WNC EMUS</span></div>
+                  <div className="text-green-400">> DIVISION: <span className="text-white">15U/1s</span></div>
+                  <div className="text-green-400">> STATUS: <span className="text-white blink">UNDEFEATED</span></div>
+                  <div className="text-green-400">> WINS: <span className="text-white">24/24</span></div>
+                </div>
+                <div className="mt-6 text-center">
+                  <div className="inline-block px-4 py-2 border border-green-400 text-green-400 font-mono text-sm">
+                    [PRESS ENTER TO CONTINUE]
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Progressive Enhancement Demo */}
+        <section>
+          <h2 className="text-2xl font-semibold mb-6">Progressive Information Reveal</h2>
+          <div className="space-y-4">
+            <div className="group relative overflow-hidden rounded-lg border-2 border-blue-200 hover:border-blue-500 transition-all duration-500">
+              <div className="p-4 bg-gradient-to-r from-blue-50 to-purple-50">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold">
+                      WNC
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-lg">WNC Eagles</h3>
+                      <p className="text-sm text-gray-600">Hover for details</p>
+                    </div>
+                  </div>
+                  <div className="text-2xl">→</div>
+                </div>
+              </div>
+              
+              <div className="absolute inset-0 bg-white transform translate-x-full group-hover:translate-x-0 transition-transform duration-500 ease-in-out">
+                <div className="p-6 h-full flex flex-col justify-center">
+                  <h3 className="font-bold text-xl mb-4">Detailed Information</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <div className="text-2xl font-bold text-blue-600">15</div>
+                      <div className="text-sm text-gray-600">Games Played</div>
+                    </div>
+                    <div>
+                      <div className="text-2xl font-bold text-green-600">80%</div>
+                      <div className="text-sm text-gray-600">Win Rate</div>
+                    </div>
+                    <div>
+                      <div className="text-2xl font-bold text-purple-600">342</div>
+                      <div className="text-sm text-gray-600">Total Goals</div>
+                    </div>
+                    <div>
+                      <div className="text-2xl font-bold text-orange-600">3rd</div>
+                      <div className="text-sm text-gray-600">League Position</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
       </div>
     </PageTemplate>
   );
