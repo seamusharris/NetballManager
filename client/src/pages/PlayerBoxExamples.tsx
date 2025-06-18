@@ -503,7 +503,7 @@ export default function PlayerBoxExamples() {
                 ✓
               </div>
               <PlayerBox 
-                player={{...samplePlayers[2], displayName: "Lily Chen", avatarColor: "bg-indigo-500"}}
+                player={{...samplePlayers[2], displayName: "Lily Chen", avatarColor: "bg-indigo-500", active: true}}
                 size="sm"
                 showPositions={true}
                 className="shadow-md transition-shadow duration-200 hover:shadow-lg"
