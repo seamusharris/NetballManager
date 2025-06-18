@@ -89,6 +89,12 @@ export default function Preparation2() {
   const [currentLineup, setCurrentLineup] = useState<Record<string, string | null>>({
     GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null
   });
+  const [currentRoster, setCurrentRoster] = useState<Record<number, Record<string, number | null>>>({
+    1: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
+    2: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
+    3: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
+    4: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null }
+  });
 
   // Load upcoming games for the current team (API automatically filters by team context)
   const { data: upcomingGames = [], isLoading: loadingGames } = useStandardQuery({
@@ -675,12 +681,90 @@ export default function Preparation2() {
   };
 
   const handleCopyRecommendation = (recommendation: GameRecommendation) => {
-    setCurrentLineup(recommendation.formation);
+    // Convert player names to player IDs for the roster manager
+    const rosterAssignment: Record<number, Record<string, number | null>> = {
+      1: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
+      2: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
+      3: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
+      4: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null }
+    };
+
+    // Assign the recommended formation to quarter 1
+    Object.entries(recommendation.formation).forEach(([position, playerName]) => {
+      const player = allPlayers.find((p: any) => p.displayName === playerName);
+      if (player) {
+        rosterAssignment[1][position] = player.id;
+      }
+    });
+
+    setCurrentRoster(rosterAssignment);
     setActiveTab('lineup');
     toast({
       title: "Lineup Copied",
-      description: `${recommendation.title} has been copied to the lineup manager.`
+      description: `${recommendation.title} has been copied to the roster manager.`
     });
+  };
+
+  const handleSaveRoster = async () => {
+    if (!selectedGameId) {
+      toast({
+        title: "Error",
+        description: "Please select a game to save the roster for.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      // Create roster assignments array for API
+      const rosterAssignments: Array<{
+        gameId: number;
+        quarter: number;
+        position: string;
+        playerId: number;
+      }> = [];
+      Object.entries(currentRoster).forEach(([quarter, positions]) => {
+        Object.entries(positions).forEach(([position, playerId]) => {
+          if (playerId) {
+            rosterAssignments.push({
+              gameId: selectedGameId,
+              quarter: parseInt(quarter),
+              position,
+              playerId
+            });
+          }
+        });
+      });
+
+      // Save roster via API (you'll need to create this endpoint)
+      const response = await fetch('/api/game-rosters', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-current-club-id': currentClubId?.toString() || '',
+          'x-current-team-id': currentTeamId?.toString() || ''
+        },
+        body: JSON.stringify({
+          gameId: selectedGameId,
+          assignments: rosterAssignments
+        })
+      });
+
+      if (response.ok) {
+        toast({
+          title: "Roster Saved",
+          description: "Game roster has been saved successfully."
+        });
+      } else {
+        throw new Error('Failed to save roster');
+      }
+    } catch (error) {
+      toast({
+        title: "Save Failed",
+        description: "Unable to save roster. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   const formatFormationForCourt = (formation: Record<string, string>) => {
@@ -1001,17 +1085,31 @@ export default function Preparation2() {
                 )}
 
                 {/* Full Roster Manager */}
-                <DragDropRosterManager
-                  availablePlayers={allPlayers}
-                  gameInfo={{
-                    opponent: opponent,
-                    date: selectedGame.date,
-                    time: selectedGame.time
-                  }}
-                  onRosterChange={(roster) => {
-                    console.log('Roster changed:', roster);
-                  }}
-                />
+                <div className="space-y-4">
+                  <DragDropRosterManager
+                    availablePlayers={allPlayers}
+                    gameInfo={{
+                      opponent: opponent,
+                      date: selectedGame.date,
+                      time: selectedGame.time
+                    }}
+                    onRosterChange={setCurrentRoster}
+                  />
+                  
+                  {/* Save Roster Button */}
+                  <div className="flex justify-end">
+                    <Button 
+                      onClick={handleSaveRoster}
+                      disabled={Object.values(currentRoster).every(quarter => 
+                        Object.values(quarter).every(playerId => playerId === null)
+                      )}
+                      className="min-w-32"
+                    >
+                      <Save className="h-4 w-4 mr-2" />
+                      Save Roster
+                    </Button>
+                  </div>
+                </div>
               </div>
             )}
           </TabsContent>
