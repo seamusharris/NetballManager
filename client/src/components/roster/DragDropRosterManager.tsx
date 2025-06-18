@@ -108,7 +108,7 @@ const PositionSlot = ({
       {/* Player or Drop Zone */}
       {player ? (
         <div 
-          className="cursor-move touch-manipulation select-none" 
+          className="cursor-move touch-manipulation select-none flex items-center justify-center h-full" 
           draggable
           onDragStart={() => onDragStart(player.id)}
           onTouchStart={(e) => onTouchStart(e, player.id)}
@@ -121,7 +121,7 @@ const PositionSlot = ({
             player={player}
             showPositions={true}
             size="sm"
-            className="transition-all duration-200"
+            className="transition-all duration-200 w-full text-center"
             style={{
                   backgroundColor: player ? getMediumColorHex(player.avatarColor) : 'transparent',
                   borderColor: player ? getDarkerColorHex(player.avatarColor) : '#ddd',
