@@ -5,7 +5,8 @@ import PageTemplate from '@/components/layout/PageTemplate';
 import { TeamBox } from '@/components/ui/team-box';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Edit, Trash2, Users, Calendar, Trophy, Target, TrendingUp, Eye } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Edit, Trash2, Users, Calendar, Trophy, Target, TrendingUp, Eye, Star, BarChart3, Settings, Play, Award, Zap } from 'lucide-react';
 
 export default function TeamBoxExamples() {
   const sampleTeams = [
@@ -52,6 +53,24 @@ export default function TeamBoxExamples() {
       clubName: "Deep Creek",
       clubCode: "DC",
       isActive: false,
+      seasonName: "Autumn 2025"
+    },
+    {
+      id: 131,
+      name: "Lightning",
+      division: "Open A",
+      clubName: "Eltham Panthers",
+      clubCode: "EP",
+      isActive: true,
+      seasonName: "Autumn 2025"
+    },
+    {
+      id: 132,
+      name: "Thunder",
+      division: "17U/A",
+      clubName: "Waverley Rep",
+      clubCode: "WR",
+      isActive: true,
       seasonName: "Autumn 2025"
     }
   ];
@@ -126,198 +145,118 @@ export default function TeamBoxExamples() {
 
   return (
     <PageTemplate 
-      title="TeamBox Examples" 
+      title="TeamBox Design Gallery" 
+      subtitle="Explore different team box layouts and styles"
       breadcrumbs={[
         { label: "Component Examples", href: "/component-examples" },
         { label: "TeamBox Examples" }
       ]}
     >
-      <div className="prose max-w-none mb-6">
-        <p className="text-lg text-gray-700">
-          Different layouts and configurations of the TeamBox component
-        </p>
-      </div>
+      <Helmet>
+        <title>TeamBox Examples | Team Manager</title>
+      </Helmet>
       
-      <div className="space-y-8">
-        {/* Minimal Variant */}
+      <div className="space-y-12">
+        
+        {/* Hero Section with Featured Design */}
+        <section className="bg-gradient-to-br from-blue-50 to-purple-50 p-8 rounded-xl">
+          <h2 className="text-3xl font-bold mb-6 text-center">Featured Team Design</h2>
+          <div className="max-w-2xl mx-auto">
+            <TeamBox 
+              team={sampleTeams[0]} 
+              variant="detailed"
+              size="lg"
+              showStats={true}
+              showPlayers={true}
+              players={samplePlayers.slice(0, 8)}
+              stats={[
+                { label: "Current Streak", value: "5 Wins" },
+                { label: "Top Scorer", value: "Abbey N" },
+                { label: "Best Quarter", value: "Q3" },
+                { label: "Team Rating", value: "8.5" },
+                { label: "Goals/Game", value: "28.5" },
+                { label: "Defense", value: "Strong" }
+              ]}
+              actions={
+                <div className="flex gap-3 mt-4">
+                  <Button className="flex-1">
+                    <Users className="h-4 w-4 mr-2" />
+                    Manage Team
+                  </Button>
+                  <Button variant="outline" className="flex-1">
+                    <BarChart3 className="h-4 w-4 mr-2" />
+                    Analytics
+                  </Button>
+                  <Button variant="outline">
+                    <Settings className="h-4 w-4" />
+                  </Button>
+                </div>
+              }
+            />
+          </div>
+        </section>
+
+        {/* Compact Grid Layout */}
         <section>
-          <h2 className="text-2xl font-semibold mb-4">Minimal Team Display</h2>
-          <div className="space-y-3">
-            {sampleTeams.slice(0, 3).map(team => (
+          <h2 className="text-2xl font-semibold mb-6">Compact Grid Layout</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {sampleTeams.slice(0, 6).map((team, index) => (
               <TeamBox 
                 key={team.id}
                 team={team} 
                 variant="minimal"
+                size="sm"
                 actions={
-                  <Button size="sm" variant="outline">
-                    <Eye className="h-4 w-4" />
-                  </Button>
+                  <div className="flex gap-1">
+                    <Button size="sm" variant="outline">
+                      <Eye className="h-3 w-3" />
+                    </Button>
+                    <Button size="sm" variant="outline">
+                      <Edit className="h-3 w-3" />
+                    </Button>
+                  </div>
                 }
               />
             ))}
           </div>
         </section>
 
-        {/* Basic Team Box */}
+        {/* Performance Focused Cards */}
         <section>
-          <h2 className="text-2xl font-semibold mb-4">Standard Team Display</h2>
-          <div className="space-y-4">
-            <TeamBox team={sampleTeams[0]} />
-            <TeamBox team={sampleTeams[1]} />
-            <TeamBox team={sampleTeams[4]} />
-          </div>
-        </section>
-
-        {/* Different Sizes */}
-        <section>
-          <h2 className="text-2xl font-semibold mb-4">Different Sizes</h2>
-          <div className="space-y-4">
-            <div>
-              <h3 className="text-lg font-medium mb-2">Small Size</h3>
-              <TeamBox team={sampleTeams[0]} size="sm" />
-            </div>
-            <div>
-              <h3 className="text-lg font-medium mb-2">Medium Size (Default)</h3>
-              <TeamBox team={sampleTeams[0]} size="md" />
-            </div>
-            <div>
-              <h3 className="text-lg font-medium mb-2">Large Size</h3>
-              <TeamBox team={sampleTeams[0]} size="lg" />
-            </div>
-          </div>
-        </section>
-
-        {/* With Action Buttons */}
-        <section>
-          <h2 className="text-2xl font-semibold mb-4">With Action Buttons</h2>
-          <div className="space-y-4">
+          <h2 className="text-2xl font-semibold mb-6">Performance Dashboard Style</h2>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <TeamBox 
               team={sampleTeams[1]} 
+              size="lg"
+              showStats={true}
+              stats={[
+                { label: "Form", value: "W-W-W-L-W" },
+                { label: "Goals", value: "145" },
+                { label: "Conceded", value: "89" },
+                { label: "Rating", value: "9.2" }
+              ]}
               actions={
-                <div className="flex gap-2">
-                  <Button size="sm" variant="outline">
-                    <Edit className="h-4 w-4" />
+                <div className="grid grid-cols-2 gap-2 mt-4">
+                  <Button variant="default" size="sm">
+                    <Trophy className="h-4 w-4 mr-2" />
+                    View Games
                   </Button>
-                  <Button size="sm" variant="outline" className="text-red-600 hover:text-red-700">
-                    <Trash2 className="h-4 w-4" />
+                  <Button variant="outline" size="sm">
+                    <TrendingUp className="h-4 w-4 mr-2" />
+                    Trends
                   </Button>
-                </div>
-              }
-            />
-            <TeamBox 
-              team={sampleTeams[2]} 
-              actions={
-                <div className="flex gap-2">
-                  <Button size="sm" variant="default">
+                  <Button variant="outline" size="sm">
                     <Users className="h-4 w-4 mr-2" />
-                    Manage Team
+                    Squad
                   </Button>
-                  <Button size="sm" variant="outline">
+                  <Button variant="outline" size="sm">
                     <Calendar className="h-4 w-4 mr-2" />
                     Schedule
                   </Button>
                 </div>
               }
             />
-          </div>
-        </section>
-
-        {/* With Statistics */}
-        <section>
-          <h2 className="text-2xl font-semibold mb-4">With Team Statistics</h2>
-          <div className="space-y-4">
-            <TeamBox 
-              team={sampleTeams[0]} 
-              showStats={true}
-              stats={sampleStats}
-            />
-            <TeamBox 
-              team={sampleTeams[1]} 
-              showStats={true}
-              stats={[
-                { label: "Games", value: 10 },
-                { label: "Wins", value: 7 },
-                { label: "Win Rate", value: "70%" },
-                { label: "Goals For", value: 245 },
-                { label: "Goals Against", value: 189 },
-                { label: "Ladder", value: "2nd" }
-              ]}
-            />
-          </div>
-        </section>
-
-        {/* With Players */}
-        <section>
-          <h2 className="text-2xl font-semibold mb-4">With Player Listing</h2>
-          <div className="space-y-4">
-            <TeamBox 
-              team={sampleTeams[0]} 
-              showPlayers={true}
-              players={samplePlayers.slice(0, 6)}
-            />
-            <TeamBox 
-              team={sampleTeams[1]} 
-              showPlayers={true}
-              players={samplePlayers}
-              size="lg"
-            />
-          </div>
-        </section>
-
-        {/* Detailed Display */}
-        <section>
-          <h2 className="text-2xl font-semibold mb-4">Full Team Details</h2>
-          <div className="space-y-4">
-            <TeamBox 
-              team={sampleTeams[0]} 
-              variant="detailed"
-              showStats={true}
-              showPlayers={true}
-              players={samplePlayers.slice(0, 8)}
-              stats={sampleStats}
-              size="lg"
-              actions={
-                <div className="flex gap-2">
-                  <Button size="sm" variant="default">
-                    <Trophy className="h-4 w-4 mr-2" />
-                    View Games
-                  </Button>
-                  <Button size="sm" variant="outline">
-                    <Target className="h-4 w-4 mr-2" />
-                    Analytics
-                  </Button>
-                  <Button size="sm" variant="outline">
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                </div>
-              }
-            />
-          </div>
-        </section>
-
-        {/* Different Club Colors */}
-        <section>
-          <h2 className="text-2xl font-semibold mb-4">Different Club Styles</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {sampleTeams.map((team) => (
-              <TeamBox 
-                key={team.id}
-                team={team}
-                variant="minimal"
-                actions={
-                  <Badge variant={team.isActive ? "default" : "secondary"}>
-                    {team.isActive ? "Active" : "Inactive"}
-                  </Badge>
-                }
-              />
-            ))}
-          </div>
-        </section>
-
-        {/* Mixed Configurations */}
-        <section>
-          <h2 className="text-2xl font-semibold mb-4">Combined Features</h2>
-          <div className="space-y-6">
+            
             <TeamBox 
               team={sampleTeams[2]} 
               size="lg"
@@ -325,20 +264,19 @@ export default function TeamBoxExamples() {
               showPlayers={true}
               players={samplePlayers.slice(0, 4)}
               stats={[
-                { label: "Current Streak", value: "5 Wins" },
-                { label: "Top Scorer", value: "Abbey N" },
-                { label: "Best Quarter", value: "Q3" },
-                { label: "Team Rating", value: "8.5" }
+                { label: "Next Game", value: "Sat 2PM" },
+                { label: "Opponent", value: "Lightning" },
+                { label: "Venue", value: "Home" },
+                { label: "Priority", value: "High" }
               ]}
               actions={
-                <div className="flex gap-2">
-                  <Button size="sm" variant="default">
-                    <TrendingUp className="h-4 w-4 mr-2" />
-                    Performance
+                <div className="flex gap-2 mt-4">
+                  <Button className="flex-1">
+                    <Play className="h-4 w-4 mr-2" />
+                    Game Prep
                   </Button>
-                  <Button size="sm" variant="outline">
-                    <Users className="h-4 w-4 mr-2" />
-                    Roster
+                  <Button variant="outline">
+                    <Target className="h-4 w-4" />
                   </Button>
                 </div>
               }
@@ -346,137 +284,319 @@ export default function TeamBoxExamples() {
           </div>
         </section>
 
-        {/* Hover Effect Comparisons */}
+        {/* Card-based Layout with Actions */}
         <section>
-          <h2 className="text-2xl font-semibold mb-4">Hover Effect Comparisons</h2>
-          <div className="space-y-6">
-            
-            <div>
-              <h3 className="text-lg font-medium mb-3">1. Background Darkening Only</h3>
-              <div 
-                className="flex items-center justify-between p-3 rounded-lg border-2 transition-all duration-300 cursor-pointer"
-                style={{ 
-                  backgroundColor: `${sampleTeams[0].clubCode === 'WNC' ? '#ff2c36' : '#3b82f6'}15`,
-                  borderColor: sampleTeams[0].clubCode === 'WNC' ? '#ff2c36' : '#3b82f6'
-                }}
-                onMouseEnter={(e) => {
-                  const teamColor = sampleTeams[0].clubCode === 'WNC' ? '#ff2c36' : '#3b82f6';
-                  e.currentTarget.style.backgroundColor = `${teamColor}25`;
-                }}
-                onMouseLeave={(e) => {
-                  const teamColor = sampleTeams[0].clubCode === 'WNC' ? '#ff2c36' : '#3b82f6';
-                  e.currentTarget.style.backgroundColor = `${teamColor}15`;
-                }}
-              >
-                <div className="flex items-center space-x-3">
-                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: sampleTeams[0].clubCode === 'WNC' ? '#ff2c36' : '#3b82f6' }}></div>
-                  <div>
-                    <div className="font-semibold">{sampleTeams[0].name}</div>
-                    <div className="text-sm text-gray-600">{sampleTeams[0].division} • {sampleTeams[0].clubName}</div>
-                  </div>
-                </div>
-                <Badge variant="default">Background Only</Badge>
-              </div>
-            </div>
+          <h2 className="text-2xl font-semibold mb-6">Action-Rich Cards</h2>
+          <div className="space-y-4">
+            <Card>
+              <CardContent className="p-0">
+                <TeamBox 
+                  team={sampleTeams[3]} 
+                  showStats={true}
+                  showPlayers={true}
+                  players={samplePlayers.slice(2, 6)}
+                  stats={[
+                    { label: "Ladder", value: "2nd" },
+                    { label: "Points", value: "24" },
+                    { label: "For/Against", value: "+67" }
+                  ]}
+                  actions={
+                    <div className="border-t p-4 bg-gray-50">
+                      <div className="flex flex-wrap gap-2">
+                        <Button size="sm" variant="default">
+                          <Users className="h-4 w-4 mr-2" />
+                          Team Hub
+                        </Button>
+                        <Button size="sm" variant="outline">
+                          <Calendar className="h-4 w-4 mr-2" />
+                          Fixtures
+                        </Button>
+                        <Button size="sm" variant="outline">
+                          <BarChart3 className="h-4 w-4 mr-2" />
+                          Stats
+                        </Button>
+                        <Button size="sm" variant="outline">
+                          <Trophy className="h-4 w-4 mr-2" />
+                          Results
+                        </Button>
+                        <Button size="sm" variant="outline">
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  }
+                />
+              </CardContent>
+            </Card>
 
-            <div>
-              <h3 className="text-lg font-medium mb-3">2. Shadow Change Only (Medium)</h3>
-              <div 
-                className="flex items-center justify-between p-3 rounded-lg border-2 transition-shadow duration-300 hover:shadow-md shadow-sm cursor-pointer"
-                style={{ 
-                  backgroundColor: `${sampleTeams[1].clubCode === 'WNC' ? '#ff2c36' : '#3b82f6'}15`,
-                  borderColor: sampleTeams[1].clubCode === 'WNC' ? '#ff2c36' : '#3b82f6'
-                }}
-              >
-                <div className="flex items-center space-x-3">
-                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: sampleTeams[1].clubCode === 'WNC' ? '#ff2c36' : '#3b82f6' }}></div>
-                  <div>
-                    <div className="font-semibold">{sampleTeams[1].name}</div>
-                    <div className="text-sm text-gray-600">{sampleTeams[1].division} • {sampleTeams[1].clubName}</div>
-                  </div>
-                </div>
-                <Badge variant="outline">Shadow Only (md)</Badge>
-              </div>
-            </div>
-
-            <div>
-              <h3 className="text-lg font-medium mb-3">3. Shadow Change Only (Large)</h3>
-              <div 
-                className="flex items-center justify-between p-3 rounded-lg border-2 transition-shadow duration-300 hover:shadow-lg shadow-sm cursor-pointer"
-                style={{ 
-                  backgroundColor: `${sampleTeams[2].clubCode === 'WNC' ? '#ff2c36' : '#3b82f6'}15`,
-                  borderColor: sampleTeams[2].clubCode === 'WNC' ? '#ff2c36' : '#3b82f6'
-                }}
-              >
-                <div className="flex items-center space-x-3">
-                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: sampleTeams[2].clubCode === 'WNC' ? '#ff2c36' : '#3b82f6' }}></div>
-                  <div>
-                    <div className="font-semibold">{sampleTeams[2].name}</div>
-                    <div className="text-sm text-gray-600">{sampleTeams[2].division} • {sampleTeams[2].clubName}</div>
-                  </div>
-                </div>
-                <Badge variant="outline">Shadow Only (lg)</Badge>
-              </div>
-            </div>
-
-            <div>
-              <h3 className="text-lg font-medium mb-3">4. Background Darkening + Medium Shadow</h3>
-              <div 
-                className="flex items-center justify-between p-3 rounded-lg border-2 transition-all duration-300 hover:shadow-md shadow-sm cursor-pointer"
-                style={{ 
-                  backgroundColor: `${sampleTeams[3].clubCode === 'WNC' ? '#ff2c36' : '#3b82f6'}15`,
-                  borderColor: sampleTeams[3].clubCode === 'WNC' ? '#ff2c36' : '#3b82f6'
-                }}
-                onMouseEnter={(e) => {
-                  const teamColor = sampleTeams[3].clubCode === 'WNC' ? '#ff2c36' : '#3b82f6';
-                  e.currentTarget.style.backgroundColor = `${teamColor}25`;
-                }}
-                onMouseLeave={(e) => {
-                  const teamColor = sampleTeams[3].clubCode === 'WNC' ? '#ff2c36' : '#3b82f6';
-                  e.currentTarget.style.backgroundColor = `${teamColor}15`;
-                }}
-              >
-                <div className="flex items-center space-x-3">
-                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: sampleTeams[3].clubCode === 'WNC' ? '#ff2c36' : '#3b82f6' }}></div>
-                  <div>
-                    <div className="font-semibold">{sampleTeams[3].name}</div>
-                    <div className="text-sm text-gray-600">{sampleTeams[3].division} • {sampleTeams[3].clubName}</div>
-                  </div>
-                </div>
-                <Badge variant="secondary">Background + Shadow (md)</Badge>
-              </div>
-            </div>
-
-            <div>
-              <h3 className="text-lg font-medium mb-3">5. Background Darkening + Large Shadow</h3>
-              <div 
-                className="flex items-center justify-between p-3 rounded-lg border-2 transition-all duration-300 hover:shadow-lg shadow-sm cursor-pointer"
-                style={{ 
-                  backgroundColor: `${sampleTeams[4].clubCode === 'WNC' ? '#ff2c36' : '#3b82f6'}15`,
-                  borderColor: sampleTeams[4].clubCode === 'WNC' ? '#ff2c36' : '#3b82f6'
-                }}
-                onMouseEnter={(e) => {
-                  const teamColor = sampleTeams[4].clubCode === 'WNC' ? '#ff2c36' : '#3b82f6';
-                  e.currentTarget.style.backgroundColor = `${teamColor}25`;
-                }}
-                onMouseLeave={(e) => {
-                  const teamColor = sampleTeams[4].clubCode === 'WNC' ? '#ff2c36' : '#3b82f6';
-                  e.currentTarget.style.backgroundColor = `${teamColor}15`;
-                }}
-              >
-                <div className="flex items-center space-x-3">
-                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: sampleTeams[4].clubCode === 'WNC' ? '#ff2c36' : '#3b82f6' }}></div>
-                  <div>
-                    <div className="font-semibold">{sampleTeams[4].name}</div>
-                    <div className="text-sm text-gray-600">{sampleTeams[4].division} • {sampleTeams[4].clubName}</div>
-                  </div>
-                </div>
-                <Badge variant="secondary">Background + Shadow (lg)</Badge>
-              </div>
-            </div>
-
+            <Card>
+              <CardContent className="p-0">
+                <TeamBox 
+                  team={sampleTeams[5]} 
+                  showStats={true}
+                  stats={[
+                    { label: "Streak", value: "8 Wins" },
+                    { label: "Top Form", value: "Attack" },
+                    { label: "MVP", value: "Sarah K" }
+                  ]}
+                  actions={
+                    <div className="border-t p-4">
+                      <div className="flex justify-between items-center">
+                        <div className="flex gap-2">
+                          <Badge variant="default" className="bg-green-500">
+                            <Star className="h-3 w-3 mr-1" />
+                            Hot Streak
+                          </Badge>
+                          <Badge variant="outline">
+                            <Award className="h-3 w-3 mr-1" />
+                            League Leaders
+                          </Badge>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button size="sm">View Details</Button>
+                          <Button size="sm" variant="outline">
+                            <Settings className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  }
+                />
+              </CardContent>
+            </Card>
           </div>
         </section>
+
+        {/* Status-Based Designs */}
+        <section>
+          <h2 className="text-2xl font-semibold mb-6">Status & Priority Indicators</h2>
+          <div className="space-y-4">
+            
+            {/* High Priority Team */}
+            <div className="border-l-4 border-red-500 bg-red-50">
+              <TeamBox 
+                team={{...sampleTeams[0], name: "Priority Team - Game Tomorrow"}} 
+                showStats={true}
+                stats={[
+                  { label: "Next Game", value: "16 hours" },
+                  { label: "Preparation", value: "85%" },
+                  { label: "Squad Status", value: "Ready" }
+                ]}
+                actions={
+                  <div className="flex gap-2 mt-3">
+                    <Button variant="destructive" size="sm">
+                      <Zap className="h-4 w-4 mr-2" />
+                      Final Prep
+                    </Button>
+                    <Button variant="outline" size="sm">Check Roster</Button>
+                    <Button variant="outline" size="sm">Team Brief</Button>
+                  </div>
+                }
+              />
+            </div>
+
+            {/* Warning Status Team */}
+            <div className="border-l-4 border-yellow-500 bg-yellow-50">
+              <TeamBox 
+                team={{...sampleTeams[1], name: "Squad Issues - Need Attention"}} 
+                showStats={true}
+                stats={[
+                  { label: "Available", value: "6/10" },
+                  { label: "Injuries", value: "2" },
+                  { label: "Status", value: "Concern" }
+                ]}
+                actions={
+                  <div className="flex gap-2 mt-3">
+                    <Button variant="outline" size="sm" className="border-yellow-600 text-yellow-700">
+                      <Users className="h-4 w-4 mr-2" />
+                      Manage Squad
+                    </Button>
+                    <Button variant="outline" size="sm">Find Cover</Button>
+                    <Button variant="outline" size="sm">Medical Update</Button>
+                  </div>
+                }
+              />
+            </div>
+
+            {/* Success Status Team */}
+            <div className="border-l-4 border-green-500 bg-green-50">
+              <TeamBox 
+                team={{...sampleTeams[2], name: "Championship Winners"}} 
+                showStats={true}
+                stats={[
+                  { label: "Trophy", value: "Champions" },
+                  { label: "Record", value: "12-0-1" },
+                  { label: "Achievement", value: "Perfect" }
+                ]}
+                actions={
+                  <div className="flex gap-2 mt-3">
+                    <Button className="bg-green-600 hover:bg-green-700" size="sm">
+                      <Trophy className="h-4 w-4 mr-2" />
+                      Celebrate
+                    </Button>
+                    <Button variant="outline" size="sm">Season Review</Button>
+                    <Button variant="outline" size="sm">Awards</Button>
+                  </div>
+                }
+              />
+            </div>
+          </div>
+        </section>
+
+        {/* Compact List View */}
+        <section>
+          <h2 className="text-2xl font-semibold mb-6">Compact List View</h2>
+          <Card>
+            <CardHeader>
+              <CardTitle>All Teams Overview</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {sampleTeams.map((team, index) => (
+                <div key={team.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 border">
+                  <div className="flex items-center space-x-4">
+                    <div 
+                      className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold"
+                      style={{ backgroundColor: team.clubCode === 'WNC' ? '#ff2c36' : team.clubCode === 'DC' ? '#10b981' : '#3b82f6' }}
+                    >
+                      {team.clubCode}
+                    </div>
+                    <div>
+                      <div className="font-semibold">{team.name}</div>
+                      <div className="text-sm text-gray-600">{team.division}</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-4">
+                    <Badge variant={team.isActive ? "default" : "secondary"}>
+                      {team.isActive ? "Active" : "Inactive"}
+                    </Badge>
+                    <div className="flex gap-1">
+                      <Button size="sm" variant="outline">
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button size="sm" variant="outline">
+                        <BarChart3 className="h-4 w-4" />
+                      </Button>
+                      <Button size="sm" variant="outline">
+                        <Settings className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </section>
+
+        {/* Interactive Hover Effects */}
+        <section>
+          <h2 className="text-2xl font-semibold mb-6">Interactive Hover Effects</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {sampleTeams.slice(0, 4).map((team, index) => (
+              <div 
+                key={team.id}
+                className="group relative overflow-hidden rounded-lg border-2 transition-all duration-300 hover:shadow-xl hover:scale-105"
+                style={{ 
+                  borderColor: team.clubCode === 'WNC' ? '#ff2c36' : team.clubCode === 'DC' ? '#10b981' : '#3b82f6'
+                }}
+              >
+                <TeamBox 
+                  team={team} 
+                  showStats={true}
+                  stats={[
+                    { label: "Rank", value: `#${index + 1}` },
+                    { label: "Form", value: "W-L-W" },
+                    { label: "Rating", value: `${8 + index}.${2 + index}` }
+                  ]}
+                />
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-300">
+                  <div className="absolute bottom-4 left-4 right-4 transform translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+                    <div className="flex gap-2">
+                      <Button size="sm" className="bg-white text-black shadow-lg">
+                        Quick View
+                      </Button>
+                      <Button size="sm" variant="outline" className="bg-white shadow-lg">
+                        Actions
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Advanced Analytics Layout */}
+        <section>
+          <h2 className="text-2xl font-semibold mb-6">Analytics Dashboard Style</h2>
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            <div className="xl:col-span-2">
+              <TeamBox 
+                team={sampleTeams[0]} 
+                size="lg"
+                showStats={true}
+                showPlayers={true}
+                players={samplePlayers.slice(0, 8)}
+                stats={[
+                  { label: "Attack Rating", value: "92%" },
+                  { label: "Defense Rating", value: "85%" },
+                  { label: "Possession", value: "64%" },
+                  { label: "Efficiency", value: "78%" },
+                  { label: "Fitness", value: "91%" },
+                  { label: "Team Chemistry", value: "88%" }
+                ]}
+                actions={
+                  <div className="grid grid-cols-3 gap-2 mt-4">
+                    <Button size="sm" variant="outline">
+                      <BarChart3 className="h-4 w-4 mr-1" />
+                      Reports
+                    </Button>
+                    <Button size="sm" variant="outline">
+                      <TrendingUp className="h-4 w-4 mr-1" />
+                      Trends
+                    </Button>
+                    <Button size="sm" variant="outline">
+                      <Target className="h-4 w-4 mr-1" />
+                      Goals
+                    </Button>
+                  </div>
+                }
+              />
+            </div>
+            <div className="space-y-4">
+              <TeamBox 
+                team={sampleTeams[1]} 
+                variant="minimal"
+                actions={
+                  <Badge variant="default" className="bg-blue-500">
+                    <TrendingUp className="h-3 w-3 mr-1" />
+                    Improving
+                  </Badge>
+                }
+              />
+              <TeamBox 
+                team={sampleTeams[2]} 
+                variant="minimal"
+                actions={
+                  <Badge variant="default" className="bg-green-500">
+                    <Star className="h-3 w-3 mr-1" />
+                    Top Form
+                  </Badge>
+                }
+              />
+              <TeamBox 
+                team={sampleTeams[3]} 
+                variant="minimal"
+                actions={
+                  <Badge variant="default" className="bg-yellow-500">
+                    <Zap className="h-3 w-3 mr-1" />
+                    Watch
+                  </Badge>
+                }
+              />
+            </div>
+          </div>
+        </section>
+
       </div>
     </PageTemplate>
   );
