@@ -157,7 +157,7 @@ export default function SharedPlayerAvailability({
               <div 
                 key={player.id}
                 className={cn(
-                  "p-4 border rounded-lg shadow-md transition-all duration-200 hover:shadow-lg cursor-pointer",
+                  "p-4 border rounded-lg shadow-md transition-all duration-200 hover:shadow-lg hover:scale-[1.02] cursor-pointer",
                   isAvailable 
                     ? "border-2" 
                     : "border border-gray-200"
