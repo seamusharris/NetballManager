@@ -16,7 +16,7 @@ import { CourtDisplay } from '@/components/ui/court-display';
 import PlayerAvatar from '@/components/ui/player-avatar';
 import DragDropLineupEditor from '@/components/roster/DragDropLineupEditor';
 import { useToast } from '@/hooks/use-toast';
-import { apiRequest } from '@/lib/queryClient';
+import { apiClient } from '@/lib/apiClient';
 import { 
   Users, 
   Target, 
