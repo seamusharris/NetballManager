@@ -68,7 +68,8 @@ const PositionSlot = ({
   onDragStart: (playerId: number) => void,
   onTouchStart: (e: React.TouchEvent, playerId: number) => void,
   onTouchMove: (e: React.TouchEvent) => void,
-  onTouchEnd: (e: React.TouchEvent) => void
+  onTouchEnd: (e: React.TouchEvent) => void,
+  onTouchCancel: (e: React.TouchEvent) => void
 }) => {
   const sectionColors = {
     attacking: 'bg-gradient-to-br from-red-50 to-red-100 border-red-200',
@@ -106,6 +107,7 @@ const PositionSlot = ({
           onTouchStart={(e) => onTouchStart(e, player.id)}
           onTouchMove={onTouchMove}
           onTouchEnd={onTouchEnd}
+          onTouchCancel={onTouchCancel}
           style={{ touchAction: 'none' }}
         >
           <PlayerBox 
@@ -167,8 +169,12 @@ export default function DragDropRosterManager({ availablePlayers, gameInfo, onRo
   // Touch handlers
   const handleTouchStart = (e: React.TouchEvent, playerId: number) => {
     e.preventDefault();
+    e.stopPropagation();
     const touch = e.touches[0];
     const target = e.currentTarget as HTMLElement;
+    
+    // Clean up any existing drag state
+    cleanup();
     
     setTouchStart({ x: touch.clientX, y: touch.clientY });
     setDraggedPlayer(playerId);
@@ -209,8 +215,13 @@ export default function DragDropRosterManager({ availablePlayers, gameInfo, onRo
     }
     
     if (isDragging && clone) {
-      clone.style.left = `${touch.clientX - touchStart.x + parseInt(clone.style.left)}px`;
-      clone.style.top = `${touch.clientY - touchStart.y + parseInt(clone.style.top)}px`;
+      // Calculate the offset from the center of the clone
+      const cloneWidth = parseInt(clone.style.width) || 0;
+      const cloneHeight = parseInt(clone.style.height) || 0;
+      
+      // Position clone centered on touch point
+      clone.style.left = `${touch.clientX - cloneWidth / 2}px`;
+      clone.style.top = `${touch.clientY - cloneHeight / 2}px`;
       
       // Check what's under the touch point
       const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
@@ -226,6 +237,9 @@ export default function DragDropRosterManager({ availablePlayers, gameInfo, onRo
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
     if (!isDragging) {
       // Just a tap, not a drag
       cleanup();
@@ -246,9 +260,19 @@ export default function DragDropRosterManager({ availablePlayers, gameInfo, onRo
     cleanup();
   };
 
+  const handleTouchCancel = (e: React.TouchEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    cleanup();
+  };
+
   const cleanup = () => {
-    if (clone) {
-      document.body.removeChild(clone);
+    if (clone && clone.parentNode) {
+      try {
+        document.body.removeChild(clone);
+      } catch (e) {
+        // Clone might have already been removed
+      }
       setClone(null);
     }
     if (draggedElement) {
@@ -480,6 +504,7 @@ export default function DragDropRosterManager({ availablePlayers, gameInfo, onRo
                 onTouchStart={handleTouchStart}
                 onTouchMove={handleTouchMove}
                 onTouchEnd={handleTouchEnd}
+                onTouchCancel={handleTouchCancel}
               />
             ))}
           </div>
@@ -565,6 +590,7 @@ export default function DragDropRosterManager({ availablePlayers, gameInfo, onRo
                   onTouchStart={(e) => handleTouchStart(e, player.id)}
                   onTouchMove={handleTouchMove}
                   onTouchEnd={handleTouchEnd}
+                  onTouchCancel={handleTouchCancel}
                   className="cursor-move transform hover:scale-105 transition-transform touch-manipulation select-none"
                   style={{ touchAction: 'none' }}
                 >
