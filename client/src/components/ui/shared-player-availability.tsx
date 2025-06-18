@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
+
 import { useToast } from '@/hooks/use-toast';
 import { Player } from '@shared/schema';
 import PlayerAvatar from '@/components/ui/player-avatar';
@@ -188,16 +188,23 @@ export default function SharedPlayerAvailability({
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Checkbox
-                      checked={isAvailable}
-                      disabled={isSaving}
-                      onCheckedChange={(checked) => {
-                        handlePlayerAvailabilityChange(
-                          player.id, 
-                          checked ? 'available' : 'unavailable'
-                        );
+                    <div 
+                      className="w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white transition-all duration-200"
+                      style={{ 
+                        backgroundColor: isAvailable ? getPlayerColorHex(playerColor) : 'transparent', 
+                        border: isAvailable ? 'none' : `2px solid ${getPlayerColorHex(playerColor)}80` 
                       }}
-                    />
+                      onClick={() => {
+                        if (!isSaving) {
+                          handlePlayerAvailabilityChange(
+                            player.id, 
+                            isAvailable ? 'unavailable' : 'available'
+                          );
+                        }
+                      }}
+                    >
+                      {isAvailable && '✓'}
+                    </div>
                   </div>
                 </div>
               </div>
