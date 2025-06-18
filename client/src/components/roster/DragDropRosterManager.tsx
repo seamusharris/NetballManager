@@ -93,7 +93,7 @@ const PositionSlot = ({
       {/* Player or Drop Zone */}
       {player ? (
         <div 
-          className="mt-2 cursor-move" 
+          className="cursor-move" 
           draggable
           onDragStart={() => onDragStart(player.id)}
         >
