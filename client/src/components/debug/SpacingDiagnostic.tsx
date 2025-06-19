@@ -120,31 +120,50 @@ export default function SpacingDiagnostic({ className }: SpacingDiagnosticProps)
               <GameResultCard
                 key={mockGame1.id}
                 game={mockGame1}
-                players={[]}
                 currentTeamId={123}
                 centralizedScores={mockScores}
-                showQuickActions={false}
-                className="w-full"
+                showLink={false}
               />
               <GameResultCard
                 key={mockGame2.id}
                 game={mockGame2}
-                players={[]}
                 currentTeamId={123}
                 centralizedScores={[]}
-                showQuickActions={false}
-                className="w-full"
+                showLink={false}
               />
               <GameResultCard
                 key={mockGame3.id}
                 game={mockGame3}
-                players={[]}
                 currentTeamId={123}
                 centralizedScores={[]}
-                showQuickActions={false}
-                className="w-full"
+                showLink={false}
               />
             </GamesContainer>
+          </div>
+
+          {/* Direct space-y test with GameResultCards */}
+          <div>
+            <h3 className="text-lg font-semibold mb-4">4. Direct space-y-4 with GameResultCards</h3>
+            <div className="space-y-4 border-2 border-orange-200 p-4 rounded">
+              <GameResultCard
+                game={mockGame1}
+                currentTeamId={123}
+                centralizedScores={mockScores}
+                showLink={false}
+              />
+              <GameResultCard
+                game={mockGame2}
+                currentTeamId={123}
+                centralizedScores={[]}
+                showLink={false}
+              />
+              <GameResultCard
+                game={mockGame3}
+                currentTeamId={123}
+                centralizedScores={[]}
+                showLink={false}
+              />
+            </div>
           </div>
 
           {/* Different Spacing Options */}
