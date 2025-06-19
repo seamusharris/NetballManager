@@ -876,9 +876,9 @@ export default function GamePreparation() {
 
                               return (
                                 <div className="space-y-6">
-                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    {/* Goals For */}
-                                    <div className="space-y-3 p-4 border-2 border-green-200 rounded-lg bg-green-50">
+                                  <div className="grid grid-cols-12 gap-6">
+                                    {/* Goals For - takes up 5/12 of the width */}
+                                    <div className="col-span-5 space-y-3 p-4 border-2 border-green-200 rounded-lg bg-green-50">
                                       <div className="flex justify-between items-center">
                                         <span className="text-sm font-medium text-gray-700">Average Goals For</span>
                                         <span className="text-lg font-bold text-green-600">{avgGoalsFor.toFixed(1)}</span>
@@ -894,8 +894,8 @@ export default function GamePreparation() {
                                       </div>
                                     </div>
 
-                                    {/* Goals Against */}
-                                    <div className="space-y-3 p-4 border-2 border-red-200 rounded-lg bg-red-50">
+                                    {/* Goals Against - takes up 5/12 of the width */}
+                                    <div className="col-span-5 space-y-3 p-4 border-2 border-red-200 rounded-lg bg-red-50">
                                       <div className="flex justify-between items-center">
                                         <span className="text-sm font-medium text-gray-700">Average Goals Against</span>
                                         <span className="text-lg font-bold text-red-600">{avgGoalsAgainst.toFixed(1)}</span>
@@ -908,6 +908,19 @@ export default function GamePreparation() {
                                       </div>
                                       <div className="text-xs text-gray-500">
                                         Lower is better for defensive performance
+                                      </div>
+                                    </div>
+
+                                    {/* Goal Difference - takes up 2/12 of the width (same as quarter boxes) */}
+                                    <div className="col-span-2 text-center p-4 border-2 border-blue-200 rounded-lg bg-blue-50">
+                                      <div className="space-y-2">
+                                        <div className="text-sm font-medium text-gray-700">Goal Difference</div>
+                                        <div className={`text-2xl font-bold ${goalDifference >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                          {goalDifference >= 0 ? '+' : ''}{goalDifference.toFixed(1)}
+                                        </div>
+                                        <div className="text-xs text-gray-500">
+                                          Per game avg
+                                        </div>
                                       </div>
                                     </div>
                                   </div>
