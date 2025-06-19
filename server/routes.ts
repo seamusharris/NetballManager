@@ -3037,51 +3037,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete all roster entries for a game
+  app.delete('/api/games/:gameId/rosters', requireClubAccess(), async (req: AuthenticatedRequest, res) => {
+    try {
+      const { gameId } = req.params;
+      await storage.deleteRostersByGame(parseInt(gameId));
+      res.json({ success: true, message: `All roster entries for game ${gameId} deleted` });
+    } catch (error) {
+      console.error('Error deleting roster entries:', error);
+      res.status(500).json({ error: 'Failed to delete roster entries' });
+    }
+  });
+
+  // Batch save roster entries for a game
+  app.post('/api/games/:gameId/rosters/batch', requireClubAccess(), async (req: AuthenticatedRequest, res) => {
+    try {
+      const { gameId } = req.params;
+      const { rosters: rosterData } = req.body;
+
+      if (!Array.isArray(rosterData)) {
+        return res.status(400).json({ error: 'Rosters data must be an array' });
+      }
+
+      // First delete all existing roster entries for this game
+      await storage.deleteRostersByGame(parseInt(gameId));
+
+      // Then insert all new roster entries
+      for (const roster of rosterData) {
+        await storage.createRoster(roster);
+      }
+
+      res.status(201).json({ 
+        success: true, 
+        message: `Batch saved ${rosterData.length} roster entries for game ${gameId}`,
+        count: rosterData.length
+      });
+    } catch (error) {
+      console.error('Error batch saving roster entries:', error);
+      res.status(500).json({ error: 'Failed to batch save roster entries' });
+    }
+  });
+
   // Create HTTP server
   const httpServer = createServer(app);
   return httpServer;
 }
-
-// Delete all roster entries for a game
-app.delete('/api/games/:gameId/rosters', requireClubAccess, async (req, res) => {
-  try {
-    const { gameId } = req.params;
-    await db.delete(rosters).where(eq(rosters.gameId, parseInt(gameId)));
-    res.json({ success: true, message: `All roster entries for game ${gameId} deleted` });
-  } catch (error) {
-    console.error('Error deleting roster entries:', error);
-    res.status(500).json({ error: 'Failed to delete roster entries' });
-  }
-});
-
-// Batch save roster entries for a game
-app.post('/api/games/:gameId/rosters/batch', requireClubAccess, async (req, res) => {
-  try {
-    const { gameId } = req.params;
-    const { rosters: rosterData } = req.body;
-
-    if (!Array.isArray(rosterData)) {
-      return res.status(400).json({ error: 'Rosters data must be an array' });
-    }
-
-    // Start a transaction for atomic operation
-    await db.transaction(async (tx) => {
-      // First delete all existing roster entries for this game
-      await tx.delete(rosters).where(eq(rosters.gameId, parseInt(gameId)));
-
-      // Then insert all new roster entries in a single batch
-      if (rosterData.length > 0) {
-        await tx.insert(rosters).values(rosterData);
-      }
-    });
-
-    res.status(201).json({ 
-      success: true, 
-      message: `Batch saved ${rosterData.length} roster entries for game ${gameId}`,
-      count: rosterData.length
-    });
-  } catch (error) {
-    console.error('Error batch saving roster entries:', error);
-    res.status(500).json({ error: 'Failed to batch save roster entries' });
-  }
-});
