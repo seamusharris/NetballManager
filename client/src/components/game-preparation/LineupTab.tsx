@@ -27,7 +27,7 @@ interface LineupTabProps {
 }
 
 // Using shared availability format (boolean-based)
-type PlayerAvailabilityData = Record<number, 'available' | 'unavailable' | 'maybe'>;
+type PlayerAvailabilityData = Record<number, boolean>;
 
 interface LineupRecommendation {
   id: string;
@@ -63,14 +63,14 @@ export function LineupTab({ game, players, rosters, onRosterUpdate }: LineupTabP
         if (response?.availablePlayerIds) {
           const initialData: PlayerAvailabilityData = {};
           players.forEach(player => {
-            initialData[player.id] = response.availablePlayerIds.includes(player.id) ? 'available' : 'unavailable';
+            initialData[player.id] = response.availablePlayerIds.includes(player.id);
           });
           setPlayerAvailability(initialData);
         } else {
           // Default all active players to available
           const defaultData: PlayerAvailabilityData = {};
           players.forEach(player => {
-            defaultData[player.id] = player.active !== false ? 'available' : 'unavailable';
+            defaultData[player.id] = player.active !== false;
           });
           setPlayerAvailability(defaultData);
         }
@@ -79,7 +79,7 @@ export function LineupTab({ game, players, rosters, onRosterUpdate }: LineupTabP
         // Default all players to available on error
         const defaultData: PlayerAvailabilityData = {};
         players.forEach(player => {
-          defaultData[player.id] = 'available';
+          defaultData[player.id] = true;
         });
         setPlayerAvailability(defaultData);
       }
@@ -92,7 +92,7 @@ export function LineupTab({ game, players, rosters, onRosterUpdate }: LineupTabP
 
   // Generate recommendations when availability changes
   useEffect(() => {
-    const availablePlayers = players.filter(p => playerAvailability[p.id] === 'available');
+    const availablePlayers = players.filter(p => playerAvailability[p.id] === true);
     if (availablePlayers.length >= 7) {
       generateLineupRecommendations(availablePlayers);
     } else {
@@ -222,8 +222,12 @@ export function LineupTab({ game, players, rosters, onRosterUpdate }: LineupTabP
     };
   };
 
-  const handleAvailabilityChange = (data: PlayerAvailabilityData) => {
-    setPlayerAvailability(data);
+  const handleAvailabilityChange = (availablePlayerIds: number[]) => {
+    const newData: PlayerAvailabilityData = {};
+    players.forEach(player => {
+      newData[player.id] = availablePlayerIds.includes(player.id);
+    });
+    setPlayerAvailability(newData);
   };
 
   const handleApplyRecommendation = (recommendation: LineupRecommendation) => {
@@ -255,7 +259,7 @@ export function LineupTab({ game, players, rosters, onRosterUpdate }: LineupTabP
       (confidenceFilter === 'low' && rec.confidence < 60);
   });
 
-  const availableCount = Object.values(playerAvailability).filter(status => status === 'available').length;
+  const availableCount = Object.values(playerAvailability).filter(status => status === true).length;
   const canProceed = availableCount >= 7;
 
   return (
@@ -392,7 +396,7 @@ export function LineupTab({ game, players, rosters, onRosterUpdate }: LineupTabP
             </CardHeader>
             <CardContent>
               <DragDropRosterManager
-                availablePlayers={players.filter(p => playerAvailability[p.id] === 'available')}
+                availablePlayers={players.filter(p => playerAvailability[p.id] === true)}
                 gameInfo={{
                   opponent: game.awayTeamName || game.homeTeamName || "Unknown",
                   date: game.date,

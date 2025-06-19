@@ -21,6 +21,7 @@ interface PlayerAvailabilityManagerProps {
   onAvailabilityChange?: (availablePlayerIds: number[]) => void;
   onAvailabilityStateChange?: (availabilityState: Record<number, boolean>) => void;
   onGameChange?: (gameId: number) => void;
+  hideGameSelection?: boolean;
 }
 
 export default function PlayerAvailabilityManager({
@@ -30,7 +31,8 @@ export default function PlayerAvailabilityManager({
   onComplete,
   onAvailabilityChange,
   onAvailabilityStateChange,
-  onGameChange
+  onGameChange,
+  hideGameSelection = false
 }: PlayerAvailabilityManagerProps) {
   const [teamPlayers, setTeamPlayers] = useState<Player[]>([]);
   const [isLoadingTeamPlayers, setIsLoadingTeamPlayers] = useState(false);
@@ -288,43 +290,45 @@ export default function PlayerAvailabilityManager({
           <span className="text-sm text-gray-600">Available Players</span>
         </div>
 
-        <div className="flex justify-between items-center mt-4">
-          <div className="flex items-center gap-4">
-            {/* Game selection dropdown */}
-            <Select 
-              value={gameId?.toString() || ''} 
-              onValueChange={(value) => {
-                const newGameId = Number(value);
-                onGameChange?.(newGameId);
-              }}
+        {!hideGameSelection && (
+          <div className="flex justify-between items-center mt-4">
+            <div className="flex items-center gap-4">
+              {/* Game selection dropdown */}
+              <Select 
+                value={gameId?.toString() || ''} 
+                onValueChange={(value) => {
+                  const newGameId = Number(value);
+                  onGameChange?.(newGameId);
+                }}
+              >
+                <SelectTrigger className="w-[400px]">
+                  <SelectValue placeholder="Switch Game" />
+                </SelectTrigger>
+                <SelectContent>
+                  {games.length === 0 ? (
+                    <SelectItem value="no-games" disabled>No games available</SelectItem>
+                  ) : (
+                    [...games]
+                      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+                      .map(game => (
+                        <SelectItem key={game.id} value={game.id.toString()}>
+                          {game.date} - {game.awayTeamId ? 'vs Away Team' : 'BYE'}
+                        </SelectItem>
+                      ))
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button 
+              onClick={onComplete}
+              disabled={availableCount === 0}
+              className="ml-2"
             >
-              <SelectTrigger className="w-[400px]">
-                <SelectValue placeholder="Switch Game" />
-              </SelectTrigger>
-              <SelectContent>
-                {games.length === 0 ? (
-                  <SelectItem value="no-games" disabled>No games available</SelectItem>
-                ) : (
-                  [...games]
-                    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-                    .map(game => (
-                      <SelectItem key={game.id} value={game.id.toString()}>
-                        {game.date} - {game.awayTeamId ? 'vs Away Team' : 'BYE'}
-                      </SelectItem>
-                    ))
-                )}
-              </SelectContent>
-            </Select>
+              <Check className="mr-2 h-4 w-4" />
+              Continue to Roster ({availableCount} available)
+            </Button>
           </div>
-          <Button 
-            onClick={onComplete}
-            disabled={availableCount === 0}
-            className="ml-2"
-          >
-            <Check className="mr-2 h-4 w-4" />
-            Continue to Roster ({availableCount} available)
-          </Button>
-        </div>
+        )}
       </CardHeader>
 
       <CardContent>
