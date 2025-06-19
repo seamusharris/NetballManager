@@ -28,6 +28,7 @@ import { apiClient } from '@/lib/apiClient';
 
 // Import GameDetails directly for now
 import GameDetails from "./pages/GameDetails";
+import SpacingDiagnostic from './components/debug/SpacingDiagnostic';
 
 // Lazy load components
 const StatsDebug = lazy(() => import("./pages/StatsDebug"));
@@ -186,6 +187,7 @@ function Router() {
         <Route path="/substitution-flow-examples" component={SubstitutionFlowExamples} />
         <Route path="/roster-management-examples" component={RosterManagementExamples} />
         <Route path="/live-stats-interface-examples" component={LiveStatsInterfaceExamples} />
+        <Route path="/spacing-diagnostic" component={SpacingDiagnostic} />
         <Route component={withErrorBoundary(NotFound, 'NotFound')} />
       </Switch>
     </Layout>
