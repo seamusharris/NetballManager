@@ -293,22 +293,27 @@ export default function DragDropRosterManager({
     refetchOnMount: true, // Do refetch on mount to ensure fresh data when navigating to roster
   });
 
-  // Handle initialRoster prop updates (from recommendations)
+  // Check if initialRoster has any actual assignments (not all null)
+  const hasInitialRosterAssignments = initialRoster && Object.values(initialRoster).some(quarter => 
+    Object.values(quarter).some(playerId => playerId !== null)
+  );
+
+  // Handle initialRoster prop updates (from recommendations) - only if it has actual assignments
   useEffect(() => {
-    if (initialRoster) {
-      console.log('DragDropRosterManager: Received initialRoster:', initialRoster);
+    if (hasInitialRosterAssignments) {
+      console.log('DragDropRosterManager: Received initialRoster with assignments:', initialRoster);
       setAssignments(initialRoster);
       if (onRosterChange) {
         onRosterChange(initialRoster);
       }
       return;
     }
-  }, [initialRoster, onRosterChange]);
+  }, [hasInitialRosterAssignments, initialRoster, onRosterChange]);
 
   // Load roster data when roster data changes
   useEffect(() => {
-    // Skip if we have initialRoster (from recommendations)
-    if (initialRoster) {
+    // Skip if we have initialRoster with actual assignments (from recommendations)
+    if (hasInitialRosterAssignments) {
       return;
     }
 
@@ -352,7 +357,7 @@ export default function DragDropRosterManager({
         onRosterChange(loadedAssignments);
       }
     }
-  }, [gameId, rosters, onRosterChange, initialRoster]);
+  }, [gameId, rosters, onRosterChange, hasInitialRosterAssignments]);
 
   // Handle roster loading error
   useEffect(() => {
