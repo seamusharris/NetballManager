@@ -491,7 +491,7 @@ export default function GamePreparation() {
                         {(() => {
                           // Calculate goal difference for head-to-head display
                           if (historicalGames.length === 0 || !batchScores) return null;
-                          
+
                           let totalGoalsFor = 0;
                           let totalGoalsAgainst = 0;
                           let gamesWithScores = 0;
@@ -500,10 +500,10 @@ export default function GamePreparation() {
                             const gameScores = batchScores?.[game.id] || [];
                             if (gameScores.length > 0) {
                               gamesWithScores++;
-                              
+
                               let gameGoalsFor = 0;
                               let gameGoalsAgainst = 0;
-                              
+
                               gameScores.forEach(score => {
                                 if (score.teamId === currentTeamId) {
                                   gameGoalsFor += score.score;
@@ -511,7 +511,7 @@ export default function GamePreparation() {
                                   gameGoalsAgainst += score.score;
                                 }
                               });
-                              
+
                               totalGoalsFor += gameGoalsFor;
                               totalGoalsAgainst += gameGoalsAgainst;
                             }
@@ -739,7 +739,7 @@ export default function GamePreparation() {
                           })}
                         </div>
 
-                        
+
 
                         {/* Quarter Average Performance Boxes + Goal Difference */}
                         <div className="mt-6 grid grid-cols-2 md:grid-cols-5 gap-4">
@@ -833,7 +833,7 @@ export default function GamePreparation() {
                               </div>
                             );
                           })}
-                          
+
                           {/* Goal Difference Box - styled like quarter boxes */}
                           {(() => {
                             // Calculate overall goal difference for styling
@@ -845,10 +845,10 @@ export default function GamePreparation() {
                               const gameScores = batchScores?.[game.id] || [];
                               if (gameScores.length > 0) {
                                 gamesWithScores++;
-                                
+
                                 let gameGoalsFor = 0;
                                 let gameGoalsAgainst = 0;
-                                
+
                                 gameScores.forEach(score => {
                                   if (score.teamId === currentTeamId) {
                                     gameGoalsFor += score.score;
@@ -856,7 +856,7 @@ export default function GamePreparation() {
                                     gameGoalsAgainst += score.score;
                                   }
                                 });
-                                
+
                                 totalGoalsFor += gameGoalsFor;
                                 totalGoalsAgainst += gameGoalsAgainst;
                               }
@@ -937,11 +937,11 @@ export default function GamePreparation() {
                                 const gameScores = batchScores?.[game.id] || [];
                                 if (gameScores.length > 0) {
                                   gamesWithScores++;
-                                  
+
                                   // Calculate final scores for this game
                                   let gameGoalsFor = 0;
                                   let gameGoalsAgainst = 0;
-                                  
+
                                   gameScores.forEach(score => {
                                     if (score.teamId === currentTeamId) {
                                       gameGoalsFor += score.score;
@@ -949,7 +949,7 @@ export default function GamePreparation() {
                                       gameGoalsAgainst += score.score;
                                     }
                                   });
-                                  
+
                                   totalGoalsFor += gameGoalsFor;
                                   totalGoalsAgainst += gameGoalsAgainst;
                                 }
@@ -1099,7 +1099,7 @@ export default function GamePreparation() {
               );
             })()}
 
-                  
+
 
                   {/* Position Performance Distribution */}
                   {(() => {
