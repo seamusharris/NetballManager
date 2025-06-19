@@ -194,13 +194,13 @@ export default function GameResultCard({
     
     const baseRound = layout === 'narrow' ? `R${game.round}` : `Round ${game.round}`;
     
-    // Add forfeit status if game is completed with forfeit
-    if (game.statusIsCompleted && game.statusName === 'forfeit') {
+    // Add forfeit status if game is completed with forfeit status (statusId 7)
+    if (game.statusIsCompleted && (game.statusId === 7 || game.statusName === 'forfeit')) {
       return `${baseRound} • Forfeit Loss`;
     }
     
     return baseRound;
-  }, [game.round, game.statusIsCompleted, game.statusName, layout]);
+  }, [game.round, game.statusIsCompleted, game.statusName, game.statusId, layout]);
 
   // Helper function for timeline round badge styling
   const getRoundBadgeVariant = () => {
