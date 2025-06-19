@@ -28,6 +28,7 @@ import AnalysisTab from '@/components/game-preparation/AnalysisTab';
 import LineupTab from '@/components/game-preparation/LineupTab';
 import StrategyTab from '@/components/game-preparation/StrategyTab';
 import GameResultCard from '@/components/ui/game-result-card';
+import { GamesContainer } from '@/components/ui/games-container';
 
 type Tab = 'overview' | 'analysis' | 'lineup' | 'strategy';
 
@@ -717,12 +718,3 @@ export default function GamePreparation() {
     </PageTemplate>
   );
 }
-
-// GamesContainer component to provide spacing
-const GamesContainer = ({ children }: { children: React.ReactNode }) => {
-  return (
-    <div className="space-y-4">
-      {children}
-    </div>
-  );
-};
