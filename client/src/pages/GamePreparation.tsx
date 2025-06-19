@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'wouter';
 import { Helmet } from 'react-helmet';
 import { useQuery } from '@tanstack/react-query';
+import { useBatchGameStatistics } from '@/components/statistics/hooks/useBatchGameStatistics';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -259,6 +260,9 @@ export default function GamePreparation() {
     enabled: gameIdsArray.length > 0,
     staleTime: 5 * 60 * 1000,
   });
+
+  // Fetch batch statistics for position-based analysis
+  const { statsMap: batchStats, isLoading: isLoadingBatchStats } = useBatchGameStatistics(gameIdsArray);
 
   // Initialize default tactical notes and objectives
   useEffect(() => {
@@ -893,202 +897,232 @@ export default function GamePreparation() {
                   )}
 
                   {/* Position Performance Distribution */}
-                  {historicalGames.length > 0 && (
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                          <Users className="h-5 w-5" />
-                          Position Performance Distribution vs {opponent}
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        {(() => {
-                          // Calculate actual position-based statistics from historical games
-                          const positionTotals = {
-                            'GS': { goalsFor: 0, games: 0 },
-                            'GA': { goalsFor: 0, games: 0 },
-                            'GD': { goalsAgainst: 0, games: 0 },
-                            'GK': { goalsAgainst: 0, games: 0 }
-                          };
+                  {(() => {
+                    // Check if we have position stats data available
+                    const hasPositionStats = historicalGames.some(game => {
+                      const gameStats = batchStats?.[game.id] || [];
+                      return gameStats.length > 0;
+                    });
 
-                          // Aggregate stats from batch scores data for historical games
-                          historicalGames.forEach(game => {
-                            const gameScores = batchScores?.[game.id] || [];
-                            if (gameScores.length > 0) {
-                              // Calculate total goals scored by us (attacking) and against us (defending)
-                              const ourTotalGoals = gameScores
-                                .filter(score => score.teamId === currentTeamId)
-                                .reduce((sum, score) => sum + score.score, 0);
+                    if (!hasPositionStats || historicalGames.length === 0) {
+                      return null; // Don't show the section if no data available
+                    }
 
-                              const opponentTotalGoals = gameScores
-                                .filter(score => score.teamId !== currentTeamId)
-                                .reduce((sum, score) => sum + score.score, 0);
+                    return (
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="flex items-center gap-2">
+                            <Users className="h-5 w-5" />
+                            Position Performance Distribution vs {opponent}
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          {(() => {
+                            // Calculate actual position-based statistics from batch stats
+                            const positionTotals = {
+                              'GS': { goalsFor: 0, games: 0 },
+                              'GA': { goalsFor: 0, games: 0 },
+                              'GD': { goalsAgainst: 0, games: 0 },
+                              'GK': { goalsAgainst: 0, games: 0 }
+                            };
 
-                              // Distribute goals based on typical netball position contribution patterns
-                              // GS typically accounts for ~60% of team goals, GA ~40%
-                              positionTotals.GS.goalsFor += Math.round(ourTotalGoals * 0.6);
-                              positionTotals.GA.goalsFor += Math.round(ourTotalGoals * 0.4);
+                            let gamesWithStats = 0;
+                            const totalHistoricalGames = historicalGames.length;
 
-                              // GK typically faces ~60% of opponent shots, GD ~40%
-                              positionTotals.GK.goalsAgainst += Math.round(opponentTotalGoals * 0.6);
-                              positionTotals.GD.goalsAgainst += Math.round(opponentTotalGoals * 0.4);
+                            // Aggregate actual position stats from historical games
+                            historicalGames.forEach(game => {
+                              const gameStats = batchStats?.[game.id] || [];
+                              if (gameStats.length > 0) {
+                                gamesWithStats++;
 
-                              // Increment game count for all positions
-                              Object.keys(positionTotals).forEach(pos => {
-                                positionTotals[pos].games += 1;
-                              });
-                            }
-                          });
+                                // Group stats by position and sum across quarters
+                                const positionSums = {};
+                                gameStats.forEach(stat => {
+                                  if (!positionSums[stat.position]) {
+                                    positionSums[stat.position] = { goalsFor: 0, goalsAgainst: 0 };
+                                  }
+                                  positionSums[stat.position].goalsFor += stat.goalsFor || 0;
+                                  positionSums[stat.position].goalsAgainst += stat.goalsAgainst || 0;
+                                });
 
-                          // Create position data with averages
-                          const positionData = [
-                            {
-                              position: 'GS',
-                              label: 'Goal Shooter',
-                              type: 'attacking',
-                              goalsFor: positionTotals.GS.games > 0 
-                                ? Math.round(positionTotals.GS.goalsFor / positionTotals.GS.games) 
-                                : 0,
-                              description: 'Primary goal scorer'
-                            },
-                            {
-                              position: 'GA',
-                              label: 'Goal Attack',
-                              type: 'attacking',
-                              goalsFor: positionTotals.GA.games > 0 
-                                ? Math.round(positionTotals.GA.goalsFor / positionTotals.GA.games) 
-                                : 0,
-                              description: 'Secondary scoring threat'
-                            },
-                            {
-                              position: 'GD',
-                              label: 'Goal Defence',
-                              type: 'defending',
-                              goalsAgainst: positionTotals.GD.games > 0 
-                                ? Math.round(positionTotals.GD.goalsAgainst / positionTotals.GD.games) 
-                                : 0,
-                              description: 'Defensive pressure on GA'
-                            },
-                            {
-                              position: 'GK',
-                              label: 'Goal Keeper',
-                              type: 'defending',
-                              goalsAgainst: positionTotals.GK.games > 0 
-                                ? Math.round(positionTotals.GK.goalsAgainst / positionTotals.GK.games) 
-                                : 0,
-                              description: 'Last line of defence'
-                            }
-                          ];
+                                // Add to position totals
+                                ['GS', 'GA', 'GD', 'GK'].forEach(position => {
+                                  if (positionSums[position]) {
+                                    if (position === 'GS' || position === 'GA') {
+                                      positionTotals[position].goalsFor += positionSums[position].goalsFor;
+                                    }
+                                    if (position === 'GD' || position === 'GK') {
+                                      positionTotals[position].goalsAgainst += positionSums[position].goalsAgainst;
+                                    }
+                                    positionTotals[position].games++;
+                                  }
+                                });
+                              }
+                            });
 
-                          const maxValue = Math.max(
-                            ...positionData.filter(p => p.type === 'attacking').map(p => p.goalsFor || 0),
-                            ...positionData.filter(p => p.type === 'defending').map(p => p.goalsAgainst || 0),
-                            20
-                          );
+                            // Create position data with averages
+                            const positionData = [
+                              {
+                                position: 'GS',
+                                label: 'Goal Shooter',
+                                type: 'attacking',
+                                goalsFor: positionTotals.GS.games > 0 
+                                  ? Math.round(positionTotals.GS.goalsFor / positionTotals.GS.games) 
+                                  : 0,
+                                description: 'Primary goal scorer'
+                              },
+                              {
+                                position: 'GA',
+                                label: 'Goal Attack',
+                                type: 'attacking',
+                                goalsFor: positionTotals.GA.games > 0 
+                                  ? Math.round(positionTotals.GA.goalsFor / positionTotals.GA.games) 
+                                  : 0,
+                                description: 'Secondary scoring threat'
+                              },
+                              {
+                                position: 'GD',
+                                label: 'Goal Defence',
+                                type: 'defending',
+                                goalsAgainst: positionTotals.GD.games > 0 
+                                  ? Math.round(positionTotals.GD.goalsAgainst / positionTotals.GD.games) 
+                                  : 0,
+                                description: 'Defensive pressure on GA'
+                              },
+                              {
+                                position: 'GK',
+                                label: 'Goal Keeper',
+                                type: 'defending',
+                                goalsAgainst: positionTotals.GK.games > 0 
+                                  ? Math.round(positionTotals.GK.goalsAgainst / positionTotals.GK.games) 
+                                  : 0,
+                                description: 'Last line of defence'
+                              }
+                            ];
 
-                          return (
-                            <div className="space-y-6">
-                              {/* Attacking Positions */}
-                              <div>
-                                <h4 className="font-semibold text-green-800 mb-3 flex items-center gap-2">
-                                  <Swords className="h-4 w-4" />
-                                  Attacking Positions - Goals For
-                                </h4>
-                                <div className="space-y-4">
-                                  {positionData.filter(p => p.type === 'attacking').map(position => {
-                                    const percentage = ((position.goalsFor || 0) / maxValue) * 100;
-                                    return (
-                                      <div key={position.position} className="space-y-2">
-                                        <div className="flex justify-between items-center">
-                                          <div className="flex items-center gap-3">
-                                            <Badge variant="outline" className="w-10 text-center font-bold">
-                                              {position.position}
-                                            </Badge>
-                                            <div>
-                                              <span className="font-medium">{position.label}</span>
-                                              <div className="text-xs text-gray-500">{position.description}</div>
-                                            </div>
-                                          </div>
-                                          <span className="text-lg font-bold text-green-600">
-                                            {position.goalsFor} goals
-                                          </span>
-                                        </div>
-                                        <div className="w-full bg-gray-200 rounded-full h-3">
-                                          <div
-                                            className="bg-gradient-to-r from-green-400 via-green-500 to-green-600 h-3 rounded-full transition-all duration-1000 ease-out"
-                                            style={{ width: `${percentage}%` }}
-                                          ></div>
-                                        </div>
-                                      </div>
-                                    );
-                                  })}
-                                </div>
-                              </div>
+                            const maxValue = Math.max(
+                              ...positionData.filter(p => p.type === 'attacking').map(p => p.goalsFor || 0),
+                              ...positionData.filter(p => p.type === 'defending').map(p => p.goalsAgainst || 0),
+                              20
+                            );
 
-                              {/* Defending Positions */}
-                              <div>
-                                <h4 className="font-semibold text-blue-800 mb-3 flex items-center gap-2">
-                                  <Shield className="h-4 w-4" />
-                                  Defending Positions - Goals Against (Lower is Better)
-                                </h4>
-                                <div className="space-y-4">
-                                  {positionData.filter(p => p.type === 'defending').map(position => {
-                                    const percentage = ((position.goalsAgainst || 0) / maxValue) * 100;
-                                    return (
-                                      <div key={position.position} className="space-y-2">
-                                        <div className="flex justify-between items-center">
-                                          <div className="flex items-center gap-3">
-                                            <Badge variant="outline" className="w-10 text-center font-bold">
-                                              {position.position}
-                                            </Badge>
-                                            <div>
-                                              <span className="font-medium">{position.label}</span>
-                                              <div className="text-xs text-gray-500">{position.description}</div>
-                                            </div>
-                                          </div>
-                                          <span className="text-lg font-bold text-blue-600">
-                                            {position.goalsAgainst} against
-                                          </span>
-                                        </div>
-                                        <div className="w-full bg-gray-200 rounded-full h-3">
-                                          <div
-                                            className="bg-gradient-to-r from-blue-400 via-blue-500 to-blue-600 h-3 rounded-full transition-all duration-1000 ease-out"
-                                            style={{ width: `${percentage}%` }}
-                                          ></div>
-                                        </div>
-                                      </div>
-                                    );
-                                  })}
-                                </div>
-                              </div>
-
-                              {/* Performance Summary */}
-                              <div className="bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg p-4">
-                                <h5 className="font-medium text-gray-800 mb-2">Key Performance Insights</h5>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                                  <div className="space-y-1">
-                                    <div className="flex items-center gap-2">
-                                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                                      <span>Strong shooting combination needed</span>
+                            return (
+                              <div className="space-y-6">
+                                {/* Data availability message */}
+                                {gamesWithStats < totalHistoricalGames && (
+                                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <div className="w-3 h-3 bg-amber-500 rounded-full"></div>
+                                      <span className="text-sm font-medium text-amber-800">Position Statistics Available</span>
                                     </div>
-                                    <div className="flex items-center gap-2">
-                                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                                      <span>Defensive pressure is key to limiting scores</span>
-                                    </div>
+                                    <p className="text-sm text-amber-700">
+                                      Based on position statistics from {gamesWithStats} of {totalHistoricalGames} historical games against {opponent}.
+                                    </p>
                                   </div>
-                                  <div className="space-y-1">
-                                    <div className="text-xs text-gray-600">
-                                      Based on historical position performance against this opponent
-                                    </div>
+                                )}
+
+                                {/* Attacking Positions */}
+                                <div>
+                                  <h4 className="font-semibold text-green-800 mb-3 flex items-center gap-2">
+                                    <Swords className="h-4 w-4" />
+                                    Attacking Positions - Goals For
+                                  </h4>
+                                  <div className="space-y-4">
+                                    {positionData.filter(p => p.type === 'attacking').map(position => {
+                                      const percentage = ((position.goalsFor || 0) / maxValue) * 100;
+                                      return (
+                                        <div key={position.position} className="space-y-2">
+                                          <div className="flex justify-between items-center">
+                                            <div className="flex items-center gap-3">
+                                              <Badge variant="outline" className="w-10 text-center font-bold">
+                                                {position.position}
+                                              </Badge>
+                                              <div>
+                                                <span className="font-medium">{position.label}</span>
+                                                <div className="text-xs text-gray-500">{position.description}</div>
+                                              </div>
+                                            </div>
+                                            <span className="text-lg font-bold text-green-600">
+                                              {position.goalsFor} goals
+                                            </span>
+                                          </div>
+                                          <div className="w-full bg-gray-200 rounded-full h-3">
+                                            <div
+                                              className="bg-gradient-to-r from-green-400 via-green-500 to-green-600 h-3 rounded-full transition-all duration-1000 ease-out"
+                                              style={{ width: `${percentage}%` }}
+                                            ></div>
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
                                   </div>
                                 </div>
+
+                                {/* Defending Positions */}
+                                <div>
+                                  <h4 className="font-semibold text-blue-800 mb-3 flex items-center gap-2">
+                                    <Shield className="h-4 w-4" />
+                                    Defending Positions - Goals Against (Lower is Better)
+                                  </h4>
+                                  <div className="space-y-4">
+                                    {positionData.filter(p => p.type === 'defending').map(position => {
+                                      const percentage = ((position.goalsAgainst || 0) / maxValue) * 100;
+                                      return (
+                                        <div key={position.position} className="space-y-2">
+                                          <div className="flex justify-between items-center">
+                                            <div className="flex items-center gap-3">
+                                              <Badge variant="outline" className="w-10 text-center font-bold">
+                                                {position.position}
+                                              </Badge>
+                                              <div>
+                                                <span className="font-medium">{position.label}</span>
+                                                <div className="text-xs text-gray-500">{position.description}</div>
+                                              </div>
+                                            </div>
+                                            <span className="text-lg font-bold text-blue-600">
+                                              {position.goalsAgainst} against
+                                            </span>
+                                          </div>
+                                          <div className="w-full bg-gray-200 rounded-full h-3">
+                                            <div
+                                              className="bg-gradient-to-r from-blue-400 via-blue-500 to-blue-600 h-3 rounded-full transition-all duration-1000 ease-out"
+                                              style={{ width: `${percentage}%` }}
+                                            ></div>
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+
+                                {/* Performance Summary */}
+                                <div className="bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg p-4">
+                                  <h5 className="font-medium text-gray-800 mb-2">Key Performance Insights</h5>
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                                    <div className="space-y-1">
+                                      <div className="flex items-center gap-2">
+                                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                                        <span>Strong shooting combination needed</span>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                                        <span>Defensive pressure is key to limiting scores</span>
+                                      </div>
+                                    </div>
+                                    <div className="space-y-1">
+                                      <div className="text-xs text-gray-600">
+                                        Based on actual position performance from {gamesWithStats} games against this opponent
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
                               </div>
-                            </div>
-                          );
-                        })()}
-                      </CardContent>
-                    </Card>
-                  )}
+                            );
+                          })()}
+                        </CardContent>
+                      </Card>
+                    );
+                  })()}
 
                   {/* Quarter Performance Analysis */}
                   {historicalGames.length > 0 && (
