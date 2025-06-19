@@ -55,6 +55,40 @@ interface GameObjective {
   completed: boolean;
 }
 
+// Diagnostic component to show visual borders, labels, and background colors
+const DiagnosticWrapper = ({ children, label }: { children: React.ReactNode; label: string }) => {
+  return (
+    <div style={{ 
+      border: '1px dashed red', 
+      backgroundColor: 'rgba(255, 0, 0, 0.05)', 
+      padding: '4px',
+      margin: '2px'
+    }}>
+      <div style={{ 
+        position: 'absolute', 
+        top: '-0.5em', 
+        left: '0.5em', 
+        fontSize: '0.75em', 
+        color: 'red',
+        backgroundColor: 'white',
+        padding: '0 2px'
+      }}>
+        {label}
+      </div>
+      {children}
+    </div>
+  );
+};
+
+// Diagnostic component specifically for the progress bar
+const ProgressBarDiagnostic = ({ children, label }: { children: React.ReactNode; label: string }) => {
+  return (
+    <DiagnosticWrapper label={label}>
+      {children}
+    </DiagnosticWrapper>
+  );
+};
+
 export default function GamePreparation() {
   const params = useParams();
   const gameId = params.gameId ? parseInt(params.gameId) : undefined;
@@ -588,105 +622,107 @@ export default function GamePreparation() {
                         </div>
 
                         {/* Quarter Average Performance Boxes */}
-                        <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
-                          {[1, 2, 3, 4].map(quarter => {
-                            // Calculate average scores for this quarter across all historical games
-                            let totalTeamScore = 0;
-                            let totalOpponentScore = 0;
-                            let gamesWithData = 0;
+                        <ProgressBarDiagnostic label="Quarter Averages">
+                          <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
+                            {[1, 2, 3, 4].map(quarter => {
+                              // Calculate average scores for this quarter across all historical games
+                              let totalTeamScore = 0;
+                              let totalOpponentScore = 0;
+                              let gamesWithData = 0;
 
-                            historicalGames.forEach(game => {
-                              const gameScores = batchScores?.[game.id] || [];
-                              if (gameScores.length > 0) {
-                                const quarterTeamScore = gameScores.find(s => s.teamId === currentTeamId && s.quarter === quarter)?.score || 0;
-                                const quarterOpponentScore = gameScores.find(s => s.teamId !== currentTeamId && s.quarter === quarter)?.score || 0;
+                              historicalGames.forEach(game => {
+                                const gameScores = batchScores?.[game.id] || [];
+                                if (gameScores.length > 0) {
+                                  const quarterTeamScore = gameScores.find(s => s.teamId === currentTeamId && s.quarter === quarter)?.score || 0;
+                                  const quarterOpponentScore = gameScores.find(s => s.teamId !== currentTeamId && s.quarter === quarter)?.score || 0;
 
-                                if (quarterTeamScore > 0 || quarterOpponentScore > 0) {
-                                  totalTeamScore += quarterTeamScore;
-                                  totalOpponentScore += quarterOpponentScore;
-                                  gamesWithData++;
+                                  if (quarterTeamScore > 0 || quarterOpponentScore > 0) {
+                                    totalTeamScore += quarterTeamScore;
+                                    totalOpponentScore += quarterOpponentScore;
+                                    gamesWithData++;
+                                  }
                                 }
-                              }
-                            });
+                              });
 
-                            const avgTeamScore = gamesWithData > 0 ? (totalTeamScore / gamesWithData) : 0;
-                            const avgOpponentScore = gamesWithData > 0 ? (totalOpponentScore / gamesWithData) : 0;
-                            const scoreDiff = avgTeamScore - avgOpponentScore;
+                              const avgTeamScore = gamesWithData > 0 ? (totalTeamScore / gamesWithData) : 0;
+                              const avgOpponentScore = gamesWithData > 0 ? (totalOpponentScore / gamesWithData) : 0;
+                              const scoreDiff = avgTeamScore - avgOpponentScore;
 
-                            // Determine performance and background shade
-                            const isWinning = avgTeamScore > avgOpponentScore;
-                            const isLosing = avgTeamScore < avgOpponentScore;
-                            const isDraw = Math.abs(avgTeamScore - avgOpponentScore) < 0.1;
+                              // Determine performance and background shade
+                              const isWinning = avgTeamScore > avgOpponentScore;
+                              const isLosing = avgTeamScore < avgOpponentScore;
+                              const isDraw = Math.abs(avgTeamScore - avgOpponentScore) < 0.1;
 
-                            // Calculate background shade intensity based on score difference
-                            const maxDiff = 5; // Max expected quarter score difference for scaling
-                            const intensity = Math.min(Math.abs(scoreDiff) / maxDiff, 1);
+                              // Calculate background shade intensity based on score difference
+                              const maxDiff = 5; // Max expected quarter score difference for scaling
+                              const intensity = Math.min(Math.abs(scoreDiff) / maxDiff, 1);
 
-                            const getBackgroundClass = () => {
-                              if (isDraw) return 'bg-amber-100 border-amber-300';
-                              if (isWinning) {
-                                if (intensity > 0.7) return 'bg-green-200 border-green-400';
-                                if (intensity > 0.4) return 'bg-green-100 border-green-300';
-                                return 'bg-green-50 border-green-200';
-                              } else {
-                                if (intensity > 0.7) return 'bg-red-200 border-red-400';
-                                if (intensity > 0.4) return 'bg-red-100 border-red-300';
-                                return 'bg-red-50 border-red-200';
-                              }
-                            };
+                              const getBackgroundClass = () => {
+                                if (isDraw) return 'bg-amber-100 border-amber-300';
+                                if (isWinning) {
+                                  if (intensity > 0.7) return 'bg-green-200 border-green-400';
+                                  if (intensity > 0.4) return 'bg-green-100 border-green-300';
+                                  return 'bg-green-50 border-green-200';
+                                } else {
+                                  if (intensity > 0.7) return 'bg-red-200 border-red-400';
+                                  if (intensity > 0.4) return 'bg-red-100 border-red-300';
+                                  return 'bg-red-50 border-red-200';
+                                }
+                              };
 
-                            const getDiffTextColorClass = () => {
-                              if (isDraw) return 'text-amber-700 font-bold';
-                              return isWinning ? 'text-green-700 font-bold' : 'text-red-700 font-bold';
-                            };
+                              const getDiffTextColorClass = () => {
+                                if (isDraw) return 'text-amber-700 font-bold';
+                                return isWinning ? 'text-green-700 font-bold' : 'text-red-700 font-bold';
+                              };
 
-                            const getPerformanceLabel = () => {
-                              if (isDraw) return 'Even';
-                              if (intensity > 0.7) return isWinning ? 'Dominant' : 'Weak';
-                              if (intensity > 0.4) return isWinning ? 'Strong' : 'Poor';
-                              return isWinning ? 'Good' : 'Slight Loss';
-                            };
+                              const getPerformanceLabel = () => {
+                                if (isDraw) return 'Even';
+                                if (intensity > 0.7) return isWinning ? 'Dominant' : 'Weak';
+                                if (intensity > 0.4) return isWinning ? 'Strong' : 'Poor';
+                                return isWinning ? 'Good' : 'Slight Loss';
+                              };
 
-                            return (
-                              <div key={quarter} className={`text-center p-2 rounded-lg border-2 ${getBackgroundClass()} transition-colors relative`}>
-                                {/* Quarter badge in top-left corner */}
-                                <div className="absolute top-1 left-2">
-                                  <Badge 
-                                    variant="outline" 
-                                    className={`text-xs font-bold ${
-                                      isDraw ? 'border-amber-400 text-amber-700' :
-                                      isWinning ? 'border-green-400 text-green-700' : 
-                                      'border-red-400 text-red-700'
-                                    }`}
-                                  >
-                                    Q{quarter}
-                                  </Badge>
-                                </div>
-
-                                <div className="space-y-1 mt-1">
-                                  {/* Score on same line with matching colors, aligned with Q badge */}
-                                  <div className={`text-lg font-bold ${getDiffTextColorClass()}`}>
-                                    {avgTeamScore.toFixed(1)} - {avgOpponentScore.toFixed(1)}
-                                  </div>
-                                  {/* Prominent score differential */}
-                                  <div className={`text-base ${getDiffTextColorClass()}`}>
-                                    {scoreDiff >= 0 ? '+' : ''}{scoreDiff.toFixed(1)}
-                                  </div>
-                                  {/* Progress bar shows our percentage of total scoring */}
-                                  <div className="w-full bg-gray-200 rounded-full h-2 mt-6 mb-4" title="Our share of total quarter scoring">
-                                    <div 
-                                      className={`h-2 rounded-full ${
-                                        isWinning ? 'bg-green-500' : 
-                                        isLosing ? 'bg-red-500' : 'bg-amber-500'
+                              return (
+                                <div key={quarter} className={`text-center p-2 rounded-lg border-2 ${getBackgroundClass()} transition-colors relative`}>
+                                  {/* Quarter badge in top-left corner */}
+                                  <div className="absolute top-1 left-2">
+                                    <Badge 
+                                      variant="outline" 
+                                      className={`text-xs font-bold ${
+                                        isDraw ? 'border-amber-400 text-amber-700' :
+                                        isWinning ? 'border-green-400 text-green-700' : 
+                                        'border-red-400 text-red-700'
                                       }`}
-                                      style={{ width: `${Math.min(100, Math.max(0, (avgTeamScore / (avgTeamScore + avgOpponentScore)) * 100))}%` }}
-                                    ></div>
+                                    >
+                                      Q{quarter}
+                                    </Badge>
+                                  </div>
+
+                                  <div className="space-y-1 mt-1">
+                                    {/* Score on same line with matching colors, aligned with Q badge */}
+                                    <div className={`text-lg font-bold ${getDiffTextColorClass()}`}>
+                                      {avgTeamScore.toFixed(1)} - {avgOpponentScore.toFixed(1)}
+                                    </div>
+                                    {/* Prominent score differential */}
+                                    <div className={`text-base ${getDiffTextColorClass()}`}>
+                                      {scoreDiff >= 0 ? '+' : ''}{scoreDiff.toFixed(1)}
+                                    </div>
+                                    {/* Progress bar shows our percentage of total scoring */}
+                                    <div className="w-full bg-gray-200 rounded-full h-2 mt-6 mb-4" title="Our share of total quarter scoring">
+                                      <div 
+                                        className={`h-2 rounded-full ${
+                                          isWinning ? 'bg-green-500' : 
+                                          isLosing ? 'bg-red-500' : 'bg-amber-500'
+                                        }`}
+                                        style={{ width: `${Math.min(100, Math.max(0, (avgTeamScore / (avgTeamScore + avgOpponentScore)) * 100))}%` }}
+                                      ></div>
+                                    </div>
                                   </div>
                                 </div>
-                              </div>
-                            );
-                          })}
-                        </div>
+                              );
+                            })}
+                          </div>
+                        </ProgressBarDiagnostic>
                       </CardContent>
                     </Card>
                   )}
