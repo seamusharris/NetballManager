@@ -538,7 +538,7 @@ export default function GamePreparation() {
                         <div className="space-y-3">
                           {historicalGames.slice(0, 5).map((game, index) => {
                             // Check for special status games (e.g., forfeit, bye)
-                            const isSpecialStatus = game.statusName === 'forfeit-win' || game.statusName === 'forfeit-loss' || game.statusName === 'bye' || game.statusName === 'abandoned';
+                            const isSpecialStatus = game.statusName === 'forfeit-win' || game.statusName === 'forfeit-loss' || game.statusName === 'bye' || game.statusName === 'abandoned' || game.statusDisplayName === 'Forfeit Loss' || game.statusDisplayName === 'Forfeit Win';
 
                             // Transform batch scores to calculate quarter breakdown
                             const gameScores = batchScores?.[game.id] || [];
@@ -650,7 +650,6 @@ export default function GamePreparation() {
                                                 const opponentScore = opponentScores[qIndex];
                                                 const quarterWin = teamScore > opponentScore;
                                                 const quarterLoss = teamScore < opponentScore;
-                                                const teamScoreWithSign = teamScore > 0 ? `+${teamScore}` : teamScore;
 
                                                 const quarterClass = quarterWin 
                                                   ? 'bg-green-100 text-green-800 border border-green-400' 
@@ -660,7 +659,7 @@ export default function GamePreparation() {
 
                                                 return (
                                                   <span key={qIndex} className={`w-16 px-1 py-0.5 ${quarterClass} rounded font-medium text-center block`}>
-                                                    {teamScoreWithSign}—{opponentScore}
+                                                    {teamScore}-{opponentScore}
                                                   </span>
                                                 );
                                               })}
@@ -680,7 +679,7 @@ export default function GamePreparation() {
 
                                                 return (
                                                   <span key={qIndex} className={`w-16 px-1 py-0.5 ${cumulativeClass} rounded text-xs text-center block`}>
-                                                    {teamCum}-{opponentCum}
+                                                    {teamCum}—{opponentCum}
                                                   </span>
                                                 );
                                               })}
@@ -766,10 +765,10 @@ export default function GamePreparation() {
 
                                 <div className="space-y-1 mt-1">
                                   <div className={`text-lg font-bold ${getDiffTextColorClass()}`}>
-                                    {avgTeamScore.toFixed(1)} - {avgOpponentScore.toFixed(1)}
+                                    {avgTeamScore > 0 ? `+${avgTeamScore.toFixed(1)}` : avgTeamScore.toFixed(1)} - {avgOpponentScore.toFixed(1)}
                                   </div>
                                   <div className={`text-base ${getDiffTextColorClass()}`}>
-                                    {(avgTeamScore - avgOpponentScore).toFixed(1)}
+                                    {avgTeamScore - avgOpponentScore > 0 ? `+${(avgTeamScore - avgOpponentScore).toFixed(1)}` : (avgTeamScore - avgOpponentScore).toFixed(1)}
                                   </div>
 
                                   <div 
