@@ -653,7 +653,7 @@ export default function GamePreparation() {
                                   <div className="absolute right-32 top-1/2 transform -translate-y-1/2 flex items-center gap-4 pointer-events-none">
                                     <div className="text-xs space-y-1">
                                       {/* Quarter-by-quarter scores on top (lighter) */}
-                                      <div className="grid grid-cols-4 gap-2">
+                                      <div className="grid grid-cols-4 gap-1">
                                         {quarterData.quarter.map((teamScore, qIndex) => {
                                           const opponentScore = quarterData.opponentQuarter[qIndex];
                                           const quarterWin = teamScore > opponentScore;
@@ -666,14 +666,14 @@ export default function GamePreparation() {
                                               : 'bg-amber-100 text-amber-700 border border-amber-400';
 
                                           return (
-                                            <span key={qIndex} className={`px-1 py-0.5 ${quarterClass} rounded font-medium text-center`}>
+                                            <span key={qIndex} className={`w-16 px-1 py-0.5 ${quarterClass} rounded font-medium text-center block`}>
                                               {teamScore}-{opponentScore}
                                             </span>
                                           );
                                         })}
                                       </div>
                                       {/* Cumulative scores underneath (darker) */}
-                                      <div className="grid grid-cols-4 gap-2">
+                                      <div className="grid grid-cols-4 gap-1">
                                         {quarterData.cumulative.map((teamCum, qIndex) => {
                                           const opponentCum = quarterData.opponentCumulative[qIndex];
                                           const cumulativeWin = teamCum > opponentCum;
@@ -686,7 +686,7 @@ export default function GamePreparation() {
                                               : 'bg-amber-200 text-amber-800 border border-amber-500';
 
                                           return (
-                                            <span key={qIndex} className={`px-1 py-0.5 ${cumulativeClass} rounded text-xs text-center`}>
+                                            <span key={qIndex} className={`w-16 px-1 py-0.5 ${cumulativeClass} rounded text-xs text-center block`}>
                                               {teamCum}-{opponentCum}
                                             </span>
                                           );
