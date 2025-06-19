@@ -25,6 +25,8 @@ import { PlayerBox } from '@/components/ui/player-box';
 import { getPlayerColorHex, getDarkerColorHex, getLighterColorHex, getMediumColorHex } from '@/lib/playerColorUtils';
 import { apiClient } from '@/lib/apiClient';
 import { useToast } from '@/hooks/use-toast';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
+import { CACHE_KEYS } from '@/lib/cacheKeys';
 
 interface Player {
   id: number;
@@ -278,68 +280,74 @@ export default function DragDropRosterManager({
     return acc;
   }, {} as Record<string, any>);
 
-  // Load existing roster data when gameId changes or component mounts
+  const queryClient = useQueryClient();
+
+  // Use cached React Query for roster data
+  const { data: rosters = [], isLoading: isLoadingRoster, error: rosterError } = useQuery({
+    queryKey: CACHE_KEYS.gameRoster(gameId),
+    queryFn: () => apiClient.get(`/api/games/${gameId}/rosters`),
+    enabled: !!gameId,
+    staleTime: 5 * 60 * 1000, // 5 minutes - roster data is relatively stable
+    gcTime: 30 * 60 * 1000, // 30 minutes - keep in cache longer
+    refetchOnWindowFocus: false, // Don't refetch on window focus to reduce unnecessary requests
+    refetchOnMount: true, // Do refetch on mount to ensure fresh data when navigating to roster
+  });
+
+  // Load roster data when roster data changes
   useEffect(() => {
     if (!gameId) {
-      console.log('DragDropRosterManager: No gameId provided, using empty assignments');
-      // Use initialRoster if provided and no gameId
-      if (initialRoster) {
-        console.log('DragDropRosterManager: Using provided initialRoster (no gameId):', initialRoster);
-        setAssignments(initialRoster);
-      }
+      setAssignments({
+        1: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
+        2: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
+        3: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
+        4: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null }
+      });
       return;
     }
 
-    // Always fetch fresh roster data from API when gameId is provided
-    const loadExistingRoster = async () => {
-      try {
-        console.log(`DragDropRosterManager: Loading roster for game ${gameId}`);
-        const response = await apiClient.get(`/api/games/${gameId}/rosters`);
-        const rosters = response;
-        
-        console.log(`DragDropRosterManager: Received ${rosters?.length || 0} roster entries:`, rosters);
-        
-        // Always start with empty assignments
-        const loadedAssignments = {
-          1: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
-          2: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
-          3: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
-          4: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null }
-        };
+    if (rosters && rosters.length >= 0) { // Allow empty arrays
+      console.log(`DragDropRosterManager: Loading roster for game ${gameId}`);
+      console.log(`DragDropRosterManager: Received ${rosters.length} roster entries:`, rosters);
 
-        if (rosters && rosters.length > 0) {
-          rosters.forEach((roster: any) => {
-            if (roster.quarter && roster.position && roster.playerId) {
-              const quarter = roster.quarter as number;
-              const position = roster.position as string;
-              if (quarter >= 1 && quarter <= 4 && NETBALL_POSITIONS.includes(position)) {
-                loadedAssignments[quarter][position] = roster.playerId;
-                console.log(`DragDropRosterManager: Loaded Q${quarter} ${position} -> Player ${roster.playerId}`);
-              }
-            }
-          });
-        }
+      // Initialize empty roster
+      const loadedAssignments = {
+        1: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
+        2: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
+        3: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
+        4: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null }
+      };
 
-        console.log('DragDropRosterManager: Final loaded assignments:', loadedAssignments);
-        setAssignments(loadedAssignments);
-        if (onRosterChange) {
-          onRosterChange(loadedAssignments);
+      // Fill in roster assignments
+      rosters.forEach((roster: any) => {
+        if (roster.quarter && roster.position && roster.playerId) {
+          const quarter = roster.quarter as number;
+          const position = roster.position as string;
+          if (quarter >= 1 && quarter <= 4 && NETBALL_POSITIONS.includes(position)) {
+            loadedAssignments[quarter][position] = roster.playerId;
+            console.log(`DragDropRosterManager: Loaded Q${quarter} ${position} -> Player ${roster.playerId}`);
+          }
         }
-      } catch (error) {
-        console.error('DragDropRosterManager: Error loading existing roster:', error);
-        // Initialize empty assignments on error
-        const emptyAssignments = {
-          1: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
-          2: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
-          3: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
-          4: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null }
-        };
-        setAssignments(emptyAssignments);
+      });
+
+      console.log('DragDropRosterManager: Final loaded assignments:', loadedAssignments);
+      setAssignments(loadedAssignments);
+      if (onRosterChange) {
+        onRosterChange(loadedAssignments);
       }
-    };
+    }
+  }, [gameId, rosters, onRosterChange]);
 
-    loadExistingRoster();
-  }, [gameId]);
+  // Handle roster loading error
+  useEffect(() => {
+    if (rosterError) {
+      console.error('DragDropRosterManager: Error loading roster:', rosterError);
+      toast({
+        title: 'Error loading roster',
+        description: 'Failed to load existing roster data',
+        variant: 'destructive'
+      });
+    }
+  }, [rosterError, toast]);
 
   // Separate effect to handle onRosterChange when assignments change
   useEffect(() => {
@@ -363,7 +371,7 @@ export default function DragDropRosterManager({
     try {
       // Convert assignments to roster format expected by API
       const rosterData = [];
-      
+
       for (const [quarter, positions] of Object.entries(assignments)) {
         for (const [position, playerId] of Object.entries(positions)) {
           if (playerId !== null) {
