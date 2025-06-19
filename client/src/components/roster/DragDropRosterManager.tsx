@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -25,7 +25,6 @@ import { PlayerBox } from '@/components/ui/player-box';
 import { getPlayerColorHex, getDarkerColorHex, getLighterColorHex, getMediumColorHex } from '@/lib/playerColorUtils';
 import { apiClient } from '@/lib/apiClient';
 import { useToast } from '@/hooks/use-toast';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 interface Player {
   id: number;
@@ -169,25 +168,16 @@ export default function DragDropRosterManager({
         [currentQuarter]: { ...assignments[currentQuarter] }
       };
 
-      // Find where the dragged player is currently positioned
-      let draggedPlayerCurrentPosition = null;
+      // Clear the player from any previous position in this quarter
       Object.keys(newAssignments[currentQuarter]).forEach(pos => {
         if (newAssignments[currentQuarter][pos] === draggedPlayer) {
-          draggedPlayerCurrentPosition = pos;
+          newAssignments[currentQuarter][pos] = null;
         }
       });
 
-      // Get the player currently in the target position (if any)
-      const existingPlayerInTarget = newAssignments[currentQuarter][position];
-
-      // Clear the dragged player from their current position
-      if (draggedPlayerCurrentPosition) {
-        newAssignments[currentQuarter][draggedPlayerCurrentPosition] = null;
-      }
-
-      // If there's a player in the target position, move them to the dragged player's old position
-      if (existingPlayerInTarget !== null && draggedPlayerCurrentPosition) {
-        newAssignments[currentQuarter][draggedPlayerCurrentPosition] = existingPlayerInTarget;
+      // If there's already a player in the target position, remove them
+      if (newAssignments[currentQuarter][position] !== null) {
+        newAssignments[currentQuarter][position] = null;
       }
 
       // Assign the dragged player to the new position
@@ -288,16 +278,7 @@ export default function DragDropRosterManager({
     return acc;
   }, {} as Record<string, any>);
 
-  // Use React Query to fetch roster data with caching
-  const { data: rosterData } = useQuery({
-    queryKey: ['roster', gameId],
-    queryFn: () => apiClient.get(`/api/games/${gameId}/rosters`),
-    enabled: !!gameId,
-    staleTime: 5 * 60 * 1000, // 5 minutes - rosters change infrequently
-    gcTime: 30 * 60 * 1000, // 30 minutes - keep in cache longer
-  });
-
-  // Load existing roster data when rosterData changes
+  // Load existing roster data when gameId changes or component mounts
   useEffect(() => {
     if (!gameId) {
       console.log('DragDropRosterManager: No gameId provided, using empty assignments');
@@ -309,35 +290,63 @@ export default function DragDropRosterManager({
       return;
     }
 
-    if (rosterData && rosterData.length > 0) {
-      console.log(`DragDropRosterManager: Loading cached roster for game ${gameId}`, rosterData);
+    // Always fetch fresh roster data from API when gameId is provided
+    const loadExistingRoster = async () => {
+      try {
+        console.log(`DragDropRosterManager: Loading roster for game ${gameId}`);
+        const response = await apiClient.get(`/api/games/${gameId}/rosters`);
+        const rosters = response;
+        
+        console.log(`DragDropRosterManager: Received ${rosters?.length || 0} roster entries:`, rosters);
+        
+        // Always start with empty assignments
+        const loadedAssignments = {
+          1: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
+          2: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
+          3: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
+          4: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null }
+        };
 
-      // Convert roster data to assignments format
-      const loadedAssignments = {
-        1: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
-        2: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
-        3: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
-        4: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null }
-      };
-
-      rosterData.forEach((roster: any) => {
-        if (roster.quarter && roster.position && roster.playerId) {
-          const quarter = roster.quarter as number;
-          const position = roster.position as string;
-          if (quarter >= 1 && quarter <= 4 && NETBALL_POSITIONS.includes(position)) {
-            loadedAssignments[quarter][position] = roster.playerId;
-          }
+        if (rosters && rosters.length > 0) {
+          rosters.forEach((roster: any) => {
+            if (roster.quarter && roster.position && roster.playerId) {
+              const quarter = roster.quarter as number;
+              const position = roster.position as string;
+              if (quarter >= 1 && quarter <= 4 && NETBALL_POSITIONS.includes(position)) {
+                loadedAssignments[quarter][position] = roster.playerId;
+                console.log(`DragDropRosterManager: Loaded Q${quarter} ${position} -> Player ${roster.playerId}`);
+              }
+            }
+          });
         }
-      });
 
-      setAssignments(loadedAssignments);
-      if (onRosterChange) {
-        onRosterChange(loadedAssignments);
+        console.log('DragDropRosterManager: Final loaded assignments:', loadedAssignments);
+        setAssignments(loadedAssignments);
+        if (onRosterChange) {
+          onRosterChange(loadedAssignments);
+        }
+      } catch (error) {
+        console.error('DragDropRosterManager: Error loading existing roster:', error);
+        // Initialize empty assignments on error
+        const emptyAssignments = {
+          1: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
+          2: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
+          3: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
+          4: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null }
+        };
+        setAssignments(emptyAssignments);
       }
-    } else {
-      console.log(`DragDropRosterManager: No roster data found for game ${gameId}`);
+    };
+
+    loadExistingRoster();
+  }, [gameId]);
+
+  // Separate effect to handle onRosterChange when assignments change
+  useEffect(() => {
+    if (onRosterChange) {
+      onRosterChange(assignments);
     }
-  }, [rosterData, gameId, onRosterChange, initialRoster]);
+  }, [assignments, onRosterChange]);
 
   // Save roster function
   const handleSaveRoster = async () => {
@@ -354,7 +363,7 @@ export default function DragDropRosterManager({
     try {
       // Convert assignments to roster format expected by API
       const rosterData = [];
-
+      
       for (const [quarter, positions] of Object.entries(assignments)) {
         for (const [position, playerId] of Object.entries(positions)) {
           if (playerId !== null) {
@@ -376,10 +385,6 @@ export default function DragDropRosterManager({
       });
 
       console.log('DragDropRosterManager: All roster entries saved successfully via batch');
-
-      // Invalidate roster cache to ensure fresh data is fetched
-      const queryClient = useQueryClient();
-      queryClient.invalidateQueries({ queryKey: ['roster', gameId] });
 
       toast({
         title: "Success",
