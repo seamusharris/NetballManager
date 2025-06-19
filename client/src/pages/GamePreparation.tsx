@@ -491,7 +491,7 @@ export default function GamePreparation() {
                         {(() => {
                           // Calculate goal difference for head-to-head display
                           if (historicalGames.length === 0 || !batchScores) return null;
-
+                          
                           let totalGoalsFor = 0;
                           let totalGoalsAgainst = 0;
                           let gamesWithScores = 0;
@@ -500,10 +500,10 @@ export default function GamePreparation() {
                             const gameScores = batchScores?.[game.id] || [];
                             if (gameScores.length > 0) {
                               gamesWithScores++;
-
+                              
                               let gameGoalsFor = 0;
                               let gameGoalsAgainst = 0;
-
+                              
                               gameScores.forEach(score => {
                                 if (score.teamId === currentTeamId) {
                                   gameGoalsFor += score.score;
@@ -511,7 +511,7 @@ export default function GamePreparation() {
                                   gameGoalsAgainst += score.score;
                                 }
                               });
-
+                              
                               totalGoalsFor += gameGoalsFor;
                               totalGoalsAgainst += gameGoalsAgainst;
                             }
@@ -739,7 +739,7 @@ export default function GamePreparation() {
                           })}
                         </div>
 
-
+                        
 
                         {/* Quarter Average Performance Boxes + Goal Difference */}
                         <div className="mt-6 grid grid-cols-2 md:grid-cols-5 gap-4">
@@ -833,7 +833,7 @@ export default function GamePreparation() {
                               </div>
                             );
                           })}
-
+                          
                           {/* Goal Difference Box - styled like quarter boxes */}
                           {(() => {
                             // Calculate overall goal difference for styling
@@ -845,10 +845,10 @@ export default function GamePreparation() {
                               const gameScores = batchScores?.[game.id] || [];
                               if (gameScores.length > 0) {
                                 gamesWithScores++;
-
+                                
                                 let gameGoalsFor = 0;
                                 let gameGoalsAgainst = 0;
-
+                                
                                 gameScores.forEach(score => {
                                   if (score.teamId === currentTeamId) {
                                     gameGoalsFor += score.score;
@@ -856,7 +856,7 @@ export default function GamePreparation() {
                                     gameGoalsAgainst += score.score;
                                   }
                                 });
-
+                                
                                 totalGoalsFor += gameGoalsFor;
                                 totalGoalsAgainst += gameGoalsAgainst;
                               }
@@ -937,11 +937,11 @@ export default function GamePreparation() {
                                 const gameScores = batchScores?.[game.id] || [];
                                 if (gameScores.length > 0) {
                                   gamesWithScores++;
-
+                                  
                                   // Calculate final scores for this game
                                   let gameGoalsFor = 0;
                                   let gameGoalsAgainst = 0;
-
+                                  
                                   gameScores.forEach(score => {
                                     if (score.teamId === currentTeamId) {
                                       gameGoalsFor += score.score;
@@ -949,7 +949,7 @@ export default function GamePreparation() {
                                       gameGoalsAgainst += score.score;
                                     }
                                   });
-
+                                  
                                   totalGoalsFor += gameGoalsFor;
                                   totalGoalsAgainst += gameGoalsAgainst;
                                 }
@@ -1015,9 +1015,26 @@ export default function GamePreparation() {
 
                               return (
                                 <div className="space-y-6">
-                                  {/* Position Performance Row - Attacking and Defending side by side */}
+                                  {/* Goals For Row */}
                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    {/* Attacking Positions (GA/GS) */}
+                                    {/* Average Goals For */}
+                                    <div className="space-y-3 p-4 border-2 border-green-200 rounded-lg bg-green-50">
+                                      <div className="flex justify-between items-center">
+                                        <span className="text-sm font-medium text-gray-700">Average Goals For</span>
+                                        <span className="text-lg font-bold text-green-600">{avgGoalsFor.toFixed(1)}</span>
+                                      </div>
+                                      <div className="w-full bg-gray-200 rounded-full h-4">
+                                        <div
+                                          className="bg-gradient-to-r from-green-400 to-green-600 h-4 rounded-full transition-all duration-700 ease-out"
+                                          style={{ width: `${goalsForPercentage}%` }}
+                                        ></div>
+                                      </div>
+                                      <div className="text-xs text-gray-500">
+                                        Based on {gamesWithScores} games with scores
+                                      </div>
+                                    </div>
+
+                                    {/* Position Goals For (GA/GS) */}
                                     <div className="space-y-3 p-4 border-2 border-green-200 rounded-lg bg-green-50">
                                       <div className="flex justify-between items-center">
                                         <span className="text-sm font-medium text-gray-700">Attacking Positions</span>
@@ -1051,8 +1068,28 @@ export default function GamePreparation() {
                                         </div>
                                       )}
                                     </div>
+                                  </div>
 
-                                    {/* Defending Positions (GD/GK) */}
+                                  {/* Goals Against Row */}
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    {/* Average Goals Against */}
+                                    <div className="space-y-3 p-4 border-2 border-red-200 rounded-lg bg-red-50">
+                                      <div className="flex justify-between items-center">
+                                        <span className="text-sm font-medium text-gray-700">Average Goals Against</span>
+                                        <span className="text-lg font-bold text-red-600">{avgGoalsAgainst.toFixed(1)}</span>
+                                      </div>
+                                      <div className="w-full bg-gray-200 rounded-full h-4">
+                                        <div
+                                          className="bg-gradient-to-r from-red-400 to-red-600 h-4 rounded-full transition-all duration-700 ease-out"
+                                          style={{ width: `${goalsAgainstPercentage}%` }}
+                                        ></div>
+                                      </div>
+                                      <div className="text-xs text-gray-500">
+                                        Lower is better for defensive performance
+                                      </div>
+                                    </div>
+
+                                    {/* Position Goals Against (GD/GK) */}
                                     <div className="space-y-3 p-4 border-2 border-red-200 rounded-lg bg-red-50">
                                       <div className="flex justify-between items-center">
                                         <span className="text-sm font-medium text-gray-700">Defending Positions</span>
@@ -1095,11 +1132,8 @@ export default function GamePreparation() {
                       </CardContent>
                     </Card>
                   )}
-                </div>
-              );
-            })()}
 
-
+                  
 
                   {/* Position Performance Distribution */}
                   {(() => {
