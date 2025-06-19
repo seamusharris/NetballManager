@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -41,7 +41,8 @@ interface GameInfo {
 interface DragDropRosterManagerProps {
   availablePlayers: Player[];
   gameInfo: GameInfo;
-  onRosterChange: (roster: Record<number, Record<string, number | null>>) => void;
+  onRosterChange?: (roster: Record<number, Record<string, number | null>>) => void;
+  initialRoster?: Record<number, Record<string, number | null>>;
 }
 
 const NETBALL_POSITIONS = ['GS', 'GA', 'WA', 'C', 'WD', 'GD', 'GK'];
@@ -119,14 +120,21 @@ const PositionSlot = ({
   );
 };
 
-export default function DragDropRosterManager({ availablePlayers, gameInfo, onRosterChange }: DragDropRosterManagerProps) {
+export default function DragDropRosterManager({ 
+  availablePlayers, 
+  gameInfo, 
+  onRosterChange,
+  initialRoster 
+}: DragDropRosterManagerProps) {
   const [currentQuarter, setCurrentQuarter] = useState(1);
-  const [assignments, setAssignments] = useState<Record<number, Record<string, number | null>>>({
-    1: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
-    2: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
-    3: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
-    4: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null }
-  });
+  const [assignments, setAssignments] = useState<Record<number, Record<string, number | null>>>(
+    initialRoster || {
+      1: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
+      2: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
+      3: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
+      4: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null }
+    }
+  );
   const [draggedPlayer, setDraggedPlayer] = useState<number | null>(null);
   const [dragOverPosition, setDragOverPosition] = useState<string | null>(null);
 
@@ -261,6 +269,13 @@ export default function DragDropRosterManager({ availablePlayers, gameInfo, onRo
     return acc;
   }, {} as Record<string, any>);
 
+  // Update roster when initialRoster prop changes
+  useEffect(() => {
+    if (initialRoster) {
+      setAssignments(initialRoster);
+    }
+  }, [initialRoster]);
+
   return (
     <div className="space-y-6">
       {/* Game Info Header */}
@@ -365,8 +380,8 @@ export default function DragDropRosterManager({ availablePlayers, gameInfo, onRo
               <PositionSlot
                 key={position}
                 position={position}
-                player={currentQuarterAssignments[position] ? 
-                  availablePlayers.find(p => p.id === currentQuarterAssignments[position]) : undefined
+                player={assignments[currentQuarter][position] ? 
+                  availablePlayers.find(p => p.id === assignments[currentQuarter][position]) : undefined
                 }
                 isDropTarget={dragOverPosition === position}
                 isCompatible={draggedPlayer ? isPlayerCompatible(draggedPlayer, position) : true}
@@ -391,8 +406,8 @@ export default function DragDropRosterManager({ availablePlayers, gameInfo, onRo
               >
                 <PositionSlot
                   position={position}
-                  player={currentQuarterAssignments[position] ? 
-                    availablePlayers.find(p => p.id === currentQuarterAssignments[position]) : undefined
+                  player={assignments[currentQuarter][position] ? 
+                    availablePlayers.find(p => p.id === assignments[currentQuarter][position]) : undefined
                   }
                   isDropTarget={dragOverPosition === position}
                   isCompatible={draggedPlayer ? isPlayerCompatible(draggedPlayer, position) : true}
@@ -418,8 +433,8 @@ export default function DragDropRosterManager({ availablePlayers, gameInfo, onRo
               >
                 <PositionSlot
                   position={position}
-                  player={currentQuarterAssignments[position] ? 
-                    availablePlayers.find(p => p.id === currentQuarterAssignments[position]) : undefined
+                  player={assignments[currentQuarter][position] ? 
+                    availablePlayers.find(p => p.id === assignments[currentQuarter][position]) : undefined
                   }
                   isDropTarget={dragOverPosition === position}
                   isCompatible={draggedPlayer ? isPlayerCompatible(draggedPlayer, position) : true}

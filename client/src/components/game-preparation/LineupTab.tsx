@@ -407,6 +407,7 @@ export function LineupTab({ game, players, rosters, onRosterUpdate }: LineupTabP
                   time: game.time
                 }}
                 onRosterChange={setSelectedRoster}
+                initialRoster={selectedRoster}
               />
             </CardContent>
           </Card>
