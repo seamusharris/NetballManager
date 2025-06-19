@@ -26,7 +26,11 @@ export function GamesContainer({
       spacingClasses[spacing],
       className
     )}>
-      {children}
+      {React.Children.map(children, (child, index) => (
+        <div key={index} className={index > 0 ? spacingClasses[spacing].replace('space-y-', 'mt-') : ''}>
+          {child}
+        </div>
+      ))}
     </div>
   );
 }
