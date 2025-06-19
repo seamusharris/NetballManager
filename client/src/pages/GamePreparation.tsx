@@ -813,9 +813,7 @@ export default function GamePreparation() {
                           const avgGoalsAgainst = 22.3; // Would be calculated from opponent's attacking vs our GD + GK
                           const gamesWithScores = historicalGames.length;
 
-                          const maxGoals = Math.maxAnalysis: The code modification replaces the original Goals Performance calculation with a placeholder implementation that uses position-based statistics.
-
-(avgGoalsFor, avgGoalsAgainst, 50);
+                          const maxGoals = Math.max(avgGoalsFor, avgGoalsAgainst, 50);
                           const goalsForPercentage = (avgGoalsFor / maxGoals) * 100;
                           const goalsAgainstPercentage = (avgGoalsAgainst / maxGoals) * 100;
                           const goalDifference = avgGoalsFor - avgGoalsAgainst;
