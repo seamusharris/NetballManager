@@ -253,7 +253,7 @@ export default function GameResultCard({
     >
       {/* Left side - Opponent and details */}
       <div className="flex-1 min-w-0">
-        <div className={cn('font-semibold text-gray-800 truncate', config.textSize)}>
+        <div className={cn('font-semibold text-gray-800 truncate text-base', config.textSize)}>
           {isByeGame ? "Bye" : `${game.homeTeamName || 'Unknown'} vs ${game.awayTeamName || 'Unknown'}`}
         </div>
 
@@ -265,13 +265,14 @@ export default function GameResultCard({
             </span>
           )}
 
+          {config.showDate && config.showRound && game.round && (
+            <span className="text-xs text-gray-500">•</span>
+          )}
+
           {config.showRound && game.round && (
-            <GameBadge 
-              variant="round-pill" 
-              size={layout === 'narrow' ? 'sm' : 'default'}
-            >
+            <span className="text-xs text-gray-600">
               {layout === 'narrow' ? `R${game.round}` : `Round ${game.round}`}
-            </GameBadge>
+            </span>
           )}
         </div>
       </div>
