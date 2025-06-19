@@ -606,20 +606,12 @@ export default function GamePreparation() {
                                   centralizedScores={transformedScores}
                                   showLink={true}
                                   className="w-full"
+                                  customRoundDisplay={isSpecialStatus ? `Round ${game.round} • ${game.statusDisplayName}` : undefined}
                                 />
 
-                                {/* Right side - either quarter breakdown or status badge */}
+                                {/* Right side - quarter breakdown for normal games */}
                                 <div className="ml-4 flex-shrink-0">
-                                  {isSpecialStatus ? (
-                                    <div className="text-center">
-                                      <Badge 
-                                        variant="secondary"
-                                        className="text-sm px-3 py-1"
-                                      >
-                                        {game.statusDisplayName}
-                                      </Badge>
-                                    </div>
-                                  ) : hasQuarterData ? (
+                                  {!isSpecialStatus && hasQuarterData ? (
                                     (() => {
                                       // Calculate quarter scores for display
                                       const teamScores = [0, 0, 0, 0];
@@ -696,11 +688,7 @@ export default function GamePreparation() {
                                         </div>
                                       );
                                     })()
-                                  ) : (
-                                    <div className="text-center text-gray-400 text-xs">
-                                      No quarter data
-                                    </div>
-                                  )}
+                                  ) : null}
                                 </div>
                               </div>
                             );
