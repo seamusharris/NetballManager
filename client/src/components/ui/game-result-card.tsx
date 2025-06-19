@@ -194,13 +194,14 @@ export default function GameResultCard({
     
     const baseRound = layout === 'narrow' ? `R${game.round}` : `Round ${game.round}`;
     
-    // Add forfeit status if game is completed with forfeit status (statusId 7)
-    if (game.statusIsCompleted && (game.statusId === 7 || game.statusName === 'forfeit')) {
-      return `${baseRound} • Forfeit Loss`;
+    // Add forfeit status if game is completed with forfeit status
+    if (game.statusIsCompleted && game.statusName && game.statusName.startsWith('forfeit-')) {
+      const forfeitType = game.statusName === 'forfeit-win' ? 'Forfeit Win' : 'Forfeit Loss';
+      return `${baseRound} • ${forfeitType}`;
     }
     
     return baseRound;
-  }, [game.round, game.statusIsCompleted, game.statusName, game.statusId, layout]);
+  }, [game.round, game.statusIsCompleted, game.statusName, layout]);
 
   // Helper function for timeline round badge styling
   const getRoundBadgeVariant = () => {
@@ -229,12 +230,12 @@ export default function GameResultCard({
 
     // Show calculated scores if available
     if (scores && scores.finalScore.for !== undefined && scores.finalScore.against !== undefined) {
-      return `${scores.finalScore.for}-${scores.finalScore.against}`;
+      return `${scores.finalScore.for}—${scores.finalScore.against}`;
     }
 
     // Show status scores if no calculated scores but status scores exist
     if (game.statusTeamGoals !== null && game.statusOpponentGoals !== null) {
-      return `${game.statusTeamGoals}-${game.statusOpponentGoals}`;
+      return `${game.statusTeamGoals}—${game.statusOpponentGoals}`;
     }
 
     // For completed games without scores, show placeholder
