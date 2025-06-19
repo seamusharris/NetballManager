@@ -278,12 +278,50 @@ export default function DragDropRosterManager({
     return acc;
   }, {} as Record<string, any>);
 
-  // Update roster when initialRoster prop changes
+  // Load existing roster data when gameId changes or component mounts
   useEffect(() => {
     if (initialRoster) {
       setAssignments(initialRoster);
+    } else if (gameId) {
+      // Fetch existing roster from API
+      const loadExistingRoster = async () => {
+        try {
+          const response = await apiClient.get(`/api/games/${gameId}/rosters`);
+          const rosters = response;
+          
+          if (rosters && rosters.length > 0) {
+            // Convert roster data to assignments format
+            const loadedAssignments = {
+              1: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
+              2: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
+              3: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
+              4: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null }
+            };
+
+            rosters.forEach((roster: any) => {
+              if (roster.quarter && roster.position && roster.playerId) {
+                const quarter = roster.quarter as number;
+                const position = roster.position as string;
+                if (quarter >= 1 && quarter <= 4 && NETBALL_POSITIONS.includes(position)) {
+                  loadedAssignments[quarter][position] = roster.playerId;
+                }
+              }
+            });
+
+            setAssignments(loadedAssignments);
+            if (onRosterChange) {
+              onRosterChange(loadedAssignments);
+            }
+          }
+        } catch (error) {
+          console.error('Error loading existing roster:', error);
+          // Don't show error toast as this is optional loading
+        }
+      };
+
+      loadExistingRoster();
     }
-  }, [initialRoster]);
+  }, [initialRoster, gameId, onRosterChange]);
 
   // Save roster function
   const handleSaveRoster = async () => {
