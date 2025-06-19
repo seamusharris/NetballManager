@@ -605,6 +605,7 @@ export default function GamePreparation() {
                                   currentTeamId={currentTeamId}
                                   centralizedScores={transformedScores}
                                   showLink={true}
+                                  customRoundDisplay={isSpecialStatus ? `Round ${game.round} • ${game.statusDisplayName}` : undefined}
                                   className="w-full"
                                 />
 
@@ -649,6 +650,7 @@ export default function GamePreparation() {
                                                 const opponentScore = opponentScores[qIndex];
                                                 const quarterWin = teamScore > opponentScore;
                                                 const quarterLoss = teamScore < opponentScore;
+                                                const teamScoreWithSign = teamScore > 0 ? `+${teamScore}` : teamScore;
 
                                                 const quarterClass = quarterWin 
                                                   ? 'bg-green-100 text-green-800 border border-green-400' 
@@ -658,7 +660,7 @@ export default function GamePreparation() {
 
                                                 return (
                                                   <span key={qIndex} className={`w-16 px-1 py-0.5 ${quarterClass} rounded font-medium text-center block`}>
-                                                    {teamScore}-{opponentScore}
+                                                    {teamScoreWithSign}—{opponentScore}
                                                   </span>
                                                 );
                                               })}
@@ -688,9 +690,7 @@ export default function GamePreparation() {
                                       );
                                     })()
                                   ) : (
-                                    <div className="text-center text-gray-400 text-xs">
-                                      No quarter data
-                                    </div>
+                                    null
                                   )}
                                 </div>
                               </div>
