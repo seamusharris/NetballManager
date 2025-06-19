@@ -30,7 +30,6 @@ import StrategyTab from '@/components/game-preparation/StrategyTab';
 import GameResultCard from '@/components/ui/game-result-card';
 import { GamesContainer } from '@/components/ui/games-container';
 import QuarterPerformanceWidget from '@/components/dashboard/QuarterPerformanceWidget';
-import SpacingDiagnostic from '@/components/debug/SpacingDiagnostic';
 
 
 type Tab = 'overview' | 'analysis' | 'lineup' | 'strategy';
@@ -602,22 +601,7 @@ export default function GamePreparation() {
                     </CardContent>
                   </Card>
 
-                  {/* Spacing Diagnostic - Debug Tool */}
-                  <Card className="border-2 border-dashed border-orange-300 bg-orange-50">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-orange-700">
-                        <AlertCircle className="h-5 w-5" />
-                        Debug: Spacing Diagnostic Tool
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm text-orange-600 mb-4">
-                        This diagnostic tool shows working examples of GamesContainer spacing. 
-                        Compare with the "Previous Games vs Matrix" section above.
-                      </p>
-                      <SpacingDiagnostic />
-                    </CardContent>
-                  </Card>
+                  
                 </>
               );
             })()}
