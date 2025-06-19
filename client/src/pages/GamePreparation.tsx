@@ -799,7 +799,7 @@ export default function GamePreparation() {
                                     ></div>
                                   </div>
                                   <Badge 
-                                    variant={performance === 'good' ? 'default' : performance === 'poor' : 'destructive' : 'secondary'}
+                                    variant={performance === 'good' ? 'default' : performance === 'poor' ? 'destructive' : 'secondary'}
                                     className="text-xs"
                                   >
                                     {performance === 'good' ? 'Strong' : performance === 'poor' ? 'Weak' : 'Even'}
