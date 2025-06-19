@@ -537,7 +537,7 @@ export default function GamePreparation() {
 
                                 {/* Overlay quarter breakdown data on top */}
                                 {quarterData && (
-                                  <div className="absolute right-20 top-1/2 transform -translate-y-1/2 flex items-center gap-4 pointer-events-none">
+                                  <div className="absolute right-32 top-1/2 transform -translate-y-1/2 flex items-center gap-4 pointer-events-none">
                                     <div className="text-xs space-y-1">
                                       {/* Quarter-by-quarter scores on top (lighter) */}
                                       <div className="grid grid-cols-4 gap-2">
@@ -673,7 +673,7 @@ export default function GamePreparation() {
                                     {scoreDiff >= 0 ? '+' : ''}{scoreDiff.toFixed(1)}
                                   </div>
                                   {/* Progress bar shows our percentage of total scoring */}
-                                  <div className="w-full bg-gray-200 rounded-full h-2 mt-1" title="Our share of total quarter scoring">
+                                  <div className="w-full bg-gray-200 rounded-full h-2 mt-3" title="Our share of total quarter scoring">
                                     <div 
                                       className={`h-2 rounded-full ${
                                         isWinning ? 'bg-green-500' : 
