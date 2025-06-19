@@ -626,6 +626,103 @@ export default function GamePreparation() {
                             );
                           })}
                         </div>
+
+                        {/* Quarter Average Performance Boxes */}
+                        <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
+                          {[1, 2, 3, 4].map(quarter => {
+                            // Calculate average scores for this quarter across all historical games
+                            let totalTeamScore = 0;
+                            let totalOpponentScore = 0;
+                            let gamesWithData = 0;
+
+                            historicalGames.forEach(game => {
+                              const gameScores = batchScores?.[game.id] || [];
+                              if (gameScores.length > 0) {
+                                const quarterTeamScore = gameScores.find(s => s.teamId === currentTeamId && s.quarter === quarter)?.score || 0;
+                                const quarterOpponentScore = gameScores.find(s => s.teamId !== currentTeamId && s.quarter === quarter)?.score || 0;
+                                
+                                if (quarterTeamScore > 0 || quarterOpponentScore > 0) {
+                                  totalTeamScore += quarterTeamScore;
+                                  totalOpponentScore += quarterOpponentScore;
+                                  gamesWithData++;
+                                }
+                              }
+                            });
+
+                            const avgTeamScore = gamesWithData > 0 ? (totalTeamScore / gamesWithData) : 0;
+                            const avgOpponentScore = gamesWithData > 0 ? (totalOpponentScore / gamesWithData) : 0;
+                            const scoreDiff = avgTeamScore - avgOpponentScore;
+                            
+                            // Determine performance and background shade
+                            const isWinning = avgTeamScore > avgOpponentScore;
+                            const isLosing = avgTeamScore < avgOpponentScore;
+                            const isDraw = Math.abs(avgTeamScore - avgOpponentScore) < 0.1;
+                            
+                            // Calculate background shade intensity based on score difference
+                            const maxDiff = 5; // Max expected quarter score difference for scaling
+                            const intensity = Math.min(Math.abs(scoreDiff) / maxDiff, 1);
+                            
+                            const getBackgroundClass = () => {
+                              if (isDraw) return 'bg-amber-100 border-amber-300';
+                              if (isWinning) {
+                                if (intensity > 0.7) return 'bg-green-200 border-green-400';
+                                if (intensity > 0.4) return 'bg-green-150 border-green-350';
+                                return 'bg-green-100 border-green-300';
+                              } else {
+                                if (intensity > 0.7) return 'bg-red-200 border-red-400';
+                                if (intensity > 0.4) return 'bg-red-150 border-red-350';
+                                return 'bg-red-100 border-red-300';
+                              }
+                            };
+
+                            const getTextColorClass = () => {
+                              if (isDraw) return 'text-amber-800';
+                              return isWinning ? 'text-green-800' : 'text-red-800';
+                            };
+
+                            const getPerformanceLabel = () => {
+                              if (isDraw) return 'Even';
+                              if (intensity > 0.7) return isWinning ? 'Dominant' : 'Weak';
+                              if (intensity > 0.4) return isWinning ? 'Strong' : 'Poor';
+                              return isWinning ? 'Good' : 'Slight Loss';
+                            };
+
+                            return (
+                              <div key={quarter} className={`text-center p-4 rounded-lg border-2 ${getBackgroundClass()} transition-colors`}>
+                                <div className="text-lg font-bold text-gray-600 mb-2">Q{quarter}</div>
+                                <div className="space-y-2">
+                                  <div className={`text-2xl font-bold ${getTextColorClass()}`}>
+                                    {avgTeamScore.toFixed(1)}
+                                  </div>
+                                  <div className="text-sm text-gray-500">vs {avgOpponentScore.toFixed(1)}</div>
+                                  <div className="text-xs text-gray-600">
+                                    {scoreDiff >= 0 ? '+' : ''}{scoreDiff.toFixed(1)}
+                                  </div>
+                                  <div className="w-full bg-gray-200 rounded-full h-2">
+                                    <div 
+                                      className={`h-2 rounded-full ${
+                                        isWinning ? 'bg-green-500' : 
+                                        isLosing ? 'bg-red-500' : 'bg-amber-500'
+                                      }`}
+                                      style={{ width: `${Math.min(100, Math.max(0, (avgTeamScore / (avgTeamScore + avgOpponentScore)) * 100))}%` }}
+                                    ></div>
+                                  </div>
+                                  <Badge 
+                                    variant={isWinning ? 'default' : isLosing ? 'destructive' : 'secondary'}
+                                    className="text-xs"
+                                  >
+                                    {getPerformanceLabel()}
+                                  </Badge>
+                                  {gamesWithData > 0 && (
+                                    <div className="text-xs text-gray-500 mt-1">
+                                      {gamesWithData} game{gamesWithData !== 1 ? 's' : ''}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
                       </CardContent>
                     </Card>
                   )}
