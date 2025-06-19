@@ -416,7 +416,7 @@ export default function GamePreparation() {
                   {/* Historical Games */}
                   {historicalGames.length > 0 && (
                     <Card>
-                      <CardHeader>
+                      <CardHeader className="pb-6">
                         <CardTitle className="flex items-center gap-2">
                           <Trophy className="h-5 w-5" />
                           Previous Games vs {opponent}
