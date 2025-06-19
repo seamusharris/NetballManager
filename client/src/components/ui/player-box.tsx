@@ -103,13 +103,12 @@ export function PlayerBox({
   const darkerBorderColor = getDarkerColorHex(player.avatarColor);
   const lightBackgroundColor = getLighterColorHex(player.avatarColor);
   const mediumBackgroundColor = getMediumColorHex(player.avatarColor);
-  const mediumBorderColor = getMediumColorHex(player.avatarColor);
 
   // Always apply default background and border, but allow overrides
   // Use medium background as default to match selected availability styling
   const defaultStyle = {
     backgroundColor: mediumBackgroundColor,
-    borderColor: mediumBorderColor, // Use medium color for lighter borders
+    borderColor: playerColorHex, // Use base player color for visible but lighter borders
     color: darkerBorderColor, // Keep darker color for text for better readability
     ...style
   };
