@@ -18,6 +18,7 @@ import { useClub } from '@/contexts/ClubContext';
 import { apiClient } from '@/lib/apiClient';
 import { useToast } from '@/hooks/use-toast';
 import { formatShortDate } from '@/lib/utils';
+import { calculateTeamWinRate } from '@/lib/winRateCalculator';
 import PageTemplate from '@/components/layout/PageTemplate';
 import TeamPositionAnalysis from '@/components/dashboard/TeamPositionAnalysis';
 import PlayerPerformance from '@/components/dashboard/PlayerPerformance';
@@ -434,9 +435,6 @@ export default function GamePreparation() {
             {(() => {
               // Calculate actual statistics based on historical games using proper win rate calculator
               const recentGames = historicalGames.slice(0, Math.min(5, historicalGames.length));
-              
-              // Import and use the proper win rate calculation
-              const { calculateTeamWinRate } = require('@/lib/winRateCalculator');
               
               // Calculate win rate using official scores
               const winRateResult = calculateTeamWinRate(
