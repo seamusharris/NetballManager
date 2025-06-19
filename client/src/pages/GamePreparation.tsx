@@ -1014,8 +1014,9 @@ export default function GamePreparation() {
                               const defendingPositionsTotal = gdAvgGoalsAgainst + gkAvgGoalsAgainst;
 
                               return (
-                                {/* Position Performance Row - Attacking and Defending side by side */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="space-y-6">
+                                  {/* Position Performance Row - Attacking and Defending side by side */}
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                   {/* Attacking Positions (GA/GS) */}
                                   <div className="space-y-3 p-4 border-2 border-green-200 rounded-lg bg-green-50">
                                     <div className="flex justify-between items-center">
