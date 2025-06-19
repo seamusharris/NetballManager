@@ -986,7 +986,7 @@ export default function GamePreparation() {
                                 label: 'Goal Shooter',
                                 type: 'attacking',
                                 goalsFor: positionTotals.GS.games > 0 
-                                  ? Math.round(positionTotals.GS.goalsFor / positionTotals.GS.games) 
+                                  ? positionTotals.GS.goalsFor / positionTotals.GS.games 
                                   : 0,
                                 description: 'Primary goal scorer'
                               },
@@ -995,7 +995,7 @@ export default function GamePreparation() {
                                 label: 'Goal Attack',
                                 type: 'attacking',
                                 goalsFor: positionTotals.GA.games > 0 
-                                  ? Math.round(positionTotals.GA.goalsFor / positionTotals.GA.games) 
+                                  ? positionTotals.GA.goalsFor / positionTotals.GA.games 
                                   : 0,
                                 description: 'Secondary scoring threat'
                               },
@@ -1004,7 +1004,7 @@ export default function GamePreparation() {
                                 label: 'Goal Defence',
                                 type: 'defending',
                                 goalsAgainst: positionTotals.GD.games > 0 
-                                  ? Math.round(positionTotals.GD.goalsAgainst / positionTotals.GD.games) 
+                                  ? positionTotals.GD.goalsAgainst / positionTotals.GD.games 
                                   : 0,
                                 description: 'Defensive pressure on GA'
                               },
@@ -1013,7 +1013,7 @@ export default function GamePreparation() {
                                 label: 'Goal Keeper',
                                 type: 'defending',
                                 goalsAgainst: positionTotals.GK.games > 0 
-                                  ? Math.round(positionTotals.GK.goalsAgainst / positionTotals.GK.games) 
+                                  ? positionTotals.GK.goalsAgainst / positionTotals.GK.games 
                                   : 0,
                                 description: 'Last line of defence'
                               }
@@ -1062,7 +1062,7 @@ export default function GamePreparation() {
                                               </div>
                                             </div>
                                             <span className="text-lg font-bold text-green-600">
-                                              {position.goalsFor} goals
+                                              {position.goalsFor.toFixed(1)} goals
                                             </span>
                                           </div>
                                           <div className="w-full bg-gray-200 rounded-full h-3">
@@ -1099,7 +1099,7 @@ export default function GamePreparation() {
                                               </div>
                                             </div>
                                             <span className="text-lg font-bold text-blue-600">
-                                              {position.goalsAgainst} against
+                                              {position.goalsAgainst.toFixed(1)} against
                                             </span>
                                           </div>
                                           <div className="w-full bg-gray-200 rounded-full h-3">
