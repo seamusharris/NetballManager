@@ -959,7 +959,7 @@ export function GameResultCardExamples() {
             <div className="max-w-4xl space-y-3">
               
               {/* Win Example with Q-by-Q and Cumulative */}
-              <div className="border-l-4 border-green-500 bg-green-50 rounded transition-colors cursor-pointer hover:bg-green-100 p-3">
+              <div className="border border-gray-200 border-l-4 border-l-green-500 bg-green-50 rounded transition-colors cursor-pointer hover:bg-green-100 p-3">
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     <div className="font-semibold text-gray-800 text-sm mb-2">WNC Dingoes vs Cobras</div>
@@ -971,19 +971,19 @@ export function GameResultCardExamples() {
                   {/* Quarter scores positioned closer to final score */}
                   <div className="flex items-center gap-4">
                     <div className="text-xs space-y-1">
-                      {/* Quarter-by-quarter scores on top */}
+                      {/* Quarter-by-quarter scores on top (lighter) */}
                       <div className="grid grid-cols-4 gap-1">
-                        <span className="px-1 py-0.5 bg-green-200 text-green-800 border border-green-500 rounded font-medium text-center">15-12</span>
-                        <span className="px-1 py-0.5 bg-red-200 text-red-800 border border-red-500 rounded font-medium text-center">12-16</span>
-                        <span className="px-1 py-0.5 bg-green-200 text-green-800 border border-green-500 rounded font-medium text-center">16-11</span>
-                        <span className="px-1 py-0.5 bg-green-200 text-green-800 border border-green-500 rounded font-medium text-center">17-12</span>
+                        <span className="px-1 py-0.5 bg-green-100 text-green-700 border border-green-400 rounded font-medium text-center">15-12</span>
+                        <span className="px-1 py-0.5 bg-red-100 text-red-700 border border-red-400 rounded font-medium text-center">12-16</span>
+                        <span className="px-1 py-0.5 bg-green-100 text-green-700 border border-green-400 rounded font-medium text-center">16-11</span>
+                        <span className="px-1 py-0.5 bg-green-100 text-green-700 border border-green-400 rounded font-medium text-center">17-12</span>
                       </div>
-                      {/* Cumulative scores underneath */}
+                      {/* Cumulative scores underneath (darker) */}
                       <div className="grid grid-cols-4 gap-1">
-                        <span className="px-1 py-0.5 bg-green-100 text-green-700 border border-green-400 rounded text-xs text-center">15-12</span>
-                        <span className="px-1 py-0.5 bg-red-100 text-red-700 border border-red-400 rounded text-xs text-center">27-28</span>
-                        <span className="px-1 py-0.5 bg-green-100 text-green-700 border border-green-400 rounded text-xs text-center">43-39</span>
-                        <span className="px-1 py-0.5 bg-green-100 text-green-700 border border-green-400 rounded text-xs text-center">60-51</span>
+                        <span className="px-1 py-0.5 bg-green-200 text-green-800 border border-green-500 rounded text-xs text-center">15-12</span>
+                        <span className="px-1 py-0.5 bg-red-200 text-red-800 border border-red-500 rounded text-xs text-center">27-28</span>
+                        <span className="px-1 py-0.5 bg-green-200 text-green-800 border border-green-500 rounded text-xs text-center">43-39</span>
+                        <span className="px-1 py-0.5 bg-green-200 text-green-800 border border-green-500 rounded text-xs text-center">60-51</span>
                       </div>
                     </div>
                     <div className="px-3 py-1 text-sm font-bold text-white bg-green-600 rounded">60-51</div>
@@ -992,7 +992,7 @@ export function GameResultCardExamples() {
               </div>
 
               {/* Loss Example */}
-              <div className="border-l-4 border-red-500 bg-red-50 rounded transition-colors cursor-pointer hover:bg-red-100 p-3">
+              <div className="border border-gray-200 border-l-4 border-l-red-500 bg-red-50 rounded transition-colors cursor-pointer hover:bg-red-100 p-3">
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     <div className="font-semibold text-gray-800 text-sm mb-2">Sharks vs WNC Dingoes</div>
@@ -1004,16 +1004,16 @@ export function GameResultCardExamples() {
                   <div className="flex items-center gap-4">
                     <div className="text-xs space-y-1">
                       <div className="grid grid-cols-4 gap-1">
-                        <span className="px-1 py-0.5 bg-red-200 text-red-800 border border-red-500 rounded font-medium text-center">6-12</span>
-                        <span className="px-1 py-0.5 bg-red-200 text-red-800 border border-red-500 rounded font-medium text-center">8-10</span>
-                        <span className="px-1 py-0.5 bg-green-200 text-green-800 border border-green-500 rounded font-medium text-center">9-7</span>
-                        <span className="px-1 py-0.5 bg-red-200 text-red-800 border border-red-500 rounded font-medium text-center">7-16</span>
+                        <span className="px-1 py-0.5 bg-red-100 text-red-700 border border-red-400 rounded font-medium text-center">6-12</span>
+                        <span className="px-1 py-0.5 bg-red-100 text-red-700 border border-red-400 rounded font-medium text-center">8-10</span>
+                        <span className="px-1 py-0.5 bg-green-100 text-green-700 border border-green-400 rounded font-medium text-center">9-7</span>
+                        <span className="px-1 py-0.5 bg-red-100 text-red-700 border border-red-400 rounded font-medium text-center">7-16</span>
                       </div>
                       <div className="grid grid-cols-4 gap-1">
-                        <span className="px-1 py-0.5 bg-red-100 text-red-700 border border-red-400 rounded text-xs text-center">6-12</span>
-                        <span className="px-1 py-0.5 bg-red-100 text-red-700 border border-red-400 rounded text-xs text-center">14-22</span>
-                        <span className="px-1 py-0.5 bg-red-100 text-red-700 border border-red-400 rounded text-xs text-center">23-29</span>
-                        <span className="px-1 py-0.5 bg-red-100 text-red-700 border border-red-400 rounded text-xs text-center">30-45</span>
+                        <span className="px-1 py-0.5 bg-red-200 text-red-800 border border-red-500 rounded text-xs text-center">6-12</span>
+                        <span className="px-1 py-0.5 bg-red-200 text-red-800 border border-red-500 rounded text-xs text-center">14-22</span>
+                        <span className="px-1 py-0.5 bg-red-200 text-red-800 border border-red-500 rounded text-xs text-center">23-29</span>
+                        <span className="px-1 py-0.5 bg-red-200 text-red-800 border border-red-500 rounded text-xs text-center">30-45</span>
                       </div>
                     </div>
                     <div className="px-3 py-1 text-sm font-bold text-white bg-red-600 rounded">30-45</div>
@@ -1022,7 +1022,7 @@ export function GameResultCardExamples() {
               </div>
 
               {/* Draw Example */}
-              <div className="border-l-4 border-amber-500 bg-amber-50 rounded transition-colors cursor-pointer hover:bg-amber-100 p-3">
+              <div className="border border-gray-200 border-l-4 border-l-amber-500 bg-amber-50 rounded transition-colors cursor-pointer hover:bg-amber-100 p-3">
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     <div className="font-semibold text-gray-800 text-sm mb-2">WNC Dingoes vs Lions</div>
@@ -1034,16 +1034,16 @@ export function GameResultCardExamples() {
                   <div className="flex items-center gap-4">
                     <div className="text-xs space-y-1">
                       <div className="grid grid-cols-4 gap-1">
-                        <span className="px-1 py-0.5 bg-green-200 text-green-800 border border-green-500 rounded font-medium text-center">11-10</span>
-                        <span className="px-1 py-0.5 bg-red-200 text-red-800 border border-red-500 rounded font-medium text-center">9-11</span>
-                        <span className="px-1 py-0.5 bg-green-200 text-green-800 border border-green-500 rounded font-medium text-center">12-8</span>
-                        <span className="px-1 py-0.5 bg-green-200 text-green-800 border border-green-500 rounded font-medium text-center">13-11</span>
+                        <span className="px-1 py-0.5 bg-green-100 text-green-700 border border-green-400 rounded font-medium text-center">11-10</span>
+                        <span className="px-1 py-0.5 bg-red-100 text-red-700 border border-red-400 rounded font-medium text-center">9-11</span>
+                        <span className="px-1 py-0.5 bg-green-100 text-green-700 border border-green-400 rounded font-medium text-center">12-8</span>
+                        <span className="px-1 py-0.5 bg-green-100 text-green-700 border border-green-400 rounded font-medium text-center">13-11</span>
                       </div>
                       <div className="grid grid-cols-4 gap-1">
-                        <span className="px-1 py-0.5 bg-green-100 text-green-700 border border-green-400 rounded text-xs text-center">11-10</span>
-                        <span className="px-1 py-0.5 bg-red-100 text-red-700 border border-red-400 rounded text-xs text-center">20-21</span>
-                        <span className="px-1 py-0.5 bg-green-100 text-green-700 border border-green-400 rounded text-xs text-center">32-29</span>
-                        <span className="px-1 py-0.5 bg-amber-100 text-amber-700 border border-amber-400 rounded text-xs text-center">45-45</span>
+                        <span className="px-1 py-0.5 bg-green-200 text-green-800 border border-green-500 rounded text-xs text-center">11-10</span>
+                        <span className="px-1 py-0.5 bg-red-200 text-red-800 border border-red-500 rounded text-xs text-center">20-21</span>
+                        <span className="px-1 py-0.5 bg-green-200 text-green-800 border border-green-500 rounded text-xs text-center">32-29</span>
+                        <span className="px-1 py-0.5 bg-amber-200 text-amber-800 border border-amber-500 rounded text-xs text-center">45-45</span>
                       </div>
                     </div>
                     <div className="px-3 py-1 text-sm font-bold text-white bg-amber-600 rounded">45-45</div>
@@ -1052,7 +1052,7 @@ export function GameResultCardExamples() {
               </div>
 
               {/* Tighter spacing version */}
-              <div className="border-l-4 border-purple-500 bg-purple-50 rounded transition-colors cursor-pointer hover:bg-purple-100 p-3">
+              <div className="border border-gray-200 border-l-4 border-l-purple-500 bg-purple-50 rounded transition-colors cursor-pointer hover:bg-purple-100 p-3">
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     <div className="font-semibold text-gray-800 text-sm mb-1">WNC Dingoes vs Thunder</div>
@@ -1062,16 +1062,16 @@ export function GameResultCardExamples() {
                   <div className="flex items-center gap-3">
                     <div className="text-xs">
                       <div className="grid grid-cols-4 gap-0.5 mb-0.5">
-                        <span className="px-1 bg-green-200 text-green-800 border border-green-500 rounded text-xs font-medium text-center">12-10</span>
-                        <span className="px-1 bg-green-200 text-green-800 border border-green-500 rounded text-xs font-medium text-center">14-8</span>
-                        <span className="px-1 bg-red-200 text-red-800 border border-red-500 rounded text-xs font-medium text-center">7-13</span>
-                        <span className="px-1 bg-green-200 text-green-800 border border-green-500 rounded text-xs font-medium text-center">16-9</span>
+                        <span className="px-1 bg-green-100 text-green-700 border border-green-400 rounded text-xs font-medium text-center">12-10</span>
+                        <span className="px-1 bg-green-100 text-green-700 border border-green-400 rounded text-xs font-medium text-center">14-8</span>
+                        <span className="px-1 bg-red-100 text-red-700 border border-red-400 rounded text-xs font-medium text-center">7-13</span>
+                        <span className="px-1 bg-green-100 text-green-700 border border-green-400 rounded text-xs font-medium text-center">16-9</span>
                       </div>
                       <div className="grid grid-cols-4 gap-0.5">
-                        <span className="px-1 bg-green-100 text-green-700 border border-green-400 rounded text-xs text-center">12-10</span>
-                        <span className="px-1 bg-green-100 text-green-700 border border-green-400 rounded text-xs text-center">26-18</span>
-                        <span className="px-1 bg-red-100 text-red-700 border border-red-400 rounded text-xs text-center">33-31</span>
-                        <span className="px-1 bg-green-100 text-green-700 border border-green-400 rounded text-xs text-center">49-40</span>
+                        <span className="px-1 bg-green-200 text-green-800 border border-green-500 rounded text-xs text-center">12-10</span>
+                        <span className="px-1 bg-green-200 text-green-800 border border-green-500 rounded text-xs text-center">26-18</span>
+                        <span className="px-1 bg-red-200 text-red-800 border border-red-500 rounded text-xs text-center">33-31</span>
+                        <span className="px-1 bg-green-200 text-green-800 border border-green-500 rounded text-xs text-center">49-40</span>
                       </div>
                     </div>
                     <div className="px-3 py-1 text-sm font-bold text-white bg-purple-600 rounded">49-40</div>
