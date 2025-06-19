@@ -417,7 +417,7 @@ export default function GamePreparation() {
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <div className="space-y-6">
+                        <div className="space-y-6 bg-red-50 border border-red-200">
                           {historicalGames.slice(0, 5).map((game, index) => {
                             // Transform batch scores to the format expected by GameResultCard
                             const gameScores = batchScores?.[game.id] || [];
@@ -434,15 +434,16 @@ export default function GamePreparation() {
                             })) : [];
 
                             return (
-                              <GameResultCard
-                                key={game.id}
-                                game={game}
-                                players={players}
-                                currentTeamId={currentTeamId}
-                                centralizedScores={transformedScores}
-                                showQuickActions={false}
-                                className="w-full"
-                              />
+                              <div key={game.id} className="bg-blue-50 border border-blue-200 p-2">
+                                <GameResultCard
+                                  game={game}
+                                  players={players}
+                                  currentTeamId={currentTeamId}
+                                  centralizedScores={transformedScores}
+                                  showQuickActions={false}
+                                  className="w-full"
+                                />
+                              </div>
                             );
                           })}
                         </div>
