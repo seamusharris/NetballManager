@@ -419,9 +419,10 @@ export default function GamePreparation() {
                           Previous Games vs {opponent}
                         </CardTitle>
                       </CardHeader>
-                      <CardContent>
-                        <GamesContainer>
-                          {historicalGames.slice(0, 5).map((game, index) => {
+                      <CardContent className="p-0">
+                        <div className="p-6 pt-0">
+                          <GamesContainer>
+                            {historicalGames.slice(0, 5).map((game, index) => {
                             // Transform batch scores to the format expected by GameResultCard
                             const gameScores = batchScores?.[game.id] || [];
                             const transformedScores = Array.isArray(gameScores) ? gameScores.map(score => ({
@@ -447,7 +448,8 @@ export default function GamePreparation() {
                               />
                             );
                           })}
-                        </GamesContainer>
+                          </GamesContainer>
+                        </div>
                       </CardContent>
                     </Card>
                   )}
