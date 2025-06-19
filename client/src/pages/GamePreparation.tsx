@@ -26,6 +26,7 @@ import DragDropRosterManager from '@/components/roster/DragDropRosterManager';
 import PlayerAvailabilityManager from '@/components/roster/PlayerAvailabilityManager';
 import AnalysisTab from '@/components/game-preparation/AnalysisTab';
 import LineupTab from '@/components/game-preparation/LineupTab';
+import StrategyTab from '@/components/game-preparation/StrategyTab';
 import GameResultCard from '@/components/ui/game-result-card';
 
 type Tab = 'overview' | 'analysis' | 'lineup' | 'strategy';
@@ -656,116 +657,27 @@ export default function GamePreparation() {
           </TabsContent>
 
           {/* Strategy Tab */}
-          <TabsContent value="strategy" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-              {/* Game Plan */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <FileText className="h-5 w-5" />
-                    Game Plan
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {tacticalNotes.map(note => (
-                    <div key={note.id} className="border-l-4 border-blue-400 pl-4 py-2 bg-blue-50 rounded-r">
-                      <div className="flex items-center justify-between mb-1">
-                        <h4 className="font-medium text-blue-800">{note.title}</h4>
-                        <Badge 
-                          variant={note.priority === 'high' ? 'destructive' : note.priority === 'medium' ? 'default' : 'secondary'}
-                          className="text-xs"
-                        >
-                          {note.priority}
-                        </Badge>
-                      </div>
-                      <p className="text-sm text-blue-700">{note.content}</p>
-                      <div className="flex items-center gap-1 mt-1">
-                        {note.category === 'offense' && <Swords className="h-3 w-3 text-blue-600" />}
-                        {note.category === 'defense' && <Shield className="h-3 w-3 text-blue-600" />}
-                        {note.category === 'general' && <Target className="h-3 w-3 text-blue-600" />}
-                        <span className="text-xs text-blue-600 capitalize">{note.category}</span>
-                      </div>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-
-              {/* Key Matchups */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Target className="h-5 w-5" />
-                    Key Matchups
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="p-3 border rounded-lg">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="font-medium">GS vs GK</span>
-                      <Badge variant="outline">Critical</Badge>
-                    </div>
-                    <p className="text-sm text-gray-600">
-                      Our shooting accuracy will be key against their defensive pressure
-                    </p>
-                  </div>
-                  <div className="p-3 border rounded-lg">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="font-medium">WD vs WA</span>
-                      <Badge variant="outline">Important</Badge>
-                    </div>
-                    <p className="text-sm text-gray-600">
-                      Mid-court battle will determine possession control
-                    </p>
-                  </div>
-                  <div className="p-3 border rounded-lg">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="font-medium">C vs C</span>
-                      <Badge variant="outline">Watch</Badge>
-                    </div>
-                    <p className="text-sm text-gray-600">
-                      Center court dominance for transition opportunities
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Pre-game Objectives */}
-              <Card className="lg:col-span-2">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <CheckCircle className="h-5 w-5" />
-                    Pre-game Objectives
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {gameObjectives.map(objective => (
-                      <div key={objective.id} className="flex items-start gap-3 p-3 border rounded-lg">
-                        <button
-                          onClick={() => toggleObjectiveComplete(objective.id)}
-                          className={`mt-0.5 w-4 h-4 rounded border-2 flex items-center justify-center ${
-                            objective.completed 
-                              ? 'bg-green-500 border-green-500 text-white' 
-                              : 'border-gray-300 hover:border-gray-400'
-                          }`}
-                        >
-                          {objective.completed && <CheckCircle className="w-3 h-3" />}
-                        </button>
-                        <div className="flex-1">
-                          <h4 className={`font-medium ${objective.completed ? 'line-through text-gray-500' : ''}`}>
-                            {objective.description}
-                          </h4>
-                          {objective.target && (
-                            <p className="text-sm text-gray-600 mt-1">{objective.target}</p>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+          <TabsContent value="strategy">
+            <StrategyTab
+              gameId={gameId!}
+              teamId={currentTeamId!}
+              opponentId={game.homeTeamId === currentTeamId ? game.awayTeamId : game.homeTeamId}
+              players={players || []}
+              previousNotes={[
+                "Focus on strong defensive pressure in mid-court",
+                "Quick ball movement through center court",
+                "Maintain shooting accuracy under pressure"
+              ]}
+              keyMatchups={[]}
+              gamePlan={{
+                objectives: [],
+                keyTactics: [],
+                playerRoles: {},
+                preGameNotes: '',
+                inGameNotes: '',
+                postGameNotes: ''
+              }}
+            />
           </TabsContent>
         </Tabs>
       </div>
