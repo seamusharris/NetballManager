@@ -1052,7 +1052,7 @@ export function GameResultCardExamples() {
               </div>
 
               {/* Tighter spacing version */}
-              <div className="border border-purple-200 border-l-4 border-l-purple-500 bg-purple-50 rounded transition-colors cursor-pointer hover:bg-purple-100 p-3"></div>
+              <div className="border border-purple-200 border-l-4 border-l-purple-500 bg-purple-50 rounded transition-colors cursor-pointer hover:bg-purple-100 p-3">
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     <div className="font-semibold text-gray-800 text-sm mb-1">WNC Dingoes vs Thunder</div>
