@@ -314,10 +314,15 @@ export default function DragDropRosterManager({
         }
       }
 
-      // Save each roster assignment
-      for (const assignment of rosterData) {
-        await apiClient.post('/api/rosters', assignment);
-      }
+      // First delete all existing roster entries for this game
+      await apiClient.delete(`/api/games/${gameId}/rosters`);
+
+      // Batch save all roster assignments in parallel
+      const savePromises = rosterData.map(assignment => 
+        apiClient.post('/api/rosters', assignment)
+      );
+      
+      await Promise.all(savePromises);
 
       toast({
         title: "Success",
