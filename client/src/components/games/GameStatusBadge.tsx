@@ -63,6 +63,7 @@ function getStatusDisplay(status: string): string {
 // Simple status badge component
 interface GameStatusBadgeProps {
   status: string;
+  displayName?: string;
   onClick?: () => void;
   className?: string;
   size?: 'default' | 'sm';
@@ -70,6 +71,7 @@ interface GameStatusBadgeProps {
 
 export function GameStatusBadge({ 
   status, 
+  displayName,
   onClick, 
   className,
   size = 'default'
@@ -88,7 +90,7 @@ export function GameStatusBadge({
       )}
       onClick={onClick}
     >
-      {getStatusDisplay(status)}
+      {displayName || getStatusDisplay(status)}
     </Badge>
   );
 }
