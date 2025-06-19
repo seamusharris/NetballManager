@@ -340,7 +340,14 @@ export default function DragDropRosterManager({
     };
 
     loadExistingRoster();
-  }, [gameId, initialRoster]);
+  }, [gameId]);
+
+  // Separate effect to handle onRosterChange when assignments change
+  useEffect(() => {
+    if (onRosterChange && !initialRoster) {
+      onRosterChange(assignments);
+    }
+  }, [assignments, onRosterChange, initialRoster]);
 
   // Save roster function
   const handleSaveRoster = async () => {
@@ -373,16 +380,12 @@ export default function DragDropRosterManager({
 
       console.log(`DragDropRosterManager: Saving ${rosterData.length} roster entries for game ${gameId}`);
 
-      // First delete all existing roster entries for this game
-      await apiClient.delete(`/api/games/${gameId}/rosters`);
+      // Use batch save endpoint to save all roster data in one request
+      await apiClient.post(`/api/games/${gameId}/rosters/batch`, {
+        rosters: rosterData
+      });
 
-      // Save all roster assignments sequentially to avoid overwhelming the server
-      // This is more reliable than parallel saves for large rosters
-      for (const assignment of rosterData) {
-        await apiClient.post('/api/rosters', assignment);
-      }
-
-      console.log('DragDropRosterManager: All roster entries saved successfully');
+      console.log('DragDropRosterManager: All roster entries saved successfully via batch');
 
       toast({
         title: "Success",

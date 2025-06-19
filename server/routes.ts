@@ -893,7 +893,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 await client.query('BEGIN');
 
         // Check if player exists
-        const playerCheck = await client.query(
+        const playerCheck = await client.query`
           'SELECT id FROM players WHERE id = $1',
           [playerId]
         );
@@ -1393,7 +1393,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 
   // ----- GAMES API -----
-  
+
   // Unified games transformation function - ensures consistent camelCase response format
   function transformGameRow(row: any) {
     return {
@@ -1463,7 +1463,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Use parameterized queries for better security and consistency
       let result;
-      
+
       if (!isClubWide && teamId) {
         // Team-specific query
         result = await db.execute(sql`
@@ -1546,7 +1546,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // UNIFIED TRANSFORMATION - guarantees consistent camelCase format including statusIsCompleted
       const games = result.rows.map(transformGameRow);
-      
+
       res.json(games);
     } catch (error) {
       console.error('Error fetching games:', error);
@@ -3041,3 +3041,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
   return httpServer;
 }
+
+// Delete all roster entries for a game
+app.delete('/api/games/:gameId/rosters', requireClubAccess, async (req, res) => {
+  try {
+    const { gameId } = req.params;
+    await db.delete(rosters).where(eq(rosters.gameId, parseInt(gameId)));
+    res.json({ success: true, message: `All roster entries for game ${gameId} deleted` });
+  } catch (error) {
+    console.error('Error deleting roster entries:', error);
+    res.status(500).json({ error: 'Failed to delete roster entries' });
+  }
+});
+
+// Batch save roster entries for a game
+app.post('/api/games/:gameId/rosters/batch', requireClubAccess, async (req, res) => {
+  try {
+    const { gameId } = req.params;
+    const { rosters: rosterData } = req.body;
+
+    if (!Array.isArray(rosterData)) {
+      return res.status(400).json({ error: 'Rosters data must be an array' });
+    }
+
+    // Start a transaction for atomic operation
+    await db.transaction(async (tx) => {
+      // First delete all existing roster entries for this game
+      await tx.delete(rosters).where(eq(rosters.gameId, parseInt(gameId)));
+
+      // Then insert all new roster entries in a single batch
+      if (rosterData.length > 0) {
+        await tx.insert(rosters).values(rosterData);
+      }
+    });
+
+    res.status(201).json({ 
+      success: true, 
+      message: `Batch saved ${rosterData.length} roster entries for game ${gameId}`,
+      count: rosterData.length
+    });
+  } catch (error) {
+    console.error('Error batch saving roster entries:', error);
+    res.status(500).json({ error: 'Failed to batch save roster entries' });
+  }
+});
