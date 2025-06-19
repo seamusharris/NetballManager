@@ -243,8 +243,15 @@ export function LineupTab({ game, players, rosters, onRosterUpdate }: LineupTabP
         }
       }
     });
+    
+    console.log('LineupTab: Applying recommendation to roster:', newRoster);
     setSelectedRoster(newRoster);
     setActiveStep('builder');
+    
+    // Add a small delay to ensure the DragDropRosterManager has time to process the roster change
+    setTimeout(() => {
+      console.log('LineupTab: Roster should now be applied in DragDropRosterManager');
+    }, 100);
   };
 
   // Filter recommendations

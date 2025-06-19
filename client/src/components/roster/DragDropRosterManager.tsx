@@ -293,8 +293,25 @@ export default function DragDropRosterManager({
     refetchOnMount: true, // Do refetch on mount to ensure fresh data when navigating to roster
   });
 
+  // Handle initialRoster prop updates (from recommendations)
+  useEffect(() => {
+    if (initialRoster) {
+      console.log('DragDropRosterManager: Received initialRoster:', initialRoster);
+      setAssignments(initialRoster);
+      if (onRosterChange) {
+        onRosterChange(initialRoster);
+      }
+      return;
+    }
+  }, [initialRoster, onRosterChange]);
+
   // Load roster data when roster data changes
   useEffect(() => {
+    // Skip if we have initialRoster (from recommendations)
+    if (initialRoster) {
+      return;
+    }
+
     if (!gameId) {
       setAssignments({
         1: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
@@ -335,7 +352,7 @@ export default function DragDropRosterManager({
         onRosterChange(loadedAssignments);
       }
     }
-  }, [gameId, rosters, onRosterChange]);
+  }, [gameId, rosters, onRosterChange, initialRoster]);
 
   // Handle roster loading error
   useEffect(() => {
