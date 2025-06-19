@@ -21,7 +21,8 @@ export const getPlayerColorHex = (avatarColor?: string): string => {
     'bg-pink-500': '#ec4899', 'bg-pink-600': '#db2777', 'bg-pink-700': '#be185d',
     'bg-rose-500': '#f43f5e', 'bg-rose-600': '#e11d48', 'bg-rose-700': '#be123c',
     'bg-gray-500': '#6b7280', 'bg-gray-600': '#4b5563', 'bg-gray-700': '#374151',
-    'bg-lime-700': '#365314', 'bg-emerald-700': '#047857', 'bg-fuchsia-700': '#a21caf'
+    'bg-lime-700': '#365314', 'bg-green-700': '#15803d', 'bg-emerald-700': '#047857',
+    'bg-red-700': '#b91c1c', 'bg-blue-700': '#1d4ed8', 'bg-fuchsia-700': '#a21caf'
   };
 
   return colorMap[avatarColor] || '#6b7280';
