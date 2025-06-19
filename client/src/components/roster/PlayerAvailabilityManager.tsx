@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useDataLoader } from '@/hooks/use-data-loader';
 import { apiClient } from '@/lib/apiClient';
 import { useQueryClient } from '@tanstack/react-query';
+import { PlayerBox } from '@/components/ui/player-box';
 import { getPlayerColorHex, getDarkerColorHex, getLighterColorHex, getMediumColorHex } from '@/lib/playerColorUtils';
 
 interface PlayerAvailabilityManagerProps {
