@@ -278,7 +278,7 @@ export default function DragDropRosterManager({ availablePlayers, gameInfo, onRo
       </div>
 
       {/* Quarter Selection and Controls */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <Tabs value={currentQuarter.toString()} onValueChange={(value) => setCurrentQuarter(parseInt(value))}>
           <TabsList className="grid grid-cols-4">
             <TabsTrigger value="1">Quarter 1</TabsTrigger>
@@ -289,26 +289,30 @@ export default function DragDropRosterManager({ availablePlayers, gameInfo, onRo
         </Tabs>
 
         {/* Quarter Management Controls */}
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleResetQuarter}
-          >
-            <RotateCcw className="h-4 w-4 mr-1" />
-            Reset Quarter
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleResetAll}
-          >
-            <Trash2 className="h-4 w-4 mr-1" />
-            Reset All
-          </Button>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+          {/* Primary Actions */}
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleResetQuarter}
+            >
+              <RotateCcw className="h-4 w-4 mr-1" />
+              Reset Quarter
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleResetAll}
+            >
+              <Trash2 className="h-4 w-4 mr-1" />
+              Reset All
+            </Button>
+          </div>
 
           {/* Copy Quarter Controls */}
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-sm text-gray-600 font-medium">Copy Quarter:</span>
             {[1, 2, 3, 4].map(sourceQuarter => (
               <Select
                 key={sourceQuarter}
@@ -318,8 +322,8 @@ export default function DragDropRosterManager({ availablePlayers, gameInfo, onRo
                   }
                 }}
               >
-                <SelectTrigger className="w-[140px] text-xs">
-                  <SelectValue placeholder={`Copy Q${sourceQuarter} to...`} />
+                <SelectTrigger className="w-[120px] text-xs">
+                  <SelectValue placeholder={`Q${sourceQuarter} →`} />
                 </SelectTrigger>
                 <SelectContent>
                   {[1, 2, 3, 4]
