@@ -313,48 +313,7 @@ export default function GamePreparation() {
 
           {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-6">
-            {/* Test Container - Matching Diagnostic Structure */}
-            <Card className="border-2 border-dashed border-green-300 bg-green-50">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-green-700">
-                  <CheckCircle className="h-5 w-5" />
-                  Test: Previous Games in Matching Container
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-green-600 mb-4">
-                  This uses the exact same container structure as the working diagnostic tool.
-                </p>
-                <GamesContainer spacing="normal" className="border-2 border-purple-200 p-4 rounded">
-                  {historicalGames.slice(0, 5).map((game, index) => {
-                    // Transform batch scores to the format expected by GameResultCard
-                    const gameScores = batchScores?.[game.id] || [];
-                    const transformedScores = Array.isArray(gameScores) ? gameScores.map(score => ({
-                      id: score.id,
-                      gameId: score.gameId,
-                      teamId: score.teamId,
-                      quarter: score.quarter,
-                      score: score.score,
-                      enteredBy: score.enteredBy,
-                      enteredAt: score.enteredAt,
-                      updatedAt: score.updatedAt,
-                      notes: score.notes
-                    })) : [];
-
-                    return (
-                      <GameResultCard
-                        key={game.id}
-                        game={game}
-                        currentTeamId={currentTeamId}
-                        centralizedScores={transformedScores}
-                        showLink={true}
-                        className="w-full"
-                      />
-                    );
-                  })}
-                </GamesContainer>
-              </CardContent>
-            </Card>
+            
 
             {(() => {
               // Calculate actual statistics based on historical games
@@ -464,7 +423,13 @@ export default function GamePreparation() {
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <GamesContainer spacing="normal">
+                        <div className="mb-4 p-2 bg-yellow-100 border border-yellow-300 rounded text-sm">
+                          <strong>Debug Info:</strong> 
+                          <br />• Historical games count: {historicalGames.length}
+                          <br />• Games to display: {historicalGames.slice(0, 5).length}
+                          <br />• Batch scores available: {batchScores ? Object.keys(batchScores).length : 0} games
+                        </div>
+                        <GamesContainer spacing="normal" className="border-2 border-red-300 bg-red-50 p-4">
                           {historicalGames.slice(0, 5).map((game, index) => {
                             // Transform batch scores to the format expected by GameResultCard
                             const gameScores = batchScores?.[game.id] || [];
@@ -484,14 +449,16 @@ export default function GamePreparation() {
                             console.log(`GameResultCard ${game.id}: currentTeamId=${currentTeamId}, game.homeTeamId=${game.homeTeamId}, game.awayTeamId=${game.awayTeamId}`);
 
                             return (
-                              <GameResultCard
-                                key={game.id}
-                                game={game}
-                                currentTeamId={currentTeamId}
-                                centralizedScores={transformedScores}
-                                showLink={true}
-                                className="w-full"
-                              />
+                              <div key={game.id} className="border border-blue-200 bg-blue-50 p-1 rounded">
+                                <div className="text-xs text-blue-600 mb-1">Game {index + 1}: {game.id}</div>
+                                <GameResultCard
+                                  game={game}
+                                  currentTeamId={currentTeamId}
+                                  centralizedScores={transformedScores}
+                                  showLink={true}
+                                  className="w-full"
+                                />
+                              </div>
                             );
                           })}
                         </GamesContainer>
