@@ -959,7 +959,7 @@ export function GameResultCardExamples() {
             <div className="max-w-4xl space-y-3">
               
               {/* Win Example with Q-by-Q and Cumulative */}
-              <div className="border border-gray-200 border-l-4 border-l-green-500 bg-green-50 rounded transition-colors cursor-pointer hover:bg-green-100 p-3">
+              <div className="border-l-4 border-green-500 bg-green-50 rounded transition-colors cursor-pointer hover:bg-green-100 p-3">
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     <div className="font-semibold text-gray-800 text-sm mb-2">WNC Dingoes vs Cobras</div>
@@ -992,7 +992,7 @@ export function GameResultCardExamples() {
               </div>
 
               {/* Loss Example */}
-              <div className="border border-gray-200 border-l-4 border-l-red-500 bg-red-50 rounded transition-colors cursor-pointer hover:bg-red-100 p-3">
+              <div className="border-l-4 border-red-500 bg-red-50 rounded transition-colors cursor-pointer hover:bg-red-100 p-3">
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     <div className="font-semibold text-gray-800 text-sm mb-2">Sharks vs WNC Dingoes</div>
@@ -1022,7 +1022,7 @@ export function GameResultCardExamples() {
               </div>
 
               {/* Draw Example */}
-              <div className="border border-gray-200 border-l-4 border-l-amber-500 bg-amber-50 rounded transition-colors cursor-pointer hover:bg-amber-100 p-3">
+              <div className="border-l-4 border-amber-500 bg-amber-50 rounded transition-colors cursor-pointer hover:bg-amber-100 p-3">
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     <div className="font-semibold text-gray-800 text-sm mb-2">WNC Dingoes vs Lions</div>
@@ -1052,7 +1052,7 @@ export function GameResultCardExamples() {
               </div>
 
               {/* Tighter spacing version */}
-              <div className="border border-gray-200 border-l-4 border-l-purple-500 bg-purple-50 rounded transition-colors cursor-pointer hover:bg-purple-100 p-3">
+              <div className="border-l-4 border-purple-500 bg-purple-50 rounded transition-colors cursor-pointer hover:bg-purple-100 p-3">
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     <div className="font-semibold text-gray-800 text-sm mb-1">WNC Dingoes vs Thunder</div>
