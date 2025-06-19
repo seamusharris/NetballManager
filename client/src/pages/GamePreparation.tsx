@@ -436,6 +436,9 @@ export default function GamePreparation() {
                               notes: score.notes
                             })) : [];
 
+                            // Debug logging
+                            console.log(`GameResultCard ${game.id}: currentTeamId=${currentTeamId}, game.homeTeamId=${game.homeTeamId}, game.awayTeamId=${game.awayTeamId}`);
+
                             return (
                               <GameResultCard
                                 key={game.id}
