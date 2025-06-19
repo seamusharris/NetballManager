@@ -418,17 +418,33 @@ export default function GamePreparation() {
                       </CardHeader>
                       <CardContent>
                         <div className="space-y-4">
-                          {historicalGames.slice(0, 5).map((game, index) => (
-                            <GameResultCard
-                              key={game.id}
-                              game={game}
-                              players={players}
-                              currentTeamId={currentTeamId}
-                              centralizedScores={[]} // Will be loaded by the component
-                              showQuickActions={false}
-                              className="w-full"
-                            />
-                          ))}
+                          {historicalGames.slice(0, 5).map((game, index) => {
+                            // Transform batch scores to the format expected by GameResultCard
+                            const gameScores = batchScores?.[game.id] || [];
+                            const transformedScores = Array.isArray(gameScores) ? gameScores.map(score => ({
+                              id: score.id,
+                              gameId: score.gameId,
+                              teamId: score.teamId,
+                              quarter: score.quarter,
+                              score: score.score,
+                              enteredBy: score.enteredBy,
+                              enteredAt: score.enteredAt,
+                              updatedAt: score.updatedAt,
+                              notes: score.notes
+                            })) : [];
+
+                            return (
+                              <GameResultCard
+                                key={game.id}
+                                game={game}
+                                players={players}
+                                currentTeamId={currentTeamId}
+                                centralizedScores={transformedScores}
+                                showQuickActions={false}
+                                className="w-full"
+                              />
+                            );
+                          })}
                         </div>
                       </CardContent>
                     </Card>
