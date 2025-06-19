@@ -823,7 +823,8 @@ export default function GamePreparation() {
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6{[1, 2, 3, 4].map(quarter => {
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                          {[1, 2, 3, 4].map(quarter => {
                             const avgScore = Math.floor(Math.random() * 15) + 8; // Mock data
                             const opponentAvg = Math.floor(Math.random() * 15) + 8;
                             const performance = avgScore > opponentAvg ? 'good' : avgScore === opponentAvg ? 'neutral' : 'poor';
