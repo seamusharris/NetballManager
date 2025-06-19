@@ -10,7 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useDataLoader } from '@/hooks/use-data-loader';
 import { apiClient } from '@/lib/apiClient';
 import { useQueryClient } from '@tanstack/react-query';
-import { SelectablePlayerBox } from '@/components/ui/selectable-player-box';
+import { getPlayerColorHex, getDarkerColorHex, getLighterColorHex, getMediumColorHex } from '@/lib/playerColorUtils';
 
 interface PlayerAvailabilityManagerProps {
   gameId: number;
@@ -334,19 +334,42 @@ export default function PlayerAvailabilityManager({
               .sort((a, b) => (a.displayName || '').localeCompare(b.displayName || ''))
               .map(player => {
                 const isSelected = availabilityData[player.id] === true;
+                const playerColorHex = getPlayerColorHex(player.avatarColor);
+                const darkerTextColor = getDarkerColorHex(player.avatarColor);
+                const lightBackgroundColor = getLighterColorHex(player.avatarColor);
+                const mediumBackgroundColor = getMediumColorHex(player.avatarColor);
+
+                const handlePlayerClick = () => {
+                  const newData = { ...availabilityData, [player.id]: !isSelected };
+                  handleAvailabilityChange(newData);
+                };
 
                 return (
-                  <SelectablePlayerBox
-                    key={player.id}
-                    player={player}
-                    isSelected={isSelected}
-                    onSelectionChange={(playerId, selected) => {
-                      const newData = { ...availabilityData, [playerId]: selected };
-                      handleAvailabilityChange(newData);
-                    }}
-                    size="md"
-                    showPositions={true}
-                  />
+                  <div key={player.id} className="relative">
+                    <div 
+                      className="absolute top-1/2 right-3 w-6 h-6 rounded flex items-center justify-center cursor-pointer text-white z-10 transform -translate-y-1/2 mr-3 transition-all duration-200"
+                      style={{ 
+                        backgroundColor: isSelected ? darkerTextColor : 'transparent', 
+                        border: isSelected ? 'none' : `2px solid ${darkerTextColor}80` 
+                      }}
+                      onClick={handlePlayerClick}
+                    >
+                      {isSelected && '✓'}
+                    </div>
+                    <PlayerBox 
+                      player={player}
+                      size="md"
+                      showPositions={true}
+                      hasSelect={true}
+                      className="shadow-md transition-all duration-200 hover:shadow-lg cursor-pointer"
+                      style={{ 
+                        backgroundColor: isSelected ? mediumBackgroundColor : lightBackgroundColor,
+                        borderColor: darkerTextColor,
+                        color: darkerTextColor
+                      }}
+                      onClick={handlePlayerClick}
+                    />
+                  </div>
                 );
               })}
           </div>
