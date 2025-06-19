@@ -11,6 +11,7 @@ import { Badge } from './badge';
 import { Card } from './card';
 import { apiClient } from '@/lib/apiClient';
 import { useClub } from '@/contexts/ClubContext';
+import { GameStatusBadge } from '@/components/games/GameStatusBadge';
 
 export type GameResultLayout = 'narrow' | 'medium' | 'wide';
 
@@ -273,6 +274,19 @@ export default function GameResultCard({
             <span className="text-xs text-gray-600">
               {layout === 'narrow' ? `R${game.round}` : `Round ${game.round}`}
             </span>
+          )}
+
+          {/* Status badge for non-standard games */}
+          {game.statusIsCompleted && ['forfeit-win', 'forfeit-loss', 'bye', 'abandoned'].includes(game.statusName) && (
+            <>
+              <span className="text-xs text-gray-500">•</span>
+              <GameStatusBadge 
+                status={game.statusName} 
+                size="sm" 
+                withDialog={false}
+                className="text-xs"
+              />
+            </>
           )}
         </div>
       </div>
