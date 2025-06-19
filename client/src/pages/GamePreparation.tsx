@@ -741,8 +741,8 @@ export default function GamePreparation() {
 
                         
 
-                        {/* Quarter Average Performance Boxes */}
-                        <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {/* Quarter Average Performance Boxes + Goal Difference */}
+                        <div className="mt-6 grid grid-cols-2 md:grid-cols-5 gap-4">
                           {[1, 2, 3, 4].map(quarter => {
                             // Calculate average scores for this quarter across all historical games
                             let totalTeamScore = 0;
@@ -833,6 +833,95 @@ export default function GamePreparation() {
                               </div>
                             );
                           })}
+                          
+                          {/* Goal Difference Box - styled like quarter boxes */}
+                          {(() => {
+                            // Calculate overall goal difference for styling
+                            let totalGoalsFor = 0;
+                            let totalGoalsAgainst = 0;
+                            let gamesWithScores = 0;
+
+                            historicalGames.forEach(game => {
+                              const gameScores = batchScores?.[game.id] || [];
+                              if (gameScores.length > 0) {
+                                gamesWithScores++;
+                                
+                                let gameGoalsFor = 0;
+                                let gameGoalsAgainst = 0;
+                                
+                                gameScores.forEach(score => {
+                                  if (score.teamId === currentTeamId) {
+                                    gameGoalsFor += score.score;
+                                  } else {
+                                    gameGoalsAgainst += score.score;
+                                  }
+                                });
+                                
+                                totalGoalsFor += gameGoalsFor;
+                                totalGoalsAgainst += gameGoalsAgainst;
+                              }
+                            });
+
+                            const avgGoalsFor = gamesWithScores > 0 ? totalGoalsFor / gamesWithScores : 0;
+                            const avgGoalsAgainst = gamesWithScores > 0 ? totalGoalsAgainst / gamesWithScores : 0;
+                            const goalDifference = avgGoalsFor - avgGoalsAgainst;
+
+                            const isWinning = goalDifference > 0;
+                            const isLosing = goalDifference < 0;
+                            const isDraw = Math.abs(goalDifference) < 0.1;
+
+                            const getBackgroundClass = () => {
+                              if (isDraw) return 'bg-amber-100 border-amber-300';
+                              if (isWinning) return 'bg-green-100 border-green-300';
+                              return 'bg-red-100 border-red-300';
+                            };
+
+                            const getDiffTextColorClass = () => {
+                              if (isDraw) return 'text-amber-600 font-bold';
+                              return isWinning ? 'text-green-600 font-bold' : 'text-red-600 font-bold';
+                            };
+
+                            return (
+                              <div className={`text-center p-2 rounded-lg border-2 ${getBackgroundClass()} transition-colors relative`}>
+                                {/* Goal difference badge in top-left corner */}
+                                <div className="absolute -top-2 -left-2">
+                                  <Badge 
+                                    className={`text-xs font-bold px-2 py-1 rounded-full shadow-sm border ${
+                                      isDraw ? 'bg-amber-500 text-white border-amber-600' :
+                                      isWinning ? 'bg-green-500 text-white border-green-600' : 
+                                      'bg-red-500 text-white border-red-600'
+                                    }`}
+                                  >
+                                    AVG
+                                  </Badge>
+                                </div>
+
+                                <div className="space-y-1 mt-1">
+                                  <div className={`text-lg font-bold ${getDiffTextColorClass()}`}>
+                                    {avgGoalsFor.toFixed(1)}–{avgGoalsAgainst.toFixed(1)}
+                                  </div>
+                                  <div className={`text-base ${getDiffTextColorClass()}`}>
+                                    {goalDifference >= 0 ? '+' : ''}{goalDifference.toFixed(1)}
+                                  </div>
+
+                                  <div 
+                                    className="w-full bg-gray-200 rounded-full h-2 mt-6 mb-4" 
+                                    title="Our share of total game scoring"
+                                  >
+                                    <div 
+                                      className={`h-2 rounded-full ${
+                                        isWinning ? 'bg-green-500' : 
+                                        isLosing ? 'bg-red-500' : 'bg-amber-500'
+                                      }`}
+                                      style={{ 
+                                        width: `${Math.min(100, Math.max(0, (avgGoalsFor / (avgGoalsFor + avgGoalsAgainst)) * 100))}%`
+                                      }}
+                                    ></div>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })()}
                         </div>
 
                         {/* Goals Performance (moved below quarter boxes) */}
@@ -876,9 +965,9 @@ export default function GamePreparation() {
 
                               return (
                                 <div className="space-y-6">
-                                  <div className="grid grid-cols-12 gap-6">
-                                    {/* Goals For - takes up 5/12 of the width */}
-                                    <div className="col-span-5 space-y-3 p-4 border-2 border-green-200 rounded-lg bg-green-50">
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    {/* Goals For */}
+                                    <div className="space-y-3 p-4 border-2 border-green-200 rounded-lg bg-green-50">
                                       <div className="flex justify-between items-center">
                                         <span className="text-sm font-medium text-gray-700">Average Goals For</span>
                                         <span className="text-lg font-bold text-green-600">{avgGoalsFor.toFixed(1)}</span>
@@ -894,8 +983,8 @@ export default function GamePreparation() {
                                       </div>
                                     </div>
 
-                                    {/* Goals Against - takes up 5/12 of the width */}
-                                    <div className="col-span-5 space-y-3 p-4 border-2 border-red-200 rounded-lg bg-red-50">
+                                    {/* Goals Against */}
+                                    <div className="space-y-3 p-4 border-2 border-red-200 rounded-lg bg-red-50">
                                       <div className="flex justify-between items-center">
                                         <span className="text-sm font-medium text-gray-700">Average Goals Against</span>
                                         <span className="text-lg font-bold text-red-600">{avgGoalsAgainst.toFixed(1)}</span>
@@ -911,18 +1000,7 @@ export default function GamePreparation() {
                                       </div>
                                     </div>
 
-                                    {/* Goal Difference - takes up 2/12 of the width (same as quarter boxes) */}
-                                    <div className="col-span-2 text-center p-4 border-2 border-blue-200 rounded-lg bg-blue-50">
-                                      <div className="space-y-2">
-                                        <div className="text-sm font-medium text-gray-700">Goal Difference</div>
-                                        <div className={`text-2xl font-bold ${goalDifference >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                          {goalDifference >= 0 ? '+' : ''}{goalDifference.toFixed(1)}
-                                        </div>
-                                        <div className="text-xs text-gray-500">
-                                          Per game avg
-                                        </div>
-                                      </div>
-                                    </div>
+                                    
                                   </div>
 
                                   
