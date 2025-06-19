@@ -526,9 +526,9 @@ export default function GamePreparation() {
                             const isDraw = quarterData && quarterData.finalScore.team === quarterData.finalScore.opponent;
 
                             const getResultClass = () => {
-                              if (isWin) return 'border-green-200 border-l-4 border-l-green-500 bg-green-50';
-                              if (isLoss) return 'border-red-200 border-l-4 border-l-red-500 bg-red-50';
-                              if (isDraw) return 'border-amber-200 border-l-4 border-l-amber-500 bg-amber-50';
+                              if (isWin) return 'border-green-500 border-l-4 border-l-green-500 bg-green-50';
+                              if (isLoss) return 'border-red-500 border-l-4 border-l-red-500 bg-red-50';
+                              if (isDraw) return 'border-amber-500 border-l-4 border-l-amber-500 bg-amber-50';
                               return 'border-gray-200 border-l-4 border-l-gray-500 bg-gray-50';
                             };
 
@@ -599,7 +599,7 @@ export default function GamePreparation() {
                                           })}
                                         </div>
                                       </div>
-                                      <div className="px-3 py-1 text-sm font-bold bg-gray-600 text-white rounded">
+                                      <div className={`px-3 py-1 text-sm font-bold ${isWin ? 'bg-green-600' : isLoss ? 'bg-red-600' : 'bg-gray-600'} text-white rounded`}>
                                         {quarterData.finalScore.team}-{quarterData.finalScore.opponent}
                                       </div>
                                     </div>
