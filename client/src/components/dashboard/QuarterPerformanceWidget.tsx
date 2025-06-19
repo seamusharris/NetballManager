@@ -207,34 +207,39 @@ export default function QuarterPerformanceWidget({
       contentClassName="px-4 py-6"
     >
         {/* Quarter Performance Boxes */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-          {[1, 2, 3, 4].map(quarter => {
-            const teamScore = quarterPerformance.avgTeamScoreByQuarter[quarter];
-            const opponentScore = quarterPerformance.avgOpponentScoreByQuarter[quarter];
-            const diff = teamScore - opponentScore;
-            const isStrongest = quarterDiffs.reduce((max, current) => 
-              current.diff > max.diff ? current : max
-            ).quarter === quarter;
-            const isWeakest = quarterDiffs.reduce((min, current) => 
-              current.diff < min.diff ? current : min
-            ).quarter === quarter;
+        <div className="p-3 bg-gray-50 rounded-lg border border-gray-200 mb-6">
+          <div className="flex justify-center items-center space-x-2 mb-3">
+            <span className="text-xs text-gray-500 font-medium">Quarter Averages</span>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {[1, 2, 3, 4].map(quarter => {
+              const teamScore = quarterPerformance.avgTeamScoreByQuarter[quarter];
+              const opponentScore = quarterPerformance.avgOpponentScoreByQuarter[quarter];
+              const diff = teamScore - opponentScore;
+              const isStrongest = quarterDiffs.reduce((max, current) => 
+                current.diff > max.diff ? current : max
+              ).quarter === quarter;
+              const isWeakest = quarterDiffs.reduce((min, current) => 
+                current.diff < min.diff ? current : min
+              ).quarter === quarter;
 
-            return (
-              <div key={quarter} className={`p-3 rounded-lg border-2 ${isStrongest ? 'border-green-500 bg-green-50' : isWeakest ? 'border-red-500 bg-red-50' : 'border-gray-200'}`}>
-                <div className="text-center">
-                  <div className="text-sm font-medium text-gray-600">Q{quarter}</div>
-                  <div className="text-lg font-bold">
-                    {teamScore.toFixed(1)} - {opponentScore.toFixed(1)}
+              return (
+                <div key={quarter} className={`p-3 rounded-lg border-2 ${isStrongest ? 'border-green-500 bg-green-50' : isWeakest ? 'border-red-500 bg-red-50' : 'border-gray-200'}`}>
+                  <div className="text-center">
+                    <div className="text-sm font-medium text-gray-600">Q{quarter}</div>
+                    <div className="text-lg font-bold">
+                      {teamScore.toFixed(1)} - {opponentScore.toFixed(1)}
+                    </div>
+                    <div className={`text-sm ${diff >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      {diff >= 0 ? '+' : ''}{diff.toFixed(1)}
+                    </div>
+                    {isStrongest && <Badge variant="secondary" className="text-xs bg-green-100 text-green-800">Strongest</Badge>}
+                    {isWeakest && <Badge variant="secondary" className="text-xs bg-red-100 text-red-800">Weakest</Badge>}
                   </div>
-                  <div className={`text-sm ${diff >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    {diff >= 0 ? '+' : ''}{diff.toFixed(1)}
-                  </div>
-                  {isStrongest && <Badge variant="secondary" className="text-xs bg-green-100 text-green-800">Strongest</Badge>}
-                  {isWeakest && <Badge variant="secondary" className="text-xs bg-red-100 text-red-800">Weakest</Badge>}
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
 
         {/* Visual Quarter Performance Chart */}
