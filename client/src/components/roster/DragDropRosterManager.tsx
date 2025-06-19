@@ -281,13 +281,17 @@ export default function DragDropRosterManager({
   // Load existing roster data when gameId changes or component mounts
   useEffect(() => {
     if (initialRoster) {
+      console.log('DragDropRosterManager: Using provided initialRoster:', initialRoster);
       setAssignments(initialRoster);
     } else if (gameId) {
       // Fetch existing roster from API
       const loadExistingRoster = async () => {
         try {
+          console.log(`DragDropRosterManager: Loading roster for game ${gameId}`);
           const response = await apiClient.get(`/api/games/${gameId}/rosters`);
           const rosters = response;
+          
+          console.log(`DragDropRosterManager: Received ${rosters?.length || 0} roster entries:`, rosters);
           
           if (rosters && rosters.length > 0) {
             // Convert roster data to assignments format
@@ -304,24 +308,28 @@ export default function DragDropRosterManager({
                 const position = roster.position as string;
                 if (quarter >= 1 && quarter <= 4 && NETBALL_POSITIONS.includes(position)) {
                   loadedAssignments[quarter][position] = roster.playerId;
+                  console.log(`DragDropRosterManager: Loaded Q${quarter} ${position} -> Player ${roster.playerId}`);
                 }
               }
             });
 
+            console.log('DragDropRosterManager: Final loaded assignments:', loadedAssignments);
             setAssignments(loadedAssignments);
             if (onRosterChange) {
               onRosterChange(loadedAssignments);
             }
+          } else {
+            console.log('DragDropRosterManager: No existing roster found, using empty assignments');
           }
         } catch (error) {
-          console.error('Error loading existing roster:', error);
+          console.error('DragDropRosterManager: Error loading existing roster:', error);
           // Don't show error toast as this is optional loading
         }
       };
 
       loadExistingRoster();
     }
-  }, [initialRoster, gameId, onRosterChange]);
+  }, [initialRoster, gameId]);
 
   // Save roster function
   const handleSaveRoster = async () => {
