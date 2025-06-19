@@ -606,12 +606,20 @@ export default function GamePreparation() {
                                   centralizedScores={transformedScores}
                                   showLink={true}
                                   className="w-full"
-                                  customRoundDisplay={isSpecialStatus ? `Round ${game.round} • ${game.statusDisplayName}` : undefined}
                                 />
 
-                                {/* Right side - quarter breakdown for normal games */}
+                                {/* Right side - either quarter breakdown or status badge */}
                                 <div className="ml-4 flex-shrink-0">
-                                  {!isSpecialStatus && hasQuarterData ? (
+                                  {isSpecialStatus ? (
+                                    <div className="text-center">
+                                      <Badge 
+                                        variant="secondary"
+                                        className="text-sm px-3 py-1"
+                                      >
+                                        {game.statusDisplayName}
+                                      </Badge>
+                                    </div>
+                                  ) : hasQuarterData ? (
                                     (() => {
                                       // Calculate quarter scores for display
                                       const teamScores = [0, 0, 0, 0];
@@ -688,7 +696,11 @@ export default function GamePreparation() {
                                         </div>
                                       );
                                     })()
-                                  ) : null}
+                                  ) : (
+                                    <div className="text-center text-gray-400 text-xs">
+                                      No quarter data
+                                    </div>
+                                  )}
                                 </div>
                               </div>
                             );
@@ -696,7 +708,98 @@ export default function GamePreparation() {
                         </div>
 
                         {/* Quarter Average Performance Boxes */}
-                        
+                        <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
+                          {[1, 2, 3, 4].map(quarter => {
+                            // Calculate average scores for this quarter across all historical games
+                            let totalTeamScore = 0;
+                            let totalOpponentScore = 0;
+                            let gamesWithData = 0;
+
+                            historicalGames.forEach(game => {
+                              const gameScores = batchScores?.[game.id] || [];
+                              const transformedScores = Array.isArray(gameScores) ? gameScores.map(score => ({
+                                id: score.id,
+                                gameId: score.gameId,
+                                teamId: score.teamId,
+                                quarter: score.quarter,
+                                score: score.score,
+                                enteredBy: score.enteredBy,
+                                enteredAt: score.enteredAt,
+                                updatedAt: score.updatedAt,
+                                notes: score.notes
+                              })) : [];
+
+                              const quarterTeamScore = transformedScores.find(s => s.teamId === currentTeamId && s.quarter === quarter)?.score || 0;
+                              const quarterOpponentScore = transformedScores.find(s => s.teamId !== currentTeamId && s.quarter === quarter)?.score || 0;
+
+                                totalTeamScore += quarterTeamScore;
+                                totalOpponentScore += quarterOpponentScore;
+
+                              if(quarterTeamScore > 0 || quarterOpponentScore > 0){
+                                gamesWithData++;
+                              }
+                            });
+
+                            const avgTeamScore = gamesWithData > 0 ? totalTeamScore / gamesWithData : 0;
+                            const avgOpponentScore = gamesWithData > 0 ? totalOpponentScore / gamesWithData : 0;
+
+                            const isWinning = avgTeamScore > avgOpponentScore;
+                            const isLosing = avgTeamScore < avgOpponentScore;
+                            const isDraw = Math.abs(avgTeamScore - avgOpponentScore) < 0.1;
+
+                            const getBackgroundClass = () => {
+                              if (isDraw) return 'bg-amber-100 border-amber-300';
+                              if (isWinning) return 'bg-green-100 border-green-300';
+                              return 'bg-red-100 border-red-300';
+                            };
+
+                            const getDiffTextColorClass = () => {
+                              if (isDraw) return 'text-amber-600 font-bold';
+                              return isWinning ? 'text-green-600 font-bold' : 'text-red-600 font-bold';
+                            };
+
+                            return (
+                              <div key={quarter} className={`text-center p-2 rounded-lg border-2 ${getBackgroundClass()} transition-colors relative`}>
+                                {/* Quarter badge in top-left corner */}
+                                <div className="absolute -top-2 -left-2">
+                                  <Badge 
+                                    className={`text-xs font-bold px-2 py-1 rounded-full shadow-sm border ${
+                                      isDraw ? 'bg-amber-500 text-white border-amber-600' :
+                                      isWinning ? 'bg-green-500 text-white border-green-600' : 
+                                      'bg-red-500 text-white border-red-600'
+                                    }`}
+                                  >
+                                    Q{quarter}
+                                  </Badge>
+                                </div>
+
+                                <div className="space-y-1 mt-1">
+                                  <div className={`text-lg font-bold ${getDiffTextColorClass()}`}>
+                                    {avgTeamScore.toFixed(1)} - {avgOpponentScore.toFixed(1)}
+                                  </div>
+                                  <div className={`text-base ${getDiffTextColorClass()}`}>
+                                    {(avgTeamScore - avgOpponentScore).toFixed(1)}
+                                  </div>
+
+                                  <div 
+                                    className="w-full bg-gray-200 rounded-full h-2 mt-6 mb-4" 
+                                    title="Our share of total quarter scoring"
+                                  >
+                                    <div 
+                                      className={`h-2 rounded-full ${
+                                        isWinning ? 'bg-green-500' : 
+                                        isLosing ? 'bg-red-500' : 'bg-amber-500'
+                                      }`}
+                                      style={{ 
+                                        width: `${Math.min(100, Math.max(0, (avgTeamScore / (avgTeamScore + avgOpponentScore)) * 100))}%`
+                                      }}
+                                    ></div>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
                       </CardContent>
                     </Card>
                   )}
@@ -812,4 +915,172 @@ export default function GamePreparation() {
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="grid grid-cols-2 md:grid-
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <Button 
+                          variant="outline" 
+                          className="flex items-center gap-2"
+                          onClick={() => setActiveTab('lineup')}
+                        >
+                          <Users className="h-4 w-4" />
+                          Set Lineup
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          className="flex items-center gap-2"
+                          onClick={() => setActiveTab('analysis')}
+                        >
+                          <BarChart3 className="h-4 w-4" />
+                          View Analysis
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          className="flex items-center gap-2"
+                          onClick={() => setActiveTab('strategy')}
+                        >
+                          <FileText className="h-4 w-4" />
+                          Game Plan
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          className="flex items-center gap-2"
+                        >
+                          <Trophy className="h-4 w-4" />
+                          Print Summary
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+
+                </>
+              );
+            })()}
+          </TabsContent>
+
+          {/* Analysis Tab */}
+          <TabsContent value="analysis" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+              {/* Historical Performance */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Historical vs {opponent}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {historicalGames.length > 0 ? (
+                    <div className="space-y-4">
+                      <div className="text-center p-4 bg-blue-50 rounded-lg">
+                        <div className="text-2xl font-bold text-blue-700">
+                          {historicalGames.length}
+                        </div>
+                        <div className="text-sm text-blue-600">Previous Games vs {opponent}</div>
+                      </div>
+                      <div className="space-y-2">
+                        {historicalGames.slice(0, 5).map((game: any, index: number) => (
+                          <div key={index} className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                            <span className="text-sm">{formatShortDate(game.date)}</span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-gray-500">Round {game.round}</span>
+                              <Badge variant="outline">{game.statusDisplayName}</Badge>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      {historicalGames.length > 5 && (
+                        <p className="text-xs text-gray-500 text-center">
+                          ...and {historicalGames.length - 5} more games
+                        </p>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <AlertCircle className="h-8 w-8 mx-auto text-gray-400 mb-2" />
+                      <p className="text-gray-600">No previous matches against {opponent}</p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        This will show completed games against the same opponent team
+                      </p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Quarter Analysis */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Quarter Performance</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {[1, 2, 3, 4].map(quarter => (
+                      <div key={quarter} className="flex items-center justify-between">
+                        <span className="font-medium">Q{quarter}</span>
+                        <div className="flex items-center gap-4">
+                          <div className="text-right">
+                            <div className="text-sm font-medium">Avg: 11.2</div>
+                            <div className="text-xs text-gray-500">vs 9.8</div>
+                          </div>
+                          <Progress value={65} className="w-20 h-2" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Position Performance */}
+              <Card className="lg:col-span-2">
+                <CardHeader>
+                  <CardTitle>Position Performance Analysis</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <TeamPositionAnalysis 
+                    games={historicalGames}
+                    players={players}
+                    currentTeamId={currentTeamId}
+                  />
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* Lineup Tab */}
+          <TabsContent value="lineup">
+            <LineupTab
+              game={game}
+              players={players || []}
+              rosters={[]}
+              onRosterUpdate={(rosters) => {
+                console.log('Roster updated:', rosters);
+                // Handle roster update here if needed
+              }}
+            />
+          </TabsContent>
+
+          {/* Strategy Tab */}
+          <TabsContent value="strategy">
+            <StrategyTab
+              gameId={gameId!}
+              teamId={currentTeamId!}
+              opponentId={game.homeTeamId === currentTeamId ? game.awayTeamId : game.homeTeamId}
+              players={players || []}
+              previousNotes={[
+                "Focus on strong defensive pressure in mid-court",
+                "Quick ball movement through center court",
+                "Maintain shooting accuracy under pressure"
+              ]}
+              keyMatchups={[]}
+              gamePlan={{
+                objectives: [],
+                keyTactics: [],
+                playerRoles: {},
+                preGameNotes: '',
+                inGameNotes: '',
+                postGameNotes: ''
+              }}
+            />
+          </TabsContent>
+        </Tabs>
+      </div>
+    </PageTemplate>
+  );
+}

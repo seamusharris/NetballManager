@@ -28,7 +28,6 @@ interface GameResultCardProps {
   compact?: boolean;
   currentTeamId?: number;
   clubTeams?: any[];
-  customRoundDisplay?: string;
 }
 
 export default function GameResultCard({ 
@@ -44,8 +43,7 @@ export default function GameResultCard({
   showScore = true,
   compact = false,
   currentTeamId,
-  clubTeams = [],
-  customRoundDisplay
+  clubTeams = []
 }: GameResultCardProps) {
   const { currentClubId } = useClub();
   const statusIsCompleted = game.statusIsCompleted;
@@ -273,7 +271,7 @@ export default function GameResultCard({
 
           {config.showRound && game.round && (
             <span className="text-xs text-gray-600">
-              {customRoundDisplay || (layout === 'narrow' ? `R${game.round}` : `Round ${game.round}`)}
+              {layout === 'narrow' ? `R${game.round}` : `Round ${game.round}`}
             </span>
           )}
         </div>
