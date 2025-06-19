@@ -321,29 +321,31 @@ export default function DragDropRosterManager({ availablePlayers, gameInfo, onRo
               <div className="text-center mb-3">
                 <span className="text-sm font-medium text-gray-700">Copy Quarter Lineup</span>
               </div>
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                 {[1, 2, 3, 4].map(sourceQuarter => (
-                  <Select
-                    key={sourceQuarter}
-                    onValueChange={(value) => {
-                      if (value) {
-                        handleCopyQuarter(sourceQuarter, parseInt(value));
-                      }
-                    }}
-                  >
-                    <SelectTrigger className="text-xs">
-                      <SelectValue placeholder={`Copy Q${sourceQuarter}`} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {[1, 2, 3, 4]
-                        .filter(q => q !== sourceQuarter)
-                        .map(targetQuarter => (
-                          <SelectItem key={targetQuarter} value={targetQuarter.toString()}>
-                            to Quarter {targetQuarter}
-                          </SelectItem>
-                        ))}
-                    </SelectContent>
-                  </Select>
+                  <div key={sourceQuarter} className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-gray-600 min-w-[20px]">Q{sourceQuarter}</span>
+                    <Select
+                      onValueChange={(value) => {
+                        if (value) {
+                          handleCopyQuarter(sourceQuarter, parseInt(value));
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="text-xs flex-1">
+                        <SelectValue placeholder="Copy to..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {[1, 2, 3, 4]
+                          .filter(q => q !== sourceQuarter)
+                          .map(targetQuarter => (
+                            <SelectItem key={targetQuarter} value={targetQuarter.toString()}>
+                              Quarter {targetQuarter}
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 ))}
               </div>
             </div>
