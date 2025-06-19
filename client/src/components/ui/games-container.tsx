@@ -1,29 +1,32 @@
-
 import React from 'react';
 import { cn } from '@/lib/utils';
 
+export type GamesSpacing = 'none' | 'tight' | 'normal' | 'loose';
+
 interface GamesContainerProps {
   children: React.ReactNode;
+  spacing?: GamesSpacing;
   className?: string;
-  spacing?: 'tight' | 'normal' | 'loose';
 }
+
+const spacingClasses: Record<GamesSpacing, string> = {
+  none: 'space-y-0',
+  tight: 'space-y-2',
+  normal: 'space-y-4',
+  loose: 'space-y-6'
+};
 
 export function GamesContainer({ 
   children, 
-  className,
-  spacing = 'normal'
+  spacing = 'normal', 
+  className 
 }: GamesContainerProps) {
-  const spacingClasses = {
-    tight: 'space-y-2',
-    normal: 'space-y-4', 
-    loose: 'space-y-6'
-  };
-
   return (
-    <div className={cn(spacingClasses[spacing], className)}>
+    <div className={cn(
+      spacingClasses[spacing],
+      className
+    )}>
       {children}
     </div>
   );
 }
-
-export default GamesContainer;
