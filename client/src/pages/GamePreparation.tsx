@@ -313,7 +313,7 @@ export default function GamePreparation() {
 
           {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-6">
-            
+
 
             {(() => {
               // Calculate actual statistics based on historical games
@@ -555,7 +555,7 @@ export default function GamePreparation() {
                     </Card>
                   )}
 
-                  
+
 
                   {/* Quick Actions */}
                   <Card>

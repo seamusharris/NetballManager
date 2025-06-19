@@ -11,10 +11,10 @@ interface GamesContainerProps {
 }
 
 const spacingClasses: Record<GamesSpacing, string> = {
-  none: 'space-y-0',
-  tight: 'space-y-2',
-  normal: 'space-y-4',
-  loose: 'space-y-6'
+  none: 'gap-0',
+  tight: 'gap-2',
+  normal: 'gap-4',
+  loose: 'gap-6'
 };
 
 export function GamesContainer({ 
@@ -23,7 +23,11 @@ export function GamesContainer({
   className 
 }: GamesContainerProps) {
   return (
-    <div className={cn(spacingClasses[spacing], className)}>
+    <div className={cn(
+      'flex flex-col',
+      spacingClasses[spacing], 
+      className
+    )}>
       {children}
     </div>
   );
