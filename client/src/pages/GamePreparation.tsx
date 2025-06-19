@@ -31,7 +31,6 @@ import GameResultCard from '@/components/ui/game-result-card';
 import { GamesContainer } from '@/components/ui/games-container';
 import QuarterPerformanceWidget from '@/components/dashboard/QuarterPerformanceWidget';
 
-
 type Tab = 'overview' | 'analysis' | 'lineup' | 'strategy';
 
 interface GamePreparationProps {
@@ -414,47 +413,7 @@ export default function GamePreparation() {
                     </Card>
                   </div>
 
-                  {/* Historical Games */}
-                  {historicalGames.length > 0 && (
-                    <Card>
-                      <CardHeader className="pb-6">
-                        <CardTitle className="flex items-center gap-2">
-                          <Trophy className="h-5 w-5" />
-                          Previous Games vs {opponent}
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <GamesContainer spacing="normal">
-                          {historicalGames.slice(0, 5).map((game, index) => {
-                            // Transform batch scores to the format expected by GameResultCard
-                            const gameScores = batchScores?.[game.id] || [];
-                            const transformedScores = Array.isArray(gameScores) ? gameScores.map(score => ({
-                              id: score.id,
-                              gameId: score.gameId,
-                              teamId: score.teamId,
-                              quarter: score.quarter,
-                              score: score.score,
-                              enteredBy: score.enteredBy,
-                              enteredAt: score.enteredAt,
-                              updatedAt: score.updatedAt,
-                              notes: score.notes
-                            })) : [];
-
-                            return (
-                              <GameResultCard
-                                key={game.id}
-                                game={game}
-                                currentTeamId={currentTeamId}
-                                centralizedScores={transformedScores}
-                                showLink={true}
-                                className="w-full"
-                              />
-                            );
-                          })}
-                        </GamesContainer>
-                      </CardContent>
-                    </Card>
-                  )}
+                  
 
 
 
@@ -469,96 +428,7 @@ currentTeamId={currentTeamId}
                     />
                   )}
 
-                  {/* Legacy Quarter Performance Analysis - can be removed once widget is confirmed working */}
-                  {historicalGames.length > 0 && false && (
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                          <BarChart3 className="h-5 w-5" />
-                          Quarter Performance vs {opponent} (Legacy)
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                          {[1, 2, 3, 4].map(quarter => {
-                            const avgScore = Math.floor(Math.random() * 15) + 8; // Mock data
-                            const opponentAvg = Math.floor(Math.random() * 15) + 8;
-                            const performance = avgScore > opponentAvg ? 'good' : avgScore === opponentAvg ? 'neutral' : 'poor';
-
-                            return (
-                              <div key={quarter} className="text-center p-4 rounded-lg border-2 border-dashed border-gray-200 hover:border-blue-300 transition-colors">
-                                <div className="text-lg font-bold text-gray-600 mb-2">Q{quarter}</div>
-                                <div className="space-y-2">
-                                  <div className={`text-2xl font-bold ${
-                                    performance === 'good' ? 'text-green-600' : 
-                                    performance === 'poor' ? 'text-red-600' : 'text-yellow-600'
-                                  }`}>
-                                    {avgScore}
-                                  </div>
-                                  <div className="text-sm text-gray-500">vs {opponentAvg}</div>
-                                  <div className="w-full bg-gray-200 rounded-full h-2">
-                                    <div 
-                                      className={`h-2 rounded-full ${
-                                        performance === 'good' ? 'bg-green-500' : 
-                                        performance === 'poor' ? 'bg-red-500' : 'bg-yellow-500'
-                                      }`}
-                                      style={{ width: `${Math.min(100, (avgScore / (avgScore + opponentAvg)) * 100)}%` }}
-                                    ></div>
-                                  </div>
-                                  <Badge 
-                                    variant={performance === 'good' ? 'default' : performance === 'poor' ? 'destructive' : 'secondary'}
-                                    className="text-xs"
-                                  >
-                                    {performance === 'good' ? 'Strong' : performance === 'poor' ? 'Weak' : 'Even'}
-                                  </Badge>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-
-                        {/* Performance Trend Chart */}
-                        <div className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg">
-                          <h4 className="font-semibold mb-3 text-gray-800">Performance Trend</h4>
-                          <div className="flex items-end justify-between h-24 px-2">
-                            {[1, 2, 3, 4].map(quarter => {
-                              const height = Math.random() * 80 + 20;
-                              return (
-                                <div key={quarter} className="flex flex-col items-center gap-2">
-                                  <div 
-                                    className="bg-gradient-to-t from-blue-500 to-purple-500 rounded-t w-8 transition-all duration-500 hover:scale-110"
-                                    style={{ height: `${height}%` }}
-                                  ></div>
-                                  <span className="text-xs font-medium text-gray-600">Q{quarter}</span>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-
-                        <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="p-3 bg-green-50 rounded-lg border border-green-200">
-                            <div className="flex items-center gap-2 mb-1">
-                              <TrendingUp className="h-4 w-4 text-green-600" />
-                              <span className="text-sm font-medium text-green-800">Strongest Quarter</span>
-                            </div>
-                            <p className="text-sm text-green-700">
-                              Quarter 3 shows best performance with consistent scoring advantage
-                            </p>
-                          </div>
-                          <div className="p-3 bg-orange-50 rounded-lg border border-orange-200">
-                            <div className="flex items-center gap-2 mb-1">
-                              <AlertCircle className="h-4 w-4 text-orange-600" />
-                              <span className="text-sm font-medium text-orange-800">Focus Area</span>
-                            </div>
-                            <p className="text-sm text-orange-700">
-                              Quarter 1 performance needs attention - consider tactical adjustments
-                            </p>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  )}
+                  
 
 
 
