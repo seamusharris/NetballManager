@@ -55,23 +55,27 @@ interface GameObjective {
   completed: boolean;
 }
 
-// Diagnostic component to show visual borders, labels, and background colors
-const DiagnosticWrapper = ({ children, label }: { children: React.ReactNode; label: string }) => {
+// Enhanced diagnostic component with comprehensive visual debugging
+const DiagnosticWrapper = ({ children, label, color = 'red' }: { children: React.ReactNode; label: string; color?: string }) => {
   return (
     <div style={{ 
-      border: '1px dashed red', 
-      backgroundColor: 'rgba(255, 0, 0, 0.05)', 
-      padding: '4px',
-      margin: '2px'
+      border: `2px dashed ${color}`, 
+      backgroundColor: `rgba(255, 0, 0, 0.1)`, 
+      padding: '8px',
+      margin: '4px',
+      position: 'relative'
     }}>
       <div style={{ 
         position: 'absolute', 
-        top: '-0.5em', 
-        left: '0.5em', 
-        fontSize: '0.75em', 
-        color: 'red',
+        top: '-12px', 
+        left: '8px', 
+        fontSize: '12px', 
+        color: color,
         backgroundColor: 'white',
-        padding: '0 2px'
+        padding: '2px 6px',
+        fontWeight: 'bold',
+        border: `1px solid ${color}`,
+        borderRadius: '3px'
       }}>
         {label}
       </div>
@@ -80,12 +84,87 @@ const DiagnosticWrapper = ({ children, label }: { children: React.ReactNode; lab
   );
 };
 
-// Diagnostic component specifically for the progress bar
+// Progress bar specific diagnostic with margin/padding visualization
 const ProgressBarDiagnostic = ({ children, label }: { children: React.ReactNode; label: string }) => {
   return (
-    <DiagnosticWrapper label={label}>
+    <div style={{ 
+      border: '3px solid purple', 
+      backgroundColor: 'rgba(128, 0, 128, 0.1)', 
+      padding: '12px',
+      margin: '8px',
+      position: 'relative'
+    }}>
+      <div style={{ 
+        position: 'absolute', 
+        top: '-15px', 
+        left: '12px', 
+        fontSize: '14px', 
+        color: 'purple',
+        backgroundColor: 'white',
+        padding: '4px 8px',
+        fontWeight: 'bold',
+        border: '2px solid purple',
+        borderRadius: '4px'
+      }}>
+        {label}
+      </div>
       {children}
-    </DiagnosticWrapper>
+    </div>
+  );
+};
+
+// Individual quarter box diagnostic
+const QuarterBoxDiagnostic = ({ children, quarter }: { children: React.ReactNode; quarter: number }) => {
+  return (
+    <div style={{ 
+      border: '2px solid blue', 
+      backgroundColor: 'rgba(0, 0, 255, 0.05)', 
+      padding: '4px',
+      position: 'relative'
+    }}>
+      <div style={{ 
+        position: 'absolute', 
+        top: '-10px', 
+        right: '4px', 
+        fontSize: '10px', 
+        color: 'blue',
+        backgroundColor: 'white',
+        padding: '1px 4px',
+        border: '1px solid blue',
+        borderRadius: '2px'
+      }}>
+        Q{quarter} Box
+      </div>
+      {children}
+    </div>
+  );
+};
+
+// Progress bar element diagnostic
+const ProgressElementDiagnostic = ({ children }: { children: React.ReactNode }) => {
+  return (
+    <div style={{ 
+      border: '2px solid orange', 
+      backgroundColor: 'rgba(255, 165, 0, 0.1)', 
+      padding: '6px',
+      position: 'relative'
+    }}>
+      <div style={{ 
+        position: 'absolute', 
+        top: '-12px', 
+        left: '4px', 
+        fontSize: '11px', 
+        color: 'orange',
+        backgroundColor: 'white',
+        padding: '2px 4px',
+        fontWeight: 'bold',
+        border: '1px solid orange',
+        borderRadius: '2px'
+      }}>
+        PROGRESS BAR
+      </div>
+      {children}
+    </div>
   );
 };
 
@@ -622,9 +701,10 @@ export default function GamePreparation() {
                         </div>
 
                         {/* Quarter Average Performance Boxes */}
-                        <ProgressBarDiagnostic label="Quarter Averages">
-                          <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
-                            {[1, 2, 3, 4].map(quarter => {
+                        <ProgressBarDiagnostic label="QUARTER AVERAGES CONTAINER">
+                          <DiagnosticWrapper label="Grid Container" color="green">
+                            <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4" style={{ backgroundColor: 'rgba(0, 255, 0, 0.05)' }}>
+                              {[1, 2, 3, 4].map(quarter => {
                               // Calculate average scores for this quarter across all historical games
                               let totalTeamScore = 0;
                               let totalOpponentScore = 0;
@@ -683,45 +763,70 @@ export default function GamePreparation() {
                               };
 
                               return (
-                                <div key={quarter} className={`text-center p-2 rounded-lg border-2 ${getBackgroundClass()} transition-colors relative`}>
-                                  {/* Quarter badge in top-left corner */}
-                                  <div className="absolute top-1 left-2">
-                                    <Badge 
-                                      variant="outline" 
-                                      className={`text-xs font-bold ${
-                                        isDraw ? 'border-amber-400 text-amber-700' :
-                                        isWinning ? 'border-green-400 text-green-700' : 
-                                        'border-red-400 text-red-700'
-                                      }`}
-                                    >
-                                      Q{quarter}
-                                    </Badge>
-                                  </div>
+                                <QuarterBoxDiagnostic key={quarter} quarter={quarter}>
+                                  <div className={`text-center p-2 rounded-lg border-2 ${getBackgroundClass()} transition-colors relative`} style={{ backgroundColor: 'rgba(255, 255, 0, 0.05)' }}>
+                                    {/* Quarter badge in top-left corner */}
+                                    <DiagnosticWrapper label="Badge Container" color="cyan">
+                                      <div className="absolute top-1 left-2">
+                                        <Badge 
+                                          variant="outline" 
+                                          className={`text-xs font-bold ${
+                                            isDraw ? 'border-amber-400 text-amber-700' :
+                                            isWinning ? 'border-green-400 text-green-700' : 
+                                            'border-red-400 text-red-700'
+                                          }`}
+                                        >
+                                          Q{quarter}
+                                        </Badge>
+                                      </div>
+                                    </DiagnosticWrapper>
 
-                                  <div className="space-y-1 mt-1">
-                                    {/* Score on same line with matching colors, aligned with Q badge */}
-                                    <div className={`text-lg font-bold ${getDiffTextColorClass()}`}>
-                                      {avgTeamScore.toFixed(1)} - {avgOpponentScore.toFixed(1)}
-                                    </div>
-                                    {/* Prominent score differential */}
-                                    <div className={`text-base ${getDiffTextColorClass()}`}>
-                                      {scoreDiff >= 0 ? '+' : ''}{scoreDiff.toFixed(1)}
-                                    </div>
-                                    {/* Progress bar shows our percentage of total scoring */}
-                                    <div className="w-full bg-gray-200 rounded-full h-2 mt-6 mb-4" title="Our share of total quarter scoring">
-                                      <div 
-                                        className={`h-2 rounded-full ${
-                                          isWinning ? 'bg-green-500' : 
-                                          isLosing ? 'bg-red-500' : 'bg-amber-500'
-                                        }`}
-                                        style={{ width: `${Math.min(100, Math.max(0, (avgTeamScore / (avgTeamScore + avgOpponentScore)) * 100))}%` }}
-                                      ></div>
-                                    </div>
+                                    <DiagnosticWrapper label="Content Container" color="magenta">
+                                      <div className="space-y-1 mt-1" style={{ backgroundColor: 'rgba(255, 0, 255, 0.05)' }}>
+                                        {/* Score on same line with matching colors, aligned with Q badge */}
+                                        <DiagnosticWrapper label="Score Display" color="teal">
+                                          <div className={`text-lg font-bold ${getDiffTextColorClass()}`}>
+                                            {avgTeamScore.toFixed(1)} - {avgOpponentScore.toFixed(1)}
+                                          </div>
+                                        </DiagnosticWrapper>
+                                        {/* Prominent score differential */}
+                                        <DiagnosticWrapper label="Score Diff" color="brown">
+                                          <div className={`text-base ${getDiffTextColorClass()}`}>
+                                            {scoreDiff >= 0 ? '+' : ''}{scoreDiff.toFixed(1)}
+                                          </div>
+                                        </DiagnosticWrapper>
+                                        {/* Progress bar shows our percentage of total scoring */}
+                                        <ProgressElementDiagnostic>
+                                          <div 
+                                            className="w-full bg-gray-200 rounded-full h-2 mt-6 mb-4" 
+                                            title="Our share of total quarter scoring"
+                                            style={{ 
+                                              backgroundColor: 'yellow',
+                                              border: '1px solid red',
+                                              marginTop: '24px',
+                                              marginBottom: '16px'
+                                            }}
+                                          >
+                                            <div 
+                                              className={`h-2 rounded-full ${
+                                                isWinning ? 'bg-green-500' : 
+                                                isLosing ? 'bg-red-500' : 'bg-amber-500'
+                                              }`}
+                                              style={{ 
+                                                width: `${Math.min(100, Math.max(0, (avgTeamScore / (avgTeamScore + avgOpponentScore)) * 100))}%`,
+                                                border: '1px solid black'
+                                              }}
+                                            ></div>
+                                          </div>
+                                        </ProgressElementDiagnostic>
+                                      </div>
+                                    </DiagnosticWrapper>
                                   </div>
-                                </div>
+                                </QuarterBoxDiagnostic>
                               );
                             })}
-                          </div>
+                            </div>
+                          </DiagnosticWrapper>
                         </ProgressBarDiagnostic>
                       </CardContent>
                     </Card>
