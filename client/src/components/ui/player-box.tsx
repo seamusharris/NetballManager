@@ -109,7 +109,7 @@ export function PlayerBox({
   const defaultStyle = {
     backgroundColor: mediumBackgroundColor,
     borderColor: darkerBorderColor,
-    color: 'inherit', // Ensure text doesn't get colored
+    color: darkerBorderColor, // Apply player colored text as default
     ...style
   };
 
