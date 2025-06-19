@@ -483,10 +483,10 @@ export default function GamePreparation() {
                             // Calculate quarter scores
                             const calculateQuarterScores = () => {
                               if (!transformedScores.length) return null;
-                              
+
                               const teamScores = [0, 0, 0, 0];
                               const opponentScores = [0, 0, 0, 0];
-                              
+
                               transformedScores.forEach(score => {
                                 const quarterIndex = score.quarter - 1;
                                 if (quarterIndex >= 0 && quarterIndex < 4) {
@@ -564,7 +564,7 @@ export default function GamePreparation() {
                                             const opponentScore = quarterData.opponentQuarter[qIndex];
                                             const quarterWin = teamScore > opponentScore;
                                             const quarterLoss = teamScore < opponentScore;
-                                            
+
                                             const quarterClass = quarterWin 
                                               ? 'bg-green-100 text-green-700 border border-green-400' 
                                               : quarterLoss 
@@ -584,7 +584,7 @@ export default function GamePreparation() {
                                             const opponentCum = quarterData.opponentCumulative[qIndex];
                                             const cumulativeWin = teamCum > opponentCum;
                                             const cumulativeLoss = teamCum < opponentCum;
-                                            
+
                                             const cumulativeClass = cumulativeWin 
                                               ? 'bg-green-200 text-green-800 border border-green-500' 
                                               : cumulativeLoss 
@@ -599,9 +599,7 @@ export default function GamePreparation() {
                                           })}
                                         </div>
                                       </div>
-                                      <div className={`px-3 py-1 text-sm font-bold text-white rounded ${
-                                        isWin ? 'bg-green-600' : isLoss ? 'bg-red-600' : isDraw ? 'bg-amber-600' : 'bg-gray-600'
-                                      }`}>
+                                      <div className="px-3 py-1 text-sm font-bold bg-gray-600 text-white rounded">
                                         {quarterData.finalScore.team}-{quarterData.finalScore.opponent}
                                       </div>
                                     </div>
@@ -769,7 +767,7 @@ export default function GamePreparation() {
                     </CardContent>
                   </Card>
 
-                  
+
                 </>
               );
             })()}
