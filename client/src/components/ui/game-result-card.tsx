@@ -188,6 +188,20 @@ export default function GameResultCard({
 
   const config = getLayoutConfig();
 
+  // Create custom round display with forfeit status if applicable
+  const customRoundDisplay = useMemo(() => {
+    if (!game.round) return null;
+    
+    const baseRound = layout === 'narrow' ? `R${game.round}` : `Round ${game.round}`;
+    
+    // Add forfeit status if game is completed with forfeit
+    if (game.statusIsCompleted && game.statusName === 'forfeit') {
+      return `${baseRound} • Forfeit Loss`;
+    }
+    
+    return baseRound;
+  }, [game.round, game.statusIsCompleted, game.statusName, layout]);
+
   // Helper function for timeline round badge styling
   const getRoundBadgeVariant = () => {
     if (game.statusIsCompleted) return "round-timeline";
