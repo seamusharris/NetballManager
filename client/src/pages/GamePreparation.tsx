@@ -537,7 +537,7 @@ export default function GamePreparation() {
 
                                 {/* Overlay quarter breakdown data on top */}
                                 {quarterData && (
-                                  <div className="absolute right-16 top-1/2 transform -translate-y-1/2 flex items-center gap-4 pointer-events-none">
+                                  <div className="absolute right-20 top-1/2 transform -translate-y-1/2 flex items-center gap-4 pointer-events-none">
                                     <div className="text-xs space-y-1">
                                       {/* Quarter-by-quarter scores on top (lighter) */}
                                       <div className="grid grid-cols-4 gap-2">
@@ -663,7 +663,7 @@ export default function GamePreparation() {
                                   </Badge>
                                 </div>
 
-                                <div className="space-y-2 mt-4">
+                                <div className="space-y-3 mt-4">
                                   {/* Score on same line with matching colors */}
                                   <div className={`text-xl font-bold ${getDiffTextColorClass()}`}>
                                     {avgTeamScore.toFixed(1)} - {avgOpponentScore.toFixed(1)}
@@ -673,7 +673,7 @@ export default function GamePreparation() {
                                     {scoreDiff >= 0 ? '+' : ''}{scoreDiff.toFixed(1)}
                                   </div>
                                   {/* Progress bar shows our percentage of total scoring */}
-                                  <div className="w-full bg-gray-200 rounded-full h-2 mt-6" title="Our share of total quarter scoring">
+                                  <div className="w-full bg-gray-200 rounded-full h-2 mt-3" title="Our share of total quarter scoring">
                                     <div 
                                       className={`h-2 rounded-full ${
                                         isWinning ? 'bg-green-500' : 
