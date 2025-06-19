@@ -28,7 +28,6 @@ import AnalysisTab from '@/components/game-preparation/AnalysisTab';
 import LineupTab from '@/components/game-preparation/LineupTab';
 import StrategyTab from '@/components/game-preparation/StrategyTab';
 import { GameResultCard } from '@/components/ui/game-result-card';
-import { useClub } from '@/contexts/ClubContext';
 import { GameStatusBadge } from '@/components/games/GameStatusBadge';
 import QuarterPerformanceWidget from '@/components/dashboard/QuarterPerformanceWidget';
 
