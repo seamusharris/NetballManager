@@ -386,31 +386,33 @@ export default function GamePreparation() {
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="text-center">
-                  <Calendar className="h-6 w-6 mx-auto mb-1 text-blue-600" />
-                  <p className="text-sm font-medium">{formatShortDate(game.date)}</p>
-                </div>
-                <div className="text-center">
-                  <Clock className="h-6 w-6 mx-auto mb-1 text-blue-600" />
-                  <p className="text-sm font-medium">{game.time}</p>
-                </div>
-                <Separator orientation="vertical" className="h-8" />
-                <div>
-                  <h1 className="text-2xl font-bold">{game.homeTeamName} vs {game.awayTeamName}</h1>
-                  <div className="flex items-center gap-2 mt-1">
-                    <MapPin className="h-4 w-4 text-gray-500" />
-                    <span className="text-sm text-gray-600">
-                      {isHomeGame ? 'Home Game' : 'Away Game'}
-                    </span>
-                    <Badge variant="outline">Round {game.round}</Badge>
+                <div className="flex items-center gap-4">
+                  <div className="text-center">
+                    <Calendar className="h-6 w-6 mx-auto mb-1 text-blue-600" />
+                    <p className="text-sm font-medium">{formatShortDate(game.date)}</p>
+                  </div>
+                  <div className="text-center">
+                    <Clock className="h-6 w-6 mx-auto mb-1 text-blue-600" />
+                    <p className="text-sm font-medium">{game.time}</p>
+                  </div>
+                  <Separator orientation="vertical" className="h-8" />
+                  <div>
+                    <h1 className="text-2xl font-bold">{game.homeTeamName} vs {game.awayTeamName}</h1>
+                    <div className="flex items-center gap-2 mt-1">
+                      <MapPin className="h-4 w-4 text-gray-500" />
+                      <span className="text-sm text-gray-600">
+                        {isHomeGame ? 'Home Game' : 'Away Game'}
+                      </span>
+                      <Badge variant="outline">Round {game.round}</Badge>
+                    </div>
                   </div>
                 </div>
+                <GameStatusBadge 
+                  status={game.statusName}
+                  displayName={game.statusDisplayName}
+                  className="text-lg px-4 py-2"
+                />
               </div>
-              <Badge variant="secondary" className="text-lg px-4 py-2">
-                {game.statusDisplayName}
-              </Badge>
-            </div>
           </CardHeader>
         </Card>
 
@@ -801,7 +803,7 @@ export default function GamePreparation() {
                                   <Badge 
                                     variant={performance === 'good' ? 'default' : performance === 'poor' ? 'destructive' : 'secondary'}
                                     className="text-xs"
-                                  >
+                                  >```text
                                     {performance === 'good' ? 'Strong' : performance === 'poor' ? 'Weak' : 'Even'}
                                   </Badge>
                                 </div>
