@@ -525,50 +525,6 @@ export default function GamePreparation() {
                     </Card>
                   </div>
 
-                  {/* Historical Games */}
-                  {historicalGames.length > 0 && (
-                    <Card>
-                      <CardHeader className="pb-6">
-                        <CardTitle className="flex items-center gap-2">
-                          <Trophy className="h-5 w-5" />
-                          Previous Games vs {opponent}
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <GamesContainer spacing="normal">
-                          {historicalGames.slice(0, 5).map((game, index) => {
-                            // Transform batch scores to the format expected by GameResultCard
-                            const gameScores = batchScores?.[game.id] || [];
-                            const transformedScores = Array.isArray(gameScores) ? gameScores.map(score => ({
-                              id: score.id,
-                              gameId: score.gameId,
-                              teamId: score.teamId,
-                              quarter: score.quarter,
-                              score: score.score,
-                              enteredBy: score.enteredBy,
-                              enteredAt: score.enteredAt,
-                              updatedAt: score.updatedAt,
-                              notes: score.notes
-                            })) : [];
-
-                            return (
-                              <GameResultCard
-                                key={game.id}
-                                game={game}
-                                currentTeamId={currentTeamId}
-                                centralizedScores={transformedScores}
-                                showLink={true}
-                                className="w-full"
-                              />
-                            );
-                          })}
-                        </GamesContainer>
-                      </CardContent>
-                    </Card>
-                  )}
-
-
-
                   {/* Historical Games with Quarter-by-Quarter Breakdown */}
                   {historicalGames.length > 0 && (
                     <Card>
