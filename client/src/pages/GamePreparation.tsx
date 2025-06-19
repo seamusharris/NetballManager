@@ -648,9 +648,9 @@ export default function GamePreparation() {
                             };
 
                             return (
-                              <div key={quarter} className={`text-center p-3 rounded-lg border-2 ${getBackgroundClass()} transition-colors relative`}>
+                              <div key={quarter} className={`text-center p-2 rounded-lg border-2 ${getBackgroundClass()} transition-colors relative`}>
                                 {/* Quarter badge in top-left corner */}
-                                <div className="absolute top-2 left-2">
+                                <div className="absolute top-1 left-2">
                                   <Badge 
                                     variant="outline" 
                                     className={`text-xs font-bold ${
@@ -663,7 +663,7 @@ export default function GamePreparation() {
                                   </Badge>
                                 </div>
 
-                                <div className="space-y-2 mt-2">
+                                <div className="space-y-1 mt-1">
                                   {/* Score on same line with matching colors */}
                                   <div className={`text-lg font-bold ${getDiffTextColorClass()}`}>
                                     {avgTeamScore.toFixed(1)} - {avgOpponentScore.toFixed(1)}
@@ -673,7 +673,7 @@ export default function GamePreparation() {
                                     {scoreDiff >= 0 ? '+' : ''}{scoreDiff.toFixed(1)}
                                   </div>
                                   {/* Progress bar shows our percentage of total scoring */}
-                                  <div className="w-full bg-gray-200 rounded-full h-2 mt-2" title="Our share of total quarter scoring">
+                                  <div className="w-full bg-gray-200 rounded-full h-2 mt-1" title="Our share of total quarter scoring">
                                     <div 
                                       className={`h-2 rounded-full ${
                                         isWinning ? 'bg-green-500' : 
