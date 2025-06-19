@@ -664,8 +664,8 @@ export default function GamePreparation() {
                                 </div>
 
                                 <div className="space-y-1 mt-1">
-                                  {/* Score on same line with matching colors */}
-                                  <div className={`text-lg font-bold ${getDiffTextColorClass()}`}>
+                                  {/* Score on same line with matching colors, aligned with Q badge */}
+                                  <div className={`text-lg font-bold ${getDiffTextColorClass()} mt-4`}>
                                     {avgTeamScore.toFixed(1)} - {avgOpponentScore.toFixed(1)}
                                   </div>
                                   {/* Prominent score differential */}
@@ -673,7 +673,7 @@ export default function GamePreparation() {
                                     {scoreDiff >= 0 ? '+' : ''}{scoreDiff.toFixed(1)}
                                   </div>
                                   {/* Progress bar shows our percentage of total scoring */}
-                                  <div className="w-full bg-gray-200 rounded-full h-2 mt-4 mb-2" title="Our share of total quarter scoring">
+                                  <div className="w-full bg-gray-200 rounded-full h-2 mt-6 mb-4" title="Our share of total quarter scoring">
                                     <div 
                                       className={`h-2 rounded-full ${
                                         isWinning ? 'bg-green-500' : 
