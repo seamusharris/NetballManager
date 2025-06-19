@@ -577,7 +577,7 @@ export default function GamePreparation() {
 
                                 {/* Overlay quarter breakdown data on top */}
                                 {quarterData && (
-                                  <div className="absolute right-22 top-1/2 transform -translate-y-1/2 flex items-center gap-4 pointer-events-none">
+                                  <div className="absolute right-32 top-1/2 transform -translate-y-1/2 flex items-center gap-4 pointer-events-none">
                                     <div className="text-xs space-y-1">
                                       {/* Quarter-by-quarter scores on top (lighter) */}
                                       <div className="grid grid-cols-4 gap-2">
