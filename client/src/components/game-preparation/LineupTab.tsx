@@ -15,8 +15,8 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { apiClient } from '@/lib/apiClient';
 import CourtDisplay from '@/components/ui/court-display';
-import SharedPlayerAvailability from '@/components/ui/shared-player-availability';
 import DragDropRosterManager from '@/components/roster/DragDropRosterManager';
+import PlayerAvailabilityManager from '@/components/roster/PlayerAvailabilityManager';
 import type { Game, Player, Roster, Position } from '@shared/schema';
 
 interface LineupTabProps {
@@ -26,7 +26,7 @@ interface LineupTabProps {
   onRosterUpdate: (rosters: Roster[]) => void;
 }
 
-// Using shared availability format (boolean-based)
+// Using boolean-based availability format to match PlayerAvailabilityManager
 type PlayerAvailabilityData = Record<number, boolean>;
 
 interface LineupRecommendation {
@@ -222,12 +222,8 @@ export function LineupTab({ game, players, rosters, onRosterUpdate }: LineupTabP
     };
   };
 
-  const handleAvailabilityChange = (availablePlayerIds: number[]) => {
-    const newData: PlayerAvailabilityData = {};
-    players.forEach(player => {
-      newData[player.id] = availablePlayerIds.includes(player.id);
-    });
-    setPlayerAvailability(newData);
+  const handleAvailabilityChange = (newAvailabilityData: PlayerAvailabilityData) => {
+    setPlayerAvailability(newAvailabilityData);
   };
 
   const handleApplyRecommendation = (recommendation: LineupRecommendation) => {
@@ -324,14 +320,22 @@ export function LineupTab({ game, players, rosters, onRosterUpdate }: LineupTabP
             )}
           </div>
 
-          <SharedPlayerAvailability
+          <PlayerAvailabilityManager
             players={players}
-            availabilityData={playerAvailability}
-            onAvailabilityChange={handleAvailabilityChange}
-            title={`Player Availability for ${game.homeTeamName} vs ${game.awayTeamName}`}
-            showQuickActions={true}
             gameId={game.id}
-            variant="detailed"
+            games={[game]}
+            onAvailabilityStateChange={(availabilityState) => {
+              setPlayerAvailability(availabilityState);
+            }}
+            onAvailabilityChange={(availablePlayerIds) => {
+              // Convert array back to boolean format for internal use
+              const newData: PlayerAvailabilityData = {};
+              players.forEach(player => {
+                newData[player.id] = availablePlayerIds.includes(player.id);
+              });
+              setPlayerAvailability(newData);
+            }}
+            hideGameSelection={true}
           />
         </TabsContent>
 
