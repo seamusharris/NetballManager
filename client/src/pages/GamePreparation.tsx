@@ -1062,14 +1062,7 @@ export default function GamePreparation() {
 
                   
 
-                  {/* Quarter Performance Analysis */}
-                  {historicalGames.length > 0 && (
-                    <QuarterPerformanceWidget
-                      games={historicalGames}
-                      currentTeamId={currentTeamId}
-                      className="mb-6"
-                    />
-                  )}
+                  
 
                   
 
