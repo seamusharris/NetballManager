@@ -458,7 +458,7 @@ export default function GamePreparation() {
                           Team Form vs {opponent}
                         </CardTitle>
                       </CardHeader>
-                      <CardContent className="space-y-2">
+                      <CardContent className="space-y-3">
                         <div className="flex justify-between">
                           <span className="text-sm text-muted-foreground">Historical Games:</span>
                           <span className="font-medium">{historicalGames.length} matches</span>
@@ -467,6 +467,95 @@ export default function GamePreparation() {
                           <span className="text-sm text-muted-foreground">Win Rate:</span>
                           <span className="font-medium">{winRate.toFixed(0)}%</span>
                         </div>
+                        
+                        {/* Recent Form Streak */}
+                        {(() => {
+                          if (historicalGames.length === 0) return null;
+                          
+                          // Calculate recent form (last 3 games)
+                          const recentGames = historicalGames.slice(0, 3);
+                          const recentResults = recentGames.map(game => {
+                            const gameScores = batchScores?.[game.id] || [];
+                            if (gameScores.length === 0) return 'U'; // Unknown
+                            
+                            let ourScore = 0;
+                            let theirScore = 0;
+                            
+                            gameScores.forEach(score => {
+                              if (score.teamId === currentTeamId) {
+                                ourScore += score.score;
+                              } else {
+                                theirScore += score.score;
+                              }
+                            });
+                            
+                            return ourScore > theirScore ? 'W' : ourScore < theirScore ? 'L' : 'D';
+                          });
+                          
+                          return (
+                            <div className="flex justify-between items-center">
+                              <span className="text-sm text-muted-foreground">Recent Form:</span>
+                              <div className="flex gap-1">
+                                {recentResults.map((result, index) => (
+                                  <span 
+                                    key={index} 
+                                    className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white ${
+                                      result === 'W' ? 'bg-green-500' : 
+                                      result === 'L' ? 'bg-red-500' : 
+                                      result === 'D' ? 'bg-amber-500' : 'bg-gray-400'
+                                    }`}
+                                  >
+                                    {result}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        })()}
+                        
+                        {/* Home vs Away Performance */}
+                        {(() => {
+                          if (historicalGames.length === 0) return null;
+                          
+                          const homeGames = historicalGames.filter(g => g.homeTeamId === currentTeamId);
+                          const awayGames = historicalGames.filter(g => g.awayTeamId === currentTeamId);
+                          
+                          const homeWins = homeGames.filter(game => {
+                            const gameScores = batchScores?.[game.id] || [];
+                            if (gameScores.length === 0) return false;
+                            
+                            let ourScore = 0;
+                            let theirScore = 0;
+                            gameScores.forEach(score => {
+                              if (score.teamId === currentTeamId) ourScore += score.score;
+                              else theirScore += score.score;
+                            });
+                            return ourScore > theirScore;
+                          }).length;
+                          
+                          const awayWins = awayGames.filter(game => {
+                            const gameScores = batchScores?.[game.id] || [];
+                            if (gameScores.length === 0) return false;
+                            
+                            let ourScore = 0;
+                            let theirScore = 0;
+                            gameScores.forEach(score => {
+                              if (score.teamId === currentTeamId) ourScore += score.score;
+                              else theirScore += score.score;
+                            });
+                            return ourScore > theirScore;
+                          }).length;
+                          
+                          return (
+                            <div className="text-xs text-gray-600 space-y-1">
+                              <div className="flex justify-between">
+                                <span>Home: {homeWins}/{homeGames.length}</span>
+                                <span>Away: {awayWins}/{awayGames.length}</span>
+                              </div>
+                            </div>
+                          );
+                        })()}
+                        
                         <div className="flex justify-between">
                           <span className="text-sm text-muted-foreground">Most Recent:</span>
                           <span className="font-medium">
@@ -476,7 +565,7 @@ export default function GamePreparation() {
                       </CardContent>
                     </Card>
 
-                    {/* Opponent Analysis */}
+                    {/* Head-to-Head Analysis */}
                     <Card>
                       <CardHeader className="pb-3">
                         <CardTitle className="text-lg flex items-center gap-2">
@@ -484,7 +573,7 @@ export default function GamePreparation() {
                           Head-to-Head Record
                         </CardTitle>
                       </CardHeader>
-                      <CardContent className="space-y-2">
+                      <CardContent className="space-y-3">
                         <div className="flex justify-between">
                           <span className="text-sm text-muted-foreground">Total Games:</span>
                           <span className="font-medium">{historicalGames.length}</span>
@@ -495,13 +584,17 @@ export default function GamePreparation() {
                             {historicalGames.length > 0 ? `${winRateResult.wins}W-${winRateResult.losses}L${winRateResult.draws > 0 ? `-${winRateResult.draws}D` : ''}` : 'No history'}
                           </span>
                         </div>
+                        
                         {(() => {
-                          // Calculate goal difference for head-to-head display
+                          // Enhanced statistics calculation
                           if (historicalGames.length === 0 || !batchScores) return null;
                           
                           let totalGoalsFor = 0;
                           let totalGoalsAgainst = 0;
                           let gamesWithScores = 0;
+                          let margins = [];
+                          let highestScore = 0;
+                          let lowestScore = 999;
 
                           historicalGames.forEach(game => {
                             const gameScores = batchScores?.[game.id] || [];
@@ -521,6 +614,10 @@ export default function GamePreparation() {
                               
                               totalGoalsFor += gameGoalsFor;
                               totalGoalsAgainst += gameGoalsAgainst;
+                              margins.push(gameGoalsFor - gameGoalsAgainst);
+                              
+                              if (gameGoalsFor > highestScore) highestScore = gameGoalsFor;
+                              if (gameGoalsFor < lowestScore) lowestScore = gameGoalsFor;
                             }
                           });
 
@@ -529,14 +626,58 @@ export default function GamePreparation() {
                           const avgGoalsFor = totalGoalsFor / gamesWithScores;
                           const avgGoalsAgainst = totalGoalsAgainst / gamesWithScores;
                           const goalDifference = avgGoalsFor - avgGoalsAgainst;
+                          const avgMargin = margins.reduce((a, b) => a + Math.abs(b), 0) / margins.length;
 
                           return (
-                            <div className="flex justify-between">
-                              <span className="text-sm text-muted-foreground">Avg Goal Difference:</span>
-                              <span className={`font-medium ${goalDifference >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                {goalDifference >= 0 ? '+' : ''}{goalDifference.toFixed(1)}
-                              </span>
-                            </div>
+                            <>
+                              <div className="flex justify-between">
+                                <span className="text-sm text-muted-foreground">Avg Margin:</span>
+                                <span className="font-medium">{avgMargin.toFixed(1)} goals</span>
+                              </div>
+                              
+                              <div className="flex justify-between">
+                                <span className="text-sm text-muted-foreground">Avg Score:</span>
+                                <span className="font-medium">
+                                  {avgGoalsFor.toFixed(1)} - {avgGoalsAgainst.toFixed(1)}
+                                </span>
+                              </div>
+                              
+                              <div className="flex justify-between">
+                                <span className="text-sm text-muted-foreground">Score Range:</span>
+                                <span className="font-medium">
+                                  {lowestScore} - {highestScore}
+                                </span>
+                              </div>
+                              
+                              {/* Performance Indicator */}
+                              <div className="pt-2 border-t">
+                                <div className="flex justify-between items-center">
+                                  <span className="text-sm text-muted-foreground">Dominance:</span>
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-16 h-2 bg-gray-200 rounded-full overflow-hidden">
+                                      <div 
+                                        className={`h-full transition-all ${
+                                          goalDifference > 5 ? 'bg-green-500' :
+                                          goalDifference > 0 ? 'bg-green-400' :
+                                          goalDifference > -5 ? 'bg-amber-400' : 'bg-red-500'
+                                        }`}
+                                        style={{ 
+                                          width: `${Math.min(100, Math.max(0, ((goalDifference + 10) / 20) * 100))}%` 
+                                        }}
+                                      ></div>
+                                    </div>
+                                    <span className={`text-xs font-medium ${
+                                      goalDifference > 0 ? 'text-green-600' : 
+                                      goalDifference < 0 ? 'text-red-600' : 'text-amber-600'
+                                    }`}>
+                                      {goalDifference > 5 ? 'Strong' :
+                                       goalDifference > 0 ? 'Slight' :
+                                       goalDifference > -5 ? 'Even' : 'Weak'}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            </>
                           );
                         })()}
                       </CardContent>
@@ -558,19 +699,68 @@ export default function GamePreparation() {
                           </div>
                           <Progress value={players.length > 0 ? (Math.min(players.length, 7) / players.length * 100) : 0} className="h-2" />
                         </div>
+                        
+                        <div className="space-y-2">
+                          <div className="flex justify-between text-sm">
+                            <span>Lineup Completion</span>
+                            <span>0/4 quarters</span>
+                          </div>
+                          <Progress value={0} className="h-2" />
+                        </div>
+                        
                         <div className="space-y-2">
                           <div className="flex justify-between text-sm">
                             <span>Historical Analysis</span>
-                            <span>{historicalGames.length > 0 ? '100%' : '0%'}</span>
+                            <span>{historicalGames.length > 0 ? 'Complete' : 'Missing'}</span>
                           </div>
                           <Progress value={historicalGames.length > 0 ? 100 : 0} className="h-2" />
                         </div>
+                        
                         <div className="space-y-2">
                           <div className="flex justify-between text-sm">
-                            <span>Strategy Notes</span>
-                            <span>{tacticalNotes.length} notes</span>
+                            <span>Tactical Planning</span>
+                            <span>{tacticalNotes.length}/5 areas</span>
                           </div>
-                          <Progress value={tacticalNotes.length > 0 ? 80 : 0} className="h-2" />
+                          <Progress value={(tacticalNotes.length / 5) * 100} className="h-2" />
+                        </div>
+                        
+                        {/* Game Readiness Indicator */}
+                        <div className="pt-2 border-t">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-medium">Game Readiness:</span>
+                            <div className="flex items-center gap-2">
+                              {(() => {
+                                const availableCount = Math.min(players.length, 7);
+                                const hasHistory = historicalGames.length > 0;
+                                const hasTactics = tacticalNotes.length >= 3;
+                                
+                                const readinessScore = (
+                                  (availableCount >= 7 ? 40 : (availableCount / 7) * 40) +
+                                  (hasHistory ? 30 : 0) +
+                                  (hasTactics ? 30 : (tacticalNotes.length / 3) * 30)
+                                );
+                                
+                                const level = readinessScore >= 80 ? 'Excellent' :
+                                            readinessScore >= 60 ? 'Good' :
+                                            readinessScore >= 40 ? 'Fair' : 'Poor';
+                                
+                                const color = readinessScore >= 80 ? 'text-green-600' :
+                                            readinessScore >= 60 ? 'text-blue-600' :
+                                            readinessScore >= 40 ? 'text-amber-600' : 'text-red-600';
+                                
+                                return (
+                                  <>
+                                    <span className={`text-sm font-medium ${color}`}>
+                                      {readinessScore.toFixed(0)}%
+                                    </span>
+                                    <Badge variant="outline" className={color}>
+                                      {level}
+                                    </Badge>
+                                  </>
+                                );
+                              })()}
+                            </div>
+                          </div>
                         </div>
                       </CardContent>
                     </Card>
