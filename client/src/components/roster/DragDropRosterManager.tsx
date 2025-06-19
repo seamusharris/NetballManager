@@ -283,53 +283,64 @@ export default function DragDropRosterManager({
     if (initialRoster) {
       console.log('DragDropRosterManager: Using provided initialRoster:', initialRoster);
       setAssignments(initialRoster);
-    } else if (gameId) {
-      // Fetch existing roster from API
-      const loadExistingRoster = async () => {
-        try {
-          console.log(`DragDropRosterManager: Loading roster for game ${gameId}`);
-          const response = await apiClient.get(`/api/games/${gameId}/rosters`);
-          const rosters = response;
-          
-          console.log(`DragDropRosterManager: Received ${rosters?.length || 0} roster entries:`, rosters);
-          
-          if (rosters && rosters.length > 0) {
-            // Convert roster data to assignments format
-            const loadedAssignments = {
-              1: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
-              2: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
-              3: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
-              4: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null }
-            };
-
-            rosters.forEach((roster: any) => {
-              if (roster.quarter && roster.position && roster.playerId) {
-                const quarter = roster.quarter as number;
-                const position = roster.position as string;
-                if (quarter >= 1 && quarter <= 4 && NETBALL_POSITIONS.includes(position)) {
-                  loadedAssignments[quarter][position] = roster.playerId;
-                  console.log(`DragDropRosterManager: Loaded Q${quarter} ${position} -> Player ${roster.playerId}`);
-                }
-              }
-            });
-
-            console.log('DragDropRosterManager: Final loaded assignments:', loadedAssignments);
-            setAssignments(loadedAssignments);
-            if (onRosterChange) {
-              onRosterChange(loadedAssignments);
-            }
-          } else {
-            console.log('DragDropRosterManager: No existing roster found, using empty assignments');
-          }
-        } catch (error) {
-          console.error('DragDropRosterManager: Error loading existing roster:', error);
-          // Don't show error toast as this is optional loading
-        }
-      };
-
-      loadExistingRoster();
+      return;
     }
-  }, [initialRoster, gameId]);
+
+    if (!gameId) {
+      console.log('DragDropRosterManager: No gameId provided, using empty assignments');
+      return;
+    }
+
+    // Fetch existing roster from API
+    const loadExistingRoster = async () => {
+      try {
+        console.log(`DragDropRosterManager: Loading roster for game ${gameId}`);
+        const response = await apiClient.get(`/api/games/${gameId}/rosters`);
+        const rosters = response;
+        
+        console.log(`DragDropRosterManager: Received ${rosters?.length || 0} roster entries:`, rosters);
+        
+        // Always start with empty assignments
+        const loadedAssignments = {
+          1: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
+          2: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
+          3: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
+          4: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null }
+        };
+
+        if (rosters && rosters.length > 0) {
+          rosters.forEach((roster: any) => {
+            if (roster.quarter && roster.position && roster.playerId) {
+              const quarter = roster.quarter as number;
+              const position = roster.position as string;
+              if (quarter >= 1 && quarter <= 4 && NETBALL_POSITIONS.includes(position)) {
+                loadedAssignments[quarter][position] = roster.playerId;
+                console.log(`DragDropRosterManager: Loaded Q${quarter} ${position} -> Player ${roster.playerId}`);
+              }
+            }
+          });
+        }
+
+        console.log('DragDropRosterManager: Final loaded assignments:', loadedAssignments);
+        setAssignments(loadedAssignments);
+        if (onRosterChange) {
+          onRosterChange(loadedAssignments);
+        }
+      } catch (error) {
+        console.error('DragDropRosterManager: Error loading existing roster:', error);
+        // Initialize empty assignments on error
+        const emptyAssignments = {
+          1: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
+          2: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
+          3: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null },
+          4: { GS: null, GA: null, WA: null, C: null, WD: null, GD: null, GK: null }
+        };
+        setAssignments(emptyAssignments);
+      }
+    };
+
+    loadExistingRoster();
+  }, [gameId, initialRoster]);
 
   // Save roster function
   const handleSaveRoster = async () => {
@@ -360,26 +371,29 @@ export default function DragDropRosterManager({
         }
       }
 
+      console.log(`DragDropRosterManager: Saving ${rosterData.length} roster entries for game ${gameId}`);
+
       // First delete all existing roster entries for this game
       await apiClient.delete(`/api/games/${gameId}/rosters`);
 
-      // Batch save all roster assignments in parallel
-      const savePromises = rosterData.map(assignment => 
-        apiClient.post('/api/rosters', assignment)
-      );
-      
-      await Promise.all(savePromises);
+      // Save all roster assignments sequentially to avoid overwhelming the server
+      // This is more reliable than parallel saves for large rosters
+      for (const assignment of rosterData) {
+        await apiClient.post('/api/rosters', assignment);
+      }
+
+      console.log('DragDropRosterManager: All roster entries saved successfully');
 
       toast({
         title: "Success",
-        description: "Roster saved successfully!"
+        description: `Roster saved successfully! (${rosterData.length} positions)`
       });
 
       if (onRosterSaved) {
         onRosterSaved();
       }
     } catch (error) {
-      console.error('Error saving roster:', error);
+      console.error('DragDropRosterManager: Error saving roster:', error);
       toast({
         title: "Error",
         description: "Failed to save roster. Please try again.",
