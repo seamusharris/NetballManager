@@ -699,6 +699,107 @@ export default function GamePreparation() {
                           })}
                         </div>
 
+                        {/* Goals Performance (moved from below) */}
+                        {historicalGames.length > 0 && batchScores && Object.keys(batchScores).some(gameId => batchScores[gameId]?.length > 0) && (
+                          <div className="mt-6 space-y-6">
+                            {(() => {
+                              // Calculate actual goals for and against from game scores
+                              let totalGoalsFor = 0;
+                              let totalGoalsAgainst = 0;
+                              let gamesWithScores = 0;
+
+                              historicalGames.forEach(game => {
+                                const gameScores = batchScores?.[game.id] || [];
+                                if (gameScores.length > 0) {
+                                  gamesWithScores++;
+                                  
+                                  // Calculate final scores for this game
+                                  let gameGoalsFor = 0;
+                                  let gameGoalsAgainst = 0;
+                                  
+                                  gameScores.forEach(score => {
+                                    if (score.teamId === currentTeamId) {
+                                      gameGoalsFor += score.score;
+                                    } else {
+                                      gameGoalsAgainst += score.score;
+                                    }
+                                  });
+                                  
+                                  totalGoalsFor += gameGoalsFor;
+                                  totalGoalsAgainst += gameGoalsAgainst;
+                                }
+                              });
+
+                              const avgGoalsFor = gamesWithScores > 0 ? totalGoalsFor / gamesWithScores : 0;
+                              const avgGoalsAgainst = gamesWithScores > 0 ? totalGoalsAgainst / gamesWithScores : 0;
+
+                              const maxGoals = Math.max(avgGoalsFor, avgGoalsAgainst, 50);
+                              const goalsForPercentage = (avgGoalsFor / maxGoals) * 100;
+                              const goalsAgainstPercentage = (avgGoalsAgainst / maxGoals) * 100;
+                              const goalDifference = avgGoalsFor - avgGoalsAgainst;
+
+                              return (
+                                <div className="space-y-6">
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    {/* Goals For */}
+                                    <div className="space-y-3">
+                                      <div className="flex justify-between items-center">
+                                        <span className="text-sm font-medium text-gray-700">Average Goals For</span>
+                                        <span className="text-lg font-bold text-green-600">{avgGoalsFor.toFixed(1)}</span>
+                                      </div>
+                                      <div className="w-full bg-gray-200 rounded-full h-4">
+                                        <div
+                                          className="bg-gradient-to-r from-green-400 to-green-600 h-4 rounded-full transition-all duration-700 ease-out"
+                                          style={{ width: `${goalsForPercentage}%` }}
+                                        ></div>
+                                      </div>
+                                      <div className="text-xs text-gray-500">
+                                        Based on {gamesWithScores} games with scores
+                                      </div>
+                                    </div>
+
+                                    {/* Goals Against */}
+                                    <div className="space-y-3">
+                                      <div className="flex justify-between items-center">
+                                        <span className="text-sm font-medium text-gray-700">Average Goals Against</span>
+                                        <span className="text-lg font-bold text-red-600">{avgGoalsAgainst.toFixed(1)}</span>
+                                      </div>
+                                      <div className="w-full bg-gray-200 rounded-full h-4">
+                                        <div
+                                          className="bg-gradient-to-r from-red-400 to-red-600 h-4 rounded-full transition-all duration-700 ease-out"
+                                          style={{ width: `${goalsAgainstPercentage}%` }}
+                                        ></div>
+                                      </div>
+                                      <div className="text-xs text-gray-500">
+                                        Lower is better for defensive performance
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* Goal Difference Summary */}
+                                  <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-4">
+                                    <div className="flex items-center justify-between">
+                                      <div className="flex items-center gap-2">
+                                        <TrendingUp className="h-5 w-5 text-blue-600" />
+                                        <span className="font-medium text-blue-800">Average Goal Difference</span>
+                                      </div>
+                                      <div className={`text-xl font-bold ${goalDifference >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                        {goalDifference >= 0 ? '+' : ''}{goalDifference.toFixed(1)}
+                                      </div>
+                                    </div>
+                                    <div className="text-sm text-blue-600 mt-1">
+                                      {goalDifference >= 0
+                                        ? `You typically outscore ${opponent} by ${goalDifference.toFixed(1)} goals per game`
+                                        : `${opponent} typically outscores you by ${Math.abs(goalDifference).toFixed(1)} goals per game`
+                                      }
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })()}
+                          </div>
+                        )}
+
                         {/* Quarter Average Performance Boxes */}
                         <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
                           {[1, 2, 3, 4].map(quarter => {
@@ -796,124 +897,7 @@ export default function GamePreparation() {
                     </Card>
                   )}
 
-                  {/* Goals Performance Horizontal Progress Bars */}
-                  {historicalGames.length > 0 && batchScores && Object.keys(batchScores).some(gameId => batchScores[gameId]?.length > 0) && (
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                          <Target className="h-5 w-5" />
-                          Goals Performance vs {opponent}
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        {(() => {
-                          // Calculate actual goals for and against from game scores
-                          let totalGoalsFor = 0;
-                          let totalGoalsAgainst = 0;
-                          let gamesWithScores = 0;
-
-                          historicalGames.forEach(game => {
-                            const gameScores = batchScores?.[game.id] || [];
-                            if (gameScores.length > 0) {
-                              gamesWithScores++;
-                              
-                              // Calculate final scores for this game
-                              let gameGoalsFor = 0;
-                              let gameGoalsAgainst = 0;
-                              
-                              gameScores.forEach(score => {
-                                if (score.teamId === currentTeamId) {
-                                  gameGoalsFor += score.score;
-                                } else {
-                                  gameGoalsAgainst += score.score;
-                                }
-                              });
-                              
-                              totalGoalsFor += gameGoalsFor;
-                              totalGoalsAgainst += gameGoalsAgainst;
-                            }
-                          });
-
-                          const avgGoalsFor = gamesWithScores > 0 ? totalGoalsFor / gamesWithScores : 0;
-                          const avgGoalsAgainst = gamesWithScores > 0 ? totalGoalsAgainst / gamesWithScores : 0;
-
-                          const maxGoals = Math.max(avgGoalsFor, avgGoalsAgainst, 50);
-                          const goalsForPercentage = (avgGoalsFor / maxGoals) * 100;
-                          const goalsAgainstPercentage = (avgGoalsAgainst / maxGoals) * 100;
-                          const goalDifference = avgGoalsFor - avgGoalsAgainst;
-
-                          return (
-                            <div className="space-y-6">
-                              <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
-                                <div className="flex items-center gap-2 mb-2">
-                                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                                  <span className="text-sm font-medium text-green-800">Actual Game Performance</span>
-                                </div>
-                                <p className="text-sm text-green-700">
-                                  These averages are calculated from the actual final scores of your {gamesWithScores} historical games against {opponent}.
-                                </p>
-                              </div>
-
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {/* Goals For */}
-                                <div className="space-y-3">
-                                  <div className="flex justify-between items-center">
-                                    <span className="text-sm font-medium text-gray-700">Average Goals For</span>
-                                    <span className="text-lg font-bold text-green-600">{avgGoalsFor.toFixed(1)}</span>
-                                  </div>
-                                  <div className="w-full bg-gray-200 rounded-full h-4">
-                                    <div
-                                      className="bg-gradient-to-r from-green-400 to-green-600 h-4 rounded-full transition-all duration-700 ease-out"
-                                      style={{ width: `${goalsForPercentage}%` }}
-                                    ></div>
-                                  </div>
-                                  <div className="text-xs text-gray-500">
-                                    Based on {gamesWithScores} games with scores
-                                  </div>
-                                </div>
-
-                                {/* Goals Against */}
-                                <div className="space-y-3">
-                                  <div className="flex justify-between items-center">
-                                    <span className="text-sm font-medium text-gray-700">Average Goals Against</span>
-                                    <span className="text-lg font-bold text-red-600">{avgGoalsAgainst.toFixed(1)}</span>
-                                  </div>
-                                  <div className="w-full bg-gray-200 rounded-full h-4">
-                                    <div
-                                      className="bg-gradient-to-r from-red-400 to-red-600 h-4 rounded-full transition-all duration-700 ease-out"
-                                      style={{ width: `${goalsAgainstPercentage}%` }}
-                                    ></div>
-                                  </div>
-                                  <div className="text-xs text-gray-500">
-                                    Lower is better for defensive performance
-                                  </div>
-                                </div>
-                              </div>
-
-                              {/* Goal Difference Summary */}
-                              <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-4">
-                                <div className="flex items-center justify-between">
-                                  <div className="flex items-center gap-2">
-                                    <TrendingUp className="h-5 w-5 text-blue-600" />
-                                    <span className="font-medium text-blue-800">Average Goal Difference</span>
-                                  </div>
-                                  <div className={`text-xl font-bold ${goalDifference >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                    {goalDifference >= 0 ? '+' : ''}{goalDifference.toFixed(1)}
-                                  </div>
-                                </div>
-                                <div className="text-sm text-blue-600 mt-1">
-                                  {goalDifference >= 0
-                                    ? `You typically outscore ${opponent} by ${goalDifference.toFixed(1)} goals per game`
-                                    : `${opponent} typically outscores you by ${Math.abs(goalDifference).toFixed(1)} goals per game`
-                                  }
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        })()}
-                      </CardContent>
-                    </Card>
-                  )}
+                  
 
                   {/* Position Performance Distribution */}
                   {(() => {
