@@ -797,7 +797,7 @@ export default function GamePreparation() {
                   )}
 
                   {/* Goals Performance Horizontal Progress Bars */}
-                  {historicalGames.length > 0 && (
+                  {historicalGames.length > 0 && batchScores && Object.keys(batchScores).some(gameId => batchScores[gameId]?.length > 0) && (
                     <Card>
                       <CardHeader>
                         <CardTitle className="flex items-center gap-2">
@@ -807,15 +807,35 @@ export default function GamePreparation() {
                       </CardHeader>
                       <CardContent>
                         {(() => {
-                          // This section is now handled by the position-based statistics system
-                          // The actual goals for/against should come from the aggregated position stats
-                          // For attacking positions (GS, GA) - their goalsFor stats
-                          // For defending positions (GD, GK) - their goalsAgainst stats
+                          // Calculate actual goals for and against from game scores
+                          let totalGoalsFor = 0;
+                          let totalGoalsAgainst = 0;
+                          let gamesWithScores = 0;
 
-                          // Placeholder values - this should be replaced with actual position-based aggregation
-                          const avgGoalsFor = 25.5; // Would be calculated from GS + GA position stats
-                          const avgGoalsAgainst = 22.3; // Would be calculated from opponent's attacking vs our GD + GK
-                          const gamesWithScores = historicalGames.length;
+                          historicalGames.forEach(game => {
+                            const gameScores = batchScores?.[game.id] || [];
+                            if (gameScores.length > 0) {
+                              gamesWithScores++;
+                              
+                              // Calculate final scores for this game
+                              let gameGoalsFor = 0;
+                              let gameGoalsAgainst = 0;
+                              
+                              gameScores.forEach(score => {
+                                if (score.teamId === currentTeamId) {
+                                  gameGoalsFor += score.score;
+                                } else {
+                                  gameGoalsAgainst += score.score;
+                                }
+                              });
+                              
+                              totalGoalsFor += gameGoalsFor;
+                              totalGoalsAgainst += gameGoalsAgainst;
+                            }
+                          });
+
+                          const avgGoalsFor = gamesWithScores > 0 ? totalGoalsFor / gamesWithScores : 0;
+                          const avgGoalsAgainst = gamesWithScores > 0 ? totalGoalsAgainst / gamesWithScores : 0;
 
                           const maxGoals = Math.max(avgGoalsFor, avgGoalsAgainst, 50);
                           const goalsForPercentage = (avgGoalsFor / maxGoals) * 100;
@@ -824,14 +844,13 @@ export default function GamePreparation() {
 
                           return (
                             <div className="space-y-6">
-                              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                              <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
                                 <div className="flex items-center gap-2 mb-2">
-                                  <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                                  <span className="text-sm font-medium text-blue-800">Position-Based Statistics</span>
+                                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                                  <span className="text-sm font-medium text-green-800">Actual Game Performance</span>
                                 </div>
-                                <p className="text-sm text-blue-700">
-                                  This section now uses position-based statistics from your game stats. 
-                                  Goals For comes from GS/GA positions, Goals Against from opponent scoring against GD/GK positions.
+                                <p className="text-sm text-green-700">
+                                  These averages are calculated from the actual final scores of your {gamesWithScores} historical games against {opponent}.
                                 </p>
                               </div>
 
@@ -849,7 +868,7 @@ export default function GamePreparation() {
                                     ></div>
                                   </div>
                                   <div className="text-xs text-gray-500">
-                                    Based on {gamesWithScores} games
+                                    Based on {gamesWithScores} games with scores
                                   </div>
                                 </div>
 
