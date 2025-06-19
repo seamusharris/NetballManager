@@ -18,6 +18,7 @@ import RosterSummary from '@/components/roster/RosterSummary';
 import { useNextGame } from '@/hooks/use-next-game';
 import UpcomingGameRecommendations from '@/components/dashboard/UpcomingGameRecommendations';
 import GameResultCard from '@/components/ui/game-result-card';
+import { GamesContainer } from '@/components/ui/games-container';
 
 const Preparation = () => {
   const queryClient = useQueryClient();
@@ -388,7 +389,7 @@ const Preparation = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <GamesContainer className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {recentGames.map((game: any) => (
                     <div key={game.id} className="p-4 border rounded-lg">
                       <div className="flex justify-between items-start mb-2">
@@ -404,7 +405,7 @@ const Preparation = () => {
                       </div>
                     </div>
                   ))}
-                </div>
+                </GamesContainer>
               </CardContent>
             </Card>
           )}
