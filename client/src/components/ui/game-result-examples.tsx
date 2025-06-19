@@ -302,7 +302,7 @@ export function GameResultCardExamples() {
                     <span className="text-sm text-gray-600">2024-06-16</span>
                     <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded">Round 6</span>
                   </div>
-                  
+
                   {/* Quarter by Quarter */}
                   <div className="flex items-center gap-3">
                     <span className="text-sm font-medium text-gray-700">Quarters:</span>
@@ -347,7 +347,7 @@ export function GameResultCardExamples() {
                     <span className="text-sm text-gray-600">2024-06-17</span>
                     <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded">Round 7</span>
                   </div>
-                  
+
                   {/* Quarter Grid */}
                   <div className="space-y-2">
                     <div className="text-sm font-medium text-gray-700 mb-2">Quarter Breakdown:</div>
@@ -405,7 +405,7 @@ export function GameResultCardExamples() {
                     <span className="text-sm text-gray-600">2024-06-18</span>
                     <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded">Round 8</span>
                   </div>
-                  
+
                   {/* Progressive Bars */}
                   <div className="space-y-3">
                     <div className="text-sm font-medium text-gray-700">Quarter Progression:</div>
@@ -483,7 +483,7 @@ export function GameResultCardExamples() {
                     <span className="text-sm text-gray-600">2024-06-16</span>
                     <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded">Round 6</span>
                   </div>
-                  
+
                   {/* Timeline */}
                   <div className="space-y-2">
                     <div className="text-sm font-medium text-gray-700 mb-3">Game Flow:</div>
@@ -552,7 +552,7 @@ export function GameResultCardExamples() {
                     <span className="text-sm text-gray-600">2024-06-16</span>
                     <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded">Round 6</span>
                   </div>
-                  
+
                   {/* Court-style quarters */}
                   <div className="space-y-2">
                     <div className="text-sm font-medium text-gray-700 mb-3">Quarter Results:</div>
@@ -612,7 +612,7 @@ export function GameResultCardExamples() {
                     <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded">Round 8</span>
                   </div>
                 </div>
-                
+
                 {/* Stacked quarters and final score */}
                 <div className="flex items-center gap-4">
                   <div className="flex gap-1">
@@ -707,7 +707,7 @@ export function GameResultCardExamples() {
         <div>
           <h4 className="text-md font-medium mb-3 text-gray-700">Style 8: Quarters Between Team Name and Score</h4>
           <div className="max-w-4xl space-y-3">
-            
+
             {/* Classic Layout with centered quarters */}
             <div className="border-l-4 border-green-500 bg-green-50 rounded transition-colors cursor-pointer hover:bg-green-100 p-4">
               <div className="flex items-center justify-between">
@@ -719,7 +719,7 @@ export function GameResultCardExamples() {
                     <span className="text-sm text-gray-600">2024-06-16</span>
                     <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded">Round 6</span>
                   </div>
-                  
+
                   {/* Quarter scores between name and final */}
                   <div className="flex items-center gap-2 mb-2">
                     <span className="text-xs text-gray-600 font-medium">Quarters:</span>
@@ -748,7 +748,7 @@ export function GameResultCardExamples() {
                     <span className="text-sm text-gray-600">2024-06-17</span>
                     <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded">Round 7</span>
                   </div>
-                  
+
                   {/* Quarter breakdown in grid */}
                   <div className="grid grid-cols-4 gap-1 max-w-xs">
                     <div className="text-center">
@@ -794,7 +794,7 @@ export function GameResultCardExamples() {
                     <span className="text-sm text-gray-600">2024-06-18</span>
                     <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded">Round 8</span>
                   </div>
-                  
+
                   {/* Horizontal table-style quarters */}
                   <div className="bg-white border border-gray-200 rounded overflow-hidden">
                     <div className="grid grid-cols-5 divide-x divide-gray-200">
@@ -835,7 +835,7 @@ export function GameResultCardExamples() {
                     <span className="text-sm text-gray-600">2024-06-19</span>
                     <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded">Round 9</span>
                   </div>
-                  
+
                   {/* Dot-style minimal quarters */}
                   <div className="flex items-center gap-3">
                     <span className="text-xs text-gray-600 font-medium">Q-by-Q:</span>
@@ -880,7 +880,7 @@ export function GameResultCardExamples() {
                       <span className="text-sm text-gray-600">2024-06-20</span>
                       <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded">Round 10</span>
                     </div>
-                    
+
                     {/* Single line quarters */}
                     <div className="flex items-center gap-1 text-xs">
                       <span className="text-gray-600">Q1-4:</span>
@@ -911,7 +911,7 @@ export function GameResultCardExamples() {
                     <span className="text-sm text-gray-600">2024-06-21</span>
                     <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded">Round 11</span>
                   </div>
-                  
+
                   {/* Progressive quarter scores showing cumulative */}
                   <div className="space-y-1">
                     <div className="text-xs text-gray-600 font-medium mb-1">Progressive Score:</div>
@@ -957,9 +957,9 @@ export function GameResultCardExamples() {
           <div>
             <h4 className="text-md font-medium mb-3 text-gray-700">Style 9: Compact with Quarter/Cumulative Split</h4>
             <div className="max-w-4xl space-y-3">
-              
+
               {/* Win Example with Q-by-Q and Cumulative */}
-              <div className="border border-green-200 border-l-4 border-l-green-500 bg-green-50 rounded transition-colors cursor-pointer hover:bg-green-100 p-3"></div>
+              <div className="border border-green-200 border-l-4 border-l-green-500 bg-green-50 rounded transition-colors cursor-pointer hover:bg-green-100 p-3">
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     <div className="font-semibold text-gray-800 text-sm mb-2">WNC Dingoes vs Cobras</div>
@@ -967,19 +967,19 @@ export function GameResultCardExamples() {
                       <span className="text-xs text-gray-600">2024-06-16 • Round 6</span>
                     </div>
                   </div>
-                  
+
                   {/* Quarter scores positioned closer to final score */}
                   <div className="flex items-center gap-4">
                     <div className="text-xs space-y-2">
                       {/* Quarter-by-quarter scores on top (lighter) */}
-                      <div className="grid grid-cols-4 gap-3"></div>
+                      <div className="grid grid-cols-4 gap-3">
                         <span className="px-1 py-0.5 bg-green-100 text-green-700 border border-green-400 rounded font-medium text-center">15-12</span>
                         <span className="px-1 py-0.5 bg-red-100 text-red-700 border border-red-400 rounded font-medium text-center">12-16</span>
                         <span className="px-1 py-0.5 bg-green-100 text-green-700 border border-green-400 rounded font-medium text-center">16-11</span>
                         <span className="px-1 py-0.5 bg-green-100 text-green-700 border border-green-400 rounded font-medium text-center">17-12</span>
                       </div>
                       {/* Cumulative scores underneath (darker) */}
-                      <div className="grid grid-cols-4 gap-3"></div>
+                      <div className="grid grid-cols-4 gap-3">
                         <span className="px-1 py-0.5 bg-green-200 text-green-800 border border-green-500 rounded text-xs text-center">15-12</span>
                         <span className="px-1 py-0.5 bg-red-200 text-red-800 border border-red-500 rounded text-xs text-center">27-28</span>
                         <span className="px-1 py-0.5 bg-green-200 text-green-800 border border-green-500 rounded text-xs text-center">43-39</span>
@@ -992,7 +992,7 @@ export function GameResultCardExamples() {
               </div>
 
               {/* Loss Example */}
-              <div className="border border-red-200 border-l-4 border-l-red-500 bg-red-50 rounded transition-colors cursor-pointer hover:bg-red-100 p-3"></div>
+              <div className="border border-red-200 border-l-4 border-l-red-500 bg-red-50 rounded transition-colors cursor-pointer hover:bg-red-100 p-3">
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     <div className="font-semibold text-gray-800 text-sm mb-2">Sharks vs WNC Dingoes</div>
@@ -1000,7 +1000,7 @@ export function GameResultCardExamples() {
                       <span className="text-xs text-gray-600">2024-06-17 • Round 7</span>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center gap-4">
                     <div className="text-xs space-y-1">
                       <div className="grid grid-cols-4 gap-2">
@@ -1022,7 +1022,7 @@ export function GameResultCardExamples() {
               </div>
 
               {/* Draw Example */}
-              <div className="border border-amber-200 border-l-4 border-l-amber-500 bg-amber-50 rounded transition-colors cursor-pointer hover:bg-amber-100 p-3"></div>
+              <div className="border border-amber-200 border-l-4 border-l-amber-500 bg-amber-50 rounded transition-colors cursor-pointer hover:bg-amber-100 p-3">
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     <div className="font-semibold text-gray-800 text-sm mb-2">WNC Dingoes vs Lions</div>
@@ -1030,7 +1030,7 @@ export function GameResultCardExamples() {
                       <span className="text-xs text-gray-600">2024-06-18 • Round 8</span>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center gap-4">
                     <div className="text-xs space-y-1">
                       <div className="grid grid-cols-4 gap-2">
@@ -1058,7 +1058,7 @@ export function GameResultCardExamples() {
                     <div className="font-semibold text-gray-800 text-sm mb-1">WNC Dingoes vs Thunder</div>
                     <div className="text-xs text-gray-600">2024-06-20 • Round 10</div>
                   </div>
-                  
+
                   <div className="flex items-center gap-3">
                     <div className="text-xs">
                       <div className="grid grid-cols-4 gap-1 mb-0.5">
@@ -1085,13 +1085,13 @@ export function GameResultCardExamples() {
 
       <div className="space-y-4">
         <h3 className="text-lg font-semibold">Hover Effect Comparisons</h3>
-        
+
         {/* Background Darkening Effects */}
         <div>
           <h4 className="text-md font-medium mb-3 text-gray-700">Background Darkening Hover Effects</h4>
           <div className="bg-white p-6 rounded-lg border space-y-4">
             <p className="text-sm text-gray-600 mb-4">Game result cards with background darkening on hover (similar to games list)</p>
-            
+
             {/* Light Background Darkening */}
             <div>
               <h5 className="text-sm font-medium mb-2 text-gray-600">Light Background Darkening</h5>
@@ -1143,7 +1143,7 @@ export function GameResultCardExamples() {
           <h4 className="text-md font-medium mb-3 text-gray-700">Shadow Hover Variations</h4>
           <div className="bg-white p-6 rounded-lg border space-y-4">
             <p className="text-sm text-gray-600 mb-4">Game result cards with different shadow hover effects</p>
-            
+
             {/* Minimal Shadow Change */}
             <div>
               <h5 className="text-sm font-medium mb-2 text-gray-600">Minimal Shadow Change</h5>
