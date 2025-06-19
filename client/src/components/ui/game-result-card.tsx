@@ -230,12 +230,12 @@ export default function GameResultCard({
 
     // Show calculated scores if available
     if (scores && scores.finalScore.for !== undefined && scores.finalScore.against !== undefined) {
-      return `${scores.finalScore.for}–${scores.finalScore.against}`;
+      return `${scores.finalScore.for}-${scores.finalScore.against}`;
     }
 
     // Show status scores if no calculated scores but status scores exist
     if (game.statusTeamGoals !== null && game.statusOpponentGoals !== null) {
-      return `${game.statusTeamGoals}–${game.statusOpponentGoals}`;
+      return `${game.statusTeamGoals}-${game.statusOpponentGoals}`;
     }
 
     // For completed games without scores, show placeholder
@@ -281,7 +281,7 @@ export default function GameResultCard({
           )}
 
           {config.showDate && config.showRound && game.round && (
-            <span className="text-xs text-gray-500">•</span>
+            <span className="text-xs text-gray-500 mx-1">•</span>
           )}
 
           {config.showRound && game.round && (
