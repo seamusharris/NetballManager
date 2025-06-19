@@ -367,11 +367,6 @@ export default function PlayerAvailabilityManager({
                       showPositions={true}
                       hasSelect={true}
                       className="shadow-md transition-all duration-200 hover:shadow-lg cursor-pointer"
-                      style={{ 
-                        backgroundColor: isSelected ? mediumBackgroundColor : lightBackgroundColor,
-                        borderColor: darkerTextColor,
-                        color: darkerTextColor
-                      }}
                       onClick={handlePlayerClick}
                     />
                   </div>
