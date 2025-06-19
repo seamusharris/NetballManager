@@ -241,14 +241,51 @@ export default function PlayerAvailabilityManager({
   return (
     <Card className="mb-6">
       <CardHeader className="pb-3">
-        <CardTitle className="text-xl">
-          Player Availability 
-          {selectedGame && (
-            <span className="font-normal text-gray-600 ml-2">
-              for {selectedGame.date}
-            </span>
-          )}
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-xl">
+            Player Availability 
+            {selectedGame && (
+              <span className="font-normal text-gray-600 ml-2">
+                for {selectedGame.date}
+              </span>
+            )}
+          </CardTitle>
+          <div className="flex space-x-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => {
+                const newData: Record<number, boolean> = {};
+                teamPlayers.forEach(player => {
+                  newData[player.id] = true;
+                });
+                handleAvailabilityChange(newData);
+              }}
+            >
+              Select All
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => {
+                const newData: Record<number, boolean> = {};
+                teamPlayers.forEach(player => {
+                  newData[player.id] = false;
+                });
+                handleAvailabilityChange(newData);
+              }}
+            >
+              Clear All
+            </Button>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 mt-2">
+          <Badge variant="outline" className="mr-1">
+            {availableCount}
+          </Badge>
+          <span className="text-sm text-gray-600">Available Players</span>
+        </div>
 
         <div className="flex justify-between items-center mt-4">
           <div className="flex items-center gap-4">
@@ -278,57 +315,19 @@ export default function PlayerAvailabilityManager({
               </SelectContent>
             </Select>
           </div>
-          <div className="flex items-center gap-2">
-            <Badge variant="outline" className="mr-1">
-              {availableCount}
-            </Badge>
-            <span className="text-sm font-medium">Available</span>
-            <Button 
-              onClick={onComplete}
-              disabled={availableCount === 0}
-              className="ml-2"
-            >
-              <Check className="mr-2 h-4 w-4" />
-              Continue to Roster ({availableCount} available)
-            </Button>
-          </div>
+          <Button 
+            onClick={onComplete}
+            disabled={availableCount === 0}
+            className="ml-2"
+          >
+            <Check className="mr-2 h-4 w-4" />
+            Continue to Roster ({availableCount} available)
+          </Button>
         </div>
       </CardHeader>
 
       <CardContent>
         <div className="space-y-4">
-          {/* Quick Actions */}
-          <div className="flex justify-between items-center">
-            <div className="flex space-x-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => {
-                  const newData: Record<number, boolean> = {};
-                  teamPlayers.forEach(player => {
-                    newData[player.id] = true;
-                  });
-                  handleAvailabilityChange(newData);
-                }}
-              >
-                Select All
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => {
-                  const newData: Record<number, boolean> = {};
-                  teamPlayers.forEach(player => {
-                    newData[player.id] = false;
-                  });
-                  handleAvailabilityChange(newData);
-                }}
-              >
-                Clear All
-              </Button>
-            </div>
-          </div>
-
           {/* Player Selection Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {teamPlayers
