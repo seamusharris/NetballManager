@@ -276,18 +276,7 @@ export default function GameResultCard({
             </span>
           )}
 
-          {/* Status badge for non-standard games */}
-          {game.statusIsCompleted && ['forfeit-win', 'forfeit-loss', 'bye', 'abandoned'].includes(game.statusName) && (
-            <>
-              <span className="text-xs text-gray-500">•</span>
-              <GameStatusBadge 
-                status={game.statusName} 
-                size="sm" 
-                withDialog={false}
-                className="text-xs"
-              />
-            </>
-          )}
+          
         </div>
       </div>
 

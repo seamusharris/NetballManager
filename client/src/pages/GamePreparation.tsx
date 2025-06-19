@@ -27,8 +27,10 @@ import PlayerAvailabilityManager from '@/components/roster/PlayerAvailabilityMan
 import AnalysisTab from '@/components/game-preparation/AnalysisTab';
 import LineupTab from '@/components/game-preparation/LineupTab';
 import StrategyTab from '@/components/game-preparation/StrategyTab';
-import GameResultCard from '@/components/ui/game-result-card';
-import { GamesContainer } from '@/components/ui/games-container';
+import { GameResultCard } from '@/components/ui/game-result-card';
+import { apiClient } from '@/lib/apiClient';
+import { useClub } from '@/contexts/ClubContext';
+import { GameStatusBadge } from '@/components/games/GameStatusBadge';
 import QuarterPerformanceWidget from '@/components/dashboard/QuarterPerformanceWidget';
 
 
@@ -677,7 +679,7 @@ export default function GamePreparation() {
                                 updatedAt: score.updatedAt,
                                 notes: score.notes
                               })) : [];
-                              
+
                               const quarterTeamScore = transformedScores.find(s => s.teamId === currentTeamId && s.quarter === quarter)?.score || 0;
                               const quarterOpponentScore = transformedScores.find(s => s.teamId !== currentTeamId && s.quarter === quarter)?.score || 0;
 
@@ -799,7 +801,7 @@ export default function GamePreparation() {
                                     ></div>
                                   </div>
                                   <Badge 
-                                    variant={performance === 'good' ? 'default' : performance === 'poor' ? 'destructive' : 'secondary'}
+                                    variant={performance === 'good' ? 'default' : performance === 'poor' : 'destructive' : 'secondary'}
                                     className="text-xs"
                                   >
                                     {performance === 'good' ? 'Strong' : performance === 'poor' ? 'Weak' : 'Even'}
