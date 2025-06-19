@@ -488,10 +488,50 @@ export default function GamePreparation() {
                             {historicalGames.length > 0 ? `${winCount}W-${historicalGames.length - winCount}L` : 'No history'}
                           </span>
                         </div>
-                        <div className="flex justify-between">
-                          <span className="text-sm text-muted-foreground">Venue:</span>
-                          <span className="font-medium">{isHomeGame ? 'Home' : 'Away'}</span>
-                        </div>
+                        {(() => {
+                          // Calculate goal difference for head-to-head display
+                          if (historicalGames.length === 0 || !batchScores) return null;
+                          
+                          let totalGoalsFor = 0;
+                          let totalGoalsAgainst = 0;
+                          let gamesWithScores = 0;
+
+                          historicalGames.forEach(game => {
+                            const gameScores = batchScores?.[game.id] || [];
+                            if (gameScores.length > 0) {
+                              gamesWithScores++;
+                              
+                              let gameGoalsFor = 0;
+                              let gameGoalsAgainst = 0;
+                              
+                              gameScores.forEach(score => {
+                                if (score.teamId === currentTeamId) {
+                                  gameGoalsFor += score.score;
+                                } else {
+                                  gameGoalsAgainst += score.score;
+                                }
+                              });
+                              
+                              totalGoalsFor += gameGoalsFor;
+                              totalGoalsAgainst += gameGoalsAgainst;
+                            }
+                          });
+
+                          if (gamesWithScores === 0) return null;
+
+                          const avgGoalsFor = totalGoalsFor / gamesWithScores;
+                          const avgGoalsAgainst = totalGoalsAgainst / gamesWithScores;
+                          const goalDifference = avgGoalsFor - avgGoalsAgainst;
+
+                          return (
+                            <div className="flex justify-between">
+                              <span className="text-sm text-muted-foreground">Avg Goal Difference:</span>
+                              <span className={`font-medium ${goalDifference >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                {goalDifference >= 0 ? '+' : ''}{goalDifference.toFixed(1)}
+                              </span>
+                            </div>
+                          );
+                        })()}
                       </CardContent>
                     </Card>
 
@@ -872,24 +912,7 @@ export default function GamePreparation() {
                                     </div>
                                   </div>
 
-                                  {/* Goal Difference Summary */}
-                                  <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-4">
-                                    <div className="flex items-center justify-between">
-                                      <div className="flex items-center gap-2">
-                                        <TrendingUp className="h-5 w-5 text-blue-600" />
-                                        <span className="font-medium text-blue-800">Average Goal Difference</span>
-                                      </div>
-                                      <div className={`text-xl font-bold ${goalDifference >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                        {goalDifference >= 0 ? '+' : ''}{goalDifference.toFixed(1)}
-                                      </div>
-                                    </div>
-                                    <div className="text-sm text-blue-600 mt-1">
-                                      {goalDifference >= 0
-                                        ? `You typically outscore ${opponent} by ${goalDifference.toFixed(1)} goals per game`
-                                        : `${opponent} typically outscores you by ${Math.abs(goalDifference).toFixed(1)} goals per game`
-                                      }
-                                    </div>
-                                  </div>
+                                  
                                 </div>
                               );
                             })()}
