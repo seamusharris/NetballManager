@@ -980,16 +980,16 @@ export default function GamePreparation() {
 
                               return (
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                  {/* Attacking Positions */}
+                                  {/* Attack */}
                                   <div className="space-y-3 p-4 border-2 border-green-200 rounded-lg bg-green-50">
                                     <div className="flex justify-between items-center">
-                                      <span className="text-sm font-medium text-gray-700">Attacking Positions</span>
-                                      <span className="text-lg font-bold text-green-600">{attackingPositionsTotal.toFixed(1)}</span>
+                                      <span className="text-lg font-bold text-gray-800">Attack</span>
+                                      <span className="text-2xl font-bold text-green-600">{attackingPositionsTotal.toFixed(1)}</span>
                                     </div>
                                     {gamesWithPositionStats > 0 ? (
                                       <>
                                         <div className="space-y-2">
-                                          <div className="flex justify-between text-xs">
+                                          <div className="flex justify-between text-sm font-semibold">
                                             <span>GS: {gsAvgGoalsFor.toFixed(1)}</span>
                                             <span>GA: {gaAvgGoalsFor.toFixed(1)}</span>
                                           </div>
@@ -1015,16 +1015,16 @@ export default function GamePreparation() {
                                     )}
                                   </div>
 
-                                  {/* Defending Positions */}
+                                  {/* Defence */}
                                   <div className="space-y-3 p-4 border-2 border-red-200 rounded-lg bg-red-50">
                                     <div className="flex justify-between items-center">
-                                      <span className="text-sm font-medium text-gray-700">Defending Positions</span>
-                                      <span className="text-lg font-bold text-red-600">{defendingPositionsTotal.toFixed(1)}</span>
+                                      <span className="text-lg font-bold text-gray-800">Defence</span>
+                                      <span className="text-2xl font-bold text-red-600">{defendingPositionsTotal.toFixed(1)}</span>
                                     </div>
                                     {gamesWithPositionStats > 0 ? (
                                       <>
                                         <div className="space-y-2">
-                                          <div className="flex justify-between text-xs">
+                                          <div className="flex justify-between text-sm font-semibold">
                                             <span>GD: {gdAvgGoalsAgainst.toFixed(1)}</span>
                                             <span>GK: {gkAvgGoalsAgainst.toFixed(1)}</span>
                                           </div>
