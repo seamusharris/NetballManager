@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { getInitials } from '@/lib/utils';
 import { cn } from '@/lib/utils';
-import { getPlayerColorHex, getDarkerColorHex, getLighterColorHex } from '@/lib/playerColorUtils';
+import { getPlayerColorHex, getDarkerColorHex, getLighterColorHex, getMediumColorHex } from '@/lib/playerColorUtils';
 import { PLAYER_BOX_STYLES } from '@/lib/playerBoxStyles';
 
 interface PlayerBoxProps {
@@ -102,10 +102,12 @@ export function PlayerBox({
   const playerColorHex = getPlayerColorHex(player.avatarColor);
   const darkerBorderColor = getDarkerColorHex(player.avatarColor);
   const lightBackgroundColor = getLighterColorHex(player.avatarColor);
+  const mediumBackgroundColor = getMediumColorHex(player.avatarColor);
 
   // Always apply default background and border, but allow overrides
+  // Use medium background as default to match selected availability styling
   const defaultStyle = {
-    backgroundColor: lightBackgroundColor,
+    backgroundColor: mediumBackgroundColor,
     borderColor: darkerBorderColor,
     color: 'inherit', // Ensure text doesn't get colored
     ...style
