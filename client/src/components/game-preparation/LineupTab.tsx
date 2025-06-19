@@ -406,7 +406,14 @@ export function LineupTab({ game, players, rosters, onRosterUpdate }: LineupTabP
                   date: game.date,
                   time: game.time
                 }}
+                gameId={game.id}
                 onRosterChange={setSelectedRoster}
+                onRosterSaved={() => {
+                  toast({
+                    title: "Success",
+                    description: "Roster saved successfully!"
+                  });
+                }}
                 initialRoster={selectedRoster}
               />
             </CardContent>

@@ -18,10 +18,13 @@ import {
   ChevronLeft,
   Eye,
   Edit,
-  Trash2
+  Trash2,
+  Save
 } from 'lucide-react';
 import { PlayerBox } from '@/components/ui/player-box';
 import { getPlayerColorHex, getDarkerColorHex, getLighterColorHex, getMediumColorHex } from '@/lib/playerColorUtils';
+import { apiClient } from '@/lib/apiClient';
+import { useToast } from '@/hooks/use-toast';
 
 interface Player {
   id: number;
@@ -41,7 +44,9 @@ interface GameInfo {
 interface DragDropRosterManagerProps {
   availablePlayers: Player[];
   gameInfo: GameInfo;
+  gameId?: number;
   onRosterChange?: (roster: Record<number, Record<string, number | null>>) => void;
+  onRosterSaved?: () => void;
   initialRoster?: Record<number, Record<string, number | null>>;
 }
 
@@ -123,7 +128,9 @@ const PositionSlot = ({
 export default function DragDropRosterManager({ 
   availablePlayers, 
   gameInfo, 
+  gameId,
   onRosterChange,
+  onRosterSaved,
   initialRoster 
 }: DragDropRosterManagerProps) {
   const [currentQuarter, setCurrentQuarter] = useState(1);
@@ -137,6 +144,8 @@ export default function DragDropRosterManager({
   );
   const [draggedPlayer, setDraggedPlayer] = useState<number | null>(null);
   const [dragOverPosition, setDragOverPosition] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const { toast } = useToast();
 
   const handleDragStart = (playerId: number) => {
     setDraggedPlayer(playerId);
@@ -276,6 +285,60 @@ export default function DragDropRosterManager({
     }
   }, [initialRoster]);
 
+  // Save roster function
+  const handleSaveRoster = async () => {
+    if (!gameId) {
+      toast({
+        title: "Error",
+        description: "No game selected to save roster for.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      // Convert assignments to roster format expected by API
+      const rosterData = [];
+      
+      for (const [quarter, positions] of Object.entries(assignments)) {
+        for (const [position, playerId] of Object.entries(positions)) {
+          if (playerId !== null) {
+            rosterData.push({
+              gameId: gameId,
+              quarter: parseInt(quarter),
+              position: position,
+              playerId: playerId
+            });
+          }
+        }
+      }
+
+      // Save each roster assignment
+      for (const assignment of rosterData) {
+        await apiClient.post('/api/rosters', assignment);
+      }
+
+      toast({
+        title: "Success",
+        description: "Roster saved successfully!"
+      });
+
+      if (onRosterSaved) {
+        onRosterSaved();
+      }
+    } catch (error) {
+      console.error('Error saving roster:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save roster. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Game Info Header */}
@@ -330,6 +393,18 @@ export default function DragDropRosterManager({
                 <Trash2 className="h-4 w-4" />
                 Reset All
               </Button>
+              {gameId && (
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={handleSaveRoster}
+                  disabled={isSaving}
+                  className="flex items-center gap-2"
+                >
+                  <Save className="h-4 w-4" />
+                  {isSaving ? 'Saving...' : 'Save Roster'}
+                </Button>
+              )}
             </div>
 
             {/* Copy Quarter Controls */}
