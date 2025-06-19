@@ -522,7 +522,7 @@ export default function GamePreparation() {
                               notes: score.notes
                             })) : [];
 
-                            // Calculate quarter scores
+                            // Calculate quarter scores for display
                             const calculateQuarterScores = () => {
                               if (!transformedScores.length) return null;
 
@@ -563,97 +563,65 @@ export default function GamePreparation() {
                             };
 
                             const quarterData = calculateQuarterScores();
-                            const isWin = quarterData && quarterData.finalScore.team > quarterData.finalScore.opponent;
-                            const isLoss = quarterData && quarterData.finalScore.team < quarterData.finalScore.opponent;
-                            const isDraw = quarterData && quarterData.finalScore.team === quarterData.finalScore.opponent;
-
-                            const getResultClass = () => {
-                              if (isWin) return 'border-green-500 border-l-4 border-l-green-500 bg-green-50';
-                              if (isLoss) return 'border-red-500 border-l-4 border-l-red-500 bg-red-50';
-                              if (isDraw) return 'border-amber-500 border-l-4 border-l-amber-500 bg-amber-50';
-                              return 'border-gray-200 border-l-4 border-l-gray-500 bg-gray-50';
-                            };
-
-                            const getHoverClass = () => {
-                              if (isWin) return 'hover:bg-green-100';
-                              if (isLoss) return 'hover:bg-red-100';
-                              if (isDraw) return 'hover:bg-amber-100';
-                              return 'hover:bg-gray-100';
-                            };
 
                             return (
-                              <div
-                                key={game.id}
-                                className={`border border-t border-r border-b rounded transition-colors cursor-pointer p-3 ${getResultClass()} ${getHoverClass()}`}
-                              >
-                                <div className="flex items-center justify-between">
-                                  <div className="flex-1">
-                                    <div className="font-semibold text-gray-800 text-sm mb-2">
-                                      {game.homeTeamName} vs {game.awayTeamName}
-                                    </div>
-                                    <div className="flex items-center gap-2 mb-1">
-                                      <span className="text-xs text-gray-600">{formatShortDate(game.date)} • Round {game.round}</span>
+                              <div key={game.id} className="relative">
+                                {/* Use the standard GameResultCard for consistent styling and scoring */}
+                                <GameResultCard
+                                  game={game}
+                                  currentTeamId={currentTeamId}
+                                  centralizedScores={transformedScores}
+                                  showLink={true}
+                                  className="w-full"
+                                />
+                                
+                                {/* Overlay quarter breakdown data on top */}
+                                {quarterData && (
+                                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center gap-4 pointer-events-none">
+                                    <div className="text-xs space-y-1">
+                                      {/* Quarter-by-quarter scores on top (lighter) */}
+                                      <div className="grid grid-cols-4 gap-2">
+                                        {quarterData.quarter.map((teamScore, qIndex) => {
+                                          const opponentScore = quarterData.opponentQuarter[qIndex];
+                                          const quarterWin = teamScore > opponentScore;
+                                          const quarterLoss = teamScore < opponentScore;
+
+                                          const quarterClass = quarterWin 
+                                            ? 'bg-green-100 text-green-700 border border-green-400' 
+                                            : quarterLoss 
+                                              ? 'bg-red-100 text-red-700 border border-red-400'
+                                              : 'bg-amber-100 text-amber-700 border border-amber-400';
+
+                                          return (
+                                            <span key={qIndex} className={`px-1 py-0.5 ${quarterClass} rounded font-medium text-center`}>
+                                              {teamScore}-{opponentScore}
+                                            </span>
+                                          );
+                                        })}
+                                      </div>
+                                      {/* Cumulative scores underneath (darker) */}
+                                      <div className="grid grid-cols-4 gap-2">
+                                        {quarterData.cumulative.map((teamCum, qIndex) => {
+                                          const opponentCum = quarterData.opponentCumulative[qIndex];
+                                          const cumulativeWin = teamCum > opponentCum;
+                                          const cumulativeLoss = teamCum < opponentCum;
+
+                                          const cumulativeClass = cumulativeWin 
+                                            ? 'bg-green-200 text-green-800 border border-green-500' 
+                                            : cumulativeLoss 
+                                              ? 'bg-red-200 text-red-800 border border-red-500'
+                                              : 'bg-amber-200 text-amber-800 border border-amber-500';
+
+                                          return (
+                                            <span key={qIndex} className={`px-1 py-0.5 ${cumulativeClass} rounded text-xs text-center`}>
+                                              {teamCum}-{opponentCum}
+                                            </span>
+                                          );
+                                        })}
+                                      </div>
                                     </div>
                                   </div>
-
-                                  {/* Quarter scores positioned closer to final score */}
-                                  {quarterData && (
-                                    <div className="flex items-center gap-4">
-                                      <div className="text-xs space-y-1">
-                                        {/* Quarter-by-quarter scores on top (lighter) */}
-                                        <div className="grid grid-cols-4 gap-2">
-                                          {quarterData.quarter.map((teamScore, qIndex) => {
-                                            const opponentScore = quarterData.opponentQuarter[qIndex];
-                                            const quarterWin = teamScore > opponentScore;
-                                            const quarterLoss = teamScore < opponentScore;
-
-                                            const quarterClass = quarterWin 
-                                              ? 'bg-green-100 text-green-700 border border-green-400' 
-                                              : quarterLoss 
-                                                ? 'bg-red-100 text-red-700 border border-red-400'
-                                                : 'bg-amber-100 text-amber-700 border border-amber-400';
-
-                                            return (
-                                              <span key={qIndex} className={`px-1 py-0.5 ${quarterClass} rounded font-medium text-center`}>
-                                                {teamScore}-{opponentScore}
-                                              </span>
-                                            );
-                                          })}
-                                        </div>
-                                        {/* Cumulative scores underneath (darker) */}
-                                        <div className="grid grid-cols-4 gap-2">
-                                          {quarterData.cumulative.map((teamCum, qIndex) => {
-                                            const opponentCum = quarterData.opponentCumulative[qIndex];
-                                            const cumulativeWin = teamCum > opponentCum;
-                                            const cumulativeLoss = teamCum < opponentCum;
-
-                                            const cumulativeClass = cumulativeWin 
-                                              ? 'bg-green-200 text-green-800 border border-green-500' 
-                                              : cumulativeLoss 
-                                                ? 'bg-red-200 text-red-800 border border-red-500'
-                                                : 'bg-amber-200 text-amber-800 border border-amber-500';
-
-                                            return (
-                                              <span key={qIndex} className={`px-1 py-0.5 ${cumulativeClass} rounded text-xs text-center`}>
-                                                {teamCum}-{opponentCum}
-                                              </span>
-                                            );
-                                          })}
-                                        </div>
-                                      </div>
-                                      <div className={`px-3 py-1 text-sm font-bold ${isWin ? 'bg-green-600' : isLoss ? 'bg-red-600' : 'bg-gray-600'} text-white rounded`}>
-                                        {quarterData.finalScore.team}-{quarterData.finalScore.opponent}
-                                      </div>
-                                    </div>
-                                  )}
-
-                                  {/* Fallback for games without quarter data */}
-                                  {!quarterData && (
-                                    <div className="px-3 py-1 text-sm font-medium text-gray-500 bg-gray-50 rounded border border-gray-200">
-                                      —
-                                    </div>
-                                  )}
-                                </div>
+                                )}
                               </div>
                             );
                           })}
