@@ -29,6 +29,7 @@ import LineupTab from '@/components/game-preparation/LineupTab';
 import StrategyTab from '@/components/game-preparation/StrategyTab';
 import GameResultCard from '@/components/ui/game-result-card';
 import { GamesContainer } from '@/components/ui/games-container';
+import SpacingDiagnostic from '@/components/debug/SpacingDiagnostic';
 
 type Tab = 'overview' | 'analysis' | 'lineup' | 'strategy';
 
@@ -541,6 +542,9 @@ export default function GamePreparation() {
                       </CardContent>
                     </Card>
                   )}
+
+                  {/* Spacing Diagnostic - TEMPORARY */}
+                  <SpacingDiagnostic />
 
                   {/* Quick Actions */}
                   <Card>
